@@ -14,9 +14,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.anyilanxin.kunpeng.cluster.raft.snapshot.v2;
+package com.anyilanxin.kunpeng.cluster.raft.snapshot;
 
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.v2.ReplicaSenderService.SnapshotTaker;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.ReplicaSenderService.SnapshotTaker;
 import com.anyilanxin.kunpeng.utils.scheduler.future.ActorFuture;
 import com.anyilanxin.kunpeng.utils.scheduler.future.CompletableActorFuture;
 import java.util.HashMap;

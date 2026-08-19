@@ -14,33 +14,27 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.anyilanxin.kunpeng.cluster.raft.snapshot.v2;
+package com.anyilanxin.kunpeng.cluster.raft.snapshot;
 
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.v2.ReplicaSenderService.SnapshotTaker;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.ReplicaSenderService.SnapshotTaker;
 import com.anyilanxin.kunpeng.utils.scheduler.future.ActorFuture;
-import com.anyilanxin.kunpeng.utils.scheduler.future.CompletableActorFuture;
 import java.util.Optional;
 
-/** bootstrap 副本发送器（bootstrap-snapshots 缓存区） */
-public final class BootstrapReplicaSender extends ReplicaTransferHub {
+/** merge 副本发送器（merge-snapshots 缓存区） */
+public final class MergeReplicaSender extends ReplicaTransferHub {
 
-  public BootstrapReplicaSender(
+  public MergeReplicaSender(
       final SnapshotVault vault, final SnapshotTaker taker, final int maxBlockBytes) {
     super(vault, taker, maxBlockBytes);
   }
 
   @Override
   protected Optional<ArchivedSnapshot> currentCached() {
-    return vault().getBootstrapSnapshot();
+    return vault().getMergeSnapshot();
   }
 
   @Override
   protected ActorFuture<Void> deleteCached() {
-    return wrapVoid(vault().deleteBootstrapSnapshots().toCompletableFuture());
-  }
-
-  /** CompletableFuture 包装为 ActorFuture */
-  static ActorFuture<Void> wrapVoid(final java.util.concurrent.CompletableFuture<Void> f) {
-    return new CompletableActorFuture<>(f);
+    return BootstrapReplicaSender.wrapVoid(vault().deleteMergeSnapshots().toCompletableFuture());
   }
 }

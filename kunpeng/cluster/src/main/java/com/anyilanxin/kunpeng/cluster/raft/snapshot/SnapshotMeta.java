@@ -14,10 +14,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.anyilanxin.kunpeng.cluster.raft.snapshot.v2;
+package com.anyilanxin.kunpeng.cluster.raft.snapshot;
 
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.v2.VaultCodec.Reader;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.v2.VaultCodec.Writer;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.VaultCodec.Reader;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.VaultCodec.Writer;
 
 /** 快照元数据（目录内 snapshot.metadata，vault codec 编码） */
 public final class SnapshotMeta {

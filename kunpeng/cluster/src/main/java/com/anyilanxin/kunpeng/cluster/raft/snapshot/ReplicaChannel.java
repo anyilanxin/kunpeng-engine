@@ -14,13 +14,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.anyilanxin.kunpeng.cluster.raft.snapshot.v2;
+package com.anyilanxin.kunpeng.cluster.raft.snapshot;
 
-import java.nio.file.Path;
-import java.util.Map;
-
-/** 外部（如存储引擎级）逐文件校验和提供方；缺省时 vault 自行逐文件计算 CRC32C */
-public interface SnapshotCrc32cChecksumProvider {
-
-  Map<String, Long> getSnapshotChecksums(Path snapshotPath);
+/** 副本传输通道：bootstrap（新节点补齐）/ merge（分区数据迁移） */
+public enum ReplicaChannel {
+  BOOTSTRAP,
+  MERGE
 }

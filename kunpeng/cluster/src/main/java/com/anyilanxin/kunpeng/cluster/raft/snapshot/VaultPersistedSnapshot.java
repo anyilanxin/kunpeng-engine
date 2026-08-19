@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.anyilanxin.kunpeng.cluster.raft.snapshot.v2;
+package com.anyilanxin.kunpeng.cluster.raft.snapshot;
 
 import com.anyilanxin.kunpeng.cluster.raft.journal.snapshots.PersistedSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.journal.snapshots.SnapshotChunkReader;
@@ -23,11 +23,11 @@ import java.nio.ByteBuffer;
 import java.nio.file.Path;
 
 /** {@link PersistedSnapshot} 的 v2 实现（包装 {@link ArchivedSnapshot}） */
-final class V2PersistedSnapshot implements PersistedSnapshot {
+final class VaultPersistedSnapshot implements PersistedSnapshot {
 
   private final ArchivedSnapshot archived;
 
-  V2PersistedSnapshot(final ArchivedSnapshot archived) {
+  VaultPersistedSnapshot(final ArchivedSnapshot archived) {
     this.archived = archived;
   }
 
@@ -85,7 +85,7 @@ final class V2PersistedSnapshot implements PersistedSnapshot {
   private static final class V2ChunkReaderAdapter implements SnapshotChunkReader {
 
     private final BlockStreamReader reader;
-    private com.anyilanxin.kunpeng.cluster.raft.snapshot.v2.SnapshotBlock current;
+    private com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotBlock current;
 
     V2ChunkReaderAdapter(final BlockStreamReader reader) {
       this.reader = reader;
@@ -126,7 +126,7 @@ final class V2PersistedSnapshot implements PersistedSnapshot {
 
   /** v2 块到 v1 快照块的适配器 */
   private record V2ChunkAdapter(
-      com.anyilanxin.kunpeng.cluster.raft.snapshot.v2.SnapshotBlock block)
+      com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotBlock block)
       implements com.anyilanxin.kunpeng.cluster.raft.journal.snapshots.SnapshotChunk {
 
     @Override

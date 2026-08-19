@@ -14,10 +14,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.anyilanxin.kunpeng.cluster.raft.snapshot.v2;
+package com.anyilanxin.kunpeng.cluster.raft.snapshot;
 
-/** 副本传输通道：bootstrap（新节点补齐）/ merge（分区数据迁移） */
-public enum ReplicaChannel {
-  BOOTSTRAP,
-  MERGE
+/** 落档快照事件监听（新快照提交/旧快照淘汰） */
+public interface ArchivedSnapshotListener {
+
+  /** 新快照落档（更早的快照随后可能被淘汰） */
+  void onArchived(ArchivedSnapshot snapshot);
+
+  /** 快照被淘汰删除 */
+  default void onPurged(ArchivedSnapshot snapshot) {}
 }

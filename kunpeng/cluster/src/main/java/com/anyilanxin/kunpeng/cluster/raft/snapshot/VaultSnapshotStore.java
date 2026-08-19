@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.anyilanxin.kunpeng.cluster.raft.snapshot.v2;
+package com.anyilanxin.kunpeng.cluster.raft.snapshot;
 
 import com.anyilanxin.kunpeng.cluster.raft.journal.snapshots.PersistedSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.journal.snapshots.PersistedSnapshotListener;
@@ -30,27 +30,27 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** {@link ReceivableSnapshotStore} 的 v2 实现（包装 {@link SnapshotVault}） */
-public final class V2SnapshotStore implements ReceivableSnapshotStore {
+public final class VaultSnapshotStore implements ReceivableSnapshotStore {
 
-  private static final Logger LOG = LoggerFactory.getLogger(V2SnapshotStore.class);
+  private static final Logger LOG = LoggerFactory.getLogger(VaultSnapshotStore.class);
 
   private final SnapshotVault vault;
   private final ConcurrentMap<PersistedSnapshotListener, ArchivedSnapshotListener> listenerMap =
       new ConcurrentHashMap<>();
 
-  public V2SnapshotStore(final SnapshotVault vault) {
+  public VaultSnapshotStore(final SnapshotVault vault) {
     this.vault = vault;
   }
 
   @Override
   public Optional<PersistedSnapshot> getLatestSnapshot() {
-    return vault.getLatestSnapshot().map(V2PersistedSnapshot::new);
+    return vault.getLatestSnapshot().map(VaultPersistedSnapshot::new);
   }
 
   @Override
   public Iterable<PersistedSnapshot> getAvailableSnapshots() {
     return (Iterable<PersistedSnapshot>) (Iterable<?>) vault.getAvailableSnapshots().stream()
-        .map(V2PersistedSnapshot::new)
+        .map(VaultPersistedSnapshot::new)
         .toList();
   }
 
@@ -62,7 +62,7 @@ public final class V2SnapshotStore implements ReceivableSnapshotStore {
   @Override
   public ReceivedSnapshot newReceivedSnapshot(final String snapshotId) {
     final IncomingReplica replica = vault.receive(snapshotId).join();
-    return new V2ReceivedSnapshot(vault, replica);
+    return new VaultReceivedSnapshot(vault, replica);
   }
 
   @Override
@@ -76,12 +76,12 @@ public final class V2SnapshotStore implements ReceivableSnapshotStore {
         new ArchivedSnapshotListener() {
           @Override
           public void onArchived(final ArchivedSnapshot snapshot) {
-            listener.onNewSnapshot(new V2PersistedSnapshot(snapshot));
+            listener.onNewSnapshot(new VaultPersistedSnapshot(snapshot));
           }
 
           @Override
           public void onPurged(final ArchivedSnapshot snapshot) {
-            listener.onSnapshotRemoved(new V2PersistedSnapshot(snapshot));
+            listener.onSnapshotRemoved(new VaultPersistedSnapshot(snapshot));
           }
         };
     listenerMap.put(listener, adapter);

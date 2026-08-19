@@ -14,11 +14,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.anyilanxin.kunpeng.cluster.raft.snapshot.v2;
+package com.anyilanxin.kunpeng.cluster.raft.snapshot;
 
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.v2.VaultCodec.Reader;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.v2.VaultCodec.Writer;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.v2.VaultCodec.VaultCodecException;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.VaultCodec.Reader;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.VaultCodec.Writer;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.VaultCodec.VaultCodecException;
 
 import java.util.zip.CRC32C;
 

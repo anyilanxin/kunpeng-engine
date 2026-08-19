@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.anyilanxin.kunpeng.cluster.raft.snapshot.v2;
+package com.anyilanxin.kunpeng.cluster.raft.snapshot;
 
 import com.anyilanxin.kunpeng.cluster.raft.journal.snapshots.PersistedSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.journal.snapshots.ReceivedSnapshot;
@@ -24,14 +24,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /** {@link ReceivedSnapshot} 的 v2 实现（包装 {@link IncomingReplica}） */
-final class V2ReceivedSnapshot implements ReceivedSnapshot {
+final class VaultReceivedSnapshot implements ReceivedSnapshot {
 
-  private static final Logger LOG = LoggerFactory.getLogger(V2ReceivedSnapshot.class);
+  private static final Logger LOG = LoggerFactory.getLogger(VaultReceivedSnapshot.class);
 
   private final SnapshotVault vault;
   private final IncomingReplica replica;
 
-  V2ReceivedSnapshot(final SnapshotVault vault, final IncomingReplica replica) {
+  VaultReceivedSnapshot(final SnapshotVault vault, final IncomingReplica replica) {
     this.vault = vault;
     this.replica = replica;
   }
@@ -54,7 +54,7 @@ final class V2ReceivedSnapshot implements ReceivedSnapshot {
             v -> {
               final var latest = vault.getLatestSnapshot();
               if (latest.isPresent() && latest.get().ref().index() == replica.ref().index()) {
-                return (PersistedSnapshot) new V2PersistedSnapshot(latest.get());
+                return (PersistedSnapshot) new VaultPersistedSnapshot(latest.get());
               }
               LOG.warn("快照提交后未找到对应落档: {}", replica.ref());
               return null;
@@ -68,7 +68,7 @@ final class V2ReceivedSnapshot implements ReceivedSnapshot {
 
   @Override
   public String toString() {
-    return "V2ReceivedSnapshot{" + replica.ref() + "}";
+    return "VaultReceivedSnapshot{" + replica.ref() + "}";
   }
 
   /** v1 wire 块转 v2 内部传输块 */

@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.anyilanxin.kunpeng.cluster.raft.snapshot.v2;
+package com.anyilanxin.kunpeng.cluster.raft.snapshot;
 
 import com.anyilanxin.kunpeng.cluster.raft.journal.snapshots.ReceivableSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.journal.snapshots.ReceivableSnapshotStoreFactory;
@@ -22,15 +22,15 @@ import io.micrometer.core.instrument.MeterRegistry;
 import java.nio.file.Path;
 
 /** v2 快照存储工厂 */
-public final class V2SnapshotStoreFactory implements ReceivableSnapshotStoreFactory {
+public final class VaultSnapshotStoreFactory implements ReceivableSnapshotStoreFactory {
 
   private final MeterRegistry meterRegistry;
 
-  public V2SnapshotStoreFactory() {
+  public VaultSnapshotStoreFactory() {
     this(null);
   }
 
-  public V2SnapshotStoreFactory(final MeterRegistry meterRegistry) {
+  public VaultSnapshotStoreFactory(final MeterRegistry meterRegistry) {
     this.meterRegistry = meterRegistry;
   }
 
@@ -38,6 +38,6 @@ public final class V2SnapshotStoreFactory implements ReceivableSnapshotStoreFact
   public ReceivableSnapshotStore createReceivableSnapshotStore(
       final Path dataDirectory, final int partitionId) {
     final var vault = new SnapshotVault(dataDirectory, null, meterRegistry);
-    return new V2SnapshotStore(vault);
+    return new VaultSnapshotStore(vault);
   }
 }
