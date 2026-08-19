@@ -20,7 +20,6 @@ package com.anyilanxin.kunpeng.cluster.raft.partition;
 import com.anyilanxin.kunpeng.cluster.cluster.Member;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationService;
-import com.anyilanxin.kunpeng.cluster.primitive.partition.*;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.ReceivableSnapshotStoreFactory;
 import com.anyilanxin.kunpeng.cluster.raft.zeebe.EntryValidator;
 import com.anyilanxin.kunpeng.cluster.utils.concurrent.Futures;

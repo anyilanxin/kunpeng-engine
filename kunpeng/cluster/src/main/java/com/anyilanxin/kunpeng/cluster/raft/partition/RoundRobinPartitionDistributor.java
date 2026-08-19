@@ -17,8 +17,6 @@
 package com.anyilanxin.kunpeng.cluster.raft.partition;
 
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
-import com.anyilanxin.kunpeng.cluster.primitive.partition.PartitionId;
-import com.anyilanxin.kunpeng.cluster.primitive.partition.PartitionMetadata;
 import com.google.common.collect.Sets;
 
 import java.util.*;

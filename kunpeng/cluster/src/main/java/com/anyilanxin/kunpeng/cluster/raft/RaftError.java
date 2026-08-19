@@ -17,8 +17,6 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft;
 
-import com.anyilanxin.kunpeng.cluster.primitive.PrimitiveException;
-
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkNotNull;
 

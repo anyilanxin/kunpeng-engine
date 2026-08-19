@@ -17,7 +17,6 @@
 package com.anyilanxin.kunpeng.cluster.raft.partition;
 
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
-import com.anyilanxin.kunpeng.cluster.primitive.partition.PartitionId;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;

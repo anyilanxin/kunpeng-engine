@@ -18,17 +18,13 @@
 package com.anyilanxin.kunpeng.cluster.raft.partition;
 
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
-import io.micrometer.core.instrument.MeterRegistry;
-import com.anyilanxin.kunpeng.cluster.primitive.partition.Partition;
-import com.anyilanxin.kunpeng.cluster.primitive.partition.PartitionId;
-import com.anyilanxin.kunpeng.cluster.primitive.partition.PartitionManagementService;
-import com.anyilanxin.kunpeng.cluster.primitive.partition.PartitionMetadata;
 import com.anyilanxin.kunpeng.cluster.raft.RaftRoleChangeListener;
 import com.anyilanxin.kunpeng.cluster.raft.RaftServer.Role;
 import com.anyilanxin.kunpeng.cluster.raft.journal.util.health.FailureListener;
 import com.anyilanxin.kunpeng.cluster.raft.journal.util.health.HealthMonitorable;
 import com.anyilanxin.kunpeng.cluster.raft.journal.util.health.HealthReport;
 import com.anyilanxin.kunpeng.cluster.raft.partition.impl.RaftPartitionServer;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

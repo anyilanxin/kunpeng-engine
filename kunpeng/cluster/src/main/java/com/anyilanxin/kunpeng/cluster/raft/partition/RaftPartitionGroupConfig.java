@@ -17,8 +17,7 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.partition;
 
-import com.anyilanxin.kunpeng.cluster.primitive.partition.PartitionGroup.Type;
-import com.anyilanxin.kunpeng.cluster.primitive.partition.PartitionGroupConfig;
+import com.anyilanxin.kunpeng.cluster.raft.partition.PartitionGroup.Type;
 import com.anyilanxin.kunpeng.cluster.raft.zeebe.EntryValidator;
 import com.anyilanxin.kunpeng.cluster.raft.zeebe.NoopEntryValidator;
 import com.esotericsoftware.kryo.serializers.FieldSerializer.Optional;
