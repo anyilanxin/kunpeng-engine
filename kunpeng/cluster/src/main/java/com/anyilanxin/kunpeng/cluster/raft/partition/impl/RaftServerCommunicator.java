@@ -18,6 +18,7 @@
 package com.anyilanxin.kunpeng.cluster.raft.partition.impl;
 
 import com.google.common.base.Preconditions;
+import io.micrometer.core.instrument.MeterRegistry;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationService;
 import com.anyilanxin.kunpeng.cluster.raft.metrics.RaftRequestMetrics;
@@ -54,6 +55,7 @@ public class RaftServerCommunicator implements RaftServerProtocol {
 
   public RaftServerCommunicator(
       final String prefix,
+      final MeterRegistry meterRegistry,
       final Serializer serializer,
       final ClusterCommunicationService clusterCommunicator,
       final Duration requestTimeout) {
@@ -63,7 +65,7 @@ public class RaftServerCommunicator implements RaftServerProtocol {
     this.clusterCommunicator =
         Preconditions.checkNotNull(clusterCommunicator, "clusterCommunicator cannot be null");
     this.requestTimeout = requestTimeout;
-    metrics = new RaftRequestMetrics(partitionName);
+    metrics = new RaftRequestMetrics(partitionName, meterRegistry);
   }
 
   @Override

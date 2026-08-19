@@ -7,7 +7,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,35 +17,43 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.metrics;
 
-import io.prometheus.client.Counter;
+import com.anyilanxin.kunpeng.utils.micrometer.Micrometers;
+import io.micrometer.core.instrument.MeterRegistry;
 
 public class RaftRequestMetrics extends RaftMetrics {
 
-  private static final Counter RAFT_MESSAGES_RECEIVED =
-      Counter.build()
-          .namespace("atomix")
-          .name("raft_messages_received")
-          .help("Number of raft requests received")
-          .labelNames("type", "partitionGroupName", "partition")
-          .register();
+  private final MeterRegistry meterRegistry;
 
-  private static final Counter RAFT_MESSAGES_SEND =
-      Counter.build()
-          .namespace("atomix")
-          .name("raft_messages_send")
-          .help("Number of raft requests send")
-          .labelNames("to", "type", "partitionGroupName", "partition")
-          .register();
-
-  public RaftRequestMetrics(final String partitionName) {
+  public RaftRequestMetrics(final String partitionName, final MeterRegistry meterRegistry) {
     super(partitionName);
+    this.meterRegistry = meterRegistry;
   }
 
   public void receivedMessage(final String type) {
-    RAFT_MESSAGES_RECEIVED.labels(type, partitionGroupName, partition).inc();
+    Micrometers.counter(
+            RaftRequestMetricDocs.RAFT_MESSAGES_RECEIVED,
+            meterRegistry,
+            "type",
+            type,
+            "partitionGroupName",
+            partitionGroupName,
+            "partition",
+            partition)
+        .increment();
   }
 
   public void sendMessage(final String memberId, final String type) {
-    RAFT_MESSAGES_SEND.labels(memberId, type, partitionGroupName, partition).inc();
+    Micrometers.counter(
+            RaftRequestMetricDocs.RAFT_MESSAGES_SEND,
+            meterRegistry,
+            "to",
+            memberId,
+            "type",
+            type,
+            "partitionGroupName",
+            partitionGroupName,
+            "partition",
+            partition)
+        .increment();
   }
 }

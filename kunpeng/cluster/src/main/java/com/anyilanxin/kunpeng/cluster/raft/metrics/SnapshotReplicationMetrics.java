@@ -6,7 +6,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,45 +16,48 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.metrics;
 
-import io.prometheus.client.Gauge;
+import com.anyilanxin.kunpeng.utils.micrometer.Micrometers;
+import com.anyilanxin.kunpeng.utils.micrometer.SettableGauge;
+import io.micrometer.core.instrument.MeterRegistry;
 
 public class SnapshotReplicationMetrics extends RaftMetrics {
-  private static final String NAMESPACE = "atomix";
-  private static final String PARTITION_GROUP_NAME_LABEL = "partitionGroupName";
-  private static final String PARTITION_LABEL = "partition";
 
-  private static final Gauge COUNT =
-      Gauge.build()
-          .namespace(NAMESPACE)
-          .labelNames(PARTITION_GROUP_NAME_LABEL, PARTITION_LABEL)
-          .help("Count of ongoing snapshot replication")
-          .name("snapshot_replication_count")
-          .register();
-  private static final Gauge DURATION =
-      Gauge.build()
-          .namespace(NAMESPACE)
-          .labelNames(PARTITION_GROUP_NAME_LABEL, PARTITION_LABEL)
-          .help("Approximate duration of replication in milliseconds")
-          .name("snapshot_replication_duration_milliseconds")
-          .register();
+  private final SettableGauge count;
+  private final SettableGauge duration;
 
-  public SnapshotReplicationMetrics(final String partitionName) {
+  public SnapshotReplicationMetrics(final String partitionName, final MeterRegistry meterRegistry) {
     super(partitionName);
+    count =
+        Micrometers.gauge(
+            SnapshotReplicationMetricDocs.COUNT,
+            meterRegistry,
+            "partitionGroupName",
+            partitionGroupName,
+            "partition",
+            partition);
+    duration =
+        Micrometers.gauge(
+            SnapshotReplicationMetricDocs.DURATION,
+            meterRegistry,
+            "partitionGroupName",
+            partitionGroupName,
+            "partition",
+            partition);
   }
 
   public void incrementCount() {
-    COUNT.labels(partitionGroupName, partition).inc();
+    count.inc();
   }
 
   public void decrementCount() {
-    COUNT.labels(partitionGroupName, partition).dec();
+    count.dec();
   }
 
   public void setCount(final int value) {
-    COUNT.labels(partitionGroupName, partition).set(value);
+    count.set(value);
   }
 
   public void observeDuration(final long durationMillis) {
-    DURATION.labels(partitionGroupName, partition).set(durationMillis);
+    duration.set(durationMillis);
   }
 }

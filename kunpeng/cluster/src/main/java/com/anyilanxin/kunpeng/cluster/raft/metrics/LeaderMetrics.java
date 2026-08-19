@@ -7,7 +7,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,23 +17,30 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.metrics;
 
-import io.prometheus.client.Histogram;
+import com.anyilanxin.kunpeng.utils.micrometer.Micrometers;
+import io.micrometer.core.instrument.MeterRegistry;
+
+import java.time.Duration;
 
 public class LeaderMetrics extends RaftMetrics {
 
-  private static final Histogram APPEND_LATENCY =
-      Histogram.build()
-          .namespace("atomix")
-          .name("append_entries_latency")
-          .help("Latency to append an entry to a follower")
-          .labelNames("follower", "partitionGroupName", "partition")
-          .register();
+  private final MeterRegistry meterRegistry;
 
-  public LeaderMetrics(final String partitionName) {
+  public LeaderMetrics(final String partitionName, final MeterRegistry meterRegistry) {
     super(partitionName);
+    this.meterRegistry = meterRegistry;
   }
 
   public void appendComplete(final long latencyms, final String memberId) {
-    APPEND_LATENCY.labels(memberId, partitionGroupName, partition).observe(latencyms / 1000f);
+    Micrometers.timer(
+            LeaderMetricDocs.APPEND_LATENCY,
+            meterRegistry,
+            "follower",
+            memberId,
+            "partitionGroupName",
+            partitionGroupName,
+            "partition",
+            partition)
+        .record(Duration.ofMillis(latencyms));
   }
 }

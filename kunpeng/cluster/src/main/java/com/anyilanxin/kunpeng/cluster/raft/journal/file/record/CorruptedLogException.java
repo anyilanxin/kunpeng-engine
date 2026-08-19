@@ -16,7 +16,8 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.journal.file.record;
 
-import com.anyilanxin.kunpeng.cluster.raft.journal.util.exception.UnrecoverableException;
+
+import com.anyilanxin.kunpeng.utils.exception.UnrecoverableException;
 
 public final class CorruptedLogException extends UnrecoverableException {
 

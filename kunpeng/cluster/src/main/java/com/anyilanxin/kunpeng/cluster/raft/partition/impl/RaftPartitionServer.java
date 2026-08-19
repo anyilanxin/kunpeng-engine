@@ -18,6 +18,7 @@
 package com.anyilanxin.kunpeng.cluster.raft.partition.impl;
 
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
+import io.micrometer.core.instrument.MeterRegistry;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationService;
 import com.anyilanxin.kunpeng.cluster.primitive.partition.Partition;
@@ -73,6 +74,7 @@ public class RaftPartitionServer implements Managed<RaftPartitionServer>, Health
   private final Set<FailureListener> deferredFailureListeners = new CopyOnWriteArraySet<>();
   private final PartitionMetadata partitionMetadata;
   private final Duration requestTimeout;
+  private final MeterRegistry meterRegistry;
 
   private RaftServer server;
   private ReceivableSnapshotStore persistedSnapshotStore;
@@ -83,7 +85,8 @@ public class RaftPartitionServer implements Managed<RaftPartitionServer>, Health
       final MemberId localMemberId,
       final ClusterMembershipService membershipService,
       final ClusterCommunicationService clusterCommunicator,
-      final PartitionMetadata partitionMetadata) {
+      final PartitionMetadata partitionMetadata,
+      final MeterRegistry meterRegistry) {
     this.partition = partition;
     this.config = config;
     this.localMemberId = localMemberId;
@@ -94,12 +97,13 @@ public class RaftPartitionServer implements Managed<RaftPartitionServer>, Health
             getClass(),
             LoggerContext.builder(RaftPartitionServer.class).addValue(partition.name()).build());
     this.partitionMetadata = partitionMetadata;
+    this.meterRegistry = meterRegistry;
     requestTimeout = config.getPartitionConfig().getRequestTimeout();
   }
 
   @Override
   public CompletableFuture<RaftPartitionServer> start() {
-    final RaftStartupMetrics raftStartupMetrics = new RaftStartupMetrics(partition.name());
+    final RaftStartupMetrics raftStartupMetrics = new RaftStartupMetrics(partition.name(), meterRegistry);
     final long bootstrapStartTime;
     log.info("Starting server for partition {}", partition.id());
     final long startTime = System.currentTimeMillis();
@@ -184,6 +188,7 @@ public class RaftPartitionServer implements Managed<RaftPartitionServer>, Health
         .withProtocol(createServerProtocol())
         .withPartitionConfig(partitionConfig)
         .withStorage(createRaftStorage())
+        .withMeterRegistry(meterRegistry)
         .withEntryValidator(config.getEntryValidator())
         .withElectionConfig(electionConfig)
         .build();
@@ -347,12 +352,14 @@ public class RaftPartitionServer implements Managed<RaftPartitionServer>, Health
         .withFreeDiskSpace(storageConfig.getFreeDiskSpace())
         .withSnapshotStore(persistedSnapshotStore)
         .withJournalIndexDensity(storageConfig.getJournalIndexDensity())
+        .withMeterRegistry(meterRegistry)
         .build();
   }
 
   private RaftServerCommunicator createServerProtocol() {
     return new RaftServerCommunicator(
         partition.name(),
+        meterRegistry,
         Serializer.using(RaftNamespaces.RAFT_PROTOCOL),
         clusterCommunicator,
         requestTimeout);

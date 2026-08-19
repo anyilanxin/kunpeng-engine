@@ -17,6 +17,7 @@
 package com.anyilanxin.kunpeng.cluster.raft.storage.log;
 
 import com.anyilanxin.kunpeng.cluster.raft.journal.Journal;
+import io.micrometer.core.instrument.MeterRegistry;
 import com.anyilanxin.kunpeng.cluster.raft.journal.file.SegmentedJournal;
 import com.anyilanxin.kunpeng.cluster.raft.journal.file.SegmentedJournalBuilder;
 import java.io.File;
@@ -116,6 +117,12 @@ public class RaftLogBuilder implements com.anyilanxin.kunpeng.cluster.utils.Buil
 
   public RaftLogBuilder withLastWrittenIndex(final long lastWrittenIndex) {
     journalBuilder.withLastWrittenIndex(lastWrittenIndex);
+    return this;
+  }
+
+  /** Sets the meter registry used by the journal metrics. */
+  public RaftLogBuilder withMeterRegistry(final MeterRegistry meterRegistry) {
+    journalBuilder.withMeterRegistry(meterRegistry);
     return this;
   }
 

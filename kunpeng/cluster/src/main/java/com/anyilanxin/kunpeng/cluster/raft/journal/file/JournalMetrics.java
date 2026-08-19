@@ -6,7 +6,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,79 +16,63 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.journal.file;
 
-import io.prometheus.client.Gauge;
-import io.prometheus.client.Gauge.Timer;
-import io.prometheus.client.Histogram;
+import com.anyilanxin.kunpeng.utils.CloseableSilently;
+import com.anyilanxin.kunpeng.utils.micrometer.Micrometers;
+import com.anyilanxin.kunpeng.utils.micrometer.SettableGauge;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
+
+import java.time.Duration;
 
 class JournalMetrics {
-  private static final String NAMESPACE = "atomix";
-  private static final String PARTITION_LABEL = "partition";
-  private static final Histogram SEGMENT_CREATION_TIME =
-      Histogram.build()
-          .namespace(NAMESPACE)
-          .name("segment_creation_time")
-          .help("Time spend to create a new segment")
-          .labelNames(PARTITION_LABEL)
-          .register();
 
-  private static final Histogram SEGMENT_TRUNCATE_TIME =
-      Histogram.build()
-          .namespace(NAMESPACE)
-          .name("segment_truncate_time")
-          .help("Time spend to truncate a segment")
-          .labelNames(PARTITION_LABEL)
-          .register();
+  private final Timer segmentCreationTime;
+  private final Timer segmentTruncateTime;
+  private final Timer segmentFlushTime;
+  private final SettableGauge segmentCount;
+  private final SettableGauge journalOpenDuration;
 
-  private static final Histogram SEGMENT_FLUSH_TIME =
-      Histogram.build()
-          .namespace(NAMESPACE)
-          .name("segment_flush_time")
-          .help("Time spend to flush segment to disk")
-          .labelNames(PARTITION_LABEL)
-          .register();
-
-  private static final Gauge SEGMENT_COUNT =
-      Gauge.build()
-          .namespace(NAMESPACE)
-          .name("segment_count")
-          .help("Number of segments")
-          .labelNames(PARTITION_LABEL)
-          .register();
-  private static final Gauge JOURNAL_OPEN_DURATION =
-      Gauge.build()
-          .namespace(NAMESPACE)
-          .name("journal_open_time")
-          .help("Time taken to open the journal")
-          .labelNames(PARTITION_LABEL)
-          .register();
-
-  private final String logName;
-
-  public JournalMetrics(final String logName) {
-    this.logName = logName;
+  JournalMetrics(final String logName, final MeterRegistry meterRegistry) {
+    segmentCreationTime =
+        Micrometers.timer(
+            JournalMetricDocs.SEGMENT_CREATION_TIME, meterRegistry, "partition", logName);
+    segmentTruncateTime =
+        Micrometers.timer(
+            JournalMetricDocs.SEGMENT_TRUNCATE_TIME, meterRegistry, "partition", logName);
+    segmentFlushTime =
+        Micrometers.timer(
+            JournalMetricDocs.SEGMENT_FLUSH_TIME, meterRegistry, "partition", logName);
+    segmentCount =
+        Micrometers.gauge(JournalMetricDocs.SEGMENT_COUNT, meterRegistry, "partition", logName);
+    journalOpenDuration =
+        Micrometers.gauge(
+            JournalMetricDocs.JOURNAL_OPEN_DURATION, meterRegistry, "partition", logName);
   }
 
-  public void observeSegmentCreation(final Runnable segmentCreation) {
-    SEGMENT_CREATION_TIME.labels(logName).time(segmentCreation);
+  void observeSegmentCreation(final Runnable segmentCreation) {
+    segmentCreationTime.record(segmentCreation);
   }
 
-  public void observeSegmentFlush(final Runnable segmentFlush) {
-    SEGMENT_FLUSH_TIME.labels(logName).time(segmentFlush);
+  void observeSegmentFlush(final Runnable segmentFlush) {
+    segmentFlushTime.record(segmentFlush);
   }
 
-  public void observeSegmentTruncation(final Runnable segmentTruncation) {
-    SEGMENT_TRUNCATE_TIME.labels(logName).time(segmentTruncation);
+  void observeSegmentTruncation(final Runnable segmentTruncation) {
+    segmentTruncateTime.record(segmentTruncation);
   }
 
-  public Timer startJournalOpenDurationTimer() {
-    return JOURNAL_OPEN_DURATION.labels(logName).startTimer();
+  /** 开始统计日志打开耗时，close 时将耗时（毫秒）记录到指标 */
+  CloseableSilently startJournalOpenDurationTimer() {
+    final long startNanos = System.nanoTime();
+    return () ->
+        journalOpenDuration.set(Duration.ofNanos(System.nanoTime() - startNanos).toMillis());
   }
 
-  public void incSegmentCount() {
-    SEGMENT_COUNT.labels(logName).inc();
+  void incSegmentCount() {
+    segmentCount.inc();
   }
 
-  public void decSegmentCount() {
-    SEGMENT_COUNT.labels(logName).dec();
+  void decSegmentCount() {
+    segmentCount.dec();
   }
 }

@@ -18,6 +18,7 @@
 package com.anyilanxin.kunpeng.cluster.raft.impl;
 
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
+import io.micrometer.core.instrument.MeterRegistry;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.raft.*;
 import com.anyilanxin.kunpeng.cluster.raft.RaftException.ProtocolException;
@@ -124,6 +125,7 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
   private long lastHeartbeat;
   private final RaftPartitionConfig partitionConfig;
   private final int partitionId;
+  private final MeterRegistry meterRegistry;
 
   public RaftContext(
       final String name,
@@ -135,15 +137,17 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
       final RaftThreadContextFactory threadContextFactory,
       final Supplier<Random> randomFactory,
       final RaftElectionConfig electionConfig,
-      final RaftPartitionConfig partitionConfig) {
+      final RaftPartitionConfig partitionConfig,
+      final MeterRegistry meterRegistry) {
     this.name = checkNotNull(name, "name cannot be null");
     this.membershipService = checkNotNull(membershipService, "membershipService cannot be null");
     this.protocol = checkNotNull(protocol, "protocol cannot be null");
     this.storage = checkNotNull(storage, "storage cannot be null");
     random = randomFactory.get();
     this.partitionId = partitionId;
+    this.meterRegistry = checkNotNull(meterRegistry, "meterRegistry cannot be null");
 
-    raftRoleMetrics = new RaftRoleMetrics(name);
+    raftRoleMetrics = new RaftRoleMetrics(name, meterRegistry);
 
     log =
         ContextualLoggerFactory.getLogger(
@@ -194,13 +198,18 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
     this.partitionConfig = partitionConfig;
     cluster = new RaftClusterContext(localMemberId, this);
 
-    replicationMetrics = new RaftReplicationMetrics(name);
+    replicationMetrics = new RaftReplicationMetrics(name, meterRegistry);
     replicationMetrics.setAppendIndex(raftLog.getLastIndex());
     lastHeartbeat = System.currentTimeMillis();
 
     // Register protocol listeners.
     registerHandlers(protocol);
     started = true;
+  }
+
+  /** 提供注入的指标注册中心，供 raft 内各指标使用 */
+  public MeterRegistry getMeterRegistry() {
+    return meterRegistry;
   }
 
   private void verifySnapshotLogConsistent() {

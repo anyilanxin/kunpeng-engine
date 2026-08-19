@@ -18,6 +18,8 @@
 package com.anyilanxin.kunpeng.cluster.cluster;
 
 import com.anyilanxin.kunpeng.cluster.cluster.discovery.BootstrapDiscoveryProvider;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import com.anyilanxin.kunpeng.cluster.cluster.discovery.NodeDiscoveryConfig;
 import com.anyilanxin.kunpeng.cluster.cluster.discovery.NodeDiscoveryProvider;
 import com.anyilanxin.kunpeng.cluster.cluster.impl.DefaultClusterMembershipService;
@@ -95,18 +97,32 @@ public class AtomixCluster implements BootstrapService, Managed<Void> {
   protected final ManagedClusterEventService eventService;
   protected volatile CompletableFuture<Void> openFuture;
   protected volatile CompletableFuture<Void> closeFuture;
+  protected final MeterRegistry meterRegistry;
   protected final ThreadContext threadContext = new SingleThreadContext("atomix-cluster-%d");
   private final AtomicBoolean started = new AtomicBoolean();
 
   public AtomixCluster(final ClusterConfig config, final Version version) {
-    this(config, version, buildMessagingService(config), buildUnicastService(config));
+    this(config, version, new SimpleMeterRegistry());
+  }
+
+  /** 可注入指标注册中心的构造器 */
+  public AtomixCluster(
+      final ClusterConfig config, final Version version, final MeterRegistry meterRegistry) {
+    this(
+        config,
+        version,
+        meterRegistry,
+        buildMessagingService(config),
+        buildUnicastService(config));
   }
 
   protected AtomixCluster(
       final ClusterConfig config,
       final Version version,
+      final MeterRegistry meterRegistry,
       final ManagedMessagingService messagingService,
       final ManagedUnicastService unicastService) {
+    this.meterRegistry = meterRegistry;
     this.messagingService =
         messagingService != null ? messagingService : buildMessagingService(config);
     this.unicastService = unicastService != null ? unicastService : buildUnicastService(config);
@@ -275,6 +291,11 @@ public class AtomixCluster implements BootstrapService, Managed<Void> {
     started.set(false);
     LOGGER.info("Stopped");
     return CompletableFuture.completedFuture(null);
+  }
+
+  /** 提供注入的指标注册中心 */
+  public MeterRegistry getMeterRegistry() {
+    return meterRegistry;
   }
 
   @Override

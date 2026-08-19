@@ -17,10 +17,10 @@
  */
 package com.anyilanxin.kunpeng.cluster.cluster.messaging.impl;
 
-import com.anyilanxin.kunpeng.cluster.raft.journal.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 
@@ -45,7 +45,7 @@ abstract class AbstractServerConnection implements ServerConnection {
 
       byte[] subjectBytes = null;
       if (subject != null) {
-        subjectBytes = StringUtil.getBytes(subject);
+        subjectBytes = subject.getBytes(StandardCharsets.UTF_8);
       }
 
       reply(message, ProtocolReply.Status.ERROR_NO_HANDLER, Optional.ofNullable(subjectBytes));

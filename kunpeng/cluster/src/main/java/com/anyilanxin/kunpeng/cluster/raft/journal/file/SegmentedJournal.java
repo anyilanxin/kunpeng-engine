@@ -22,7 +22,7 @@ import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException;
 import com.anyilanxin.kunpeng.cluster.raft.journal.JournalReader;
 import com.anyilanxin.kunpeng.cluster.raft.journal.JournalRecord;
 import com.anyilanxin.kunpeng.cluster.raft.journal.file.record.CorruptedLogException;
-import com.anyilanxin.kunpeng.cluster.raft.journal.util.FileUtil;
+import com.anyilanxin.kunpeng.utils.FileUtil;
 import com.google.common.collect.Sets;
 import org.agrona.DirectBuffer;
 import org.slf4j.Logger;
@@ -32,6 +32,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import io.micrometer.core.instrument.MeterRegistry;
+
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
@@ -71,11 +73,12 @@ public final class SegmentedJournal implements Journal {
       final int maxSegmentSize,
       final long minFreeSpace,
       final JournalIndex journalIndex,
-      final long lastWrittenIndex) {
+      final long lastWrittenIndex,
+      final MeterRegistry meterRegistry) {
     this.name = checkNotNull(name, "name cannot be null");
     this.directory = checkNotNull(directory, "directory cannot be null");
     this.maxSegmentSize = maxSegmentSize;
-    journalMetrics = new JournalMetrics(name);
+    journalMetrics = new JournalMetrics(name, meterRegistry);
     minFreeDiskSpace = minFreeSpace;
     this.journalIndex = journalIndex;
     this.lastWrittenIndex = lastWrittenIndex;

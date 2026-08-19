@@ -22,7 +22,7 @@ import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException.InvalidIndex
 import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException.SegmentFull;
 import com.anyilanxin.kunpeng.cluster.raft.journal.JournalRecord;
 import com.anyilanxin.kunpeng.cluster.raft.journal.file.record.*;
-import com.anyilanxin.kunpeng.cluster.raft.journal.util.Either;
+import com.anyilanxin.kunpeng.utils.Either;
 import org.agrona.DirectBuffer;
 import org.agrona.MutableDirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;

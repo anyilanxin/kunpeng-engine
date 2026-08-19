@@ -18,6 +18,8 @@
 package com.anyilanxin.kunpeng.cluster.raft.impl;
 
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import com.anyilanxin.kunpeng.cluster.raft.RaftRoleChangeListener;
 import com.anyilanxin.kunpeng.cluster.raft.RaftServer;
 import com.anyilanxin.kunpeng.cluster.raft.RaftThreadContextFactory;
@@ -256,6 +258,7 @@ public class DefaultRaftServer implements RaftServer {
               ? new DefaultRaftSingleThreadContextFactory()
               : threadContextFactory;
       final Supplier<Random> randomSupplier = randomFactory == null ? Random::new : randomFactory;
+      final MeterRegistry registry = meterRegistry == null ? new SimpleMeterRegistry() : meterRegistry;
 
       final RaftContext raft =
           new RaftContext(
@@ -268,7 +271,8 @@ public class DefaultRaftServer implements RaftServer {
               singleThreadFactory,
               randomSupplier,
               electionConfig,
-              partitionConfig);
+              partitionConfig,
+              registry);
       raft.setEntryValidator(entryValidator);
 
       return new DefaultRaftServer(raft);

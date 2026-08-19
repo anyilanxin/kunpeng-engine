@@ -18,12 +18,12 @@
 package com.anyilanxin.kunpeng.cluster.cluster.messaging.impl;
 
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException;
-import com.anyilanxin.kunpeng.cluster.raft.journal.util.StringUtil;
 import com.google.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.ConnectException;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -65,7 +65,7 @@ abstract class AbstractClientConnection implements ClientConnection {
     String exceptionMessage = null;
 
     if (payload != null && payload.length > 0) {
-      exceptionMessage = StringUtil.fromBytes(payload);
+      exceptionMessage = new String(payload, StandardCharsets.UTF_8);
     }
     return exceptionMessage;
   }

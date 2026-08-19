@@ -18,12 +18,13 @@
 package com.anyilanxin.kunpeng.cluster.cluster;
 
 import com.anyilanxin.kunpeng.cluster.cluster.discovery.NodeDiscoveryProvider;
+import io.micrometer.core.instrument.MeterRegistry;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingConfig.CompressionAlgorithm;
 import com.anyilanxin.kunpeng.cluster.cluster.protocol.GroupMembershipProtocol;
-import com.anyilanxin.kunpeng.cluster.raft.journal.util.VersionUtil;
 import com.anyilanxin.kunpeng.cluster.utils.Builder;
 import com.anyilanxin.kunpeng.cluster.utils.Version;
 import com.anyilanxin.kunpeng.cluster.utils.net.Address;
+import com.anyilanxin.kunpeng.utils.VersionUtil;
 import com.google.common.collect.Lists;
 
 import java.io.File;
@@ -60,6 +61,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class AtomixClusterBuilder implements Builder<AtomixCluster> {
 
   protected final ClusterConfig config;
+  protected MeterRegistry meterRegistry;
 
   public AtomixClusterBuilder(final ClusterConfig config) {
     this.config = checkNotNull(config);
@@ -250,8 +252,14 @@ public class AtomixClusterBuilder implements Builder<AtomixCluster> {
     return this;
   }
 
+  /** Sets the meter registry used by the cluster metrics. */
+  public AtomixClusterBuilder withMeterRegistry(final MeterRegistry meterRegistry) {
+    this.meterRegistry = meterRegistry;
+    return this;
+  }
+
   @Override
   public AtomixCluster build() {
-    return new AtomixCluster(config, Version.from(VersionUtil.getVersion()));
+    return new AtomixCluster(config, Version.from(VersionUtil.getVersion()), meterRegistry);
   }
 }

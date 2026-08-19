@@ -118,6 +118,7 @@ public final class SBESerializer implements JournalRecordSerializer {
     return new RecordData(recordDecoder.index(), recordDecoder.asqn(), data);
   }
 
+  @Override
   public int getMetadataLength(final DirectBuffer buffer, final int offset) {
     headerDecoder.wrap(buffer, offset);
     return headerDecoder.encodedLength() + headerDecoder.blockLength();

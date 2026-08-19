@@ -17,20 +17,21 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.journal.file;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-import static com.google.common.base.Preconditions.checkState;
-
-import com.google.common.collect.Sets;
 import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException;
-import com.anyilanxin.kunpeng.cluster.raft.journal.util.FileUtil;
+import com.anyilanxin.kunpeng.utils.FileUtil;
+import com.google.common.collect.Sets;
+import org.agrona.IoUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
 import java.nio.file.Files;
 import java.util.Set;
-import org.agrona.IoUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * Log segment.

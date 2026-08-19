@@ -17,7 +17,6 @@
  */
 package com.anyilanxin.kunpeng.cluster.utils.concurrent;
 
-import com.anyilanxin.kunpeng.cluster.raft.journal.util.error.FatalErrorHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,7 +38,6 @@ import static com.google.common.base.Preconditions.checkState;
  */
 public class SingleThreadContext extends AbstractThreadContext {
   protected static final Logger LOGGER = LoggerFactory.getLogger(SingleThreadContext.class);
-  private static final FatalErrorHandler FATAL_ERROR_HANDLER = FatalErrorHandler.withLogger(LOGGER);
   private static final Consumer<Throwable> DEFAULT_UNCAUGHT_EXCEPTION_OBSERVER =
       e -> LOGGER.error("An uncaught exception occurred", e);
   protected final ScheduledExecutorService executor;
@@ -164,7 +162,6 @@ public class SingleThreadContext extends AbstractThreadContext {
       try {
         command.run();
       } catch (final Throwable e) {
-        FATAL_ERROR_HANDLER.handleError(e);
         // If we don't handle throwable here, it will be swallowed by ScheduledThreadPoolExecutor
         uncaughtExceptionObserver.accept(e);
         throw e; // rethrow so that the ScheduledFuture is completed exceptionally

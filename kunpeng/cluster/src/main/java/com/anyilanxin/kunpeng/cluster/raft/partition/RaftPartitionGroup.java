@@ -18,6 +18,8 @@
 package com.anyilanxin.kunpeng.cluster.raft.partition;
 
 import com.anyilanxin.kunpeng.cluster.cluster.Member;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationService;
 import com.anyilanxin.kunpeng.cluster.primitive.partition.*;
@@ -60,13 +62,18 @@ public class RaftPartitionGroup implements ManagedPartitionGroup {
   private ClusterCommunicationService communicationService;
 
   public RaftPartitionGroup(final RaftPartitionGroupConfig config) {
+    this(config, new SimpleMeterRegistry());
+  }
+
+  /** 可注入指标注册中心的构造器 */
+  public RaftPartitionGroup(final RaftPartitionGroupConfig config, final MeterRegistry meterRegistry) {
     this.config = config;
 
     name = config.getName();
     replicationFactor = config.getReplicationFactor();
     snapshotSubject = "raft-partition-group-" + name + "-snapshot";
 
-    buildPartitions(config)
+    buildPartitions(config, meterRegistry)
         .forEach(
             p -> {
               partitions.put(p.id(), p);
@@ -75,7 +82,8 @@ public class RaftPartitionGroup implements ManagedPartitionGroup {
     Collections.sort(sortedPartitionIds);
   }
 
-  private static Collection<RaftPartition> buildPartitions(final RaftPartitionGroupConfig config) {
+  private static Collection<RaftPartition> buildPartitions(
+      final RaftPartitionGroupConfig config, final MeterRegistry meterRegistry) {
     final File partitionsDir =
         new File(config.getStorageConfig().getDirectory(config.getName()), "partitions");
     final List<RaftPartition> partitions = new ArrayList<>(config.getPartitionCount());
@@ -84,7 +92,8 @@ public class RaftPartitionGroup implements ManagedPartitionGroup {
           new RaftPartition(
               PartitionId.from(config.getName(), i + 1),
               config,
-              new File(partitionsDir, String.valueOf(i + 1))));
+              new File(partitionsDir, String.valueOf(i + 1)),
+              meterRegistry));
     }
     return partitions;
   }
@@ -241,6 +250,8 @@ public class RaftPartitionGroup implements ManagedPartitionGroup {
 
   /** Raft partition group builder. */
   public static class Builder extends PartitionGroup.Builder<RaftPartitionGroupConfig> {
+
+    private MeterRegistry meterRegistry;
 
     protected Builder(final RaftPartitionGroupConfig config) {
       super(config);
@@ -502,7 +513,13 @@ public class RaftPartitionGroup implements ManagedPartitionGroup {
 
     @Override
     public RaftPartitionGroup build() {
-      return new RaftPartitionGroup(config);
+      return new RaftPartitionGroup(config, meterRegistry == null ? new SimpleMeterRegistry() : meterRegistry);
+    }
+
+    /** Sets the meter registry used by the raft metrics. */
+    public Builder withMeterRegistry(final MeterRegistry meterRegistry) {
+      this.meterRegistry = meterRegistry;
+      return this;
     }
   }
 }

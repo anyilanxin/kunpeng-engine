@@ -29,6 +29,8 @@ import static org.mockito.Mockito.verify;
 
 import com.google.common.collect.Maps;
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.raft.RaftServer.Builder;
 import com.anyilanxin.kunpeng.cluster.raft.RaftServer.Role;
@@ -89,6 +91,9 @@ public class RaftTest extends ConcurrentTestCase {
   private volatile ThreadContext context;
   private volatile long position = 0;
   private Path directory;
+  /** 测试共用的指标注册中心 */
+  private static final MeterRegistry METER_REGISTRY = new SimpleMeterRegistry();
+
   private final Map<MemberId, TestRaftServerProtocol> serverProtocols = Maps.newConcurrentMap();
 
   @Before
@@ -178,7 +183,8 @@ public class RaftTest extends ConcurrentTestCase {
             .withPartitionConfig(
                 new RaftPartitionConfig()
                     .setElectionTimeout(Duration.ofSeconds(1))
-                    .setHeartbeatInterval(Duration.ofMillis(100)));
+                    .setHeartbeatInterval(Duration.ofMillis(100)))
+            .withMeterRegistry(METER_REGISTRY);
 
     final RaftServer server = configurator.apply(defaults).build();
 
@@ -321,13 +327,13 @@ public class RaftTest extends ConcurrentTestCase {
 
     appendEntry(leader);
 
-    final double startMissedHeartBeats = RaftRoleMetrics.getHeartbeatMissCount("1");
+    final double startMissedHeartBeats = RaftRoleMetrics.getHeartbeatMissCount(METER_REGISTRY, "1");
 
     // when
     appendEntries(leader, 1000);
 
     // then
-    final double missedHeartBeats = RaftRoleMetrics.getHeartbeatMissCount("1");
+    final double missedHeartBeats = RaftRoleMetrics.getHeartbeatMissCount(METER_REGISTRY, "1");
     assertThat(0.0, is(missedHeartBeats - startMissedHeartBeats));
   }
 

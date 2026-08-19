@@ -18,6 +18,7 @@
 package com.anyilanxin.kunpeng.cluster.raft;
 
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
+import io.micrometer.core.instrument.MeterRegistry;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftCluster;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember;
@@ -424,6 +425,7 @@ public interface RaftServer {
     protected RaftElectionConfig electionConfig = RaftElectionConfig.ofDefaultElection();
     protected RaftPartitionConfig partitionConfig = new RaftPartitionConfig();
     protected int partitionId;
+    protected MeterRegistry meterRegistry;
 
     protected Builder(final MemberId localMemberId) {
       this.localMemberId = checkNotNull(localMemberId, "localMemberId cannot be null");
@@ -506,6 +508,12 @@ public interface RaftServer {
 
     public Builder withPartitionId(final int partitionId) {
       this.partitionId = partitionId;
+      return this;
+    }
+
+    /** Sets the meter registry used by the raft metrics. */
+    public Builder withMeterRegistry(final MeterRegistry meterRegistry) {
+      this.meterRegistry = meterRegistry;
       return this;
     }
   }

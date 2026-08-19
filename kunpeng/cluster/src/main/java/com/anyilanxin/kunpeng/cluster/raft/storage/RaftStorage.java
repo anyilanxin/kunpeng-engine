@@ -18,6 +18,7 @@
 package com.anyilanxin.kunpeng.cluster.raft.storage;
 
 import com.anyilanxin.kunpeng.cluster.raft.journal.snapshots.PersistedSnapshotStore;
+import io.micrometer.core.instrument.MeterRegistry;
 import com.anyilanxin.kunpeng.cluster.raft.journal.snapshots.ReceivableSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.journal.util.FileUtil;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLog;
@@ -174,6 +175,7 @@ public final class RaftStorage {
         .withFlushExplicitly(flushExplicitly)
         .withJournalIndexDensity(journalIndexDensity)
         .withLastWrittenIndex(lastWrittenIndex)
+        .withMeterRegistry(meterRegistry)
         .build();
   }
 
@@ -228,6 +230,7 @@ public final class RaftStorage {
     private boolean flushExplicitly = DEFAULT_FLUSH_EXPLICITLY;
     private ReceivableSnapshotStore persistedSnapshotStore;
     private int journalIndexDensity = DEFAULT_JOURNAL_INDEX_DENSITY;
+    private MeterRegistry meterRegistry;
 
     private Builder() {}
 

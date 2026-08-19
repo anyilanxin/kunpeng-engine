@@ -6,7 +6,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,39 +16,40 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.metrics;
 
-import io.prometheus.client.Gauge;
+import com.anyilanxin.kunpeng.utils.micrometer.Micrometers;
+import com.anyilanxin.kunpeng.utils.micrometer.SettableGauge;
+import io.micrometer.core.instrument.MeterRegistry;
 
 public class RaftReplicationMetrics extends RaftMetrics {
 
-  private static final String NAMESPACE = "atomix";
-  private static final String PARTITION_GROUP_NAME_LABEL = "partitionGroupName";
-  private static final String PARTITION_LABEL = "partition";
+  private final SettableGauge commitIndex;
+  private final SettableGauge appendIndex;
 
-  private static final Gauge COMMIT_INDEX =
-      Gauge.build()
-          .namespace(NAMESPACE)
-          .labelNames(PARTITION_GROUP_NAME_LABEL, PARTITION_LABEL)
-          .help("The commit index")
-          .name("partition_raft_commit_index")
-          .register();
-
-  private static final Gauge APPEND_INDEX =
-      Gauge.build()
-          .namespace(NAMESPACE)
-          .labelNames(PARTITION_GROUP_NAME_LABEL, PARTITION_LABEL)
-          .help("The index of last entry appended to the log")
-          .name("partition_raft_append_index")
-          .register();
-
-  public RaftReplicationMetrics(final String partitionName) {
+  public RaftReplicationMetrics(final String partitionName, final MeterRegistry meterRegistry) {
     super(partitionName);
+    commitIndex =
+        Micrometers.gauge(
+            RaftReplicationMetricDocs.COMMIT_INDEX,
+            meterRegistry,
+            "partitionGroupName",
+            partitionGroupName,
+            "partition",
+            partition);
+    appendIndex =
+        Micrometers.gauge(
+            RaftReplicationMetricDocs.APPEND_INDEX,
+            meterRegistry,
+            "partitionGroupName",
+            partitionGroupName,
+            "partition",
+            partition);
   }
 
   public void setCommitIndex(final long value) {
-    COMMIT_INDEX.labels(partitionGroupName, partition).set(value);
+    commitIndex.set(value);
   }
 
   public void setAppendIndex(final long value) {
-    APPEND_INDEX.labels(partitionGroupName, partition).set(value);
+    appendIndex.set(value);
   }
 }

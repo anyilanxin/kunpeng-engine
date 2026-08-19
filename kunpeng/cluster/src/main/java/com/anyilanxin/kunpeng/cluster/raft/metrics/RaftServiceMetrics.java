@@ -7,7 +7,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,23 +17,29 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.metrics;
 
-import io.prometheus.client.Histogram;
+import com.anyilanxin.kunpeng.utils.micrometer.Micrometers;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
+
+import java.time.Duration;
 
 public class RaftServiceMetrics extends RaftMetrics {
 
-  private static final Histogram COMPACTION_TIME =
-      Histogram.build()
-          .namespace("atomix")
-          .name("compaction_time_ms")
-          .help("Time spend to compact")
-          .labelNames("partitionGroupName", "partition")
-          .register();
+  private final Timer compactionTime;
 
-  public RaftServiceMetrics(final String partitionName) {
+  public RaftServiceMetrics(final String partitionName, final MeterRegistry meterRegistry) {
     super(partitionName);
+    compactionTime =
+        Micrometers.timer(
+            RaftServiceMetricDocs.COMPACTION_TIME,
+            meterRegistry,
+            "partitionGroupName",
+            partitionGroupName,
+            "partition",
+            partition);
   }
 
   public void compactionTime(final long latencyms) {
-    COMPACTION_TIME.labels(partitionGroupName, partition).observe(latencyms / 1000f);
+    compactionTime.record(Duration.ofMillis(latencyms));
   }
 }

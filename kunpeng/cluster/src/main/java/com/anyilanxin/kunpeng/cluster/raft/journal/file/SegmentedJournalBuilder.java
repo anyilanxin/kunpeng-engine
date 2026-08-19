@@ -20,6 +20,9 @@ package com.anyilanxin.kunpeng.cluster.raft.journal.file;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+
 import java.io.File;
 
 /** Raft log builder. */
@@ -38,6 +41,7 @@ public class SegmentedJournalBuilder {
   private long freeDiskSpace = DEFAULT_MIN_FREE_DISK_SPACE;
   private int journalIndexDensity = DEFAULT_JOURNAL_INDEX_DENSITY;
   private long lastWrittenIndex = -1L;
+  private MeterRegistry meterRegistry;
 
   protected SegmentedJournalBuilder() {}
 
@@ -129,9 +133,16 @@ public class SegmentedJournalBuilder {
     return this;
   }
 
+  /** Sets the meter registry used by the journal metrics (defaults to a simple registry). */
+  public SegmentedJournalBuilder withMeterRegistry(final MeterRegistry meterRegistry) {
+    this.meterRegistry = meterRegistry;
+    return this;
+  }
+
   public SegmentedJournal build() {
     final JournalIndex journalIndex = new SparseJournalIndex(journalIndexDensity);
+    final MeterRegistry registry = meterRegistry == null ? new SimpleMeterRegistry() : meterRegistry;
     return new SegmentedJournal(
-        name, directory, maxSegmentSize, freeDiskSpace, journalIndex, lastWrittenIndex);
+        name, directory, maxSegmentSize, freeDiskSpace, journalIndex, lastWrittenIndex, registry);
   }
 }

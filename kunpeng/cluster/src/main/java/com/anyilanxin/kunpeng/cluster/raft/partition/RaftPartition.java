@@ -18,6 +18,7 @@
 package com.anyilanxin.kunpeng.cluster.raft.partition;
 
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import io.micrometer.core.instrument.MeterRegistry;
 import com.anyilanxin.kunpeng.cluster.primitive.partition.Partition;
 import com.anyilanxin.kunpeng.cluster.primitive.partition.PartitionId;
 import com.anyilanxin.kunpeng.cluster.primitive.partition.PartitionManagementService;
@@ -48,6 +49,7 @@ public class RaftPartition implements Partition, HealthMonitorable {
   private final PartitionId partitionId;
   private final RaftPartitionGroupConfig config;
   private final File dataDirectory;
+  private final MeterRegistry meterRegistry;
   private final Set<RaftRoleChangeListener> deferredRoleChangeListeners =
       new CopyOnWriteArraySet<>();
   private PartitionMetadata partitionMetadata;
@@ -56,10 +58,12 @@ public class RaftPartition implements Partition, HealthMonitorable {
   public RaftPartition(
       final PartitionId partitionId,
       final RaftPartitionGroupConfig config,
-      final File dataDirectory) {
+      final File dataDirectory,
+      final MeterRegistry meterRegistry) {
     this.partitionId = partitionId;
     this.config = config;
     this.dataDirectory = dataDirectory;
+    this.meterRegistry = meterRegistry;
   }
 
   public void addRoleChangeListener(final RaftRoleChangeListener listener) {
@@ -127,7 +131,8 @@ public class RaftPartition implements Partition, HealthMonitorable {
         managementService.getMembershipService().getLocalMember().id(),
         managementService.getMembershipService(),
         managementService.getMessagingService(),
-        partitionMetadata);
+        partitionMetadata,
+        meterRegistry);
   }
 
   /**
