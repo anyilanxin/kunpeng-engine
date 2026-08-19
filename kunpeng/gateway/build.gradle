@@ -3,11 +3,11 @@ plugins {
     id 'kunpeng.build-publish'
 }
 
-description = "Broker"
+description = "Gateway"
 
 configure(jarInfo) {
-    archiveName = "kunpeng-broker"
+    archiveName = "kunpeng-gateway"
 }
 dependencies {
-    
+
 }
