@@ -16,6 +16,8 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.snapshot.impl;
 
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.ArchivedSnapshotListener;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChecksumProvider;
 import io.micrometer.core.instrument.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +48,7 @@ public final class SnapshotVault implements AutoCloseable {
   private final Path snapshotsRoot;
   private final Path bootstrapRoot;
   private final Path mergeRoot;
-  private final SnapshotCrc32cChecksumProvider checksumProvider;
+  private final SnapshotChecksumProvider checksumProvider;
 
   private final AtomicReference<ArchivedSnapshot> active = new AtomicReference<>();
   private final AtomicReference<ArchivedSnapshot> activeBootstrap = new AtomicReference<>();
@@ -71,7 +73,7 @@ public final class SnapshotVault implements AutoCloseable {
 
   public SnapshotVault(
       final Path partitionRoot,
-      final SnapshotCrc32cChecksumProvider checksumProvider,
+      final SnapshotChecksumProvider checksumProvider,
       final MeterRegistry registry) {
     snapshotsRoot = partitionRoot.resolve(SnapshotLayout.SNAPSHOTS_DIR);
     bootstrapRoot = partitionRoot.resolve(SnapshotLayout.BOOTSTRAP_DIR);
@@ -322,10 +324,10 @@ public final class SnapshotVault implements AutoCloseable {
 
   // ===== 包内（串行线程或被串行作业调用） =====
 
-  /** 构建目录清单：优先外部提供（RocksDB 级），否则逐文件 CRC32C */
+  /** 构建目录清单：优先外部提供，否则逐文件 CRC32C */
   ChecksumManifest buildManifest(final Path directory) {
     final ChecksumManifest manifest = ChecksumManifest.empty();
-    Map<String, Long> provided = null;
+    Map<String, String> provided = null;
     if (checksumProvider != null) {
       provided = checksumProvider.getSnapshotChecksums(directory);
     }
@@ -334,11 +336,11 @@ public final class SnapshotVault implements AutoCloseable {
         if (SnapshotLayout.MANIFEST_FILE.equals(name)) {
           continue;
         }
-        final long crc =
+        final String checksum =
             provided != null && provided.containsKey(name)
                 ? provided.get(name)
-                : VaultFiles.fileCrc(directory.resolve(name));
-        manifest.add(name, crc);
+                : Long.toHexString(VaultFiles.fileCrc(directory.resolve(name)));
+        manifest.add(name, checksum);
       }
     } catch (final IOException e) {
       throw new SnapshotStoreException.WriteFailure("清单计算失败: " + directory, e);

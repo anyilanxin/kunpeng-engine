@@ -136,12 +136,12 @@ public final class IncomingReplica {
       if (size == null || bytes == null || size.longValue() != bytes.longValue()) {
         throw new SnapshotStoreException.Corrupted("文件不完整: " + fileName);
       }
-      manifest.add(fileName, VaultFiles.fileCrc(targetDirectory.resolve(fileName)));
+      manifest.add(fileName, Long.toHexString(VaultFiles.fileCrc(targetDirectory.resolve(fileName))));
     }
     if (Files.exists(targetDirectory.resolve(SnapshotLayout.METADATA_FILE))) {
       manifest.add(
           SnapshotLayout.METADATA_FILE,
-          VaultFiles.fileCrc(targetDirectory.resolve(SnapshotLayout.METADATA_FILE)));
+          Long.toHexString(VaultFiles.fileCrc(targetDirectory.resolve(SnapshotLayout.METADATA_FILE))));
     }
     ref.checksum(Long.toHexString(manifest.combined()));
     VaultFiles.writeDurably(

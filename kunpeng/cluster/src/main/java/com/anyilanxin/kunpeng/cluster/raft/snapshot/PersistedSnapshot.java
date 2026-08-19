@@ -1,5 +1,5 @@
 /*
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -12,7 +12,7 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package com.anyilanxin.kunpeng.cluster.raft.snapshot;
 
@@ -33,12 +33,6 @@ public interface PersistedSnapshot {
 
   /** 快照格式版本 */
   int version();
-
-  /** 已处理位置 */
-  long getProcessedPosition();
-
-  /** 已导出位置 */
-  long getExportedPosition();
 
   /** 快照校验和 */
   long getChecksum();

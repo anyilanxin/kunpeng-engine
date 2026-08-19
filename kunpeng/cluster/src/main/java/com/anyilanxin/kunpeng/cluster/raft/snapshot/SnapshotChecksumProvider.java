@@ -14,15 +14,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.anyilanxin.kunpeng.cluster.raft.snapshot.impl;
+package com.anyilanxin.kunpeng.cluster.raft.snapshot;
 
-/** 落档快照事件监听（新快照提交/旧快照淘汰） */
-public interface ArchivedSnapshotListener {
+import java.nio.file.Path;
+import java.util.Map;
 
-  /** 新快照落档（更早的快照随后可能被淘汰） */
-  void onArchived(ArchivedSnapshot snapshot);
+/** 外部（如存储引擎级）逐文件校验和提供方；返回值以字符串表示以适配不同校验算法 */
+public interface SnapshotChecksumProvider {
 
-  /** 快照被淘汰删除 */
-  default void onPurged(final ArchivedSnapshot snapshot) {
-  }
+  /** @return 文件相对路径 → 校验和字符串 */
+  Map<String, String> getSnapshotChecksums(Path snapshotPath);
 }

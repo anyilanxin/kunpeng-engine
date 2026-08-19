@@ -24,7 +24,7 @@ import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 
-/** {@link PersistedSnapshot} 的 v2 实现（包装 {@link ArchivedSnapshot}） */
+/** {@link PersistedSnapshot} 的 vault 实现（包装 {@link ArchivedSnapshot}） */
 final class VaultPersistedSnapshot implements PersistedSnapshot {
 
   private final ArchivedSnapshot archived;
@@ -54,16 +54,6 @@ final class VaultPersistedSnapshot implements PersistedSnapshot {
   }
 
   @Override
-  public long getProcessedPosition() {
-    return archived.meta().processedPosition();
-  }
-
-  @Override
-  public long getExportedPosition() {
-    return archived.meta().exportedPosition();
-  }
-
-  @Override
   public long getChecksum() {
     return archived.manifest().combined();
   }
@@ -76,20 +66,20 @@ final class VaultPersistedSnapshot implements PersistedSnapshot {
   @Override
   public SnapshotChunkReader newChunkReader() {
     final int maxBlockBytes = 1024 * 1024;
-    return new V2ChunkReaderAdapter(archived.blockReader(maxBlockBytes));
+    return new ChunkReaderAdapter(archived.blockReader(maxBlockBytes));
   }
 
   ArchivedSnapshot archived() {
     return archived;
   }
 
-  /** v2 块读取器到 v1 接口的适配器 */
-  private static final class V2ChunkReaderAdapter implements SnapshotChunkReader {
+  /** 块读取器适配器 */
+  private static final class ChunkReaderAdapter implements SnapshotChunkReader {
 
     private final BlockStreamReader reader;
     private SnapshotBlock current;
 
-    V2ChunkReaderAdapter(final BlockStreamReader reader) {
+    ChunkReaderAdapter(final BlockStreamReader reader) {
       this.reader = reader;
     }
 
@@ -105,7 +95,7 @@ final class VaultPersistedSnapshot implements PersistedSnapshot {
       }
       try {
         current = reader.next();
-        return new V2ChunkAdapter(current);
+        return new ChunkAdapter(current);
       } catch (final SnapshotStoreException e) {
         throw new UncheckedIOException(new java.io.IOException(e.getMessage(), e));
       }
@@ -126,8 +116,8 @@ final class VaultPersistedSnapshot implements PersistedSnapshot {
     }
   }
 
-  /** v2 块到 v1 快照块的适配器 */
-  private record V2ChunkAdapter(
+  /** 传输块适配器 */
+  private record ChunkAdapter(
       SnapshotBlock block)
       implements SnapshotChunk {
 

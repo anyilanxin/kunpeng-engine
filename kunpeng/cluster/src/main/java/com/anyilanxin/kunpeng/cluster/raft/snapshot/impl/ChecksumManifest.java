@@ -1,5 +1,5 @@
 /*
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -12,7 +12,7 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package com.anyilanxin.kunpeng.cluster.raft.snapshot.impl;
 
@@ -20,8 +20,6 @@ import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.VaultCodec.Reader;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.VaultCodec.VaultCodecException;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.VaultCodec.Writer;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,16 +30,17 @@ import java.util.zip.CRC32C;
 /**
  * 落档快照的逐文件校验清单（vault codec 二进制 manifest）。
  *
- * <p>综合校验 = 按文件名排序后对 (utf8 名字节 + crc64 小端 8 字节) 序列做一次 CRC32C。
+ * <p>校验和以字符串存储以适配不同校验算法（CRC32C hex、SHA-256 hex 等）。
+ * 综合校验 = 按文件名排序后对 (utf8 名字节 + 校验和字符串 utf8 字节) 序列做一次 CRC32C。
  */
 public final class ChecksumManifest {
 
-  private static final int VERSION = 1;
+  private static final int VERSION = 2;
 
-  private final TreeMap<String, Long> entries;
+  private final TreeMap<String, String> entries;
   private long combined;
 
-  private ChecksumManifest(final TreeMap<String, Long> entries) {
+  private ChecksumManifest(final TreeMap<String, String> entries) {
     this.entries = entries;
     combined = computeCombined(entries);
   }
@@ -51,14 +50,14 @@ public final class ChecksumManifest {
   }
 
   /** 追加一条（构建期） */
-  public void add(final String fileName, final long crc) {
-    entries.put(fileName, crc);
+  public void add(final String fileName, final String checksum) {
+    entries.put(fileName, checksum);
     combined = computeCombined(entries);
   }
 
-  public long checksumOf(final String fileName) {
-    final Long crc = entries.get(fileName);
-    return crc == null ? -1 : crc;
+  /** 文件校验和；不存在返回 {@code null} */
+  public String checksumOf(final String fileName) {
+    return entries.get(fileName);
   }
 
   public long combined() {
@@ -66,7 +65,7 @@ public final class ChecksumManifest {
   }
 
   /** 按文件名排序的条目 */
-  public Map<String, Long> entries() {
+  public Map<String, String> entries() {
     return java.util.Collections.unmodifiableMap(entries);
   }
 
@@ -74,9 +73,7 @@ public final class ChecksumManifest {
     return entries.size();
   }
 
-  /**
-   * @return 全部条目与综合值逐项相等
-   */
+  /** 全部条目与综合值逐项相等 */
   public boolean matches(final ChecksumManifest other) {
     return combined == other.combined && entries.equals(other.entries);
   }
@@ -85,9 +82,9 @@ public final class ChecksumManifest {
     final var writer = new Writer();
     writer.writeByte(VERSION);
     VaultCodec.putArrayHeader(writer, entries.size());
-    for (final Map.Entry<String, Long> entry : entries.entrySet()) {
+    for (final Map.Entry<String, String> entry : entries.entrySet()) {
       VaultCodec.putString(writer, entry.getKey());
-      VaultCodec.putLong(writer, entry.getValue());
+      VaultCodec.putString(writer, entry.getValue());
     }
     VaultCodec.putLong(writer, combined);
     return writer.toByteArray();
@@ -100,11 +97,11 @@ public final class ChecksumManifest {
       throw new VaultCodecException("manifest 版本不支持: " + version);
     }
     final int count = VaultCodec.nextArrayHeader(reader);
-    final TreeMap<String, Long> entries = new TreeMap<>();
+    final TreeMap<String, String> entries = new TreeMap<>();
     for (int i = 0; i < count; i++) {
       final String name = VaultCodec.nextString(reader);
-      final long crc = VaultCodec.nextLong(reader);
-      entries.put(name, crc);
+      final String checksum = VaultCodec.nextString(reader);
+      entries.put(name, checksum);
     }
     final long storedCombined = VaultCodec.nextLong(reader);
     VaultCodec.expectEnd(reader);
@@ -115,13 +112,11 @@ public final class ChecksumManifest {
     return manifest;
   }
 
-  static long computeCombined(final TreeMap<String, Long> entries) {
+  static long computeCombined(final TreeMap<String, String> entries) {
     final CRC32C crc = new CRC32C();
-    final ByteBuffer scratch = ByteBuffer.allocate(Long.BYTES).order(ByteOrder.LITTLE_ENDIAN);
-    for (final Map.Entry<String, Long> entry : entries.entrySet()) {
+    for (final Map.Entry<String, String> entry : entries.entrySet()) {
       crc.update(entry.getKey().getBytes(StandardCharsets.UTF_8));
-      scratch.putLong(0, entry.getValue()).clear();
-      crc.update(scratch.array(), 0, Long.BYTES);
+      crc.update(entry.getValue().getBytes(StandardCharsets.UTF_8));
     }
     return crc.getValue();
   }

@@ -21,7 +21,7 @@ import com.anyilanxin.kunpeng.cluster.raft.snapshot.ReceivableSnapshotStoreFacto
 import io.micrometer.core.instrument.MeterRegistry;
 import java.nio.file.Path;
 
-/** v2 快照存储工厂 */
+/** 快照存储工厂 */
 public final class VaultSnapshotStoreFactory implements ReceivableSnapshotStoreFactory {
 
   private final MeterRegistry meterRegistry;

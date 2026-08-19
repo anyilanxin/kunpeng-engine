@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.CompletableFuture;
 
-/** {@link ReceivedSnapshot} 的 v2 实现（包装 {@link IncomingReplica}） */
+/** {@link ReceivedSnapshot} 的 vault 实现（包装 {@link IncomingReplica}） */
 final class VaultReceivedSnapshot implements ReceivedSnapshot {
 
   private static final Logger LOG = LoggerFactory.getLogger(VaultReceivedSnapshot.class);
@@ -72,7 +72,7 @@ final class VaultReceivedSnapshot implements ReceivedSnapshot {
     return "VaultReceivedSnapshot{" + replica.ref() + "}";
   }
 
-  /** v1 wire 块转 v2 内部传输块 */
+  /** wire 块转内部传输块 */
   private static SnapshotBlock toBlock(final SnapshotChunk chunk) {
     final String blockName = chunk.getChunkName();
     final int separator = blockName.lastIndexOf(':');
