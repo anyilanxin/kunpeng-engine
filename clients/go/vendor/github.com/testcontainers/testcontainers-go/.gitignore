@@ -8,6 +8,26 @@ site/
 src/mkdocs-codeinclude-plugin
 src/pip-delete-this-directory.txt
 .idea/
+.build/
 .DS_Store
 
-cover.txt
+TEST-*.xml
+
+**/go.work
+
+# VS Code settings
+.vscode
+
+# Environment variables
+.env
+
+# Coverage files
+coverage.out
+
+# Usage metrics script binary
+usage-metrics/scripts/collect-metrics
+
+# Gas Town / Claude Code agent artifacts
+.beads/
+.claude/
+.runtime/

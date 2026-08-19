@@ -6,64 +6,117 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/docker/go-connections/nat"
+	"github.com/moby/moby/api/types/network"
 )
 
-//ForSQL constructs a new waitForSql strategy for the given driver
-func ForSQL(port nat.Port, driver string, url func(nat.Port) string) *waitForSql {
-	return &waitForSql{
+var (
+	_ Strategy        = (*waitForSQL)(nil)
+	_ StrategyTimeout = (*waitForSQL)(nil)
+)
+
+const defaultForSQLQuery = "SELECT 1"
+
+// ForSQL constructs a new waitForSql strategy for the given driver
+func ForSQL(port string, driver string, url func(host string, port network.Port) string) *waitForSQL {
+	return &waitForSQL{
 		Port:           port,
 		URL:            url,
 		Driver:         driver,
 		startupTimeout: defaultStartupTimeout(),
 		PollInterval:   defaultPollInterval(),
+		query:          defaultForSQLQuery,
 	}
 }
 
-type waitForSql struct {
-	URL            func(port nat.Port) string
+type waitForSQL struct {
+	timeout *time.Duration
+
+	URL            func(host string, port network.Port) string
 	Driver         string
-	Port           nat.Port
+	Port           string
 	startupTimeout time.Duration
 	PollInterval   time.Duration
+	query          string
 }
 
-//Timeout sets the maximum waiting time for the strategy after which it'll give up and return an error
-func (w *waitForSql) Timeout(duration time.Duration) *waitForSql {
-	w.startupTimeout = duration
+// WithStartupTimeout can be used to change the default startup timeout
+func (w *waitForSQL) WithStartupTimeout(timeout time.Duration) *waitForSQL {
+	w.timeout = &timeout
 	return w
 }
 
-//WithPollInterval can be used to override the default polling interval of 100 milliseconds
-func (w *waitForSql) WithPollInterval(pollInterval time.Duration) *waitForSql {
+// WithPollInterval can be used to override the default polling interval of 100 milliseconds
+func (w *waitForSQL) WithPollInterval(pollInterval time.Duration) *waitForSQL {
 	w.PollInterval = pollInterval
 	return w
 }
 
-//WaitUntilReady repeatedly tries to run "SELECT 1" query on the given port using sql and driver.
-// If the it doesn't succeed until the timeout value which defaults to 60 seconds, it will return an error
-func (w *waitForSql) WaitUntilReady(ctx context.Context, target StrategyTarget) (err error) {
-	ctx, cancel := context.WithTimeout(ctx, w.startupTimeout)
+// WithQuery can be used to override the default query used in the strategy.
+func (w *waitForSQL) WithQuery(query string) *waitForSQL {
+	w.query = query
+	return w
+}
+
+func (w *waitForSQL) Timeout() *time.Duration {
+	return w.timeout
+}
+
+// String returns a human-readable description of the wait strategy.
+func (w *waitForSQL) String() string {
+	port := "default"
+	if w.Port != "" {
+		p, err := network.ParsePort(w.Port)
+		if err == nil {
+			port = p.Port()
+		}
+	}
+
+	query := ""
+	if w.query != defaultForSQLQuery {
+		query = fmt.Sprintf(" with query %q", w.query)
+	}
+
+	return fmt.Sprintf("SQL database on port %s using driver %q%s", port, w.Driver, query)
+}
+
+// WaitUntilReady repeatedly tries to run "SELECT 1" or user defined query on the given port using sql and driver.
+//
+// If it doesn't succeed until the timeout value which defaults to 60 seconds, it will return an error.
+func (w *waitForSQL) WaitUntilReady(ctx context.Context, target StrategyTarget) error {
+	timeout := defaultStartupTimeout()
+	if w.timeout != nil {
+		timeout = *w.timeout
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
+
+	host, err := target.Host(ctx)
+	if err != nil {
+		return err
+	}
 
 	ticker := time.NewTicker(w.PollInterval)
 	defer ticker.Stop()
 
-	var port nat.Port
+	var port network.Port
 	port, err = target.MappedPort(ctx, w.Port)
 
-	for port == "" {
+	for port.IsZero() {
 		select {
 		case <-ctx.Done():
-			return fmt.Errorf("%s:%w", ctx.Err(), err)
+			return fmt.Errorf("%w: %w", ctx.Err(), err)
 		case <-ticker.C:
+			if err := checkTarget(ctx, target); err != nil {
+				return err
+			}
 			port, err = target.MappedPort(ctx, w.Port)
 		}
 	}
 
-	db, err := sql.Open(w.Driver, w.URL(port))
+	db, err := sql.Open(w.Driver, w.URL(host, port))
 	if err != nil {
-		return fmt.Errorf("sql.Open: %v", err)
+		return fmt.Errorf("sql.Open: %w", err)
 	}
 	defer db.Close()
 	for {
@@ -71,8 +124,10 @@ func (w *waitForSql) WaitUntilReady(ctx context.Context, target StrategyTarget) 
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-ticker.C:
-
-			if _, err := db.ExecContext(ctx, "SELECT 1"); err != nil {
+			if err := checkTarget(ctx, target); err != nil {
+				return err
+			}
+			if _, err := db.ExecContext(ctx, w.query); err != nil {
 				continue
 			}
 			return nil
