@@ -15,11 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.primitive.partition.impl;
+package com.anyilanxin.kunpeng.cluster.primitive.partition.impl;
 
-import io.atomix.cluster.ClusterMembershipService;
-import io.atomix.cluster.messaging.ClusterCommunicationService;
-import io.atomix.primitive.partition.PartitionManagementService;
+import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
+import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationService;
+import com.anyilanxin.kunpeng.cluster.primitive.partition.PartitionManagementService;
 
 /** Default partition management service. */
 public class DefaultPartitionManagementService implements PartitionManagementService {

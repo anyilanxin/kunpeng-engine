@@ -17,4 +17,4 @@
  */
 
 /** Common serializer implementations. */
-package io.atomix.utils.serializer.serializers;
+package com.anyilanxin.kunpeng.cluster.utils.serializer.serializers;

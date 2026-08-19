@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.utils.serializer;
+package com.anyilanxin.kunpeng.cluster.utils.serializer;
 
 import java.io.ByteArrayOutputStream;
 

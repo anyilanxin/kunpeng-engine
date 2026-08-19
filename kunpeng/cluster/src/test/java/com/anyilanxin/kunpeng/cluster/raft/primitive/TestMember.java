@@ -14,10 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft.primitive;
+package com.anyilanxin.kunpeng.cluster.raft.primitive;
 
-import io.atomix.cluster.MemberId;
-import io.atomix.raft.cluster.RaftMember;
+import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;

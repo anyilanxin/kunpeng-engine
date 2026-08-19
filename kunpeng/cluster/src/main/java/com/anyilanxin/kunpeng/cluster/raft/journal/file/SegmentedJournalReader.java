@@ -15,12 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.camunda.zeebe.journal.file;
+package com.anyilanxin.kunpeng.cluster.raft.journal.file;
 
-import static io.camunda.zeebe.journal.file.SegmentedJournal.ASQN_IGNORE;
+import static com.anyilanxin.kunpeng.cluster.raft.journal.file.SegmentedJournal.ASQN_IGNORE;
 
-import io.camunda.zeebe.journal.JournalReader;
-import io.camunda.zeebe.journal.JournalRecord;
+import com.anyilanxin.kunpeng.cluster.raft.journal.JournalReader;
+import com.anyilanxin.kunpeng.cluster.raft.journal.JournalRecord;
 import java.util.NoSuchElementException;
 
 class SegmentedJournalReader implements JournalReader {

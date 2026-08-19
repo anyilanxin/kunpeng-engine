@@ -15,29 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft.roles;
+package com.anyilanxin.kunpeng.cluster.raft.roles;
 
-import io.atomix.raft.RaftError;
-import io.atomix.raft.RaftServer;
-import io.atomix.raft.impl.RaftContext;
-import io.atomix.raft.protocol.AppendRequest;
-import io.atomix.raft.protocol.AppendResponse;
-import io.atomix.raft.protocol.ConfigureRequest;
-import io.atomix.raft.protocol.ConfigureResponse;
-import io.atomix.raft.protocol.InstallRequest;
-import io.atomix.raft.protocol.InstallResponse;
-import io.atomix.raft.protocol.PollRequest;
-import io.atomix.raft.protocol.PollResponse;
-import io.atomix.raft.protocol.RaftResponse;
-import io.atomix.raft.protocol.RaftResponse.Status;
-import io.atomix.raft.protocol.ReconfigureRequest;
-import io.atomix.raft.protocol.ReconfigureResponse;
-import io.atomix.raft.protocol.TransferRequest;
-import io.atomix.raft.protocol.TransferResponse;
-import io.atomix.raft.protocol.VoteRequest;
-import io.atomix.raft.protocol.VoteResponse;
-import io.atomix.raft.storage.system.Configuration;
-import io.atomix.utils.concurrent.Futures;
+import com.anyilanxin.kunpeng.cluster.raft.RaftError;
+import com.anyilanxin.kunpeng.cluster.raft.RaftServer;
+import com.anyilanxin.kunpeng.cluster.raft.impl.RaftContext;
+import com.anyilanxin.kunpeng.cluster.raft.protocol.AppendRequest;
+import com.anyilanxin.kunpeng.cluster.raft.protocol.AppendResponse;
+import com.anyilanxin.kunpeng.cluster.raft.protocol.ConfigureRequest;
+import com.anyilanxin.kunpeng.cluster.raft.protocol.ConfigureResponse;
+import com.anyilanxin.kunpeng.cluster.raft.protocol.InstallRequest;
+import com.anyilanxin.kunpeng.cluster.raft.protocol.InstallResponse;
+import com.anyilanxin.kunpeng.cluster.raft.protocol.PollRequest;
+import com.anyilanxin.kunpeng.cluster.raft.protocol.PollResponse;
+import com.anyilanxin.kunpeng.cluster.raft.protocol.RaftResponse;
+import com.anyilanxin.kunpeng.cluster.raft.protocol.RaftResponse.Status;
+import com.anyilanxin.kunpeng.cluster.raft.protocol.ReconfigureRequest;
+import com.anyilanxin.kunpeng.cluster.raft.protocol.ReconfigureResponse;
+import com.anyilanxin.kunpeng.cluster.raft.protocol.TransferRequest;
+import com.anyilanxin.kunpeng.cluster.raft.protocol.TransferResponse;
+import com.anyilanxin.kunpeng.cluster.raft.protocol.VoteRequest;
+import com.anyilanxin.kunpeng.cluster.raft.protocol.VoteResponse;
+import com.anyilanxin.kunpeng.cluster.raft.storage.system.Configuration;
+import com.anyilanxin.kunpeng.cluster.utils.concurrent.Futures;
 import java.util.concurrent.CompletableFuture;
 
 /** Inactive state. */

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.utils.logging;
+package com.anyilanxin.kunpeng.cluster.utils.logging;
 
 import static org.junit.Assert.assertEquals;
 

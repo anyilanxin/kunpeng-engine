@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft.protocol;
+package com.anyilanxin.kunpeng.cluster.raft.protocol;
 
-import io.atomix.raft.RaftError;
+import com.anyilanxin.kunpeng.cluster.raft.RaftError;
 
 /**
  * Base interface for responses.
@@ -49,7 +49,7 @@ public interface RaftResponse extends RaftMessage {
    * @param <U> The response type.
    */
   interface Builder<T extends Builder<T, U>, U extends RaftResponse>
-      extends io.atomix.utils.Builder<U> {
+      extends com.anyilanxin.kunpeng.cluster.utils.Builder<U> {
 
     /**
      * Sets the response status.

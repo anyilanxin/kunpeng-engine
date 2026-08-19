@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.utils.serializer;
+package com.anyilanxin.kunpeng.cluster.utils.serializer;
 
-import static io.atomix.utils.serializer.Namespace.FLOATING_ID;
+import static com.anyilanxin.kunpeng.cluster.utils.serializer.Namespace.FLOATING_ID;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -26,7 +26,7 @@ import com.esotericsoftware.kryo.SerializerFactory.CompatibleFieldSerializerFact
 import com.esotericsoftware.kryo.serializers.CompatibleFieldSerializer.CompatibleFieldSerializerConfig;
 import com.esotericsoftware.kryo.util.DefaultInstantiatorStrategy;
 import com.esotericsoftware.kryo.util.Pool;
-import io.atomix.utils.serializer.Namespace.RegistrationBlock;
+import com.anyilanxin.kunpeng.cluster.utils.serializer.Namespace.RegistrationBlock;
 import java.util.Arrays;
 import java.util.List;
 import org.apache.commons.lang3.tuple.Pair;

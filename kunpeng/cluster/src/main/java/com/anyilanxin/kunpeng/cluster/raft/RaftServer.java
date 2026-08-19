@@ -15,25 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft;
+package com.anyilanxin.kunpeng.cluster.raft;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static io.atomix.raft.RaftException.ConfigurationException;
+import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
+import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftCluster;
+import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember;
+import com.anyilanxin.kunpeng.cluster.raft.impl.DefaultRaftServer;
+import com.anyilanxin.kunpeng.cluster.raft.impl.RaftContext;
+import com.anyilanxin.kunpeng.cluster.raft.journal.util.health.FailureListener;
+import com.anyilanxin.kunpeng.cluster.raft.partition.RaftElectionConfig;
+import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartitionConfig;
+import com.anyilanxin.kunpeng.cluster.raft.protocol.RaftServerProtocol;
+import com.anyilanxin.kunpeng.cluster.raft.storage.RaftStorage;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLog;
+import com.anyilanxin.kunpeng.cluster.raft.zeebe.EntryValidator;
+import com.anyilanxin.kunpeng.cluster.raft.zeebe.NoopEntryValidator;
 
-import io.atomix.cluster.ClusterMembershipService;
-import io.atomix.cluster.MemberId;
-import io.atomix.raft.cluster.RaftCluster;
-import io.atomix.raft.cluster.RaftMember;
-import io.atomix.raft.impl.DefaultRaftServer;
-import io.atomix.raft.impl.RaftContext;
-import io.atomix.raft.partition.RaftElectionConfig;
-import io.atomix.raft.partition.RaftPartitionConfig;
-import io.atomix.raft.protocol.RaftServerProtocol;
-import io.atomix.raft.storage.RaftStorage;
-import io.atomix.raft.storage.log.RaftLog;
-import io.atomix.raft.zeebe.EntryValidator;
-import io.atomix.raft.zeebe.NoopEntryValidator;
-import io.camunda.zeebe.util.health.FailureListener;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
@@ -44,13 +42,16 @@ import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
+import static com.anyilanxin.kunpeng.cluster.raft.RaftException.ConfigurationException;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
  * Provides a standalone implementation of the <a href="http://raft.github.io/">Raft consensus
  * algorithm</a>.
  *
  * <p>To create a new server, use the server {@link RaftServer.Builder}. Servers require cluster
  * membership information in order to perform communication. Each server must be provided a local
- * {@link MemberId} to which to bind the internal {@link io.atomix.raft.protocol.RaftServerProtocol}
+ * {@link MemberId} to which to bind the internal {@link com.anyilanxin.kunpeng.cluster.raft.protocol.RaftServerProtocol}
  * and a set of addresses for other members in the cluster.
  *
  * <h2>State machines</h2>
@@ -158,7 +159,7 @@ public interface RaftServer {
    *
    * <p>The server name is provided to the server via the {@link Builder#withName(String) builder
    * configuration}. The name is used internally to manage the server's on-disk state. {@link
-   * RaftLog Log}, {@code snapshot}, and {@link io.atomix.raft.storage.system.MetaStore
+   * RaftLog Log}, {@code snapshot}, and {@link com.anyilanxin.kunpeng.cluster.raft.storage.system.MetaStore
    * configuration} files stored on disk use the server name as the prefix.
    *
    * @return The server name.
@@ -407,7 +408,7 @@ public interface RaftServer {
    *
    * }</pre>
    */
-  abstract class Builder implements io.atomix.utils.Builder<RaftServer> {
+  abstract class Builder implements com.anyilanxin.kunpeng.cluster.utils.Builder<RaftServer> {
 
     private static final Duration DEFAULT_ELECTION_TIMEOUT = Duration.ofMillis(750);
     private static final Duration DEFAULT_HEARTBEAT_INTERVAL = Duration.ofMillis(250);

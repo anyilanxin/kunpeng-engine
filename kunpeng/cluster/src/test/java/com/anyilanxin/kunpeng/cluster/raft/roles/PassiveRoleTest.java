@@ -14,36 +14,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft.roles;
+package com.anyilanxin.kunpeng.cluster.raft.roles;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import io.atomix.raft.impl.RaftContext;
-import io.atomix.raft.metrics.RaftReplicationMetrics;
-import io.atomix.raft.protocol.AppendRequest;
-import io.atomix.raft.protocol.AppendResponse;
-import io.atomix.raft.storage.RaftStorage;
-import io.atomix.raft.storage.log.IndexedRaftLogEntry;
-import io.atomix.raft.storage.log.PersistedRaftRecord;
-import io.atomix.raft.storage.log.RaftLog;
+import com.anyilanxin.kunpeng.cluster.raft.impl.RaftContext;
+import com.anyilanxin.kunpeng.cluster.raft.metrics.RaftReplicationMetrics;
+import com.anyilanxin.kunpeng.cluster.raft.protocol.AppendRequest;
+import com.anyilanxin.kunpeng.cluster.raft.protocol.AppendResponse;
+import com.anyilanxin.kunpeng.cluster.raft.storage.RaftStorage;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.IndexedRaftLogEntry;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.PersistedRaftRecord;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLog;
 import io.camunda.zeebe.journal.JournalException;
 import io.camunda.zeebe.journal.JournalException.InvalidChecksum;
 import io.camunda.zeebe.snapshots.PersistedSnapshot;
 import io.camunda.zeebe.snapshots.ReceivableSnapshotStore;
-import java.io.IOException;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 public class PassiveRoleTest {
 

@@ -25,7 +25,7 @@
 
   <Loggers>
     <Logger name="io.camunda.zeebe" level="debug"/>
-    <Logger name="io.atomix" level="trace"/>
+    <Logger name="com.anyilanxin.kunpeng.cluster" level="trace"/>
 
     <Root level="info">
       <AppenderRef ref="Console"/>

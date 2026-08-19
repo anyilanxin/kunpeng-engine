@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft.storage.log;
+package com.anyilanxin.kunpeng.cluster.raft.storage.log;
 
-import io.atomix.raft.storage.log.entry.ApplicationEntry;
-import io.atomix.raft.storage.log.entry.RaftEntry;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ApplicationEntry;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.RaftEntry;
 
 /** Stores a state change in a {@link RaftLog}. */
 public interface IndexedRaftLogEntry {

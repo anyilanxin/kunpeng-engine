@@ -15,15 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.cluster;
+package com.anyilanxin.kunpeng.cluster.cluster;
+
+import com.anyilanxin.kunpeng.cluster.utils.Version;
+import com.anyilanxin.kunpeng.cluster.utils.net.Address;
+
+import java.util.Objects;
+import java.util.Properties;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkNotNull;
-
-import io.atomix.utils.Version;
-import io.atomix.utils.net.Address;
-import java.util.Objects;
-import java.util.Properties;
 
 /** Represents a node as a member in a cluster. */
 public class Member extends Node {

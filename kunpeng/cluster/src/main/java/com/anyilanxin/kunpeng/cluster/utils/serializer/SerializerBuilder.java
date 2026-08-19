@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.utils.serializer;
+package com.anyilanxin.kunpeng.cluster.utils.serializer;
 
-import io.atomix.utils.Builder;
+import com.anyilanxin.kunpeng.cluster.utils.Builder;
 
 /** Serializer builder. */
 public class SerializerBuilder implements Builder<Serializer> {

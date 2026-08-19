@@ -15,29 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft.partition;
+package com.anyilanxin.kunpeng.cluster.raft.partition;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
+import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.primitive.partition.Partition;
+import com.anyilanxin.kunpeng.cluster.primitive.partition.PartitionId;
+import com.anyilanxin.kunpeng.cluster.primitive.partition.PartitionManagementService;
+import com.anyilanxin.kunpeng.cluster.primitive.partition.PartitionMetadata;
+import com.anyilanxin.kunpeng.cluster.raft.RaftRoleChangeListener;
+import com.anyilanxin.kunpeng.cluster.raft.RaftServer.Role;
+import com.anyilanxin.kunpeng.cluster.raft.journal.util.health.FailureListener;
+import com.anyilanxin.kunpeng.cluster.raft.journal.util.health.HealthMonitorable;
+import com.anyilanxin.kunpeng.cluster.raft.journal.util.health.HealthReport;
+import com.anyilanxin.kunpeng.cluster.raft.partition.impl.RaftPartitionServer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import io.atomix.cluster.MemberId;
-import io.atomix.primitive.partition.Partition;
-import io.atomix.primitive.partition.PartitionId;
-import io.atomix.primitive.partition.PartitionManagementService;
-import io.atomix.primitive.partition.PartitionMetadata;
-import io.atomix.raft.RaftRoleChangeListener;
-import io.atomix.raft.RaftServer.Role;
-import io.atomix.raft.partition.impl.RaftPartitionServer;
-import io.camunda.zeebe.util.health.FailureListener;
-import io.camunda.zeebe.util.health.HealthMonitorable;
-import io.camunda.zeebe.util.health.HealthReport;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import static com.google.common.base.MoreObjects.toStringHelper;
 
 /** Abstract partition. */
 public class RaftPartition implements Partition, HealthMonitorable {

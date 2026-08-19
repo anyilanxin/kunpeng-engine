@@ -15,39 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft.roles;
+package com.anyilanxin.kunpeng.cluster.raft.roles;
 
-import io.atomix.raft.RaftError;
-import io.atomix.raft.RaftServer;
-import io.atomix.raft.impl.RaftContext;
-import io.atomix.raft.metrics.SnapshotReplicationMetrics;
-import io.atomix.raft.protocol.AppendRequest;
-import io.atomix.raft.protocol.AppendResponse;
-import io.atomix.raft.protocol.InstallRequest;
-import io.atomix.raft.protocol.InstallResponse;
-import io.atomix.raft.protocol.PollRequest;
-import io.atomix.raft.protocol.PollResponse;
-import io.atomix.raft.protocol.RaftResponse;
-import io.atomix.raft.protocol.ReconfigureRequest;
-import io.atomix.raft.protocol.ReconfigureResponse;
-import io.atomix.raft.protocol.VoteRequest;
-import io.atomix.raft.protocol.VoteResponse;
-import io.atomix.raft.snapshot.impl.SnapshotChunkImpl;
-import io.atomix.raft.storage.log.IndexedRaftLogEntry;
-import io.atomix.raft.storage.log.PersistedRaftRecord;
-import io.atomix.raft.storage.log.RaftLog;
-import io.atomix.raft.storage.log.RaftLogReader;
-import io.atomix.utils.concurrent.ThreadContext;
-import io.camunda.zeebe.journal.JournalException;
-import io.camunda.zeebe.journal.JournalException.InvalidChecksum;
-import io.camunda.zeebe.journal.JournalException.InvalidIndex;
-import io.camunda.zeebe.snapshots.PersistedSnapshot;
-import io.camunda.zeebe.snapshots.PersistedSnapshotListener;
-import io.camunda.zeebe.snapshots.ReceivedSnapshot;
-import java.nio.ByteBuffer;
-import java.util.concurrent.CompletableFuture;
+import com.anyilanxin.kunpeng.cluster.raft.RaftError;
+import com.anyilanxin.kunpeng.cluster.raft.RaftServer;
+import com.anyilanxin.kunpeng.cluster.raft.impl.RaftContext;
+import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException;
+import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException.InvalidChecksum;
+import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException.InvalidIndex;
+import com.anyilanxin.kunpeng.cluster.raft.journal.snapshots.PersistedSnapshot;
+import com.anyilanxin.kunpeng.cluster.raft.journal.snapshots.PersistedSnapshotListener;
+import com.anyilanxin.kunpeng.cluster.raft.journal.snapshots.ReceivedSnapshot;
+import com.anyilanxin.kunpeng.cluster.raft.metrics.SnapshotReplicationMetrics;
+import com.anyilanxin.kunpeng.cluster.raft.protocol.*;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.SnapshotChunkImpl;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.IndexedRaftLogEntry;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.PersistedRaftRecord;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLog;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLogReader;
+import com.anyilanxin.kunpeng.cluster.utils.concurrent.ThreadContext;
 import org.agrona.concurrent.UnsafeBuffer;
 import org.slf4j.Logger;
+
+import java.nio.ByteBuffer;
+import java.util.concurrent.CompletableFuture;
 
 /** Passive state. */
 public class PassiveRole extends InactiveRole {

@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft.protocol;
+package com.anyilanxin.kunpeng.cluster.raft.protocol;
 
-import io.atomix.cluster.MemberId;
-import io.atomix.utils.concurrent.Futures;
+import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.utils.concurrent.Futures;
 import io.camunda.zeebe.util.collection.Tuple;
 import java.net.ConnectException;
 import java.time.Duration;

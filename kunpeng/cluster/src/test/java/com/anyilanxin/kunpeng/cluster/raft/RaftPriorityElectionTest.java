@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft;
+package com.anyilanxin.kunpeng.cluster.raft;
 
-import io.atomix.raft.partition.RaftElectionConfig;
+import com.anyilanxin.kunpeng.cluster.raft.partition.RaftElectionConfig;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;

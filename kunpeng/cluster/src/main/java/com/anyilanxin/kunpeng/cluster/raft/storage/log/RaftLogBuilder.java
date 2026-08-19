@@ -14,14 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft.storage.log;
+package com.anyilanxin.kunpeng.cluster.raft.storage.log;
 
-import io.camunda.zeebe.journal.Journal;
-import io.camunda.zeebe.journal.file.SegmentedJournal;
-import io.camunda.zeebe.journal.file.SegmentedJournalBuilder;
+import com.anyilanxin.kunpeng.cluster.raft.journal.Journal;
+import com.anyilanxin.kunpeng.cluster.raft.journal.file.SegmentedJournal;
+import com.anyilanxin.kunpeng.cluster.raft.journal.file.SegmentedJournalBuilder;
 import java.io.File;
 
-public class RaftLogBuilder implements io.atomix.utils.Builder<RaftLog> {
+public class RaftLogBuilder implements com.anyilanxin.kunpeng.cluster.utils.Builder<RaftLog> {
 
   private final SegmentedJournalBuilder journalBuilder = SegmentedJournal.builder();
   private boolean flushExplicitly = true;

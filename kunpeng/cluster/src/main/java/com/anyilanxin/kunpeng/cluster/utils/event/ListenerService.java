@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.utils.event;
+package com.anyilanxin.kunpeng.cluster.utils.event;
 
 /** Abstraction of a service capable of asynchronously notifying listeners. */
 public interface ListenerService<E extends Event, L extends EventListener<E>> {

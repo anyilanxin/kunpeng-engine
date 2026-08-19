@@ -15,13 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.cluster.messaging.impl;
+package com.anyilanxin.kunpeng.cluster.cluster.messaging.impl;
 
-import io.camunda.zeebe.util.StringUtil;
-import java.util.Optional;
-import java.util.function.BiConsumer;
+import com.anyilanxin.kunpeng.cluster.raft.journal.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Optional;
+import java.util.function.BiConsumer;
 
 /** Base class for server-side connections. Manages dispatching requests to message handlers. */
 abstract class AbstractServerConnection implements ServerConnection {

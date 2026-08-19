@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.cluster.discovery;
+package com.anyilanxin.kunpeng.cluster.cluster.discovery;
 
-import io.atomix.cluster.Node;
-import io.atomix.utils.net.Address;
+import com.anyilanxin.kunpeng.cluster.cluster.Node;
+import com.anyilanxin.kunpeng.cluster.utils.net.Address;
 import java.util.Collection;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.utils;
+package com.anyilanxin.kunpeng.cluster.utils;
 
 /** Abstract identifier backed by another value, e.g. string, int. */
 public interface Identifier<T extends Comparable<T>> {

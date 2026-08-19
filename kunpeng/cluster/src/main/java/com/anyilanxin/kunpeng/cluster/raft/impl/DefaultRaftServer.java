@@ -15,28 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft.impl;
+package com.anyilanxin.kunpeng.cluster.raft.impl;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-import static com.google.common.base.Preconditions.checkNotNull;
+import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.raft.RaftRoleChangeListener;
+import com.anyilanxin.kunpeng.cluster.raft.RaftServer;
+import com.anyilanxin.kunpeng.cluster.raft.RaftThreadContextFactory;
+import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftCluster;
+import com.anyilanxin.kunpeng.cluster.raft.journal.util.health.FailureListener;
+import com.anyilanxin.kunpeng.cluster.raft.storage.RaftStorage;
+import com.anyilanxin.kunpeng.cluster.utils.concurrent.AtomixFuture;
+import com.anyilanxin.kunpeng.cluster.utils.concurrent.Futures;
+import com.anyilanxin.kunpeng.cluster.utils.logging.ContextualLoggerFactory;
+import com.anyilanxin.kunpeng.cluster.utils.logging.LoggerContext;
+import org.slf4j.Logger;
 
-import io.atomix.cluster.MemberId;
-import io.atomix.raft.RaftRoleChangeListener;
-import io.atomix.raft.RaftServer;
-import io.atomix.raft.RaftThreadContextFactory;
-import io.atomix.raft.cluster.RaftCluster;
-import io.atomix.raft.storage.RaftStorage;
-import io.atomix.utils.concurrent.AtomixFuture;
-import io.atomix.utils.concurrent.Futures;
-import io.atomix.utils.logging.ContextualLoggerFactory;
-import io.atomix.utils.logging.LoggerContext;
-import io.camunda.zeebe.util.health.FailureListener;
 import java.util.Collection;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
-import org.slf4j.Logger;
+
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Provides a standalone implementation of the <a href="http://raft.github.io/">Raft consensus

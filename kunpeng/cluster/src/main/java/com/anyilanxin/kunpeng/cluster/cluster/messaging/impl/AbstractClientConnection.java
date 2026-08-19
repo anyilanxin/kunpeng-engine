@@ -15,17 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.cluster.messaging.impl;
+package com.anyilanxin.kunpeng.cluster.cluster.messaging.impl;
 
+import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException;
+import com.anyilanxin.kunpeng.cluster.raft.journal.util.StringUtil;
 import com.google.common.collect.Maps;
-import io.atomix.cluster.messaging.MessagingException;
-import io.camunda.zeebe.util.StringUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.net.ConnectException;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** Base class for client-side connections. Manages request futures and timeouts. */
 abstract class AbstractClientConnection implements ClientConnection {

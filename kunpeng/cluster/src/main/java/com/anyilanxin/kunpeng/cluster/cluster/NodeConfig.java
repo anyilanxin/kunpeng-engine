@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.cluster;
+package com.anyilanxin.kunpeng.cluster.cluster;
 
-import io.atomix.utils.config.Config;
-import io.atomix.utils.net.Address;
+import com.anyilanxin.kunpeng.cluster.utils.config.Config;
+import com.anyilanxin.kunpeng.cluster.utils.net.Address;
 
 /** Node configuration. */
 public class NodeConfig implements Config {

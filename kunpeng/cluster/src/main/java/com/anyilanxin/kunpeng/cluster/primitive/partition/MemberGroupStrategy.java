@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.primitive.partition;
+package com.anyilanxin.kunpeng.cluster.primitive.partition;
 
-import io.atomix.cluster.Member;
-import io.atomix.primitive.partition.impl.NodeMemberGroup;
+import com.anyilanxin.kunpeng.cluster.cluster.Member;
+import com.anyilanxin.kunpeng.cluster.primitive.partition.impl.NodeMemberGroup;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;

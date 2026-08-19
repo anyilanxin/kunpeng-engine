@@ -15,11 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.utils.concurrent;
-
-import static com.google.common.base.Preconditions.checkState;
+package com.anyilanxin.kunpeng.cluster.utils.concurrent;
 
 import java.util.concurrent.Executor;
+
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * Thread context.

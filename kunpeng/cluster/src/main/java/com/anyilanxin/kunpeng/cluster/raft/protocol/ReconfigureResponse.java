@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package io.atomix.raft.protocol;
+package com.anyilanxin.kunpeng.cluster.raft.protocol;
 
-import io.atomix.raft.RaftError;
-import io.atomix.raft.cluster.RaftMember;
+import com.anyilanxin.kunpeng.cluster.raft.RaftError;
+import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember;
 import java.util.Collection;
 
 /** Server configuration change response. */

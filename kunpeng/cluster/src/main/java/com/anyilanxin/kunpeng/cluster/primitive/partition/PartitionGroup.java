@@ -15,13 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.primitive.partition;
+package com.anyilanxin.kunpeng.cluster.primitive.partition;
 
 import com.google.common.hash.Hashing;
-import io.atomix.cluster.MemberId;
-import io.atomix.utils.NamedType;
-import io.atomix.utils.config.Configured;
-import io.atomix.utils.serializer.Namespace;
+import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.utils.NamedType;
+import com.anyilanxin.kunpeng.cluster.utils.config.Configured;
+import com.anyilanxin.kunpeng.cluster.utils.serializer.Namespace;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
@@ -87,7 +87,7 @@ public interface PartitionGroup extends Configured<PartitionGroupConfig> {
 
   /** Partition group builder. */
   abstract class Builder<C extends PartitionGroupConfig<C>>
-      implements io.atomix.utils.Builder<ManagedPartitionGroup> {
+      implements com.anyilanxin.kunpeng.cluster.utils.Builder<ManagedPartitionGroup> {
     protected final C config;
 
     protected Builder(final C config) {

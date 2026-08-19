@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.cluster.discovery;
+package com.anyilanxin.kunpeng.cluster.cluster.discovery;
 
-import io.atomix.utils.Managed;
+import com.anyilanxin.kunpeng.cluster.utils.Managed;
 
 /** Managed node discovery service. */
 public interface ManagedNodeDiscoveryService

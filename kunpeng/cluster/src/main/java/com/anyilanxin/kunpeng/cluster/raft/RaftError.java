@@ -15,12 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft;
+package com.anyilanxin.kunpeng.cluster.raft;
+
+import com.anyilanxin.kunpeng.cluster.primitive.PrimitiveException;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkNotNull;
-
-import io.atomix.primitive.PrimitiveException;
 
 /**
  * Base type for Raft protocol errors.

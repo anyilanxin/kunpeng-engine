@@ -16,9 +16,9 @@
  * limitations under the License.
  */
 
-package io.atomix.primitive;
+package com.anyilanxin.kunpeng.cluster.primitive;
 
-import io.atomix.utils.AtomixRuntimeException;
+import com.anyilanxin.kunpeng.cluster.utils.AtomixRuntimeException;
 
 /** Top level exception for Store failures. */
 public class PrimitiveException extends AtomixRuntimeException {

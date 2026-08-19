@@ -16,5 +16,7 @@
  * limitations under the License.
  */
 
-/** Provides classes and interfaces for defining and managing primitive types. */
-package io.atomix.primitive;
+/**
+ * Provides classes and interfaces for defining and managing primitive types.
+ */
+package com.anyilanxin.kunpeng.cluster.primitive;

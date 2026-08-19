@@ -14,13 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.cluster;
+package com.anyilanxin.kunpeng.cluster.cluster;
 
-import io.atomix.cluster.discovery.NodeDiscoveryService;
-import io.atomix.cluster.protocol.GroupMembershipEvent;
-import io.atomix.cluster.protocol.GroupMembershipEventListener;
-import io.atomix.cluster.protocol.GroupMembershipProtocol;
-import io.atomix.cluster.protocol.GroupMembershipProtocolConfig;
+import com.anyilanxin.kunpeng.cluster.cluster.discovery.NodeDiscoveryService;
+import com.anyilanxin.kunpeng.cluster.cluster.protocol.GroupMembershipEvent;
+import com.anyilanxin.kunpeng.cluster.cluster.protocol.GroupMembershipEventListener;
+import com.anyilanxin.kunpeng.cluster.cluster.protocol.GroupMembershipProtocol;
+import com.anyilanxin.kunpeng.cluster.cluster.protocol.GroupMembershipProtocolConfig;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;

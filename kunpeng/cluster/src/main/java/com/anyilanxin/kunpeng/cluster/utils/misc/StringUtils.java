@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.utils.misc;
+package com.anyilanxin.kunpeng.cluster.utils.misc;
 
 import com.google.common.base.MoreObjects;
 import java.nio.ByteBuffer;

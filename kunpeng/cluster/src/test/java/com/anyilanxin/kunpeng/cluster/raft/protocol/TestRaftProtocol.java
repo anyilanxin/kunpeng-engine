@@ -15,11 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft.protocol;
+package com.anyilanxin.kunpeng.cluster.raft.protocol;
 
-import io.atomix.cluster.MemberId;
-import io.atomix.utils.concurrent.Scheduled;
-import io.atomix.utils.concurrent.ThreadContext;
+import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.utils.concurrent.Scheduled;
+import com.anyilanxin.kunpeng.cluster.utils.concurrent.ThreadContext;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;

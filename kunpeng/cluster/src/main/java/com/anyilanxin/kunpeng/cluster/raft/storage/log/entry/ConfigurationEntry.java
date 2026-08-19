@@ -15,12 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft.storage.log.entry;
+package com.anyilanxin.kunpeng.cluster.raft.storage.log.entry;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 
-import io.atomix.raft.cluster.RaftMember;
-import io.atomix.utils.misc.TimestampPrinter;
+import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember;
+import com.anyilanxin.kunpeng.cluster.utils.misc.TimestampPrinter;
 import java.util.Collection;
 import java.util.Objects;
 

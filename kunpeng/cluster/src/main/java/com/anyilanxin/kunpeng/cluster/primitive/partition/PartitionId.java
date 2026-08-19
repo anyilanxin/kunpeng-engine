@@ -15,13 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.primitive.partition;
+package com.anyilanxin.kunpeng.cluster.primitive.partition;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.Preconditions;
-import io.atomix.utils.AbstractIdentifier;
+import com.anyilanxin.kunpeng.cluster.utils.AbstractIdentifier;
 import java.util.Objects;
 
 /** {@link PartitionMetadata} identifier. */

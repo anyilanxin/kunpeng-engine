@@ -14,35 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft.roles;
+package com.anyilanxin.kunpeng.cluster.raft.roles;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.timeout;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import io.atomix.cluster.ClusterMembershipService;
-import io.atomix.raft.RaftException.NoLeader;
-import io.atomix.raft.RaftServer.Role;
-import io.atomix.raft.impl.RaftContext;
-import io.atomix.raft.metrics.RaftReplicationMetrics;
-import io.atomix.raft.storage.RaftStorage;
-import io.atomix.raft.storage.log.IndexedRaftLogEntry;
-import io.atomix.raft.storage.log.PersistedRaftRecord;
-import io.atomix.raft.storage.log.RaftLog;
-import io.atomix.raft.storage.log.entry.ApplicationEntry;
-import io.atomix.raft.storage.log.entry.RaftEntry;
-import io.atomix.raft.storage.log.entry.RaftLogEntry;
-import io.atomix.raft.zeebe.ValidationResult;
-import io.atomix.raft.zeebe.ZeebeLogAppender.AppendListener;
-import io.atomix.raft.zeebe.util.TestAppender;
-import io.atomix.utils.concurrent.SingleThreadContext;
+import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
+import com.anyilanxin.kunpeng.cluster.raft.RaftException.NoLeader;
+import com.anyilanxin.kunpeng.cluster.raft.RaftServer.Role;
+import com.anyilanxin.kunpeng.cluster.raft.impl.RaftContext;
+import com.anyilanxin.kunpeng.cluster.raft.metrics.RaftReplicationMetrics;
+import com.anyilanxin.kunpeng.cluster.raft.storage.RaftStorage;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.IndexedRaftLogEntry;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.PersistedRaftRecord;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLog;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ApplicationEntry;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.RaftEntry;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.RaftLogEntry;
+import com.anyilanxin.kunpeng.cluster.raft.zeebe.ValidationResult;
+import com.anyilanxin.kunpeng.cluster.raft.zeebe.ZeebeLogAppender.AppendListener;
+import com.anyilanxin.kunpeng.cluster.raft.zeebe.util.TestAppender;
+import com.anyilanxin.kunpeng.cluster.utils.concurrent.SingleThreadContext;
 import io.camunda.zeebe.journal.JournalException;
 import io.camunda.zeebe.snapshots.ReceivableSnapshotStore;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mockito;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.time.Duration;
@@ -51,9 +46,10 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mockito;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 public class LeaderRoleTest {
 

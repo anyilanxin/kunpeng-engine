@@ -20,4 +20,4 @@
  * Provides classes and interfaces that aid in storing and loading persistent cluster and server
  * configurations.
  */
-package io.atomix.raft.storage.system;
+package com.anyilanxin.kunpeng.cluster.raft.storage.system;

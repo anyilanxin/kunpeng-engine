@@ -15,21 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft.roles;
+package com.anyilanxin.kunpeng.cluster.raft.roles;
 
-import io.atomix.cluster.messaging.MessagingException.NoRemoteHandler;
-import io.atomix.raft.RaftServer;
-import io.atomix.raft.cluster.impl.DefaultRaftMember;
-import io.atomix.raft.cluster.impl.RaftMemberContext;
-import io.atomix.raft.impl.RaftContext;
-import io.atomix.raft.protocol.AppendRequest;
-import io.atomix.raft.protocol.AppendResponse;
-import io.atomix.raft.protocol.RaftResponse;
-import io.atomix.raft.protocol.VoteRequest;
-import io.atomix.raft.protocol.VoteResponse;
-import io.atomix.raft.storage.log.IndexedRaftLogEntry;
-import io.atomix.raft.utils.Quorum;
-import io.atomix.utils.concurrent.Scheduled;
+import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.NoRemoteHandler;
+import com.anyilanxin.kunpeng.cluster.raft.RaftServer;
+import com.anyilanxin.kunpeng.cluster.raft.cluster.impl.DefaultRaftMember;
+import com.anyilanxin.kunpeng.cluster.raft.cluster.impl.RaftMemberContext;
+import com.anyilanxin.kunpeng.cluster.raft.impl.RaftContext;
+import com.anyilanxin.kunpeng.cluster.raft.protocol.AppendRequest;
+import com.anyilanxin.kunpeng.cluster.raft.protocol.AppendResponse;
+import com.anyilanxin.kunpeng.cluster.raft.protocol.RaftResponse;
+import com.anyilanxin.kunpeng.cluster.raft.protocol.VoteRequest;
+import com.anyilanxin.kunpeng.cluster.raft.protocol.VoteResponse;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.IndexedRaftLogEntry;
+import com.anyilanxin.kunpeng.cluster.raft.utils.Quorum;
+import com.anyilanxin.kunpeng.cluster.utils.concurrent.Scheduled;
 import java.time.Duration;
 import java.util.HashSet;
 import java.util.Set;

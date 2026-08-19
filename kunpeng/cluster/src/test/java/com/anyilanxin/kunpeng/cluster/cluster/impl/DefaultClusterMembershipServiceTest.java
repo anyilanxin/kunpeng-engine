@@ -15,21 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.cluster.impl;
+package com.anyilanxin.kunpeng.cluster.cluster.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.atomix.cluster.BootstrapService;
-import io.atomix.cluster.ClusterMembershipEvent;
-import io.atomix.cluster.Member;
-import io.atomix.cluster.TestBootstrapService;
-import io.atomix.cluster.TestGroupMembershipProtocol;
-import io.atomix.cluster.discovery.BootstrapDiscoveryProvider;
-import io.atomix.cluster.discovery.ManagedNodeDiscoveryService;
-import io.atomix.cluster.messaging.impl.TestMessagingServiceFactory;
-import io.atomix.cluster.messaging.impl.TestUnicastServiceFactory;
-import io.atomix.cluster.protocol.GroupMembershipEvent;
-import io.atomix.utils.Version;
+import com.anyilanxin.kunpeng.cluster.cluster.BootstrapService;
+import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipEvent;
+import com.anyilanxin.kunpeng.cluster.cluster.Member;
+import com.anyilanxin.kunpeng.cluster.cluster.TestBootstrapService;
+import com.anyilanxin.kunpeng.cluster.cluster.TestGroupMembershipProtocol;
+import com.anyilanxin.kunpeng.cluster.cluster.discovery.BootstrapDiscoveryProvider;
+import com.anyilanxin.kunpeng.cluster.cluster.discovery.ManagedNodeDiscoveryService;
+import com.anyilanxin.kunpeng.cluster.cluster.messaging.impl.TestMessagingServiceFactory;
+import com.anyilanxin.kunpeng.cluster.cluster.messaging.impl.TestUnicastServiceFactory;
+import com.anyilanxin.kunpeng.cluster.cluster.protocol.GroupMembershipEvent;
+import com.anyilanxin.kunpeng.cluster.utils.Version;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;

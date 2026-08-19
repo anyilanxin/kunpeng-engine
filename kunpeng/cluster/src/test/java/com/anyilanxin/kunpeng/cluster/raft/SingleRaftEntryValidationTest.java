@@ -14,20 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft;
+package com.anyilanxin.kunpeng.cluster.raft;
+
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ApplicationEntry;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.InitialEntry;
+import com.anyilanxin.kunpeng.cluster.raft.zeebe.EntryValidator;
+import com.anyilanxin.kunpeng.cluster.raft.zeebe.ValidationResult;
+import io.camunda.zeebe.test.util.TestUtil;
+import org.junit.Rule;
+import org.junit.Test;
+
+import java.util.Collection;
+import java.util.function.BiFunction;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import io.atomix.raft.storage.log.entry.ApplicationEntry;
-import io.atomix.raft.storage.log.entry.InitialEntry;
-import io.atomix.raft.zeebe.EntryValidator;
-import io.atomix.raft.zeebe.ValidationResult;
-import io.camunda.zeebe.test.util.TestUtil;
-import java.util.Collection;
-import java.util.function.BiFunction;
-import org.junit.Rule;
-import org.junit.Test;
 
 public class SingleRaftEntryValidationTest {
 

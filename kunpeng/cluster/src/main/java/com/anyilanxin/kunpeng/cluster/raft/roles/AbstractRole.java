@@ -15,20 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft.roles;
+package com.anyilanxin.kunpeng.cluster.raft.roles;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 
-import io.atomix.cluster.MemberId;
-import io.atomix.raft.RaftException;
-import io.atomix.raft.RaftServer;
-import io.atomix.raft.cluster.impl.DefaultRaftMember;
-import io.atomix.raft.impl.RaftContext;
-import io.atomix.raft.protocol.RaftRequest;
-import io.atomix.raft.protocol.RaftResponse;
-import io.atomix.utils.concurrent.Futures;
-import io.atomix.utils.logging.ContextualLoggerFactory;
-import io.atomix.utils.logging.LoggerContext;
+import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.raft.RaftException;
+import com.anyilanxin.kunpeng.cluster.raft.RaftServer;
+import com.anyilanxin.kunpeng.cluster.raft.cluster.impl.DefaultRaftMember;
+import com.anyilanxin.kunpeng.cluster.raft.impl.RaftContext;
+import com.anyilanxin.kunpeng.cluster.raft.protocol.RaftRequest;
+import com.anyilanxin.kunpeng.cluster.raft.protocol.RaftResponse;
+import com.anyilanxin.kunpeng.cluster.utils.concurrent.Futures;
+import com.anyilanxin.kunpeng.cluster.utils.logging.ContextualLoggerFactory;
+import com.anyilanxin.kunpeng.cluster.utils.logging.LoggerContext;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
 import org.slf4j.Logger;

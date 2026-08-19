@@ -15,39 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.cluster;
+package com.anyilanxin.kunpeng.cluster.cluster;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
+import com.anyilanxin.kunpeng.cluster.cluster.discovery.BootstrapDiscoveryProvider;
+import com.anyilanxin.kunpeng.cluster.cluster.discovery.NodeDiscoveryConfig;
+import com.anyilanxin.kunpeng.cluster.cluster.discovery.NodeDiscoveryProvider;
+import com.anyilanxin.kunpeng.cluster.cluster.impl.DefaultClusterMembershipService;
+import com.anyilanxin.kunpeng.cluster.cluster.impl.DefaultNodeDiscoveryService;
+import com.anyilanxin.kunpeng.cluster.cluster.messaging.*;
+import com.anyilanxin.kunpeng.cluster.cluster.messaging.impl.DefaultClusterCommunicationService;
+import com.anyilanxin.kunpeng.cluster.cluster.messaging.impl.DefaultClusterEventService;
+import com.anyilanxin.kunpeng.cluster.cluster.messaging.impl.NettyMessagingService;
+import com.anyilanxin.kunpeng.cluster.cluster.messaging.impl.NettyUnicastService;
+import com.anyilanxin.kunpeng.cluster.cluster.protocol.GroupMembershipProtocol;
+import com.anyilanxin.kunpeng.cluster.utils.Managed;
+import com.anyilanxin.kunpeng.cluster.utils.Version;
+import com.anyilanxin.kunpeng.cluster.utils.concurrent.Futures;
+import com.anyilanxin.kunpeng.cluster.utils.concurrent.SingleThreadContext;
+import com.anyilanxin.kunpeng.cluster.utils.concurrent.ThreadContext;
+import com.anyilanxin.kunpeng.cluster.utils.net.Address;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import io.atomix.cluster.discovery.BootstrapDiscoveryProvider;
-import io.atomix.cluster.discovery.NodeDiscoveryConfig;
-import io.atomix.cluster.discovery.NodeDiscoveryProvider;
-import io.atomix.cluster.impl.DefaultClusterMembershipService;
-import io.atomix.cluster.impl.DefaultNodeDiscoveryService;
-import io.atomix.cluster.messaging.ClusterCommunicationService;
-import io.atomix.cluster.messaging.ClusterEventService;
-import io.atomix.cluster.messaging.ManagedClusterCommunicationService;
-import io.atomix.cluster.messaging.ManagedClusterEventService;
-import io.atomix.cluster.messaging.ManagedMessagingService;
-import io.atomix.cluster.messaging.ManagedUnicastService;
-import io.atomix.cluster.messaging.MessagingService;
-import io.atomix.cluster.messaging.UnicastService;
-import io.atomix.cluster.messaging.impl.DefaultClusterCommunicationService;
-import io.atomix.cluster.messaging.impl.DefaultClusterEventService;
-import io.atomix.cluster.messaging.impl.NettyMessagingService;
-import io.atomix.cluster.messaging.impl.NettyUnicastService;
-import io.atomix.cluster.protocol.GroupMembershipProtocol;
-import io.atomix.utils.Managed;
-import io.atomix.utils.Version;
-import io.atomix.utils.concurrent.Futures;
-import io.atomix.utils.concurrent.SingleThreadContext;
-import io.atomix.utils.concurrent.ThreadContext;
-import io.atomix.utils.net.Address;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import static com.google.common.base.MoreObjects.toStringHelper;
 
 /**
  * Atomix cluster manager.

@@ -15,22 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft.storage;
+package com.anyilanxin.kunpeng.cluster.raft.storage;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import com.anyilanxin.kunpeng.cluster.raft.journal.snapshots.PersistedSnapshotStore;
+import com.anyilanxin.kunpeng.cluster.raft.journal.snapshots.ReceivableSnapshotStore;
+import com.anyilanxin.kunpeng.cluster.raft.journal.util.FileUtil;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLog;
+import com.anyilanxin.kunpeng.cluster.raft.storage.system.MetaStore;
 
-import io.atomix.raft.storage.log.RaftLog;
-import io.atomix.raft.storage.system.MetaStore;
-import io.camunda.zeebe.snapshots.PersistedSnapshotStore;
-import io.camunda.zeebe.snapshots.ReceivableSnapshotStore;
-import io.camunda.zeebe.util.FileUtil;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
+
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Immutable log configuration and {@link RaftLog} factory.
@@ -210,7 +211,7 @@ public final class RaftStorage {
    *
    * }</pre>
    */
-  public static final class Builder implements io.atomix.utils.Builder<RaftStorage> {
+  public static final class Builder implements com.anyilanxin.kunpeng.cluster.utils.Builder<RaftStorage> {
 
     private static final String DEFAULT_PREFIX = "atomix";
     private static final String DEFAULT_DIRECTORY =

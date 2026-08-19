@@ -14,11 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft.impl;
+package com.anyilanxin.kunpeng.cluster.raft.impl;
 
-import io.atomix.raft.ElectionTimer;
-import io.atomix.utils.concurrent.Scheduled;
-import io.atomix.utils.concurrent.ThreadContext;
+import com.anyilanxin.kunpeng.cluster.raft.ElectionTimer;
+import com.anyilanxin.kunpeng.cluster.utils.concurrent.Scheduled;
+import com.anyilanxin.kunpeng.cluster.utils.concurrent.ThreadContext;
 import java.time.Duration;
 import org.slf4j.Logger;
 

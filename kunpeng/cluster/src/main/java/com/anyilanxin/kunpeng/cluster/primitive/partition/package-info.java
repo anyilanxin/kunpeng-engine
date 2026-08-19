@@ -20,4 +20,4 @@
  * Provides classes and interfaces for managing primitive partitions, partition groups, and member
  * groups.
  */
-package io.atomix.primitive.partition;
+package com.anyilanxin.kunpeng.cluster.primitive.partition;

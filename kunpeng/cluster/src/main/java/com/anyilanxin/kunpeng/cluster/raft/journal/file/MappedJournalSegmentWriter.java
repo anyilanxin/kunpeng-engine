@@ -15,25 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.camunda.zeebe.journal.file;
+package com.anyilanxin.kunpeng.cluster.raft.journal.file;
 
-import io.camunda.zeebe.journal.JournalException.InvalidChecksum;
-import io.camunda.zeebe.journal.JournalException.InvalidIndex;
-import io.camunda.zeebe.journal.JournalException.SegmentFull;
-import io.camunda.zeebe.journal.JournalRecord;
-import io.camunda.zeebe.journal.file.record.CorruptedLogException;
-import io.camunda.zeebe.journal.file.record.JournalRecordReaderUtil;
-import io.camunda.zeebe.journal.file.record.JournalRecordSerializer;
-import io.camunda.zeebe.journal.file.record.PersistedJournalRecord;
-import io.camunda.zeebe.journal.file.record.RecordData;
-import io.camunda.zeebe.journal.file.record.RecordMetadata;
-import io.camunda.zeebe.journal.file.record.SBESerializer;
-import io.camunda.zeebe.util.Either;
-import java.nio.BufferUnderflowException;
-import java.nio.MappedByteBuffer;
+import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException.InvalidChecksum;
+import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException.InvalidIndex;
+import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException.SegmentFull;
+import com.anyilanxin.kunpeng.cluster.raft.journal.JournalRecord;
+import com.anyilanxin.kunpeng.cluster.raft.journal.file.record.*;
+import com.anyilanxin.kunpeng.cluster.raft.journal.util.Either;
 import org.agrona.DirectBuffer;
 import org.agrona.MutableDirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
+
+import java.nio.BufferUnderflowException;
+import java.nio.MappedByteBuffer;
 
 /** Segment writer. */
 class MappedJournalSegmentWriter {

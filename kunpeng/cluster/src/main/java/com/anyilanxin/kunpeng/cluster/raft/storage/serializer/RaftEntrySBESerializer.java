@@ -14,20 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft.storage.serializer;
+package com.anyilanxin.kunpeng.cluster.raft.storage.serializer;
 
-import static io.atomix.raft.storage.serializer.SerializerUtil.getRaftMemberType;
-import static io.atomix.raft.storage.serializer.SerializerUtil.getSBEType;
+import static com.anyilanxin.kunpeng.cluster.raft.storage.serializer.SerializerUtil.getRaftMemberType;
+import static com.anyilanxin.kunpeng.cluster.raft.storage.serializer.SerializerUtil.getSBEType;
 
-import io.atomix.cluster.MemberId;
-import io.atomix.raft.cluster.RaftMember;
-import io.atomix.raft.cluster.impl.DefaultRaftMember;
-import io.atomix.raft.storage.log.entry.ApplicationEntry;
-import io.atomix.raft.storage.log.entry.ConfigurationEntry;
-import io.atomix.raft.storage.log.entry.InitialEntry;
-import io.atomix.raft.storage.log.entry.RaftEntry;
-import io.atomix.raft.storage.log.entry.RaftLogEntry;
-import io.atomix.raft.storage.serializer.ConfigurationEntryDecoder.RaftMemberDecoder;
+import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember;
+import com.anyilanxin.kunpeng.cluster.raft.cluster.impl.DefaultRaftMember;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ApplicationEntry;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ConfigurationEntry;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.InitialEntry;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.RaftEntry;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.RaftLogEntry;
+import com.anyilanxin.kunpeng.cluster.raft.storage.serializer.ConfigurationEntryDecoder.RaftMemberDecoder;
 import java.time.Instant;
 import java.util.ArrayList;
 import org.agrona.DirectBuffer;

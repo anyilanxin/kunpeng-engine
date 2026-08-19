@@ -17,4 +17,4 @@
  */
 
 /** Provides a standalone segmented log for use in the Raft consensus protocol implementation. */
-package io.atomix.raft.storage.log;
+package com.anyilanxin.kunpeng.cluster.raft.storage.log;

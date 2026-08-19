@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft.protocol;
+package com.anyilanxin.kunpeng.cluster.raft.protocol;
 
 /** Base interface for requests. */
 public interface RaftRequest extends RaftMessage {
@@ -26,5 +26,5 @@ public interface RaftRequest extends RaftMessage {
    * @param <T> The builder type.
    */
   interface Builder<T extends Builder<T, U>, U extends RaftRequest>
-      extends io.atomix.utils.Builder<U> {}
+      extends com.anyilanxin.kunpeng.cluster.utils.Builder<U> {}
 }

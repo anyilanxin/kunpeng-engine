@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.utils.event;
+package com.anyilanxin.kunpeng.cluster.utils.event;
 
 /** Abstraction of an of a time-stamped event pertaining to an arbitrary subject. */
 public interface Event<T, S> {

@@ -15,17 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.cluster;
+package com.anyilanxin.kunpeng.cluster.cluster;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import io.atomix.cluster.discovery.BootstrapDiscoveryProvider;
-import io.atomix.raft.partition.RaftPartitionGroupConfig;
-import io.atomix.raft.partition.RaftStorageConfig;
-import io.atomix.utils.net.Address;
+import com.anyilanxin.kunpeng.cluster.cluster.discovery.BootstrapDiscoveryProvider;
+import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartitionGroupConfig;
+import com.anyilanxin.kunpeng.cluster.raft.partition.RaftStorageConfig;
+import com.anyilanxin.kunpeng.cluster.utils.net.Address;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;

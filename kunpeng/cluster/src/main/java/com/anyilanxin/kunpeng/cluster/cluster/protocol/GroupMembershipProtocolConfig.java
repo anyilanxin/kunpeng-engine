@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.cluster.protocol;
+package com.anyilanxin.kunpeng.cluster.cluster.protocol;
 
-import io.atomix.utils.config.TypedConfig;
+import com.anyilanxin.kunpeng.cluster.utils.config.TypedConfig;
 
 /** Group membership protocol configuration. */
 public abstract class GroupMembershipProtocolConfig

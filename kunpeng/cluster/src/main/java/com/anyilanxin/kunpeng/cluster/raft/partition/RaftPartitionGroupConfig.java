@@ -15,13 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft.partition;
+package com.anyilanxin.kunpeng.cluster.raft.partition;
 
+import com.anyilanxin.kunpeng.cluster.primitive.partition.PartitionGroup.Type;
+import com.anyilanxin.kunpeng.cluster.primitive.partition.PartitionGroupConfig;
+import com.anyilanxin.kunpeng.cluster.raft.zeebe.EntryValidator;
+import com.anyilanxin.kunpeng.cluster.raft.zeebe.NoopEntryValidator;
 import com.esotericsoftware.kryo.serializers.FieldSerializer.Optional;
-import io.atomix.primitive.partition.PartitionGroup.Type;
-import io.atomix.primitive.partition.PartitionGroupConfig;
-import io.atomix.raft.zeebe.EntryValidator;
-import io.atomix.raft.zeebe.NoopEntryValidator;
+
 import java.util.HashSet;
 import java.util.Set;
 

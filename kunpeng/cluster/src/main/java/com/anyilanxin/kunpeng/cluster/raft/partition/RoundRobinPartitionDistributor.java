@@ -14,18 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft.partition;
+package com.anyilanxin.kunpeng.cluster.raft.partition;
 
+import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.primitive.partition.PartitionId;
+import com.anyilanxin.kunpeng.cluster.primitive.partition.PartitionMetadata;
 import com.google.common.collect.Sets;
-import io.atomix.cluster.MemberId;
-import io.atomix.primitive.partition.PartitionId;
-import io.atomix.primitive.partition.PartitionMetadata;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+
+import java.util.*;
 
 /**
  * This implementation of {@link PartitionDistributor} distributes the partitions in a round robin

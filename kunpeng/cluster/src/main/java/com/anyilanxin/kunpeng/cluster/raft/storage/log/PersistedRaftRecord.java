@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft.storage.log;
+package com.anyilanxin.kunpeng.cluster.raft.storage.log;
 
-import io.camunda.zeebe.journal.JournalRecord;
+import com.anyilanxin.kunpeng.cluster.raft.journal.JournalRecord;
 import org.agrona.DirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
 

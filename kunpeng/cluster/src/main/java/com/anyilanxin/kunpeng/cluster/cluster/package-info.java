@@ -16,5 +16,7 @@
  * limitations under the License.
  */
 
-/** Provides classes and interfaces for cluster management. */
-package io.atomix.cluster;
+/**
+ * Provides classes and interfaces for cluster management.
+ */
+package com.anyilanxin.kunpeng.cluster.cluster;

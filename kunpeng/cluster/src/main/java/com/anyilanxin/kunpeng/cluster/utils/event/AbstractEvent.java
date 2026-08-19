@@ -15,11 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.utils.event;
+package com.anyilanxin.kunpeng.cluster.utils.event;
+
+import com.anyilanxin.kunpeng.cluster.utils.misc.TimestampPrinter;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
-
-import io.atomix.utils.misc.TimestampPrinter;
 
 /** Base event implementation. */
 public class AbstractEvent<T extends Enum, S> implements Event<T, S> {

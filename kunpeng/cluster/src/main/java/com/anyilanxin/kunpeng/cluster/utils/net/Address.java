@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.utils.net;
+package com.anyilanxin.kunpeng.cluster.utils.net;
 
 import com.google.common.net.HostAndPort;
 import java.net.Inet6Address;

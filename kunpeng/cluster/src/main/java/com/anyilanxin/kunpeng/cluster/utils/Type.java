@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.utils;
+package com.anyilanxin.kunpeng.cluster.utils;
 
 /** Identifier interface for types. */
 public interface Type {

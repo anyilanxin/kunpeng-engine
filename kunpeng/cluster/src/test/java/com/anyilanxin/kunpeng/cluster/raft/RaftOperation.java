@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft;
+package com.anyilanxin.kunpeng.cluster.raft;
 
-import io.atomix.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;

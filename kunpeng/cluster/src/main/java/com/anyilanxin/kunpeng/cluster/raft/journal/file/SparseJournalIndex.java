@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.camunda.zeebe.journal.file;
+package com.anyilanxin.kunpeng.cluster.raft.journal.file;
 
-import io.camunda.zeebe.journal.JournalRecord;
+import com.anyilanxin.kunpeng.cluster.raft.journal.JournalRecord;
 import java.util.Map;
 import java.util.TreeMap;
 

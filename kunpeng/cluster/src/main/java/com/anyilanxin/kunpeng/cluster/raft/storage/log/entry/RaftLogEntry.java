@@ -15,11 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft.storage.log.entry;
+package com.anyilanxin.kunpeng.cluster.raft.storage.log.entry;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 
-import io.atomix.raft.storage.log.RaftLog;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLog;
 import java.util.Objects;
 
 /** Stores a state change in a {@link RaftLog}. */

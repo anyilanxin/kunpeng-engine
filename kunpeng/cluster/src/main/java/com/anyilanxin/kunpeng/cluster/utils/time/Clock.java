@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.utils.time;
+package com.anyilanxin.kunpeng.cluster.utils.time;
 
 /** Clock. */
 public interface Clock<T extends Timestamp> {

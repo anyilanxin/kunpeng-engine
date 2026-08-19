@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.utils.event;
+package com.anyilanxin.kunpeng.cluster.utils.event;
 
 /** Abstraction of an event sink capable of processing the specified event types. */
 public interface EventSink<E extends Event> {

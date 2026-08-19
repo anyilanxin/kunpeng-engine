@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.cluster.discovery;
+package com.anyilanxin.kunpeng.cluster.cluster.discovery;
 
-import io.atomix.utils.config.TypedConfig;
+import com.anyilanxin.kunpeng.cluster.utils.config.TypedConfig;
 
 /** Node discovery configuration. */
 public abstract class NodeDiscoveryConfig implements TypedConfig<NodeDiscoveryProvider.Type> {}

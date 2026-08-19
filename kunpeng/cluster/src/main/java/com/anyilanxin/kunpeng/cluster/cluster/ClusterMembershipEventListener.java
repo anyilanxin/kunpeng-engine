@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.cluster;
+package com.anyilanxin.kunpeng.cluster.cluster;
 
-import io.atomix.utils.event.EventListener;
+import com.anyilanxin.kunpeng.cluster.utils.event.EventListener;
 
 /** Entity capable of receiving device cluster-related events. */
 public interface ClusterMembershipEventListener extends EventListener<ClusterMembershipEvent> {}

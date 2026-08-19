@@ -15,14 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft.storage.log;
+package com.anyilanxin.kunpeng.cluster.raft.storage.log;
+
+import com.anyilanxin.kunpeng.cluster.raft.journal.JournalRecord;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ApplicationEntry;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.RaftEntry;
+
+import java.util.Objects;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
-
-import io.atomix.raft.storage.log.entry.ApplicationEntry;
-import io.atomix.raft.storage.log.entry.RaftEntry;
-import io.camunda.zeebe.journal.JournalRecord;
-import java.util.Objects;
 
 /** Indexed journal entry. */
 class IndexedRaftLogEntryImpl implements IndexedRaftLogEntry {

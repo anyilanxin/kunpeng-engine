@@ -15,8 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.cluster.discovery;
+package com.anyilanxin.kunpeng.cluster.cluster.discovery;
 
 /** Node discovery builder. */
 public abstract class NodeDiscoveryBuilder
-    implements io.atomix.utils.Builder<NodeDiscoveryProvider> {}
+  implements com.anyilanxin.kunpeng.cluster.utils.Builder<NodeDiscoveryProvider> {
+}

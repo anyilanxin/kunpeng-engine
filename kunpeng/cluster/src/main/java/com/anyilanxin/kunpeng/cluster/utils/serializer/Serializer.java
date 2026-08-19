@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package io.atomix.utils.serializer;
+package com.anyilanxin.kunpeng.cluster.utils.serializer;
 
 /** Interface for serialization of store artifacts. */
 public interface Serializer {

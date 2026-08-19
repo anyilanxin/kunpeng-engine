@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.cluster.messaging;
+package com.anyilanxin.kunpeng.cluster.cluster.messaging;
 
 import com.google.common.collect.Maps;
-import io.atomix.utils.net.Address;
+import com.anyilanxin.kunpeng.cluster.utils.net.Address;
 import java.util.Map;
 
 /** Test unicast service factory. */

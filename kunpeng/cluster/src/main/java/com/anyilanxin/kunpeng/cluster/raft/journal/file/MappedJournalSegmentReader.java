@@ -15,12 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.camunda.zeebe.journal.file;
+package com.anyilanxin.kunpeng.cluster.raft.journal.file;
 
 import com.google.common.base.Preconditions;
-import io.camunda.zeebe.journal.JournalRecord;
-import io.camunda.zeebe.journal.file.record.JournalRecordReaderUtil;
-import io.camunda.zeebe.journal.file.record.SBESerializer;
+import com.anyilanxin.kunpeng.cluster.raft.journal.JournalRecord;
+import com.anyilanxin.kunpeng.cluster.raft.journal.file.record.JournalRecordReaderUtil;
+import com.anyilanxin.kunpeng.cluster.raft.journal.file.record.SBESerializer;
 import java.nio.ByteBuffer;
 import java.util.NoSuchElementException;
 

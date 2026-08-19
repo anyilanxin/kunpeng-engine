@@ -15,11 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft.partition;
+package com.anyilanxin.kunpeng.cluster.raft.partition;
 
+import com.anyilanxin.kunpeng.cluster.raft.journal.snapshots.ReceivableSnapshotStoreFactory;
+import com.anyilanxin.kunpeng.cluster.utils.memory.MemorySize;
 import com.esotericsoftware.kryo.serializers.FieldSerializer.Optional;
-import io.atomix.utils.memory.MemorySize;
-import io.camunda.zeebe.snapshots.ReceivableSnapshotStoreFactory;
 
 /** Raft storage configuration. */
 public class RaftStorageConfig {

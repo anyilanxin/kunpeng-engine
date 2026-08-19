@@ -17,4 +17,4 @@
  */
 
 /** Primitive serialization interfaces. */
-package io.atomix.primitive.serialization;
+package com.anyilanxin.kunpeng.cluster.primitive.serialization;

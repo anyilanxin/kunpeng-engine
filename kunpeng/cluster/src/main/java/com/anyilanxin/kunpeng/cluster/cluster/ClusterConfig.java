@@ -15,15 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.cluster;
+package com.anyilanxin.kunpeng.cluster.cluster;
+
+import com.anyilanxin.kunpeng.cluster.cluster.discovery.NodeDiscoveryConfig;
+import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingConfig;
+import com.anyilanxin.kunpeng.cluster.cluster.protocol.GroupMembershipProtocolConfig;
+import com.anyilanxin.kunpeng.cluster.cluster.protocol.SwimMembershipProtocolConfig;
+import com.anyilanxin.kunpeng.cluster.utils.config.Config;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-
-import io.atomix.cluster.discovery.NodeDiscoveryConfig;
-import io.atomix.cluster.messaging.MessagingConfig;
-import io.atomix.cluster.protocol.GroupMembershipProtocolConfig;
-import io.atomix.cluster.protocol.SwimMembershipProtocolConfig;
-import io.atomix.utils.config.Config;
 
 /** Cluster configuration. */
 public class ClusterConfig implements Config {

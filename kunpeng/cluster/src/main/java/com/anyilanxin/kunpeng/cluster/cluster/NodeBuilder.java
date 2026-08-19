@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.cluster;
+package com.anyilanxin.kunpeng.cluster.cluster;
 
-import io.atomix.utils.Builder;
-import io.atomix.utils.net.Address;
+import com.anyilanxin.kunpeng.cluster.utils.Builder;
+import com.anyilanxin.kunpeng.cluster.utils.net.Address;
 
 /** Node builder. */
 public class NodeBuilder implements Builder<Node> {

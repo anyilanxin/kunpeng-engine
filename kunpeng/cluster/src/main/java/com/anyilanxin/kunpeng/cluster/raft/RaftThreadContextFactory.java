@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft;
+package com.anyilanxin.kunpeng.cluster.raft;
 
-import io.atomix.utils.concurrent.ThreadContext;
+import com.anyilanxin.kunpeng.cluster.utils.concurrent.ThreadContext;
 import java.util.concurrent.ThreadFactory;
 import java.util.function.Consumer;
 

@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.cluster.discovery;
+package com.anyilanxin.kunpeng.cluster.cluster.discovery;
 
-import io.atomix.utils.event.EventListener;
+import com.anyilanxin.kunpeng.cluster.utils.event.EventListener;
 
 /** Node discovery event listener. */
 public interface NodeDiscoveryEventListener extends EventListener<NodeDiscoveryEvent> {}

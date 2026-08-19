@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.cluster;
+package com.anyilanxin.kunpeng.cluster.cluster;
 
-import io.atomix.utils.AbstractIdentifier;
+import com.anyilanxin.kunpeng.cluster.utils.AbstractIdentifier;
 import java.util.Objects;
 import java.util.UUID;
 

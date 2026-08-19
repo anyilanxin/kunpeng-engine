@@ -22,8 +22,8 @@
     </encoder>
   </appender>
 
-  <logger level="${root.logging.level:-TRACE}" name="io.atomix"/>
-  <logger level="INFO" name="io.atomix.messaging"/>
+  <logger level="${root.logging.level:-TRACE}" name="com.anyilanxin.kunpeng.cluster"/>
+  <logger level="INFO" name="com.anyilanxin.kunpeng.cluster.messaging"/>
 
   <root level="${root.logging.level:-INFO}">
     <appender-ref ref="STDOUT"/>

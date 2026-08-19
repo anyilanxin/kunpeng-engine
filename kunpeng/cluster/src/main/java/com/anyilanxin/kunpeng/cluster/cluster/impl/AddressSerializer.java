@@ -15,12 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.cluster.impl;
+package com.anyilanxin.kunpeng.cluster.cluster.impl;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
-import io.atomix.utils.net.Address;
+import com.anyilanxin.kunpeng.cluster.utils.net.Address;
 
 /** Address serializer. */
 public class AddressSerializer extends com.esotericsoftware.kryo.Serializer<Address> {

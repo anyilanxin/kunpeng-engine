@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.utils.memory;
+package com.anyilanxin.kunpeng.cluster.utils.memory;
 
 import java.io.File;
 import java.io.IOException;

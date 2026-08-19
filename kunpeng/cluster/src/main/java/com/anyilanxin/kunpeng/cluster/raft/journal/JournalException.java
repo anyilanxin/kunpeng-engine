@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.camunda.zeebe.journal;
+package com.anyilanxin.kunpeng.cluster.raft.journal;
 
 /** Defines exceptions thrown by the Journal */
 public class JournalException extends RuntimeException {

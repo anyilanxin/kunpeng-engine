@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft.zeebe;
+package com.anyilanxin.kunpeng.cluster.raft.zeebe;
 
-import io.atomix.raft.storage.log.entry.ApplicationEntry;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ApplicationEntry;
 
 public class NoopEntryValidator implements EntryValidator {
 

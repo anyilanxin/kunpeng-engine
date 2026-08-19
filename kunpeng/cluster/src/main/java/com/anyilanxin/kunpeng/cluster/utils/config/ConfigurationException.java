@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.utils.config;
+package com.anyilanxin.kunpeng.cluster.utils.config;
 
-import io.atomix.utils.AtomixRuntimeException;
+import com.anyilanxin.kunpeng.cluster.utils.AtomixRuntimeException;
 
 /** Atomix configuration exception. */
 public class ConfigurationException extends AtomixRuntimeException {

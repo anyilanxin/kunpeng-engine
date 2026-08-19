@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft;
+package com.anyilanxin.kunpeng.cluster.raft;
 
-import io.atomix.raft.RaftServer.Role;
+import com.anyilanxin.kunpeng.cluster.raft.RaftServer.Role;
 
 public interface RaftRoleChangeListener {
   void onNewRole(Role newRole, long newTerm);

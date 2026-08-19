@@ -15,13 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.utils;
+package com.anyilanxin.kunpeng.cluster.utils;
+
+import com.google.common.collect.ComparisonChain;
+
+import java.util.Objects;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.Integer.parseInt;
-
-import com.google.common.collect.ComparisonChain;
-import java.util.Objects;
 
 /** Atomix software version. */
 public final class Version implements Comparable<Version> {

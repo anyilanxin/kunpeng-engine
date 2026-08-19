@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft;
+package com.anyilanxin.kunpeng.cluster.raft;
 
 /**
  * Listener which will be invoked when a new snapshot is received by this follower from a leader.
@@ -24,8 +24,8 @@ package io.atomix.raft;
  * its internal state so that it can start with a new log and a new snapshot.
  *
  * <p>The difference between this listener and {@link
- * io.camunda.zeebe.snapshots.PersistedSnapshotListener} is that {@link
- * io.camunda.zeebe.snapshots.PersistedSnapshotListener} notifies when a snapshot is taken locally
+ * com.anyilanxin.kunpeng.cluster.raft.journal.snapshots.PersistedSnapshotListener} is that {@link
+ * com.anyilanxin.kunpeng.cluster.raft.journal.snapshots.PersistedSnapshotListener} notifies when a snapshot is taken locally
  * and when a snapshot is received via replication. This listener only notifies when a snapshot is
  * received via raft replication, which happens only when the follower's log is lagging behind the
  * leader.

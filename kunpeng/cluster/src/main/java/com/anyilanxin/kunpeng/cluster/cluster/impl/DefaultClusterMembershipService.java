@@ -15,28 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.cluster.impl;
+package com.anyilanxin.kunpeng.cluster.cluster.impl;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static org.slf4j.LoggerFactory.getLogger;
+import com.anyilanxin.kunpeng.cluster.cluster.*;
+import com.anyilanxin.kunpeng.cluster.cluster.discovery.ManagedNodeDiscoveryService;
+import com.anyilanxin.kunpeng.cluster.cluster.protocol.GroupMembershipEvent;
+import com.anyilanxin.kunpeng.cluster.cluster.protocol.GroupMembershipEventListener;
+import com.anyilanxin.kunpeng.cluster.cluster.protocol.GroupMembershipProtocol;
+import com.anyilanxin.kunpeng.cluster.utils.Version;
+import com.anyilanxin.kunpeng.cluster.utils.event.AbstractListenerManager;
+import org.slf4j.Logger;
 
-import io.atomix.cluster.BootstrapService;
-import io.atomix.cluster.ClusterMembershipEvent;
-import io.atomix.cluster.ClusterMembershipEventListener;
-import io.atomix.cluster.ClusterMembershipService;
-import io.atomix.cluster.ManagedClusterMembershipService;
-import io.atomix.cluster.Member;
-import io.atomix.cluster.MemberId;
-import io.atomix.cluster.discovery.ManagedNodeDiscoveryService;
-import io.atomix.cluster.protocol.GroupMembershipEvent;
-import io.atomix.cluster.protocol.GroupMembershipEventListener;
-import io.atomix.cluster.protocol.GroupMembershipProtocol;
-import io.atomix.utils.Version;
-import io.atomix.utils.event.AbstractListenerManager;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.slf4j.Logger;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static org.slf4j.LoggerFactory.getLogger;
 
 /** Default cluster implementation. */
 public class DefaultClusterMembershipService

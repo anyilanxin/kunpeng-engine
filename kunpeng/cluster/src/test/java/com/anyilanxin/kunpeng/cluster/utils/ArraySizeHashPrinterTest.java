@@ -15,11 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.utils;
+package com.anyilanxin.kunpeng.cluster.utils;
 
 import static org.junit.Assert.assertEquals;
 
-import io.atomix.utils.misc.ArraySizeHashPrinter;
+import com.anyilanxin.kunpeng.cluster.utils.misc.ArraySizeHashPrinter;
 import org.junit.Test;
 
 /** Array size hash printer test. */

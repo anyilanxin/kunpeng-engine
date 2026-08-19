@@ -15,12 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.cluster.protocol;
+package com.anyilanxin.kunpeng.cluster.cluster.protocol;
 
-import static io.atomix.cluster.protocol.GroupMembershipEvent.Type.MEMBER_ADDED;
-import static io.atomix.cluster.protocol.GroupMembershipEvent.Type.MEMBER_REMOVED;
-import static io.atomix.cluster.protocol.GroupMembershipEvent.Type.METADATA_CHANGED;
-import static io.atomix.cluster.protocol.GroupMembershipEvent.Type.REACHABILITY_CHANGED;
+import static com.anyilanxin.kunpeng.cluster.cluster.protocol.GroupMembershipEvent.Type.MEMBER_ADDED;
+import static com.anyilanxin.kunpeng.cluster.cluster.protocol.GroupMembershipEvent.Type.MEMBER_REMOVED;
+import static com.anyilanxin.kunpeng.cluster.cluster.protocol.GroupMembershipEvent.Type.METADATA_CHANGED;
+import static com.anyilanxin.kunpeng.cluster.cluster.protocol.GroupMembershipEvent.Type.REACHABILITY_CHANGED;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 
@@ -28,19 +28,19 @@ import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Sets;
-import io.atomix.cluster.BootstrapService;
-import io.atomix.cluster.Member;
-import io.atomix.cluster.MemberId;
-import io.atomix.cluster.Node;
-import io.atomix.cluster.TestBootstrapService;
-import io.atomix.cluster.discovery.BootstrapDiscoveryProvider;
-import io.atomix.cluster.discovery.NodeDiscoveryProvider;
-import io.atomix.cluster.discovery.NodeDiscoveryService;
-import io.atomix.cluster.impl.DefaultNodeDiscoveryService;
-import io.atomix.cluster.messaging.impl.TestMessagingServiceFactory;
-import io.atomix.cluster.messaging.impl.TestUnicastServiceFactory;
-import io.atomix.utils.Version;
-import io.atomix.utils.net.Address;
+import com.anyilanxin.kunpeng.cluster.cluster.BootstrapService;
+import com.anyilanxin.kunpeng.cluster.cluster.Member;
+import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.cluster.Node;
+import com.anyilanxin.kunpeng.cluster.cluster.TestBootstrapService;
+import com.anyilanxin.kunpeng.cluster.cluster.discovery.BootstrapDiscoveryProvider;
+import com.anyilanxin.kunpeng.cluster.cluster.discovery.NodeDiscoveryProvider;
+import com.anyilanxin.kunpeng.cluster.cluster.discovery.NodeDiscoveryService;
+import com.anyilanxin.kunpeng.cluster.cluster.impl.DefaultNodeDiscoveryService;
+import com.anyilanxin.kunpeng.cluster.cluster.messaging.impl.TestMessagingServiceFactory;
+import com.anyilanxin.kunpeng.cluster.cluster.messaging.impl.TestUnicastServiceFactory;
+import com.anyilanxin.kunpeng.cluster.utils.Version;
+import com.anyilanxin.kunpeng.cluster.utils.net.Address;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;

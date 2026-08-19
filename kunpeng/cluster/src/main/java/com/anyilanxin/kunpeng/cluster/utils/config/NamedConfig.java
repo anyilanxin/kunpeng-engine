@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.utils.config;
+package com.anyilanxin.kunpeng.cluster.utils.config;
 
 /** Named configuration. */
 public interface NamedConfig<C extends NamedConfig<C>> extends Config {

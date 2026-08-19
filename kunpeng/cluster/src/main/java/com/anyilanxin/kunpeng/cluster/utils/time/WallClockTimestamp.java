@@ -15,12 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.utils.time;
+package com.anyilanxin.kunpeng.cluster.utils.time;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.common.collect.ComparisonChain;
-import io.atomix.utils.misc.TimestampPrinter;
+import com.anyilanxin.kunpeng.cluster.utils.misc.TimestampPrinter;
 import java.util.Objects;
 
 /**

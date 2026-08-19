@@ -15,11 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.utils;
-
-import static com.google.common.base.Preconditions.checkNotNull;
+package com.anyilanxin.kunpeng.cluster.utils;
 
 import java.util.Objects;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /** Abstract identifier backed by another value, e.g. string, int. */
 public class AbstractIdentifier<T extends Comparable<T>> implements Identifier<T> {
@@ -82,6 +82,7 @@ public class AbstractIdentifier<T extends Comparable<T>> implements Identifier<T
    *
    * @return string
    */
+  @Override
   public String toString() {
     return identifier.toString();
   }

@@ -15,16 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.cluster.discovery;
+package com.anyilanxin.kunpeng.cluster.cluster.discovery;
 
-import io.atomix.cluster.BootstrapService;
-import io.atomix.cluster.ClusterMembershipService;
-import io.atomix.cluster.Member;
-import io.atomix.cluster.Node;
-import io.atomix.utils.NamedType;
-import io.atomix.utils.config.Configured;
-import io.atomix.utils.event.ListenerService;
-import io.atomix.utils.net.Address;
+import com.anyilanxin.kunpeng.cluster.cluster.BootstrapService;
+import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
+import com.anyilanxin.kunpeng.cluster.cluster.Member;
+import com.anyilanxin.kunpeng.cluster.cluster.Node;
+import com.anyilanxin.kunpeng.cluster.utils.NamedType;
+import com.anyilanxin.kunpeng.cluster.utils.config.Configured;
+import com.anyilanxin.kunpeng.cluster.utils.event.ListenerService;
+import com.anyilanxin.kunpeng.cluster.utils.net.Address;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 

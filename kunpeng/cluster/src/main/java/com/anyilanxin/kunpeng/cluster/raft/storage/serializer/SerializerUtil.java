@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft.storage.serializer;
+package com.anyilanxin.kunpeng.cluster.raft.storage.serializer;
 
-import io.atomix.raft.cluster.RaftMember;
+import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember;
 
 public class SerializerUtil {
 

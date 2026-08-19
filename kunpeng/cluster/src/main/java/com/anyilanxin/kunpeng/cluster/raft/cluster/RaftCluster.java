@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package io.atomix.raft.cluster;
+package com.anyilanxin.kunpeng.cluster.raft.cluster;
 
-import io.atomix.cluster.MemberId;
-import io.atomix.raft.RaftServer;
+import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.raft.RaftServer;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;

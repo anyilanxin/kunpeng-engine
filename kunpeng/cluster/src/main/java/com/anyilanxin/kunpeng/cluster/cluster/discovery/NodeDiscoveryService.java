@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.cluster.discovery;
+package com.anyilanxin.kunpeng.cluster.cluster.discovery;
 
-import io.atomix.cluster.Node;
-import io.atomix.utils.event.ListenerService;
+import com.anyilanxin.kunpeng.cluster.cluster.Node;
+import com.anyilanxin.kunpeng.cluster.utils.event.ListenerService;
 import java.util.Set;
 
 /** Node discovery service. */

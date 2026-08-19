@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package io.atomix.raft.cluster;
+package com.anyilanxin.kunpeng.cluster.raft.cluster;
 
-import io.atomix.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;

@@ -14,11 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft.impl;
+package com.anyilanxin.kunpeng.cluster.raft.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.atomix.utils.concurrent.SingleThreadContext;
+import com.anyilanxin.kunpeng.cluster.utils.concurrent.SingleThreadContext;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;

@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.cluster.impl;
+package com.anyilanxin.kunpeng.cluster.cluster.impl;
 
-import io.atomix.cluster.Member;
-import io.atomix.utils.Version;
+import com.anyilanxin.kunpeng.cluster.cluster.Member;
+import com.anyilanxin.kunpeng.cluster.utils.Version;
 import java.util.Objects;
 
 /** Default cluster node. */

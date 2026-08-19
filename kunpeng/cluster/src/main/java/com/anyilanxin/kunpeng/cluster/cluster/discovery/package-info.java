@@ -16,5 +16,7 @@
  * limitations under the License.
  */
 
-/** Provides classes and interfaces for extensible cluster membership discovery. */
-package io.atomix.cluster.discovery;
+/**
+ * Provides classes and interfaces for extensible cluster membership discovery.
+ */
+package com.anyilanxin.kunpeng.cluster.cluster.discovery;

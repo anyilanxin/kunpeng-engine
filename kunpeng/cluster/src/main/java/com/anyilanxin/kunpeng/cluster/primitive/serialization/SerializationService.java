@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.primitive.serialization;
+package com.anyilanxin.kunpeng.cluster.primitive.serialization;
 
-import io.atomix.utils.serializer.SerializerBuilder;
+import com.anyilanxin.kunpeng.cluster.utils.serializer.SerializerBuilder;
 
 /** Primitive serialization service. */
 public interface SerializationService {

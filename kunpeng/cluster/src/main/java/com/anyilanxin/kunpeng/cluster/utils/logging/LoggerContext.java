@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.utils.logging;
+package com.anyilanxin.kunpeng.cluster.utils.logging;
 
 import com.google.common.base.MoreObjects;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -56,7 +56,7 @@ public class LoggerContext {
   }
 
   /** Contextual logger builder. */
-  public static class Builder implements io.atomix.utils.Builder<LoggerContext> {
+  public static class Builder implements com.anyilanxin.kunpeng.cluster.utils.Builder<LoggerContext> {
     private final MoreObjects.ToStringHelper identityStringHelper;
     private MoreObjects.ToStringHelper argsStringHelper;
     private final boolean omitNullValues = false;

@@ -15,12 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft.protocol;
+package com.anyilanxin.kunpeng.cluster.raft.protocol;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import io.atomix.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import java.util.Objects;
 
 /** Leadership transfer request. */

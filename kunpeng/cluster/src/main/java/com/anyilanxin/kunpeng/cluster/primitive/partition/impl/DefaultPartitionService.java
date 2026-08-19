@@ -15,14 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.primitive.partition.impl;
+package com.anyilanxin.kunpeng.cluster.primitive.partition.impl;
 
-import io.atomix.cluster.ClusterMembershipService;
-import io.atomix.cluster.messaging.ClusterCommunicationService;
-import io.atomix.primitive.partition.ManagedPartitionGroup;
-import io.atomix.primitive.partition.ManagedPartitionService;
-import io.atomix.primitive.partition.PartitionManagementService;
-import io.atomix.primitive.partition.PartitionService;
+import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
+import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationService;
+import com.anyilanxin.kunpeng.cluster.primitive.partition.ManagedPartitionGroup;
+import com.anyilanxin.kunpeng.cluster.primitive.partition.ManagedPartitionService;
+import com.anyilanxin.kunpeng.cluster.primitive.partition.PartitionManagementService;
+import com.anyilanxin.kunpeng.cluster.primitive.partition.PartitionService;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;

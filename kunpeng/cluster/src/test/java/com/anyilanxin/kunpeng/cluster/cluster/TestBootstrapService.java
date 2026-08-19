@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.cluster;
+package com.anyilanxin.kunpeng.cluster.cluster;
 
-import io.atomix.cluster.messaging.MessagingService;
-import io.atomix.cluster.messaging.UnicastService;
+import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
+import com.anyilanxin.kunpeng.cluster.cluster.messaging.UnicastService;
 
 /** Test bootstrap service. */
 public class TestBootstrapService implements BootstrapService {

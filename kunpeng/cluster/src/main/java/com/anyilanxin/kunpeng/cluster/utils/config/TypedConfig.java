@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.utils.config;
+package com.anyilanxin.kunpeng.cluster.utils.config;
 
 /** Typed configuration. */
 public interface TypedConfig<T> extends Config {

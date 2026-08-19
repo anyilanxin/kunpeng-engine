@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.utils.serializer.serializers;
+package com.anyilanxin.kunpeng.cluster.utils.serializer.serializers;
 
-import io.atomix.utils.serializer.Serializer;
+import com.anyilanxin.kunpeng.cluster.utils.serializer.Serializer;
 
 /** Default serializers. */
 public final class DefaultSerializers {

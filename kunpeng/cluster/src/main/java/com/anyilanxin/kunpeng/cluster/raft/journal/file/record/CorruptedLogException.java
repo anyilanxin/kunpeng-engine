@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.camunda.zeebe.journal.file.record;
+package com.anyilanxin.kunpeng.cluster.raft.journal.file.record;
 
-import io.camunda.zeebe.util.exception.UnrecoverableException;
+import com.anyilanxin.kunpeng.cluster.raft.journal.util.exception.UnrecoverableException;
 
 public final class CorruptedLogException extends UnrecoverableException {
 

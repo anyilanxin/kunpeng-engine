@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.cluster.protocol;
+package com.anyilanxin.kunpeng.cluster.cluster.protocol;
 
-import io.atomix.cluster.Member;
-import io.atomix.utils.event.AbstractEvent;
+import com.anyilanxin.kunpeng.cluster.cluster.Member;
+import com.anyilanxin.kunpeng.cluster.utils.event.AbstractEvent;
 import java.util.Objects;
 
 /** Group membership protocol event. */

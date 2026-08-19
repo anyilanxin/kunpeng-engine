@@ -15,14 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.primitive.partition.impl;
+package com.anyilanxin.kunpeng.cluster.primitive.partition.impl;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import io.atomix.cluster.Member;
-import io.atomix.primitive.partition.MemberGroup;
-import io.atomix.primitive.partition.MemberGroupId;
+import com.anyilanxin.kunpeng.cluster.cluster.Member;
+import com.anyilanxin.kunpeng.cluster.primitive.partition.MemberGroup;
+import com.anyilanxin.kunpeng.cluster.primitive.partition.MemberGroupId;
 import java.util.Objects;
 import java.util.Set;
 

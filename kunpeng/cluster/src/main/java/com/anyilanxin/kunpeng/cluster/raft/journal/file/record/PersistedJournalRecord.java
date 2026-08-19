@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.camunda.zeebe.journal.file.record;
+package com.anyilanxin.kunpeng.cluster.raft.journal.file.record;
 
-import io.camunda.zeebe.journal.JournalRecord;
+import com.anyilanxin.kunpeng.cluster.raft.journal.JournalRecord;
 import java.util.Objects;
 import org.agrona.DirectBuffer;
 

@@ -15,37 +15,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.cluster.discovery;
+package com.anyilanxin.kunpeng.cluster.cluster.discovery;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
+import com.anyilanxin.kunpeng.cluster.cluster.BootstrapService;
+import com.anyilanxin.kunpeng.cluster.cluster.Node;
+import com.anyilanxin.kunpeng.cluster.cluster.NodeConfig;
+import com.anyilanxin.kunpeng.cluster.utils.event.AbstractListenerManager;
 import com.google.common.collect.ImmutableSet;
-import io.atomix.cluster.BootstrapService;
-import io.atomix.cluster.Node;
-import io.atomix.cluster.NodeConfig;
-import io.atomix.utils.event.AbstractListenerManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Cluster membership provider that bootstraps membership from a pre-defined set of peers.
  *
  * <p>The bootstrap member provider takes a set of peer {@link
  * BootstrapDiscoveryConfig#setNodes(Collection) addresses} and uses them to join the cluster. Using
- * the {@link io.atomix.cluster.messaging.MessagingService}, each node sends a heartbeat to its
+ * the {@link com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService}, each node sends a heartbeat to its
  * configured bootstrap peers. Peers respond to each heartbeat message with a list of all known
  * peers, thus propagating membership information using a gossip style protocol.
  *
  * <p>A phi accrual failure detector is used to detect failures and remove peers from the
  * configuration. In order to avoid flapping of membership following a {@link
- * io.atomix.cluster.ClusterMembershipEvent.Type#MEMBER_ADDED} event, the implementation attempts to
+ * com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipEvent.Type#MEMBER_ADDED} event, the implementation attempts to
  * heartbeat all newly discovered peers before triggering a {@link
- * io.atomix.cluster.ClusterMembershipEvent.Type#MEMBER_REMOVED} event.
+ * com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipEvent.Type#MEMBER_REMOVED} event.
  */
 public final class BootstrapDiscoveryProvider
     extends AbstractListenerManager<NodeDiscoveryEvent, NodeDiscoveryEventListener>

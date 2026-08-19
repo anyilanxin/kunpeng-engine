@@ -15,17 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft.cluster.impl;
+package com.anyilanxin.kunpeng.cluster.raft.cluster.impl;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import io.atomix.cluster.MemberId;
-import io.atomix.raft.cluster.RaftCluster;
-import io.atomix.raft.cluster.RaftMember;
-import io.atomix.raft.cluster.RaftMember.Type;
-import io.atomix.raft.impl.RaftContext;
-import io.atomix.raft.storage.system.Configuration;
+import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftCluster;
+import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember;
+import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember.Type;
+import com.anyilanxin.kunpeng.cluster.raft.impl.RaftContext;
+import com.anyilanxin.kunpeng.cluster.raft.storage.system.Configuration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;

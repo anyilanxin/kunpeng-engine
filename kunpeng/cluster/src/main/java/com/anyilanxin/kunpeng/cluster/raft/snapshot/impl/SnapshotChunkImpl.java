@@ -15,11 +15,11 @@
  *  limitations under the License.
  *
  */
-package io.atomix.raft.snapshot.impl;
+package com.anyilanxin.kunpeng.cluster.raft.snapshot.impl;
 
-import io.atomix.raft.snapshot.SbeBufferWriterReader;
-import io.camunda.zeebe.snapshots.SnapshotChunk;
-import io.camunda.zeebe.util.buffer.BufferUtil;
+import com.anyilanxin.kunpeng.cluster.raft.journal.snapshots.SnapshotChunk;
+import com.anyilanxin.kunpeng.cluster.raft.journal.util.buffer.BufferUtil;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SbeBufferWriterReader;
 import org.agrona.DirectBuffer;
 import org.agrona.MutableDirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;

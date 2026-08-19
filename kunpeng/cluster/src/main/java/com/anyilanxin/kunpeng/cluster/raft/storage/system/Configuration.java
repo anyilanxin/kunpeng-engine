@@ -15,14 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package io.atomix.raft.storage.system;
+package com.anyilanxin.kunpeng.cluster.raft.storage.system;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import io.atomix.raft.cluster.RaftMember;
-import io.atomix.utils.misc.TimestampPrinter;
+import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember;
+import com.anyilanxin.kunpeng.cluster.utils.misc.TimestampPrinter;
 import java.util.Collection;
 
 /** Represents a persisted server configuration. */
@@ -46,7 +46,7 @@ public class Configuration {
   /**
    * Returns the configuration index.
    *
-   * <p>The index is the index of the {@link io.atomix.raft.storage.log.entry.ConfigurationEntry
+   * <p>The index is the index of the {@link com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ConfigurationEntry
    * ConfigurationEntry} which resulted in this configuration.
    *
    * @return The configuration index.

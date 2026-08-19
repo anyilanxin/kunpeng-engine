@@ -17,4 +17,4 @@
  */
 
 /** Partition service/interface implementations. */
-package io.atomix.primitive.partition.impl;
+package com.anyilanxin.kunpeng.cluster.primitive.partition.impl;

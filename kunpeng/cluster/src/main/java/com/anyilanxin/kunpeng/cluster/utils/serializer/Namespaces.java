@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.utils.serializer;
+package com.anyilanxin.kunpeng.cluster.utils.serializer;
 
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
@@ -24,17 +24,17 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multisets;
 import com.google.common.collect.Sets;
-import io.atomix.utils.Version;
-import io.atomix.utils.serializer.serializers.ArraysAsListSerializer;
-import io.atomix.utils.serializer.serializers.AtomicBooleanSerializer;
-import io.atomix.utils.serializer.serializers.AtomicIntegerSerializer;
-import io.atomix.utils.serializer.serializers.AtomicLongSerializer;
-import io.atomix.utils.serializer.serializers.ByteBufferSerializer;
-import io.atomix.utils.serializer.serializers.ImmutableListSerializer;
-import io.atomix.utils.serializer.serializers.ImmutableMapSerializer;
-import io.atomix.utils.serializer.serializers.ImmutableSetSerializer;
-import io.atomix.utils.time.LogicalTimestamp;
-import io.atomix.utils.time.WallClockTimestamp;
+import com.anyilanxin.kunpeng.cluster.utils.Version;
+import com.anyilanxin.kunpeng.cluster.utils.serializer.serializers.ArraysAsListSerializer;
+import com.anyilanxin.kunpeng.cluster.utils.serializer.serializers.AtomicBooleanSerializer;
+import com.anyilanxin.kunpeng.cluster.utils.serializer.serializers.AtomicIntegerSerializer;
+import com.anyilanxin.kunpeng.cluster.utils.serializer.serializers.AtomicLongSerializer;
+import com.anyilanxin.kunpeng.cluster.utils.serializer.serializers.ByteBufferSerializer;
+import com.anyilanxin.kunpeng.cluster.utils.serializer.serializers.ImmutableListSerializer;
+import com.anyilanxin.kunpeng.cluster.utils.serializer.serializers.ImmutableMapSerializer;
+import com.anyilanxin.kunpeng.cluster.utils.serializer.serializers.ImmutableSetSerializer;
+import com.anyilanxin.kunpeng.cluster.utils.time.LogicalTimestamp;
+import com.anyilanxin.kunpeng.cluster.utils.time.WallClockTimestamp;
 import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.util.ArrayDeque;

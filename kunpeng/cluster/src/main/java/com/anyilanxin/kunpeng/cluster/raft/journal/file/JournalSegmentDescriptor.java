@@ -15,11 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.camunda.zeebe.journal.file;
+package com.anyilanxin.kunpeng.cluster.raft.journal.file;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-import io.camunda.zeebe.journal.file.record.CorruptedLogException;
+import com.anyilanxin.kunpeng.cluster.raft.journal.file.record.CorruptedLogException;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 import org.agrona.MutableDirectBuffer;

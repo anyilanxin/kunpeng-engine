@@ -15,12 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft.protocol;
+package com.anyilanxin.kunpeng.cluster.raft.protocol;
 
 import com.google.common.collect.Sets;
-import io.atomix.cluster.MemberId;
-import io.atomix.utils.concurrent.Futures;
-import io.atomix.utils.concurrent.ThreadContext;
+import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.utils.concurrent.Futures;
+import com.anyilanxin.kunpeng.cluster.utils.concurrent.ThreadContext;
 import java.net.ConnectException;
 import java.util.Map;
 import java.util.Set;

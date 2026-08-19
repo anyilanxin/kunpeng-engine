@@ -15,14 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.cluster;
+package com.anyilanxin.kunpeng.cluster.cluster;
+
+import com.anyilanxin.kunpeng.cluster.utils.config.Configured;
+import com.anyilanxin.kunpeng.cluster.utils.net.Address;
+
+import java.util.Objects;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkNotNull;
-
-import io.atomix.utils.config.Configured;
-import io.atomix.utils.net.Address;
-import java.util.Objects;
 
 /** Represents a node. */
 public class Node implements Configured<NodeConfig> {

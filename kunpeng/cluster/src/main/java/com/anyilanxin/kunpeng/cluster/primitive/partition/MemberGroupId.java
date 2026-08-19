@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.primitive.partition;
+package com.anyilanxin.kunpeng.cluster.primitive.partition;
 
-import io.atomix.utils.AbstractIdentifier;
+import com.anyilanxin.kunpeng.cluster.utils.AbstractIdentifier;
 
 /** Member group identifier. */
 public class MemberGroupId extends AbstractIdentifier<String> {

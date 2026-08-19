@@ -16,5 +16,7 @@
  * limitations under the License.
  */
 
-/** Provides classes and interfaces for managing Raft clients and servers. */
-package io.atomix.raft;
+/**
+ * Provides classes and interfaces for managing Raft clients and servers.
+ */
+package com.anyilanxin.kunpeng.cluster.raft;

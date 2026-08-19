@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.cluster.messaging.impl;
+package com.anyilanxin.kunpeng.cluster.cluster.messaging.impl;
 
 /** Base class for internal messages. */
 public abstract class ProtocolMessage {

@@ -15,10 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.raft.roles;
+package com.anyilanxin.kunpeng.cluster.raft.roles;
 
-import io.atomix.raft.RaftServer;
-import io.atomix.raft.impl.RaftContext;
+import com.anyilanxin.kunpeng.cluster.raft.RaftServer;
+import com.anyilanxin.kunpeng.cluster.raft.impl.RaftContext;
 
 /** Promotable role. */
 public class PromotableRole extends PassiveRole {

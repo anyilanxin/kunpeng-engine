@@ -14,13 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.camunda.zeebe.journal.file.record;
+package com.anyilanxin.kunpeng.cluster.raft.journal.file.record;
 
-import io.camunda.zeebe.journal.JournalException.InvalidIndex;
-import io.camunda.zeebe.journal.JournalRecord;
-import io.camunda.zeebe.journal.file.ChecksumGenerator;
-import java.nio.ByteBuffer;
+import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException.InvalidIndex;
+import com.anyilanxin.kunpeng.cluster.raft.journal.JournalRecord;
+import com.anyilanxin.kunpeng.cluster.raft.journal.file.ChecksumGenerator;
 import org.agrona.concurrent.UnsafeBuffer;
+
+import java.nio.ByteBuffer;
 
 /** Common methods used by SegmentWriter and SegmentReader to read records from a buffer. */
 public final class JournalRecordReaderUtil {

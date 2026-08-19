@@ -14,15 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.camunda.zeebe.journal.file.record;
+package com.anyilanxin.kunpeng.cluster.raft.journal.file.record;
 
-import io.camunda.zeebe.journal.file.MessageHeaderDecoder;
-import io.camunda.zeebe.journal.file.MessageHeaderEncoder;
-import io.camunda.zeebe.journal.file.RecordDataDecoder;
-import io.camunda.zeebe.journal.file.RecordDataEncoder;
-import io.camunda.zeebe.journal.file.RecordMetadataDecoder;
-import io.camunda.zeebe.journal.file.RecordMetadataEncoder;
-import io.camunda.zeebe.util.Either;
+import com.anyilanxin.kunpeng.cluster.raft.journal.file.MessageHeaderDecoder;
+import com.anyilanxin.kunpeng.cluster.raft.journal.file.MessageHeaderEncoder;
+import com.anyilanxin.kunpeng.cluster.raft.journal.file.RecordDataDecoder;
+import com.anyilanxin.kunpeng.cluster.raft.journal.file.RecordDataEncoder;
+import com.anyilanxin.kunpeng.cluster.raft.journal.file.RecordMetadataDecoder;
+import com.anyilanxin.kunpeng.cluster.raft.journal.file.RecordMetadataEncoder;
+import com.anyilanxin.kunpeng.cluster.raft.journal.util.Either;
 import java.nio.BufferOverflowException;
 import org.agrona.DirectBuffer;
 import org.agrona.MutableDirectBuffer;

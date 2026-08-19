@@ -14,12 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.camunda.zeebe.journal.file.record;
+package com.anyilanxin.kunpeng.cluster.raft.journal.file.record;
 
-import io.camunda.zeebe.util.Either;
-import java.nio.BufferOverflowException;
+import com.anyilanxin.kunpeng.cluster.raft.journal.util.Either;
 import org.agrona.DirectBuffer;
 import org.agrona.MutableDirectBuffer;
+
+import java.nio.BufferOverflowException;
 
 public interface JournalRecordSerializer {
 

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.atomix.utils.config;
+package com.anyilanxin.kunpeng.cluster.utils.config;
 
 /** Interface for objects configured via a configuration object. */
 public interface Configured<T extends Config> {
