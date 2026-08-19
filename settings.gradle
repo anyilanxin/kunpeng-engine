@@ -56,12 +56,36 @@ if (file("${rootDir}/kunpeng/bpm-model").directory) {
     }
 }
 
+if (file("${rootDir}/kunpeng/broker").directory) {
+    file("${rootDir}/kunpeng/broker").eachDir {
+        if (it.directory) {
+            if (file("${it.path}/build.gradle").file) {
+                if (!excludes.contains(it.name)) {
+                    include "kunpeng:broker:${it.name}"
+                }
+            }
+        }
+    }
+}
+
 if (file("${rootDir}/kunpeng/engine").directory) {
     file("${rootDir}/kunpeng/engine").eachDir {
         if (it.directory) {
             if (file("${it.path}/build.gradle").file) {
                 if (!excludes.contains(it.name)) {
                     include "kunpeng:engine:${it.name}"
+                }
+            }
+        }
+    }
+}
+
+if (file("${rootDir}/kunpeng/gateway").directory) {
+    file("${rootDir}/kunpeng/gateway").eachDir {
+        if (it.directory) {
+            if (file("${it.path}/build.gradle").file) {
+                if (!excludes.contains(it.name)) {
+                    include "kunpeng:gateway:${it.name}"
                 }
             }
         }
