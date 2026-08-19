@@ -1,0 +1,13 @@
+plugins {
+    id 'kunpeng.sbe-java'
+    id 'kunpeng.build-publish'
+}
+
+description = "Broker"
+
+configure(jarInfo) {
+    archiveName = "kunpeng-broker"
+}
+dependencies {
+
+}
