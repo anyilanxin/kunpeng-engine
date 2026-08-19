@@ -44,6 +44,18 @@ if (file("${rootDir}/kunpeng").directory) {
 	}
 }
 
+if (file("${rootDir}/kunpeng/backup").directory) {
+    file("${rootDir}/kunpeng/backup").eachDir {
+        if (it.directory) {
+            if (file("${it.path}/build.gradle").file) {
+                if (!excludes.contains(it.name)) {
+                    include "kunpeng:backup:${it.name}"
+                }
+            }
+        }
+    }
+}
+
 if (file("${rootDir}/kunpeng/bpm-model").directory) {
     file("${rootDir}/kunpeng/bpm-model").eachDir {
         if (it.directory) {
@@ -74,6 +86,18 @@ if (file("${rootDir}/kunpeng/engine").directory) {
             if (file("${it.path}/build.gradle").file) {
                 if (!excludes.contains(it.name)) {
                     include "kunpeng:engine:${it.name}"
+                }
+            }
+        }
+    }
+}
+
+if (file("${rootDir}/kunpeng/exporter").directory) {
+    file("${rootDir}/kunpeng/exporter").eachDir {
+        if (it.directory) {
+            if (file("${it.path}/build.gradle").file) {
+                if (!excludes.contains(it.name)) {
+                    include "kunpeng:exporter:${it.name}"
                 }
             }
         }
