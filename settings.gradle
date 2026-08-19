@@ -44,6 +44,30 @@ if (file("${rootDir}/kunpeng").directory) {
 	}
 }
 
+if (file("${rootDir}/kunpeng/bpm-model").directory) {
+    file("${rootDir}/kunpeng/bpm-model").eachDir {
+        if (it.directory) {
+            if (file("${it.path}/build.gradle").file) {
+                if (!excludes.contains(it.name)) {
+                    include "kunpeng:bpm-model:${it.name}"
+                }
+            }
+        }
+    }
+}
+
+if (file("${rootDir}/kunpeng/engine").directory) {
+    file("${rootDir}/kunpeng/engine").eachDir {
+        if (it.directory) {
+            if (file("${it.path}/build.gradle").file) {
+                if (!excludes.contains(it.name)) {
+                    include "kunpeng:engine:${it.name}"
+                }
+            }
+        }
+    }
+}
+
 
 // 二、 客户端
 if (file("${rootDir}/clients").directory) {
