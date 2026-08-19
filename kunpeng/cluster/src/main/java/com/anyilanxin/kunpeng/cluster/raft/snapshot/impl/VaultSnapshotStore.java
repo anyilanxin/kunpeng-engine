@@ -25,7 +25,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-/** {@link ReceivableSnapshotStore} 的 vault 实现（包装 {@link SnapshotVault}） */
+/**
+ * {@link ReceivableSnapshotStore} 的 vault 实现（包装 {@link SnapshotVault}）
+ */
 public final class VaultSnapshotStore implements ReceivableSnapshotStore {
 
   private static final Logger LOG = LoggerFactory.getLogger(VaultSnapshotStore.class);

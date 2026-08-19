@@ -324,7 +324,9 @@ public final class SnapshotVault implements AutoCloseable {
 
   // ===== 包内（串行线程或被串行作业调用） =====
 
-  /** 构建目录清单：优先外部提供，否则逐文件 CRC32C */
+  /**
+   * 构建目录清单：优先外部提供，否则逐文件 CRC32C
+   */
   ChecksumManifest buildManifest(final Path directory) {
     final ChecksumManifest manifest = ChecksumManifest.empty();
     Map<String, String> provided = null;
@@ -339,7 +341,7 @@ public final class SnapshotVault implements AutoCloseable {
         final String checksum =
             provided != null && provided.containsKey(name)
                 ? provided.get(name)
-                : Long.toHexString(VaultFiles.fileCrc(directory.resolve(name)));
+                    : Long.toHexString(VaultFiles.fileCrc(directory.resolve(name)));
         manifest.add(name, checksum);
       }
     } catch (final IOException e) {
