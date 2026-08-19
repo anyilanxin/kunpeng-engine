@@ -25,6 +25,7 @@ configure(jarInfo) {
     archiveName = "kunpeng-cluster"
 }
 dependencies {
+    implementation project(':kunpeng:utils')
     implementation 'org.agrona:agrona'
     implementation 'io.netty:netty-transport'
     implementation 'io.netty:netty-codec'
