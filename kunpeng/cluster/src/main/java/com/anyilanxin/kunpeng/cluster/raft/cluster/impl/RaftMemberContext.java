@@ -17,7 +17,7 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.cluster.impl;
 
-import com.anyilanxin.kunpeng.cluster.raft.journal.snapshots.SnapshotChunkReader;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChunkReader;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.IndexedRaftLogEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLog;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLogReader;

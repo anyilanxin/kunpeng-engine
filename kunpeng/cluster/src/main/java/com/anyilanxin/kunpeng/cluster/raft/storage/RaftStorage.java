@@ -17,9 +17,9 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.storage;
 
-import com.anyilanxin.kunpeng.cluster.raft.journal.snapshots.PersistedSnapshotStore;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshotStore;
 import io.micrometer.core.instrument.MeterRegistry;
-import com.anyilanxin.kunpeng.cluster.raft.journal.snapshots.ReceivableSnapshotStore;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.ReceivableSnapshotStore;
 import com.anyilanxin.kunpeng.utils.FileUtil;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLog;
 import com.anyilanxin.kunpeng.cluster.raft.storage.system.MetaStore;

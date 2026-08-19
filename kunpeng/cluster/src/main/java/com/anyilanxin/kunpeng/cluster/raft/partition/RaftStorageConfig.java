@@ -17,7 +17,7 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.partition;
 
-import com.anyilanxin.kunpeng.cluster.raft.journal.snapshots.ReceivableSnapshotStoreFactory;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.ReceivableSnapshotStoreFactory;
 import com.anyilanxin.kunpeng.cluster.utils.memory.MemorySize;
 import com.esotericsoftware.kryo.serializers.FieldSerializer.Optional;
 

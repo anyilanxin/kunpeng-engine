@@ -27,7 +27,7 @@ import com.anyilanxin.kunpeng.cluster.raft.cluster.impl.DefaultRaftMember;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.impl.RaftMemberContext;
 import com.anyilanxin.kunpeng.cluster.raft.impl.RaftContext;
 import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException;
-import com.anyilanxin.kunpeng.cluster.raft.journal.snapshots.PersistedSnapshotListener;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshotListener;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.*;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.IndexedRaftLogEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLogReader;

@@ -17,6 +17,8 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft;
 
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshotListener;
+
 /**
  * Listener which will be invoked when a new snapshot is received by this follower from a leader.
  * When a new snapshot is received via raft replication, the log will be reset and all entries in
@@ -24,8 +26,8 @@ package com.anyilanxin.kunpeng.cluster.raft;
  * its internal state so that it can start with a new log and a new snapshot.
  *
  * <p>The difference between this listener and {@link
- * com.anyilanxin.kunpeng.cluster.raft.journal.snapshots.PersistedSnapshotListener} is that {@link
- * com.anyilanxin.kunpeng.cluster.raft.journal.snapshots.PersistedSnapshotListener} notifies when a snapshot is taken locally
+ * PersistedSnapshotListener} is that {@link
+ * PersistedSnapshotListener} notifies when a snapshot is taken locally
  * and when a snapshot is received via replication. This listener only notifies when a snapshot is
  * received via raft replication, which happens only when the follower's log is lagging behind the
  * leader.
