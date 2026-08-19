@@ -23,5 +23,6 @@ public interface PersistedSnapshotListener {
   void onNewSnapshot(PersistedSnapshot snapshot);
 
   /** 快照被淘汰删除 */
-  default void onSnapshotRemoved(PersistedSnapshot snapshot) {}
+  default void onSnapshotRemoved(final PersistedSnapshot snapshot) {
+  }
 }

@@ -17,8 +17,8 @@
 package com.anyilanxin.kunpeng.cluster.raft.snapshot.impl;
 
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.VaultCodec.Reader;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.VaultCodec.Writer;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.VaultCodec.VaultCodecException;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.VaultCodec.Writer;
 
 import java.util.zip.CRC32C;
 
@@ -68,6 +68,7 @@ public record SnapshotBlock(
         fileSize);
   }
 
+  @Override
   public byte[] payload() {
     return payload.clone();
   }

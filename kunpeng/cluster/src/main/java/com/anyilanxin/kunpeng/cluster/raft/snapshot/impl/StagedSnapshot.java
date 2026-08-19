@@ -17,13 +17,14 @@
 package com.anyilanxin.kunpeng.cluster.raft.snapshot.impl;
 
 import com.anyilanxin.kunpeng.utils.FileUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.function.Consumer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 暂存快照（写入中）：taker 写入 {@code staging-<hex>} 目录 → persist 时计算清单、写元数据
@@ -74,7 +75,7 @@ public final class StagedSnapshot {
       }
     } catch (final Exception e) {
       LOG.warn("快照内容写入失败: {}", ref, e);
-      throw e instanceof RuntimeException runtime ? runtime : new IllegalStateException(e);
+      throw e instanceof final RuntimeException runtime ? runtime : new IllegalStateException(e);
     }
   }
 

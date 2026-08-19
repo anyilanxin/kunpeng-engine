@@ -40,7 +40,7 @@ public final class VaultFiles {
   /** 逐文件 CRC32C（FileChannel 4KB 循环） */
   public static long fileCrc(final Path file) throws IOException {
     final CRC32C crc = new CRC32C();
-    try (FileChannel channel = FileChannel.open(file, StandardOpenOption.READ)) {
+    try (final FileChannel channel = FileChannel.open(file, StandardOpenOption.READ)) {
       final ByteBuffer buffer = ByteBuffer.allocateDirect(CRC_BUFFER_BYTES);
       while (channel.read(buffer) != -1) {
         buffer.flip();
@@ -54,7 +54,7 @@ public final class VaultFiles {
   /** 目录下全部常规文件（相对路径名按字典序） */
   public static TreeSet<String> listFilesSorted(final Path directory) throws IOException {
     final TreeSet<String> names = new TreeSet<>();
-    try (var walk = Files.walk(directory)) {
+    try (final var walk = Files.walk(directory)) {
       walk.filter(Files::isRegularFile)
           .forEach(file -> names.add(directory.relativize(file).toString().replace('\\', '/')));
     }
@@ -64,7 +64,7 @@ public final class VaultFiles {
   /** 覆盖式持久写：临时文件 + fsync + 原子改名 */
   public static void writeDurably(final Path target, final byte[] bytes) throws IOException {
     final Path tmp = target.resolveSibling(target.getFileName() + ".tmp");
-    try (FileChannel channel =
+    try (final FileChannel channel =
         FileChannel.open(tmp, StandardOpenOption.CREATE, StandardOpenOption.WRITE,
             StandardOpenOption.TRUNCATE_EXISTING)) {
       channel.write(ByteBuffer.wrap(bytes));
@@ -76,7 +76,7 @@ public final class VaultFiles {
   /** 定位写（接收端乱序分块） */
   public static void positionedWrite(final Path file, final long offset, final byte[] payload)
       throws IOException {
-    try (RandomAccessFile raf = new RandomAccessFile(file.toFile(), "rw")) {
+    try (final RandomAccessFile raf = new RandomAccessFile(file.toFile(), "rw")) {
       raf.seek(offset);
       raf.write(payload);
       raf.getFD().sync();
@@ -97,7 +97,7 @@ public final class VaultFiles {
   }
 
   public static List<Path> sortedSubDirectories(final Path directory) throws IOException {
-    try (var stream = Files.list(directory)) {
+    try (final var stream = Files.list(directory)) {
       return stream
           .filter(Files::isDirectory)
           .sorted(Comparator.comparing(p -> p.getFileName().toString()))

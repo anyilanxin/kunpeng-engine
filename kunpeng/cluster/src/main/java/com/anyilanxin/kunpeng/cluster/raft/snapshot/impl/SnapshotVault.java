@@ -16,23 +16,14 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.snapshot.impl;
 
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.Gauge;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tag;
-import io.micrometer.core.instrument.Tags;
+import io.micrometer.core.instrument.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
@@ -40,8 +31,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 快照库（唯一 Store 门面）：三副本区（主/bootstrap/merge）各自维护 active 落档；
@@ -84,9 +73,9 @@ public final class SnapshotVault implements AutoCloseable {
       final Path partitionRoot,
       final SnapshotCrc32cChecksumProvider checksumProvider,
       final MeterRegistry registry) {
-    this.snapshotsRoot = partitionRoot.resolve(SnapshotLayout.SNAPSHOTS_DIR);
-    this.bootstrapRoot = partitionRoot.resolve(SnapshotLayout.BOOTSTRAP_DIR);
-    this.mergeRoot = partitionRoot.resolve(SnapshotLayout.MERGE_DIR);
+    snapshotsRoot = partitionRoot.resolve(SnapshotLayout.SNAPSHOTS_DIR);
+    bootstrapRoot = partitionRoot.resolve(SnapshotLayout.BOOTSTRAP_DIR);
+    mergeRoot = partitionRoot.resolve(SnapshotLayout.MERGE_DIR);
     this.checksumProvider = checksumProvider;
     if (registry != null) {
       Gauge.builder("snapshotVault.known", knownGauge, AtomicLong::doubleValue)
@@ -270,9 +259,9 @@ public final class SnapshotVault implements AutoCloseable {
     return submitVoid(
         () -> {
           for (final Object pending : List.copyOf(inProgress)) {
-            if (pending instanceof StagedSnapshot staged) {
+            if (pending instanceof final StagedSnapshot staged) {
               staged.abort();
-            } else if (pending instanceof IncomingReplica replica) {
+            } else if (pending instanceof final IncomingReplica replica) {
               replica.abort();
             }
           }

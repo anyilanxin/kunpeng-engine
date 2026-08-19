@@ -162,7 +162,7 @@ public final class VaultCodec {
 
     public Reader(final byte[] buffer) {
       this.buffer = buffer;
-      this.limit = buffer.length;
+      limit = buffer.length;
     }
 
     public int readByte() {

@@ -20,13 +20,13 @@ import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshotListener;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.ReceivableSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.ReceivedSnapshot;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /** {@link ReceivableSnapshotStore} 的 v2 实现（包装 {@link SnapshotVault}） */
 public final class VaultSnapshotStore implements ReceivableSnapshotStore {

@@ -19,9 +19,10 @@ package com.anyilanxin.kunpeng.cluster.raft.snapshot.impl;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.ReceivedSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChunk;
-import java.util.concurrent.CompletableFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.CompletableFuture;
 
 /** {@link ReceivedSnapshot} 的 v2 实现（包装 {@link IncomingReplica}） */
 final class VaultReceivedSnapshot implements ReceivedSnapshot {

@@ -19,11 +19,12 @@ package com.anyilanxin.kunpeng.cluster.raft.snapshot.impl;
 import com.anyilanxin.kunpeng.utils.scheduler.Actor;
 import com.anyilanxin.kunpeng.utils.scheduler.future.ActorFuture;
 import com.anyilanxin.kunpeng.utils.scheduler.future.CompletableActorFuture;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 副本拉取编排（客户端侧）：首块建立会话 → vault.receive 建立接收副本 → 逐块 apply →
@@ -48,7 +49,7 @@ public final class ReplicaPullTransfer extends Actor {
     this.vault = vault;
     this.transferClient = transferClient;
     this.channel = channel;
-    this.actorName = "ReplicaPullTransfer-" + channel.name().toLowerCase() + '-' + partitionId;
+      actorName = "ReplicaPullTransfer-" + channel.name().toLowerCase() + '-' + partitionId;
   }
 
   @Override

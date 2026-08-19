@@ -111,7 +111,7 @@ public final class BlockStreamReader {
       throw new IllegalStateException("游标越界: " + span.name + ':' + offsetInSpan);
     }
     final byte[] payload = new byte[length];
-    try (RandomAccessFile file = new RandomAccessFile(span.file.toFile(), "r")) {
+    try (final RandomAccessFile file = new RandomAccessFile(span.file.toFile(), "r")) {
       file.seek(offsetInSpan);
       file.readFully(payload);
     } catch (final IOException e) {

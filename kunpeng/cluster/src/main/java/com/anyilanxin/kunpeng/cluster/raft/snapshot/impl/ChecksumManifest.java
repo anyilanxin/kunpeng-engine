@@ -17,8 +17,8 @@
 package com.anyilanxin.kunpeng.cluster.raft.snapshot.impl;
 
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.VaultCodec.Reader;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.VaultCodec.Writer;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.VaultCodec.VaultCodecException;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.VaultCodec.Writer;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -43,7 +43,7 @@ public final class ChecksumManifest {
 
   private ChecksumManifest(final TreeMap<String, Long> entries) {
     this.entries = entries;
-    this.combined = computeCombined(entries);
+    combined = computeCombined(entries);
   }
 
   public static ChecksumManifest empty() {

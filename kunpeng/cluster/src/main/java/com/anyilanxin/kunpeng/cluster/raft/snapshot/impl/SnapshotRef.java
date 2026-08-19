@@ -50,7 +50,7 @@ public final class SnapshotRef implements Comparable<SnapshotRef> {
     this.processedPosition = processedPosition;
     this.exportedPosition = exportedPosition;
     this.brokerId = Objects.requireNonNull(brokerId);
-    this.checksum = "";
+    checksum = "";
   }
 
   /** 目录名/线上字符串解析；格式不符抛 {@link IllegalArgumentException} */
@@ -116,7 +116,7 @@ public final class SnapshotRef implements Comparable<SnapshotRef> {
 
   /** 落档时写入综合校验值（一次性） */
   void checksum(final String value) {
-    this.checksum = value;
+    checksum = value;
   }
 
   @Override
@@ -144,7 +144,7 @@ public final class SnapshotRef implements Comparable<SnapshotRef> {
     if (this == o) {
       return true;
     }
-    if (!(o instanceof SnapshotRef ref)) {
+    if (!(o instanceof final SnapshotRef ref)) {
       return false;
     }
     return index == ref.index

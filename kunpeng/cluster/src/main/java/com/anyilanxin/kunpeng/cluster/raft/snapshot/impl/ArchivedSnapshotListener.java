@@ -23,5 +23,6 @@ public interface ArchivedSnapshotListener {
   void onArchived(ArchivedSnapshot snapshot);
 
   /** 快照被淘汰删除 */
-  default void onPurged(ArchivedSnapshot snapshot) {}
+  default void onPurged(final ArchivedSnapshot snapshot) {
+  }
 }

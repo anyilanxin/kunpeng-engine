@@ -18,8 +18,6 @@
 package com.anyilanxin.kunpeng.cluster.raft.partition;
 
 import com.anyilanxin.kunpeng.cluster.cluster.Member;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationService;
 import com.anyilanxin.kunpeng.cluster.primitive.partition.*;
@@ -32,6 +30,8 @@ import com.anyilanxin.kunpeng.cluster.utils.serializer.Namespaces;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
