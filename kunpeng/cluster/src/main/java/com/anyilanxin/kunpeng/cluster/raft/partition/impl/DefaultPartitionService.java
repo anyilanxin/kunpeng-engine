@@ -14,12 +14,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.anyilanxin.kunpeng.cluster.primitive.partition.impl;
+package com.anyilanxin.kunpeng.cluster.raft.partition.impl;
 
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationService;
-import com.anyilanxin.kunpeng.cluster.primitive.partition.ManagedPartitionGroup;
-import com.anyilanxin.kunpeng.cluster.primitive.partition.ManagedPartitionService;
+import com.anyilanxin.kunpeng.cluster.raft.partition.ManagedPartitionGroup;
+import com.anyilanxin.kunpeng.cluster.raft.partition.ManagedPartitionService;
 import com.anyilanxin.kunpeng.cluster.raft.partition.PartitionManagementService;
 import com.anyilanxin.kunpeng.cluster.raft.partition.PartitionService;
 import org.slf4j.Logger;

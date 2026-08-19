@@ -17,7 +17,7 @@
 package com.anyilanxin.kunpeng.cluster.raft.partition;
 
 import com.anyilanxin.kunpeng.cluster.cluster.Member;
-import com.anyilanxin.kunpeng.cluster.primitive.partition.impl.NodeMemberGroup;
+import com.anyilanxin.kunpeng.cluster.raft.partition.impl.NodeMemberGroup;
 
 import java.util.*;
 import java.util.function.Function;
