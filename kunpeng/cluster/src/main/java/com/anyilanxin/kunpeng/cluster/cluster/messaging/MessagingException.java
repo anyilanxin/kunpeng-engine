@@ -17,6 +17,8 @@
  */
 package com.anyilanxin.kunpeng.cluster.cluster.messaging;
 
+import com.anyilanxin.kunpeng.cluster.utils.net.Address;
+
 import java.io.IOException;
 
 /** Top level exception for MessagingService failures. */
@@ -32,7 +34,7 @@ public class MessagingException extends IOException {
 
   /** Exception indicating no remote registered remote handler. */
   public static class NoRemoteHandler extends MessagingException {
-    public NoRemoteHandler(String subject) {
+    public NoRemoteHandler(final String subject) {
       super(
           String.format(
               "No remote message handler registered for this message, subject %s", subject));
@@ -41,7 +43,7 @@ public class MessagingException extends IOException {
 
   /** Exception indicating handler failure. */
   public static class RemoteHandlerFailure extends MessagingException {
-    public RemoteHandlerFailure(String message) {
+    public RemoteHandlerFailure(final String message) {
       super(String.format("Remote handler failed to handle message, cause: %s", message));
     }
   }
@@ -52,6 +54,17 @@ public class MessagingException extends IOException {
   public static class ProtocolException extends MessagingException {
     public ProtocolException() {
       super("Failed to process message due to invalid message structure");
+    }
+  }
+
+
+  public static class NoSuchMemberException extends MessagingException {
+    public NoSuchMemberException(final Address address) {
+      super("Failed to handle message, sender %s is not a known cluster member".formatted(address));
+    }
+
+    public NoSuchMemberException(final String message) {
+      super(message);
     }
   }
 }

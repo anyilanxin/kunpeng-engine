@@ -20,10 +20,7 @@ package com.anyilanxin.kunpeng.cluster.cluster.messaging.impl;
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
 import com.anyilanxin.kunpeng.cluster.cluster.Member;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
-import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationService;
-import com.anyilanxin.kunpeng.cluster.cluster.messaging.ManagedClusterCommunicationService;
-import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
-import com.anyilanxin.kunpeng.cluster.cluster.messaging.UnicastService;
+import com.anyilanxin.kunpeng.cluster.cluster.messaging.*;
 import com.anyilanxin.kunpeng.cluster.utils.concurrent.Futures;
 import com.anyilanxin.kunpeng.cluster.utils.net.Address;
 import com.google.common.base.Objects;
@@ -188,6 +185,30 @@ public class DefaultClusterCommunicationService implements ManagedClusterCommuni
     return CompletableFuture.completedFuture(null);
   }
 
+
+  @Override
+  public <M, R> void replyTo(
+    final String subject,
+    final Function<byte[], M> decoder,
+    final BiFunction<MemberId, M, R> handler,
+    final Function<R, byte[]> encoder,
+    final Executor executor) {
+    messagingService.registerHandler(
+      subject, new InternalMessageBiResponder<>(decoder, encoder, handler, executor));
+  }
+
+
+  @Override
+  public <M, R> void replyToAsync(
+    final String subject,
+    final Function<byte[], M> decoder,
+    final Function<M, CompletableFuture<R>> handler,
+    final Function<R, byte[]> encoder,
+    final Executor executor) {
+    messagingService.registerHandler(
+      subject, new InternalMessageAsyncResponder<>(decoder, encoder, handler, executor));
+  }
+
   @Override
   public void unsubscribe(final String subject) {
     messagingService.unregisterHandler(subject);
@@ -273,6 +294,7 @@ public class DefaultClusterCommunicationService implements ManagedClusterCommuni
       this.handler = handler;
     }
 
+
     @Override
     public CompletableFuture<byte[]> apply(final Address sender, final byte[] bytes) {
       return handler.apply(decoder.apply(bytes)).thenApply(encoder);
@@ -310,6 +332,85 @@ public class DefaultClusterCommunicationService implements ManagedClusterCommuni
       if (member != null) {
         consumer.accept(member.id(), decoder.apply(bytes));
       }
+    }
+  }
+
+
+  private final class InternalMessageBiResponder<M, R>
+    implements BiFunction<Address, byte[], CompletableFuture<byte[]>> {
+    private final Function<byte[], M> decoder;
+    private final Function<R, byte[]> encoder;
+    private final BiFunction<MemberId, M, R> handler;
+    private final Executor executor;
+
+    InternalMessageBiResponder(
+      final Function<byte[], M> decoder,
+      final Function<R, byte[]> encoder,
+      final BiFunction<MemberId, M, R> handler,
+      final Executor executor) {
+      this.decoder = decoder;
+      this.encoder = encoder;
+      this.handler = handler;
+      this.executor = executor;
+    }
+
+    @Override
+    public CompletableFuture<byte[]> apply(final Address address, final byte[] bytes) {
+      final var response = new CompletableFuture<byte[]>();
+      executor.execute(
+        () -> {
+          try {
+            handleRequest(address, bytes, response);
+          } catch (final Exception e) {
+            response.completeExceptionally(e);
+          }
+        });
+
+      return response;
+    }
+
+    private void handleRequest(
+      final Address address, final byte[] bytes, final CompletableFuture<byte[]> response)
+      throws Exception {
+      final Member member = membershipService.getMember(address);
+      if (member == null) {
+        throw new MessagingException.NoSuchMemberException(address);
+      }
+
+      final var decodedResponse = handler.apply(member.id(), decoder.apply(bytes));
+      final var encodedResponse = encoder.apply(decodedResponse);
+      response.complete(encodedResponse);
+    }
+  }
+
+
+  private class InternalMessageAsyncResponder<M, R>
+    implements BiFunction<Address, byte[], CompletableFuture<byte[]>> {
+    private final Function<byte[], M> decoder;
+    private final Function<R, byte[]> encoder;
+    private final Function<M, CompletableFuture<R>> handler;
+    private final Executor executor;
+
+    InternalMessageAsyncResponder(
+      final Function<byte[], M> decoder,
+      final Function<R, byte[]> encoder,
+      final Function<M, CompletableFuture<R>> handler,
+      final Executor executor) {
+      this.decoder = decoder;
+      this.encoder = encoder;
+      this.handler = handler;
+      this.executor = executor;
+    }
+
+    @Override
+    public CompletableFuture<byte[]> apply(final Address sender, final byte[] bytes) {
+      final Member member = membershipService.getMember(sender);
+      if (member == null) {
+        return CompletableFuture.failedFuture(new MessagingException.NoSuchMemberException(sender));
+      }
+      return CompletableFuture.supplyAsync(() -> decoder.apply(bytes), executor)
+        .thenComposeAsync(handler, executor)
+        .thenApplyAsync(encoder, executor);
     }
   }
 }
