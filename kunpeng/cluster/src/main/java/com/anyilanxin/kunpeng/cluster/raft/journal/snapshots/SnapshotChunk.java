@@ -14,23 +14,27 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.anyilanxin.kunpeng.utils;
+package com.anyilanxin.kunpeng.cluster.raft.journal.snapshots;
 
-import java.util.List;
-import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
 
-/** 字符串工具 */
-public final class StringUtil {
+/** 快照传输块（线上单元，SBE 序列化） */
+public interface SnapshotChunk {
 
-  /** 列表清洗器：去除每项首尾空白并过滤空白项 */
-  public static final UnaryOperator<List<String>> LIST_SANITIZER =
-      list -> list.stream().map(String::trim).filter(s -> !s.isEmpty()).collect(Collectors.toList());
+  /** 所属快照标识（目录名） */
+  String getSnapshotId();
 
-  private StringUtil() {}
+  /** 该快照总块数 */
+  int getTotalCount();
 
-  /** 字符串转 UTF-8 字节数组 */
-  public static byte[] getBytes(final String value) {
-    return value.getBytes(java.nio.charset.StandardCharsets.UTF_8);
-  }
+  /** 块标识 "{fileName}:{offset}" */
+  String getChunkName();
+
+  /** 块内容 CRC */
+  long getChecksum();
+
+  /** 快照综合校验 */
+  long getSnapshotChecksum();
+
+  /** 块字节内容 */
+  byte[] getContent();
 }

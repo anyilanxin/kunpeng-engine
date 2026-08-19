@@ -14,23 +14,38 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.anyilanxin.kunpeng.utils;
+package com.anyilanxin.kunpeng.cluster.raft.journal.snapshots;
 
-import java.util.List;
-import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
+import java.io.UncheckedIOException;
+import java.nio.file.Path;
 
-/** 字符串工具 */
-public final class StringUtil {
+/** 已持久化的快照（只读视图） */
+public interface PersistedSnapshot {
 
-  /** 列表清洗器：去除每项首尾空白并过滤空白项 */
-  public static final UnaryOperator<List<String>> LIST_SANITIZER =
-      list -> list.stream().map(String::trim).filter(s -> !s.isEmpty()).collect(Collectors.toList());
+  /** raft 日志索引 */
+  long getIndex();
 
-  private StringUtil() {}
+  /** 拍摄时的任期 */
+  long getTerm();
 
-  /** 字符串转 UTF-8 字节数组 */
-  public static byte[] getBytes(final String value) {
-    return value.getBytes(java.nio.charset.StandardCharsets.UTF_8);
-  }
+  /** 快照唯一标识（目录名） */
+  String getId();
+
+  /** 快照格式版本 */
+  int version();
+
+  /** 已处理位置 */
+  long getProcessedPosition();
+
+  /** 已导出位置 */
+  long getExportedPosition();
+
+  /** 快照校验和 */
+  long getChecksum();
+
+  /** 快照目录 */
+  Path getPath();
+
+  /** 创建块读取器；快照可能已被删除，抛 {@link UncheckedIOException} */
+  SnapshotChunkReader newChunkReader();
 }

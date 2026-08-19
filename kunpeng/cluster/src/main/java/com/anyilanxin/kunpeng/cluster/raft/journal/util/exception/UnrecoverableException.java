@@ -14,23 +14,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.anyilanxin.kunpeng.utils;
+package com.anyilanxin.kunpeng.cluster.raft.journal.util.exception;
 
-import java.util.List;
-import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
+/** 不可恢复异常：触发进程退出（如存储损坏、锁竞争失败） */
+public class UnrecoverableException extends RuntimeException {
 
-/** 字符串工具 */
-public final class StringUtil {
+  public UnrecoverableException(final String message) {
+    super(message);
+  }
 
-  /** 列表清洗器：去除每项首尾空白并过滤空白项 */
-  public static final UnaryOperator<List<String>> LIST_SANITIZER =
-      list -> list.stream().map(String::trim).filter(s -> !s.isEmpty()).collect(Collectors.toList());
-
-  private StringUtil() {}
-
-  /** 字符串转 UTF-8 字节数组 */
-  public static byte[] getBytes(final String value) {
-    return value.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+  public UnrecoverableException(final String message, final Throwable cause) {
+    super(message, cause);
   }
 }

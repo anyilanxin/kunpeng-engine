@@ -14,23 +14,22 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.anyilanxin.kunpeng.utils;
+package com.anyilanxin.kunpeng.cluster.raft.journal.snapshots;
 
-import java.util.List;
-import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
+import java.nio.ByteBuffer;
 
-/** 字符串工具 */
-public final class StringUtil {
+/** 快照块顺序读取器（Leader 侧向 Follower 发送用） */
+public interface SnapshotChunkReader {
 
-  /** 列表清洗器：去除每项首尾空白并过滤空白项 */
-  public static final UnaryOperator<List<String>> LIST_SANITIZER =
-      list -> list.stream().map(String::trim).filter(s -> !s.isEmpty()).collect(Collectors.toList());
+  /** 是否还有下一个块 */
+  boolean hasNext();
 
-  private StringUtil() {}
+  /** 读取下一个块 */
+  SnapshotChunk next();
 
-  /** 字符串转 UTF-8 字节数组 */
-  public static byte[] getBytes(final String value) {
-    return value.getBytes(java.nio.charset.StandardCharsets.UTF_8);
-  }
+  /** 下一个块的标识（用于 InstallRequest.nextChunkId） */
+  ByteBuffer nextId();
+
+  /** 定位到指定块（重传） */
+  void seek(ByteBuffer chunkId);
 }

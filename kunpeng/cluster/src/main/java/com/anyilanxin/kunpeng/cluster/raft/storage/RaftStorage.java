@@ -20,7 +20,7 @@ package com.anyilanxin.kunpeng.cluster.raft.storage;
 import com.anyilanxin.kunpeng.cluster.raft.journal.snapshots.PersistedSnapshotStore;
 import io.micrometer.core.instrument.MeterRegistry;
 import com.anyilanxin.kunpeng.cluster.raft.journal.snapshots.ReceivableSnapshotStore;
-import com.anyilanxin.kunpeng.cluster.raft.journal.util.FileUtil;
+import com.anyilanxin.kunpeng.utils.FileUtil;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLog;
 import com.anyilanxin.kunpeng.cluster.raft.storage.system.MetaStore;
 
@@ -60,6 +60,7 @@ public final class RaftStorage {
   private final boolean flushExplicitly;
   private final ReceivableSnapshotStore persistedSnapshotStore;
   private final int journalIndexDensity;
+  private final MeterRegistry meterRegistry;
 
   private RaftStorage(
       final String prefix,
@@ -68,7 +69,8 @@ public final class RaftStorage {
       final long freeDiskSpace,
       final boolean flushExplicitly,
       final ReceivableSnapshotStore persistedSnapshotStore,
-      final int journalIndexDensity) {
+      final int journalIndexDensity,
+      final MeterRegistry meterRegistry) {
     this.prefix = prefix;
     this.directory = directory;
     this.maxSegmentSize = maxSegmentSize;
@@ -76,6 +78,7 @@ public final class RaftStorage {
     this.flushExplicitly = flushExplicitly;
     this.persistedSnapshotStore = persistedSnapshotStore;
     this.journalIndexDensity = journalIndexDensity;
+    this.meterRegistry = meterRegistry;
 
     try {
       FileUtil.ensureDirectoryExists(directory.toPath());
@@ -321,6 +324,12 @@ public final class RaftStorage {
       return this;
     }
 
+    /** Sets the meter registry for the log metrics. */
+    public Builder withMeterRegistry(final MeterRegistry meterRegistry) {
+      this.meterRegistry = meterRegistry;
+      return this;
+    }
+
     /**
      * Builds the {@link RaftStorage} object.
      *
@@ -335,7 +344,8 @@ public final class RaftStorage {
           freeDiskSpace,
           flushExplicitly,
           persistedSnapshotStore,
-          journalIndexDensity);
+          journalIndexDensity,
+          meterRegistry);
     }
   }
 }

@@ -59,6 +59,16 @@ public final class SnapshotChunkImpl
   }
 
   @Override
+  protected int bodyTemplateId() {
+    return SnapshotChunkEncoder.TEMPLATE_ID;
+  }
+
+  @Override
+  protected int bodySchemaId() {
+    return SnapshotChunkEncoder.SCHEMA_ID;
+  }
+
+  @Override
   public void reset() {
     super.reset();
 
@@ -74,6 +84,7 @@ public final class SnapshotChunkImpl
   @Override
   public int getLength() {
     return super.getLength()
+        + SnapshotChunkEncoder.BLOCK_LENGTH
         + SnapshotChunkEncoder.snapshotIdHeaderLength()
         + snapshotId.length()
         + SnapshotChunkEncoder.chunkNameHeaderLength()
@@ -85,7 +96,7 @@ public final class SnapshotChunkImpl
   @Override
   public void write(final MutableDirectBuffer buffer, final int offset) {
     super.write(buffer, offset);
-
+    encoder.wrapAndApplyHeader(buffer, offset, getHeaderEncoder());
     encoder
         .totalCount(totalCount)
         .snapshotId(snapshotId)
@@ -98,7 +109,7 @@ public final class SnapshotChunkImpl
   @Override
   public void wrap(final DirectBuffer buffer, final int offset, final int length) {
     super.wrap(buffer, offset, length);
-
+    decoder.wrapAndApplyHeader(buffer, offset, getHeaderDecoder());
     totalCount = decoder.totalCount();
     snapshotId = decoder.snapshotId();
     chunkName = decoder.chunkName();

@@ -83,6 +83,11 @@ public final class FileUtil {
   /**
    * 确保目录存在：单次 createDirectories，已存在且非目录时抛 {@link NotDirectoryException}
    */
+  /** 确保目录存在（ensureDirectory 别名） */
+  public static void ensureDirectoryExists(final Path directory) throws IOException {
+    ensureDirectory(directory);
+  }
+
   public static void ensureDirectory(final Path directory) throws IOException {
     try {
       Files.createDirectories(directory);

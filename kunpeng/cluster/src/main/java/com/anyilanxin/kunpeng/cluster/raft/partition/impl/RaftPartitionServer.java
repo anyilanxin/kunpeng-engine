@@ -62,6 +62,11 @@ import java.util.concurrent.CopyOnWriteArraySet;
 /** {@link Partition} server. */
 public class RaftPartitionServer implements Managed<RaftPartitionServer>, HealthMonitorable {
 
+  @Override
+  public String getName() {
+    return partition.name();
+  }
+
   private final Logger log;
 
   private final MemberId localMemberId;

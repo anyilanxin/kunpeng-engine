@@ -21,7 +21,7 @@ import com.anyilanxin.kunpeng.cluster.cluster.messaging.ManagedMessagingService;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingConfig;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
-import com.anyilanxin.kunpeng.cluster.raft.journal.util.StringUtil;
+import com.anyilanxin.kunpeng.utils.StringUtil;
 import com.anyilanxin.kunpeng.cluster.utils.concurrent.OrderedFuture;
 import com.anyilanxin.kunpeng.cluster.utils.net.Address;
 import com.google.common.base.Throwables;

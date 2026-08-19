@@ -14,23 +14,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.anyilanxin.kunpeng.utils;
+package com.anyilanxin.kunpeng.cluster.raft.snapshot.v2;
 
-import java.util.List;
-import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
-
-/** 字符串工具 */
-public final class StringUtil {
-
-  /** 列表清洗器：去除每项首尾空白并过滤空白项 */
-  public static final UnaryOperator<List<String>> LIST_SANITIZER =
-      list -> list.stream().map(String::trim).filter(s -> !s.isEmpty()).collect(Collectors.toList());
-
-  private StringUtil() {}
-
-  /** 字符串转 UTF-8 字节数组 */
-  public static byte[] getBytes(final String value) {
-    return value.getBytes(java.nio.charset.StandardCharsets.UTF_8);
-  }
+/** 副本传输通道：bootstrap（新节点补齐）/ merge（分区数据迁移） */
+public enum ReplicaChannel {
+  BOOTSTRAP,
+  MERGE
 }

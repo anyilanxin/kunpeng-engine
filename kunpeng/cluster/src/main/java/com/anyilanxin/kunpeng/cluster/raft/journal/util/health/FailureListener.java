@@ -14,23 +14,19 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.anyilanxin.kunpeng.utils;
+package com.anyilanxin.kunpeng.cluster.raft.journal.util.health;
 
-import java.util.List;
-import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
+/** 组件故障/恢复回调 */
+public interface FailureListener {
 
-/** 字符串工具 */
-public final class StringUtil {
+  /** 组件进入不健康状态 */
+  void onFailure(HealthReport report);
 
-  /** 列表清洗器：去除每项首尾空白并过滤空白项 */
-  public static final UnaryOperator<List<String>> LIST_SANITIZER =
-      list -> list.stream().map(String::trim).filter(s -> !s.isEmpty()).collect(Collectors.toList());
-
-  private StringUtil() {}
-
-  /** 字符串转 UTF-8 字节数组 */
-  public static byte[] getBytes(final String value) {
-    return value.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+  /** 组件进入不可恢复状态（进程应退出） */
+  default void onUnrecoverableFailure(HealthReport report) {
+    onFailure(report);
   }
+
+  /** 组件从故障中恢复 */
+  void onRecovered();
 }

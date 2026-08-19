@@ -14,23 +14,23 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.anyilanxin.kunpeng.utils;
+package com.anyilanxin.kunpeng.cluster.raft.journal.snapshots;
 
-import java.util.List;
-import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
+import java.io.IOException;
+import java.util.Optional;
 
-/** 字符串工具 */
-public final class StringUtil {
+/** 快照存储基础接口 */
+public interface PersistedSnapshotStore extends AutoCloseable {
 
-  /** 列表清洗器：去除每项首尾空白并过滤空白项 */
-  public static final UnaryOperator<List<String>> LIST_SANITIZER =
-      list -> list.stream().map(String::trim).filter(s -> !s.isEmpty()).collect(Collectors.toList());
+  /** 最新落档快照 */
+  Optional<PersistedSnapshot> getLatestSnapshot();
 
-  private StringUtil() {}
+  /** 全部可用快照 */
+  Iterable<PersistedSnapshot> getAvailableSnapshots();
 
-  /** 字符串转 UTF-8 字节数组 */
-  public static byte[] getBytes(final String value) {
-    return value.getBytes(java.nio.charset.StandardCharsets.UTF_8);
-  }
+  /** 快照压缩下界（日志可压缩到的最小索引） */
+  long getCompactionBound();
+
+  @Override
+  void close() throws IOException;
 }
