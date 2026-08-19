@@ -1,6 +1,6 @@
 # kunpeng-bpmn-model 更改说明
 
-[English](./README.md)
+[English](./CHANGES.md)
 
 本模块的代码来源于 Camunda 8 / Zeebe 仓库的 bpmn-model 模块（BPMN 2.0 模型 API）：
 

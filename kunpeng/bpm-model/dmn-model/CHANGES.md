@@ -1,6 +1,6 @@
 # kunpeng-dmn-model Change Notes
 
-[中文](./README.zh-CN.md)
+[中文](./CHANGES.zh-CN.md)
 
 The code in this module originates from the dmn-model module (DMN 1.1 model API written in Java) of the Camunda 7 platform:
 

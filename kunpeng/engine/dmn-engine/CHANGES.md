@@ -1,6 +1,6 @@
 # kunpeng-dmn-engine Change Notes
 
-[中文](./README.zh-CN.md)
+[中文](./CHANGES.zh-CN.md)
 
 The code in this module originates from the engine-dmn module (DMN engine) of the Camunda 7 platform, placed here as `kunpeng/dmn-engine`:
 

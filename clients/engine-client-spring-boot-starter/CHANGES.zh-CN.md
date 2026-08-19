@@ -1,6 +1,6 @@
 # kunpeng-camunda-spring-boot-starter 更改说明
 
-[English](./README.md)
+[English](./CHANGES.md)
 
 本模块的代码来源于 Camunda 8 / Zeebe 仓库的 camunda-spring-boot-starter 模块
 （Camunda 8 java client 的 Spring Boot starter）：

@@ -1,6 +1,6 @@
 # kunpeng-connector Change Notes
 
-[中文](./README.zh-CN.md)
+[中文](./CHANGES.zh-CN.md)
 
 This directory contains the code imported from the Camunda Connectors repository:
 

@@ -1,6 +1,6 @@
 # kunpeng-dmn-model 更改说明
 
-[English](./README.md)
+[English](./CHANGES.md)
 
 本模块的代码来源于 Camunda 7 平台的 dmn-model 模块（DMN 模型 API）：
 

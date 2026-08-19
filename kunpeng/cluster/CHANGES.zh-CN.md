@@ -1,6 +1,6 @@
 # kunpeng-cluster 更改说明
 
-[English](./README.md)
+[English](./CHANGES.md)
 
 本模块的代码来源于 Camunda（Zeebe）仓库的 hard fork 版本 Atomix：
 

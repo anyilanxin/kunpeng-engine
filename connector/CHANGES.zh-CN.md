@@ -1,6 +1,6 @@
 # kunpeng-connector 更改说明
 
-[English](./README.md)
+[English](./CHANGES.md)
 
 本目录的代码来源于 Camunda Connectors 仓库：
 

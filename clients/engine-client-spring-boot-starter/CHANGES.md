@@ -1,6 +1,6 @@
 # kunpeng-camunda-spring-boot-starter Change Notes
 
-[中文](./README.zh-CN.md)
+[中文](./CHANGES.zh-CN.md)
 
 The code in this module originates from the camunda-spring-boot-starter module (Spring Boot starter
 for the Camunda 8 java client) of the Camunda 8 / Zeebe repository:

@@ -1,6 +1,6 @@
 # kunpeng-clients-java Change Notes
 
-[中文](./README.zh-CN.md)
+[中文](./CHANGES.zh-CN.md)
 
 The code in this module originates from the java client module of the Camunda 8 / Zeebe repository:
 

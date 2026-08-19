@@ -1,6 +1,6 @@
 # kunpeng-dmn-engine 更改说明
 
-[English](./README.md)
+[English](./CHANGES.md)
 
 本模块的代码来源于 Camunda 7 平台的 engine-dmn 模块（DMN 引擎），在本仓库中置于 `kunpeng/dmn-engine`：
 

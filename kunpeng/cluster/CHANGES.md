@@ -1,6 +1,6 @@
 # kunpeng-cluster Change Notes
 
-[中文](./README.zh-CN.md)
+[中文](./CHANGES.zh-CN.md)
 
 The code in this module originates from the hard fork of Atomix maintained by Camunda (Zeebe):
 

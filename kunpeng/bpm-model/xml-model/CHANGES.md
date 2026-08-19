@@ -1,6 +1,6 @@
 # kunpeng-xml-model Change Notes
 
-[中文](./README.zh-CN.md)
+[中文](./CHANGES.zh-CN.md)
 
 The code in this module originates from the xml-model module (generic XML model API written in Java, the foundation used by the BPMN/DMN model APIs) of the Camunda 7 platform:
 

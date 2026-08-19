@@ -1,6 +1,6 @@
 # kunpeng-clients-java 更改说明
 
-[English](./README.md)
+[English](./CHANGES.md)
 
 本模块的代码来源于 Camunda 8 / Zeebe 仓库的 java client 模块：
 

@@ -1,6 +1,6 @@
 # kunpeng-xml-model 更改说明
 
-[English](./README.md)
+[English](./CHANGES.md)
 
 本模块的代码来源于 Camunda 7 平台的 xml-model 模块（通用 XML 模型 API，BPMN/DMN 模型 API 的基础）：
 
