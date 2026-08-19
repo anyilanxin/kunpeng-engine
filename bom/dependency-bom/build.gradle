@@ -67,6 +67,7 @@ dependencies {
         api "org.graalvm.js:js:$graalvmjs"
         // 脚本引擎----end
 
+        api "org.jetbrains:annotations:26.1.0"
         api "org.bouncycastle:bcpkix-jdk18on:1.85"
         api "org.bouncycastle:bcprov-jdk18on:1.85.2"
         api "org.agrona:agrona:2.5.0"
