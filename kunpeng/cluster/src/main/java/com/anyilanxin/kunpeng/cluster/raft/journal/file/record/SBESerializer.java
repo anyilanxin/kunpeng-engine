@@ -16,17 +16,13 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.journal.file.record;
 
-import com.anyilanxin.kunpeng.cluster.raft.journal.file.MessageHeaderDecoder;
-import com.anyilanxin.kunpeng.cluster.raft.journal.file.MessageHeaderEncoder;
-import com.anyilanxin.kunpeng.cluster.raft.journal.file.RecordDataDecoder;
-import com.anyilanxin.kunpeng.cluster.raft.journal.file.RecordDataEncoder;
-import com.anyilanxin.kunpeng.cluster.raft.journal.file.RecordMetadataDecoder;
-import com.anyilanxin.kunpeng.cluster.raft.journal.file.RecordMetadataEncoder;
-import com.anyilanxin.kunpeng.cluster.raft.journal.util.Either;
-import java.nio.BufferOverflowException;
+import com.anyilanxin.kunpeng.cluster.raft.journal.file.*;
+import com.anyilanxin.kunpeng.utils.Either;
 import org.agrona.DirectBuffer;
 import org.agrona.MutableDirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
+
+import java.nio.BufferOverflowException;
 
 /** The serializer that writes and reads a journal record according to the SBE schema defined. */
 public final class SBESerializer implements JournalRecordSerializer {
