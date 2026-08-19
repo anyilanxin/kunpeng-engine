@@ -1,26 +1,22 @@
 /*
- * Copyright © 2017 camunda services GmbH (info@camunda.com)
  * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.anyilanxin.kunpeng.cluster.journal.file.record;
+package com.anyilanxin.kunpeng.cluster.raft.journal.file.record;
 
-import com.anyilanxin.kunpeng.cluster.raft.journal.file.record.CorruptedLogException;
-import com.anyilanxin.kunpeng.cluster.raft.journal.file.record.RecordData;
-import com.anyilanxin.kunpeng.cluster.raft.journal.file.record.RecordMetadata;
-import com.anyilanxin.kunpeng.cluster.raft.journal.file.record.SBESerializer;
-import io.camunda.zeebe.util.Either;
+import com.anyilanxin.kunpeng.cluster.raft.journal.util.Either;
 import org.agrona.DirectBuffer;
 import org.agrona.MutableDirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
