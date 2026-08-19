@@ -1,0 +1,74 @@
+/*
+ * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+ * under one or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information regarding copyright
+ * ownership. Camunda licenses this file to you under the Apache License,
+ * Version 2.0; you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.camunda.connector.runtime.core.inbound.activitylog;
+
+import com.google.common.collect.EvictingQueue;
+import io.camunda.connector.api.inbound.Activity;
+import io.camunda.connector.runtime.core.inbound.ExecutableId;
+import java.util.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+
+public class ActivityLogRegistry implements ActivityLogWriter {
+
+  private final Logger LOG = LoggerFactory.getLogger(ActivityLogRegistry.class);
+
+  private final Map<ExecutableId, EvictingQueue<Activity>> activityLogs = new HashMap<>();
+
+  private final int maxLogSize;
+
+  public ActivityLogRegistry(int maxLogSize) {
+    this.maxLogSize = maxLogSize;
+  }
+
+  public ActivityLogRegistry() {
+    this(100); // Default size, can be overridden
+  }
+
+  public Collection<Activity> getLogs(ExecutableId executableId) {
+    synchronized (activityLogs) {
+      return Optional.ofNullable(activityLogs.get(executableId))
+          .<Collection<Activity>>map(queue -> Collections.unmodifiableList(new ArrayList<>(queue)))
+          .orElse(Collections.emptyList());
+    }
+  }
+
+  public void remove(ExecutableId executableId) {
+    synchronized (activityLogs) {
+      activityLogs.remove(executableId);
+    }
+  }
+
+  @Override
+  public void log(ActivityLogEntry logEntry) {
+    String message = logEntry.activity().toString();
+    MDC.put("executableId", logEntry.executableId().getId());
+    MDC.put("source", logEntry.source().name());
+    switch (logEntry.activity().severity()) {
+      case DEBUG -> LOG.debug(message);
+      case INFO -> LOG.info(message);
+      case ERROR, WARNING -> LOG.warn(message); // errors would be too noisy
+    }
+    MDC.clear();
+    synchronized (activityLogs) {
+      activityLogs
+          .computeIfAbsent(logEntry.executableId(), key -> EvictingQueue.create(maxLogSize))
+          .add(logEntry.activity());
+    }
+  }
+}

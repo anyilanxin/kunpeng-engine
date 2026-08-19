@@ -1,0 +1,733 @@
+/*
+ * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+ * under one or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information regarding copyright
+ * ownership. Camunda licenses this file to you under the Apache License,
+ * Version 2.0; you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.camunda.connector.generator.java.util;
+
+import static io.camunda.connector.util.reflection.ReflectionUtil.getAllFields;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import io.camunda.connector.api.annotation.Header;
+import io.camunda.connector.api.annotation.Variable;
+import io.camunda.connector.api.document.Document;
+import io.camunda.connector.generator.dsl.*;
+import io.camunda.connector.generator.dsl.DropdownProperty.DropdownChoice;
+import io.camunda.connector.generator.dsl.PropertyBinding;
+import io.camunda.connector.generator.dsl.PropertyBinding.ZeebeInput;
+import io.camunda.connector.generator.dsl.PropertyBinding.ZeebeProperty;
+import io.camunda.connector.generator.dsl.PropertyCondition;
+import io.camunda.connector.generator.dsl.PropertyCondition.AllMatch;
+import io.camunda.connector.generator.dsl.PropertyCondition.Equals;
+import io.camunda.connector.generator.dsl.PropertyCondition.OneOf;
+import io.camunda.connector.generator.dsl.PropertyGroup.PropertyGroupBuilder;
+import io.camunda.connector.generator.java.annotation.*;
+import io.camunda.connector.generator.java.annotation.TemplateProperty.PropertyType;
+import io.camunda.connector.generator.java.processor.AnnotationProcessor;
+import io.camunda.connector.generator.java.processor.JakartaValidationAnnotationProcessor;
+import io.camunda.connector.generator.java.processor.TemplatePropertyAnnotationProcessor;
+import io.camunda.connector.generator.java.util.TemplateGenerationContext.Outbound;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Field;
+import java.lang.reflect.Parameter;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.*;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import org.apache.commons.lang3.ClassUtils;
+import org.apache.commons.lang3.StringUtils;
+
+/** Utility class for transforming data classes into {@link PropertyBuilder} instances. */
+public class TemplatePropertiesUtil {
+
+  private static final List<AnnotationProcessor> fieldProcessors =
+      List.of(
+          new JakartaValidationAnnotationProcessor(), new TemplatePropertyAnnotationProcessor());
+
+  public static List<PropertyBuilder> extractTemplatePropertiesFromParameter(
+      Parameter parameter, TemplateGenerationContext context) {
+
+    var type = parameter.getType();
+    var annotation = parameter.getAnnotation(TemplateProperty.class);
+    var documentAnnotation = parameter.getAnnotation(TemplateDocumentProperty.class);
+    if (annotation != null && documentAnnotation != null) {
+      throw new IllegalStateException(
+          "@TemplateProperty and @TemplateDocumentProperty are mutually exclusive on: "
+              + parameter.getName());
+    }
+    if (documentAnnotation != null) {
+      return handleTemplateDocumentProperty(
+          parameter, parameter.getName(), type, documentAnnotation);
+    }
+    if (!isContainerType(parameter.getType(), annotation)) {
+      // If the type is a primitive, String, Enum or Number, return a single property
+      var property = buildProperty(parameter, parameter.getName(), type, context);
+      if (property != null) {
+        return List.of(property);
+      } else {
+        return Collections.emptyList();
+      }
+    }
+
+    //
+    return extractTemplatePropertiesFromType(type, context);
+  }
+
+  public static boolean shouldMapBindingsForParameter(Parameter parameter) {
+    return isContainerType(parameter.getType(), parameter.getAnnotation(TemplateProperty.class));
+  }
+
+  /**
+   * Analyze the type and return a list of {@link PropertyBuilder} instances.
+   *
+   * <p>Capabilities:
+   *
+   * <ul>
+   *   <li>primitive types and Strings are mapped to template properties according to their type
+   *   <li>nested types are handled recursively
+   *   <li>{@link TemplateProperty} annotations are taken into account
+   *   <li>Sealed hierarchies are supported by adding an extra Dropdown discriminator property.
+   *       {@link TemplateSubType} annotations are used to configure the sealed hierarchies.
+   * </ul>
+   *
+   * <p>Note: {@link PropertyBuilder#binding(PropertyBinding)} is not set by this method. The caller
+   * is responsible for setting the binding according to the connector type (inbound or outbound).
+   *
+   * @param type the type to analyze
+   * @return a list of {@link PropertyBuilder} instances
+   */
+  public static List<PropertyBuilder> extractTemplatePropertiesFromType(
+      Class<?> type, TemplateGenerationContext context) {
+
+    if (type == Void.class) {
+      // If the type is Void, return an empty list
+      return Collections.emptyList();
+    }
+
+    if (type.isSealed()) {
+      return handleSealedType(type, context);
+    }
+
+    var fields = getAllFields(type);
+    var properties = new ArrayList<PropertyBuilder>();
+
+    for (Field field : fields) {
+      var documentAnnotation = field.getAnnotation(TemplateDocumentProperty.class);
+      if (field.getAnnotation(TemplateProperty.class) != null && documentAnnotation != null) {
+        throw new IllegalStateException(
+            "@TemplateProperty and @TemplateDocumentProperty are mutually exclusive on: "
+                + field.getName());
+      }
+      if (documentAnnotation != null) {
+        properties.addAll(
+            handleTemplateDocumentProperty(
+                field, field.getName(), field.getType(), documentAnnotation));
+        continue;
+      }
+      if (isContainerType(field.getType(), field.getAnnotation(TemplateProperty.class))) {
+        var nestedPropertiesAnnotation = field.getAnnotation(NestedProperties.class);
+        boolean hasPathPrefix =
+            nestedPropertiesAnnotation == null || nestedPropertiesAnnotation.addNestedPath();
+        boolean hasConditionOverride =
+            nestedPropertiesAnnotation != null
+                && StringUtils.isNotBlank(nestedPropertiesAnnotation.condition().property());
+        boolean hasGroupOverride =
+            nestedPropertiesAnnotation != null
+                && StringUtils.isNotBlank(nestedPropertiesAnnotation.group());
+
+        try {
+          // analyze recursively
+          var nestedProperties =
+              extractTemplatePropertiesFromType(field.getType(), context).stream()
+                  .peek(
+                      builder -> {
+                        if (hasPathPrefix) {
+                          addPathPrefixToBuilder(builder, field.getName(), context);
+                        }
+                        if (hasConditionOverride) {
+                          builder.condition(
+                              TemplatePropertyAnnotationProcessor.transformToCondition(
+                                  nestedPropertiesAnnotation.condition()));
+                        }
+                        if (hasGroupOverride) {
+                          builder.group(nestedPropertiesAnnotation.group());
+                        }
+                      })
+                  .toList();
+          properties.addAll(nestedProperties);
+        } catch (StackOverflowError e) {
+          throw new RuntimeException(
+              "Failed to analyze container field "
+                  + field.getName()
+                  + " of class "
+                  + field.getDeclaringClass()
+                  + " due to a stack overflow error. This is likely caused by a "
+                  + "circular reference in the data class.\nCheck if the type is meant to be handled as "
+                  + "a container type and consider applying a type override using @TemplateProperty or breaking the circular reference.");
+        }
+      } else {
+        properties.add(buildProperty(field, field.getName(), field.getType(), context));
+      }
+    }
+
+    // TYPE-level @DocumentReturnFormat on the input class / sealed sub-type → adds the
+    // documentReturnFormat dropdown + encoding sub-field bound to the root variable path.
+    // Appended after the field loop so the dropdown renders below the connector-specific fields
+    // (file ID, key, bucket, etc.) instead of above them.
+    var typeDocumentReturnFormatAnnotation = type.getAnnotation(DocumentReturnFormat.class);
+    if (typeDocumentReturnFormatAnnotation != null) {
+      properties.addAll(
+          DocumentReturnFormatHandler.handleDocumentReturnFormat(
+              typeDocumentReturnFormatAnnotation));
+    }
+    return properties.stream().filter(Objects::nonNull).toList();
+  }
+
+  /**
+   * Create property groups from a list of properties based on {@link TemplateProperty#group()}.
+   *
+   * <p>Properties without a group are ignored.
+   *
+   * @param properties the properties to group
+   * @return a list of {@link PropertyGroup} instances
+   */
+  public static List<PropertyGroupBuilder> groupProperties(List<PropertyBuilder> properties) {
+    return properties.stream()
+        .map(PropertyBuilder::build)
+        .filter(property -> property.getGroup() != null)
+        .collect(Collectors.groupingBy(Property::getGroup))
+        .entrySet()
+        .stream()
+        .map(
+            entry ->
+                PropertyGroup.builder()
+                    .id(entry.getKey())
+                    .label(transformIdIntoLabel(entry.getKey()))
+                    .properties(entry.getValue()))
+        .toList();
+  }
+
+  /**
+   * Routes a {@code Document} / {@code List<Document>} field or parameter to {@link
+   * DocumentPropertyHandler}.
+   */
+  private static List<PropertyBuilder> handleTemplateDocumentProperty(
+      AnnotatedElement element,
+      String declaredName,
+      Class<?> declaredType,
+      TemplateDocumentProperty annotation) {
+    if (Document.class.isAssignableFrom(declaredType)) {
+      return DocumentPropertyHandler.handleDocumentProperty(declaredType, declaredName, annotation);
+    }
+    if (Collection.class.isAssignableFrom(declaredType)) {
+      Class<?> elementType = getListElementType(element);
+      if (elementType == null) {
+        throw new IllegalStateException(
+            "@TemplateDocumentProperty on '"
+                + declaredName
+                + "' must declare its element type (e.g. List<Document>), got raw "
+                + declaredType.getSimpleName());
+      }
+      return DocumentPropertyHandler.handleListDocumentProperty(
+          elementType, declaredName, annotation);
+    }
+    throw new IllegalStateException(
+        "@TemplateDocumentProperty on '"
+            + declaredName
+            + "' requires type Document or List<Document>, got "
+            + declaredType.getSimpleName());
+  }
+
+  private static Class<?> getListElementType(AnnotatedElement element) {
+    Type genericType = null;
+    if (element instanceof Field field) {
+      genericType = field.getGenericType();
+    } else if (element instanceof Parameter parameter) {
+      genericType = parameter.getParameterizedType();
+    }
+    if (genericType instanceof ParameterizedType parameterized) {
+      Type[] typeArgs = parameterized.getActualTypeArguments();
+      if (typeArgs.length == 1 && typeArgs[0] instanceof Class<?> classArg) {
+        return classArg;
+      }
+    }
+    return null;
+  }
+
+  private static PropertyBuilder buildProperty(
+      AnnotatedElement declaredProperty,
+      String declaredName,
+      Class<?> type,
+      TemplateGenerationContext context) {
+
+    var templatePropertyAnnotation = declaredProperty.getAnnotation(TemplateProperty.class);
+    var variableAnnotation = declaredProperty.getAnnotation(Variable.class);
+    var headerAnnotation = declaredProperty.getAnnotation(Header.class);
+
+    String name, label, tooltip = null, exampleValue = null, placeholder = null;
+    String bindingName = declaredName;
+    if (templatePropertyAnnotation != null) {
+      if (templatePropertyAnnotation.ignore()) {
+        return null;
+      }
+      if (!templatePropertyAnnotation.id().isBlank()) {
+        name = templatePropertyAnnotation.id();
+      } else {
+        name = declaredName;
+      }
+      if (!templatePropertyAnnotation.label().isBlank()) {
+        label = templatePropertyAnnotation.label();
+      } else {
+        label = transformIdIntoLabel(name);
+      }
+      if (!templatePropertyAnnotation.binding().name().isBlank()) {
+        bindingName = templatePropertyAnnotation.binding().name();
+      }
+      if (!templatePropertyAnnotation.tooltip().isBlank()) {
+        tooltip = templatePropertyAnnotation.tooltip();
+      }
+      if (!templatePropertyAnnotation.exampleValue().isBlank()) {
+        exampleValue = templatePropertyAnnotation.exampleValue();
+      }
+      if (!templatePropertyAnnotation.placeholder().isBlank()) {
+        placeholder = templatePropertyAnnotation.placeholder();
+      }
+    } else {
+      name = declaredName;
+      label = transformIdIntoLabel(name);
+    }
+
+    if (variableAnnotation != null) {
+      if (!variableAnnotation.name().isBlank()) {
+        name = variableAnnotation.name();
+      } else if (!variableAnnotation.value().isBlank()) {
+        name = variableAnnotation.value();
+      }
+      label = transformIdIntoLabel(name);
+      bindingName = name;
+    } else if (headerAnnotation != null) {
+      if (!headerAnnotation.name().isBlank()) {
+        bindingName = headerAnnotation.name();
+      } else if (!headerAnnotation.value().isBlank()) {
+        bindingName = headerAnnotation.value();
+      }
+      label = transformIdIntoLabel(name);
+    }
+
+    PropertyBuilder propertyBuilder =
+        createPropertyBuilder(type, templatePropertyAnnotation, context)
+            .id(name)
+            .label(label)
+            .tooltip(tooltip)
+            .placeholder(placeholder)
+            .exampleValue(exampleValue)
+            .binding(createBinding(bindingName, context));
+
+    for (AnnotationProcessor processor : fieldProcessors) {
+      processor.process(declaredProperty, type, propertyBuilder, context);
+    }
+    return propertyBuilder;
+  }
+
+  private static void addPathPrefixToBuilder(
+      PropertyBuilder builder, String path, TemplateGenerationContext context) {
+    var originalId = builder.getId();
+    boolean isRootBoundDocReturn =
+        DocumentReturnFormatHandler.DROPDOWN_ID.equals(originalId)
+            || DocumentReturnFormatHandler.ENCODING_ID.equals(originalId);
+
+    if (isRootBoundDocReturn) {
+      // The DocumentReturnFormat dropdown + encoding always bind to a canonical root-level path
+      // ("documentReturnFormat.choice" / ".encoding") so the runtime can read them without
+      // per-connector configuration. Skip the id and binding rewrite. Discriminator references
+      // in this builder's condition are already path-prefixed by handleSealedType's dependant
+      // pass (see DiscriminatorPropertyBuilder branch below) — re-prefixing here would double-
+      // apply the path.
+      return;
+    }
+
+    builder.id(path + "." + originalId);
+    var binding = builder.getBinding();
+
+    if (binding instanceof ZeebeInput) {
+      builder.binding(createBinding(path + "." + ((ZeebeInput) binding).name(), context));
+    } else if (binding instanceof ZeebeProperty) {
+      builder.binding(createBinding(path + "." + ((ZeebeProperty) binding).name(), context));
+    }
+
+    if (builder instanceof DocumentComposerPropertyBuilder composerBuilder) {
+      // Re-render so the composer's helper references match their just-prefixed bindings.
+      composerBuilder.addHelperPathPrefix(path);
+    }
+
+    if (builder instanceof DiscriminatorPropertyBuilder discriminatorPropertyBuilder) {
+      discriminatorPropertyBuilder
+          .getDependantProperties()
+          .forEach(
+              dependant ->
+                  dependant.condition(
+                      addConditionPrefix(dependant.getCondition(), path, originalId)));
+    }
+  }
+
+  private static PropertyCondition addConditionPrefix(
+      PropertyCondition condition, String path, String discriminatorPropertyId) {
+    switch (condition) {
+      case AllMatch allMatchCondition -> {
+        return new AllMatch(
+            allMatchCondition.allMatch().stream()
+                .map(
+                    subCondition -> addConditionPrefix(subCondition, path, discriminatorPropertyId))
+                .toList());
+      }
+      case Equals equalsCondition -> {
+        if (!equalsCondition.property().equals(discriminatorPropertyId)) {
+          return equalsCondition;
+        }
+        return new Equals(path + "." + equalsCondition.property(), equalsCondition.equals());
+      }
+      case OneOf oneOfCondition -> {
+        if (!oneOfCondition.property().equals(discriminatorPropertyId)) {
+          return oneOfCondition;
+        }
+        return new OneOf(path + "." + oneOfCondition.property(), oneOfCondition.oneOf());
+      }
+      default -> throw new IllegalStateException("Unknown condition type: " + condition.getClass());
+    }
+  }
+
+  private static List<DropdownModel> createDropdownModelList(Class<?> enumType) {
+    return Arrays.stream(enumType.getEnumConstants())
+        .map(
+            enumConstant -> {
+              try {
+                Field enumValue = enumType.getField(((Enum<?>) enumConstant).name());
+                if (enumValue.isAnnotationPresent(DropdownItem.class)) {
+                  DropdownItem enumLabel = enumValue.getAnnotation(DropdownItem.class);
+                  return new DropdownModel(
+                      enumLabel.label(), enumValue.getName(), enumLabel.order());
+                } else {
+                  return new DropdownModel(
+                      transformIdIntoLabel(((Enum<?>) enumConstant).name()),
+                      ((Enum<?>) enumConstant).name(),
+                      0);
+                }
+              } catch (NoSuchFieldException e) {
+                throw new RuntimeException(e);
+              }
+            })
+        .toList();
+  }
+
+  public static boolean isNumberClass(Class<?> clazz) {
+    if (clazz == null) {
+      return false;
+    }
+    if (clazz.isPrimitive()) {
+      return clazz == int.class
+          || clazz == long.class
+          || clazz == double.class
+          || clazz == float.class
+          || clazz == short.class;
+    }
+    return Number.class.isAssignableFrom(clazz);
+  }
+
+  private static PropertyBuilder createPropertyBuilder(
+      Class<?> parameterType, TemplateProperty annotation, TemplateGenerationContext context) {
+    PropertyType type;
+    List<DropdownModel> dropdownChoices = new ArrayList<>();
+
+    if (parameterType == Boolean.class || parameterType == boolean.class) {
+      type = PropertyType.Boolean;
+    } else if (parameterType.isEnum()) {
+      type = PropertyType.Dropdown;
+      dropdownChoices = createDropdownModelList(parameterType);
+    } else if (isNumberClass(parameterType) && isOutbound(context)) { // TODO: To be removed
+      type = PropertyType.Number;
+    } else {
+      type = PropertyType.String;
+    }
+
+    if (annotation != null) {
+      if (annotation.type() != PropertyType.Unknown) {
+        type = annotation.type();
+      }
+      if (annotation.choices().length > 0) {
+        dropdownChoices =
+            Arrays.stream(annotation.choices())
+                .map(
+                    dropdownPropertyChoice ->
+                        new DropdownModel(
+                            dropdownPropertyChoice.label(), dropdownPropertyChoice.value(), 0))
+                .toList();
+      }
+    }
+
+    List<DropdownChoice> dropdownChoiceList =
+        dropdownChoices.stream()
+            .sorted(Comparator.comparingInt(DropdownModel::order))
+            .map(dropdownModel -> new DropdownChoice(dropdownModel.label(), dropdownModel.value()))
+            .toList();
+
+    var builder =
+        switch (type) {
+          case Boolean -> BooleanProperty.builder();
+          case Number -> NumberProperty.builder();
+          case Dropdown ->
+              DropdownProperty.builder().choices(dropdownChoiceList).feel(FeelMode.disabled);
+          case Hidden -> HiddenProperty.builder();
+          case String -> StringProperty.builder();
+          case Text -> TextProperty.builder();
+          case Configuration -> createConfigurationPropertyBuilder(parameterType);
+          case Unknown -> throw new IllegalStateException("Unknown property type");
+        };
+    if (Object.class.equals(parameterType)
+        || JsonNode.class.equals(parameterType)
+        || Collection.class.isAssignableFrom(parameterType)
+        || Map.class.isAssignableFrom(parameterType)) {
+      builder.feel(FeelMode.required);
+    }
+    return builder;
+  }
+
+  private static PropertyBuilder createConfigurationPropertyBuilder(Class<?> parameterType) {
+    var templateAnnotation =
+        parameterType.getAnnotation(io.camunda.connector.api.annotation.Configuration.class);
+    if (templateAnnotation == null) {
+      throw new IllegalStateException(
+          "A property of type Configuration must reference a type annotated with"
+              + " @Configuration, but "
+              + parameterType.getName()
+              + " is not annotated with @Configuration");
+    }
+    return ConfigurationProperty.builder()
+        .configurationTemplate(templateAnnotation.id())
+        .feel(FeelMode.disabled);
+  }
+
+  /**
+   * Extracts properties from a {@code @Configuration}-annotated class in configuration-template
+   * extraction mode: each property's binding is replaced with a {@link
+   * PropertyBinding.ConfigurationTemplateProperty} (name = property id), {@code feel} is disabled,
+   * and any {@code secret} hint from {@link
+   * io.camunda.connector.generator.java.annotation.TemplateProperty#secret()} is preserved.
+   */
+  public static List<PropertyBuilder> extractConfigurationTemplatePropertiesFromType(
+      Class<?> type, TemplateGenerationContext context) {
+    var builders = extractTemplatePropertiesFromType(type, context);
+    for (var builder : builders) {
+      // Override binding: configuration-template properties use {"type":"property","name":<id>}
+      builder.binding(new PropertyBinding.ConfigurationTemplateProperty(builder.getId()));
+      // No feel on configuration-template properties (values are atomic literals / secret refs)
+      builder.feel(FeelMode.disabled);
+      // The configuration-template schema forbids `optional`; optionality is expressed via
+      // conditions, not this flag. Clear it so it is omitted from the embedded template.
+      builder.optional(null);
+    }
+    return builders;
+  }
+
+  public static boolean isOutbound(TemplateGenerationContext context) {
+    return switch (context) {
+      case TemplateGenerationContext.Inbound unused -> false;
+      case Outbound unused -> true;
+    };
+  }
+
+  private static List<PropertyBuilder> handleSealedType(
+      Class<?> type, TemplateGenerationContext context) {
+    var subTypes =
+        Arrays.stream(type.getPermittedSubclasses())
+            .filter(
+                subType -> {
+                  var annotation = subType.getAnnotation(TemplateSubType.class);
+                  return annotation == null || !annotation.ignore();
+                })
+            .toList();
+    var properties = new ArrayList<PropertyBuilder>();
+
+    var discriminatorIdAndLabel =
+        extractIdAndLabelFromAnnotationOrDeriveFromType(
+            type,
+            TemplateDiscriminatorProperty.class,
+            prop -> {
+              if (StringUtils.isBlank(prop.id())) {
+                return prop.name();
+              }
+              return prop.id();
+            },
+            TemplateDiscriminatorProperty::label);
+
+    Map<String, String> values = new LinkedHashMap<>();
+
+    for (Class<?> subType : subTypes) {
+      var subTypeIdAndName =
+          extractIdAndLabelFromAnnotationOrDeriveFromType(
+              subType, TemplateSubType.class, TemplateSubType::id, TemplateSubType::label);
+
+      values.put(subTypeIdAndName.getKey(), subTypeIdAndName.getValue());
+
+      var currentSubTypeProperties =
+          extractTemplatePropertiesFromType(subType, context).stream()
+              .peek(
+                  property -> {
+                    if (property.getCondition() == null) {
+                      var condition =
+                          new Equals(discriminatorIdAndLabel.getKey(), subTypeIdAndName.getKey());
+                      property.condition(condition);
+                    } else {
+                      if (property.getCondition() instanceof AllMatch allMatch) {
+                        var conditions = new ArrayList<>(allMatch.allMatch());
+                        conditions.add(
+                            new Equals(
+                                discriminatorIdAndLabel.getKey(), subTypeIdAndName.getKey()));
+                        property.condition(new AllMatch(conditions));
+                      } else {
+                        property.condition(
+                            new AllMatch(
+                                List.of(
+                                    property.getCondition(),
+                                    new Equals(
+                                        discriminatorIdAndLabel.getKey(),
+                                        subTypeIdAndName.getKey()))));
+                      }
+                    }
+                  })
+              .toList();
+
+      properties.addAll(currentSubTypeProperties);
+    }
+
+    if (values.isEmpty()) {
+      throw new IllegalStateException("Sealed type " + type + " has no subtypes");
+    }
+
+    var discriminatorAnnotation = type.getAnnotation(TemplateDiscriminatorProperty.class);
+
+    String discriminatorBindingName;
+    if (discriminatorAnnotation != null && !discriminatorAnnotation.name().isBlank()) {
+      discriminatorBindingName = discriminatorAnnotation.name();
+    } else {
+      discriminatorBindingName = discriminatorIdAndLabel.getKey();
+    }
+
+    var discriminator =
+        new DiscriminatorPropertyBuilder()
+            .dependantProperties(properties)
+            .choices(
+                values.entrySet().stream()
+                    .filter(Objects::nonNull)
+                    .map(entry -> new DropdownChoice(entry.getValue(), entry.getKey()))
+                    .collect(Collectors.toList()))
+            .id(discriminatorIdAndLabel.getKey())
+            .binding(createBinding(discriminatorBindingName, context))
+            .group(
+                discriminatorAnnotation == null || discriminatorAnnotation.group().isBlank()
+                    ? null
+                    : discriminatorAnnotation.group())
+            .label(discriminatorIdAndLabel.getValue())
+            .description(
+                discriminatorAnnotation == null || discriminatorAnnotation.description().isBlank()
+                    ? null
+                    : discriminatorAnnotation.description())
+            .tooltip(
+                discriminatorAnnotation == null || discriminatorAnnotation.tooltip().isBlank()
+                    ? null
+                    : discriminatorAnnotation.tooltip())
+            .value(
+                discriminatorAnnotation == null || discriminatorAnnotation.defaultValue().isBlank()
+                    ? null
+                    : discriminatorAnnotation.defaultValue());
+
+    var result = new ArrayList<>(List.of(discriminator));
+    result.addAll(properties);
+    return result;
+  }
+
+  private static <T extends Annotation>
+      Map.Entry<String, String> extractIdAndLabelFromAnnotationOrDeriveFromType(
+          Class<?> type,
+          Class<T> annotationClass,
+          Function<T, String> idExtractor,
+          Function<T, String> labelExtractor) {
+
+    var annotation = type.getAnnotation(annotationClass);
+    if (annotation != null) {
+      var id = idExtractor.apply(annotation);
+      var name = labelExtractor.apply(annotation);
+      if (name.isBlank()) {
+        name = transformIdIntoLabel(type.getSimpleName());
+      }
+      return Map.entry(id, name);
+    } else {
+      return Map.entry(
+          type.getSimpleName().toLowerCase(), transformIdIntoLabel(type.getSimpleName()));
+    }
+  }
+
+  public static String transformIdIntoLabel(String id) {
+    // uppercase ids are preserved
+    if (id.toUpperCase().equals(id)) {
+      return id;
+    }
+    // A simple attempt to transform camelCase into a normal sentence (first letter capitalized,
+    // spaces)
+    var label = new StringBuilder();
+    for (int i = 0; i < id.length(); i++) {
+      char c = id.charAt(i);
+      if (i == 0) {
+        label.append(Character.toUpperCase(c));
+      } else if (Character.isUpperCase(c)
+          || (Character.isDigit(c) && !Character.isDigit(id.charAt(i - 1)))) {
+        label.append(" ").append(Character.toLowerCase(c));
+      } else {
+        label.append(c);
+      }
+    }
+    return label.toString();
+  }
+
+  private static boolean isContainerType(Class<?> type, TemplateProperty propertyAnnotation) {
+    boolean hasManualTypeOverride =
+        propertyAnnotation != null && propertyAnnotation.type() != PropertyType.Unknown;
+    // true if object with fields, false if primitive or collection or map or array
+    // or if the type has a manual type override
+    return !ClassUtils.isPrimitiveOrWrapper(type)
+        && !hasManualTypeOverride
+        && !"java.time".equals(type.getPackageName())
+        && type != Date.class
+        && type != Function.class
+        && type != Supplier.class
+        && type != String.class
+        && type != Object.class
+        && type != JsonNode.class
+        && !Document.class.isAssignableFrom(type)
+        && !type.isEnum()
+        && !type.isArray()
+        && !Collection.class.isAssignableFrom(type)
+        && !Map.class.isAssignableFrom(type);
+  }
+
+  static PropertyBinding createBinding(String propertyName, TemplateGenerationContext context) {
+    if (context instanceof Outbound) {
+      return new ZeebeInput(propertyName);
+    } else {
+      return new ZeebeProperty(propertyName);
+    }
+  }
+}

@@ -1,0 +1,2753 @@
+/*
+ * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+ * under one or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information regarding copyright
+ * ownership. Camunda licenses this file to you under the Apache License,
+ * Version 2.0; you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package io.camunda.connector.runtime.outbound.job;
+
+import static io.camunda.connector.runtime.core.Keywords.ERROR_EXPRESSION_KEYWORD;
+import static io.camunda.connector.runtime.core.Keywords.RESULT_EXPRESSION_KEYWORD;
+import static io.camunda.connector.runtime.core.Keywords.RESULT_VARIABLE_KEYWORD;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+
+import io.camunda.client.CamundaClient;
+import io.camunda.client.api.command.ClientStatusException;
+import io.camunda.client.api.command.FailJobCommandStep1;
+import io.camunda.client.api.command.UpdateTimeoutJobCommandStep1;
+import io.camunda.client.api.command.UpdateTimeoutJobCommandStep1.UpdateTimeoutJobCommandStep2;
+import io.camunda.client.api.response.ActivatedJob;
+import io.camunda.client.api.worker.BackoffSupplier;
+import io.camunda.client.api.worker.JobClient;
+import io.camunda.client.jobhandling.CommandOutcome;
+import io.camunda.client.jobhandling.JobCallbackCommandWrapperFactory;
+import io.camunda.client.metrics.MicrometerMetricsRecorder;
+import io.camunda.connector.api.document.Document;
+import io.camunda.connector.api.document.DocumentFactory;
+import io.camunda.connector.api.document.DocumentReturn;
+import io.camunda.connector.api.document.RawPayload;
+import io.camunda.connector.api.error.ConnectorException;
+import io.camunda.connector.api.error.ConnectorExceptionBuilder;
+import io.camunda.connector.api.error.ConnectorInputException;
+import io.camunda.connector.api.error.ConnectorRetryExceptionBuilder;
+import io.camunda.connector.api.outbound.ConnectorResponse;
+import io.camunda.connector.api.outbound.ConnectorResponse.AdHocSubProcessConnectorResponse;
+import io.camunda.connector.api.outbound.ConnectorResponse.AdHocSubProcessConnectorResponse.ElementActivation;
+import io.camunda.connector.api.outbound.ConnectorResponse.StandardConnectorResponse;
+import io.camunda.connector.api.outbound.JobCompletionFailure;
+import io.camunda.connector.api.outbound.JobCompletionFailure.CommandFailure.CommandFailed;
+import io.camunda.connector.api.outbound.JobCompletionFailure.ExecutionFailed;
+import io.camunda.connector.api.outbound.JobCompletionListener;
+import io.camunda.connector.api.outbound.OutboundConnectorContext;
+import io.camunda.connector.api.outbound.OutboundConnectorFunction;
+import io.camunda.connector.api.secret.SecretContext;
+import io.camunda.connector.runtime.JobBuilder;
+import io.camunda.connector.runtime.TestObjectMapperSupplier;
+import io.camunda.connector.runtime.TestValidation;
+import io.camunda.connector.runtime.core.Keywords;
+import io.camunda.connector.runtime.core.document.DocumentFactoryImpl;
+import io.camunda.connector.runtime.core.document.store.InMemoryDocumentStore;
+import io.camunda.connector.runtime.core.secret.SecretFilter;
+import io.camunda.connector.runtime.core.secret.SecretProviderAggregator;
+import io.camunda.connector.runtime.secret.FooBarSecretProvider;
+import io.camunda.connector.validation.impl.DefaultValidationProvider;
+import io.grpc.Status;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.*;
+import org.mockito.ArgumentCaptor;
+
+class SpringConnectorJobHandlerTest {
+
+  private record TestConnectorResponsePojo(String value) {}
+
+  private record TestAdHocSubProcessResponse(
+      Object responseValue,
+      Map<String, Object> variables,
+      List<ElementActivation> elementActivations,
+      boolean completionConditionFulfilled,
+      boolean cancelRemainingInstances)
+      implements AdHocSubProcessConnectorResponse {
+
+    private record TestElementActivation(String elementId, Map<String, Object> variables)
+        implements ElementActivation {}
+  }
+
+  private static class NonSerializable {
+    private final UUID field = UUID.randomUUID();
+  }
+
+  private static final ScheduledExecutorService commandScheduler =
+      Executors.newSingleThreadScheduledExecutor();
+
+  @AfterAll
+  static void shutdownScheduler() {
+    commandScheduler.shutdownNow();
+  }
+
+  private SpringConnectorJobHandler newConnectorJobHandler(OutboundConnectorFunction call) {
+    return newConnectorJobHandler(
+        call, new SecretProviderAggregator(List.of(new FooBarSecretProvider())));
+  }
+
+  private SpringConnectorJobHandler newConnectorJobHandler(
+      OutboundConnectorFunction call, SecretProviderAggregator secretProviderAggregator) {
+    return newConnectorJobHandler(
+        call, secretProviderAggregator, mock(CamundaClient.class, RETURNS_DEEP_STUBS));
+  }
+
+  private SpringConnectorJobHandler newConnectorJobHandler(
+      OutboundConnectorFunction call,
+      SecretProviderAggregator secretProviderAggregator,
+      CamundaClient camundaClient) {
+    var metricsRecorder = new MicrometerMetricsRecorder(new SimpleMeterRegistry());
+    return new SpringConnectorJobHandler(
+        metricsRecorder,
+        new JobCallbackCommandWrapperFactory(
+            BackoffSupplier.newBackoffBuilder().build(), commandScheduler, metricsRecorder),
+        secretProviderAggregator,
+        new DefaultValidationProvider(),
+        mock(DocumentFactory.class),
+        TestObjectMapperSupplier.INSTANCE,
+        call,
+        job -> SecretFilter.allowAll(),
+        camundaClient);
+  }
+
+  private SpringConnectorJobHandler newConnectorJobHandler(
+      OutboundConnectorFunction call, CamundaClient camundaClient) {
+    return newConnectorJobHandler(
+        call, new SecretProviderAggregator(List.of(new FooBarSecretProvider())), camundaClient);
+  }
+
+  private SpringConnectorJobHandler newConnectorJobHandlerWithDocumentFactory(
+      OutboundConnectorFunction call, DocumentFactory documentFactory) {
+    var metricsRecorder = new MicrometerMetricsRecorder(new SimpleMeterRegistry());
+    return new SpringConnectorJobHandler(
+        metricsRecorder,
+        new JobCallbackCommandWrapperFactory(
+            BackoffSupplier.newBackoffBuilder().build(), commandScheduler, metricsRecorder),
+        new SecretProviderAggregator(List.of(new FooBarSecretProvider())),
+        new DefaultValidationProvider(),
+        documentFactory,
+        TestObjectMapperSupplier.INSTANCE,
+        call,
+        job -> SecretFilter.allowAll(),
+        mock(CamundaClient.class, RETURNS_DEEP_STUBS));
+  }
+
+  private SpringConnectorJobHandler newConnectorJobHandler(
+      OutboundConnectorFunction call, CompletableFuture<CommandOutcome> outcome) {
+    var factory = mock(JobCallbackCommandWrapperFactory.class, RETURNS_DEEP_STUBS);
+    when(factory.create(any(), anyLong(), any(), anyInt()).executeAsync()).thenReturn(outcome);
+    return new SpringConnectorJobHandler(
+        new MicrometerMetricsRecorder(new SimpleMeterRegistry()),
+        factory,
+        new SecretProviderAggregator(List.of(new FooBarSecretProvider())),
+        new DefaultValidationProvider(),
+        mock(DocumentFactory.class),
+        TestObjectMapperSupplier.INSTANCE,
+        call,
+        job -> SecretFilter.allowAll(),
+        mock(CamundaClient.class, RETURNS_DEEP_STUBS));
+  }
+
+  private SpringConnectorJobHandler newConnectorJobHandler(
+      OutboundConnectorFunction call,
+      CamundaClient camundaClient,
+      JobCallbackCommandWrapperFactory jobCallbackCommandWrapperFactory) {
+    return new SpringConnectorJobHandler(
+        new MicrometerMetricsRecorder(new SimpleMeterRegistry()),
+        jobCallbackCommandWrapperFactory,
+        new SecretProviderAggregator(List.of(new FooBarSecretProvider())),
+        new DefaultValidationProvider(),
+        mock(DocumentFactory.class),
+        TestObjectMapperSupplier.INSTANCE,
+        call,
+        job -> SecretFilter.allowAll(),
+        camundaClient);
+  }
+
+  @Nested
+  class DocumentReturnTests {
+
+    @Test
+    void convertsDocumentReturnAtRuntimeBoundary() throws Exception {
+      // given a connector that returns a DocumentReturn and a job selecting the TEXT format
+      var jobHandler =
+          newConnectorJobHandler(
+              ctx ->
+                  DocumentReturn.of(
+                      "hello".getBytes(StandardCharsets.UTF_8),
+                      "text/plain",
+                      "greeting.txt",
+                      (converted, choice) -> converted));
+
+      // when
+      var result =
+          JobBuilder.create()
+              .withVariablesAsMap(Map.of("documentReturnFormat", Map.of("choice", "TEXT")))
+              .withResultVariableHeader("result")
+              .executeAndCaptureResult(jobHandler);
+
+      // then the runtime converted the payload to text before result-variable mapping
+      assertThat(result.getVariables()).isEqualTo(Map.of("result", "hello"));
+    }
+
+    @Test
+    void safetyNetClosesPayloadWhenFormatIsMissing() throws Exception {
+      // given a connector returning a DocumentReturn but a job with no documentReturnFormat
+      var closed = new AtomicBoolean(false);
+      var jobHandler =
+          newConnectorJobHandler(
+              ctx ->
+                  new DocumentReturn<>(
+                      RawPayload.of(trackingStream(closed), "text/plain", "f.txt"),
+                      (converted, choice) -> converted));
+
+      // when
+      var result =
+          JobBuilder.create()
+              .withRetries(3)
+              .withHeaders(Map.of())
+              .withVariablesAsMap(Map.of())
+              .executeAndCaptureResult(jobHandler, false);
+
+      // then the safety net closed the payload and the job failed with an actionable message
+      assertThat(closed).isTrue();
+      assertThat(result.getErrorMessage()).contains("documentReturnFormat.choice");
+    }
+
+    @Test
+    void safetyNetClosesPayloadWhenFormatIsInvalid() throws Exception {
+      // given a connector returning a DocumentReturn but a job with an invalid choice
+      var closed = new AtomicBoolean(false);
+      var jobHandler =
+          newConnectorJobHandler(
+              ctx ->
+                  new DocumentReturn<>(
+                      RawPayload.of(trackingStream(closed), "text/plain", "f.txt"),
+                      (converted, choice) -> converted));
+
+      // when
+      var result =
+          JobBuilder.create()
+              .withRetries(3)
+              .withHeaders(Map.of())
+              .withVariablesAsMap(Map.of("documentReturnFormat", Map.of("choice", "BOGUS")))
+              .executeAndCaptureResult(jobHandler, false);
+
+      // then the safety net closed the payload even though processing never started conversion
+      assertThat(closed).isTrue();
+      assertThat(result.getErrorMessage()).contains("DOCUMENT, TEXT, JSON");
+    }
+
+    private static InputStream trackingStream(AtomicBoolean closed) {
+      return new InputStream() {
+        @Override
+        public int read() {
+          return -1;
+        }
+
+        @Override
+        public void close() {
+          closed.set(true);
+        }
+      };
+    }
+  }
+
+  @Nested
+  class OutputTests {
+
+    @Nested
+    class ResultVariableTests {
+
+      @ParameterizedTest
+      @NullSource
+      @EmptySource
+      @ValueSource(strings = {" ", "\t", "\n"})
+      void shouldNotSetWithBlankResultVariable(String variableName) throws Exception {
+        // given
+        var jobHandler = newConnectorJobHandler((context) -> Map.of("hello", "world"));
+
+        // when
+        var result =
+            JobBuilder.create()
+                .withResultVariableHeader(variableName)
+                .executeAndCaptureResult(jobHandler);
+
+        // then
+        assertThat(result.getVariables()).isEmpty();
+      }
+
+      @Test
+      void shouldHandleMap() throws Exception {
+        // given
+        var jobHandler = newConnectorJobHandler((context) -> Map.of("hello", "world"));
+
+        // when
+        var result =
+            JobBuilder.create()
+                .withResultVariableHeader("result")
+                .executeAndCaptureResult(jobHandler);
+
+        // then
+        assertThat(result.getVariables()).isEqualTo(Map.of("result", Map.of("hello", "world")));
+      }
+
+      @Test
+      void shouldHandleNull() throws Exception {
+        // given
+        var jobHandler = newConnectorJobHandler((ctx) -> null);
+        var expected = new HashMap<>();
+        expected.put("result", null);
+
+        // when
+        var result =
+            JobBuilder.create()
+                .withResultVariableHeader("result")
+                .executeAndCaptureResult(jobHandler);
+
+        // then
+        assertThat(result.getVariables()).isEqualTo(expected);
+      }
+
+      @Test
+      void shouldHandleEmptyMap() throws Exception {
+        // given
+        var jobHandler = newConnectorJobHandler((ctx) -> Map.of());
+
+        // when
+        var result =
+            JobBuilder.create()
+                .withResultVariableHeader("result")
+                .executeAndCaptureResult(jobHandler);
+
+        // then
+        assertThat(result.getVariables()).isEqualTo(Map.of("result", Map.of()));
+      }
+
+      @Test
+      void shouldHandleScalarValue() throws Exception {
+        // given
+        var jobHandler = newConnectorJobHandler((ctx) -> 1);
+
+        // when
+        var result =
+            JobBuilder.create()
+                .withResultVariableHeader("result")
+                .executeAndCaptureResult(jobHandler);
+
+        // then
+        assertThat(result.getVariables()).isEqualTo(Map.of("result", 1));
+      }
+
+      @Test
+      void shouldFailJobWhenResultVariableExceedsZeebeLimit() throws Exception {
+        // given
+        String largeValue =
+            "x"
+                .repeat(
+                    (int) io.camunda.connector.api.document.InlineSizeGuard.MAX_INLINE_BYTES + 1);
+        var jobHandler = newConnectorJobHandler((ctx) -> largeValue);
+
+        // when
+        var result =
+            JobBuilder.create()
+                .withRetries(3)
+                .withResultVariableHeader("result")
+                .executeAndCaptureResult(jobHandler, false);
+
+        // then - oversized payload is a deterministic input error: immediate incident, no retries
+        assertThat(result.getRetries()).isEqualTo(0);
+        assertThat(result.getErrorMessage()).contains("Create document");
+      }
+
+      @Test
+      void shouldCompleteJobWhenResultVariableBelowZeebeLimit() throws Exception {
+        // given
+        var jobHandler = newConnectorJobHandler((ctx) -> "small value");
+
+        // when
+        var result =
+            JobBuilder.create()
+                .withResultVariableHeader("result")
+                .executeAndCaptureResult(jobHandler);
+
+        // then
+        assertThat(result.getVariables()).containsKey("result");
+      }
+    }
+
+    @Nested
+    class ResultExpressionTests {
+
+      @ParameterizedTest
+      @NullSource
+      @EmptySource
+      @ValueSource(strings = {" ", "\t", "\n"})
+      void shouldNotSetWithBlankResultExpression(String expression) throws Exception {
+        // given
+        var jobHandler = newConnectorJobHandler((context) -> Map.of("hello", "world"));
+
+        // when
+        var result =
+            JobBuilder.create()
+                .withResultExpressionHeader(expression)
+                .executeAndCaptureResult(jobHandler);
+
+        // then
+        assertThat(result.getVariables()).isEmpty();
+      }
+
+      @Test
+      void shouldHandleMap() throws Exception {
+        // given
+        var jobHandler =
+            newConnectorJobHandler(
+                (context) -> Map.of("callStatus", Map.of("statusCode", "200 OK")));
+        var resultExpression = "{\"processedOutput\": response.callStatus }";
+
+        // when
+        var result =
+            JobBuilder.create()
+                .withResultExpressionHeader(resultExpression)
+                .executeAndCaptureResult(jobHandler);
+
+        // then
+        assertThat(result.getVariables())
+            .isEqualTo(Map.of("processedOutput", Map.of("statusCode", "200 OK")));
+      }
+
+      @Test
+      void shouldHandleMap_WithNullValues() throws Exception {
+        // given
+        var jobHandler =
+            newConnectorJobHandler(
+                (context) -> {
+                  var map = new HashMap<>();
+                  map.put("statusCode", 200);
+                  map.put("failure", null);
+
+                  return Map.of("callStatus", map);
+                });
+        var resultExpression = "= {\"processedOutput\": { status: callStatus.statusCode } }";
+
+        // when
+        var result =
+            JobBuilder.create()
+                .withResultExpressionHeader(resultExpression)
+                .executeAndCaptureResult(jobHandler);
+
+        // then
+        assertThat(result.getVariables())
+            .isEqualTo(Map.of("processedOutput", Map.of("status", 200)));
+      }
+
+      @Test
+      void shouldHandleMap_MapNullValues() throws Exception {
+        // given
+        var jobHandler =
+            newConnectorJobHandler(
+                (context) -> {
+                  var map = new HashMap<>();
+                  map.put("statusCode", 200);
+                  map.put("failure", null);
+
+                  return Map.of("callStatus", map);
+                });
+        var resultExpression = "= {\"processedOutput\": { failure: callStatus.failure } }";
+
+        var expected = new HashMap<>();
+        expected.put("failure", null);
+
+        // when
+        var result =
+            JobBuilder.create()
+                .withResultExpressionHeader(resultExpression)
+                .executeAndCaptureResult(jobHandler);
+
+        // then
+        assertThat(result.getVariables()).isEqualTo(Map.of("processedOutput", expected));
+      }
+
+      @Test
+      void shouldHandlePojo_Mapped() throws Exception {
+        // given
+        var jobHandler =
+            newConnectorJobHandler((context) -> new TestConnectorResponsePojo("responseValue"));
+        var resultExpression = "{\"processedOutput\": response.value }";
+
+        // when
+        var result =
+            JobBuilder.create()
+                .withResultExpressionHeader(resultExpression)
+                .executeAndCaptureResult(jobHandler);
+
+        // then
+        assertThat(result.getVariables()).isEqualTo(Map.of("processedOutput", "responseValue"));
+      }
+
+      @Test
+      void shouldHandlePojo_NullValues() throws Exception {
+        // given
+        var jobHandler = newConnectorJobHandler((context) -> new TestConnectorResponsePojo(null));
+        var resultExpression = "{\"processedOutput\": response.value }";
+        var expected = new HashMap<>();
+        expected.put("processedOutput", null);
+
+        // when
+        var result =
+            JobBuilder.create()
+                .withResultExpressionHeader(resultExpression)
+                .executeAndCaptureResult(jobHandler);
+
+        // then
+        assertThat(result.getVariables()).isEqualTo(expected);
+      }
+
+      @Test
+      void shouldHandlePojo_DirectAssignment() throws Exception {
+        // given
+        var jobHandler =
+            newConnectorJobHandler((context) -> new TestConnectorResponsePojo("responseValue"));
+        var resultExpression = "= response";
+
+        // when
+        var result =
+            JobBuilder.create()
+                .withResultExpressionHeader(resultExpression)
+                .executeAndCaptureResult(jobHandler);
+
+        // then
+        assertThat(result.getVariables()).isEqualTo(Map.of("value", "responseValue"));
+      }
+
+      @Test
+      void shouldHandleUnknownObject() throws Exception {
+        // given
+        var jobHandler =
+            newConnectorJobHandler(
+                (context) -> {
+                  var response = new HashMap<>();
+                  response.put("status", "COMPLETED");
+                  response.put("failure", new NonSerializable());
+                  return response;
+                });
+        var resultExpression =
+            "{\"processedOutput\": response.status, \"ignoredOutput\": response.failure}";
+
+        // when
+        var result =
+            JobBuilder.create()
+                .withResultExpressionHeader(resultExpression)
+                .executeAndCaptureResult(jobHandler);
+
+        // then
+        assertThat(result.getVariables())
+            .isEqualTo(Map.of("processedOutput", "COMPLETED", "ignoredOutput", Map.of()));
+      }
+
+      @Test
+      void shouldFail_MappingFromNull() throws Exception {
+        // given
+        var jobHandler = newConnectorJobHandler((context) -> null);
+        var resultExpression = "{\"processedOutput\": response.callStatus }";
+
+        // when
+        var result =
+            JobBuilder.create()
+                .withResultExpressionHeader(resultExpression)
+                .executeAndCaptureResult(jobHandler);
+
+        // then
+        assertThat(result.getVariables().get("processedOutput")).isNull();
+      }
+
+      @Test
+      void shouldNotFail_MappingNonExistingKeys() throws Exception {
+        // given
+        var jobHandler = newConnectorJobHandler((context) -> Map.of());
+        var resultExpression = "{\"processedOutput\": response.callStatus }";
+
+        // when
+        var result =
+            JobBuilder.create()
+                .withResultExpressionHeader(resultExpression)
+                .executeAndCaptureResult(jobHandler, true);
+
+        // then
+        assertThat(result).isNotNull();
+      }
+
+      @Test
+      void shouldSucceed_MappingFromScalarToContext() throws Exception {
+        // given
+        var jobHandler = newConnectorJobHandler((context) -> "FOO");
+        var resultExpression = "{processedOutput: response}";
+
+        // when
+        var result =
+            JobBuilder.create()
+                .withResultExpressionHeader(resultExpression)
+                .executeAndCaptureResult(jobHandler);
+
+        // then
+        assertThat(result.getVariables()).isEqualTo(Map.of("processedOutput", "FOO"));
+      }
+
+      @Test
+      void shouldFail_MappingFromScalar() throws Exception {
+        // given
+        var jobHandler = newConnectorJobHandler((context) -> "FOO");
+        var resultExpression = "= response";
+
+        // when
+        var result =
+            JobBuilder.create()
+                .withResultExpressionHeader(resultExpression)
+                .executeAndCaptureResult(jobHandler, false);
+
+        // then
+        assertThat(result.getErrorMessage())
+            .contains("Result expression must return a JSON object")
+            .contains("string");
+      }
+
+      @Test
+      void shouldFail_ProducingScalar() throws Exception {
+        // given
+        var jobHandler = newConnectorJobHandler((context) -> Map.of("FOO", "BAR"));
+        var resultExpression = "= FOO";
+
+        // when & then
+        var result =
+            JobBuilder.create()
+                .withResultExpressionHeader(resultExpression)
+                .executeAndCaptureResult(jobHandler, false);
+
+        // then
+        assertThat(result.getErrorMessage())
+            .contains("Result expression must return a JSON object")
+            .contains("string");
+      }
+    }
+
+    @Nested
+    class ResultVariableAndExpressionTests {
+      @Test
+      void shouldNotSetWithoutResultVariableAndExpression() throws Exception {
+        // given
+        var jobHandler = newConnectorJobHandler((context) -> Map.of("hello", "world"));
+
+        // when
+        var result = JobBuilder.create().executeAndCaptureResult(jobHandler);
+
+        // then
+        assertThat(result.getVariables()).isEmpty();
+      }
+
+      @Test
+      void shouldSetBothResultVariableAndExpression() throws Exception {
+        // given
+        var jobHandler =
+            newConnectorJobHandler(
+                (context) -> Map.of("callStatus", Map.of("statusCode", "200 OK")));
+
+        var resultExpression = "{\"processedOutput\": response.callStatus, \"nullVar\": null}";
+        var resultVariable = "result";
+
+        // when
+        var result =
+            JobBuilder.create()
+                .withHeaders(
+                    Map.of(
+                        RESULT_VARIABLE_KEYWORD, resultVariable,
+                        RESULT_EXPRESSION_KEYWORD, resultExpression))
+                .executeAndCaptureResult(jobHandler);
+
+        // then
+        assertThat(result.getVariables().size()).isEqualTo(3);
+        assertThat(result.getVariable("processedOutput")).isEqualTo(Map.of("statusCode", "200 OK"));
+        assertThat(result.getVariable("nullVar")).isNull();
+        assertThat(result.getVariable(resultVariable))
+            .isEqualTo(Map.of("callStatus", Map.of("statusCode", "200 OK")));
+      }
+    }
+  }
+
+  @Nested
+  class ExecutionTests {
+
+    private static Stream<RuntimeException> provideInputExceptions() {
+      return Stream.of(
+          new ConnectorExceptionBuilder()
+              .message("expected Connector Input Exception")
+              .cause(new ConnectorInputException(new Exception()))
+              .build(),
+          new ConnectorInputException(
+              "expected Connector Input Exception", new RuntimeException("cause")));
+    }
+
+    @Test
+    void shouldProduceFailCommandWhenCallThrowsException() throws Exception {
+      // given
+      var jobHandler =
+          newConnectorJobHandler(
+              context -> {
+                throw new NullPointerException("expected");
+              });
+
+      // when
+      var result = JobBuilder.create().executeAndCaptureResult(jobHandler, false);
+
+      // then
+      assertThat(result.getErrorMessage()).startsWith("expected");
+    }
+
+    @Test
+    void shouldTruncateFailJobErrorMessage() throws Exception {
+      // given
+      var veryLongMessage = "This is quite a long message".repeat(300); // 8400 chars
+      var jobHandler =
+          newConnectorJobHandler(
+              context -> {
+                throw new IllegalArgumentException(veryLongMessage);
+              });
+
+      // when
+      var result = JobBuilder.create().executeAndCaptureResult(jobHandler, false);
+
+      // then
+      assertThat(result.getErrorMessage().length())
+          .isLessThanOrEqualTo(SpringConnectorJobHandler.MAX_ERROR_MESSAGE_LENGTH);
+    }
+
+    @Test
+    void shouldTruncateBpmnErrorMessage() throws Exception {
+      // given
+      var veryLongMessage = "This is quite a long message".repeat(300); // 8400 chars
+      var errorExpression = "bpmnError(\"500\", testProperty)";
+      var jobHandler = newConnectorJobHandler(context -> veryLongMessage);
+
+      // when
+      var result =
+          JobBuilder.create()
+              .withHeaders(
+                  Map.of(
+                      RESULT_VARIABLE_KEYWORD,
+                      "testProperty",
+                      ERROR_EXPRESSION_KEYWORD,
+                      errorExpression))
+              .executeAndCaptureResult(jobHandler, false, true);
+
+      // then
+      assertThat(result.getErrorMessage().length())
+          .isLessThanOrEqualTo(SpringConnectorJobHandler.MAX_ERROR_MESSAGE_LENGTH);
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideInputExceptions")
+    void shouldNotRetry_OnConnectorInputException(Exception exception) throws Exception {
+      // given
+      var jobHandler =
+          newConnectorJobHandler(
+              context -> {
+                throw exception;
+              });
+
+      // when
+      var result = JobBuilder.create().withRetries(3).executeAndCaptureResult(jobHandler, false);
+
+      // then
+      assertThat(result.getErrorMessage()).startsWith("expected Connector Input Exception");
+      assertThat(result.getRetries()).isEqualTo(0);
+    }
+  }
+
+  @Nested
+  class RetryBackoffTests {
+
+    private FailJobCommandStep1 firstStepMock;
+    private FailJobCommandStep1.FailJobCommandStep2 secondStepMock;
+    private JobClient jobClient;
+
+    @BeforeEach
+    void init() {
+      firstStepMock = mock(FailJobCommandStep1.class);
+      secondStepMock = mock(FailJobCommandStep1.FailJobCommandStep2.class, RETURNS_DEEP_STUBS);
+      jobClient = mock(JobClient.class);
+      when(firstStepMock.retries(anyInt())).thenReturn(secondStepMock);
+      when(secondStepMock.retryBackoff(any())).thenReturn(secondStepMock);
+      when(secondStepMock.errorMessage(any())).thenReturn(secondStepMock);
+      when(secondStepMock.variables(anyMap())).thenReturn(secondStepMock);
+      when(secondStepMock.variables(any(Object.class))).thenReturn(secondStepMock);
+      jobClient = mock(JobClient.class);
+      when(jobClient.newFailCommand(any())).thenReturn(firstStepMock);
+    }
+
+    @Test
+    void shouldParseRetryBackoffHeader_Duration() throws Exception {
+      // given
+      int initialRetries = 3;
+
+      var jobBuilder =
+          JobBuilder.create()
+              .useJobClient(jobClient)
+              .withRetries(initialRetries)
+              .withHeaders(Map.of(Keywords.RETRY_BACKOFF_KEYWORD, "PT1M"));
+      var jobHandler =
+          newConnectorJobHandler(
+              context -> {
+                throw new RuntimeException("oops");
+              });
+
+      // when
+      jobBuilder.execute(jobHandler);
+
+      // then
+      verify(firstStepMock).retries(initialRetries - 1);
+      ArgumentCaptor<Duration> backoffCaptor = ArgumentCaptor.forClass(Duration.class);
+      verify(secondStepMock).retryBackoff(backoffCaptor.capture());
+      assertThat(backoffCaptor.getValue()).isEqualTo(Duration.ofMinutes(1));
+    }
+
+    @Test
+    void shouldParseRetryBackoffHeader_Period() throws Exception {
+      // given
+      int initialRetries = 3;
+      var jobBuilder =
+          JobBuilder.create()
+              .useJobClient(jobClient)
+              .withRetries(initialRetries)
+              .withHeaders(Map.of(Keywords.RETRY_BACKOFF_KEYWORD, "P1D"));
+      var jobHandler =
+          newConnectorJobHandler(
+              context -> {
+                throw new RuntimeException("oops");
+              });
+
+      // when
+      jobBuilder.execute(jobHandler);
+
+      // then
+      verify(firstStepMock).retries(initialRetries - 1);
+      ArgumentCaptor<Duration> backoffCaptor = ArgumentCaptor.forClass(Duration.class);
+      verify(secondStepMock).retryBackoff(backoffCaptor.capture());
+      assertThat(backoffCaptor.getValue()).isEqualTo(Duration.ofDays(1));
+    }
+
+    @Test
+    void shouldParseRetryBackoffHeader_Invalid_ConnectorNotInvoked() throws Exception {
+      // given
+      int initialRetries = 3;
+      var jobBuilder =
+          JobBuilder.create()
+              .useJobClient(jobClient)
+              .withRetries(initialRetries)
+              .withHeaders(Map.of(Keywords.RETRY_BACKOFF_KEYWORD, "P1D1S")); // invalid
+      var connectorFunction = mock(OutboundConnectorFunction.class);
+      var jobHandler = newConnectorJobHandler(connectorFunction);
+
+      // when
+      jobBuilder.execute(jobHandler);
+
+      // then
+      verify(firstStepMock).retries(0);
+      verify(secondStepMock, times(0)).retryBackoff(any()); // not set
+      verify(secondStepMock).errorMessage(contains("Failed to parse retry backoff header"));
+      verify(secondStepMock).send();
+      verify(connectorFunction, times(0)).execute(any()); // not invoked
+    }
+
+    @Test
+    void shouldHandleMissingRetryBackoffHeader() throws Exception {
+      // given
+      int initialRetries = 3;
+      var jobBuilder = JobBuilder.create().useJobClient(jobClient).withRetries(initialRetries);
+
+      var jobHandler =
+          newConnectorJobHandler(
+              context -> {
+                throw new RuntimeException("oops");
+              });
+
+      // when
+      jobBuilder.execute(jobHandler);
+
+      // then
+      verify(firstStepMock).retries(initialRetries - 1);
+      verify(secondStepMock).errorMessage(any());
+      verify(secondStepMock, times(0)).retryBackoff(any()); // not set
+      verify(secondStepMock).send();
+    }
+  }
+
+  @Nested
+  class JobTimeoutTests {
+
+    private CamundaClient camundaClient;
+    private UpdateTimeoutJobCommandStep1 updateTimeoutStep1;
+    private UpdateTimeoutJobCommandStep2 updateTimeoutStep2;
+
+    @BeforeEach
+    void init() {
+      camundaClient = mock(CamundaClient.class);
+      updateTimeoutStep1 = mock(UpdateTimeoutJobCommandStep1.class);
+      updateTimeoutStep2 = mock(UpdateTimeoutJobCommandStep2.class);
+      when(camundaClient.newUpdateTimeoutCommand(any(ActivatedJob.class)))
+          .thenReturn(updateTimeoutStep1);
+      when(updateTimeoutStep1.timeout(any(Duration.class))).thenReturn(updateTimeoutStep2);
+    }
+
+    @Test
+    void shouldUpdateJobTimeout_WhenHeaderPresent() throws Exception {
+      // given
+      var jobHandler = newConnectorJobHandler(context -> "ok", camundaClient);
+      var jobBuilder =
+          JobBuilder.create().withHeaders(Map.of(Keywords.JOB_TIMEOUT_KEYWORD, "PT10M"));
+
+      // when
+      jobBuilder.executeAndCaptureResult(jobHandler);
+
+      // then
+      ArgumentCaptor<Duration> timeoutCaptor = ArgumentCaptor.forClass(Duration.class);
+      verify(updateTimeoutStep1).timeout(timeoutCaptor.capture());
+      assertThat(timeoutCaptor.getValue()).isEqualTo(Duration.ofMinutes(10));
+      verify(updateTimeoutStep2).execute();
+    }
+
+    @Test
+    void shouldNotUpdateJobTimeout_WhenHeaderMissing() throws Exception {
+      // given
+      var jobHandler = newConnectorJobHandler(context -> "ok", camundaClient);
+      var jobBuilder = JobBuilder.create();
+
+      // when
+      jobBuilder.executeAndCaptureResult(jobHandler);
+
+      // then
+      verifyNoInteractions(camundaClient);
+    }
+
+    @Test
+    void shouldFailJob_WhenHeaderInvalid_ConnectorNotInvoked() throws Exception {
+      // given
+      var connectorFunction = mock(OutboundConnectorFunction.class);
+      var jobHandler = newConnectorJobHandler(connectorFunction, camundaClient);
+      var jobBuilder =
+          JobBuilder.create()
+              .withRetries(3)
+              .withHeaders(Map.of(Keywords.JOB_TIMEOUT_KEYWORD, "not-a-duration"));
+
+      // when
+      var result = jobBuilder.executeAndCaptureResult(jobHandler, false);
+
+      // then
+      assertThat(result.getRetries()).isEqualTo(0);
+      verify(connectorFunction, times(0)).execute(any());
+      verifyNoInteractions(camundaClient);
+    }
+
+    @Test
+    void shouldContinueExecution_WhenUpdateCommandFailsTransiently() throws Exception {
+      // given — a transient transport failure, where the broker's actual outcome is ambiguous
+      when(updateTimeoutStep2.execute())
+          .thenThrow(new ClientStatusException(Status.UNAVAILABLE, new RuntimeException("boom")));
+      var jobHandler = newConnectorJobHandler(context -> "ok", camundaClient);
+      var jobBuilder =
+          JobBuilder.create()
+              // a realistic, still-comfortably-future original deadline — without this, the mock's
+              // default job.getDeadline()==0 would make Math.min(...) always look already expired
+              .withDeadline(System.currentTimeMillis() + Duration.ofMinutes(5).toMillis())
+              .withHeaders(Map.of(Keywords.JOB_TIMEOUT_KEYWORD, "PT10M"));
+
+      // when
+      var result = jobBuilder.executeAndCaptureResult(jobHandler);
+
+      // then — connector still ran and the job still completed
+      assertThat(result.getVariables()).isNotNull();
+    }
+
+    @Test
+    void shouldNotInvokeConnector_WhenUpdateCommandDefinitivelyRejected() throws Exception {
+      // given — NOT_FOUND means the broker no longer recognizes this job: this worker's lease is
+      // definitively gone, so the connector must not run (risk of duplicate side effects)
+      when(updateTimeoutStep2.execute())
+          .thenThrow(new ClientStatusException(Status.NOT_FOUND, new RuntimeException("boom")));
+      var connectorFunction = mock(OutboundConnectorFunction.class);
+      var jobHandler = newConnectorJobHandler(connectorFunction, camundaClient);
+      var jobBuilder =
+          JobBuilder.create()
+              .withRetries(3)
+              .withHeaders(Map.of(Keywords.JOB_TIMEOUT_KEYWORD, "PT10M"));
+
+      // when
+      jobBuilder.executeAndCaptureResult(jobHandler, false);
+
+      // then
+      verify(connectorFunction, times(0)).execute(any());
+    }
+
+    @Test
+    void shouldNotInvokeConnector_WhenDeadlineAlreadyElapsedAfterUpdate() throws Exception {
+      // given — the update command takes long enough that a very short (but valid) jobTimeout has
+      // already elapsed by the time it returns; the broker may already consider this worker's
+      // lease gone, so the connector must not run
+      when(updateTimeoutStep2.execute())
+          .thenAnswer(
+              invocation -> {
+                Thread.sleep(50);
+                return null;
+              });
+      var connectorFunction = mock(OutboundConnectorFunction.class);
+      var jobHandler = newConnectorJobHandler(connectorFunction, camundaClient);
+      var jobBuilder =
+          JobBuilder.create()
+              .withRetries(3)
+              .withHeaders(Map.of(Keywords.JOB_TIMEOUT_KEYWORD, "PT0.01S"));
+
+      // when
+      jobBuilder.executeAndCaptureResult(jobHandler, false);
+
+      // then
+      verify(connectorFunction, times(0)).execute(any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"PT0S", "P0D", "PT-10M", "PT0.000000001S"})
+    void shouldFailJob_WhenHeaderNonPositive_ConnectorNotInvoked(String nonPositiveTimeout)
+        throws Exception {
+      // given
+      var connectorFunction = mock(OutboundConnectorFunction.class);
+      var jobHandler = newConnectorJobHandler(connectorFunction, camundaClient);
+      var jobBuilder =
+          JobBuilder.create()
+              .withRetries(3)
+              .withHeaders(Map.of(Keywords.JOB_TIMEOUT_KEYWORD, nonPositiveTimeout));
+
+      // when
+      var result = jobBuilder.executeAndCaptureResult(jobHandler, false);
+
+      // then — a zero or negative duration is rejected before the update command is ever issued
+      assertThat(result.getRetries()).isEqualTo(0);
+      assertThat(result.getErrorMessage()).contains("must be a positive duration");
+      verify(connectorFunction, times(0)).execute(any());
+      verifyNoInteractions(camundaClient);
+    }
+
+    @Test
+    void shouldFailJob_WhenHeaderDurationTooLargeToConvertToMillis_ConnectorNotInvoked()
+        throws Exception {
+      // given — Duration.parse succeeds but Duration#toMillis overflows long
+      var connectorFunction = mock(OutboundConnectorFunction.class);
+      var jobHandler = newConnectorJobHandler(connectorFunction, camundaClient);
+      var jobBuilder =
+          JobBuilder.create()
+              .withRetries(3)
+              .withHeaders(Map.of(Keywords.JOB_TIMEOUT_KEYWORD, "PT9999999999999999S"));
+
+      // when
+      var result = jobBuilder.executeAndCaptureResult(jobHandler, false);
+
+      // then
+      assertThat(result.getRetries()).isEqualTo(0);
+      assertThat(result.getErrorMessage()).contains("too large to represent");
+      verify(connectorFunction, times(0)).execute(any());
+      verifyNoInteractions(camundaClient);
+    }
+
+    @Test
+    void shouldFailJob_WhenDeadlineAdditionOverflows_ConnectorNotInvoked() throws Exception {
+      // given — Duration#toMillis succeeds (a representable, huge value close to Long.MAX_VALUE),
+      // but adding it to the current epoch millis would overflow
+      var connectorFunction = mock(OutboundConnectorFunction.class);
+      var jobHandler = newConnectorJobHandler(connectorFunction, camundaClient);
+      var jobBuilder =
+          JobBuilder.create()
+              .withRetries(3)
+              .withHeaders(Map.of(Keywords.JOB_TIMEOUT_KEYWORD, "PT9223372036854775S"));
+
+      // when
+      var result = jobBuilder.executeAndCaptureResult(jobHandler, false);
+
+      // then
+      assertThat(result.getRetries()).isEqualTo(0);
+      assertThat(result.getErrorMessage()).contains("too large to represent");
+      verify(connectorFunction, times(0)).execute(any());
+      verifyNoInteractions(camundaClient);
+    }
+
+    @Test
+    void shouldUseUpdatedDeadline_ForFailJobCallback_WhenHeaderPresent() throws Exception {
+      // given — a job with plenty of time left on its current deadline
+      long staleDeadline = System.currentTimeMillis() + Duration.ofMinutes(25).toMillis();
+      var factory = mock(JobCallbackCommandWrapperFactory.class, RETURNS_DEEP_STUBS);
+      var jobHandler =
+          newConnectorJobHandler(
+              context -> {
+                throw new RuntimeException("boom");
+              },
+              camundaClient,
+              factory);
+      var jobBuilder =
+          JobBuilder.create()
+              .withDeadline(staleDeadline)
+              .withHeaders(Map.of(Keywords.JOB_TIMEOUT_KEYWORD, "PT10M"));
+
+      // when — the connector function throws, so the job fails via failJob
+      jobBuilder.execute(jobHandler);
+
+      // then — the deadline update command was issued with the requested duration
+      ArgumentCaptor<Duration> timeoutCaptor = ArgumentCaptor.forClass(Duration.class);
+      verify(updateTimeoutStep1).timeout(timeoutCaptor.capture());
+      assertThat(timeoutCaptor.getValue()).isEqualTo(Duration.ofMinutes(10));
+
+      // and — the fail-command callback was scheduled against the NEW deadline (now + 10 minutes),
+      // not the stale one captured at activation
+      ArgumentCaptor<Long> deadlineCaptor = ArgumentCaptor.forClass(Long.class);
+      verify(factory).create(any(), deadlineCaptor.capture(), any(), anyInt());
+      long capturedDeadline = deadlineCaptor.getValue();
+      long expectedDeadline = System.currentTimeMillis() + Duration.ofMinutes(10).toMillis();
+
+      assertThat(capturedDeadline).isNotEqualTo(staleDeadline);
+      assertThat(Math.abs(capturedDeadline - expectedDeadline)).isLessThan(5000L);
+    }
+
+    @Test
+    void shouldUseEarlierDeadline_ForFailJobCallback_WhenUpdateCommandFailsAmbiguously()
+        throws Exception {
+      // given — a job with a long remaining lease, and a jobTimeout header requesting a much
+      // shorter one; the update command fails transiently, but the broker may have applied it
+      // anyway
+      long staleDeadline = System.currentTimeMillis() + Duration.ofMinutes(25).toMillis();
+      when(updateTimeoutStep2.execute())
+          .thenThrow(new ClientStatusException(Status.UNAVAILABLE, new RuntimeException("boom")));
+      var factory = mock(JobCallbackCommandWrapperFactory.class, RETURNS_DEEP_STUBS);
+      var jobHandler =
+          newConnectorJobHandler(
+              context -> {
+                throw new RuntimeException("boom");
+              },
+              camundaClient,
+              factory);
+      var jobBuilder =
+          JobBuilder.create()
+              .withDeadline(staleDeadline)
+              .withHeaders(Map.of(Keywords.JOB_TIMEOUT_KEYWORD, "PT1M"));
+
+      // when
+      jobBuilder.execute(jobHandler);
+
+      // then — the callback uses the earlier (requested) deadline, not the later stale one, so
+      // the retry-worthiness check is never overly optimistic about the ambiguous outcome
+      ArgumentCaptor<Long> deadlineCaptor = ArgumentCaptor.forClass(Long.class);
+      verify(factory).create(any(), deadlineCaptor.capture(), any(), anyInt());
+      long capturedDeadline = deadlineCaptor.getValue();
+      long expectedDeadline = System.currentTimeMillis() + Duration.ofMinutes(1).toMillis();
+
+      assertThat(capturedDeadline).isLessThan(staleDeadline);
+      assertThat(Math.abs(capturedDeadline - expectedDeadline)).isLessThan(5000L);
+    }
+  }
+
+  @Nested
+  class ConnectorRetryExceptionTests {
+    @Test
+    void shouldHandleConnectorRetryException_Default_Error() throws Exception {
+      // given
+      var jobHandler =
+          newConnectorJobHandler(
+              context -> {
+                throw new ConnectorRetryExceptionBuilder().message("Test retry exception").build();
+              });
+
+      // when
+      var result = JobBuilder.create().withRetries(3).executeAndCaptureResult(jobHandler, false);
+
+      // then
+      assertThat(result.getErrorMessage()).startsWith("Test retry exception");
+      assertThat(result.getRetries()).isEqualTo(2);
+    }
+
+    @Test
+    void shouldHandleConnectorRetryException_Custom_Error_Code() throws Exception {
+      // given
+      var jobRetries = 3;
+      var policyRetries = 4;
+      var policyBackoff = Duration.ofSeconds(10);
+      var customErrorCode = "customErrorCode";
+      var errorMessage = "Test retry exception";
+      var jobHandler =
+          newConnectorJobHandler(
+              context -> {
+                throw new ConnectorRetryExceptionBuilder()
+                    .message(errorMessage)
+                    .errorCode(customErrorCode)
+                    .retries(policyRetries)
+                    .backoffDuration(policyBackoff)
+                    .build();
+              });
+
+      // when
+      var result =
+          JobBuilder.create().withRetries(jobRetries).executeAndCaptureResult(jobHandler, false);
+
+      // then
+      assertThat(result.getErrorMessage()).startsWith(errorMessage);
+      assertThat(result.getRetries()).isEqualTo(policyRetries);
+
+      // Second occurrence of this Exception
+      result =
+          JobBuilder.create()
+              .withRetries(policyRetries)
+              .withVariables(
+                  TestObjectMapperSupplier.INSTANCE
+                      .writer()
+                      .writeValueAsString(result.getVariables()))
+              .executeAndCaptureResult(jobHandler, false);
+      assertThat(result.getErrorMessage()).startsWith(errorMessage);
+      // this is still the same value as this is the developer's responsibility to handle the
+      // retries state
+      // and decrement the retries value
+      assertThat(result.getRetries()).isEqualTo(policyRetries);
+    }
+
+    @Test
+    void shouldHandleConnectorRetryException_Basic_And_Retry_Exceptions() throws Exception {
+      AtomicInteger occurrence = new AtomicInteger();
+      // given
+      var jobRetries = 3;
+      var policyRetries = 4;
+      var policyBackoff = Duration.ofSeconds(10);
+      var customRetryErrorCode = "customErrorCode";
+      var retryErrorMessage = "Test retry exception";
+      var basicErrorMessage = "Basic exception";
+      var basicErrorCode = "basicErrorCode";
+      var jobHandler =
+          newConnectorJobHandler(
+              context -> {
+                if (occurrence.getAndIncrement() == 0) {
+                  throw new ConnectorRetryExceptionBuilder()
+                      .message(retryErrorMessage)
+                      .errorCode(customRetryErrorCode)
+                      .retries(policyRetries)
+                      .backoffDuration(policyBackoff)
+                      .build();
+                } else {
+                  throw new ConnectorException(basicErrorCode, basicErrorMessage);
+                }
+              });
+
+      // when
+      var result =
+          JobBuilder.create().withRetries(jobRetries).executeAndCaptureResult(jobHandler, false);
+
+      // then
+      assertThat(result.getErrorMessage()).startsWith(retryErrorMessage);
+      assertThat(result.getRetries()).isEqualTo(policyRetries);
+
+      // Second occurrence, will throw the ConnectorException
+      result =
+          JobBuilder.create()
+              .withRetries(policyRetries)
+              .withVariables(
+                  TestObjectMapperSupplier.INSTANCE
+                      .writer()
+                      .writeValueAsString(result.getVariables()))
+              .executeAndCaptureResult(jobHandler, false);
+      assertThat(result.getErrorMessage()).startsWith(basicErrorMessage);
+      assertThat(result.getRetries()).isEqualTo(policyRetries - 1);
+    }
+  }
+
+  @Nested
+  class ErrorExpressionTests {
+
+    @ParameterizedTest
+    @NullSource
+    @EmptySource
+    @ValueSource(
+        strings = {
+          " ",
+          "\t",
+          "\n",
+          "if error.code != null then bpmnError(\"123\", \"\") else {}",
+          "if error.code != null then bpmnError(\"123\", \"\") else null",
+          "if unknownFunction(error.code) then bpmnError(\"123\", \"\") else null"
+        })
+    void shouldNotCreateBpmnErrorWithExpression(String expression) throws Exception {
+      var jobHandler =
+          newConnectorJobHandler(
+              context -> {
+                // no error code provided
+                throw new ConnectorException(null, "exception message");
+              });
+      // when
+      var result =
+          JobBuilder.create()
+              .withErrorExpressionHeader(expression)
+              .executeAndCaptureResult(jobHandler, false);
+
+      // then
+      assertThat(result.getErrorMessage()).startsWith("exception message");
+    }
+
+    @Test
+    void shouldFail_BpmnErrorFunctionWithWrongArgument() throws Exception {
+      var jobHandler =
+          newConnectorJobHandler(
+              context -> {
+                // no error code provided
+                throw new ConnectorException(null, "exception message");
+              });
+      var errorExpression = "bpmnError(123, \"\")";
+      // when
+      var result =
+          JobBuilder.create()
+              .withErrorExpressionHeader(errorExpression)
+              .executeAndCaptureResult(jobHandler, false);
+
+      // then
+      assertThat(result.getErrorMessage())
+          .contains("Parameter 'errorCode' of function 'bpmnError' must be a String");
+    }
+
+    @Test
+    void shouldCreateBpmnError_UsingExceptionCodeAndRawContext() throws Exception {
+      // given
+      var errorExpression =
+          "if error.code != null then "
+              + "{ \"errorType\": \"bpmnError\", \"errorCode\": error.code, \"errorMessage\": \"Message: \" + error.message} "
+              + "else {}";
+      var jobHandler =
+          newConnectorJobHandler(
+              context -> {
+                throw new ConnectorException("1013", "exception message");
+              });
+      // when
+      var result =
+          JobBuilder.create()
+              .withErrorExpressionHeader(errorExpression)
+              .executeAndCaptureResult(jobHandler, false, true);
+      // then
+      assertThat(result.getErrorCode()).isEqualTo("1013");
+      assertThat(result.getErrorMessage()).isEqualTo("Message: exception message");
+    }
+
+    @Test
+    void shouldCreateBpmnError_UsingExceptionCodeAndErrorVariables() throws Exception {
+      // given
+      var errorExpression =
+          "if error.code != null then "
+              + "{ \"errorType\": \"bpmnError\", \"errorCode\": error.code, \"errorMessage\": \"Message: \" + error.message, \"variables\": error.variables} "
+              + "else {}";
+      var jobHandler =
+          newConnectorJobHandler(
+              context -> {
+                throw new ConnectorExceptionBuilder()
+                    .errorCode("1013")
+                    .message("exception message")
+                    .errorVariables(Map.of("foo", "bar"))
+                    .build();
+              });
+      // when
+      var result =
+          JobBuilder.create()
+              .withErrorExpressionHeader(errorExpression)
+              .executeAndCaptureResult(jobHandler, false, true);
+      // then
+      assertThat(result.getErrorCode()).isEqualTo("1013");
+      assertThat(result.getVariables()).isEqualTo(Map.of("foo", "bar"));
+      assertThat(result.getErrorMessage()).isEqualTo("Message: exception message");
+    }
+
+    @Test
+    void shouldCreateBpmnError_UsingCodeOnlyBpmnErrorFunction() throws Exception {
+      // given
+      var errorExpression =
+          "if contains(error.code,\"10\") then " + "bpmnError(error.code) " + "else null";
+      var jobHandler =
+          newConnectorJobHandler(
+              context -> {
+                throw new ConnectorException("1013", "exception message");
+              });
+      // when
+      var result =
+          JobBuilder.create()
+              .withErrorExpressionHeader(errorExpression)
+              .executeAndCaptureResult(jobHandler, false, true);
+      // then
+      assertThat(result.getErrorCode()).isEqualTo("1013");
+      assertThat(result.getErrorMessage()).isNull();
+    }
+
+    @Test
+    void shouldHideSecretsInJobErrorMessage() throws Exception {
+      // given
+      var errorMessage = "Something went wrong: bar is not the correct password";
+      var jobHandler =
+          newConnectorJobHandler(
+              context -> {
+                throw new IllegalArgumentException(errorMessage);
+              });
+
+      // when
+      var result =
+          JobBuilder.create()
+              .withVariables("{{secrets.FOO}}")
+              .executeAndCaptureResult(jobHandler, false);
+
+      // then
+      assertThat(result.getErrorMessage())
+          .startsWith("Something went wrong: *** is not the correct password");
+    }
+
+    @Test
+    void shouldHideSecretsInJsonProcessingError() throws Exception {
+      // given
+      var jobHandler =
+          newConnectorJobHandler(
+              context -> {
+                throw new ConnectorException(
+                    "JSON_PROCESSING_ERROR, bar could not be parsed as JSON String");
+              });
+
+      // when
+      var result =
+          JobBuilder.create()
+              .withVariables("{ \"integer\" : {{secrets.FOO}} }")
+              .executeAndCaptureResult(jobHandler, false);
+
+      // then
+      assertThat(result.getErrorMessage())
+          .startsWith("JSON_PROCESSING_ERROR, *** could not be parsed as JSON String");
+    }
+
+    @Test
+    void shouldHideSecretsInJobErrorJsonMessage() throws Exception {
+      // given
+      var errorMessage = "Something went wrong: bar is not the correct password";
+      var jobHandler =
+          newConnectorJobHandler(
+              context -> {
+                throw new IllegalArgumentException(errorMessage);
+              });
+
+      // when
+      var result =
+          JobBuilder.create()
+              .withVariables("{ \"integer\" : {{secrets.FOO}} }")
+              .executeAndCaptureResult(jobHandler, false);
+
+      // then
+      assertThat(result.getErrorMessage())
+          .startsWith("Something went wrong: *** is not the correct password");
+    }
+
+    @Test
+    void shouldCreateBpmnErro2r_UsingExceptionCodeAndErrorVariables() throws Exception {
+      // given
+      var jobHandler =
+          newConnectorJobHandler(
+              context -> {
+                throw new ConnectorExceptionBuilder()
+                    .errorCode("1013")
+                    .message("exception message")
+                    .errorVariables(Map.of("foo", "bar"))
+                    .build();
+              });
+      // when
+      var result = JobBuilder.create().executeAndCaptureResult(jobHandler, false, false);
+      // then
+      assertThat(result.getVariables())
+          .isEqualTo(
+              Map.of(
+                  "error",
+                  Map.of(
+                      "code",
+                      "1013",
+                      "variables",
+                      Map.of("foo", "bar"),
+                      "message",
+                      "exception message",
+                      "type",
+                      "io.camunda.connector.api.error.ConnectorException")));
+      assertThat(result.getErrorMessage()).startsWith("exception message");
+    }
+
+    @Test
+    void shouldCreateBpmnError_UsingExceptionWithBpmnErrorFunction() throws Exception {
+      // given
+      var errorExpression =
+          "if error.code != null then "
+              + "bpmnError(error.code, \"Message: \" + error.message) "
+              + "else null";
+      var jobHandler =
+          newConnectorJobHandler(
+              context -> {
+                throw new ConnectorException("1013", "exception message");
+              });
+      // when
+      var result =
+          JobBuilder.create()
+              .withErrorExpressionHeader(errorExpression)
+              .executeAndCaptureResult(jobHandler, false, true);
+      // then
+      assertThat(result.getErrorCode()).isEqualTo("1013");
+      assertThat(result.getErrorMessage()).isEqualTo("Message: exception message");
+    }
+
+    @Test
+    void shouldCreateBpmnError_UsingExceptionWithDefaultFunction() throws Exception {
+      // given
+      var errorExpression =
+          "if contains(error.code,\"10\") then "
+              + "bpmnError(error.code, \"Message: \" + error.message) "
+              + "else null";
+      var jobHandler =
+          newConnectorJobHandler(
+              context -> {
+                throw new ConnectorException("1013", "exception message");
+              });
+      // when
+      var result =
+          JobBuilder.create()
+              .withErrorExpressionHeader(errorExpression)
+              .executeAndCaptureResult(jobHandler, false, true);
+      // then
+      assertThat(result.getErrorCode()).isEqualTo("1013");
+      assertThat(result.getErrorMessage()).isEqualTo("Message: exception message");
+    }
+
+    @Test
+    void shouldCreateBpmnError_UsingExceptionCodeAsFirstCondition() throws Exception {
+      // given
+      var errorExpression =
+          "if error.code != null then "
+              + "bpmnError(error.code, \"Message: \" + error.message) "
+              + "else if testProperty = \"foo\" then "
+              + "bpmnError(\"9999\", \"Message for foo value on test property\") "
+              + "else null";
+      var jobHandler =
+          newConnectorJobHandler(
+              context -> {
+                throw new ConnectorException("1013", "exception message");
+              });
+      // when
+      var result =
+          JobBuilder.create()
+              .withErrorExpressionHeader(errorExpression)
+              .executeAndCaptureResult(jobHandler, false, true);
+      // then
+      assertThat(result.getErrorCode()).isEqualTo("1013");
+      assertThat(result.getErrorMessage()).isEqualTo("Message: exception message");
+    }
+
+    @Test
+    void shouldCreateJobError_UsingExceptionCodeAsSecondConditionAfterResponseProperty()
+        throws Exception {
+      // given
+      var errorExpression =
+          """
+          if response.testProperty = "foo" then
+            jobError("Message for foo value on test property")
+          else if error.code != null then
+            jobError("Message: " + error.message)
+          else {}
+          """;
+      var jobHandler =
+          newConnectorJobHandler(
+              context -> {
+                throw new ConnectorException("1013", "exception message");
+              });
+      // when
+      var result =
+          JobBuilder.create()
+              .withErrorExpressionHeader(errorExpression)
+              .executeAndCaptureResult(jobHandler, false, false);
+      // then
+      assertThat(result.getErrorMessage()).startsWith("Message: exception message");
+    }
+
+    @Test
+    void shouldCreateJobError_UsingResponseProperty() throws Exception {
+      // given
+      var errorExpression =
+          """
+          if response.testProperty = "foo" then
+            jobError("Message for foo value on test property")
+          else if error.code != null then
+            jobError("Message: " + error.message)
+          else {}
+          """;
+      var jobHandler = newConnectorJobHandler(context -> Map.of("testProperty", "foo"));
+      // when
+      var result =
+          JobBuilder.create()
+              .withErrorExpressionHeader(errorExpression)
+              .executeAndCaptureResult(jobHandler, false, false);
+      // then
+      assertThat(result.getErrorMessage()).startsWith("Message for foo value on test property");
+    }
+
+    @Test
+    void shouldCreateJobError_UsingResponsePropertySettingRetriesRelativeToCurrentRetries()
+        throws Exception {
+      // given
+      var errorExpression =
+          """
+          if response.testProperty = "foo" then
+            jobError("Message for foo value on test property", {}, job.retries - 1)
+          else if error.code != null then
+            jobError("Message: " + error.message)
+          else {}
+          """;
+      var jobHandler = newConnectorJobHandler(context -> Map.of("testProperty", "foo"));
+      // when
+      var result =
+          JobBuilder.create()
+              .withErrorExpressionHeader(errorExpression)
+              .withRetries(5)
+              .executeAndCaptureResult(jobHandler, false, false);
+      // then
+      assertThat(result.getErrorMessage()).startsWith("Message for foo value on test property");
+      assertThat(result.getRetries()).isEqualTo(4);
+    }
+
+    @Test
+    void shouldCreateJobError_WithVariablesSetOnFailedJob() throws Exception {
+      // Given
+      var errorExpression =
+          """
+          jobError("MyError", {"myVar": "myVal"})
+          """;
+      var jobHandler =
+          newConnectorJobHandler(
+              context -> {
+                throw new ConnectorException("CONNECTION_ERROR", "connection failed");
+              });
+      // when
+      var result =
+          JobBuilder.create()
+              .withErrorExpressionHeader(errorExpression)
+              .executeAndCaptureResult(jobHandler, false, false);
+      // then
+      assertThat(result.getErrorMessage()).startsWith("MyError");
+      assertThat(result.getVariables()).containsEntry("myVar", "myVal");
+      assertThat(result.getVariables()).containsEntry("error", "MyError");
+    }
+
+    @Test
+    void shouldCreateJobError_WithErrorKeyInVariables_ErrorMessageTakesPrecedence()
+        throws Exception {
+      // Given - user provides an "error" key that should be overwritten
+      var errorExpression =
+          """
+          jobError("ActualError", {"error": "UserProvidedError", "otherVar": "value"})
+          """;
+      var jobHandler =
+          newConnectorJobHandler(
+              context -> {
+                throw new ConnectorException("CONNECTION_ERROR", "connection failed");
+              });
+      // when
+      var result =
+          JobBuilder.create()
+              .withErrorExpressionHeader(errorExpression)
+              .executeAndCaptureResult(jobHandler, false, false);
+      // then - error message takes precedence over user-provided "error" key
+      assertThat(result.getErrorMessage()).startsWith("ActualError");
+      assertThat(result.getVariables()).containsEntry("error", "ActualError");
+      assertThat(result.getVariables()).containsEntry("otherVar", "value");
+      assertThat(result.getVariables()).doesNotContainValue("UserProvidedError");
+    }
+
+    @Test
+    void shouldCreateBpmnError_UsingExceptionCodeAsSecondConditionAfterResponseProperty()
+        throws Exception {
+      // given
+      var errorExpression =
+          "if response.testProperty = \"foo\" then "
+              + "bpmnError(\"9999\", \"Message for foo value on test property\") "
+              + "else if error.code != null then "
+              + "bpmnError(error.code, \"Message: \" + error.message) "
+              + "else {}";
+      var jobHandler =
+          newConnectorJobHandler(
+              context -> {
+                throw new ConnectorException("1013", "exception message");
+              });
+      // when
+      var result =
+          JobBuilder.create()
+              .withErrorExpressionHeader(errorExpression)
+              .executeAndCaptureResult(jobHandler, false, true);
+      // then
+      assertThat(result.getErrorCode()).isEqualTo("1013");
+      assertThat(result.getErrorMessage()).startsWith("Message: exception message");
+    }
+
+    @Test
+    void shouldCreateBpmnError_UsingExceptionCodeAsSecondConditionAfterPlainProperty()
+        throws Exception {
+      // given
+      var errorExpression =
+          "if testProperty = \"foo\" then "
+              + "bpmnError(\"9999\", \"Message for foo value on test property\") "
+              + "else if error.code != null then "
+              + "bpmnError(error.code, \"Message: \" + error.message) "
+              + "else {}";
+      var jobHandler =
+          newConnectorJobHandler(
+              context -> {
+                throw new ConnectorException("1013", "exception message");
+              });
+      // when
+      var result =
+          JobBuilder.create()
+              .withErrorExpressionHeader(errorExpression)
+              .executeAndCaptureResult(jobHandler, false, true);
+      // then
+      assertThat(result.getErrorCode()).isEqualTo("1013");
+      assertThat(result.getErrorMessage()).isEqualTo("Message: exception message");
+    }
+
+    @Test
+    void shouldCreateBpmnError_UsingExceptionCodeAsSecondConditionAfterContextProperty()
+        throws Exception {
+      // given
+      var errorExpression =
+          "if testObject.testProperty = \"foo\" then "
+              + "bpmnError(\"9999\", \"Message for foo value on test property\") "
+              + "else if error.code != null then "
+              + "bpmnError(error.code, \"Message: \" + error.message) "
+              + "else {}";
+      var jobHandler =
+          newConnectorJobHandler(
+              context -> {
+                throw new ConnectorException("1013", "exception message");
+              });
+      // when
+      var result =
+          JobBuilder.create()
+              .withErrorExpressionHeader(errorExpression)
+              .executeAndCaptureResult(jobHandler, false, true);
+      // then
+      assertThat(result.getErrorCode()).isEqualTo("1013");
+      assertThat(result.getErrorMessage()).isEqualTo("Message: exception message");
+    }
+
+    @Test
+    void shouldCreateBpmnError_UsingResponseValueAsFirstCondition() throws Exception {
+      // given
+      var errorExpression =
+          "if response.testProperty = \"foo\" then "
+              + "bpmnError(\"9999\", \"Message for foo value on test property\") "
+              + "else if error.code != null then "
+              + "bpmnError(error.code, \"Message: \" + error.message) "
+              + "else {}";
+      var jobHandler = newConnectorJobHandler(context -> Map.of("testProperty", "foo"));
+      // when
+      var result =
+          JobBuilder.create()
+              .withErrorExpressionHeader(errorExpression)
+              .executeAndCaptureResult(jobHandler, false, true);
+      // then
+      assertThat(result.getErrorCode()).isEqualTo("9999");
+      assertThat(result.getErrorMessage()).isEqualTo("Message for foo value on test property");
+    }
+
+    @Test
+    void shouldCreateBpmnError_UsingResponseValueAsSecondCondition() throws Exception {
+      // given
+      var errorExpression =
+          "if error.code != null then "
+              + "bpmnError(error.code, \"Message: \" + error.message) "
+              + "else if response.testProperty = \"foo\" then "
+              + "bpmnError(\"9999\", \"Message for foo value on test property\") "
+              + "else {}";
+      var jobHandler = newConnectorJobHandler(context -> Map.of("testProperty", "foo"));
+      // when
+      var result =
+          JobBuilder.create()
+              .withErrorExpressionHeader(errorExpression)
+              .executeAndCaptureResult(jobHandler, false, true);
+      // then
+      assertThat(result.getErrorCode()).isEqualTo("9999");
+      assertThat(result.getErrorMessage()).isEqualTo("Message for foo value on test property");
+    }
+
+    @Test
+    void shouldCreateBpmnError_UsingResultVariable() throws Exception {
+      // given
+      var errorExpression =
+          "if testProperty = \"foo\" then "
+              + "bpmnError(\"9999\", \"Message for foo value on test property\") "
+              + "else if error.code != null then "
+              + "bpmnError(error.code, \"Message: \" + error.message) "
+              + "else {}";
+      var jobHandler = newConnectorJobHandler(context -> "foo");
+      // when
+      var result =
+          JobBuilder.create()
+              .withHeaders(
+                  Map.of(
+                      RESULT_VARIABLE_KEYWORD,
+                      "testProperty",
+                      ERROR_EXPRESSION_KEYWORD,
+                      errorExpression))
+              .executeAndCaptureResult(jobHandler, false, true);
+      // then
+      assertThat(result.getErrorCode()).isEqualTo("9999");
+      assertThat(result.getErrorMessage()).isEqualTo("Message for foo value on test property");
+    }
+
+    @Test
+    void ignoreErrorShouldLeadToSuccessfulCompletion() throws Exception {
+      // given
+      var errorExpression =
+          "if contains(error.code,\"10\") then " + "ignoreError(error.variables) " + "else null";
+      var jobHandler =
+          newConnectorJobHandler(
+              context -> {
+                throw new ConnectorException(
+                    "1013",
+                    "exception message",
+                    new RuntimeException("Test"),
+                    Map.of("foo", "bar"));
+              });
+      // when
+      var result =
+          JobBuilder.create()
+              .withErrorExpressionHeader(errorExpression)
+              .executeAndCaptureResult(jobHandler, true);
+      // then
+      assertThat(result.getErrorCode()).isNull();
+      assertThat(result.getErrorMessage()).isNull();
+      assertThat(result.getVariables()).containsEntry("foo", "bar");
+    }
+
+    @Test
+    void ignoreErrorWithoutVarsShouldLeadToSuccessfulCompletion() throws Exception {
+      // given
+      var errorExpression = "if contains(error.code,\"10\") then " + "ignoreError() " + "else null";
+      var jobHandler =
+          newConnectorJobHandler(
+              context -> {
+                throw new ConnectorException(
+                    "1013",
+                    "exception message",
+                    new RuntimeException("Test"),
+                    Map.of("foo", "bar"));
+              });
+      // when
+      var result =
+          JobBuilder.create()
+              .withErrorExpressionHeader(errorExpression)
+              .executeAndCaptureResult(jobHandler, true);
+      // then
+      assertThat(result.getErrorCode()).isNull();
+      assertThat(result.getErrorMessage()).isNull();
+      assertThat(result.getVariables()).isEmpty();
+    }
+
+    @Test
+    void shouldAbandonJob_WhenThreadInterruptedDuringErrorExpressionEvaluation() throws Exception {
+      // given: the job-handling thread was interrupted (e.g. runtime shutdown via
+      // JobWorkerExecutors.close()) right before error expression evaluation gets a chance to
+      // observe it - mirroring a downstream connector call that returned after being interrupted
+      var errorExpression = "if error != null then bpmnError(error.code, error.message) else null";
+      var jobHandler =
+          newConnectorJobHandler(
+              context -> {
+                throw new ConnectorException("1013", "exception message");
+              });
+      var jobClient = mock(JobClient.class);
+
+      // when
+      Thread.currentThread().interrupt();
+      try {
+        JobBuilder.create()
+            .withErrorExpressionHeader(errorExpression)
+            .useJobClient(jobClient)
+            .execute(jobHandler);
+      } finally {
+        // clear any leftover interrupt status so it doesn't leak into other tests
+        Thread.interrupted();
+      }
+
+      // then: no incident is raised - the job is abandoned so Zeebe's activation timeout
+      // reassigns it, instead of failing with a misleading "Reason: null" error
+      verifyNoInteractions(jobClient);
+    }
+  }
+
+  @Test
+  void shouldRaiseExceptionDuringJsonProcessing() throws Exception {
+    // given
+    var jobHandler = newConnectorJobHandler(context -> context.bindVariables(TestValidation.class));
+
+    // when
+    var result =
+        JobBuilder.create()
+            .withVariables("{ \"test\" : \"{{secrets.FOO}}\", \"test2\" : \"{{secrets.FOO}}\" }")
+            .executeAndCaptureResult(jobHandler, false);
+
+    // then
+    assertThat(result.getErrorMessage())
+        .startsWith(
+            "jakarta.validation.ValidationException: Found constraints violated while validating input: \n"
+                + " - Property: test: Validation failed. Original message: numeric value out of bounds (<2 digits>.<0 digits> expected)");
+  }
+
+  @Test
+  void shouldPrioritizeSecretNotFoundException() throws Exception {
+    // given
+    var jobHandler = newConnectorJobHandler(context -> context.bindVariables(TestValidation.class));
+
+    // when
+    var result =
+        JobBuilder.create()
+            .withVariables("{ \"test\" : \"{{secrets.FOO}}\", \"test2\" : \"{{secrets.FOO2}}\" }")
+            .executeAndCaptureResult(jobHandler, false);
+
+    // then
+    assertThat(result.getErrorMessage()).startsWith("Secret with name 'FOO2' is not available");
+  }
+
+  @Test
+  void shouldHideExceptionMessageWhenSecretsObfuscationFails() throws Exception {
+    // given
+    var jobHandlerForMissingSecret =
+        newConnectorJobHandler(
+            context -> context.bindVariables(TestValidation.class),
+            new SecretProviderAggregator(List.of()) {
+              @Override
+              public List<String> fetchAll(List<String> keys, SecretContext context) {
+                throw new RuntimeException("Network error while fetching secrets");
+              }
+            });
+    var jobHandlerRaisingException =
+        newConnectorJobHandler(
+            context -> {
+              throw new ConnectorException("Crazy error something with bar");
+            },
+            new SecretProviderAggregator(List.of(new FooBarSecretProvider())) {
+              @Override
+              public List<String> fetchAll(List<String> keys, SecretContext context) {
+                throw new RuntimeException("Network error while fetching secrets");
+              }
+            });
+
+    // when
+    var resultForMissingSecret =
+        JobBuilder.create()
+            .withVariables("{ \"test\" : \"{{secrets.FOO}}\" }")
+            .executeAndCaptureResult(jobHandlerForMissingSecret, false);
+    var resultForRaisingException =
+        JobBuilder.create()
+            .withVariables("{ \"test\" : \"{{secrets.FOO}}\" }")
+            .executeAndCaptureResult(jobHandlerRaisingException, false);
+
+    // then
+    assertThat(resultForMissingSecret.getErrorMessage())
+        .startsWith(
+            "Fetching secrets failed, original error can't be displayed as the error message might contain secrets: Network error while fetching secrets");
+    assertThat(resultForRaisingException.getErrorMessage())
+        .startsWith(
+            "Fetching secrets failed, original error can't be displayed as the error message might contain secrets: Network error while fetching secrets");
+  }
+
+  @Test
+  void shouldRaiseMultipleExceptionsDuringJsonProcessing() throws Exception {
+    // given
+    var jobHandler = newConnectorJobHandler(context -> context.bindVariables(TestValidation.class));
+
+    // when
+    var result =
+        JobBuilder.create()
+            .withVariables("{ \"test\" : \"{{secrets.FOO}}\", \"test2\" : \"\" }")
+            .executeAndCaptureResult(jobHandler, false);
+
+    // then
+    assertThat(result.getErrorMessage())
+        .contains("Property: test2: Validation failed. Original message: must not be empty");
+    assertThat(result.getErrorMessage())
+        .contains("Property: test2: Validation failed. Original message: must not be empty");
+  }
+
+  @Test
+  void connectorRaiseAnExceptionContainingSecret() throws Exception {
+    // given
+    var jobHandler =
+        newConnectorJobHandler(
+            context -> {
+              throw new ConnectorException("test: bar");
+            });
+
+    // when
+    var result =
+        JobBuilder.create()
+            .withVariables("{ \"test\" : \"{{secrets.FOO}}\", \"test2\" : \"null\" }")
+            .executeAndCaptureResult(jobHandler, false);
+
+    // then
+    assertThat(result.getErrorMessage()).startsWith("test: ***");
+  }
+
+  @Test
+  void retrieveAllSecretsShouldNotThrowIfSecretNotFound() throws Exception {
+    // given
+    var jobHandler =
+        newConnectorJobHandler(
+            context -> {
+              throw new ConnectorException("test: bar");
+            });
+
+    // when
+    var result =
+        JobBuilder.create()
+            .withVariables("{ \"test\" : \"12\", \"test2\" : \"{{secrets.FOO}}\" }")
+            .executeAndCaptureResult(jobHandler, false);
+
+    // then
+    assertThat(result.getErrorMessage()).startsWith("test: ***");
+  }
+
+  @Test
+  void shouldIncludeErrorVariablesInFailJobErrorMessage() throws Exception {
+    // given
+    var errorMessage = "HTTP request failed";
+    Map<String, Object> errorVariables = Map.of("status", 400);
+
+    var jobHandler =
+        newConnectorJobHandler(
+            context -> {
+              throw new ConnectorExceptionBuilder()
+                  .message(errorMessage)
+                  .errorVariables(errorVariables)
+                  .build();
+            });
+
+    // when
+    var result = JobBuilder.create().executeAndCaptureResult(jobHandler, false);
+
+    // then
+    assertThat(result.getErrorMessage())
+        .startsWith("HTTP request failed | Error variables: ")
+        .contains("status=400")
+        .contains("type=io.camunda.connector.api.error.ConnectorException")
+        .contains("message=HTTP request failed");
+  }
+
+  @Nested
+  class ConnectorResponseTests {
+
+    @Test
+    void defaultGetVariablesPassesThroughResultExpressionVariables() throws Exception {
+      var response = StandardConnectorResponse.of(Map.of("key", "value"));
+      var handler = newConnectorJobHandler(context -> response);
+
+      var result =
+          JobBuilder.create()
+              .withResultExpressionHeader("={mapped: response.key}")
+              .executeAndCaptureResult(handler);
+
+      assertThat(result.getVariables()).isEqualTo(Map.of("mapped", "value"));
+    }
+
+    @Test
+    void rejectsIgnoreErrorForAdHocSubProcessResponse() throws Exception {
+      var ahspResponse =
+          new TestAdHocSubProcessResponse(
+              Map.of("status", "trigger ignore"), Map.of(), List.of(), false, false);
+      var handler = newConnectorJobHandler(context -> ahspResponse);
+
+      var result =
+          JobBuilder.create()
+              .withErrorExpressionHeader(
+                  "=if response.status = \"trigger ignore\" then ignoreError({}) else null")
+              .executeAndCaptureResult(handler, false);
+
+      assertThat(result.getErrorMessage())
+          .startsWith("IgnoreError is not supported for this connector");
+    }
+
+    @Test
+    void allowsIgnoreErrorForStandardResponse() throws Exception {
+      var customResponse =
+          new StandardConnectorResponse() {
+            @Override
+            public Object responseValue() {
+              return Map.of("status", "trigger ignore");
+            }
+          };
+      var handler = newConnectorJobHandler(context -> customResponse);
+
+      var result =
+          JobBuilder.create()
+              .withErrorExpressionHeader(
+                  "=if response.status = \"trigger ignore\" then ignoreError({\"recovered\": true}) else null")
+              .executeAndCaptureResult(handler);
+
+      assertThat(result.getVariables()).isEqualTo(Map.of("recovered", true));
+    }
+
+    @Test
+    void completesAdHocSubProcessWithElementActivations() throws Exception {
+      var response =
+          new TestAdHocSubProcessResponse(
+              null,
+              Map.of("agentContext", "some-context"),
+              List.of(
+                  new TestAdHocSubProcessResponse.TestElementActivation(
+                      "task1", Map.of("input", "value1")),
+                  new TestAdHocSubProcessResponse.TestElementActivation(
+                      "task2", Map.of("input", "value2"))),
+              false,
+              true);
+      var handler = newConnectorJobHandler(context -> response);
+
+      var result = JobBuilder.create().executeAndCaptureAdHocSubProcessResult(handler);
+
+      assertThat(result.variables()).isEqualTo(Map.of("agentContext", "some-context"));
+      assertThat(result.completionConditionFulfilled()).isFalse();
+      assertThat(result.cancelRemainingInstances()).isTrue();
+      assertThat(result.elementActivations()).hasSize(2);
+      assertThat(result.elementActivations().get(0).elementId()).isEqualTo("task1");
+      assertThat(result.elementActivations().get(0).variables())
+          .isEqualTo(Map.of("input", "value1"));
+      assertThat(result.elementActivations().get(1).elementId()).isEqualTo("task2");
+      assertThat(result.elementActivations().get(1).variables())
+          .isEqualTo(Map.of("input", "value2"));
+    }
+
+    @Test
+    void adHocSubProcessResponseSkipsResultExpression() throws Exception {
+      var response =
+          new TestAdHocSubProcessResponse(
+              Map.of("key", "value"), Map.of("ownVar", "ownValue"), List.of(), true, false);
+      var handler = newConnectorJobHandler(context -> response);
+
+      // result expression is configured but should be ignored for AHSP
+      var result =
+          JobBuilder.create()
+              .withResultExpressionHeader("={mapped: response.key}")
+              .executeAndCaptureAdHocSubProcessResult(handler);
+
+      assertThat(result.variables()).isEqualTo(Map.of("ownVar", "ownValue"));
+      assertThat(result.completionConditionFulfilled()).isTrue();
+      assertThat(result.cancelRemainingInstances()).isFalse();
+      assertThat(result.elementActivations()).isEmpty();
+    }
+
+    @Test
+    void nullVariablesTreatedAsEmptyMap() throws Exception {
+      var response = new TestAdHocSubProcessResponse(null, null, List.of(), true, false);
+      var handler = newConnectorJobHandler(context -> response);
+
+      var result = JobBuilder.create().executeAndCaptureAdHocSubProcessResult(handler);
+
+      assertThat(result.variables()).isEmpty();
+      assertThat(result.completionConditionFulfilled()).isTrue();
+      assertThat(result.elementActivations()).isEmpty();
+    }
+
+    @Test
+    void nullElementActivationsTreatedAsEmptyList() throws Exception {
+      var response =
+          new TestAdHocSubProcessResponse(null, Map.of("key", "value"), null, true, false);
+      var handler = newConnectorJobHandler(context -> response);
+
+      var result = JobBuilder.create().executeAndCaptureAdHocSubProcessResult(handler);
+
+      assertThat(result.variables()).isEqualTo(Map.of("key", "value"));
+      assertThat(result.completionConditionFulfilled()).isTrue();
+      assertThat(result.elementActivations()).isEmpty();
+    }
+  }
+
+  @Nested
+  class JobCompletionListenerTests {
+
+    @Test
+    void listenerNotifiedWithBpmnErrorThrownOnBpmnErrorExpression() throws Exception {
+      var listener = mock(JobCompletionListener.class);
+      var function = new TestListenerFunction(Map.of("status", "fail"), listener);
+      var handler =
+          newConnectorJobHandler(
+              function, CompletableFuture.completedFuture(new CommandOutcome.Completed(null, 1)));
+
+      JobBuilder.create()
+          .withErrorExpressionHeader(
+              "=if response.status = \"fail\" then bpmnError(\"ERR_001\", \"test error\") else null")
+          .executeAndCaptureResult(handler, false, true);
+
+      var captor = ArgumentCaptor.forClass(JobCompletionFailure.class);
+      verify(listener).onJobCompletionFailed(any(), any(ConnectorResponse.class), captor.capture());
+      assertThat(captor.getValue())
+          .isInstanceOfSatisfying(
+              JobCompletionFailure.BpmnErrorThrown.class,
+              failure -> {
+                assertThat(failure.errorCode()).isEqualTo("ERR_001");
+                assertThat(failure.errorMessage()).isEqualTo("test error");
+                assertThat(failure.variables()).isEmpty();
+                assertThat(failure.commandFailure()).isNull();
+              });
+    }
+
+    @Test
+    void listenerNotifiedWithBpmnErrorThrownWithVariables() throws Exception {
+      var listener = mock(JobCompletionListener.class);
+      var function = new TestListenerFunction(Map.of("status", "fail"), listener);
+      var handler =
+          newConnectorJobHandler(
+              function, CompletableFuture.completedFuture(new CommandOutcome.Completed(null, 1)));
+
+      JobBuilder.create()
+          .withErrorExpressionHeader(
+              "=if response.status = \"fail\" then bpmnError(\"ERR_002\", \"with vars\", {detail: \"info\"}) else null")
+          .executeAndCaptureResult(handler, false, true);
+
+      var captor = ArgumentCaptor.forClass(JobCompletionFailure.class);
+      verify(listener).onJobCompletionFailed(any(), any(ConnectorResponse.class), captor.capture());
+      assertThat(captor.getValue())
+          .isInstanceOfSatisfying(
+              JobCompletionFailure.BpmnErrorThrown.class,
+              failure -> {
+                assertThat(failure.errorCode()).isEqualTo("ERR_002");
+                assertThat(failure.errorMessage()).isEqualTo("with vars");
+                assertThat(failure.variables())
+                    .containsExactlyInAnyOrderEntriesOf(Map.of("detail", "info"));
+                assertThat(failure.commandFailure()).isNull();
+              });
+    }
+
+    @Test
+    void listenerNotifiedWithBpmnErrorAndCommandFailureWhenThrowBpmnErrorRejected()
+        throws Exception {
+      var listener = mock(JobCompletionListener.class);
+      var function = new TestListenerFunction(Map.of("status", "fail"), listener);
+      var cause = new RuntimeException("Zeebe rejected throwBpmnError");
+      var handler =
+          newConnectorJobHandler(
+              function, CompletableFuture.completedFuture(new CommandOutcome.Failed(cause, 3)));
+
+      JobBuilder.create()
+          .withErrorExpressionHeader(
+              "=if response.status = \"fail\" then bpmnError(\"ERR_X\", \"boom\") else null")
+          .executeAndCaptureResult(handler, false, true);
+
+      var captor = ArgumentCaptor.forClass(JobCompletionFailure.class);
+      verify(listener).onJobCompletionFailed(any(), any(ConnectorResponse.class), captor.capture());
+      assertThat(captor.getValue())
+          .isInstanceOfSatisfying(
+              JobCompletionFailure.BpmnErrorThrown.class,
+              failure -> {
+                assertThat(failure.errorCode()).isEqualTo("ERR_X");
+                assertThat(failure.commandFailure())
+                    .isInstanceOfSatisfying(
+                        JobCompletionFailure.CommandFailure.CommandFailed.class,
+                        cf -> assertThat(cf.cause()).isSameAs(cause));
+              });
+    }
+
+    @Test
+    void listenerNotifiedWithJobErrorRaisedOnJobErrorExpression() throws Exception {
+      var listener = mock(JobCompletionListener.class);
+      var function = new TestListenerFunction(Map.of("status", "fail"), listener);
+      var handler =
+          newConnectorJobHandler(
+              function, CompletableFuture.completedFuture(new CommandOutcome.Completed(null, 1)));
+
+      JobBuilder.create()
+          .withErrorExpressionHeader(
+              "=if response.status = \"fail\" then jobError(\"something went wrong\") else null")
+          .executeAndCaptureResult(handler, false, false);
+
+      var captor = ArgumentCaptor.forClass(JobCompletionFailure.class);
+      verify(listener).onJobCompletionFailed(any(), any(ConnectorResponse.class), captor.capture());
+      assertThat(captor.getValue())
+          .isInstanceOfSatisfying(
+              JobCompletionFailure.JobErrorRaised.class,
+              failure -> {
+                assertThat(failure.errorMessage()).isEqualTo("something went wrong");
+                assertThat(failure.variables())
+                    .containsExactlyInAnyOrderEntriesOf(Map.of("error", "something went wrong"));
+                assertThat(failure.commandFailure()).isNull();
+              });
+    }
+
+    @Test
+    void listenerNotifiedWithJobErrorRaisedWithVariables() throws Exception {
+      var listener = mock(JobCompletionListener.class);
+      var function = new TestListenerFunction(Map.of("status", "fail"), listener);
+      var handler =
+          newConnectorJobHandler(
+              function, CompletableFuture.completedFuture(new CommandOutcome.Completed(null, 1)));
+
+      JobBuilder.create()
+          .withErrorExpressionHeader(
+              "=if response.status = \"fail\" then jobError(\"failed\", {detail: \"more info\"}) else null")
+          .executeAndCaptureResult(handler, false, false);
+
+      var captor = ArgumentCaptor.forClass(JobCompletionFailure.class);
+      verify(listener).onJobCompletionFailed(any(), any(ConnectorResponse.class), captor.capture());
+      assertThat(captor.getValue())
+          .isInstanceOfSatisfying(
+              JobCompletionFailure.JobErrorRaised.class,
+              failure -> {
+                assertThat(failure.errorMessage()).isEqualTo("failed");
+                assertThat(failure.variables())
+                    .containsExactlyInAnyOrderEntriesOf(
+                        Map.of("detail", "more info", "error", "failed"));
+                assertThat(failure.commandFailure()).isNull();
+              });
+    }
+
+    @Test
+    void listenerNotifiedWithJobErrorRaisedWithRetriesAndBackoff() throws Exception {
+      var listener = mock(JobCompletionListener.class);
+      var function = new TestListenerFunction(Map.of("status", "fail"), listener);
+      var handler =
+          newConnectorJobHandler(
+              function, CompletableFuture.completedFuture(new CommandOutcome.Completed(null, 1)));
+
+      JobBuilder.create()
+          .withErrorExpressionHeader(
+              "=if response.status = \"fail\" then jobError(\"retry me\", {}, 2, @\"PT30S\") else null")
+          .executeAndCaptureResult(handler, false, false);
+
+      var captor = ArgumentCaptor.forClass(JobCompletionFailure.class);
+      verify(listener).onJobCompletionFailed(any(), any(ConnectorResponse.class), captor.capture());
+      // retries and backoff control the FailJob command, not the notification
+      assertThat(captor.getValue())
+          .isInstanceOfSatisfying(
+              JobCompletionFailure.JobErrorRaised.class,
+              failure -> {
+                assertThat(failure.errorMessage()).isEqualTo("retry me");
+                assertThat(failure.variables())
+                    .containsExactlyInAnyOrderEntriesOf(Map.of("error", "retry me"));
+                assertThat(failure.commandFailure()).isNull();
+              });
+    }
+
+    @Test
+    void listenerNotifiedWithJobErrorAndCommandFailureWhenFailJobRejected() throws Exception {
+      var listener = mock(JobCompletionListener.class);
+      var function = new TestListenerFunction(Map.of("status", "fail"), listener);
+      var cause = new RuntimeException("Zeebe rejected failJob");
+      var handler =
+          newConnectorJobHandler(
+              function, CompletableFuture.completedFuture(new CommandOutcome.Ignored(cause, 1)));
+
+      JobBuilder.create()
+          .withErrorExpressionHeader(
+              "=if response.status = \"fail\" then jobError(\"boom\") else null")
+          .executeAndCaptureResult(handler, false, false);
+
+      var captor = ArgumentCaptor.forClass(JobCompletionFailure.class);
+      verify(listener).onJobCompletionFailed(any(), any(ConnectorResponse.class), captor.capture());
+      assertThat(captor.getValue())
+          .isInstanceOfSatisfying(
+              JobCompletionFailure.JobErrorRaised.class,
+              failure -> {
+                assertThat(failure.errorMessage()).isEqualTo("boom");
+                assertThat(failure.commandFailure())
+                    .isInstanceOfSatisfying(
+                        JobCompletionFailure.CommandFailure.CommandIgnored.class,
+                        cf -> assertThat(cf.cause()).isSameAs(cause));
+              });
+    }
+
+    @Test
+    void listenerNotifiedOnSuccessfulCompletion() throws Exception {
+      var listener = mock(JobCompletionListener.class);
+      var function = new TestListenerFunction(Map.of("key", "value"), listener);
+      var handler =
+          newConnectorJobHandler(
+              function, CompletableFuture.completedFuture(new CommandOutcome.Completed(null, 1)));
+
+      JobBuilder.create().execute(handler);
+
+      verify(listener).onJobCompleted(any(), any(ConnectorResponse.class));
+    }
+
+    @Test
+    void listenerNotifiedWithCommandIgnoredOnIgnoredOutcome() throws Exception {
+      var listener = mock(JobCompletionListener.class);
+      var function = new TestListenerFunction(Map.of("key", "value"), listener);
+      var cause = new RuntimeException("NOT_FOUND");
+      var handler =
+          newConnectorJobHandler(
+              function, CompletableFuture.completedFuture(new CommandOutcome.Ignored(cause, 1)));
+
+      JobBuilder.create().execute(handler);
+
+      var captor = ArgumentCaptor.forClass(JobCompletionFailure.class);
+      verify(listener).onJobCompletionFailed(any(), any(ConnectorResponse.class), captor.capture());
+      assertThat(captor.getValue())
+          .isInstanceOfSatisfying(
+              JobCompletionFailure.CommandFailure.CommandIgnored.class,
+              failure -> assertThat(failure.cause()).isSameAs(cause));
+    }
+
+    @Test
+    void listenerNotifiedWithCommandFailedOnFailedOutcome() throws Exception {
+      var listener = mock(JobCompletionListener.class);
+      var function = new TestListenerFunction(Map.of("key", "value"), listener);
+      var cause = new RuntimeException("command failed");
+      var handler =
+          newConnectorJobHandler(
+              function, CompletableFuture.completedFuture(new CommandOutcome.Failed(cause, 3)));
+
+      JobBuilder.create().execute(handler);
+
+      var captor = ArgumentCaptor.forClass(JobCompletionFailure.class);
+      verify(listener).onJobCompletionFailed(any(), any(ConnectorResponse.class), captor.capture());
+      assertThat(captor.getValue())
+          .isInstanceOfSatisfying(
+              JobCompletionFailure.CommandFailure.CommandFailed.class,
+              failure -> assertThat(failure.cause()).isSameAs(cause));
+    }
+
+    @Test
+    void listenerNotifiedWithCommandFailedOnFutureException() throws Exception {
+      var listener = mock(JobCompletionListener.class);
+      var function = new TestListenerFunction(Map.of("key", "value"), listener);
+      var cause = new RuntimeException("future failed");
+      var handler = newConnectorJobHandler(function, CompletableFuture.failedFuture(cause));
+
+      JobBuilder.create().execute(handler);
+
+      var captor = ArgumentCaptor.forClass(JobCompletionFailure.class);
+      verify(listener).onJobCompletionFailed(any(), any(ConnectorResponse.class), captor.capture());
+      assertThat(captor.getValue())
+          .isInstanceOfSatisfying(
+              JobCompletionFailure.CommandFailure.CommandFailed.class,
+              failure -> assertThat(failure.cause()).isSameAs(cause));
+    }
+
+    @Test
+    void throwingListenerOnCompletionDoesNotPropagate() throws Exception {
+      var listener = mock(JobCompletionListener.class);
+      doThrow(new RuntimeException("listener exploded"))
+          .when(listener)
+          .onJobCompleted(any(), any());
+      var function = new TestListenerFunction(Map.of("key", "value"), listener);
+      var handler =
+          newConnectorJobHandler(
+              function, CompletableFuture.completedFuture(new CommandOutcome.Completed(null, 1)));
+
+      // should not throw despite listener failure
+      JobBuilder.create().execute(handler);
+
+      verify(listener).onJobCompleted(any(), any(ConnectorResponse.class));
+    }
+
+    @Test
+    void throwingListenerOnFailureDoesNotPropagate() throws Exception {
+      var listener = mock(JobCompletionListener.class);
+      doThrow(new RuntimeException("listener exploded"))
+          .when(listener)
+          .onJobCompletionFailed(any(), any(), any());
+      var function = new TestListenerFunction(Map.of("status", "fail"), listener);
+      var handler =
+          newConnectorJobHandler(
+              function, CompletableFuture.completedFuture(new CommandOutcome.Completed(null, 1)));
+
+      // should not throw despite listener failure
+      JobBuilder.create()
+          .withErrorExpressionHeader(
+              "=if response.status = \"fail\" then bpmnError(\"ERR\", \"boom\") else null")
+          .executeAndCaptureResult(handler, false, true);
+
+      verify(listener).onJobCompletionFailed(any(), any(ConnectorResponse.class), any());
+    }
+
+    @Test
+    void listenerNotifiedOnIgnoreErrorCompletion() throws Exception {
+      var listener = mock(JobCompletionListener.class);
+      var function = new TestListenerFunction(Map.of("status", "fail"), listener);
+      var handler =
+          newConnectorJobHandler(
+              function, CompletableFuture.completedFuture(new CommandOutcome.Completed(null, 1)));
+
+      JobBuilder.create()
+          .withErrorExpressionHeader(
+              "=if response.status = \"fail\" then ignoreError({\"recovered\": true}) else null")
+          .executeAndCaptureResult(handler);
+
+      verify(listener).onJobCompleted(any(), any(ConnectorResponse.class));
+    }
+
+    @Test
+    void listenerNotifiedWhenErrorExpressionEvaluationFails() throws Exception {
+      var listener = mock(JobCompletionListener.class);
+      var function = new TestListenerFunction(Map.of("key", "value"), listener);
+      var handler =
+          newConnectorJobHandler(
+              function, CompletableFuture.completedFuture(new CommandOutcome.Completed(null, 1)));
+
+      // expression returning a non-object value causes examineErrorExpression to throw
+      JobBuilder.create()
+          .withErrorExpressionHeader("=\"not an error object\"")
+          .executeAndCaptureResult(handler, false);
+
+      var captor = ArgumentCaptor.forClass(JobCompletionFailure.class);
+      verify(listener).onJobCompletionFailed(any(), any(ConnectorResponse.class), captor.capture());
+      assertThat(captor.getValue())
+          .isInstanceOfSatisfying(
+              ExecutionFailed.class, failure -> assertThat(failure.commandFailure()).isNull());
+    }
+
+    @Test
+    void listenerNotifiedWithNullResponseWhenExecuteThrows() throws Exception {
+      var listener = mock(JobCompletionListener.class);
+      var function = new TestListenerFunction(new RuntimeException("execute exploded"), listener);
+      var handler =
+          newConnectorJobHandler(
+              function, CompletableFuture.completedFuture(new CommandOutcome.Completed(null, 1)));
+
+      JobBuilder.create().executeAndCaptureResult(handler, false);
+
+      var captor = ArgumentCaptor.forClass(JobCompletionFailure.class);
+      verify(listener).onJobCompletionFailed(any(), eq(null), captor.capture());
+      assertThat(captor.getValue())
+          .isInstanceOfSatisfying(
+              ExecutionFailed.class,
+              failure -> {
+                assertThat(failure.cause()).hasMessage("execute exploded");
+                assertThat(failure.commandFailure()).isNull();
+              });
+    }
+
+    @Test
+    void executionFailedCarriesCommandFailureWhenFailJobRejected() throws Exception {
+      var listener = mock(JobCompletionListener.class);
+      var function = new TestListenerFunction(new RuntimeException("execute exploded"), listener);
+      var failJobCause = new RuntimeException("Zeebe rejected failJob");
+      var handler =
+          newConnectorJobHandler(
+              function,
+              CompletableFuture.completedFuture(new CommandOutcome.Failed(failJobCause, 3)));
+
+      JobBuilder.create().executeAndCaptureResult(handler, false);
+
+      var captor = ArgumentCaptor.forClass(JobCompletionFailure.class);
+      verify(listener).onJobCompletionFailed(any(), eq(null), captor.capture());
+      assertThat(captor.getValue())
+          .isInstanceOfSatisfying(
+              ExecutionFailed.class,
+              failure -> {
+                assertThat(failure.cause()).hasMessage("execute exploded");
+                assertThat(failure.commandFailure()).isInstanceOf(CommandFailed.class);
+                assertThat(((CommandFailed) failure.commandFailure()).cause())
+                    .isSameAs(failJobCause);
+              });
+    }
+
+    @Test
+    void noListenerDoesNotCrash() throws Exception {
+      // function that does NOT implement JobCompletionListener
+      var handler =
+          newConnectorJobHandler(
+              context -> StandardConnectorResponse.of(Map.of("key", "value")),
+              CompletableFuture.completedFuture(new CommandOutcome.Completed(null, 1)));
+
+      // should not throw
+      JobBuilder.create().execute(handler);
+    }
+
+    /** Function that implements both OutboundConnectorFunction and JobCompletionListener. */
+    private static final class TestListenerFunction
+        implements OutboundConnectorFunction, JobCompletionListener {
+
+      private final Object responseOrException;
+      private final JobCompletionListener delegate;
+
+      TestListenerFunction(Object responseOrException, JobCompletionListener delegate) {
+        this.responseOrException = responseOrException;
+        this.delegate = delegate;
+      }
+
+      @Override
+      public Object execute(OutboundConnectorContext context) throws Exception {
+        if (responseOrException instanceof Exception ex) {
+          throw ex;
+        }
+        return responseOrException;
+      }
+
+      @Override
+      public void onJobCompleted(OutboundConnectorContext context, ConnectorResponse response) {
+        delegate.onJobCompleted(context, response);
+      }
+
+      @Override
+      public void onJobCompletionFailed(
+          OutboundConnectorContext context,
+          ConnectorResponse response,
+          JobCompletionFailure failure) {
+        delegate.onJobCompletionFailed(context, response, failure);
+      }
+    }
+  }
+
+  @Nested
+  class CreateDocumentTests {
+
+    @Test
+    void resultExpressionCreateDocumentProducesRealDocumentInOutputVariables() throws Exception {
+      // given a connector whose response embeds a base64-encoded file inside its JSON body,
+      // mirroring the shape from https://github.com/camunda/connectors/issues/4715
+      String base64 = Base64.getEncoder().encodeToString("hello".getBytes(StandardCharsets.UTF_8));
+      var jobHandler =
+          newConnectorJobHandlerWithDocumentFactory(
+              (context) -> Map.of("body", Map.of("file", base64)),
+              new DocumentFactoryImpl(InMemoryDocumentStore.INSTANCE));
+
+      // when the result expression extracts just that field via createDocument
+      var result =
+          JobBuilder.create()
+              .withResultExpressionHeader("={myDoc: createDocument(response.body.file)}")
+              .executeAndCaptureResult(jobHandler);
+
+      // then the output variable holds a real document reference, not the raw base64 string.
+      // NOTE (Task 3 correction, verified against InboundCorrelationHandlerTest): with the
+      // production-shaped ObjectMapper used here (TestObjectMapperSupplier.INSTANCE, which
+      // registers the full JacksonModuleDocumentDeserializer stack just like the real
+      // connectorObjectMapper/outboundConnectorObjectMapper beans), the resolved document
+      // reference JSON gets re-hydrated by Jackson's own Object.class deserializer into a real
+      // Document rather than staying a raw reference Map. The Mockito ArgumentCaptor in
+      // JobBuilder captures the in-memory variables Map directly (no JsonMapper round-trip
+      // through a Zeebe client), so that live Document object survives into the captured result.
+      var myDoc = result.getVariables().get("myDoc");
+      assertThat(myDoc).isInstanceOf(Document.class);
+      assertThat(((Document) myDoc).asByteArray())
+          .isEqualTo("hello".getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Test
+    void doesNotResolveAnInjectedSentinelFromConnectorResponseData() throws Exception {
+      // End-to-end injection scenario, through the real SpringConnectorJobHandler pipeline: a
+      // malicious/compromised remote API's response body happens to be shaped exactly like the
+      // createDocument() sentinel, guessing the pre-nonce literal discriminator value
+      // ("createDocument", with no runtime-generated suffix). The result expression here is a
+      // plain pass-through of the response — no createDocument() call anywhere in the expression
+      // itself, exactly what an ordinary connector user would write. This must not create a
+      // document from attacker-controlled bytes: the forged object must survive untouched all the
+      // way through job completion.
+      String attackerBase64 =
+          Base64.getEncoder().encodeToString("attacker payload".getBytes(StandardCharsets.UTF_8));
+      var jobHandler =
+          newConnectorJobHandlerWithDocumentFactory(
+              (context) ->
+                  Map.of(
+                      "body",
+                      Map.of("connectorResultFunction", "createDocument", "value", attackerBase64)),
+              new DocumentFactoryImpl(InMemoryDocumentStore.INSTANCE));
+
+      var result =
+          JobBuilder.create()
+              .withResultExpressionHeader("={result: response.body}")
+              .executeAndCaptureResult(jobHandler);
+
+      @SuppressWarnings("unchecked")
+      Map<String, Object> passedThrough = (Map<String, Object>) result.getVariables().get("result");
+      assertThat(passedThrough)
+          .containsEntry("connectorResultFunction", "createDocument")
+          .containsEntry("value", attackerBase64);
+      assertThat(passedThrough.values()).noneMatch(v -> v instanceof Document);
+    }
+
+    @Test
+    void doesNotResolveASentinelForgedWithAnotherJobsLeakedNonce() throws Exception {
+      // End-to-end version of the cross-tenant nonce-leak scenario: the nonce is scoped per
+      // evaluation (see FeelConnectorFunctionProvider), not a single per-JVM constant, precisely
+      // because a result expression can legitimately project it out via field access
+      // (createDocument(x).connectorResultFunction) — so a real per-JVM secret would be learnable
+      // by whoever authors that expression and reusable against a completely different job.
+      var documentFactory = new DocumentFactoryImpl(InMemoryDocumentStore.INSTANCE);
+
+      // Job A: harvests its own evaluation's nonce via a legitimate field projection.
+      var jobHandlerA =
+          newConnectorJobHandlerWithDocumentFactory((context) -> Map.of(), documentFactory);
+      var resultA =
+          JobBuilder.create()
+              .withResultExpressionHeader(
+                  "={leakedNonce: createDocument(\"aA==\").connectorResultFunction}")
+              .executeAndCaptureResult(jobHandlerA);
+      String leakedNonce = (String) resultA.getVariables().get("leakedNonce");
+      assertThat(leakedNonce).startsWith("createDocument:");
+
+      // Job B: a completely independent job whose connector response an attacker has crafted to
+      // look exactly like a sentinel, tagged with Job A's leaked nonce.
+      String attackerBase64 =
+          Base64.getEncoder().encodeToString("attacker payload".getBytes(StandardCharsets.UTF_8));
+      var jobHandlerB =
+          newConnectorJobHandlerWithDocumentFactory(
+              (context) ->
+                  Map.of(
+                      "body",
+                      Map.of("connectorResultFunction", leakedNonce, "value", attackerBase64)),
+              documentFactory);
+      var resultB =
+          JobBuilder.create()
+              .withResultExpressionHeader("={result: response.body}")
+              .executeAndCaptureResult(jobHandlerB);
+
+      @SuppressWarnings("unchecked")
+      Map<String, Object> passedThrough =
+          (Map<String, Object>) resultB.getVariables().get("result");
+      assertThat(passedThrough)
+          .containsEntry("connectorResultFunction", leakedNonce)
+          .containsEntry("value", attackerBase64);
+      assertThat(passedThrough.values()).noneMatch(v -> v instanceof Document);
+    }
+  }
+}

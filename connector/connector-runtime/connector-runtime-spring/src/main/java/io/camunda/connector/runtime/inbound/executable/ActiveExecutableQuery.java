@@ -1,0 +1,90 @@
+/*
+ * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+ * under one or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information regarding copyright
+ * ownership. Camunda licenses this file to you under the Apache License,
+ * Version 2.0; you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.camunda.connector.runtime.inbound.executable;
+
+import io.camunda.connector.runtime.core.inbound.ExecutableId;
+import java.util.List;
+
+/** Mutable filter used with the consumer-based {@code query} API. */
+public class ActiveExecutableQuery {
+
+  private String bpmnProcessId;
+  private String elementId;
+  private String type;
+  private String tenantId;
+  private ExecutableId executableId;
+  private List<String> physicalTenantIds;
+
+  public ActiveExecutableQuery bpmnProcessId(String bpmnProcessId) {
+    this.bpmnProcessId = bpmnProcessId;
+    return this;
+  }
+
+  public ActiveExecutableQuery elementId(String elementId) {
+    this.elementId = elementId;
+    return this;
+  }
+
+  public ActiveExecutableQuery type(String type) {
+    this.type = type;
+    return this;
+  }
+
+  public ActiveExecutableQuery tenantId(String tenantId) {
+    this.tenantId = tenantId;
+    return this;
+  }
+
+  public ActiveExecutableQuery executableId(ExecutableId executableId) {
+    this.executableId = executableId;
+    return this;
+  }
+
+  public ActiveExecutableQuery executableId(String executableId) {
+    this.executableId = executableId == null ? null : ExecutableId.fromHashedId(executableId);
+    return this;
+  }
+
+  public ActiveExecutableQuery physicalTenantIds(List<String> physicalTenantIds) {
+    this.physicalTenantIds = physicalTenantIds;
+    return this;
+  }
+
+  public String bpmnProcessId() {
+    return bpmnProcessId;
+  }
+
+  public String elementId() {
+    return elementId;
+  }
+
+  public String type() {
+    return type;
+  }
+
+  public String tenantId() {
+    return tenantId;
+  }
+
+  public ExecutableId executableId() {
+    return executableId;
+  }
+
+  public List<String> physicalTenantIds() {
+    return physicalTenantIds;
+  }
+}

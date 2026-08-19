@@ -1,0 +1,97 @@
+/*
+ * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+ * under one or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information regarding copyright
+ * ownership. Camunda licenses this file to you under the Apache License,
+ * Version 2.0; you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.camunda.connector.runtime.inbound.importer;
+
+import io.camunda.connector.runtime.inbound.search.SearchQueryClient;
+import io.camunda.connector.runtime.inbound.state.model.ImportResult;
+import io.camunda.connector.runtime.inbound.state.model.ImportResult.ImportType;
+import io.camunda.connector.runtime.inbound.state.model.ProcessDefinitionRef;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class Importers {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(Importers.class);
+
+  public ImportResult importLatestVersions(
+      String physicalTenantId, SearchQueryClient searchQueryClient) {
+    LOGGER.debug("Starting import of LATEST versions for physicalTenantId '{}'", physicalTenantId);
+
+    Map<ProcessDefinitionRef, Set<Long>> result =
+        PaginatedSearchUtil.queryAllPages(searchQueryClient::queryProcessDefinitions)
+            .collect(
+                Collectors.toMap(
+                    definition ->
+                        new ProcessDefinitionRef(
+                            physicalTenantId,
+                            definition.getProcessDefinitionId(),
+                            definition.getTenantId()),
+                    definition -> Collections.singleton(definition.getProcessDefinitionKey())));
+
+    LOGGER.debug("Imported {} latest process versions", result.size());
+    if (LOGGER.isTraceEnabled()) {
+      LOGGER.trace(
+          "Imported latest process versions: {}",
+          result.entrySet().stream()
+              .map(
+                  entry ->
+                      String.format(
+                          "%s => key: %d",
+                          entry.getKey().bpmnProcessId(), entry.getValue().iterator().next()))
+              .reduce((a, b) -> a + "; " + b)
+              .orElse("none"));
+    }
+
+    return new ImportResult(result, ImportType.LATEST_VERSIONS, physicalTenantId);
+  }
+
+  public ImportResult importActiveVersions(
+      String physicalTenantId, SearchQueryClient searchQueryClient) {
+    LOGGER.debug("Starting import of ACTIVE versions for physicalTenantId '{}'", physicalTenantId);
+
+    Map<ProcessDefinitionRef, Set<Long>> result =
+        PaginatedSearchUtil.queryAllPages(searchQueryClient::queryMessageSubscriptionStatistics)
+            .collect(
+                Collectors.groupingBy(
+                    stats ->
+                        new ProcessDefinitionRef(
+                            physicalTenantId, stats.getProcessDefinitionId(), stats.getTenantId()),
+                    Collectors.mapping(
+                        stats -> Long.parseLong(stats.getProcessDefinitionKey()),
+                        Collectors.toSet())));
+
+    LOGGER.debug("Imported {} active process versions", result.size());
+    if (LOGGER.isTraceEnabled()) {
+      LOGGER.trace(
+          "Imported active process versions: {}",
+          result.entrySet().stream()
+              .map(
+                  entry ->
+                      String.format(
+                          "%s => keys: %s",
+                          entry.getKey().bpmnProcessId(), entry.getValue().toString()))
+              .reduce((a, b) -> a + "; " + b)
+              .orElse("none"));
+    }
+
+    return new ImportResult(result, ImportType.HAVE_ACTIVE_SUBSCRIPTIONS, physicalTenantId);
+  }
+}

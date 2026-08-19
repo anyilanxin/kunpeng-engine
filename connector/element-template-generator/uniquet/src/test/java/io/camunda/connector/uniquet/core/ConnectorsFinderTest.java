@@ -1,0 +1,88 @@
+/*
+ * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+ * under one or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information regarding copyright
+ * ownership. Camunda licenses this file to you under the Apache License,
+ * Version 2.0; you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.camunda.connector.uniquet.core;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import io.camunda.connector.uniquet.dto.Connector;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.List;
+import org.junit.jupiter.api.Test;
+
+class ConnectorsFinderTest {
+
+  @Test
+  void create() {
+    ConnectorsFinder connectorsFinder =
+        ConnectorsFinder.create(Path.of("src/test/resources"), null);
+    assertEquals(2, connectorsFinder.getAllConnectors().size());
+  }
+
+  @Test
+  void createWithIgnore() throws IOException {
+    ConnectorsFinder connectorsFinder =
+        ConnectorsFinder.create(
+            Path.of("src/test/resources"),
+            Path.of("src/test/resources/ignore-templates.json").toString());
+    assertEquals(1, connectorsFinder.getAllConnectors().size());
+  }
+
+  @Test
+  void nonJsonFilesAreIgnored() {
+    // README.md files exist alongside the JSON templates in element-templates/ and
+    // element-templates/versioned/; ConnectorsFinder must skip them without throwing.
+    ConnectorsFinder connectorsFinder =
+        ConnectorsFinder.create(Path.of("src/test/resources"), null);
+    List<Connector> connectors = connectorsFinder.getAllConnectors();
+    assertEquals(2, connectors.size());
+    connectors.forEach(
+        c -> {
+          assertTrue(c.currentElementTemplate().getName().endsWith(".json"));
+          c.versionedElementTemplate().forEach(v -> assertTrue(v.getName().endsWith(".json")));
+        });
+  }
+
+  @Test
+  void next() {
+    ConnectorsFinder connectorsFinder =
+        ConnectorsFinder.create(Path.of("src/test/resources"), null);
+    Connector soap = findConnector(connectorsFinder, "soap-outbound-connector.json");
+    assertEquals(1, soap.versionedElementTemplate().size());
+    assertEquals(
+        "soap-outbound-connector-2.json", soap.versionedElementTemplate().getFirst().getName());
+  }
+
+  @Test
+  void symlinkedElementTemplatesDirectoryIsSkipped() {
+    ConnectorsFinder connectorsFinder =
+        ConnectorsFinder.create(Path.of("src/test/resources"), null);
+    Connector foo = findConnector(connectorsFinder, "foo-connector.json");
+    assertTrue(
+        foo.currentElementTemplate()
+            .toPath()
+            .getParent()
+            .endsWith(Path.of("with-symlink", "real", "element-templates")));
+  }
+
+  private static Connector findConnector(ConnectorsFinder connectorsFinder, String fileName) {
+    return connectorsFinder.getAllConnectors().stream()
+        .filter(c -> c.currentElementTemplate().getName().equals(fileName))
+        .findFirst()
+        .orElseThrow();
+  }
+}

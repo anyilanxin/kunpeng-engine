@@ -1,0 +1,200 @@
+<!--
+  ~ Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>io.camunda.connector</groupId>
+    <artifactId>connectors-bundle-parent</artifactId>
+    <version>8.10.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>connectors-parent</artifactId>
+  <name>Connectors (OOTB)</name>
+  <packaging>pom</packaging>
+
+  <description>Parent POM for Connectors implementations</description>
+  <inceptionYear>2022</inceptionYear>
+
+  <modules>
+    <module>app-integrations</module>
+    <module>agentic-ai</module>
+    <module>automation-anywhere</module>
+    <module>aws</module>
+    <module>box</module>
+    <module>csv</module>
+    <module>email</module>
+    <module>google</module>
+    <module>http</module>
+    <module>jdbc</module>
+    <module>kafka</module>
+    <module>microsoft/azure-blobstorage</module>
+    <module>microsoft/common</module>
+    <module>microsoft/email-inbound</module>
+    <module>microsoft/teams</module>
+    <module>camunda-message</module>
+    <module>rabbitmq</module>
+    <module>salesforce</module>
+    <module>sendgrid</module>
+    <module>slack</module>
+    <module>soap</module>
+    <module>webhook</module>
+    <module>idp-extraction</module>
+    <module>embeddings-vector-database</module>
+  </modules>
+
+  <properties>
+    <license.inlineheader>Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+under one or more contributor license agreements. Licensed under a proprietary license.
+See the License.txt file for more information. You may not use this file
+except in compliance with the proprietary license.</license.inlineheader>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>io.camunda.connector</groupId>
+      <artifactId>connector-object-mapper</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.camunda.connector</groupId>
+      <artifactId>connector-core</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.validation</groupId>
+      <artifactId>jakarta.validation-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.camunda.connector</groupId>
+      <artifactId>connector-validation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+    </dependency>
+
+    <!-- test dependencies -->
+    <dependency>
+      <groupId>io.camunda.connector</groupId>
+      <artifactId>connector-runtime-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.assertj</groupId>
+      <artifactId>assertj-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers-junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>libraries-bom</artifactId>
+        <version>${version.google-libraries-bom}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>io.camunda.connector</groupId>
+          <artifactId>element-template-generator-maven-plugin</artifactId>
+          <version>${project.version}</version>
+          <executions>
+            <execution>
+              <goals>
+                <goal>generate-templates</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+
+    <plugins>
+      <plugin>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>analyze-dependencies</id>
+            <configuration>
+              <ignoredUnusedDeclaredDependencies combine.children="append">
+                <dependency>org.assertj:assertj-core</dependency>
+                <dependency>io.camunda.connector:connector-core</dependency>
+                <dependency>io.camunda.connector:connector-runtime-core</dependency>
+                <dependency>jakarta.validation:jakarta.validation-api</dependency>
+                <dependency>io.camunda.connector:connector-runtime-test</dependency>
+                <dependency>io.camunda.connector:connector-object-mapper</dependency>
+                <dependency>io.camunda.connector:connector-validation</dependency>
+                <dependency>com.fasterxml.jackson.core:jackson-databind</dependency>
+                <dependency>org.mockito:mockito-core</dependency>
+                <dependency>org.springframework.boot:spring-boot-test</dependency>
+                <dependency>org.apache.tika:tika-parsers-standard-package</dependency>
+              </ignoredUnusedDeclaredDependencies>
+              <ignoredNonTestScopedDependencies combine.children="append">
+                <dependency>io.camunda.connector:connector-validation</dependency>
+                <dependency>com.fasterxml.jackson.core:jackson-core</dependency>
+                <dependency>io.camunda.connector:jackson-datatype-document</dependency>
+                <dependency>io.camunda.connector:connector-object-mapper</dependency>
+                <dependency>org.junit.jupiter:junit-jupiter-api</dependency>
+              </ignoredNonTestScopedDependencies>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

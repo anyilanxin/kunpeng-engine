@@ -1,0 +1,487 @@
+/*
+ * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+ * under one or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information regarding copyright
+ * ownership. Camunda licenses this file to you under the Apache License,
+ * Version 2.0; you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.camunda.connector.generator.java;
+
+import static io.camunda.connector.generator.java.util.OperationBasedConnectorUtil.*;
+import static io.camunda.connector.generator.java.util.TemplateGenerationStringUtil.camelCaseToSpaces;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.camunda.connector.api.annotation.Operation;
+import io.camunda.connector.api.inbound.InboundConnectorExecutable;
+import io.camunda.connector.api.outbound.OutboundConnectorFunction;
+import io.camunda.connector.api.outbound.OutboundConnectorProvider;
+import io.camunda.connector.generator.api.ElementTemplateGenerator;
+import io.camunda.connector.generator.api.GeneratorConfiguration;
+import io.camunda.connector.generator.api.GeneratorConfiguration.ConnectorElementType;
+import io.camunda.connector.generator.api.GeneratorConfiguration.ConnectorMode;
+import io.camunda.connector.generator.api.GeneratorConfiguration.GenerationFeature;
+import io.camunda.connector.generator.dsl.*;
+import io.camunda.connector.generator.java.annotation.BpmnType;
+import io.camunda.connector.generator.java.annotation.ElementTemplate;
+import io.camunda.connector.generator.java.processor.TemplatePropertyAnnotationProcessor;
+import io.camunda.connector.generator.java.util.*;
+import io.camunda.connector.generator.java.util.TemplateGenerationContext.Outbound;
+import io.camunda.connector.util.reflection.ReflectionUtil;
+import io.camunda.connector.util.reflection.ReflectionUtil.MethodWithAnnotation;
+import java.util.*;
+import java.util.regex.Pattern;
+import org.apache.commons.lang3.StringUtils;
+
+public class ClassBasedTemplateGenerator implements ElementTemplateGenerator<Class<?>> {
+
+  private static final ObjectMapper TOOLTIP_JSON_MAPPER = new ObjectMapper();
+  private static final Pattern SEM_VER_PATTERN =
+      Pattern.compile(
+          "^(?:[~^]?(?:0|[1-9]\\d*)\\.(?:\\d+)(?:\\.\\d+)?(?:-[\\da-z.-]+)?(?:\\+[\\da-z.-]+)?|\\*|\\d+\\.\\d+|\\d+)(?:\\s*[-,]\\s*[~^]?(?:0|[1-9]\\d*)\\.(?:\\d+)(?:\\.\\d+)?(?:-[\\da-z.-]+)?(?:\\+[\\da-z.-]+)?)?$");
+
+  // Configuration (credential) templates rely on modeler/engine support that only ships from
+  // Camunda 8.10 onward; a connector wiring @ElementTemplate.configurations() onto an older
+  // declared engineVersion would silently ship a chooser the target platform can't render.
+  private static final String MIN_ENGINE_VERSION_FOR_CONFIGURATIONS = "8.10";
+  private static final int MIN_ENGINE_MAJOR_FOR_CONFIGURATIONS = 8;
+  private static final int MIN_ENGINE_MINOR_FOR_CONFIGURATIONS = 10;
+  private static final Pattern ENGINE_VERSION_NUMBER_PATTERN =
+      Pattern.compile("^[~^]?(\\d+)\\.(\\d+)");
+  private static final Pattern BARE_MAJOR_VERSION_PATTERN = Pattern.compile("^[~^]?(\\d+)$");
+
+  private final ClassLoader classLoader;
+
+  public ClassBasedTemplateGenerator(ClassLoader classLoader) {
+    this.classLoader = classLoader;
+  }
+
+  public ClassBasedTemplateGenerator() {
+    this(Thread.currentThread().getContextClassLoader());
+  }
+
+  private static String createId(
+      TemplateGenerationContext context,
+      String templateId,
+      ConnectorElementType elementType,
+      final boolean isHybridMode) {
+    String baseTemplateId =
+        Optional.ofNullable(elementType.templateIdOverride())
+            .orElseGet(
+                () ->
+                    context.elementTypes().size() > 1
+                        ? templateId + ":" + elementType.elementType().getId()
+                        : templateId);
+    return isHybridMode
+        ? baseTemplateId + GeneratorConfiguration.HYBRID_TEMPLATE_ID_SUFFIX
+        : baseTemplateId;
+  }
+
+  private static String createName(
+      TemplateGenerationContext context,
+      String templateName,
+      ConnectorElementType elementType,
+      boolean isHybridMode) {
+    String baseTemplateName =
+        Optional.ofNullable(elementType.templateNameOverride())
+            .orElseGet(
+                () -> {
+                  if (context.elementTypes().size() > 1) {
+                    return templateName
+                        + " ("
+                        + camelCaseToSpaces(elementType.elementType().getId())
+                        + ")";
+                  }
+                  return templateName;
+                });
+    return isHybridMode
+        ? GeneratorConfiguration.HYBRID_TEMPLATE_NAME_PREFIX + baseTemplateName
+        : baseTemplateName;
+  }
+
+  @Override
+  public List<io.camunda.connector.generator.dsl.ElementTemplate> generate(
+      Class<?> connectorDefinition, GeneratorConfiguration configuration) {
+
+    var template = ReflectionUtil.getRequiredAnnotation(connectorDefinition, ElementTemplate.class);
+    var connectorInput = template.inputDataClass();
+    var context = TemplateGenerationContextUtil.createContext(connectorDefinition, configuration);
+
+    List<PropertyBuilder> properties;
+    StepTreeResult stepTree;
+    if (OutboundConnectorFunction.class.isAssignableFrom(connectorDefinition)
+        || InboundConnectorExecutable.class.isAssignableFrom(connectorDefinition)) {
+      // Merge the properties of all input data classes (in declaration order) into one template.
+      // Property id collisions are rejected by the ElementTemplate constructor.
+      properties = new ArrayList<>();
+      for (Class<?> inputClass : connectorInput) {
+        if (inputClass != Void.class) {
+          properties.addAll(
+              TemplatePropertiesUtil.extractTemplatePropertiesFromType(inputClass, context));
+        }
+      }
+      // zeebe:linkedResource is a service-task extension; skip it for inbound connectors
+      if (OutboundConnectorFunction.class.isAssignableFrom(connectorDefinition)) {
+        for (Class<?> inputClass : connectorInput) {
+          if (inputClass != Void.class) {
+            properties.addAll(
+                LinkedResourcePropertiesUtil.buildClassBasedLinkedResourceProperties(inputClass));
+          }
+        }
+      }
+      stepTree = walkInputStepTree(connectorInput);
+    } else if (OutboundConnectorProvider.class.isAssignableFrom(connectorDefinition)) {
+      List<MethodWithAnnotation<Operation>> methods =
+          ReflectionUtil.getMethodsAnnotatedWith(connectorDefinition, Operation.class);
+      properties = new ArrayList<>(List.of(createOperationsProperty(methods)));
+      properties.addAll(getOperationProperties(methods, context));
+      stepTree = OperationStepTreeWalker.walk(methods);
+    } else {
+      throw new IllegalArgumentException(
+          "Connector class "
+              + connectorDefinition.getName()
+              + " must implement OutboundConnectorFunction, InboundConnectorExecutable or OutboundConnectorProvider");
+    }
+
+    List<PropertyBuilder> extensionProperties = generateExtensionProperties(template);
+    properties.addAll(extensionProperties);
+
+    final List<PropertyGroup> mergedGroups = new ArrayList<>();
+
+    var groupsDefinedInProperties =
+        new ArrayList<>(TemplatePropertiesUtil.groupProperties(properties));
+
+    var manuallyDefinedGroups = Arrays.asList(template.propertyGroups());
+
+    if (!manuallyDefinedGroups.isEmpty()) {
+      for (ElementTemplate.PropertyGroup group : manuallyDefinedGroups) {
+        var groupDefinedInProperties =
+            groupsDefinedInProperties.stream()
+                .filter(g -> g.getId().equals(group.id()))
+                .findFirst();
+
+        if (groupDefinedInProperties.isEmpty()) {
+          throw new IllegalStateException(
+              String.format(
+                  "Property group '%s' defined in @ElementTemplate but no properties with this group id found",
+                  group.id()));
+        }
+
+        mergedGroups.add(
+            PropertyGroup.builder()
+                .id(group.id())
+                .label(group.label())
+                .tooltip(group.tooltip().isBlank() ? null : group.tooltip())
+                .openByDefault(group.openByDefault() == Boolean.TRUE ? null : false)
+                .properties(groupDefinedInProperties.get().build().properties())
+                .build());
+
+        groupsDefinedInProperties.remove(groupDefinedInProperties.get());
+      }
+    }
+
+    if (!groupsDefinedInProperties.isEmpty()) {
+      mergedGroups.addAll(
+          groupsDefinedInProperties.stream()
+              .map(PropertyGroup.PropertyGroupBuilder::build)
+              .toList());
+    }
+
+    if (groupsDefinedInProperties.isEmpty() && manuallyDefinedGroups.isEmpty()) {
+      // default group so that user properties are higher up in the UI than the output/error mapping
+      mergedGroups.add(
+          PropertyGroup.builder()
+              .id("default")
+              .label("Properties")
+              .properties(properties.toArray(PropertyBuilder[]::new))
+              .build());
+    }
+
+    var nonGroupedProperties =
+        properties.stream().filter(property -> property.build().getGroup() == null).toList();
+
+    var icon =
+        template.icon().isBlank() ? null : ElementTemplateIcon.from(template.icon(), classLoader);
+
+    if (!template.engineVersion().isBlank()
+        && !SEM_VER_PATTERN.matcher(template.engineVersion()).matches()) {
+      throw new IllegalArgumentException(
+          template.engineVersion() + " is not a valid semantic version");
+    }
+
+    if (template.configurations().length > 0
+        && !meetsMinimumEngineVersionForConfigurations(template.engineVersion())) {
+      String declared =
+          template.engineVersion().isBlank() ? "none" : "\"" + template.engineVersion() + "\"";
+      throw new IllegalArgumentException(
+          "@ElementTemplate.configurations() on "
+              + template.id()
+              + " requires engineVersion >= "
+              + MIN_ENGINE_VERSION_FOR_CONFIGURATIONS
+              + " (Configuration/credential templates aren't supported by older Camunda"
+              + " versions), but engineVersion declared was "
+              + declared);
+    }
+
+    var configurationTemplates = buildConfigurationTemplates(template, context);
+
+    return context.elementTypes().stream()
+        .map(
+            elementType -> {
+              var builder =
+                  context instanceof Outbound
+                      ? ElementTemplateBuilder.createOutbound()
+                      : ElementTemplateBuilder.createInbound();
+              boolean isHybridMode = ConnectorMode.HYBRID.equals(configuration.connectorMode());
+              return builder
+                  .id(createId(context, template.id(), elementType, isHybridMode))
+                  .type(context.connectorType(), isHybridMode)
+                  .name(createName(context, template.name(), elementType, isHybridMode))
+                  .version(template.version())
+                  .category(
+                      new ElementTemplateCategory(
+                          template.category().id(), template.category().name()))
+                  .appliesTo(elementType.appliesTo())
+                  .engines(
+                      !template.engineVersion().isBlank()
+                          ? new Engines(template.engineVersion())
+                          : null)
+                  .elementType(elementType.elementType())
+                  .icon(icon)
+                  .keywords(template.keywords().length == 0 ? null : template.keywords())
+                  .documentationRef(
+                      template.documentationRef().isEmpty() ? null : template.documentationRef())
+                  .description(template.description().isEmpty() ? null : template.description())
+                  .properties(nonGroupedProperties.stream().map(PropertyBuilder::build).toList())
+                  .propertyGroups(
+                      addServiceProperties(
+                          mergedGroups, context, elementType, configuration, template))
+                  .steps(stepTree.steps())
+                  .presets(stepTree.presets())
+                  .configurationTemplates(configurationTemplates)
+                  .build();
+            })
+        .toList();
+  }
+
+  /**
+   * Produces the operation-metadata step tree for a connector that may declare multiple input data
+   * classes ({@code @ElementTemplate.inputDataClass} is an array). Walks each input class in
+   * declaration order and returns the first non-empty result; only sealed-type/operation connectors
+   * produce a non-empty tree, so for connectors that merge several plain models (e.g. the webhook)
+   * this is empty.
+   */
+  private static StepTreeResult walkInputStepTree(Class<?>[] inputClasses) {
+    for (Class<?> inputClass : inputClasses) {
+      if (inputClass != Void.class) {
+        StepTreeResult result = StepTreeWalker.walk(inputClass);
+        if (!result.isEmpty()) {
+          return result;
+        }
+      }
+    }
+    return StepTreeResult.empty();
+  }
+
+  private List<PropertyGroup> addServiceProperties(
+      List<PropertyGroup> groups,
+      TemplateGenerationContext context,
+      ConnectorElementType elementType,
+      GeneratorConfiguration configuration,
+      ElementTemplate template) {
+    var newGroups = new ArrayList<>(groups);
+    var resultExpressionExampleTooltip =
+        buildResultExpressionExampleTooltip(template.outputDataClass());
+    if (context instanceof Outbound) {
+      newGroups.add(
+          PropertyGroup.ADD_CONNECTORS_DETAILS_OUTPUT.apply(template.id(), template.version()));
+      newGroups.add(
+          PropertyGroup.outputGroupOutbound(
+              template.defaultResultVariable(),
+              template.defaultResultExpression(),
+              resultExpressionExampleTooltip));
+      newGroups.add(PropertyGroup.ERROR_GROUP);
+      newGroups.add(PropertyGroup.RETRIES_GROUP);
+    } else {
+
+      if (configuration.features().get(GenerationFeature.ACKNOWLEDGEMENT_STRATEGY_SELECTION)
+          == Boolean.TRUE) {
+        newGroups.add(PropertyGroup.ACTIVATION_GROUP_WITH_CONSUME_UNMATCHED_EVENTS);
+      } else {
+        newGroups.add(PropertyGroup.ACTIVATION_GROUP);
+      }
+
+      boolean syncResponseEnabled =
+          configuration.features().get(GenerationFeature.SYNCHRONOUS_RESPONSE) == Boolean.TRUE;
+
+      if (syncResponseEnabled) {
+        newGroups.add(PropertyGroup.SYNCHRONOUS_RESPONSE_GROUP);
+      }
+
+      if (elementType.elementType().equals(BpmnType.MESSAGE_START_EVENT)) {
+        newGroups.add(PropertyGroup.correlationGroupMessageStartEvent(syncResponseEnabled));
+      } else if (elementType.elementType().equals(BpmnType.INTERMEDIATE_CATCH_EVENT)
+          || elementType.elementType().equals(BpmnType.BOUNDARY_EVENT)
+          || elementType.elementType().equals(BpmnType.RECEIVE_TASK)) {
+        newGroups.add(
+            PropertyGroup.correlationGroupIntermediateCatchEventOrBoundaryOrReceive(
+                syncResponseEnabled));
+      }
+      if (configuration.features().get(GenerationFeature.INBOUND_DEDUPLICATION) == Boolean.TRUE) {
+        newGroups.add(PropertyGroup.DEDUPLICATION_GROUP);
+      }
+      newGroups.add(
+          PropertyGroup.outputGroupInbound(
+              template.defaultResultVariable(),
+              template.defaultResultExpression(),
+              resultExpressionExampleTooltip));
+    }
+    return newGroups;
+  }
+
+  private static String buildResultExpressionExampleTooltip(Class<?> outputDataClass) {
+    if (Void.class.equals(outputDataClass)) {
+      return null;
+    }
+    return ClassBasedDocsGenerator.resolvePrimaryExampleData(outputDataClass)
+        .map(ClassBasedTemplateGenerator::formatExampleTooltip)
+        .orElse(null);
+  }
+
+  /**
+   * The example FEEL expression is evaluated directly against the returned example object's own
+   * fields (see {@code ClassBasedDocsGenerator#buildDataExampleModel}), so it necessarily omits any
+   * runtime variable-binding prefix (e.g. {@code response.} for outbound connectors, {@code
+   * request.} for webhook-style inbound ones) that the property's own default value may use. Both
+   * forms resolve correctly at runtime; the tooltip illustrates the response's shape, not a
+   * copy-pasteable snippet.
+   */
+  private static String formatExampleTooltip(DataExampleModel example) {
+    var tooltip =
+        new StringBuilder("<div><p>Example response:</p><code>")
+            .append(escapeHtml(compactJson(example.json())))
+            .append("</code>");
+    if (StringUtils.isNotBlank(example.feel())) {
+      tooltip
+          .append("<p>Example FEEL expression: <code>")
+          .append(escapeHtml(example.feel()))
+          .append("</code> -&gt; <code>")
+          .append(escapeHtml(compactJson(example.feelResultJson())))
+          .append("</code></p>");
+    }
+    return tooltip.append("</div>").toString();
+  }
+
+  /**
+   * Re-serializes pretty-printed JSON compactly, rather than collapsing whitespace with a regex — a
+   * regex would also collapse meaningful whitespace inside JSON string values.
+   */
+  private static String compactJson(String json) {
+    if (json == null) {
+      return "";
+    }
+    try {
+      return TOOLTIP_JSON_MAPPER.readTree(json).toString();
+    } catch (JsonProcessingException e) {
+      throw new IllegalStateException("Failed to compact JSON for tooltip: " + json, e);
+    }
+  }
+
+  private static String escapeHtml(String value) {
+    return value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+  }
+
+  private static boolean meetsMinimumEngineVersionForConfigurations(String engineVersion) {
+    if (engineVersion.isBlank()) {
+      // no engineVersion declared at all means no floor is emitted (engines: null) - strictly
+      // worse than an explicit-but-too-low one, since nothing then stops the template from being
+      // used on any engine version.
+      return false;
+    }
+    var majorMinorMatcher = ENGINE_VERSION_NUMBER_PATTERN.matcher(engineVersion);
+    if (majorMinorMatcher.find()) {
+      int major = Integer.parseInt(majorMinorMatcher.group(1));
+      int minor = Integer.parseInt(majorMinorMatcher.group(2));
+      return major > MIN_ENGINE_MAJOR_FOR_CONFIGURATIONS
+          || (major == MIN_ENGINE_MAJOR_FOR_CONFIGURATIONS
+              && minor >= MIN_ENGINE_MINOR_FOR_CONFIGURATIONS);
+    }
+    var bareMajorMatcher = BARE_MAJOR_VERSION_PATTERN.matcher(engineVersion);
+    if (bareMajorMatcher.matches()) {
+      // a bare major (e.g. "8" or "^7") permits any minor within that major, so it only proves
+      // the floor is met when the major itself is already past it - "8" alone still allows 8.0.
+      return Integer.parseInt(bareMajorMatcher.group(1)) > MIN_ENGINE_MAJOR_FOR_CONFIGURATIONS;
+    }
+    // anything else SEM_VER_PATTERN still accepts ("*", an unparsed range lower bound, etc.)
+    // can't be proven to satisfy the floor - reject conservatively rather than let it slip
+    // through as a false pass.
+    return false;
+  }
+
+  private List<ConfigurationTemplate> buildConfigurationTemplates(
+      ElementTemplate template, TemplateGenerationContext context) {
+    return Arrays.stream(template.configurations())
+        .map(
+            templateClass -> {
+              var configurationAnnotation =
+                  templateClass.getAnnotation(
+                      io.camunda.connector.api.annotation.Configuration.class);
+              if (configurationAnnotation == null) {
+                throw new IllegalArgumentException(
+                    "Class "
+                        + templateClass.getName()
+                        + " referenced in @ElementTemplate.configurations() must be"
+                        + " annotated with @Configuration");
+              }
+              if (configurationAnnotation.name().isBlank()) {
+                throw new IllegalArgumentException(
+                    "@Configuration on "
+                        + templateClass.getName()
+                        + " must declare a non-blank name (generator constraint; the schema requires"
+                        + " name to be present but does not itself enforce non-blank)");
+              }
+              if (configurationAnnotation.kind().isBlank()) {
+                throw new IllegalArgumentException(
+                    "@Configuration on "
+                        + templateClass.getName()
+                        + " must declare a non-blank kind (required by the configuration-template"
+                        + " schema)");
+              }
+              var templateProperties =
+                  TemplatePropertiesUtil.extractConfigurationTemplatePropertiesFromType(
+                          templateClass, context)
+                      .stream()
+                      .map(PropertyBuilder::build)
+                      .toList();
+              return new ConfigurationTemplate(
+                  configurationAnnotation.id(),
+                  configurationAnnotation.kind(),
+                  configurationAnnotation.version(),
+                  configurationAnnotation.name(),
+                  templateProperties);
+            })
+        .toList();
+  }
+
+  private List<PropertyBuilder> generateExtensionProperties(ElementTemplate template) {
+    return Arrays.stream(template.extensionProperties())
+        .map(
+            extensionProperty ->
+                HiddenProperty.builder()
+                    .binding(new PropertyBinding.ZeebeProperty(extensionProperty.name()))
+                    .value(extensionProperty.value())
+                    .condition(
+                        TemplatePropertyAnnotationProcessor.buildCondition(
+                            extensionProperty.condition())))
+        .toList();
+  }
+}

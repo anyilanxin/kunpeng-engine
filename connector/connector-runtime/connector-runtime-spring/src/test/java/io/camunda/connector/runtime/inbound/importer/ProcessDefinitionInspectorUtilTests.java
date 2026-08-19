@@ -1,0 +1,155 @@
+/*
+ * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+ * under one or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information regarding copyright
+ * ownership. Camunda licenses this file to you under the Apache License,
+ * Version 2.0; you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.camunda.connector.runtime.inbound.importer;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import io.camunda.client.api.search.response.ProcessDefinition;
+import io.camunda.connector.runtime.core.inbound.InboundConnectorElement;
+import io.camunda.connector.runtime.inbound.search.SearchQueryClient;
+import io.camunda.connector.runtime.inbound.state.ProcessDefinitionInspector;
+import io.camunda.connector.runtime.inbound.state.model.ProcessDefinitionRef;
+import io.camunda.connector.runtime.metrics.ConnectorsInboundMetrics;
+import io.camunda.zeebe.model.bpmn.Bpmn;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import java.io.FileInputStream;
+import java.util.List;
+import java.util.Map;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
+import org.springframework.util.ResourceUtils;
+
+public class ProcessDefinitionInspectorUtilTests {
+
+  @Test
+  public void testSingleWebhookInCollaboration() {
+    var inboundConnectors = fromModel("single-webhook-collaboration.bpmn", "process");
+    assertEquals(1, inboundConnectors.size());
+    assertEquals("start_event", inboundConnectors.getFirst().element().elementId());
+    assertEquals("My Webhook Process", inboundConnectors.getFirst().element().processName());
+  }
+
+  @Test
+  public void testMultipleWebhooksInCollaborationP1() {
+    var inboundConnectors = fromModel("multi-webhook-collaboration.bpmn", "process1");
+    assertEquals(1, inboundConnectors.size());
+    assertEquals("start_event", inboundConnectors.getFirst().element().elementId());
+  }
+
+  @Test
+  public void testMultipleWebhooksInCollaborationP2() {
+    var inboundConnectors = fromModel("multi-webhook-collaboration.bpmn", "process2");
+    assertEquals(1, inboundConnectors.size());
+    assertEquals("intermediate_event", inboundConnectors.getFirst().element().elementId());
+    assertEquals(
+        "af13ccea-2581-45b1-928d-165edbc1af8f",
+        inboundConnectors.getFirst().element().messageName());
+  }
+
+  @Test
+  public void testMultipleWebhookStartEventsInCollaborationP1() {
+    var inboundConnectors = fromModel("multi-webhook-start-collaboration.bpmn", "process1");
+    assertEquals(1, inboundConnectors.size());
+    assertEquals("start_1", inboundConnectors.getFirst().element().elementId());
+  }
+
+  @Test
+  public void testMultipleWebhookStartEventsInCollaborationP2() {
+    var inboundConnectors = fromModel("multi-webhook-start-collaboration.bpmn", "process2");
+    assertEquals(1, inboundConnectors.size());
+    assertEquals("start_2", inboundConnectors.getFirst().element().elementId());
+  }
+
+  @Test
+  public void testSingleWebhookBoundaryEvent() {
+    var inboundConnectors = fromModel("single-webhook-boundary.bpmn", "BoundaryEventTest");
+    assertEquals(1, inboundConnectors.size());
+    assertEquals("boundary_event", inboundConnectors.getFirst().element().elementId());
+    assertEquals(
+        "c97ca438-b051-49db-b007-f897574daceb",
+        inboundConnectors.getFirst().element().messageName());
+  }
+
+  @Test
+  public void testSingleWebhookSubprocess() {
+    var inboundConnectors = fromModel("single-webhook-subprocess.bpmn", "subprocess_webhook");
+    assertEquals(1, inboundConnectors.size());
+    assertEquals("webhook_in_subprocess", inboundConnectors.getFirst().element().elementId());
+  }
+
+  @Test
+  public void testSingleKafkaSubprocess() {
+    var inboundConnectors =
+        fromModel("single-kafka-consumer-subprocess.bpmn", "kafka-consumer-subprocess");
+    assertEquals(1, inboundConnectors.size());
+    assertEquals("kafka_in_subprocess", inboundConnectors.getFirst().element().elementId());
+  }
+
+  @Test
+  public void testMultiWebhookStartMessage() {
+    var inboundConnectors =
+        fromModel("multi-webhook-start-message.bpmn", "multi-webhook-start-message");
+    assertEquals(2, inboundConnectors.size());
+    assertNotNull(
+        inboundConnectors.stream()
+            .filter(ic -> ic.element().elementId().equals("wh-start-msg-1"))
+            .findFirst()
+            .get());
+    assertNotNull(
+        inboundConnectors.stream()
+            .filter(ic -> ic.element().elementId().equals("wh-start-msg-2"))
+            .findFirst()
+            .get());
+  }
+
+  @Test
+  public void testDuplicatePropertiesAreRemoved() {
+    var inboundConnectors =
+        fromModel(
+            "multi-webhook-start-message-duplicate-property.bpmn", "multi-webhook-start-message");
+    Assertions.assertEquals("firstRes", inboundConnectors.getFirst().resultVariable());
+    System.out.println(inboundConnectors);
+  }
+
+  private List<InboundConnectorElement> fromModel(String fileName, String processId) {
+    try {
+      var searchQueryClientMock = mock(SearchQueryClient.class);
+      var cacheManager =
+          new ConcurrentMapCacheManager(ProcessDefinitionInspector.PROCESS_DEFINITION_CACHE_NAME);
+      var inspector =
+          new ProcessDefinitionInspector(
+              Map.of(ProcessDefinitionRef.DEFAULT_PHYSICAL_TENANT_ID, searchQueryClientMock),
+              cacheManager.getCache(ProcessDefinitionInspector.PROCESS_DEFINITION_CACHE_NAME),
+              new ConnectorsInboundMetrics(new SimpleMeterRegistry()));
+      var modelFile = ResourceUtils.getFile("classpath:bpmn/" + fileName);
+      var model = Bpmn.readModelFromStream(new FileInputStream(modelFile));
+      var processDefinitionID = new ProcessDefinitionRef(processId, "tenant1");
+      var processDefinitionKey = 1L;
+      when(searchQueryClientMock.getProcessModel(processDefinitionKey)).thenReturn(model);
+      var pdMock = mock(ProcessDefinition.class);
+      when(pdMock.getVersion()).thenReturn(1);
+      when(searchQueryClientMock.getProcessDefinition(processDefinitionKey)).thenReturn(pdMock);
+      return inspector.findInboundConnectors(processDefinitionID, processDefinitionKey);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+}

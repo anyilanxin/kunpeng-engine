@@ -1,0 +1,569 @@
+/*
+ * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+ * under one or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information regarding copyright
+ * ownership. Camunda licenses this file to you under the Apache License,
+ * Version 2.0; you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.camunda.connector.runtime.inbound.webhook;
+
+import static java.util.Collections.emptyMap;
+import static java.util.stream.Collectors.toMap;
+import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
+import static org.springframework.web.bind.annotation.RequestMethod.GET;
+import static org.springframework.web.bind.annotation.RequestMethod.HEAD;
+import static org.springframework.web.bind.annotation.RequestMethod.POST;
+import static org.springframework.web.bind.annotation.RequestMethod.PUT;
+
+import io.camunda.connector.api.document.Document;
+import io.camunda.connector.api.document.DocumentCreationRequest;
+import io.camunda.connector.api.error.ConnectorException;
+import io.camunda.connector.api.inbound.ActivationCheckResult;
+import io.camunda.connector.api.inbound.CorrelationFailureHandlingStrategy.ForwardErrorToUpstream;
+import io.camunda.connector.api.inbound.CorrelationFailureHandlingStrategy.Ignore;
+import io.camunda.connector.api.inbound.CorrelationRequest;
+import io.camunda.connector.api.inbound.CorrelationResult;
+import io.camunda.connector.api.inbound.CorrelationResult.Success.MessageCorrelated;
+import io.camunda.connector.api.inbound.CorrelationResult.Success.MessagePublished;
+import io.camunda.connector.api.inbound.CorrelationResult.Success.ProcessInstanceCreated;
+import io.camunda.connector.api.inbound.CorrelationResult.Success.ProcessInstanceCreatedWithResult;
+import io.camunda.connector.api.inbound.InboundConnectorContext;
+import io.camunda.connector.api.inbound.Severity;
+import io.camunda.connector.api.inbound.webhook.MappedHttpRequest;
+import io.camunda.connector.api.inbound.webhook.WebhookConnectorException;
+import io.camunda.connector.api.inbound.webhook.WebhookConnectorException.WebhookSecurityException;
+import io.camunda.connector.api.inbound.webhook.WebhookConnectorExecutable;
+import io.camunda.connector.api.inbound.webhook.WebhookHttpResponse;
+import io.camunda.connector.api.inbound.webhook.WebhookProcessingPayload;
+import io.camunda.connector.api.inbound.webhook.WebhookResult;
+import io.camunda.connector.api.inbound.webhook.WebhookResultContext;
+import io.camunda.connector.api.inbound.webhook.WebhookTriggerResultContext;
+import io.camunda.connector.feel.FeelEngineWrapperException;
+import io.camunda.connector.runtime.core.inbound.InboundConnectorManagementContext;
+import io.camunda.connector.runtime.inbound.executable.RegisteredExecutable;
+import io.camunda.connector.runtime.inbound.webhook.model.HttpServletRequestWebhookProcessingPayload;
+import io.grpc.Status;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.Part;
+import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.HtmlUtils;
+
+@RestController
+public class InboundWebhookRestController {
+
+  private static final Logger LOG = LoggerFactory.getLogger(InboundWebhookRestController.class);
+  private static final int MAX_BODY_LOG_LENGTH = 1_000;
+  private static final Set<String> REDACTED_HEADERS =
+      Set.of("authorization", "proxy-authorization", "cookie", "x-api-key");
+  private static final Set<String> REDACTED_QUERY_PARAMS =
+      Set.of("token", "access_token", "signature", "api_key", "apikey");
+
+  private final WebhookConnectorRegistry webhookConnectorRegistry;
+
+  @Autowired
+  public InboundWebhookRestController(final WebhookConnectorRegistry webhookConnectorRegistry) {
+    this.webhookConnectorRegistry = webhookConnectorRegistry;
+  }
+
+  protected static ResponseEntity<?> toResponseEntity(WebhookHttpResponse webhookHttpResponse) {
+    int status =
+        Optional.ofNullable(webhookHttpResponse.statusCode()).orElse(HttpStatus.OK.value());
+    HttpHeaders headers = new HttpHeaders();
+    Optional.ofNullable(webhookHttpResponse.headers())
+        .orElse(Collections.emptyMap())
+        .forEach(headers::add);
+
+    String contentType =
+        Optional.ofNullable(webhookHttpResponse.headers())
+            .flatMap(
+                h ->
+                    h.entrySet().stream()
+                        .filter(e -> e.getKey().equalsIgnoreCase(HttpHeaders.CONTENT_TYPE))
+                        .map(Map.Entry::getValue)
+                        .findFirst())
+            .orElse(null);
+    Object body =
+        isXmlContentType(contentType)
+            ? webhookHttpResponse.body()
+            : escapeValue(webhookHttpResponse.body());
+
+    return ResponseEntity.status(status).headers(headers).body(body);
+  }
+
+  protected static Object escapeValue(Object value) {
+    return switch (value) {
+      case String s -> HtmlUtils.htmlEscape(s);
+      case null, default -> value;
+    };
+  }
+
+  private static boolean isXmlContentType(String contentType) {
+    if (contentType == null) {
+      return false;
+    }
+    String lowerContentType = contentType.toLowerCase();
+    return lowerContentType.contains("application/xml") || lowerContentType.contains("text/xml");
+  }
+
+  private static io.camunda.connector.api.inbound.webhook.Part mapToCamundaPart(Part part) {
+    try {
+      return new io.camunda.connector.api.inbound.webhook.Part(
+          part.getName(),
+          part.getSubmittedFileName(),
+          part.getInputStream(),
+          part.getContentType());
+    } catch (IOException e) {
+      LOG.warn("Failed to process part: {}", part.getName(), e);
+      return null;
+    }
+  }
+
+  @RequestMapping(
+      method = {GET, HEAD, POST, PUT, DELETE},
+      path = "/inbound/{context}")
+  public ResponseEntity<?> inbound(
+      @PathVariable(value = "context") String context,
+      @RequestHeader Map<String, String> headers,
+      HttpServletRequest httpServletRequest)
+      throws IOException {
+    return dispatch(
+        webhookConnectorRegistry.getActiveWebhook(context), context, headers, httpServletRequest);
+  }
+
+  /**
+   * Physical-tenant/tenant-scoped route, used when {@code
+   * camunda.connector.webhook.append-physical-tenant-and-tenant-to-path} is enabled. Spring's path
+   * matcher matches {@code {var}} to exactly one segment and webhook paths are validated to never
+   * contain "/", so this 4-segment route and the legacy 2-segment {@link #inbound} route are
+   * structurally disjoint — both can coexist unconditionally regardless of the flag.
+   */
+  @RequestMapping(
+      method = {GET, HEAD, POST, PUT, DELETE},
+      path = "/inbound/{physicalTenantId}/{tenantId}/{context}")
+  public ResponseEntity<?> inboundPhysicalTenantScoped(
+      @PathVariable(value = "physicalTenantId") String physicalTenantId,
+      @PathVariable(value = "tenantId") String tenantId,
+      @PathVariable(value = "context") String context,
+      @RequestHeader Map<String, String> headers,
+      HttpServletRequest httpServletRequest)
+      throws IOException {
+    return dispatch(
+        webhookConnectorRegistry.getActiveWebhook(physicalTenantId, tenantId, context),
+        context,
+        headers,
+        httpServletRequest);
+  }
+
+  private ResponseEntity<?> dispatch(
+      Optional<RegisteredExecutable.Activated> connectorOpt,
+      String context,
+      Map<String, String> headers,
+      HttpServletRequest httpServletRequest)
+      throws IOException {
+    LOG.trace("Received inbound hook on {}", sanitizeForLog(context));
+    // Body must be read before any call that triggers form-parameter parsing (e.g.
+    // getParameterMap).
+    // For application/x-www-form-urlencoded requests, Tomcat consumes the input stream when
+    // getParameterMap() is invoked, which would leave rawBody empty and break HMAC verification.
+    byte[] bodyAsByteArray = httpServletRequest.getInputStream().readAllBytes();
+    Map<String, String> params = extractQueryParams(httpServletRequest.getQueryString());
+
+    return connectorOpt
+        .map(
+            connector -> {
+              // In Tomcat 11.0.12 (2025-10-07), the Coyote HTTP stack was updated to
+              // “store HTTP request headers using the original case for the header name rather
+              // than forcing it to lower case.”
+              // This breaks some webhook connectors that expect lowercase headers in expressions.
+              var lowercaseHeaders =
+                  headers.entrySet().stream()
+                      .collect(toMap(e -> e.getKey().toLowerCase(), Map.Entry::getValue));
+              Optional.ofNullable(httpServletRequest.getContentType())
+                  .ifPresent(
+                      contentType -> lowercaseHeaders.putIfAbsent("content-type", contentType));
+              WebhookProcessingPayload payload =
+                  new HttpServletRequestWebhookProcessingPayload(
+                      httpServletRequest,
+                      params,
+                      lowercaseHeaders,
+                      bodyAsByteArray,
+                      getParts(httpServletRequest));
+              return processWebhook(connector, payload);
+            })
+        .orElseGet(() -> ResponseEntity.notFound().build());
+  }
+
+  private ResponseEntity<?> processWebhook(
+      RegisteredExecutable.Activated connector, WebhookProcessingPayload payload) {
+    ResponseEntity<?> response;
+    try {
+      WebhookConnectorExecutable connectorHook =
+          (WebhookConnectorExecutable) connector.executable();
+      // Step 1: verification
+      // This is required for cases, when we need to get a message from an external source
+      // but at the same time, not triggering correlation
+      // Such use-case can be echoing webhook verification challenge
+      response = verify(connectorHook, payload, connector.context());
+      if (response == null) {
+        // when verification was skipped
+        // Step 2: trigger and correlate
+        connector
+            .context()
+            .log(
+                activity ->
+                    activity
+                        .withSeverity(Severity.INFO)
+                        .withTag(payload.method())
+                        .withMessage(buildRequestLogMessage(payload)));
+
+        var webhookResult = connectorHook.triggerWebhook(payload);
+        // create documents if the connector is activable
+        var documents = createDocuments(connector.context(), webhookResult, payload.parts());
+        var ctxData = toWebhookTriggerResultContext(webhookResult, documents);
+        // correlate
+        var correlationResult =
+            connector.context().correlate(CorrelationRequest.builder().variables(ctxData).build());
+        response = buildResponse(webhookResult, documents, correlationResult);
+      }
+    } catch (Exception e) {
+      connector
+          .context()
+          .log(
+              activity ->
+                  activity
+                      .withSeverity(Severity.ERROR)
+                      .withTag(payload.method())
+                      .withMessage("Webhook processing failed", e));
+      response = buildErrorResponse(e);
+    }
+    return response;
+  }
+
+  private List<Document> createDocuments(
+      InboundConnectorContext context,
+      WebhookResult webhookResult,
+      Collection<io.camunda.connector.api.inbound.webhook.Part> parts) {
+    if (!(context.canActivate(webhookResult) instanceof ActivationCheckResult.Success)) {
+      return List.of();
+    }
+
+    return parts.stream()
+        .map(
+            part ->
+                context.create(
+                    DocumentCreationRequest.from(part.inputStream())
+                        .fileName(part.submittedFileName())
+                        .contentType(part.contentType())
+                        .build()))
+        .toList();
+  }
+
+  protected ResponseEntity<?> verify(
+      WebhookConnectorExecutable connectorHook,
+      WebhookProcessingPayload payload,
+      InboundConnectorManagementContext context) {
+    WebhookHttpResponse verificationResponse = connectorHook.verify(payload);
+    ResponseEntity<?> response = null;
+    if (verificationResponse != null) {
+      response = toResponseEntity(verificationResponse);
+      context.log(
+          activity ->
+              activity
+                  .withSeverity(Severity.INFO)
+                  .withTag(payload.method())
+                  .withMessage("Successfully handled a verification request"));
+    }
+    return response;
+  }
+
+  private ResponseEntity<?> buildResponse(
+      WebhookResult webhookResult, List<Document> documents, CorrelationResult correlationResult) {
+    ResponseEntity<?> response;
+    if (correlationResult instanceof CorrelationResult.Success success) {
+      response = buildSuccessfulResponse(webhookResult, documents, success);
+    } else {
+      if (correlationResult instanceof CorrelationResult.Failure failure) {
+        switch (failure.handlingStrategy()) {
+          case ForwardErrorToUpstream ignored -> response = buildErrorResponse(failure);
+          case Ignore ignored -> response = buildSuccessfulResponse(webhookResult, documents, null);
+        }
+      } else {
+        throw new IllegalStateException("Illegal correlation result : " + correlationResult);
+      }
+    }
+    return response;
+  }
+
+  private ResponseEntity<?> buildErrorResponse(CorrelationResult.Failure failure) {
+    ResponseEntity<?> response;
+    if (failure instanceof CorrelationResult.Failure.Other) {
+      response = ResponseEntity.internalServerError().build();
+    } else if (failure instanceof CorrelationResult.Failure.ZeebeClientStatus zeebeClientStatus) {
+      response =
+          switch (Status.Code.valueOf(zeebeClientStatus.status())) {
+            case CANCELLED -> ResponseEntity.status(499).body(failure);
+            case UNKNOWN, INTERNAL, DATA_LOSS -> ResponseEntity.status(500).body(failure);
+            case INVALID_ARGUMENT -> ResponseEntity.status(400).body(failure);
+            case DEADLINE_EXCEEDED -> ResponseEntity.status(504).body(failure);
+            case NOT_FOUND -> ResponseEntity.status(404).body(failure);
+            case ALREADY_EXISTS, ABORTED -> ResponseEntity.status(409).body(failure);
+            case PERMISSION_DENIED -> ResponseEntity.status(403).body(failure);
+            case RESOURCE_EXHAUSTED -> ResponseEntity.status(429).body(failure);
+            case FAILED_PRECONDITION -> ResponseEntity.status(412).body(failure);
+            case OUT_OF_RANGE -> ResponseEntity.status(416).body(failure);
+            case UNIMPLEMENTED -> ResponseEntity.status(501).body(failure);
+            case UNAVAILABLE -> ResponseEntity.status(503).body(failure);
+            case UNAUTHENTICATED -> ResponseEntity.status(401).body(failure);
+            default -> ResponseEntity.unprocessableEntity().body(failure);
+          };
+    } else {
+      response = ResponseEntity.unprocessableEntity().body(failure);
+    }
+    return response;
+  }
+
+  private ResponseEntity<?> buildSuccessfulResponse(
+      WebhookResult webhookResult,
+      List<Document> documents,
+      CorrelationResult.Success correlationResult) {
+    ResponseEntity<?> response;
+    if (webhookResult.response() != null) {
+      var processVariablesContext =
+          toWebhookResultContext(webhookResult, documents, correlationResult);
+      var httpResponseData = webhookResult.response().apply(processVariablesContext);
+      if (httpResponseData != null) {
+        response = toResponseEntity(httpResponseData);
+      } else {
+        response = ResponseEntity.ok().build();
+      }
+    } else {
+      response = ResponseEntity.ok().build();
+    }
+    return response;
+  }
+
+  protected ResponseEntity<?> buildErrorResponse(Exception e) {
+    ResponseEntity<?> response;
+    if (e instanceof FeelEngineWrapperException feelEngineWrapperException) {
+      var error =
+          new FeelExpressionErrorResponse(
+              feelEngineWrapperException.getReason(), feelEngineWrapperException.getExpression());
+      response = ResponseEntity.unprocessableEntity().body(error);
+    } else if (e instanceof ConnectorException connectorException) {
+      if (e instanceof WebhookConnectorException webhookConnectorException) {
+        response = handleWebhookConnectorException(webhookConnectorException);
+      } else {
+        response =
+            ResponseEntity.unprocessableEntity()
+                .body(
+                    new ErrorResponse(
+                        connectorException.getErrorCode(), connectorException.getMessage()));
+      }
+    } else {
+      response = ResponseEntity.internalServerError().build();
+    }
+    return response;
+  }
+
+  private Collection<io.camunda.connector.api.inbound.webhook.Part> getParts(
+      HttpServletRequest httpServletRequest) {
+    try {
+      return httpServletRequest.getParts().stream()
+          .map(InboundWebhookRestController::mapToCamundaPart)
+          .filter(Objects::nonNull)
+          .toList();
+    } catch (IOException e) {
+      LOG.error("Failed to get parts from request", e);
+      throw new RuntimeException("Failed to get parts from request", e);
+    } catch (ServletException e) {
+      LOG.debug("The request is not multipart/form-data, silently ignoring: {}", e.getMessage());
+      return List.of();
+    } catch (IllegalStateException e) {
+      LOG.error("Size limits are exceeded or no multipart configuration is provided", e);
+      throw new RuntimeException(
+          "Size limits are exceeded or no multipart configuration is provided", e);
+    }
+  }
+
+  // This will be used to correlate data returned from connector.
+  // In other words, we pass this data to Zeebe.
+  private WebhookTriggerResultContext toWebhookTriggerResultContext(
+      WebhookResult processedResult, List<Document> documents) {
+    WebhookTriggerResultContext ctx = new WebhookTriggerResultContext(null, null, List.of());
+    if (processedResult != null) {
+      ctx =
+          new WebhookTriggerResultContext(
+              new MappedHttpRequest(
+                  Optional.ofNullable(processedResult.request().body()).orElse(emptyMap()),
+                  Optional.ofNullable(processedResult.request().headers()).orElse(emptyMap()),
+                  Optional.ofNullable(processedResult.request().params()).orElse(emptyMap())),
+              Optional.ofNullable(processedResult.connectorData()).orElse(emptyMap()),
+              documents);
+    }
+    return ctx;
+  }
+
+  // This data will be used to compose a response.
+  // In other words, depending on the response body expression,
+  // this data may be returned to the webhook caller.
+  private WebhookResultContext toWebhookResultContext(
+      WebhookResult processedResult,
+      List<Document> documents,
+      CorrelationResult.Success correlationResult) {
+    WebhookResultContext ctx = new WebhookResultContext(null, null, null);
+    if (processedResult != null) {
+      CorrelationResult.Success correlation = null;
+      if (correlationResult instanceof ProcessInstanceCreated
+          || correlationResult instanceof ProcessInstanceCreatedWithResult
+          || correlationResult instanceof MessagePublished
+          || correlationResult instanceof MessageCorrelated) {
+        correlation = correlationResult;
+      }
+      ctx =
+          new WebhookResultContext(
+              new MappedHttpRequest(
+                  Optional.ofNullable(processedResult.request().body()).orElse(emptyMap()),
+                  Optional.ofNullable(processedResult.request().headers()).orElse(emptyMap()),
+                  Optional.ofNullable(processedResult.request().params()).orElse(emptyMap())),
+              Optional.ofNullable(processedResult.connectorData()).orElse(emptyMap()),
+              correlation,
+              documents);
+    }
+    return ctx;
+  }
+
+  private static String buildRequestLogMessage(WebhookProcessingPayload payload) {
+    var sb = new StringBuilder();
+    sb.append(payload.method()).append(" ").append(payload.requestURL());
+    var isMultipartRequest = isMultipartRequest(payload);
+
+    if (payload.headers() != null && !payload.headers().isEmpty()) {
+      sb.append("\n\nHeaders:");
+      payload
+          .headers()
+          .forEach(
+              (k, v) -> {
+                var value = REDACTED_HEADERS.contains(k.toLowerCase()) ? "[redacted]" : v;
+                sb.append("\n  ").append(k).append(": ").append(value);
+              });
+    }
+
+    if (payload.params() != null && !payload.params().isEmpty()) {
+      sb.append("\n\nQuery params:");
+      payload
+          .params()
+          .forEach(
+              (k, v) -> {
+                var value = REDACTED_QUERY_PARAMS.contains(k.toLowerCase()) ? "[redacted]" : v;
+                sb.append("\n  ").append(k).append("=").append(value);
+              });
+    }
+
+    sb.append("\n\nBody: ");
+    byte[] rawBody = payload.rawBody();
+    if (isMultipartRequest) {
+      sb.append("(omitted for multipart request)");
+    } else if (rawBody != null && rawBody.length > 0) {
+      int previewLength = Math.min(rawBody.length, MAX_BODY_LOG_LENGTH);
+      String bodyPreview = new String(rawBody, 0, previewLength, StandardCharsets.UTF_8);
+      sb.append(bodyPreview);
+      if (rawBody.length > MAX_BODY_LOG_LENGTH) {
+        sb.append("... (truncated)");
+      }
+    } else {
+      sb.append("(empty)");
+    }
+
+    if (payload.parts() != null && !payload.parts().isEmpty()) {
+      sb.append("\n\nParts (").append(payload.parts().size()).append("):");
+      payload
+          .parts()
+          .forEach(
+              part -> {
+                sb.append("\n  - name=").append(part.name());
+                if (part.submittedFileName() != null) {
+                  sb.append(", fileName=").append(part.submittedFileName());
+                }
+                if (part.contentType() != null) {
+                  sb.append(", contentType=").append(part.contentType());
+                }
+              });
+    }
+
+    return sb.toString();
+  }
+
+  /**
+   * Strips CR/LF from a user-controlled value before it is written to the log, so a crafted path
+   * segment cannot forge additional log lines/entries (log injection, CWE-117).
+   */
+  private static String sanitizeForLog(String value) {
+    return value == null ? null : value.replaceAll("[\r\n]", "_");
+  }
+
+  private static Map<String, String> extractQueryParams(String queryString) {
+    if (queryString == null || queryString.isBlank()) {
+      return emptyMap();
+    }
+    return Arrays.stream(queryString.split("&"))
+        .map(pair -> pair.split("=", 2))
+        .filter(parts -> parts.length > 0 && !parts[0].isBlank())
+        .collect(
+            toMap(
+                parts -> URLDecoder.decode(parts[0], StandardCharsets.UTF_8),
+                parts ->
+                    parts.length > 1 ? URLDecoder.decode(parts[1], StandardCharsets.UTF_8) : "",
+                (a, b) -> a));
+  }
+
+  private static boolean isMultipartRequest(WebhookProcessingPayload payload) {
+    return (payload.parts() != null && !payload.parts().isEmpty())
+        || Optional.ofNullable(payload.headers())
+            .map(headers -> headers.get("content-type"))
+            .map(contentType -> contentType.toLowerCase(Locale.ROOT))
+            .filter(contentType -> contentType.startsWith("multipart/form-data"))
+            .isPresent();
+  }
+
+  private ResponseEntity<?> handleWebhookConnectorException(WebhookConnectorException e) {
+    var status = HttpStatus.valueOf(e.getStatusCode());
+    ResponseEntity response = ResponseEntity.status(status).build();
+    if (e instanceof WebhookSecurityException) {
+      LOG.warn("Webhook failed with security-related exception", e);
+      // no message will be included for security reasons
+      response = ResponseEntity.status(status).body(null);
+    }
+    if (status.is5xxServerError()) {
+      LOG.error("Webhook failed with exception", e);
+      // no message will be included for security reasons
+      response = ResponseEntity.status(status).body(null);
+    }
+    if (status.is4xxClientError()) {
+      response = ResponseEntity.status(status).body(new GenericErrorResponse(e.getMessage()));
+    }
+    return response;
+  }
+}

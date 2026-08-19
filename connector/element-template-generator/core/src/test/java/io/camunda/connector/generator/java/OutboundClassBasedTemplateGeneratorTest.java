@@ -1,0 +1,2238 @@
+/*
+ * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+ * under one or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information regarding copyright
+ * ownership. Camunda licenses this file to you under the Apache License,
+ * Version 2.0; you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.camunda.connector.generator.java;
+
+import static io.camunda.connector.generator.java.util.TemplateGenerationStringUtil.camelCaseToSpaces;
+import static java.nio.file.Files.readAllBytes;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import io.camunda.connector.api.annotation.OutboundConnector;
+import io.camunda.connector.api.outbound.OutboundConnectorContext;
+import io.camunda.connector.api.outbound.OutboundConnectorFunction;
+import io.camunda.connector.generator.BaseTest;
+import io.camunda.connector.generator.api.GeneratorConfiguration;
+import io.camunda.connector.generator.api.GeneratorConfiguration.ConnectorElementType;
+import io.camunda.connector.generator.api.GeneratorConfiguration.ConnectorMode;
+import io.camunda.connector.generator.dsl.ConfigurationProperty;
+import io.camunda.connector.generator.dsl.ConfigurationTemplate;
+import io.camunda.connector.generator.dsl.DropdownProperty;
+import io.camunda.connector.generator.dsl.DropdownProperty.DropdownChoice;
+import io.camunda.connector.generator.dsl.ElementTemplate.ElementTypeWrapper;
+import io.camunda.connector.generator.dsl.ElementTemplateCategory;
+import io.camunda.connector.generator.dsl.HiddenProperty;
+import io.camunda.connector.generator.dsl.NumberProperty;
+import io.camunda.connector.generator.dsl.Property;
+import io.camunda.connector.generator.dsl.PropertyBinding;
+import io.camunda.connector.generator.dsl.PropertyBinding.ZeebeInput;
+import io.camunda.connector.generator.dsl.PropertyBinding.ZeebeLinkedResource;
+import io.camunda.connector.generator.dsl.PropertyBinding.ZeebeTaskDefinition;
+import io.camunda.connector.generator.dsl.PropertyBinding.ZeebeTaskHeader;
+import io.camunda.connector.generator.dsl.PropertyCondition;
+import io.camunda.connector.generator.dsl.PropertyCondition.AllMatch;
+import io.camunda.connector.generator.dsl.PropertyCondition.Equals;
+import io.camunda.connector.generator.dsl.PropertyConstraints.Pattern;
+import io.camunda.connector.generator.dsl.StringProperty;
+import io.camunda.connector.generator.dsl.TextProperty;
+import io.camunda.connector.generator.java.annotation.BpmnType;
+import io.camunda.connector.generator.java.annotation.ElementTemplate;
+import io.camunda.connector.generator.java.annotation.FeelMode;
+import io.camunda.connector.generator.java.annotation.TemplateLinkedResource;
+import io.camunda.connector.generator.java.annotation.TemplateProperty;
+import io.camunda.connector.generator.java.example.outbound.ClassBasedConnectorWithLinkedResource;
+import io.camunda.connector.generator.java.example.outbound.MyConnectorFunction;
+import io.camunda.connector.generator.java.example.outbound.OperationAnnotatedConnector;
+import io.camunda.connector.generator.java.example.outbound.OperationAnnotatedConnectorWithLinkedResource;
+import io.camunda.connector.generator.java.example.outbound.OperationAnnotatedConnectorWithPrimitiveTypes;
+import io.camunda.connector.generator.java.example.outbound.SingleOperationAnnotatedConnector;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Base64;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+
+public class OutboundClassBasedTemplateGeneratorTest extends BaseTest {
+
+  private final ClassBasedTemplateGenerator generator = new ClassBasedTemplateGenerator();
+
+  @Nested
+  class Basic {
+
+    @Test
+    void schemaPresent() {
+      assertThat(generator.generate(MyConnectorFunction.FullyAnnotated.class).getFirst().schema())
+          .isEqualTo(
+              "https://unpkg.com/@camunda/zeebe-element-templates-json-schema/resources/schema.json");
+    }
+
+    @Test
+    void elementType_default_isServiceTask() {
+      assertThat(
+              generator
+                  .generate(MyConnectorFunction.MinimallyAnnotated.class)
+                  .getFirst()
+                  .elementType())
+          .isEqualTo(ElementTypeWrapper.from(BpmnType.SERVICE_TASK));
+    }
+
+    @Test
+    void elementType_customizable() {
+      assertThat(
+              generator.generate(MyConnectorFunction.FullyAnnotated.class).getFirst().elementType())
+          .isEqualTo(ElementTypeWrapper.from(BpmnType.SCRIPT_TASK));
+    }
+
+    @Test
+    void appliesTo_default_isTask() {
+      assertThat(
+              generator
+                  .generate(MyConnectorFunction.MinimallyAnnotated.class)
+                  .getFirst()
+                  .appliesTo())
+          .isEqualTo(Set.of(BpmnType.TASK.getName()));
+    }
+
+    @Test
+    void appliesTo_customizable() {
+      assertThat(
+              generator.generate(MyConnectorFunction.FullyAnnotated.class).getFirst().appliesTo())
+          .isEqualTo(Set.of(BpmnType.SERVICE_TASK.getName()));
+    }
+
+    @Test
+    void elementTemplateAnnotation_canDefineBasicFields() {
+      var template = generator.generate(MyConnectorFunction.FullyAnnotated.class).getFirst();
+      assertThat(template.id()).isEqualTo(MyConnectorFunction.ID);
+      assertThat(template.name()).isEqualTo(MyConnectorFunction.NAME);
+      assertThat(template.version()).isEqualTo(MyConnectorFunction.VERSION);
+      assertThat(template.documentationRef()).isEqualTo(MyConnectorFunction.DOCUMENTATION_REF);
+      assertThat(template.description()).isEqualTo(MyConnectorFunction.DESCRIPTION);
+    }
+
+    @Test
+    void elementTemplateAnnotation_providesCorrectDefaultValues() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      assertThat(template.id()).isEqualTo(MyConnectorFunction.ID);
+      assertThat(template.name()).isEqualTo(MyConnectorFunction.NAME);
+      assertThat(template.version()).isEqualTo(0);
+      assertThat(template.documentationRef()).isNull();
+      assertThat(template.description()).isNull();
+    }
+
+    @Test
+    void elementTemplateAnnotation_categoryDefaultsToConnectors() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      assertThat(template.category()).isEqualTo(ElementTemplateCategory.CONNECTORS);
+    }
+
+    @Test
+    void elementTemplateAnnotation_canDefineCustomCategory() {
+      var template =
+          generator
+              .generate(MyConnectorFunction.MinimallyAnnotatedWithCustomCategory.class)
+              .getFirst();
+      assertThat(template.category())
+          .isEqualTo(new ElementTemplateCategory("test-category", "Test Category"));
+    }
+
+    @Test
+    void elementTemplateAnnotation_partialCategoryFails() {
+      assertThatThrownBy(
+              () ->
+                  generator.generate(
+                      MyConnectorFunction.MinimallyAnnotatedWithPartialCategory.class))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessage("category id and name must be non-blank");
+    }
+
+    @Test
+    void elementTemplateAnnotation_supportsLongVersionValues() {
+      // Test support for long version values (e.g., Unix epoch timestamps from Web Modeler)
+      var template = generator.generate(MyConnectorFunction.WithLongVersion.class).getFirst();
+      assertThat(template.version()).isEqualTo(1750631399060L);
+
+      // Verify the version property is correctly generated
+      var versionProperty =
+          template.properties().stream()
+              .filter(p -> p.getId() != null && p.getId().equals("version"))
+              .findFirst()
+              .orElseThrow();
+      assertThat(versionProperty.getValue()).isEqualTo("1750631399060");
+    }
+
+    @Test
+    void resultVariableProperty() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      var property = getPropertyByLabel("Result variable", template);
+      assertThat(property.getType()).isEqualTo("String");
+      assertThat(property.getBinding().type()).isEqualTo("zeebe:taskHeader");
+      assertThat(property.getFeel()).isNull();
+    }
+
+    @Test
+    void resultVariablePropertyWithValue() {
+      var template =
+          generator
+              .generate(MyConnectorFunction.MinimallyAnnotatedWithResultVariable.class)
+              .getFirst();
+      var property = getPropertyByLabel("Result variable", template);
+      assertThat(property.getType()).isEqualTo("String");
+      assertThat(property.getBinding().type()).isEqualTo("zeebe:taskHeader");
+      assertThat(property.getFeel()).isNull();
+      assertThat(property.getValue()).isEqualTo("myResultVariable");
+    }
+
+    @Test
+    void resultExpressionProperty() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      var property = getPropertyByLabel("Result expression", template);
+      assertThat(property.getType()).isEqualTo("Text");
+      assertThat(property.getBinding().type()).isEqualTo("zeebe:taskHeader");
+      assertThat(property.getFeel()).isEqualTo(FeelMode.required);
+    }
+
+    @Test
+    void staticFeelProperty() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      var property = getPropertyById("feeModelStaticProperty", template);
+      assertThat(property.getType()).isEqualTo("String");
+      assertThat(property.getFeel()).isEqualTo(FeelMode.staticFeel);
+    }
+
+    @Test
+    void resultExpressionPropertyWithValue() {
+      var template =
+          generator
+              .generate(MyConnectorFunction.MinimallyAnnotatedWithResultExpression.class)
+              .getFirst();
+      var property = getPropertyByLabel("Result expression", template);
+      assertThat(property.getType()).isEqualTo("Text");
+      assertThat(property.getBinding().type()).isEqualTo("zeebe:taskHeader");
+      assertThat(property.getFeel()).isEqualTo(FeelMode.required);
+      assertThat(property.getValue()).isEqualTo("={ myResponse: response }");
+    }
+
+    @Test
+    void errorExpressionProperty() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      var property = getPropertyByLabel("Error expression", template);
+      assertThat(property.getType()).isEqualTo("Text");
+      assertThat(property.getBinding().type()).isEqualTo("zeebe:taskHeader");
+      assertThat(property.getFeel()).isEqualTo(FeelMode.required);
+    }
+
+    @Test
+    void retryBackoffProperty() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      var property = getPropertyByLabel("Retry backoff", template);
+      assertThat(property.getType()).isEqualTo("String");
+      assertThat(property.getBinding().type()).isEqualTo("zeebe:taskHeader");
+      assertThat(((ZeebeTaskHeader) property.getBinding()).key()).isEqualTo("retryBackoff");
+      assertThat(property.getGroup()).isEqualTo("retries");
+      assertThat(property.getValue()).isEqualTo("PT30S");
+    }
+
+    @Test
+    void jobTimeoutProperty() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      var property = getPropertyByLabel("Job timeout", template);
+      assertThat(property.getType()).isEqualTo("String");
+      assertThat(property.getBinding().type()).isEqualTo("zeebe:taskHeader");
+      assertThat(((ZeebeTaskHeader) property.getBinding()).key()).isEqualTo("jobTimeout");
+      assertThat(property.getGroup()).isEqualTo("retries");
+      assertThat(property.getValue()).isNull();
+    }
+
+    @Test
+    void retryCountProperty() {
+      var templates = generator.generate(MyConnectorFunction.MinimallyAnnotated.class);
+      var property = getPropertyByLabel("Retries", templates.getFirst());
+      assertThat(property.getType()).isEqualTo("String");
+      assertThat(property.getBinding().type()).isEqualTo("zeebe:taskDefinition");
+      assertThat(((ZeebeTaskDefinition) property.getBinding()).property()).isEqualTo("retries");
+      assertThat(property.getGroup()).isEqualTo("retries");
+      assertThat(property.getValue()).isEqualTo("3");
+    }
+
+    @Test
+    void normalMode_taskDefinitionTypeProperty_hidden() {
+      var templates = generator.generate(MyConnectorFunction.MinimallyAnnotated.class);
+      var property =
+          templates.getFirst().properties().stream()
+              .filter(p -> "zeebe:taskDefinition".equals(p.getBinding().type()))
+              .findFirst()
+              .orElseThrow();
+      assertThat(property.getType()).isEqualTo("Hidden");
+      assertThat(property.getBinding().type()).isEqualTo("zeebe:taskDefinition");
+      assertThat(((ZeebeTaskDefinition) property.getBinding()).property()).isEqualTo("type");
+    }
+
+    @Test
+    void hybridMode_taskDefinitionTypePropertyPresent() {
+      var template =
+          generator
+              .generate(
+                  MyConnectorFunction.MinimallyAnnotated.class,
+                  new GeneratorConfiguration(
+                      ConnectorMode.HYBRID, null, null, null, null, Map.of()))
+              .getFirst();
+      var property = getPropertyById("taskDefinitionType", template);
+      assertThat(property.getType()).isEqualTo("String");
+      assertThat(property.getGroup()).isEqualTo("taskDefinitionType");
+      assertThat(property.getFeel()).isEqualTo(null);
+      assertThat(property.getBinding().type()).isEqualTo("zeebe:taskDefinition");
+      assertThat(((ZeebeTaskDefinition) property.getBinding()).property()).isEqualTo("type");
+    }
+
+    @Test
+    void resultExpressionProperty_tooltipPopulated_whenOutputDataClassHasExample() {
+      var template = generator.generate(MyConnectorFunction.FullyAnnotated.class).getFirst();
+      var property = getPropertyByLabel("Result expression", template);
+      assertThat(property.getTooltip()).contains("myListOutputProperty").contains("first-item");
+    }
+
+    @Test
+    void resultExpressionProperty_tooltipNull_whenNoOutputDataClass() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      var property = getPropertyByLabel("Result expression", template);
+      assertThat(property.getTooltip()).isNull();
+    }
+  }
+
+  @Nested
+  class ElementTypes {
+
+    @Test
+    void singleElementType_hasCorrectNameAndId() {
+      // when single element type is defined
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      // then no suffixes are added
+      assertThat(template.id()).isEqualTo(MyConnectorFunction.ID);
+      assertThat(template.name()).isEqualTo(MyConnectorFunction.NAME);
+    }
+
+    @Test
+    void multipleElementTypes_definedInAnnotation() {
+      var config =
+          new GeneratorConfiguration(ConnectorMode.HYBRID, null, null, null, null, Map.of());
+      var templates =
+          generator.generate(MyConnectorFunction.WithMultipleElementTypes.class, config);
+      boolean hasServiceTask = false,
+          hasScriptTask = false,
+          hasSendTask = false,
+          hasMessageThrowEvent = false,
+          hasMessageEndEvent = false;
+      for (var template : templates) {
+        if (template.elementType().equals(ElementTypeWrapper.from(BpmnType.SERVICE_TASK))) {
+          hasServiceTask = true;
+        } else if (template.elementType().equals(ElementTypeWrapper.from(BpmnType.SCRIPT_TASK))) {
+          hasScriptTask = true;
+        } else if (template.elementType().equals(ElementTypeWrapper.from(BpmnType.SEND_TASK))) {
+          hasSendTask = true;
+        } else if (template
+            .elementType()
+            .equals(ElementTypeWrapper.from(BpmnType.INTERMEDIATE_THROW_EVENT))) {
+          hasMessageThrowEvent = true;
+        } else if (template
+            .elementType()
+            .equals(ElementTypeWrapper.from(BpmnType.MESSAGE_END_EVENT))) {
+          hasMessageEndEvent = true;
+        }
+      }
+      assertThat(templates.size()).isEqualTo(5);
+      assertTrue(hasServiceTask);
+      assertTrue(hasScriptTask);
+      assertTrue(hasSendTask);
+      assertTrue(hasMessageThrowEvent);
+      assertTrue(hasMessageEndEvent);
+    }
+
+    @Test
+    void multipleElementTypes_definedInAnnotation_haveCorrectNamesAndIds() {
+      // when
+      var templates = generator.generate(MyConnectorFunction.WithMultipleElementTypes.class);
+
+      // then
+      var templateMap =
+          templates.stream()
+              .collect(Collectors.toMap(t -> t.elementType().originalType().getId(), t -> t));
+
+      for (var elementType : BpmnType.values()) {
+        var template = templateMap.get(elementType.getId());
+        if (template == null) {
+          continue;
+        }
+        if (elementType == BpmnType.INTERMEDIATE_THROW_EVENT) {
+          assertThat(template.id()).isEqualTo("my-custom-id-for-intermediate-event");
+          assertThat(template.name()).isEqualTo("My custom name for intermediate event");
+        } else {
+          assertThat(template.id()).isEqualTo(MyConnectorFunction.ID + ":" + elementType.getId());
+          assertThat(template.name())
+              .isEqualTo(
+                  MyConnectorFunction.NAME + " (" + camelCaseToSpaces(elementType.getId() + ")"));
+        }
+      }
+    }
+
+    @Test
+    void multipleElementTypes_definedInConfig() {
+      var config =
+          new GeneratorConfiguration(
+              ConnectorMode.HYBRID,
+              null,
+              null,
+              null,
+              Set.of(
+                  new ConnectorElementType(
+                      Set.of(BpmnType.TASK), BpmnType.SERVICE_TASK, null, null),
+                  new ConnectorElementType(
+                      Set.of(BpmnType.INTERMEDIATE_THROW_EVENT),
+                      BpmnType.INTERMEDIATE_THROW_EVENT,
+                      null,
+                      null)),
+              Map.of());
+      var templates = generator.generate(MyConnectorFunction.FullyAnnotated.class, config);
+      boolean hasServiceTask = false, hasMessageThrowEvent = false;
+      for (var template : templates) {
+        if (template.elementType().equals(ElementTypeWrapper.from(BpmnType.SERVICE_TASK))) {
+          hasServiceTask = true;
+        } else if (template
+            .elementType()
+            .equals(ElementTypeWrapper.from(BpmnType.INTERMEDIATE_THROW_EVENT))) {
+          hasMessageThrowEvent = true;
+        }
+      }
+      assertThat(templates.size()).isEqualTo(2);
+      assertTrue(hasServiceTask);
+      assertTrue(hasMessageThrowEvent);
+    }
+
+    @Test
+    void multipleElementTypes_overriddenInConfig() {
+      var config =
+          new GeneratorConfiguration(
+              ConnectorMode.HYBRID,
+              null,
+              null,
+              null,
+              Set.of(
+                  new ConnectorElementType(
+                      Set.of(BpmnType.TASK), BpmnType.SERVICE_TASK, null, null)),
+              Map.of());
+      var templates =
+          generator.generate(MyConnectorFunction.WithMultipleElementTypes.class, config);
+      boolean hasServiceTask = false,
+          hasScriptTask = false,
+          hasMessageThrowEvent = false,
+          hasMessageEndEvent = false;
+      for (var template : templates) {
+        if (template.elementType().equals(ElementTypeWrapper.from(BpmnType.SERVICE_TASK))) {
+          hasServiceTask = true;
+        } else if (template.elementType().equals(ElementTypeWrapper.from(BpmnType.SCRIPT_TASK))) {
+          hasScriptTask = true;
+        } else if (template
+            .elementType()
+            .equals(ElementTypeWrapper.from(BpmnType.INTERMEDIATE_THROW_EVENT))) {
+          hasMessageThrowEvent = true;
+        } else if (template
+            .elementType()
+            .equals(ElementTypeWrapper.from(BpmnType.MESSAGE_END_EVENT))) {
+          hasMessageEndEvent = true;
+        }
+      }
+      assertThat(templates.size()).isEqualTo(1);
+      assertTrue(hasServiceTask);
+      assertFalse(hasScriptTask);
+      assertFalse(hasMessageThrowEvent);
+      assertFalse(hasMessageEndEvent);
+    }
+
+    @Test
+    void invalidElementType_throwsException() {
+      var config =
+          new GeneratorConfiguration(
+              ConnectorMode.HYBRID,
+              null,
+              null,
+              null,
+              Set.of(
+                  new ConnectorElementType(
+                      Set.of(BpmnType.TASK), BpmnType.SERVICE_TASK, null, null),
+                  new ConnectorElementType(
+                      Set.of(BpmnType.INTERMEDIATE_CATCH_EVENT),
+                      BpmnType.INTERMEDIATE_CATCH_EVENT,
+                      null,
+                      null)),
+              Map.of());
+      var exception =
+          assertThrows(
+              IllegalArgumentException.class,
+              () -> generator.generate(MyConnectorFunction.MinimallyAnnotated.class, config));
+      assertThat(exception.getMessage()).contains("Unsupported element type");
+    }
+  }
+
+  @Nested
+  class Properties {
+
+    @Test
+    void notAnnotated_StringProperty_hasCorrectDefaults() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      var property = getPropertyByLabel("Not annotated string property", template);
+
+      assertThat(property).isInstanceOf(StringProperty.class);
+      assertThat(property.getType()).isEqualTo("String");
+      assertThat(property.isOptional()).isNull();
+      assertThat(property.getGroup()).isEqualTo(null);
+      assertThat(property.getFeel()).isEqualTo(FeelMode.optional);
+      assertThat(property.getBinding())
+          .isEqualTo(new PropertyBinding.ZeebeInput("notAnnotatedStringProperty"));
+      assertThat(property.getConstraints()).isNull();
+    }
+
+    @Test
+    void annotated_StringProperty_definedByAnnotation() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      var property = getPropertyById("annotatedStringProperty", template);
+
+      assertThat(property).isInstanceOf(TextProperty.class);
+      assertThat(property.getType()).isEqualTo("Text");
+      assertThat(property.isOptional()).isFalse();
+      assertThat(property.getLabel()).isEqualTo("Annotated and renamed string property");
+      assertThat(property.getGroup()).isEqualTo("group1");
+      assertThat(property.getDescription()).isEqualTo("description");
+      assertThat(property.getFeel()).isEqualTo(FeelMode.optional);
+      assertThat(property.getBinding()).isEqualTo(new PropertyBinding.ZeebeInput("customBinding"));
+      assertThat(property.getConstraints().notEmpty()).isTrue();
+      assertThat(property.getConstraints().minLength()).isNull();
+      assertThat(property.getConstraints().maxLength()).isNull();
+      assertThat(property.getConstraints().pattern()).isNull();
+    }
+
+    @Test
+    void objectProperty_hasRequiredFeelByDefault() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+
+      var objectProperty = getPropertyByLabel("Object property", template);
+      assertThat(objectProperty.getFeel()).isEqualTo(FeelMode.required);
+
+      var jsonNodeProperty = getPropertyByLabel("Json node property", template);
+      assertThat(jsonNodeProperty.getFeel()).isEqualTo(FeelMode.required);
+    }
+
+    @Test
+    void notAnnotated_EnumProperty_hasCorrectDefaults() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      var property = getPropertyByLabel("Enum property", template);
+
+      assertThat(property).isInstanceOf(DropdownProperty.class);
+      assertThat(property.getType()).isEqualTo("Dropdown");
+      assertThat(((DropdownProperty) property).getChoices())
+          .containsExactly(
+              new DropdownChoice("Value one", "VALUE1"), new DropdownChoice("Value two", "VALUE2"));
+      assertThat(property.isOptional()).isNull();
+      assertThat(property.getGroup()).isEqualTo(null);
+      assertThat(property.getFeel()).isEqualTo(null);
+      assertThat(property.getBinding()).isEqualTo(new PropertyBinding.ZeebeInput("enumProperty"));
+    }
+
+    @Test
+    void nested_addsPrefixPathByDefault() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      assertDoesNotThrow(() -> getPropertyById("nestedProperty.nestedA", template));
+      assertThrows(Exception.class, () -> getPropertyById("nestedProperty.nestedB", template));
+    }
+
+    @Test
+    void nested_disableAddPrefixPath() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      assertDoesNotThrow(() -> getPropertyById("nestedB", template));
+      assertThrows(
+          Exception.class, () -> getPropertyById("customPathNestedProperty.nestedB", template));
+    }
+
+    @Test
+    void nested_groupOverride() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      var property = getPropertyById("nestedPropertyWithGroup.nestedA", template);
+      assertThat(property.getGroup()).isEqualTo("customGroup");
+    }
+
+    @Test
+    void nested_groupOverrideWhenChildGroupIsSet() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      var property = getPropertyById("nestedPropertyWithGroupOverride.nestedB", template);
+      assertThat(property.getGroup()).isEqualTo("customGroup");
+    }
+
+    @Test
+    void ignoredProperty() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      assertThat(template.properties()).noneMatch(p -> "ignoredField".equals(p.getId()));
+    }
+
+    @Test
+    void conditionalProperty_valid_equals() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      var property = getPropertyByLabel("Conditional property equals", template);
+
+      assertThat(property.getCondition())
+          .isEqualTo(new PropertyCondition.Equals("annotatedStringProperty", "value"));
+    }
+
+    @Test
+    void conditionalProperty_valid_oneOf() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      var property = getPropertyByLabel("Conditional property one of", template);
+
+      assertThat(property.getCondition())
+          .isEqualTo(
+              new PropertyCondition.OneOf("annotatedStringProperty", List.of("value1", "value2")));
+    }
+
+    @Test
+    void duplicatePropertyId_throwsException() {
+      var exception =
+          assertThrows(
+              IllegalArgumentException.class,
+              () -> generator.generate(MyConnectorFunction.WithDuplicatePropertyIds.class));
+
+      assertThat(exception.getMessage()).contains("duplicate property prop");
+    }
+
+    @Test
+    void propertyWithDifferentIdAndBinding_isSupported() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      var property = getPropertyById("idNotEqualToBinding", template);
+
+      assertThat(property.getBinding()).isInstanceOf(ZeebeInput.class);
+      assertThat(((ZeebeInput) property.getBinding()).name())
+          .isEqualTo("propertyWithDifferentIdAndBinding");
+    }
+
+    @Test
+    void nested_conditionIsNotChanged() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      var property = getPropertyByLabel("First nested sub type override value", template);
+
+      assertThat(property.getCondition()).isInstanceOf(AllMatch.class);
+      assertThat(((AllMatch) property.getCondition()).allMatch())
+          .contains(new PropertyCondition.Equals("annotatedStringProperty", "value"));
+    }
+
+    @Test
+    void containerType_withManualTypeOverride() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      var property = getPropertyByLabel("Property with type override", template);
+      assertThat(property.getType()).isEqualTo("String");
+    }
+
+    @Test
+    void dateProperty_defaultsToStringType() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      var property = getPropertyByLabel("Date property", template);
+      assertThat(property.getType()).isEqualTo("String");
+    }
+
+    @Test
+    void annotatedProperty_tooltipPresent() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      var property = getPropertyById("annotatedStringProperty", template);
+      assertThat(property.getTooltip()).isEqualTo("tooltip");
+    }
+
+    @Test
+    void annotatedProperty_placeholderPresent() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      var property = getPropertyById("annotatedStringProperty", template);
+      assertThat(property.getPlaceholder()).isEqualTo("placeholder");
+    }
+
+    @Test
+    void booleanProperty() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      var property = getPropertyById("booleanProperty", template);
+      assertThat(property.getType()).isEqualTo("Boolean");
+      assertThat(property.getBinding()).isEqualTo(new ZeebeInput("booleanProperty"));
+      assertThat(property.getValue()).isEqualTo(Boolean.FALSE);
+    }
+
+    @Test
+    void booleanProperty_dependants() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      var dependsOnTrue = getPropertyById("dependsOnBooleanPropertyTrue", template);
+      assertThat(dependsOnTrue.getCondition()).isEqualTo(new Equals("booleanProperty", true));
+      var dependsOnFalse = getPropertyById("dependsOnBooleanPropertyFalse", template);
+      assertThat(dependsOnFalse.getCondition()).isEqualTo(new Equals("booleanProperty", false));
+    }
+
+    @Test
+    void supportsExtensionProperties() {
+      var template =
+          generator
+              .generate(MyConnectorFunction.MinimallyAnnotatedWithExtensionProperties.class)
+              .getFirst();
+
+      assertThat(template.properties())
+          .filteredOn(
+              p ->
+                  p.getBinding().type().equals("zeebe:property")
+                      && ((PropertyBinding.ZeebeProperty) p.getBinding())
+                          .name()
+                          .startsWith("myExtensionProperty"))
+          .hasSize(2)
+          .satisfiesExactlyInAnyOrder(
+              p -> {
+                assertThat(p).isInstanceOf(HiddenProperty.class);
+                assertThat(p.getBinding())
+                    .isEqualTo(new PropertyBinding.ZeebeProperty("myExtensionProperty1"));
+                assertThat(p.getValue()).isEqualTo("value1");
+                assertThat(p.getCondition()).isNull();
+              },
+              p -> {
+                assertThat(p).isInstanceOf(HiddenProperty.class);
+                assertThat(p.getBinding())
+                    .isEqualTo(new PropertyBinding.ZeebeProperty("myExtensionProperty2"));
+                assertThat(p.getValue()).isEqualTo("value2");
+                assertThat(p.getCondition()).isEqualTo(new Equals("booleanProperty", false));
+              });
+    }
+
+    @Test
+    void staticFields_areNotGeneratedAsProperties() {
+      var template = generator.generate(MyConnectorFunction.WithStaticFields.class).getFirst();
+      var propertyIds =
+          template.properties().stream().map(Property::getId).collect(Collectors.toSet());
+
+      assertThat(propertyIds).contains("instanceField");
+      assertThat(propertyIds).doesNotContain("STATIC_CONSTANT");
+    }
+  }
+
+  @Nested
+  class SealedTypes {
+
+    @Test
+    void nonAnnotated_sealedType_hasCorrectDefaults() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      var discriminatorProperty =
+          template.properties().stream()
+              .filter(p -> "Non annotated sealed type".equals(p.getLabel()))
+              .findFirst()
+              .orElseThrow();
+
+      assertThat(discriminatorProperty).isInstanceOf(DropdownProperty.class);
+      assertThat(discriminatorProperty.getType()).isEqualTo("Dropdown");
+      assertThat(((DropdownProperty) discriminatorProperty).getChoices())
+          .containsExactlyInAnyOrder(
+              new DropdownChoice("First sub type", "firstsubtype"),
+              new DropdownChoice("Second sub type", "secondsubtype"),
+              new DropdownChoice("Nested sealed type", "nestedsealedtype"));
+
+      var firstSubTypeValueProperty =
+          template.properties().stream()
+              .filter(p -> "First sub type value".equals(p.getLabel()))
+              .findFirst()
+              .orElseThrow();
+      assertThat(firstSubTypeValueProperty.getCondition())
+          .isEqualTo(new Equals(discriminatorProperty.getId(), "firstsubtype"));
+
+      var secondSubTypeValueProperty =
+          template.properties().stream()
+              .filter(p -> "Nested sealed type".equals(p.getLabel()))
+              .findFirst()
+              .orElseThrow();
+      assertThat(secondSubTypeValueProperty.getCondition())
+          .isEqualTo(new Equals(discriminatorProperty.getId(), "nestedsealedtype"));
+
+      var nestedSubTypeDiscriminator =
+          template.properties().stream()
+              .filter(p -> "Nested sealed type".equals(p.getLabel()))
+              .findFirst()
+              .orElseThrow();
+      assertThat(nestedSubTypeDiscriminator.getCondition())
+          .isEqualTo(new Equals(discriminatorProperty.getId(), "nestedsealedtype"));
+
+      var nestedSubTypeValueProperty =
+          template.properties().stream()
+              .filter(p -> "Third sub type value".equals(p.getLabel()))
+              .findFirst()
+              .orElseThrow();
+
+      assertThat(nestedSubTypeValueProperty.getCondition()).isInstanceOf(AllMatch.class);
+      assertThat(((AllMatch) nestedSubTypeValueProperty.getCondition()).allMatch())
+          .containsExactlyInAnyOrder(
+              new Equals(discriminatorProperty.getId(), "nestedsealedtype"),
+              new Equals(nestedSubTypeDiscriminator.getId(), "nestedsubtype"));
+    }
+
+    @Test
+    void annotated_sealedType_followsAnnotations() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      var discriminatorProperty =
+          template.properties().stream()
+              .filter(p -> "Annotated type override".equals(p.getLabel()))
+              .findFirst()
+              .orElseThrow();
+
+      assertThat(discriminatorProperty).isInstanceOf(DropdownProperty.class);
+      assertThat(discriminatorProperty.getType()).isEqualTo("Dropdown");
+      assertThat(((DropdownProperty) discriminatorProperty).getChoices())
+          .containsExactlyInAnyOrder(
+              new DropdownChoice("First annotated override", "firstAnnotatedOverride"),
+              new DropdownChoice("Second annotated override", "secondAnnotatedOverride"),
+              new DropdownChoice(
+                  "Nested annotated sealed type override", "nestedAnnotatedSealedType"));
+
+      assertThat(discriminatorProperty.getId())
+          .isEqualTo("annotatedSealedType.annotatedTypeOverrideCustomId");
+      assertThat(discriminatorProperty.getTooltip()).isEqualTo("Annotated type override tooltip");
+      assertThat(((ZeebeInput) discriminatorProperty.getBinding()).name())
+          .isEqualTo("annotatedSealedType.annotatedTypeOverride");
+
+      var firstSubTypeValueProperty =
+          template.properties().stream()
+              .filter(p -> "First annotated override value".equals(p.getLabel()))
+              .findFirst()
+              .orElseThrow();
+      assertThat(firstSubTypeValueProperty.getCondition())
+          .isEqualTo(new Equals(discriminatorProperty.getId(), "firstAnnotatedOverride"));
+
+      var secondSubTypeValueProperty =
+          template.properties().stream()
+              .filter(p -> "Second annotated override value".equals(p.getLabel()))
+              .findFirst()
+              .orElseThrow();
+      assertThat(secondSubTypeValueProperty.getCondition())
+          .isEqualTo(new Equals(discriminatorProperty.getId(), "secondAnnotatedOverride"));
+
+      var nestedSubTypeDiscriminator =
+          template.properties().stream()
+              .filter(p -> "Nested discriminator property".equals(p.getLabel()))
+              .findFirst()
+              .orElseThrow();
+
+      assertThat(nestedSubTypeDiscriminator.getCondition())
+          .isEqualTo(new Equals(discriminatorProperty.getId(), "nestedAnnotatedSealedType"));
+
+      var nestedSubTypeValueProperty =
+          template.properties().stream()
+              .filter(p -> "First nested sub type override value".equals(p.getLabel()))
+              .findFirst()
+              .orElseThrow();
+
+      assertThat(nestedSubTypeValueProperty.getCondition()).isInstanceOf(AllMatch.class);
+      assertThat(((AllMatch) nestedSubTypeValueProperty.getCondition()).allMatch())
+          .containsExactlyInAnyOrder(
+              new Equals(discriminatorProperty.getId(), "nestedAnnotatedSealedType"),
+              new Equals(nestedSubTypeDiscriminator.getId(), "firstNestedSubTypeOverride"),
+              new Equals("annotatedStringProperty", "value"));
+    }
+
+    @Test
+    void discriminatorProperty_withCondition() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      var discriminatorProperty =
+          template.properties().stream()
+              .filter(p -> "Conditional discriminator".equals(p.getLabel()))
+              .findFirst()
+              .orElseThrow();
+
+      assertThat(discriminatorProperty).isInstanceOf(DropdownProperty.class);
+      assertThat(discriminatorProperty.getType()).isEqualTo("Dropdown");
+      assertThat(((DropdownProperty) discriminatorProperty).getChoices())
+          .containsExactlyInAnyOrder(
+              new DropdownChoice("Conditional sub type", "conditionalSubType"));
+
+      assertThat(discriminatorProperty.getCondition())
+          .isEqualTo(new Equals("annotatedStringProperty", "value"));
+    }
+  }
+
+  @Nested
+  class PropertyGroups {
+
+    @Test
+    void propertyGroups_unordered() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      checkPropertyGroups(
+          List.of(
+              Map.entry("customGroup", "Custom group"),
+              Map.entry("group1", "Group 1"),
+              Map.entry("group2", "Group 2"),
+              Map.entry("output", "Output mapping"),
+              Map.entry("error", "Error handling"),
+              Map.entry("retries", "Retries"),
+              Map.entry("connector", "Connector")),
+          template,
+          false);
+    }
+
+    @Test
+    void allInPredefinedGroups() {
+      var template =
+          generator.generate(MyConnectorFunction.AllPropertiesInPredefinedGroups.class).getFirst();
+      checkPropertyGroups(
+          List.of(
+              Map.entry("predefinedGroup1", "Predefined Group One"),
+              Map.entry("predefinedGroup2", "Predefined Group Two"),
+              Map.entry("predefinedGroup3", "Predefined Group Three"),
+              Map.entry("connector", "Connector"),
+              Map.entry("output", "Output mapping"),
+              Map.entry("error", "Error handling"),
+              Map.entry("retries", "Retries")),
+          template,
+          false);
+    }
+
+    @Test
+    void propertyGroups_orderedAndLabeledByAnnotation() {
+      var template = generator.generate(MyConnectorFunction.FullyAnnotated.class).getFirst();
+      checkPropertyGroups(
+          List.of(
+              Map.entry("group2", "Group Two"),
+              Map.entry("group1", "Group One"),
+              Map.entry("customGroup", "Custom group"),
+              Map.entry("connector", "Connector"),
+              Map.entry("output", "Output mapping"),
+              Map.entry("error", "Error handling"),
+              Map.entry("retries", "Retries")),
+          template,
+          true);
+    }
+
+    @Test
+    void propertyGroupContents_definedByTemplatePropertyAnnotation() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      var group1 =
+          template.properties().stream()
+              .filter(p -> "group1".equals(p.getGroup()))
+              .collect(Collectors.toList());
+      assertThat(group1).hasSize(2);
+      assertThat(group1)
+          .containsExactlyInAnyOrder(
+              getPropertyByLabel("Annotated and renamed string property", template),
+              getPropertyByLabel("Property for group 1", template));
+    }
+
+    @Test
+    void hybridMode_groupPresentAndIsOnTop() {
+      var template =
+          generator
+              .generate(
+                  MyConnectorFunction.MinimallyAnnotated.class,
+                  new GeneratorConfiguration(
+                      ConnectorMode.HYBRID, null, null, null, null, Map.of()))
+              .getFirst();
+      checkPropertyGroups(
+          List.of(
+              Map.entry("taskDefinitionType", "Task definition type"),
+              Map.entry("customGroup", "Custom group"),
+              Map.entry("group2", "Group 2"),
+              Map.entry("group1", "Group 1"),
+              Map.entry("connector", "Connector"),
+              Map.entry("output", "Output mapping"),
+              Map.entry("error", "Error handling"),
+              Map.entry("retries", "Retries")),
+          template,
+          true);
+    }
+
+    @Test
+    void tooltip_definedByPropertyGroupAnnotation() {
+      var template = generator.generate(MyConnectorFunction.FullyAnnotated.class).getFirst();
+      var group1 =
+          template.groups().stream().filter(g -> "group1".equals(g.id())).findFirst().orElseThrow();
+      assertThat(group1.tooltip()).isEqualTo("Group One Tooltip");
+
+      var group2 =
+          template.groups().stream().filter(g -> "group2".equals(g.id())).findFirst().orElseThrow();
+      assertThat(group2.tooltip()).isNull();
+    }
+
+    @Test
+    void openByDefault_definedByPropertyGroupAnnotation() {
+      var template = generator.generate(MyConnectorFunction.FullyAnnotated.class).getFirst();
+      var group1 =
+          template.groups().stream().filter(g -> "group1".equals(g.id())).findFirst().orElseThrow();
+      assertThat(group1.openByDefault()).isFalse();
+
+      var group2 =
+          template.groups().stream().filter(g -> "group2".equals(g.id())).findFirst().orElseThrow();
+      assertThat(group2.openByDefault()).isNull();
+    }
+  }
+
+  @Nested
+  class ValidationConstraints {
+
+    @Test
+    void validationPresent_onlyPattern() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      var property = getPropertyByLabel("Property with pattern", template);
+      assertThat(property.getConstraints()).isNotNull();
+      assertThat(property.getConstraints().pattern())
+          .isEqualTo(new Pattern("^(=.*|[0-9]+|\\{\\{secrets\\..+}})$", "Pattern violated"));
+      assertThat(property.getConstraints().minLength()).isNull();
+      assertThat(property.getConstraints().maxLength()).isNull();
+      assertThat(property.getConstraints().notEmpty()).isNull();
+    }
+
+    @Test
+    void validationNotPresent() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      var property = getPropertyByLabel("Not annotated string property", template);
+      assertThat(property.getConstraints()).isNull();
+    }
+
+    @Test
+    void validationPresent_minMaxSize() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      var property = getPropertyByLabel("Property with min max", template);
+      assertThat(property.getConstraints()).isNotNull();
+      assertThat(property.getConstraints().minLength()).isEqualTo(1);
+      assertThat(property.getConstraints().maxLength()).isEqualTo(10);
+    }
+
+    @Test
+    void validationPresent_maxSizeOnly() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      var property = getPropertyByLabel("Property with max size", template);
+      assertThat(property.getConstraints()).isNotNull();
+      assertThat(property.getConstraints().minLength()).isNull();
+      assertThat(property.getConstraints().maxLength()).isEqualTo(10);
+    }
+
+    @Test
+    void validationPresent_notEmpty_stringProperty() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      var notEmptyProperty = getPropertyByLabel("String property with not empty", template);
+      assertThat(notEmptyProperty.getConstraints()).isNotNull();
+      assertThat(notEmptyProperty.getConstraints().notEmpty()).isTrue();
+      assertThat(notEmptyProperty.getConstraints().minLength()).isNull();
+      assertThat(notEmptyProperty.getConstraints().maxLength()).isNull();
+
+      var notBlankProperty = getPropertyByLabel("String property with not blank", template);
+      assertThat(notBlankProperty.getConstraints()).isNotNull();
+      assertThat(notBlankProperty.getConstraints().notEmpty()).isTrue();
+      assertThat(notBlankProperty.getConstraints().minLength()).isNull();
+      assertThat(notBlankProperty.getConstraints().maxLength()).isNull();
+    }
+
+    @Test
+    void validationPresent_notEmpty_objectProperty() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      var notEmptyProperty = getPropertyByLabel("Object property with not null", template);
+      assertThat(notEmptyProperty.getConstraints()).isNotNull();
+      assertThat(notEmptyProperty.getConstraints().notEmpty()).isTrue();
+      assertThat(notEmptyProperty.getConstraints().minLength()).isNull();
+      assertThat(notEmptyProperty.getConstraints().maxLength()).isNull();
+    }
+
+    @Test
+    void validationPresent_Pattern_optional() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      var mayBeEmptyOrRegexValidated = getPropertyById("mayBeEmptyOrRegexValidated", template);
+      assertThat(mayBeEmptyOrRegexValidated.getConstraints()).isNotNull();
+      assertThat(mayBeEmptyOrRegexValidated.getConstraints().notEmpty()).isFalse();
+      assertThat(mayBeEmptyOrRegexValidated.getConstraints().minLength()).isNull();
+      assertThat(mayBeEmptyOrRegexValidated.getConstraints().maxLength()).isNull();
+    }
+
+    @Test
+    void validationPresent_Pattern_optional_jakarta() {
+      var template = generator.generate(MyConnectorFunction.MinimallyAnnotated.class).getFirst();
+      var mayBeEmptyOrRegexValidated =
+          getPropertyById("mayBeEmptyOrRegexValidatedJakartaStyle", template);
+      assertThat(mayBeEmptyOrRegexValidated.getConstraints()).isNotNull();
+      assertThat(mayBeEmptyOrRegexValidated.getConstraints().notEmpty()).isFalse();
+      assertThat(mayBeEmptyOrRegexValidated.getConstraints().minLength()).isNull();
+      assertThat(mayBeEmptyOrRegexValidated.getConstraints().maxLength()).isNull();
+    }
+  }
+
+  @Nested
+  class Icons {
+
+    @Test
+    void svgIcon_classpathFile() throws IOException {
+      Path expectedIconPath =
+          new File(
+                  OutboundClassBasedTemplateGeneratorTest.class
+                      .getClassLoader()
+                      .getResource("my-connector-icon.svg")
+                      .getFile())
+              .toPath();
+      var expectedIconString =
+          "data:image/svg+xml;base64,"
+              + Base64.getEncoder().encodeToString(readAllBytes(expectedIconPath));
+
+      var template =
+          generator.generate(MyConnectorFunction.MinimallyAnnotatedWithSvgIcon.class).getFirst();
+      var icon = template.icon();
+
+      assertThat(icon.contents()).isEqualTo(expectedIconString);
+    }
+
+    @Test
+    void pngIcon_classpathFile() throws IOException {
+      Path expectedIconPath =
+          new File(
+                  OutboundClassBasedTemplateGeneratorTest.class
+                      .getClassLoader()
+                      .getResource("my-connector-icon.png")
+                      .getFile())
+              .toPath();
+      var expectedIconString =
+          "data:image/png;base64,"
+              + Base64.getEncoder().encodeToString(readAllBytes(expectedIconPath));
+
+      var template =
+          generator.generate(MyConnectorFunction.MinimallyAnnotatedWithPngIcon.class).getFirst();
+      var icon = template.icon();
+
+      assertThat(icon.contents()).isEqualTo(expectedIconString);
+    }
+  }
+
+  @Nested
+  class LinkedResource {
+
+    @Test
+    void singleLinkedResource_emitsFourProperties() {
+      var template =
+          generator.generate(OperationAnnotatedConnectorWithLinkedResource.class).getFirst();
+      var linkedResourceProps =
+          template.properties().stream()
+              .filter(
+                  p ->
+                      "zeebe:linkedResource".equals(p.getBinding().type())
+                          && p.getCondition() instanceof PropertyCondition.AllMatch am
+                          && am.allMatch()
+                              .contains(new PropertyCondition.Equals("operation", "op1")))
+              .toList();
+      assertThat(linkedResourceProps).hasSize(4);
+    }
+
+    @Test
+    void linkedResource_hiddenResourceTypeProperty() {
+      var template =
+          generator.generate(OperationAnnotatedConnectorWithLinkedResource.class).getFirst();
+      var hidden =
+          template.properties().stream()
+              .filter(
+                  p ->
+                      "zeebe:linkedResource".equals(p.getBinding().type())
+                          && p instanceof HiddenProperty)
+              .findFirst()
+              .orElseThrow();
+
+      assertThat(hidden.getValue()).isEqualTo("form");
+      assertThat(hidden.getGroup()).isEqualTo("form");
+      assertThat(((ZeebeLinkedResource) hidden.getBinding()).linkName())
+          .isEqualTo("formDefinition");
+      assertThat(((ZeebeLinkedResource) hidden.getBinding()).property()).isEqualTo("resourceType");
+      assertThat(hidden.getCondition()).isInstanceOf(PropertyCondition.AllMatch.class);
+      assertThat(((PropertyCondition.AllMatch) hidden.getCondition()).allMatch())
+          .contains(new PropertyCondition.Equals("operation", "op1"));
+    }
+
+    @Test
+    void linkedResource_bindingTypeDropdown() {
+      var template =
+          generator.generate(OperationAnnotatedConnectorWithLinkedResource.class).getFirst();
+      var bindingType =
+          (DropdownProperty) getPropertyById("op1:formDefinition.bindingType", template);
+
+      assertThat(bindingType.getLabel()).isEqualTo("Form binding");
+      assertThat(bindingType.getGroup()).isEqualTo("form");
+      assertThat(bindingType.getValue()).isEqualTo("latest");
+      assertThat(((ZeebeLinkedResource) bindingType.getBinding()).linkName())
+          .isEqualTo("formDefinition");
+      assertThat(((ZeebeLinkedResource) bindingType.getBinding()).property())
+          .isEqualTo("bindingType");
+      assertThat(bindingType.getChoices())
+          .containsExactly(
+              new DropdownProperty.DropdownChoice("Latest", "latest"),
+              new DropdownProperty.DropdownChoice("Deployment", "deployment"),
+              new DropdownProperty.DropdownChoice("Version tag", "versionTag"));
+      assertThat(bindingType.getCondition()).isInstanceOf(PropertyCondition.AllMatch.class);
+      assertThat(((PropertyCondition.AllMatch) bindingType.getCondition()).allMatch())
+          .contains(new PropertyCondition.Equals("operation", "op1"));
+    }
+
+    @Test
+    void linkedResource_resourceIdString() {
+      var template =
+          generator.generate(OperationAnnotatedConnectorWithLinkedResource.class).getFirst();
+      var resourceId = getPropertyById("op1:formDefinition.resourceId", template);
+
+      assertThat(resourceId).isInstanceOf(StringProperty.class);
+      assertThat(resourceId.getLabel()).isEqualTo("Form ID");
+      assertThat(resourceId.getDescription())
+          .isEqualTo("Select a form to render as an adaptive card");
+      assertThat(resourceId.getGroup()).isEqualTo("form");
+      assertThat(((ZeebeLinkedResource) resourceId.getBinding()).linkName())
+          .isEqualTo("formDefinition");
+      assertThat(((ZeebeLinkedResource) resourceId.getBinding()).property())
+          .isEqualTo("resourceId");
+      assertThat(resourceId.getCondition()).isInstanceOf(PropertyCondition.AllMatch.class);
+      assertThat(((PropertyCondition.AllMatch) resourceId.getCondition()).allMatch())
+          .contains(new PropertyCondition.Equals("operation", "op1"));
+    }
+
+    @Test
+    void linkedResource_versionTagProperty_shownOnlyWhenBindingTypeIsVersionTag() {
+      var template =
+          generator.generate(OperationAnnotatedConnectorWithLinkedResource.class).getFirst();
+      var versionTag = getPropertyById("op1:formDefinition.versionTag", template);
+
+      assertThat(versionTag).isInstanceOf(StringProperty.class);
+      assertThat(versionTag.getLabel()).isEqualTo("Version tag");
+      assertThat(versionTag.getGroup()).isEqualTo("form");
+      assertThat(((ZeebeLinkedResource) versionTag.getBinding()).linkName())
+          .isEqualTo("formDefinition");
+      assertThat(((ZeebeLinkedResource) versionTag.getBinding()).property())
+          .isEqualTo("versionTag");
+      assertThat(versionTag.getCondition()).isInstanceOf(PropertyCondition.AllMatch.class);
+      var allMatch = ((PropertyCondition.AllMatch) versionTag.getCondition()).allMatch();
+      assertThat(allMatch).contains(new PropertyCondition.Equals("operation", "op1"));
+      assertThat(allMatch)
+          .contains(new PropertyCondition.Equals("op1:formDefinition.bindingType", "versionTag"));
+    }
+
+    @Test
+    void multipleLinkedResources_emitsEightProperties() {
+      var template =
+          generator.generate(OperationAnnotatedConnectorWithLinkedResource.class).getFirst();
+      var op2LinkedResourceProps =
+          template.properties().stream()
+              .filter(
+                  p ->
+                      "zeebe:linkedResource".equals(p.getBinding().type())
+                          && p.getCondition() instanceof PropertyCondition.AllMatch am
+                          && am.allMatch()
+                              .contains(new PropertyCondition.Equals("operation", "op2")))
+              .toList();
+      assertThat(op2LinkedResourceProps).hasSize(8);
+    }
+
+    @Test
+    void linkedResource_blankLabels_fallBackToNeutralDefaults() {
+      var template =
+          generator.generate(OperationAnnotatedConnectorWithLinkedResource.class).getFirst();
+      var bindingType = (DropdownProperty) getPropertyById("op3:resource.bindingType", template);
+      var resourceId = getPropertyById("op3:resource.resourceId", template);
+
+      assertThat(bindingType.getLabel()).isEqualTo("Resource binding");
+      assertThat(resourceId.getLabel()).isEqualTo("Resource ID");
+      assertThat(resourceId.getDescription()).isNull();
+    }
+
+    @Test
+    void optionalLinkedResource_emitsFiveProperties_firstIsToggle() {
+      var template =
+          generator.generate(OperationAnnotatedConnectorWithLinkedResource.class).getFirst();
+      var toggle = getPropertyById("op4:formDefinition.include", template);
+      assertThat(toggle).isInstanceOf(DropdownProperty.class);
+      assertThat(toggle.getLabel()).isEqualTo("Include form?");
+      assertThat(toggle.getValue()).isEqualTo("false");
+      assertThat(toggle.getBinding().type()).isEqualTo("zeebe:taskHeader");
+      assertThat(((DropdownProperty) toggle).getChoices())
+          .containsExactly(
+              new DropdownProperty.DropdownChoice("No", "false"),
+              new DropdownProperty.DropdownChoice("Yes", "true"));
+
+      // Property.equals() excludes condition, so indexOf is unreliable for properties that share
+      // the same binding/value across operations. Use index-based stream instead.
+      var allProps = template.properties();
+      int toggleIndex = -1;
+      int firstLinkedResourceIndex = Integer.MAX_VALUE;
+      for (int i = 0; i < allProps.size(); i++) {
+        var p = allProps.get(i);
+        if (toggleIndex == -1 && "op4:formDefinition.include".equals(p.getId())) {
+          toggleIndex = i;
+        }
+        if ("zeebe:linkedResource".equals(p.getBinding().type())
+            && p.getCondition() instanceof PropertyCondition.AllMatch am
+            && am.allMatch().contains(new PropertyCondition.Equals("operation", "op4"))
+            && i < firstLinkedResourceIndex) {
+          firstLinkedResourceIndex = i;
+        }
+      }
+      assertThat(toggleIndex).isGreaterThan(-1);
+      assertThat(firstLinkedResourceIndex).isLessThan(Integer.MAX_VALUE);
+      assertThat(toggleIndex).isLessThan(firstLinkedResourceIndex);
+    }
+
+    @Test
+    void optionalLinkedResource_linkedResourcePropertiesConditionedOnToggle() {
+      var template =
+          generator.generate(OperationAnnotatedConnectorWithLinkedResource.class).getFirst();
+      var toggleCondition = new PropertyCondition.Equals("op4:formDefinition.include", "true");
+
+      var resourceType =
+          template.properties().stream()
+              .filter(
+                  p ->
+                      p instanceof HiddenProperty
+                          && "zeebe:linkedResource".equals(p.getBinding().type())
+                          && "formDefinition"
+                              .equals(((ZeebeLinkedResource) p.getBinding()).linkName())
+                          && p.getCondition() instanceof PropertyCondition.AllMatch am
+                          && am.allMatch()
+                              .contains(new PropertyCondition.Equals("operation", "op4")))
+              .findFirst()
+              .orElseThrow();
+      assertThat(((PropertyCondition.AllMatch) resourceType.getCondition()).allMatch())
+          .contains(new PropertyCondition.Equals("operation", "op4"))
+          .contains(toggleCondition);
+
+      var resourceId = getPropertyById("op4:formDefinition.resourceId", template);
+      assertThat(((PropertyCondition.AllMatch) resourceId.getCondition()).allMatch())
+          .contains(new PropertyCondition.Equals("operation", "op4"))
+          .contains(toggleCondition);
+
+      var versionTag = getPropertyById("op4:formDefinition.versionTag", template);
+      assertThat(((PropertyCondition.AllMatch) versionTag.getCondition()).allMatch())
+          .contains(new PropertyCondition.Equals("operation", "op4"))
+          .contains(toggleCondition)
+          .contains(new PropertyCondition.Equals("op4:formDefinition.bindingType", "versionTag"));
+    }
+
+    @Test
+    void optionalLinkedResource_blankToggleLabel_defaultsToIncludeLinkName() {
+      var template =
+          generator.generate(OperationAnnotatedConnectorWithLinkedResource.class).getFirst();
+      var toggle = getPropertyById("op5:attachment.include", template);
+      assertThat(toggle.getLabel()).isEqualTo("Include attachment?");
+    }
+
+    @Test
+    void multipleLinkedResources_correctLinkNamesAndResourceTypes() {
+      var template =
+          generator.generate(OperationAnnotatedConnectorWithLinkedResource.class).getFirst();
+
+      var attachmentAHidden =
+          template.properties().stream()
+              .filter(
+                  p ->
+                      p instanceof HiddenProperty
+                          && "zeebe:linkedResource".equals(p.getBinding().type())
+                          && "attachmentA"
+                              .equals(((ZeebeLinkedResource) p.getBinding()).linkName()))
+              .findFirst()
+              .orElseThrow();
+      assertThat(attachmentAHidden.getValue()).isEqualTo("form");
+
+      var attachmentBHidden =
+          template.properties().stream()
+              .filter(
+                  p ->
+                      p instanceof HiddenProperty
+                          && "zeebe:linkedResource".equals(p.getBinding().type())
+                          && "attachmentB"
+                              .equals(((ZeebeLinkedResource) p.getBinding()).linkName()))
+              .findFirst()
+              .orElseThrow();
+      assertThat(attachmentBHidden.getValue()).isEqualTo("file");
+    }
+  }
+
+  @Nested
+  class ClassBasedLinkedResource {
+
+    @Test
+    void classBased_emitsFourLinkedResourceProperties() {
+      var template = generator.generate(ClassBasedConnectorWithLinkedResource.class).getFirst();
+      var linkedResourceProps =
+          template.properties().stream()
+              .filter(p -> "zeebe:linkedResource".equals(p.getBinding().type()))
+              .toList();
+      assertThat(linkedResourceProps).hasSize(4);
+    }
+
+    @Test
+    void classBased_hiddenResourceType_hasNoCondition() {
+      var template = generator.generate(ClassBasedConnectorWithLinkedResource.class).getFirst();
+      var hidden =
+          template.properties().stream()
+              .filter(
+                  p ->
+                      "zeebe:linkedResource".equals(p.getBinding().type())
+                          && p instanceof HiddenProperty)
+              .findFirst()
+              .orElseThrow();
+
+      assertThat(hidden.getValue()).isEqualTo("form");
+      assertThat(hidden.getCondition()).isNull();
+      assertThat(((ZeebeLinkedResource) hidden.getBinding()).linkName())
+          .isEqualTo("formDefinition");
+      assertThat(((ZeebeLinkedResource) hidden.getBinding()).property()).isEqualTo("resourceType");
+    }
+
+    @Test
+    void classBased_bindingTypeDropdown_hasNoCondition() {
+      var template = generator.generate(ClassBasedConnectorWithLinkedResource.class).getFirst();
+      var bindingType = (DropdownProperty) getPropertyById("formDefinition.bindingType", template);
+
+      assertThat(bindingType.getLabel()).isEqualTo("Form binding");
+      assertThat(bindingType.getGroup()).isEqualTo("form");
+      assertThat(bindingType.getValue()).isEqualTo("latest");
+      assertThat(bindingType.getCondition()).isNull();
+      assertThat(((ZeebeLinkedResource) bindingType.getBinding()).property())
+          .isEqualTo("bindingType");
+      assertThat(bindingType.getChoices())
+          .containsExactly(
+              new DropdownProperty.DropdownChoice("Latest", "latest"),
+              new DropdownProperty.DropdownChoice("Deployment", "deployment"),
+              new DropdownProperty.DropdownChoice("Version tag", "versionTag"));
+    }
+
+    @Test
+    void classBased_resourceIdString_hasNoCondition() {
+      var template = generator.generate(ClassBasedConnectorWithLinkedResource.class).getFirst();
+      var resourceId = getPropertyById("formDefinition.resourceId", template);
+
+      assertThat(resourceId).isInstanceOf(StringProperty.class);
+      assertThat(resourceId.getLabel()).isEqualTo("Form ID");
+      assertThat(resourceId.getDescription())
+          .isEqualTo("Select a form to render as an adaptive card");
+      assertThat(resourceId.getGroup()).isEqualTo("form");
+      assertThat(resourceId.getCondition()).isNull();
+      assertThat(((ZeebeLinkedResource) resourceId.getBinding()).property())
+          .isEqualTo("resourceId");
+    }
+
+    @Test
+    void classBased_versionTagProperty_shownOnlyWhenBindingTypeIsVersionTag() {
+      var template = generator.generate(ClassBasedConnectorWithLinkedResource.class).getFirst();
+      var versionTag = getPropertyById("formDefinition.versionTag", template);
+
+      assertThat(versionTag).isInstanceOf(StringProperty.class);
+      assertThat(versionTag.getLabel()).isEqualTo("Version tag");
+      assertThat(versionTag.getGroup()).isEqualTo("form");
+      assertThat(versionTag.getCondition())
+          .isEqualTo(new PropertyCondition.Equals("formDefinition.bindingType", "versionTag"));
+      assertThat(((ZeebeLinkedResource) versionTag.getBinding()).property())
+          .isEqualTo("versionTag");
+    }
+
+    @Test
+    void blankLinkName_throwsIllegalArgumentException() {
+      assertThatThrownBy(() -> generator.generate(BlankLinkNameConnector.class))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("blank linkName");
+    }
+
+    @Test
+    void blankResourceType_throwsIllegalArgumentException() {
+      assertThatThrownBy(() -> generator.generate(BlankResourceTypeConnector.class))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("blank resourceType");
+    }
+
+    @Test
+    void duplicateLinkName_throwsIllegalArgumentException() {
+      assertThatThrownBy(() -> generator.generate(DuplicateLinkNameConnector.class))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("Duplicate")
+          .hasMessageContaining("form");
+    }
+
+    @Test
+    void inboundConnector_linkedResourceAnnotationOnRequest_producesNoLinkedResourceProperties() {
+      var template = generator.generate(InboundConnectorWithLinkedResourceRequest.class).getFirst();
+      var linkedResourceProps =
+          template.properties().stream()
+              .filter(p -> "zeebe:linkedResource".equals(p.getBinding().type()))
+              .toList();
+      assertThat(linkedResourceProps).isEmpty();
+    }
+  }
+
+  @Nested
+  class OperationAnnotated {
+
+    @Test
+    void operationAnnotated() {
+      var template = generator.generate(OperationAnnotatedConnector.class).getFirst();
+      assertThat(template.id()).isNotNull();
+      assertThat(template.id()).isEqualTo(OperationAnnotatedConnector.ID);
+      assertThat(template.name()).isEqualTo(OperationAnnotatedConnector.NAME);
+      assertThat(template.properties()).hasSize(15);
+
+      DropdownProperty operationProperty =
+          (DropdownProperty) getPropertyById("operation", template);
+      assertThat(operationProperty.getChoices()).isNotNull();
+      assertThat(operationProperty.getValue()).isEqualTo("operation-1");
+      assertThat(operationProperty.getChoices())
+          .containsExactlyInAnyOrder(
+              new DropdownChoice("Operation 1", "operation-1"),
+              new DropdownChoice("Operation 2", "operation-2"),
+              new DropdownChoice("Operation 3", "operation-3"));
+
+      var propOp1P1 = getPropertyById("operation-1:p1", template);
+      assertThat(propOp1P1.getCondition()).isNotNull();
+      assertThat(propOp1P1.getGroup()).isNotNull();
+      assertThat(propOp1P1.getGroup()).isEqualTo("customGroup");
+
+      var customGroup =
+          template.groups().stream().filter(g -> g.id().equals("customGroup")).findFirst().get();
+      assertThat(customGroup.id()).isEqualTo("customGroup");
+      assertThat(customGroup.label()).isEqualTo("Custom Group");
+
+      // Verify that the referenced operation property is properly prefixed
+      var propOp1P2 = getPropertyById("operation-1:param2", template);
+      assertThat(propOp1P2.getGroup()).isEqualTo("operation");
+      assertThat(propOp1P2.getCondition()).isInstanceOf(AllMatch.class);
+      assertThat(((AllMatch) propOp1P2.getCondition()).allMatch())
+          .containsExactlyInAnyOrder(
+              new Equals("operation-1:p1", "myValue"), new Equals("operation", "operation-1"));
+
+      var propOp3P1 = getPropertyById("operation-3:p1", template);
+      assertThat(propOp3P1).isNotNull();
+      var propOp3P2 = getPropertyById("operation-3:param2", template);
+      assertThat(propOp3P2).isNotNull();
+
+      StringProperty propOp3Header =
+          (StringProperty) getPropertyById("operation-3:myHeader", template);
+      assertThat(propOp3Header.getBinding()).isInstanceOf(PropertyBinding.ZeebeTaskHeader.class);
+      assertThat(((ZeebeTaskHeader) propOp3Header.getBinding()).key()).isEqualTo("test-header");
+      assertThat(propOp3Header.getLabel()).isEqualTo("My Header");
+      assertThat(propOp3Header.getFeel()).isEqualTo(FeelMode.optional);
+      assertThat(propOp3Header.getValue()).isEqualTo("my-default-value");
+    }
+
+    @Test
+    void singleOperationAnnotated() {
+      var template = generator.generate(SingleOperationAnnotatedConnector.class).getFirst();
+      assertThat(template.id()).isNotNull();
+      assertThat(template.id()).isEqualTo(SingleOperationAnnotatedConnector.ID);
+      assertThat(template.name()).isEqualTo(SingleOperationAnnotatedConnector.NAME);
+
+      HiddenProperty operationProperty = (HiddenProperty) getPropertyById("operation", template);
+      assertThat(operationProperty.getValue()).isEqualTo("operation-1");
+    }
+
+    @Test
+    void operationWithPrimitiveParametersAnnotated() {
+      var template =
+          generator.generate(OperationAnnotatedConnectorWithPrimitiveTypes.class).getFirst();
+      assertThat(template.id()).isNotNull();
+
+      NumberProperty propertyA = (NumberProperty) getPropertyById("add:a", template);
+      NumberProperty propertyB = (NumberProperty) getPropertyById("add:b", template);
+      assertThat(propertyA.getType()).isEqualTo("Number");
+      assertThat(propertyB.getType()).isEqualTo("Number");
+      assertThat(propertyA.getBinding()).isEqualTo(new ZeebeInput("a"));
+      assertThat(propertyB.getBinding()).isEqualTo(new ZeebeInput("b"));
+
+      NumberProperty propertyAWithTemplateProperty =
+          (NumberProperty) getPropertyById("addWithVariableAndTemplateProperty:a", template);
+      NumberProperty propertyBWithTemplateProperty =
+          (NumberProperty) getPropertyById("addWithVariableAndTemplateProperty:b", template);
+      assertThat(propertyAWithTemplateProperty.getType()).isEqualTo("Number");
+      assertThat(propertyBWithTemplateProperty.getType()).isEqualTo("Number");
+      assertThat(propertyAWithTemplateProperty.getBinding()).isEqualTo(new ZeebeInput("a"));
+      assertThat(propertyBWithTemplateProperty.getBinding()).isEqualTo(new ZeebeInput("b"));
+      assertThat(propertyAWithTemplateProperty.getLabel()).isEqualTo("a prop");
+      assertThat(propertyBWithTemplateProperty.getLabel()).isEqualTo("b prop");
+
+      // TODO: all header params are currently forced to String, even if the method parameter is
+      // of a different type. Do we want to change this?
+
+      StringProperty propertyAWithHeader =
+          (StringProperty) getPropertyById("addWithHeader:a", template);
+      StringProperty propertyBWithHeader =
+          (StringProperty) getPropertyById("addWithHeader:b", template);
+      assertThat(propertyAWithHeader.getBinding())
+          .isEqualTo(new PropertyBinding.ZeebeTaskHeader("a"));
+      assertThat(propertyBWithHeader.getBinding())
+          .isEqualTo(new PropertyBinding.ZeebeTaskHeader("b"));
+
+      StringProperty propertyAWithHeaderAndTemplateProperty =
+          (StringProperty) getPropertyById("addWithHeaderAndTemplateProperty:a", template);
+      StringProperty propertyBWithHeaderAndTemplateProperty =
+          (StringProperty) getPropertyById("addWithHeaderAndTemplateProperty:b", template);
+      assertThat(propertyAWithHeaderAndTemplateProperty.getBinding())
+          .isEqualTo(new PropertyBinding.ZeebeTaskHeader("a"));
+      assertThat(propertyBWithHeaderAndTemplateProperty.getBinding())
+          .isEqualTo(new PropertyBinding.ZeebeTaskHeader("b"));
+      assertThat(propertyAWithHeaderAndTemplateProperty.getLabel()).isEqualTo("a prop");
+      assertThat(propertyBWithHeaderAndTemplateProperty.getLabel()).isEqualTo("b prop");
+    }
+  }
+
+  // Fixtures for linked-resource validation tests
+
+  @TemplateLinkedResource(linkName = "", resourceType = "form")
+  private record BlankLinkNameRequest() {}
+
+  @OutboundConnector(name = "Test", type = "test:blank-link")
+  @ElementTemplate(
+      id = "test-blank-link",
+      name = "Test",
+      version = 1,
+      inputDataClass = BlankLinkNameRequest.class)
+  private static class BlankLinkNameConnector implements OutboundConnectorFunction {
+    @Override
+    public Object execute(OutboundConnectorContext context) {
+      return null;
+    }
+  }
+
+  @TemplateLinkedResource(linkName = "myResource", resourceType = "")
+  private record BlankResourceTypeRequest() {}
+
+  @OutboundConnector(name = "Test", type = "test:blank-resource-type")
+  @ElementTemplate(
+      id = "test-blank-resource-type",
+      name = "Test",
+      version = 1,
+      inputDataClass = BlankResourceTypeRequest.class)
+  private static class BlankResourceTypeConnector implements OutboundConnectorFunction {
+    @Override
+    public Object execute(OutboundConnectorContext context) {
+      return null;
+    }
+  }
+
+  @TemplateLinkedResource(linkName = "form", resourceType = "form")
+  @TemplateLinkedResource(linkName = "form", resourceType = "form")
+  private record DuplicateLinkNameRequest() {}
+
+  @OutboundConnector(name = "Test", type = "test:duplicate-link")
+  @ElementTemplate(
+      id = "test-duplicate-link",
+      name = "Test",
+      version = 1,
+      inputDataClass = DuplicateLinkNameRequest.class)
+  private static class DuplicateLinkNameConnector implements OutboundConnectorFunction {
+    @Override
+    public Object execute(OutboundConnectorContext context) {
+      return null;
+    }
+  }
+
+  @Nested
+  class LanguageProperty {
+
+    @Test
+    void propertyWithLanguageJson_hasLanguageField() {
+      var template = generator.generate(MyConnectorFunction.WithLanguageProperty.class).getFirst();
+      var property = getPropertyById("jsonField", template);
+      assertThat(property.getLanguage()).isEqualTo("json");
+    }
+
+    @Test
+    void propertyWithoutLanguage_hasNullLanguageField() {
+      var template = generator.generate(MyConnectorFunction.WithLanguageProperty.class).getFirst();
+      var property = getPropertyById("normalField", template);
+      assertThat(property.getLanguage()).isNull();
+    }
+
+    @Test
+    void unsupportedLanguageValue_throwsException() {
+      assertThatThrownBy(() -> generator.generate(InvalidLanguageConnector.class))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("javascript");
+    }
+
+    @Test
+    void languageOnBooleanProperty_throwsException() {
+      assertThatThrownBy(() -> generator.generate(InvalidLanguageBooleanConnector.class))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("only supported for String and Text properties");
+    }
+
+    @Test
+    void languageOnNumberProperty_throwsException() {
+      assertThatThrownBy(() -> generator.generate(InvalidLanguageNumberConnector.class))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("only supported for String and Text properties");
+    }
+  }
+
+  // Fixture for inbound connector linked-resource test
+
+  // Fixture for invalid language value test
+
+  record InvalidLanguageInput(@TemplateProperty(language = "javascript") String field) {}
+
+  @OutboundConnector(name = "test", type = "test:invalid-lang")
+  @ElementTemplate(
+      id = "test-invalid-lang",
+      name = "Test",
+      inputDataClass = InvalidLanguageInput.class)
+  private static class InvalidLanguageConnector implements OutboundConnectorFunction {
+    @Override
+    public Object execute(OutboundConnectorContext context) {
+      return null;
+    }
+  }
+
+  // Fixtures for language on unsupported property types
+
+  record InvalidLanguageBooleanInput(@TemplateProperty(language = "json") Boolean field) {}
+
+  @OutboundConnector(name = "test", type = "test:invalid-lang-boolean")
+  @ElementTemplate(
+      id = "test-invalid-lang-boolean",
+      name = "Test",
+      inputDataClass = InvalidLanguageBooleanInput.class)
+  private static class InvalidLanguageBooleanConnector implements OutboundConnectorFunction {
+    @Override
+    public Object execute(OutboundConnectorContext context) {
+      return null;
+    }
+  }
+
+  record InvalidLanguageNumberInput(@TemplateProperty(language = "json") Integer field) {}
+
+  @OutboundConnector(name = "test", type = "test:invalid-lang-number")
+  @ElementTemplate(
+      id = "test-invalid-lang-number",
+      name = "Test",
+      inputDataClass = InvalidLanguageNumberInput.class)
+  private static class InvalidLanguageNumberConnector implements OutboundConnectorFunction {
+    @Override
+    public Object execute(OutboundConnectorContext context) {
+      return null;
+    }
+  }
+
+  @TemplateLinkedResource(linkName = "form", resourceType = "form")
+  private record InboundLinkedResourceRequest() {}
+
+  @io.camunda.connector.api.annotation.InboundConnector(
+      name = "Test Inbound",
+      type = "test:inbound-linked-resource")
+  @ElementTemplate(
+      id = "test-inbound-linked-resource",
+      name = "Test Inbound",
+      version = 1,
+      inputDataClass = InboundLinkedResourceRequest.class)
+  private static class InboundConnectorWithLinkedResourceRequest
+      implements io.camunda.connector.api.inbound.InboundConnectorExecutable<
+          io.camunda.connector.api.inbound.InboundConnectorContext> {
+    @Override
+    public void activate(io.camunda.connector.api.inbound.InboundConnectorContext context)
+        throws Exception {}
+
+    @Override
+    public void deactivate() {}
+  }
+
+  @Nested
+  class Configurations {
+
+    // --- Test 1: JDBC-style whole-object chooser + embedded template ---
+
+    @io.camunda.connector.api.annotation.Configuration(
+        id = "io.camunda:jdbc-credential:1",
+        version = 1,
+        name = "JDBC Connection")
+    record JdbcConnection(String url, String username, String password) {}
+
+    record JdbcRequest(
+        @TemplateProperty(
+                type = TemplateProperty.PropertyType.Configuration,
+                group = "connection",
+                binding = @TemplateProperty.PropertyBinding(name = "configuration"))
+            JdbcConnection configuration) {}
+
+    @OutboundConnector(name = "JDBC", type = "test:jdbc")
+    @ElementTemplate(
+        id = "test-jdbc",
+        name = "JDBC",
+        version = 1,
+        engineVersion = "^8.10",
+        inputDataClass = JdbcRequest.class,
+        configurations = {JdbcConnection.class})
+    static class JdbcConnector implements OutboundConnectorFunction {
+      @Override
+      public Object execute(OutboundConnectorContext context) {
+        return null;
+      }
+    }
+
+    @Test
+    void jdbc_chooserProperty_isConfigurationPropertyBoundWholeObject() {
+      var template = generator.generate(JdbcConnector.class).getFirst();
+      var chooser = getPropertyById("configuration", template);
+
+      assertThat(chooser).isInstanceOf(ConfigurationProperty.class);
+      assertThat(chooser.getType()).isEqualTo("Configuration");
+      assertThat(((ConfigurationProperty) chooser).getConfigurationTemplate())
+          .isEqualTo("io.camunda:jdbc-credential:1");
+      // the chooser carries no version — the floor lives on the embedded template
+      assertThat(chooser.getBinding()).isEqualTo(new ZeebeInput("configuration"));
+      // chooser is not recursed into: the configuration field's url/username/password are NOT
+      // emitted as top-level properties
+      assertThat(template.properties()).noneMatch(p -> "url".equals(p.getId()));
+    }
+
+    @Test
+    void jdbc_configurationTemplate_isEmbeddedWithProperties() {
+      var template = generator.generate(JdbcConnector.class).getFirst();
+
+      assertThat(template.configurationTemplates()).hasSize(1);
+      var configurationTemplate = template.configurationTemplates().getFirst();
+      assertThat(configurationTemplate.id()).isEqualTo("io.camunda:jdbc-credential:1");
+      assertThat(configurationTemplate.kind()).isEqualTo("CREDENTIAL");
+      assertThat(configurationTemplate.version()).isEqualTo(1);
+      assertThat(configurationTemplate.name()).isEqualTo("JDBC Connection");
+      assertThat(configurationTemplate.properties().stream().map(Property::getId))
+          .containsExactlyInAnyOrder("url", "username", "password");
+    }
+
+    @Test
+    void jdbc_embeddedProperties_usePropertyBindingAndNoFeel() {
+      var template = generator.generate(JdbcConnector.class).getFirst();
+      var url =
+          template.configurationTemplates().getFirst().properties().stream()
+              .filter(p -> "url".equals(p.getId()))
+              .findFirst()
+              .orElseThrow();
+
+      assertThat(url.getBinding())
+          .isEqualTo(new PropertyBinding.ConfigurationTemplateProperty("url"));
+      assertThat(url.getBinding().type()).isEqualTo("property");
+      assertThat(url.getFeel()).isNull();
+    }
+
+    // --- Test 2: nested value shape (dotted property binding names) + secret hint + kind ---
+
+    record AwsAuthentication(
+        @TemplateProperty(secret = true) String accessKey,
+        @TemplateProperty(secret = true) String secretKey) {}
+
+    @io.camunda.connector.api.annotation.Configuration(
+        id = "io.camunda:aws-credential:1",
+        version = 2,
+        name = "AWS Credential",
+        kind = "CREDENTIAL")
+    record AwsCredential(
+        @TemplateProperty(group = "authentication") AwsAuthentication authentication,
+        @TemplateProperty(group = "connection") String region) {}
+
+    record AwsRequest(
+        @TemplateProperty(
+                type = TemplateProperty.PropertyType.Configuration,
+                group = "authentication",
+                binding = @TemplateProperty.PropertyBinding(name = "configuration"))
+            AwsCredential configuration) {}
+
+    @OutboundConnector(name = "AWS", type = "test:aws")
+    @ElementTemplate(
+        id = "test-aws",
+        name = "AWS",
+        version = 1,
+        engineVersion = "^8.10",
+        inputDataClass = AwsRequest.class,
+        configurations = {AwsCredential.class})
+    static class AwsConnector implements OutboundConnectorFunction {
+      @Override
+      public Object execute(OutboundConnectorContext context) {
+        return null;
+      }
+    }
+
+    @Test
+    void aws_chooserBoundWholeObject_andTemplateEmbeddedWithKindAndVersion() {
+      var template = generator.generate(AwsConnector.class).getFirst();
+
+      var chooser = getPropertyById("configuration", template);
+      assertThat(chooser).isInstanceOf(ConfigurationProperty.class);
+      assertThat(((ConfigurationProperty) chooser).getConfigurationTemplate())
+          .isEqualTo("io.camunda:aws-credential:1");
+      assertThat(chooser.getBinding()).isEqualTo(new ZeebeInput("configuration"));
+
+      assertThat(template.configurationTemplates().stream().map(ConfigurationTemplate::id))
+          .containsExactly("io.camunda:aws-credential:1");
+      var configurationTemplate = template.configurationTemplates().getFirst();
+      assertThat(configurationTemplate.kind()).isEqualTo("CREDENTIAL");
+      assertThat(configurationTemplate.version()).isEqualTo(2);
+    }
+
+    @Test
+    void aws_nestedFields_produceDottedPropertyBindingNames() {
+      var template = generator.generate(AwsConnector.class).getFirst();
+      var props = template.configurationTemplates().getFirst().properties();
+
+      assertThat(props.stream().map(Property::getId))
+          .containsExactlyInAnyOrder(
+              "authentication.accessKey", "authentication.secretKey", "region");
+
+      var accessKey =
+          props.stream()
+              .filter(p -> "authentication.accessKey".equals(p.getId()))
+              .findFirst()
+              .orElseThrow();
+      assertThat(accessKey.getBinding())
+          .isEqualTo(new PropertyBinding.ConfigurationTemplateProperty("authentication.accessKey"));
+    }
+
+    @Test
+    void aws_secretHint_isPreservedOnlyOnMarkedFields() {
+      var template = generator.generate(AwsConnector.class).getFirst();
+      var props = template.configurationTemplates().getFirst().properties();
+
+      var accessKey =
+          props.stream()
+              .filter(p -> "authentication.accessKey".equals(p.getId()))
+              .findFirst()
+              .orElseThrow();
+      var region = props.stream().filter(p -> "region".equals(p.getId())).findFirst().orElseThrow();
+
+      assertThat(accessKey.getSecret()).isTrue();
+      assertThat(region.getSecret()).isNull();
+    }
+
+    // --- blank name rejected (generator constraint; the schema requires name to be present but
+    // does not itself enforce non-blank) ---
+
+    @io.camunda.connector.api.annotation.Configuration(
+        id = "io.camunda:blank-name:1",
+        version = 1,
+        name = "")
+    record BlankName(String field) {}
+
+    record BlankNameRequest(
+        @TemplateProperty(
+                type = TemplateProperty.PropertyType.Configuration,
+                binding = @TemplateProperty.PropertyBinding(name = "configuration"))
+            BlankName configuration) {}
+
+    @OutboundConnector(name = "BlankName", type = "test:blank-name")
+    @ElementTemplate(
+        id = "test-blank-name",
+        name = "BlankName",
+        version = 1,
+        engineVersion = "^8.10",
+        inputDataClass = BlankNameRequest.class,
+        configurations = {BlankName.class})
+    static class BlankNameConnector implements OutboundConnectorFunction {
+      @Override
+      public Object execute(OutboundConnectorContext context) {
+        return null;
+      }
+    }
+
+    @Test
+    void blankName_isRejected() {
+      assertThatThrownBy(() -> generator.generate(BlankNameConnector.class))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("must declare a non-blank name");
+    }
+
+    // --- blank kind rejected (schema requires kind to be non-blank, minLength: 1) ---
+
+    @io.camunda.connector.api.annotation.Configuration(
+        id = "io.camunda:blank-kind:1",
+        version = 1,
+        name = "Blank Kind",
+        kind = "")
+    record BlankKind(String field) {}
+
+    record BlankKindRequest(
+        @TemplateProperty(
+                type = TemplateProperty.PropertyType.Configuration,
+                binding = @TemplateProperty.PropertyBinding(name = "configuration"))
+            BlankKind configuration) {}
+
+    @OutboundConnector(name = "BlankKind", type = "test:blank-kind")
+    @ElementTemplate(
+        id = "test-blank-kind",
+        name = "BlankKind",
+        version = 1,
+        engineVersion = "^8.10",
+        inputDataClass = BlankKindRequest.class,
+        configurations = {BlankKind.class})
+    static class BlankKindConnector implements OutboundConnectorFunction {
+      @Override
+      public Object execute(OutboundConnectorContext context) {
+        return null;
+      }
+    }
+
+    @Test
+    void blankKind_isRejected() {
+      assertThatThrownBy(() -> generator.generate(BlankKindConnector.class))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("must declare a non-blank kind");
+    }
+
+    // --- engineVersion floor: Configuration (credential) templates require Camunda >= 8.10 ---
+
+    @io.camunda.connector.api.annotation.Configuration(
+        id = "io.camunda:below-floor:1",
+        version = 1,
+        name = "Below Floor Credential")
+    record BelowFloorCredential(String field) {}
+
+    record BelowFloorRequest(
+        @TemplateProperty(
+                type = TemplateProperty.PropertyType.Configuration,
+                binding = @TemplateProperty.PropertyBinding(name = "configuration"))
+            BelowFloorCredential configuration) {}
+
+    @OutboundConnector(name = "BelowFloor", type = "test:below-floor")
+    @ElementTemplate(
+        id = "test-below-floor",
+        name = "BelowFloor",
+        version = 1,
+        engineVersion = "^8.9",
+        inputDataClass = BelowFloorRequest.class,
+        configurations = {BelowFloorCredential.class})
+    static class BelowFloorConnector implements OutboundConnectorFunction {
+      @Override
+      public Object execute(OutboundConnectorContext context) {
+        return null;
+      }
+    }
+
+    @Test
+    void engineVersionBelow810_isRejectedWhenConfigurationsUsed() {
+      assertThatThrownBy(() -> generator.generate(BelowFloorConnector.class))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("requires engineVersion >= 8.10")
+          .hasMessageContaining("^8.9");
+    }
+
+    @io.camunda.connector.api.annotation.Configuration(
+        id = "io.camunda:no-floor:1",
+        version = 1,
+        name = "No Floor Credential")
+    record NoFloorCredential(String field) {}
+
+    record NoFloorRequest(
+        @TemplateProperty(
+                type = TemplateProperty.PropertyType.Configuration,
+                binding = @TemplateProperty.PropertyBinding(name = "configuration"))
+            NoFloorCredential configuration) {}
+
+    @OutboundConnector(name = "NoFloor", type = "test:no-floor")
+    @ElementTemplate(
+        id = "test-no-floor",
+        name = "NoFloor",
+        version = 1,
+        // no engineVersion declared at all
+        inputDataClass = NoFloorRequest.class,
+        configurations = {NoFloorCredential.class})
+    static class NoFloorConnector implements OutboundConnectorFunction {
+      @Override
+      public Object execute(OutboundConnectorContext context) {
+        return null;
+      }
+    }
+
+    @Test
+    void blankEngineVersion_isRejectedWhenConfigurationsUsed() {
+      assertThatThrownBy(() -> generator.generate(NoFloorConnector.class))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("requires engineVersion >= 8.10")
+          .hasMessageContaining("declared was none");
+    }
+
+    @io.camunda.connector.api.annotation.Configuration(
+        id = "io.camunda:at-floor:1",
+        version = 1,
+        name = "At Floor Credential")
+    record AtFloorCredential(String field) {}
+
+    record AtFloorRequest(
+        @TemplateProperty(
+                type = TemplateProperty.PropertyType.Configuration,
+                binding = @TemplateProperty.PropertyBinding(name = "configuration"))
+            AtFloorCredential configuration) {}
+
+    @OutboundConnector(name = "AtFloor", type = "test:at-floor")
+    @ElementTemplate(
+        id = "test-at-floor",
+        name = "AtFloor",
+        version = 1,
+        engineVersion = "^8.10",
+        inputDataClass = AtFloorRequest.class,
+        configurations = {AtFloorCredential.class})
+    static class AtFloorConnector implements OutboundConnectorFunction {
+      @Override
+      public Object execute(OutboundConnectorContext context) {
+        return null;
+      }
+    }
+
+    @Test
+    void engineVersionAtOrAbove810_isAccepted() {
+      var template = generator.generate(AtFloorConnector.class).getFirst();
+      assertThat(template.engines()).isNotNull();
+    }
+
+    // --- underspecified engineVersion forms that SEM_VER_PATTERN accepts but that don't
+    // guarantee the 8.10 floor is met: wildcard and bare-major must be rejected too ---
+
+    @io.camunda.connector.api.annotation.Configuration(
+        id = "io.camunda:wildcard:1",
+        version = 1,
+        name = "Wildcard Credential")
+    record WildcardCredential(String field) {}
+
+    record WildcardRequest(
+        @TemplateProperty(
+                type = TemplateProperty.PropertyType.Configuration,
+                binding = @TemplateProperty.PropertyBinding(name = "configuration"))
+            WildcardCredential configuration) {}
+
+    @OutboundConnector(name = "Wildcard", type = "test:wildcard")
+    @ElementTemplate(
+        id = "test-wildcard",
+        name = "Wildcard",
+        version = 1,
+        engineVersion = "*",
+        inputDataClass = WildcardRequest.class,
+        configurations = {WildcardCredential.class})
+    static class WildcardConnector implements OutboundConnectorFunction {
+      @Override
+      public Object execute(OutboundConnectorContext context) {
+        return null;
+      }
+    }
+
+    @Test
+    void wildcardEngineVersion_isRejectedWhenConfigurationsUsed() {
+      assertThatThrownBy(() -> generator.generate(WildcardConnector.class))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("requires engineVersion >= 8.10")
+          .hasMessageContaining("\"*\"");
+    }
+
+    @io.camunda.connector.api.annotation.Configuration(
+        id = "io.camunda:bare-major-at-floor:1",
+        version = 1,
+        name = "Bare Major At Floor Credential")
+    record BareMajorAtFloorCredential(String field) {}
+
+    record BareMajorAtFloorRequest(
+        @TemplateProperty(
+                type = TemplateProperty.PropertyType.Configuration,
+                binding = @TemplateProperty.PropertyBinding(name = "configuration"))
+            BareMajorAtFloorCredential configuration) {}
+
+    // engineVersion = "8" means "^8", i.e. any 8.x - it does NOT guarantee minor >= 10, so it
+    // must be rejected exactly like an explicit "^8.9" would be.
+    @OutboundConnector(name = "BareMajorAtFloor", type = "test:bare-major-at-floor")
+    @ElementTemplate(
+        id = "test-bare-major-at-floor",
+        name = "BareMajorAtFloor",
+        version = 1,
+        engineVersion = "8",
+        inputDataClass = BareMajorAtFloorRequest.class,
+        configurations = {BareMajorAtFloorCredential.class})
+    static class BareMajorAtFloorConnector implements OutboundConnectorFunction {
+      @Override
+      public Object execute(OutboundConnectorContext context) {
+        return null;
+      }
+    }
+
+    @Test
+    void bareMajorAtFloor_isRejectedWhenConfigurationsUsed() {
+      assertThatThrownBy(() -> generator.generate(BareMajorAtFloorConnector.class))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("requires engineVersion >= 8.10");
+    }
+
+    @io.camunda.connector.api.annotation.Configuration(
+        id = "io.camunda:bare-major-below-floor:1",
+        version = 1,
+        name = "Bare Major Below Floor Credential")
+    record BareMajorBelowFloorCredential(String field) {}
+
+    record BareMajorBelowFloorRequest(
+        @TemplateProperty(
+                type = TemplateProperty.PropertyType.Configuration,
+                binding = @TemplateProperty.PropertyBinding(name = "configuration"))
+            BareMajorBelowFloorCredential configuration) {}
+
+    @OutboundConnector(name = "BareMajorBelowFloor", type = "test:bare-major-below-floor")
+    @ElementTemplate(
+        id = "test-bare-major-below-floor",
+        name = "BareMajorBelowFloor",
+        version = 1,
+        engineVersion = "7",
+        inputDataClass = BareMajorBelowFloorRequest.class,
+        configurations = {BareMajorBelowFloorCredential.class})
+    static class BareMajorBelowFloorConnector implements OutboundConnectorFunction {
+      @Override
+      public Object execute(OutboundConnectorContext context) {
+        return null;
+      }
+    }
+
+    @Test
+    void bareMajorBelowFloor_isRejectedWhenConfigurationsUsed() {
+      assertThatThrownBy(() -> generator.generate(BareMajorBelowFloorConnector.class))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("requires engineVersion >= 8.10");
+    }
+
+    @io.camunda.connector.api.annotation.Configuration(
+        id = "io.camunda:bare-major-above-floor:1",
+        version = 1,
+        name = "Bare Major Above Floor Credential")
+    record BareMajorAboveFloorCredential(String field) {}
+
+    record BareMajorAboveFloorRequest(
+        @TemplateProperty(
+                type = TemplateProperty.PropertyType.Configuration,
+                binding = @TemplateProperty.PropertyBinding(name = "configuration"))
+            BareMajorAboveFloorCredential configuration) {}
+
+    // engineVersion = "9" means "^9", i.e. any 9.x - strictly above the 8.10 floor, so it must
+    // be accepted even though it's a bare major with no minor component.
+    @OutboundConnector(name = "BareMajorAboveFloor", type = "test:bare-major-above-floor")
+    @ElementTemplate(
+        id = "test-bare-major-above-floor",
+        name = "BareMajorAboveFloor",
+        version = 1,
+        engineVersion = "9",
+        inputDataClass = BareMajorAboveFloorRequest.class,
+        configurations = {BareMajorAboveFloorCredential.class})
+    static class BareMajorAboveFloorConnector implements OutboundConnectorFunction {
+      @Override
+      public Object execute(OutboundConnectorContext context) {
+        return null;
+      }
+    }
+
+    @Test
+    void bareMajorAboveFloor_isAccepted() {
+      var template = generator.generate(BareMajorAboveFloorConnector.class).getFirst();
+      assertThat(template.engines()).isNotNull();
+    }
+  }
+}

@@ -1,0 +1,63 @@
+[
+  {
+    "descriptionOfTest": "String value",
+    "method": "get",
+    "url": "https://camunda.io/http-endpoint",
+    "connectionTimeoutInSeconds": "bad value",
+    "readTimeoutInSeconds": "bad value",
+    "authentication": {
+      "type": "noAuth"
+    }
+  },
+  {
+    "descriptionOfTest": "Float value",
+    "method": "get",
+    "url": "https://camunda.io/http-endpoint",
+    "connectionTimeoutInSeconds": "0.1",
+    "readTimeoutInSeconds": "0.2",
+    "authentication": {
+      "type": "noAuth"
+    }
+  },
+  {
+    "descriptionOfTest": "Binary value",
+    "method": "get",
+    "url": "https://camunda.io/http-endpoint",
+    "connectionTimeoutInSeconds": "0xFF",
+    "readTimeoutInSeconds": "0xFF",
+    "authentication": {
+      "type": "noAuth"
+    }
+  },
+  {
+    "descriptionOfTest": "Binary value",
+    "method": "get",
+    "url": "https://camunda.io/http-endpoint",
+    "connectionTimeoutInSeconds": "0b0011",
+    "readTimeoutInSeconds": "0b0011",
+    "authentication": {
+      "type": "bearer",
+      "token": "{{secrets.TOKEN_KEY}}"
+    }
+  },
+  {
+    "descriptionOfTest": "Value with 'secrets' token in the middle",
+    "method": "get",
+    "url": "https://camunda.io/http-endpoint",
+    "connectionTimeoutInSeconds": "bad secrets.TOKEN_KEY value",
+    "readTimeoutInSeconds": "bad secrets.TOKEN_KEY value",
+    "authentication": {
+      "type": "noAuth"
+    }
+  },
+  {
+    "descriptionOfTest": "Value with a numeric token in the middle",
+    "method": "get",
+    "url": "https://camunda.io/http-endpoint",
+    "connectionTimeoutInSeconds": "bad 123 value",
+    "readTimeoutInSeconds": "bad 123 value",
+    "authentication": {
+      "type": "noAuth"
+    }
+  }
+]

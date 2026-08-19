@@ -1,0 +1,178 @@
+/*
+ * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+ * under one or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information regarding copyright
+ * ownership. Camunda licenses this file to you under the Apache License,
+ * Version 2.0; you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.camunda.connector.http.client.authentication;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.camunda.connector.api.error.ConnectorException;
+import io.camunda.connector.http.client.HttpClientObjectMapperSupplier;
+import io.camunda.connector.http.client.mapper.ResponseMappers;
+import io.camunda.connector.http.client.mapper.StreamingHttpResponse;
+import io.camunda.connector.http.client.model.HttpClientRequest;
+import io.camunda.connector.http.client.model.HttpMethod;
+import io.camunda.connector.http.client.model.auth.OAuthAuthentication;
+import io.camunda.connector.http.client.model.auth.OAuthRefreshTokenAuthentication;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.HttpHeaders;
+
+public class OAuthService {
+
+  private static final ObjectMapper OBJECT_MAPPER = HttpClientObjectMapperSupplier.getCopy();
+
+  /**
+   * Converts a {@link HttpClientRequest} to a request that can be used to fetch an OAuth token.
+   * This method will create a new request with the OAuth token endpoint as the URL, the
+   * authentication data as the body, and the client ID and client secret as the basic
+   * authentication header (if the client authentication is set to {@link
+   * OAuthConstants#BASIC_AUTH_HEADER}), or as client credentials in the request body (if the client
+   * authentication is set to {@link OAuthConstants#CREDENTIALS_BODY}).
+   *
+   * @param authentication the OAuth authentication data
+   * @return a new request that can be used to fetch an OAuth token
+   * @see OAuthAuthentication
+   */
+  public HttpClientRequest createOAuthRequestFrom(OAuthAuthentication authentication) {
+    HttpClientRequest oauthRequest = new HttpClientRequest();
+    Map<String, String> headers = new HashMap<>();
+
+    headers.put(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_FORM_URLENCODED.getMimeType());
+
+    oauthRequest.setMethod(HttpMethod.POST);
+    oauthRequest.setUrl(authentication.oauthTokenEndpoint());
+    Map<String, String> body = authentication.getDataForAuthRequestBody();
+
+    // Depending on the client authentication, add the client ID and client secret to the request
+    // either as basic authentication header or as client credentials in the request body
+    addCredentials(body, headers, authentication);
+
+    oauthRequest.setBody(body);
+    oauthRequest.setHeaders(headers);
+
+    return oauthRequest;
+  }
+
+  public TokenResponse extractTokenFromResponse(StreamingHttpResponse body) {
+    var jsonNode = ResponseMappers.asJsonNode(() -> OBJECT_MAPPER).apply(body);
+    return Optional.ofNullable(jsonNode)
+        .filter(JsonNode::isObject)
+        .map(node -> node.findValue(OAuthConstants.ACCESS_TOKEN))
+        .map(JsonNode::asText)
+        .map(accessToken -> toTokenResponse(accessToken, jsonNode))
+        .orElseThrow(
+            () ->
+                new ConnectorException(
+                    "OAUTH_TOKEN_ERROR",
+                    "OAuth token response does not contain an access_token field"));
+  }
+
+  /**
+   * Creates an OAuth token request for the refresh-token grant flow.
+   *
+   * @param authentication the refresh-token authentication configuration
+   * @return a request targeting the token endpoint with the refresh-token body
+   */
+  public HttpClientRequest createOAuthRefreshTokenRequestFrom(
+      OAuthRefreshTokenAuthentication authentication) {
+    HttpClientRequest oauthRequest = new HttpClientRequest();
+    Map<String, String> headers = new HashMap<>();
+    headers.put(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_FORM_URLENCODED.getMimeType());
+
+    oauthRequest.setMethod(HttpMethod.POST);
+    oauthRequest.setUrl(authentication.oauthTokenEndpoint());
+    oauthRequest.setBody(authentication.getDataForAuthRequestBody());
+    oauthRequest.setHeaders(headers);
+    return oauthRequest;
+  }
+
+  /**
+   * Extracts an access token from a refresh-token grant response, with actionable error messages
+   * for common failure modes ({@code invalid_grant}, {@code interaction_required}).
+   *
+   * @param body the raw token endpoint response
+   * @return token response containing the access token (and expires_in if present)
+   * @throws ConnectorException if the response contains an OAuth error or no access_token
+   */
+  public TokenResponse extractTokenFromRefreshTokenResponse(StreamingHttpResponse body) {
+    var jsonNode = ResponseMappers.asJsonNode(() -> OBJECT_MAPPER).apply(body);
+    if (jsonNode != null && jsonNode.isObject()) {
+      var errorNode = jsonNode.findValue(OAuthConstants.ERROR);
+      if (errorNode != null) {
+        String error = errorNode.asText();
+        String description =
+            Optional.ofNullable(jsonNode.findValue(OAuthConstants.ERROR_DESCRIPTION))
+                .map(JsonNode::asText)
+                .orElse("no description provided");
+        if (OAuthConstants.INVALID_GRANT.equals(error)) {
+          throw new ConnectorException(
+              "OAUTH_REFRESH_TOKEN_EXPIRED",
+              "Refresh token is invalid or expired; re-authorization is required. Details: "
+                  + description);
+        }
+        if (OAuthConstants.INTERACTION_REQUIRED.equals(error)) {
+          throw new ConnectorException(
+              "OAUTH_INTERACTION_REQUIRED",
+              "The identity provider requires user interaction before a token can be issued; "
+                  + "re-authorization is required. Details: "
+                  + description);
+        }
+        throw new ConnectorException(
+            "OAUTH_TOKEN_ERROR", "OAuth token exchange failed: " + error + ". " + description);
+      }
+    }
+    return Optional.ofNullable(jsonNode)
+        .filter(JsonNode::isObject)
+        .map(node -> node.findValue(OAuthConstants.ACCESS_TOKEN))
+        .map(JsonNode::asText)
+        .map(accessToken -> toTokenResponse(accessToken, jsonNode))
+        .orElseThrow(
+            () ->
+                new ConnectorException(
+                    "OAUTH_TOKEN_ERROR",
+                    "OAuth token response does not contain an access_token field"));
+  }
+
+  private TokenResponse toTokenResponse(String accessToken, JsonNode jsonNode) {
+    return Optional.of(jsonNode)
+        .map(node -> node.findValue(OAuthConstants.EXPIRES_IN))
+        .filter(JsonNode::isNumber)
+        .map(node -> new TokenResponse(accessToken, node.asLong()))
+        .orElseGet(() -> new TokenResponse(accessToken));
+  }
+
+  private void addCredentials(
+      Map<String, String> body, Map<String, String> headers, OAuthAuthentication authentication) {
+    switch (authentication.clientAuthentication()) {
+      case OAuthConstants.BASIC_AUTH_HEADER ->
+          headers.put(
+              HttpHeaders.AUTHORIZATION,
+              Base64Helper.buildBasicAuthenticationHeader(
+                  authentication.clientId(), authentication.clientSecret()));
+      case OAuthConstants.CREDENTIALS_BODY -> {
+        body.put(OAuthConstants.CLIENT_ID, authentication.clientId());
+        body.put(OAuthConstants.CLIENT_SECRET, authentication.clientSecret());
+      }
+      default ->
+          throw new IllegalArgumentException(
+              "Unsupported client authentication method: "
+                  + authentication.clientAuthentication()
+                  + ". Please use either 'basicAuthHeader' or 'credentialsBody'.");
+    }
+  }
+}
