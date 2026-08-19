@@ -1,0 +1,43 @@
+/*
+ * Copyright © 2025 anyilanxin zxh(anyilanxin@aliyun.com)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+plugins {
+    id 'kunpeng.build-publish'
+}
+
+description = "Script Engine "
+
+configure(jarInfo) {
+    archiveName = "kunpeng-script-engine"
+}
+
+
+dependencies {
+    implementation project(':kunpeng:utils')
+    implementation 'org.springframework:spring-beans'
+    implementation 'org.apache.commons:commons-lang3'
+    implementation 'tools.jackson.core:jackson-databind'
+    implementation 'tools.jackson.core:jackson-core'
+    implementation 'org.agrona:agrona'
+    implementation "com.google.guava:guava"
+    // js
+    implementation "org.graalvm.js:js-scriptengine"
+    implementation "org.graalvm.js:js"
+    // python
+    implementation "org.python:jython-standalone"
+    // qlexpress4
+    implementation 'com.alibaba:qlexpress4'
+}
