@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration status="WARN">
+  <Properties>
+    <property name="FILE_PATH" value="${sys:logging.file.path:-logs}"/>
+    <property name="FILE_NAME" value="${sys:logging.file.name:-kunpeng}"/>
+    <property name="LOG_PATTERN"
+              value="%date{yyyy-MM-dd HH:mm:ss} %-5level [%thread] %logger{500} - %msg%n"/>
+  </Properties>
+
+  <appenders>
+
+    <console name="Console" target="SYSTEM_OUT">
+      <PatternLayout pattern="${LOG_PATTERN}"/>
+    </console>
+
+    <RollingFile name="RollingFile" fileName="${FILE_PATH}/${FILE_NAME}-all.log"
+                 filePattern="${FILE_PATH}/${FILE_NAME}-all-%d{yyyy-MM-dd}_%i.log.gz">
+      <PatternLayout pattern="${LOG_PATTERN}"/>
+      <Policies>
+        <SizeBasedTriggeringPolicy size="30MB"/>
+      </Policies>
+      <DefaultRolloverStrategy max="15">
+        <Delete basePath="${FILE_PATH}" maxDepth="1">
+          <IfFileName glob="${FILE_NAME}-all-*.log.gz"/>
+          <IfLastModified age="60d"/>
+        </Delete>
+      </DefaultRolloverStrategy>
+    </RollingFile>
+
+    <RollingFile name="RollingFileError" fileName="${FILE_PATH}/${FILE_NAME}-error.log"
+                 filePattern="${FILE_PATH}/${FILE_NAME}-error-%d{yyyy-MM-dd}_%i.log.gz">
+      <ThresholdFilter level="error" onMatch="ACCEPT" onMismatch="DENY"/>
+      <PatternLayout pattern="${LOG_PATTERN}"/>
+      <Policies>
+        <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+        <SizeBasedTriggeringPolicy size="30MB"/>
+      </Policies>
+      <DefaultRolloverStrategy max="15">
+        <Delete basePath="${FILE_PATH}" maxDepth="1">
+          <IfFileName glob="${FILE_NAME}-error-*.log.gz"/>
+          <IfLastModified age="60d"/>
+        </Delete>
+      </DefaultRolloverStrategy>
+    </RollingFile>
+
+  </appenders>
+  <loggers>
+    <logger name="org.springframework" level="info"/>
+    <logger name="reactor.netty.http.server" level="info"/>
+    <logger name="reactor.netty" level="info"/>
+
+    <root level="debug">
+      <appender-ref ref="Console"/>
+      <appender-ref ref="RollingFile"/>
+      <appender-ref ref="RollingFileError"/>
+      <appender-ref ref="RollingFileTestInfo"/>
+    </root>
+  </loggers>
+
+</configuration>

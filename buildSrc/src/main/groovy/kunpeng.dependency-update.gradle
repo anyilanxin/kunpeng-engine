@@ -1,0 +1,241 @@
+/*
+ * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+import groovy.json.JsonSlurper
+
+// 模块级插件：应用到哪个 build.gradle，就只处理哪个模块的依赖更新
+// 版本变量可能定义在 build.gradle 里 (def var = "x.y.z") 或者 gradle.properties 里 (var=x.y.z)
+plugins {
+    id 'io.github.ben-manes.versions'
+}
+
+ext.NON_STABLE_KEYWORDS = ['alpha', 'beta', 'milestone', 'm1', 'm2', 'cr', 'dev', 'pr', 'snapshot', 'ea', 'preview']
+
+// 通过关键字判断是否为非稳定版本（关键字在版本号任意位置出现即视为非稳定）
+// 注意：rc 不在列表里，视为稳定版本可更新；如需把 rc 也当非稳定，加入 NON_STABLE_KEYWORDS 即可
+ext.isNonStableVersion = { String version ->
+    def lower = version.toLowerCase()
+    return NON_STABLE_KEYWORDS.any { lower.contains(it) }
+}
+
+// 通过 -PincludeNonStable=true 临时放开非稳定版本过滤
+ext.allowNonStable = project.hasProperty('includeNonStable') && project.property('includeNonStable') == 'true'
+
+// 配置当前项目的 dependencyUpdates
+def reportDir = layout.buildDirectory.dir('dependency-updates').get().asFile
+def reportFile = new File(reportDir, 'report.json')
+
+dependencyUpdates {
+    checkConstraints = true
+    checkBuildEnvironmentConstraints = false
+    outputFormatter = 'json,html'
+    outputDir = reportDir.path
+    reportfileName = 'report'
+    revision = allowNonStable ? 'current' : 'release'
+    gradleReleaseChannel = 'current'
+}
+
+
+// 把字符串里的正则特殊字符转义
+ext.escapeRegex = { String s ->
+    return s.replaceAll(/([.\\\*\+\?\(\)\[\]\{\}\^\$\|])/, '\\\\$1')
+}
+
+
+/**
+ * 处理单个 build.gradle 文件，根据 outdated 列表更新版本声明
+ *
+ * 版本声明的几种形式：
+ *   1. inline:       api 'g:a:1.2.3'
+ *   2. def 变量:      def v = "1.2.3"  + api "g:a:$v"
+ *   3. properties:   gradle.properties 里 v=1.2.3 + build.gradle 里 api "g:a:$v"
+ *   4. plugin id:    id 'plugin.id' version '1.2.3'
+ *
+ * @param buildGradleFile 当前模块的 build.gradle
+ * @param gradlePropsFile root 的 gradle.properties（用于解析 $var 引用）
+ * @param deps ben-manes 报告中的过期依赖列表
+ * @return 更新描述列表
+ */
+ext.updateBuildFile = { File buildGradleFile, File gradlePropsFile, List<Map> deps ->
+    if (!buildGradleFile.file) {
+        return []
+    }
+    def content = buildGradleFile.text
+    def original = content
+    def updates = []
+
+    // 待应用到 gradle.properties 的更新（varName -> [old, new, dep]）
+    def pendingPropUpdates = new LinkedHashMap<String, Map>()
+
+    deps.each { dep ->
+        def group = dep.group as String
+        def name = dep.name as String
+        def current = dep.version as String
+        def available = (dep.available?.release ?: dep.available?.milestone) as String
+        if (!available || available == current) {
+            return
+        }
+        // 兜底过滤：ben-manes 在 0.56.0 里 revision='release' 不能 100% 过滤掉 beta/alpha/M1
+        if (!allowNonStable && isNonStableVersion(available)) {
+            return
+        }
+
+        // 模式 1: 'group:name:version' / "group:name:version"
+        def inlineRe = /(['"])(${escapeRegex(group)}:${escapeRegex(name)}:)([^\s'"]+)\1/
+        def m1 = content =~ inlineRe
+        if (m1) {
+            content = content.replaceAll(inlineRe) { all, q, prefix, ver ->
+                if (ver.contains('$') || ver == available) {
+                    return all
+                }
+                updates << "${group}:${name} ${ver} -> ${available}"
+                return "${q}${prefix}${available}${q}"
+            }
+        }
+
+        // 模式 2: 'group:name:$var' 反向追溯变量定义
+        def varUseRe = /(['"])${escapeRegex(group)}:${escapeRegex(name)}:\$\{?(\w+)\}?\1/
+        def m2 = content =~ varUseRe
+        if (m2) {
+            def varName = m2[0][2] as String
+
+            // 先在 build.gradle 里找 def varName = "x.y.z"
+            def defRe = /(def\s+${varName}\s*=\s*['"])([^\s'"]+)(['"])/
+            def m3 = content =~ defRe
+            if (m3 && m3[0][2] != available) {
+                content = content.replaceAll(defRe) { all, prefix, ver, q ->
+                    updates << "${group}:${name} (\$${varName}=${ver}) -> ${available}"
+                    return "${prefix}${available}${q}"
+                }
+            } else if (gradlePropsFile?.file && !pendingPropUpdates.containsKey(varName)) {
+                // build.gradle 里没 def，去 gradle.properties 找
+                def propContent = gradlePropsFile.text
+                def propRe = ~/(?m)^\s*${varName}\s*=\s*([^\s]+)\s*$/
+                def m4 = propContent =~ propRe
+                if (m4) {
+                    def oldVer = m4[0][1] as String
+                    if (oldVer != available) {
+                        pendingPropUpdates[varName] = [old: oldVer, newVer: available, dep: "${group}:${name}"]
+                    }
+                }
+            }
+        }
+
+        // 模式 3: plugin id 'group' version 'x.y.z'
+        def pluginRe = /(id\s+['"]${escapeRegex(group)}['"]\s+version\s+['"])([^\s'"]+)(['"])/
+        def m5 = content =~ pluginRe
+        if (m5) {
+            content = content.replaceAll(pluginRe) { all, prefix, ver, q ->
+                if (ver.contains('$') || ver == available) {
+                    return all
+                }
+                updates << "plugin ${group} ${ver} -> ${available}"
+                return "${prefix}${available}${q}"
+            }
+        }
+    }
+
+    // 应用 build.gradle 修改
+    if (content != original) {
+        buildGradleFile.text = content
+    }
+
+    // 应用 gradle.properties 修改
+    if (pendingPropUpdates && gradlePropsFile?.file) {
+        def propContent = gradlePropsFile.text
+        def propOriginal = propContent
+        pendingPropUpdates.each { varName, info ->
+            def oldEscaped = escapeRegex(info.old as String)
+            def propRe = ~/(?m)^(\s*${varName}\s*=\s*)${oldEscaped}\s*$/
+            propContent = propContent.replaceFirst(propRe.pattern()) { all, prefix ->
+                updates << "${info.dep} (\${${varName}}=${info.old}) -> ${info.newVer} (${gradlePropsFile.name})"
+                return "${prefix}${info.newVer}"
+            }
+        }
+        if (propContent != propOriginal) {
+            gradlePropsFile.text = propContent
+        }
+    }
+
+    return updates
+}
+
+
+tasks.register('autoUpdateDependencies') {
+    group = 'help'
+    description = "检测并自动把当前模块(${project.path})的过期依赖更新到最新稳定版本(会修改 build.gradle 与 gradle.properties)"
+    dependsOn tasks.named('dependencyUpdates')
+    doFirst {
+        tasks.withType(Test).configureEach { testTask ->
+            testTask.enabled = false
+        }
+        tasks.named('check').configure { checkTask ->
+            checkTask.enabled = false
+        }
+    }
+    doLast {
+        if (!reportFile.file) {
+            logger.error("[dependency-update] ${project.path} 找不到依赖更新报告: ${reportFile}")
+            return
+        }
+
+        def reportMap = new JsonSlurper().parse(reportFile) as Map
+        def outdated = (reportMap.outdated?.dependencies ?: []) as List<Map>
+
+        if (outdated.isEmpty()) {
+            logger.lifecycle("[dependency-update] ${project.path} 所有依赖都是最新版本 ✓")
+            return
+        }
+
+        logger.lifecycle("[dependency-update] ${project.path} 发现 ${outdated.size()} 个过期依赖，开始扫描并更新...")
+
+        // 扫描当前模块的 build.gradle + root 的 gradle.properties（用于 $var 反查）
+        def buildGradleFile = project.file('build.gradle')
+        def gradlePropsFile = rootProject.file('gradle.properties')
+
+        def allUpdates = updateBuildFile(buildGradleFile, gradlePropsFile, outdated)
+
+        def skipped = outdated.collect { dep ->
+            def group = dep.group as String
+            def name = dep.name as String
+            def ga = "${group}:${name}"
+            def cur = dep.version
+            def av = dep.available?.release ?: dep.available?.milestone
+            if (!av) {
+                return "${ga} ${cur} (无可用的稳定版本)"
+            }
+            if (!allowNonStable && isNonStableVersion(av)) {
+                return "${ga} ${cur} -> ${av} (非稳定版本，已跳过；可加 -PincludeNonStable=true 强制)"
+            }
+            def seen = allUpdates.any {
+                it.contains("${ga} ") || it.contains("${ga}(") || it.contains("plugin ${group} ")
+            }
+            return seen ? null : "${ga} ${cur} -> ${av} (未匹配到可修改的声明)"
+        }.findAll { it }
+
+        if (allUpdates) {
+            logger.lifecycle("[dependency-update] ${project.path} 已更新:")
+            allUpdates.unique().sort().each { logger.lifecycle("  ✓ ${it}") }
+        }
+        if (skipped) {
+            logger.lifecycle("[dependency-update] ${project.path} 未自动更新(请手动处理):")
+            skipped.unique().sort().each { logger.lifecycle("  - ${it}") }
+        }
+
+        logger.lifecycle("[dependency-update] ${project.path} 完成: 更新 ${allUpdates.size()} 处，跳过 ${skipped.size()} 处")
+    }
+}

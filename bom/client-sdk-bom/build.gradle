@@ -1,0 +1,88 @@
+/*
+ * Copyright © 2024 anyilanxin zxh(anyilanxin@aliyun.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+plugins {
+    id 'java-platform'
+    id 'maven-publish'
+}
+
+description = "AnYi Kunpeng Sdk Bom"
+
+
+javaPlatform {
+    allowDependencies()
+}
+
+
+dependencies {
+    api platform(project(':bom:dependency-bom'))
+    constraints {
+        def allProjects = []
+        rootProject.allprojects.each {
+            if (it.parent != null) {
+                allProjects.add(":${it.parent.name}:${it.name}")
+            }
+        }
+
+        // 基础核心模块
+        if (file("${rootDir}/clients").directory) {
+            file("${rootDir}/clients").eachDir {
+                if (allProjects.contains(":clients:${it.name}")) {
+                    api project(":clients:${it.name}")
+                }
+
+            }
+        }
+    }
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId project.group
+            version project.version
+            artifactId "kunpeng-${project.name}"
+            from components.javaPlatform
+            pom {
+                name = "kunpeng-${project.name}"
+                url = 'https://github.com/anyilanxin/kunpeng-engine.git'
+                description = project.description
+                developers {
+                    developer {
+                        id = 'zxh'
+                        name = 'zxh'
+                        email = 'zxuanhong@aliyun.com'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:git://github.com/anyilanxin/kunpeng-engine.git'
+                    developerConnection = 'scm:git:ssh://github.com/anyilanxin/kunpeng-engine.git'
+                    url = 'https://anyilanxin.com'
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            allowInsecureProtocol = true
+            credentials {
+                username = rootProject.ext.repo['username']
+                password = rootProject.ext.repo['password']
+            }
+            url = version.endsWith('SNAPSHOT') ? rootProject.ext.repo['snapshotsRepoUrl'] : rootProject.ext.repo['releasesRepoUrl']
+        }
+    }
+}
+

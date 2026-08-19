@@ -1,0 +1,15 @@
+${AnsiColor.MAGENTA}
+
+        __ ____  ___   ______  _______   ________   ____  ____  ____  __ __ __________
+       / //_/ / / / | / / __ \/ ____/ | / / ____/  / __ )/ __ \/ __ \/ //_// ____/ __ \
+      / ,< / / / /  |/ / /_/ / __/ /  |/ / / __   / __  / /_/ / / / / ,<  / __/ / /_/ /
+     / /| / /_/ / /|  / ____/ /___/ /|  / /_/ /  / /_/ / _, _/ /_/ / /| |/ /___/ _, _/
+    /_/ |_\____/_/ |_/_/   /_____/_/ |_/\____/  /_____/_/ |_|\____/_/ |_/_____/_/ |_|
+
+      安一兰心(AN YI LAN XIN)
+
+    :: Spring Boot Version ::    ${spring-boot.formatted-version}
+    :: AnYi        Kunpeng ::     ${spring.application.name}(${spring.application.version})
+    :: Official    Website ::     https://anyilanxin.com
+
+${AnsiColor.DEFAULT}

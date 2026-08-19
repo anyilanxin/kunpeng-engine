@@ -1,0 +1,66 @@
+
+/*
+ * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+import org.apache.tools.ant.filters.ReplaceTokens
+
+plugins {
+    id 'kunpeng.sbe-generator'
+}
+
+
+// sbe生成配置---start
+def javaCode = "build/generated/sources/sbe/main/java"
+def commonTypePath = rootDir.path + "/kunpeng/protocol/protocol/src/main/resources/sbe/common-types.xml"
+def copySbeFiles = {
+    copy {
+        from file("src/main/resources/sbe/schemas")
+        filter(ReplaceTokens, tokens: ['project.version': version, 'protocol.version': "6", 'common.types.path': commonTypePath])
+        into file("build")
+    }
+}
+sbeGenerator {
+    copySbeFiles()
+    src {
+        dir = 'build'
+    }
+    javaCodecsDir = javaCode
+    javaOptions = ['sbe.java.generate.interfaces'  : 'true',
+                   'sbe.decode.unknown.enum.values': 'true',
+                   'sbe.validation.stop.on.error'  : 'true',
+                   'sbe.xinclude.aware'            : 'true'
+    ]
+
+}
+sourceSets {
+    main {
+        java {
+            srcDir javaCode
+        }
+    }
+}
+compileJava.dependsOn("sbeGenerateJavaCodecs")
+
+gradle.taskGraph.whenReady {
+    tasks.each { task ->
+        if (task.name != "sbeGenerateJavaCodecs" && task.name.startsWith("sbe")) {
+            task.group = null
+        }
+    }
+}
+
+// sbe生成配置---end

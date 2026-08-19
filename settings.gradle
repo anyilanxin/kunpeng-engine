@@ -1,0 +1,112 @@
+/*
+ * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+pluginManagement {
+	repositories {
+		gradlePluginPortal()
+	}
+}
+
+
+// 项目信息
+rootProject.name = 'kunpeng-engine'
+
+
+// 基础核心模块
+def excludes = [
+
+]
+
+
+// 一、核心引擎部分
+if (file("${rootDir}/kunpeng").directory) {
+	file("${rootDir}/kunpeng").eachDir {
+		if (it.directory) {
+			if (file("${it.path}/build.gradle").file) {
+				if (!excludes.contains(it.name)) {
+					include "kunpeng:${it.name}"
+				}
+			}
+		}
+	}
+}
+
+
+// 二、 客户端
+if (file("${rootDir}/clients").directory) {
+	file("${rootDir}/clients").eachDir {
+		if (it.directory) {
+			if (file("${it.path}/build.gradle").file) {
+				if (!excludes.contains(it.name)) {
+					include "clients:${it.name}"
+				}
+			}
+		}
+	}
+}
+
+
+// 三、 导出器
+if (file("${rootDir}/exporters").directory) {
+	file("${rootDir}/exporters").eachDir {
+		if (it.directory) {
+			if (file("${it.path}/build.gradle").file) {
+				if (!excludes.contains(it.name)) {
+					include "exporters:${it.name}"
+				}
+			}
+		}
+	}
+}
+
+
+// 三、 备份器
+if (file("${rootDir}/backup-stores").directory) {
+	file("${rootDir}/backup-stores").eachDir {
+		if (it.directory) {
+			if (file("${it.path}/build.gradle").file) {
+				if (!excludes.contains(it.name)) {
+					include "backup-stores:${it.name}"
+				}
+			}
+		}
+	}
+}
+
+
+// 五、bom
+if (file("${rootDir}/bom").directory) {
+	file("${rootDir}/bom").eachDir {
+		if (it.directory) {
+			if (file("${it.path}/build.gradle").file) {
+				if (!excludes.contains(it.name)) {
+					include "bom:${it.name}"
+				}
+			}
+		}
+	}
+}
+
+
+file("${rootDir}").eachDir {
+	if (it.directory) {
+		if (file("${it.path}/build.gradle").file) {
+			if (!excludes.contains(it.name) && it.name != 'buildSrc') {
+				include "${it.name}"
+			}
+		}
+	}
+}

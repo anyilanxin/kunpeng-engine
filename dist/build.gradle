@@ -1,0 +1,102 @@
+/*
+ * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+import org.apache.tools.ant.filters.ReplaceTokens
+
+plugins {
+    id 'application'
+    id 'org.springframework.boot'
+    id "com.google.cloud.tools.jib"
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot'
+    implementation 'org.springframework.boot:spring-boot-autoconfigure'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-health'
+    implementation 'org.springframework.boot:spring-boot-actuator'
+    implementation 'org.springframework.boot:spring-boot-micrometer-metrics'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+
+    annotationProcessor "org.projectlombok:lombok"
+    compileOnly "org.projectlombok:lombok"
+}
+
+
+processResources {
+    filteringCharset = 'UTF-8'
+    include('*.yml', "*.properties", "banners/*.txt", "*.xml")
+    filesMatching('*.yml') {
+        filter(
+                ReplaceTokens,
+                "tokens": [version: rootProject.version],
+                "beginToken": "#@",
+                "endToken": "@#"
+        )
+    }
+}
+
+
+configurations.configureEach {
+    exclude group: 'ch.qos.logback', module: 'logback-classic'
+    exclude group: 'org.apache.logging.log4j', module: 'log4j-to-slf4j'
+}
+
+
+jar {
+    archiveClassifier = ''
+    archiveBaseName = 'kunpeng-dist'
+    into("META-INF") {
+        from "$rootDir/licenses"
+        from "$rootDir/LICENSE"
+        from "$rootDir/NOTICE"
+    }
+}
+
+springBoot {
+    buildInfo {
+        properties {
+            artifact = 'kunpeng'
+            version = project.version
+            name = 'Engine for Microservices Orchestration'
+        }
+    }
+}
+
+bootJar {
+    enabled = true
+    archiveClassifier = ''
+    archiveBaseName = 'kunpeng'
+    manifest {
+        attributes(
+                "Manifest-Version": 1.0,
+                'Implementation-Title': project.name,
+                'Implementation-Version': project.version,
+                'Created-By': System.getProperty('java.version') + ' (' + System.getProperty('java.vendor') + ')',
+                'Built-With': "gradle-${project.getGradle().getGradleVersion()}, groovy-${GroovySystem.getVersion()}",
+                'Build-Time': "${new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")}",
+                'Built-By': System.getProperty('user.name'),
+                'Built-On': "${InetAddress.localHost.hostName}/${InetAddress.localHost.hostAddress}",
+                'Build-Jdk-Spec': JavaVersion.VERSION_21
+        )
+    }
+    into("META-INF") {
+        from "$rootDir/licenses"
+        from "$rootDir/LICENSE"
+        from "$rootDir/NOTICE"
+    }
+}

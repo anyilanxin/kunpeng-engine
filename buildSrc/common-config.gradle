@@ -1,0 +1,41 @@
+/*
+ * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+ext {
+
+	def isAnYiSnapshots = Boolean.parseBoolean(anyiSnapshots)
+	def anyiSnapshotsSuffix = 'snapshot'
+	def anyiReleasesSuffix = 'release'
+	def anyiRepoUrlPrefix = 'https://packages.aliyun.com/63581b190e55ca7465986664/maven/'
+	// 仓库配置
+	repo = [
+			'snapshotsRepoUrl': "${anyiRepoUrlPrefix}${anyiSnapshotsSuffix}",
+			'releasesRepoUrl' : "${anyiRepoUrlPrefix}${anyiReleasesSuffix}",
+			'url'             : "${anyiRepoUrlPrefix}${isAnYiSnapshots ? anyiSnapshotsSuffix : anyiReleasesSuffix}",
+            'username'        : System.getenv("ALIYUN_REPO_USERNAME"),
+            'password'        : System.getenv("ALIYUN_REPO_PASSWORD"),
+	]
+
+
+	docker = [
+			'baseImage'   : 'eclipse-temurin:21.0.5_11-jre-jammy',
+			'imageRepoUrl': 'harbor.anyilanxin.com',
+			'username'    : 'username',
+			'password'    : 'password',
+	]
+
+}
+

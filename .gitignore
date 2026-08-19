@@ -1,44 +1,31 @@
+
+### IntelliJ IDEA ###
+*/.idea
 .idea/*
+!.idea/icon.png
 !.idea/codeStyles
+!.idea/copyright
+!.idea/scopes
 !.idea/externalDependencies.xml
 !.idea/google-java-format.xml
 !.idea/saveactions_settings.xml
-target
-.classpath
-.checkstyle
-.project
-.checkstyle
-.settings
-.factorypath
-build.properties
-bin
-.metadata
-transaction.log
-nbactions*.xml
-nb-configuration.xml
-/webapps/fox-platform-tasklist/server-work
-dependency-reduced-pom.xml
-faces-config.NavData
+!.idea/ay_git_commit_message_storage.xml
+!.idea/ay_git_commit_scope_storage.xml
+*.iws
+*.ipr
 *.iml
-*.sublime-project
-*.sublime-workspace
-*.h2.db
-*.lock.db
-.cache-main
-.cache-tests
-.jqwik-database
 
-*.DS_Store
-.java-version
-.gradle
-.worktree
-work/
-public/
-tngp-data
 
-.flattened-pom.xml
+### Mac ###
+.DS_Store
 
-hs_err*.log
-/data/
-/metrics/
-*.exe
+### Gradle ###
+.gradle/
+
+### Project ###
+/data
+/logs
+**/build/
+*.iml
+*.ipr
+*.iws

@@ -1,0 +1,184 @@
+/*
+ * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+plugins {
+	id 'idea'
+	id "java"
+	id 'java-library'
+	id 'org.springframework.boot' version "${springBootVersion}"
+	id "org.jetbrains.gradle.plugin.idea-ext" version "1.4.1"
+	id "io.github.ben-manes.versions" version "0.60.0" apply false
+	id 'com.google.protobuf' version '0.10.0' apply false
+	id 'com.google.cloud.tools.jib' version '3.5.4' apply false
+	id "com.diffplug.spotless" version "8.9.0"
+	id "com.gradleup.shadow" version "9.6.1" apply false
+	id "org.springdoc.openapi-gradle-plugin" version "1.9.0" apply false
+	id "kunpeng.code-spotless"
+}
+
+
+apply from: rootProject.file('buildSrc/common-config.gradle')
+
+
+// root关闭一些任务
+gradle.taskGraph.whenReady {
+	tasks.each { task ->
+		if (task.name.startsWith('boot') ||
+				task.name.startsWith('jar')) {
+			task.enabled = false
+		}
+	}
+}
+
+
+// 所有项目下载仓库
+allprojects {
+
+	// 编译jdk版本
+	java {
+		toolchain {
+			languageVersion = JavaLanguageVersion.of(25)
+		}
+	}
+	group = 'com.anyilanxin.kunpeng'
+	tasks.withType(Jar).configureEach {
+		duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+	}
+
+	// 禁用分发脚本打包以及 test fixturesJar
+	gradle.taskGraph.whenReady {
+		tasks.each { task ->
+			if (task.name.contains("startScripts") ||
+					task.name == "testFixturesJar" ||
+					task.name == "bootDistTar" ||
+					task.name == "bootDistTar" ||
+					task.name == "bootDistZip" ||
+					task.name == "installBootDist" ||
+					task.name == "assembleBootDist") {
+				task.enabled = false
+				task.group = null
+			}
+		}
+	}
+
+	tasks.withType(JavaCompile).configureEach {
+		options.compilerArgs.add("-parameters")
+		options.encoding = "UTF-8"
+	}
+
+	compileJava {
+		options.fork = true
+		options.forkOptions.jvmArgs += ['-Xlint:-deprecation']
+	}
+
+	// 指定所有项目maven仓库
+	repositories {
+		maven {
+			content {
+				includeGroupByRegex "com\\.anyilanxin.*"
+			}
+			credentials {
+				username rootProject.ext.repo['username']
+				password rootProject.ext.repo['password']
+			}
+			url rootProject.ext.repo['releasesRepoUrl']
+		}
+		maven {
+			content {
+				includeGroup "com.yomahub"
+			}
+			url 'https://maven.aliyun.com/repository/central/'
+		}
+		mavenCentral()
+	}
+}
+
+subprojects {
+	apply plugin: 'idea'
+
+	if (!project.name.endsWith("-bom")) {
+		apply plugin: "java"
+		apply plugin: "java-test-fixtures"
+
+		tasks.withType(JavaExec).configureEach {
+			jvmArgs += [
+					"--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED",
+					"-Xshare:auto",
+					"-Xshare:on"
+			]
+		}
+
+		tasks.withType(Test).configureEach {
+			useJUnitPlatform()
+			jvmArgs += [
+					"--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED",
+					"-Xshare:auto",
+					"-Xshare:on"
+			]
+		}
+
+		configurations {
+			compileOnly {
+				extendsFrom annotationProcessor
+			}
+		}
+		// 公共依赖
+		dependencies {
+			implementation platform(project(':bom:dependency-bom'))
+			annotationProcessor platform(project(':bom:dependency-bom'))
+			testFixturesImplementation platform(project(':bom:dependency-bom'))
+
+			implementation 'org.slf4j:slf4j-api'
+			implementation 'org.assertj:assertj-core'
+
+			annotationProcessor "org.projectlombok:lombok"
+			compileOnly "org.projectlombok:lombok"
+
+			testImplementation 'junit:junit'
+			testImplementation 'org.junit.jupiter:junit-jupiter-params'
+			testImplementation 'org.junit.jupiter:junit-jupiter-api'
+			testImplementation 'org.junit.jupiter:junit-jupiter-engine'
+			testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+			testImplementation 'org.assertj:assertj-core'
+			testImplementation 'org.mockito:mockito-core'
+		}
+
+		// 定义跳过测试的 build 任务
+		tasks.register('buildSkipTest') {
+			group = 'build'
+			description = 'Builds the project skip tests'
+			doFirst {
+				tasks.withType(Test).configureEach { testTask ->
+					testTask.enabled = false
+				}
+				tasks.named('check').configure { checkTask ->
+					checkTask.enabled = false
+				}
+			}
+			dependsOn tasks.named('classes')
+			dependsOn tasks.named('jar')
+		}
+
+		// 空目录禁止执行除clean外的任何task
+		if (!file("${projectDir}/build.gradle").file) {
+			tasks.each { task ->
+				if (!task.name.contains('clean')) {
+					task.enabled = false
+				}
+			}
+		}
+	}
+}
