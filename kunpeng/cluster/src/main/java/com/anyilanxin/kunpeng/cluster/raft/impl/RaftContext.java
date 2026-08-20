@@ -33,6 +33,7 @@ import com.anyilanxin.kunpeng.cluster.raft.journal.util.health.HealthMonitorable
 import com.anyilanxin.kunpeng.cluster.raft.journal.util.health.HealthReport;
 import com.anyilanxin.kunpeng.cluster.raft.metrics.RaftReplicationMetrics;
 import com.anyilanxin.kunpeng.cluster.raft.metrics.RaftRoleMetrics;
+import com.anyilanxin.kunpeng.cluster.raft.partition.PartitionMetadata;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftElectionConfig;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartitionConfig;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.RaftResponse;
@@ -133,6 +134,7 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
   private long lastHeartbeat;
   private final RaftPartitionConfig partitionConfig;
   private final int partitionId;
+  private final PartitionMetadata partitionMetadata;
   private final MeterRegistry meterRegistry;
   private volatile int electionPriority;
 
@@ -147,8 +149,10 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
       final Supplier<Random> randomFactory,
       final RaftElectionConfig electionConfig,
       final RaftPartitionConfig partitionConfig,
-      final MeterRegistry meterRegistry) {
+      final MeterRegistry meterRegistry,
+      final PartitionMetadata partitionMetadata) {
     this.name = checkNotNull(name, "name cannot be null");
+    this.partitionMetadata = checkNotNull(partitionMetadata, "partitionMetadata cannot be null");
     this.membershipService = checkNotNull(membershipService, "membershipService cannot be null");
     this.protocol = checkNotNull(protocol, "protocol cannot be null");
     this.storage = checkNotNull(storage, "storage cannot be null");
@@ -255,10 +259,10 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
     try {
       if (error instanceof UnrecoverableException) {
         health = HealthReport.dead(this).withIssue(error);
-        failureListeners.forEach((l) -> l.onUnrecoverableFailure(health));
+        failureListeners.forEach((l) -> l.onUnrecoverableFailure(partitionMetadata, health));
       } else {
         health = HealthReport.unhealthy(this).withIssue(error);
-        failureListeners.forEach((l) -> l.onFailure(health));
+        failureListeners.forEach((l) -> l.onFailure(partitionMetadata, health));
       }
     } catch (final Exception e) {
       log.error("Could not notify failure listeners", e);
@@ -318,7 +322,7 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
           if (!ongoingTransition) {
             // Otherwise, the listener will called directly for the last
             // completed transition.
-            listener.onNewRole(getRole(), getTerm());
+            listener.onNewRole(partitionMetadata, getRole(), getTerm());
           }
         });
   }
@@ -654,7 +658,7 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
 
     if (!this.role.role().active() && role.active()) {
       health = HealthReport.healthy(this);
-      failureListeners.forEach(FailureListener::onRecovered);
+      failureListeners.forEach(l -> l.onRecovered(partitionMetadata));
     }
 
     if (this.role.role() == role) {
@@ -689,7 +693,7 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
 
   private void notifyRoleChangeListeners() {
     try {
-      roleChangeListeners.forEach(l -> l.onNewRole(role.role(), getTerm()));
+      roleChangeListeners.forEach(l -> l.onNewRole(partitionMetadata, role.role(), getTerm()));
     } catch (final Exception exception) {
       log.error("Unexpected error on calling role change listeners.", exception);
     }
@@ -946,6 +950,11 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
   @Override
   public String getName() {
     return name;
+  }
+
+  /** 分区元数据（用于角色/故障通知时区分分区） */
+  public PartitionMetadata getPartitionMetadata() {
+    return partitionMetadata;
   }
 
   @Override

@@ -17,20 +17,15 @@
  */
 package com.anyilanxin.kunpeng.cluster.cluster;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.anyilanxin.kunpeng.cluster.cluster.discovery.BootstrapDiscoveryProvider;
-import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartitionGroupConfig;
-import com.anyilanxin.kunpeng.cluster.raft.partition.RaftStorageConfig;
 import com.anyilanxin.kunpeng.cluster.utils.net.Address;
-import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -44,43 +39,6 @@ public class AtomixClusterTest {
   private static final int TIMEOUT_IN_S = 90;
 
   @Rule public final AtomixClusterRule atomixClusterRule = new AtomixClusterRule();
-
-  @Test
-  public void testStopStartConsensus() throws Exception {
-    // given
-    final var atomix =
-        atomixClusterRule
-            .startAtomix(
-                1,
-                Arrays.asList(1),
-                (builder) -> {
-                  final var groupConfig =
-                      new RaftPartitionGroupConfig()
-                          .setName("raft")
-                          .setReplicationFactor(3)
-                          .setPartitionCount(7)
-                          .setMembers(Set.of("1"))
-                          .setStorageConfig(
-                              new RaftStorageConfig()
-                                  .setDirectory(
-                                      new File(
-                                              atomixClusterRule.getDataDir(),
-                                              "start-stop-consensus")
-                                          .getPath())
-                                  .setPersistedSnapshotStoreFactory(
-                                      new NoopSnapshotStoreFactory()));
-
-                  return builder.build();
-                })
-            .get(TIMEOUT_IN_S, TimeUnit.SECONDS);
-
-    // when
-    final var stopFuture = atomix.stop();
-
-    // then
-    assertThat(stopFuture).succeedsWithin(TIMEOUT_IN_S, TimeUnit.SECONDS);
-    assertThat(stopFuture).isDone();
-  }
 
   @Test
   public void shouldFailStartAfterStop() throws Exception {

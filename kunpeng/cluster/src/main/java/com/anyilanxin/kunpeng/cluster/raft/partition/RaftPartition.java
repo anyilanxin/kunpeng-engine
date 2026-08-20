@@ -20,14 +20,16 @@ package com.anyilanxin.kunpeng.cluster.raft.partition;
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationService;
+import com.anyilanxin.kunpeng.cluster.raft.RaftCommitListener;
 import com.anyilanxin.kunpeng.cluster.raft.RaftRoleChangeListener;
 import com.anyilanxin.kunpeng.cluster.raft.RaftServer.Role;
 import com.anyilanxin.kunpeng.cluster.raft.journal.util.health.FailureListener;
 import com.anyilanxin.kunpeng.cluster.raft.journal.util.health.HealthMonitorable;
 import com.anyilanxin.kunpeng.cluster.raft.journal.util.health.HealthReport;
+import com.anyilanxin.kunpeng.cluster.raft.orchestrator.ManagedPartitionTopologyService;
 import com.anyilanxin.kunpeng.cluster.raft.partition.impl.RaftPartitionServer;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotHandler;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.SnapshotVault;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.VaultSnapshotStore;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,9 +67,12 @@ public class RaftPartition implements Partition, HealthMonitorable {
   private final com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotHandler snapshotHandler;
   private final ClusterMembershipService membershipService;
   private final ClusterCommunicationService communicationService;
+  private final ManagedPartitionTopologyService topologyService;
   private final Set<RaftRoleChangeListener> deferredRoleChangeListeners =
       new CopyOnWriteArraySet<>();
   private final Set<FailureListener> deferredFailureListeners = new CopyOnWriteArraySet<>();
+  private final Set<RaftCommitListener> deferredCommitListeners =
+      new CopyOnWriteArraySet<>();
   private volatile RaftPartitionServer server;
 
   public RaftPartition(
@@ -75,18 +80,25 @@ public class RaftPartition implements Partition, HealthMonitorable {
       final RaftPartitionConfig config,
       final File dataDirectory,
       final MeterRegistry meterRegistry,
-      final SnapshotVault snapshotVault,
-      final com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotHandler snapshotHandler,
+      final SnapshotHandler snapshotHandler,
       final ClusterMembershipService membershipService,
-      final ClusterCommunicationService communicationService) {
+      final ClusterCommunicationService communicationService,
+      final ManagedPartitionTopologyService topologyService) {
     this.metadata = metadata;
     this.config = config;
     this.dataDirectory = dataDirectory;
     this.meterRegistry = meterRegistry;
-    this.snapshotVault = snapshotVault;
     this.snapshotHandler = snapshotHandler;
+    snapshotVault =
+      new SnapshotVault(dataDirectory.toPath(), snapshotHandler, meterRegistry);
     this.membershipService = membershipService;
     this.communicationService = communicationService;
+    this.topologyService = topologyService;
+    // 注册分区拓扑服务：角色/故障变化时携带本分区元数据上报并广播
+    if (topologyService != null) {
+      deferredRoleChangeListeners.add(topologyService);
+      deferredFailureListeners.add(topologyService);
+    }
   }
 
   /** 快照操作处理器（由业务层实现） */
@@ -218,6 +230,16 @@ public class RaftPartition implements Partition, HealthMonitorable {
     return srv.leave().thenApply(v -> this);
   }
 
+  /**
+   * 关闭前阶段：主动拍摄一次终局快照 → 关闭业务资源（{@code SnapshotHandler.onClose}）。
+   *
+   * <p>必须在 {@link #close()} 之前调用——业务需在 raft server 停止前完成
+   * 终局快照写入与资源释放。
+   */
+  public CompletableFuture<Void> closeHandler() {
+    return takeCloseSnapshot().thenCompose(v -> closeSnapshotHandler());
+  }
+
   /** 关闭分区（不离开集群，仅停止本节点的 Raft 服务） */
   public CompletableFuture<Void> close() {
     final var srv = server;
@@ -228,6 +250,37 @@ public class RaftPartition implements Partition, HealthMonitorable {
       });
     }
     return CompletableFuture.completedFuture(null);
+  }
+
+  /**
+   * 终局快照：关闭前主动拍摄一次（业务位置沿用最近一次快照；失败不阻断关闭）
+   */
+  private CompletableFuture<Void> takeCloseSnapshot() {
+    if (snapshotHandler == null) {
+      return CompletableFuture.completedFuture(null);
+    }
+    final var latest = snapshotVault.getLatestSnapshot();
+    final long processed = latest.map(s -> s.ref().processedPosition()).orElse(0L);
+    final long exported = latest.map(s -> s.ref().exportedPosition()).orElse(0L);
+    LOG.info("Take final snapshot on close for {} (processed={}, exported={})",
+      name(), processed, exported);
+    return takeSnapshot(processed, exported, true).exceptionally(error -> {
+      LOG.warn("Final snapshot on close failed for {}, continuing shutdown", name(), error);
+      return null;
+    });
+  }
+
+  /**
+   * 关闭业务系统资源
+   */
+  private CompletableFuture<Void> closeSnapshotHandler() {
+    if (snapshotHandler == null) {
+      return CompletableFuture.completedFuture(null);
+    }
+    return snapshotHandler.onClose().toCompletableFuture().exceptionally(error -> {
+      LOG.error("Error on closing snapshot handler for {}", metadata.id(), error);
+      return null;
+    });
   }
 
   /** 删除分区（停止 + 清理数据） */
@@ -405,6 +458,10 @@ public class RaftPartition implements Partition, HealthMonitorable {
       deferredFailureListeners.forEach(srv::addFailureListener);
       deferredFailureListeners.clear();
     }
+    if (!deferredCommitListeners.isEmpty()) {
+      deferredCommitListeners.forEach(srv::addCommitListener);
+      deferredCommitListeners.clear();
+    }
   }
 
   // ===== 查询 =====
@@ -513,6 +570,23 @@ public class RaftPartition implements Partition, HealthMonitorable {
     final var srv = server;
     if (srv != null) {
       srv.removeRoleChangeListener(listener);
+    }
+  }
+
+  public void addCommitListener(final RaftCommitListener listener) {
+    final var srv = server;
+    if (srv != null) {
+      srv.addCommitListener(listener);
+    } else {
+      deferredCommitListeners.add(listener);
+    }
+  }
+
+  public void removeCommitListener(final RaftCommitListener listener) {
+    deferredCommitListeners.remove(listener);
+    final var srv = server;
+    if (srv != null) {
+      srv.removeCommitListener(listener);
     }
   }
 

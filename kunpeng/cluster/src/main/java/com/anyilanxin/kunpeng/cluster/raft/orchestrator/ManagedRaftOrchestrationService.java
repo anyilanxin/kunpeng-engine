@@ -1,5 +1,5 @@
 /*
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -12,15 +12,16 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.anyilanxin.kunpeng.cluster.raft.snapshot;
+package com.anyilanxin.kunpeng.cluster.raft.orchestrator;
 
-import java.nio.file.Path;
+import com.anyilanxin.kunpeng.cluster.utils.Managed;
 
-/** 快照存储工厂 */
-public interface ReceivableSnapshotStoreFactory {
-
-  /** 为指定分区数据目录创建可接收快照存储 */
-  ReceivableSnapshotStore createReceivableSnapshotStore(Path dataDirectory, final SnapshotChecksumProvider checksumProvider, int partitionId);
-}
+/**
+ * 可管理的 Raft 编排服务：增加启动/停止生命周期。
+ *
+ * <p>启动顺序：拓扑服务 → 分区管理器 → 逐组启动分区；停止倒序。
+ */
+public interface ManagedRaftOrchestrationService
+    extends RaftOrchestrationService, Managed<RaftOrchestrationService> {}

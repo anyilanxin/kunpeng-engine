@@ -36,6 +36,7 @@ import com.anyilanxin.kunpeng.cluster.raft.RaftServer.Builder;
 import com.anyilanxin.kunpeng.cluster.raft.RaftServer.Role;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember;
 import com.anyilanxin.kunpeng.cluster.raft.metrics.RaftRoleMetrics;
+import com.anyilanxin.kunpeng.cluster.raft.partition.PartitionMetadata;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartitionConfig;
 import com.anyilanxin.kunpeng.cluster.raft.primitive.TestMember;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.TestRaftProtocolFactory;
@@ -349,7 +350,7 @@ public class RaftTest extends ConcurrentTestCase {
     servers.forEach(
         server ->
             server.addRoleChangeListener(
-                (role, term) -> {
+                (metadata, role, term) -> {
                   if (term > previousLeaderTerm) {
                     assertLastReadInitialEntry(role, term, server, transitionCompleted);
                   }
@@ -529,7 +530,7 @@ public class RaftTest extends ConcurrentTestCase {
 
     // when
     server.addRoleChangeListener(
-        (role, term) -> {
+        (metadata, role, term) -> {
           roleWithinListener.set(role);
           termWithinListener.set(term);
           listenerLatch.countDown();
@@ -631,14 +632,15 @@ public class RaftTest extends ConcurrentTestCase {
     }
 
     @Override
-    public void onFailure(final HealthReport report) {
+    public void onFailure(final PartitionMetadata metadata, final HealthReport report) {
       latch.countDown();
     }
 
     @Override
-    public void onRecovered() {}
+    public void onRecovered(final PartitionMetadata metadata) {}
 
     @Override
-    public void onUnrecoverableFailure(final HealthReport report) {}
+    public void onUnrecoverableFailure(
+        final PartitionMetadata metadata, final HealthReport report) {}
   }
 }

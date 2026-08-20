@@ -76,6 +76,7 @@ public final class SchedulerRouter {
       final int replicationFactor) {
     if (isLocal(targetNodeId)) {
       return orchestrationService
+          .partitionManager()
           .startRemoteGroup(groupName, groupType, partitionCount, replicationFactor)
           .thenApply(v -> RaftScheduleResponse.ok("local"))
           .exceptionally(e -> RaftScheduleResponse.error("local", e.getMessage()));
@@ -88,6 +89,7 @@ public final class SchedulerRouter {
       final MemberId targetNodeId, final String groupName) {
     if (isLocal(targetNodeId)) {
       return orchestrationService
+          .partitionManager()
           .stopPartitionGroupRemote(groupName)
           .thenApply(v -> RaftScheduleResponse.ok("local"))
           .exceptionally(e -> RaftScheduleResponse.error("local", e.getMessage()));
@@ -100,6 +102,7 @@ public final class SchedulerRouter {
       final MemberId targetNodeId, final String groupName) {
     if (isLocal(targetNodeId)) {
       return orchestrationService
+          .partitionManager()
           .joinRemoteGroup(groupName)
           .thenApply(v -> RaftScheduleResponse.ok("local"))
           .exceptionally(e -> RaftScheduleResponse.error("local", e.getMessage()));
@@ -112,6 +115,7 @@ public final class SchedulerRouter {
       final MemberId targetNodeId, final String groupName) {
     if (isLocal(targetNodeId)) {
       return orchestrationService
+          .partitionManager()
           .leaveRemoteGroup(groupName)
           .thenApply(v -> RaftScheduleResponse.ok("local"))
           .exceptionally(e -> RaftScheduleResponse.error("local", e.getMessage()));

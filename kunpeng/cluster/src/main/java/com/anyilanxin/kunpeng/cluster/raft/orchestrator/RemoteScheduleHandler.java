@@ -91,6 +91,7 @@ public final class RemoteScheduleHandler {
   private CompletableFuture<RaftScheduleResponse> handleStartGroup(
       final RaftScheduleRequest request) {
     return orchestrationService
+        .partitionManager()
         .startRemoteGroup(
             request.groupName(),
             request.param("groupType"),
@@ -103,6 +104,7 @@ public final class RemoteScheduleHandler {
   private CompletableFuture<RaftScheduleResponse> handleStopGroup(
       final RaftScheduleRequest request) {
     return orchestrationService
+        .partitionManager()
         .stopPartitionGroupRemote(request.groupName())
         .thenApply(v -> RaftScheduleResponse.ok(request.requestId()))
         .exceptionally(e -> RaftScheduleResponse.error(request.requestId(), e.getMessage()));
@@ -111,6 +113,7 @@ public final class RemoteScheduleHandler {
   private CompletableFuture<RaftScheduleResponse> handleJoin(
       final RaftScheduleRequest request) {
     return orchestrationService
+        .partitionManager()
         .joinRemoteGroup(request.groupName())
         .thenApply(v -> RaftScheduleResponse.ok(request.requestId()))
         .exceptionally(e -> RaftScheduleResponse.error(request.requestId(), e.getMessage()));
@@ -119,6 +122,7 @@ public final class RemoteScheduleHandler {
   private CompletableFuture<RaftScheduleResponse> handleLeave(
       final RaftScheduleRequest request) {
     return orchestrationService
+        .partitionManager()
         .leaveRemoteGroup(request.groupName())
         .thenApply(v -> RaftScheduleResponse.ok(request.requestId()))
         .exceptionally(e -> RaftScheduleResponse.error(request.requestId(), e.getMessage()));
@@ -138,14 +142,14 @@ public final class RemoteScheduleHandler {
 
   private CompletableFuture<RaftScheduleResponse> handleQueryStatus(
       final RaftScheduleRequest request) {
-    final var context = orchestrationService.getPartitionGroup(request.groupName());
+    final var context = orchestrationService.partitionManager().getPartitionGroup(request.groupName());
     if (context.isEmpty()) {
       return CompletableFuture.completedFuture(
           RaftScheduleResponse.error(request.requestId(), "分区组不存在: " + request.groupName()));
     }
     final var data = new java.util.HashMap<String, String>();
     data.put("groupName", context.get().groupName());
-    data.put("started", String.valueOf(context.get().hasPartitions()));
+    data.put("started", "true");
     return CompletableFuture.completedFuture(
         RaftScheduleResponse.ok(request.requestId(), data));
   }

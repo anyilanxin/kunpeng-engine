@@ -22,8 +22,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 /**
  * {@link ReceivableSnapshotStore} 的 vault 实现（包装 {@link SnapshotVault}）
@@ -33,8 +31,6 @@ public final class VaultSnapshotStore implements ReceivableSnapshotStore {
   private static final Logger LOG = LoggerFactory.getLogger(VaultSnapshotStore.class);
 
   private final SnapshotVault vault;
-  private final ConcurrentMap<PersistedSnapshotListener, ArchivedSnapshotListener> listenerMap =
-      new ConcurrentHashMap<>();
 
   public VaultSnapshotStore(final SnapshotVault vault) {
     this.vault = vault;
@@ -70,28 +66,12 @@ public final class VaultSnapshotStore implements ReceivableSnapshotStore {
 
   @Override
   public void addSnapshotListener(final PersistedSnapshotListener listener) {
-    final ArchivedSnapshotListener adapter =
-        new ArchivedSnapshotListener() {
-          @Override
-          public void onArchived(final ArchivedSnapshot snapshot) {
-            listener.onNewSnapshot(new VaultPersistedSnapshot(snapshot));
-          }
-
-          @Override
-          public void onPurged(final ArchivedSnapshot snapshot) {
-            listener.onSnapshotRemoved(new VaultPersistedSnapshot(snapshot));
-          }
-        };
-    listenerMap.put(listener, adapter);
-    vault.addSnapshotListener(adapter);
+    vault.addSnapshotListener(listener);
   }
 
   @Override
   public void removeSnapshotListener(final PersistedSnapshotListener listener) {
-    final ArchivedSnapshotListener adapter = listenerMap.remove(listener);
-    if (adapter != null) {
-      vault.removeSnapshotListener(adapter);
-    }
+    vault.removeSnapshotListener(listener);
   }
 
   @Override

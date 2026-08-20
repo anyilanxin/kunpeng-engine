@@ -25,6 +25,7 @@ import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember;
 import com.anyilanxin.kunpeng.cluster.raft.impl.DefaultRaftServer;
 import com.anyilanxin.kunpeng.cluster.raft.impl.RaftContext;
 import com.anyilanxin.kunpeng.cluster.raft.journal.util.health.FailureListener;
+import com.anyilanxin.kunpeng.cluster.raft.partition.PartitionMetadata;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftElectionConfig;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartitionConfig;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.RaftServerProtocol;
@@ -503,6 +504,7 @@ public interface RaftServer {
     protected RaftElectionConfig electionConfig = RaftElectionConfig.ofDefaultElection();
     protected RaftPartitionConfig partitionConfig = new RaftPartitionConfig();
     protected int partitionId;
+    protected PartitionMetadata partitionMetadata;
     protected MeterRegistry meterRegistry;
 
     protected Builder(final MemberId localMemberId) {
@@ -586,6 +588,12 @@ public interface RaftServer {
 
     public Builder withPartitionId(final int partitionId) {
       this.partitionId = partitionId;
+      return this;
+    }
+
+    /** 设置分区元数据（用于角色/故障通知时区分分区） */
+    public Builder withPartitionMetadata(final PartitionMetadata partitionMetadata) {
+      this.partitionMetadata = checkNotNull(partitionMetadata, "partitionMetadata cannot be null");
       return this;
     }
 

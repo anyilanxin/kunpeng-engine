@@ -16,24 +16,29 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.orchestrator;
 
+import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.raft.RaftServer.Role;
+
 /**
- * 节点级 Raft 编排服务：对外的能力入口。
+ * 分区拓扑信息条目：描述某个分区在某个节点上的状态。
  *
- * <p>提供三类能力：
- * <ul>
- *   <li>{@link #topologyService()}——分区拓扑服务（跨节点查询分区 leader/健康）</li>
- *   <li>{@link #partitionManager()}——分区管理器（分区组/分区的本地与远程调度）</li>
- *   <li>{@link #metadataStore()}——当前节点分区持久化数据的读取</li>
- * </ul>
+ * @param groupName 分区组名
+ * @param partitionId 分区号
+ * @param nodeId 承载该分区的节点 ID
+ * @param role 该分区的 Raft 角色
+ * @param healthy 健康状态
+ * @param address 分区请求地址（通信地址）
  */
-public interface RaftOrchestrationService {
+public record PartitionInfo(
+    String groupName,
+    int partitionId,
+    MemberId nodeId,
+    Role role,
+    boolean healthy,
+    String address) {
 
-  /** 分区拓扑服务 */
-  PartitionTopologyService topologyService();
-
-  /** 分区管理器（主要负责分区的调度） */
-  PartitionManager partitionManager();
-
-  /** 当前节点分区持久化数据的读取 */
-  NodeMetadataStore metadataStore();
+  /** 是否为该分区的 leader */
+  public boolean isLeader() {
+    return role == Role.LEADER;
+  }
 }

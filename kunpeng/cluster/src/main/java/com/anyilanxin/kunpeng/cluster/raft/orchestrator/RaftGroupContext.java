@@ -16,14 +16,10 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.orchestrator;
 
-import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationService;
-import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
-import com.anyilanxin.kunpeng.cluster.raft.RaftServer.Role;
-import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartition;
-import io.micrometer.core.instrument.MeterRegistry;
+import com.anyilanxin.kunpeng.cluster.raft.partition.PartitionMetadata;
+import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
+
 import java.nio.file.Path;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Raft 分区组上下文基类。
@@ -33,97 +29,50 @@ import java.util.concurrent.ConcurrentHashMap;
  * （启动链中该步骤之前的 {@link PartitionStartup} 不应访问分区）。
  */
 public abstract class RaftGroupContext {
+  private PartitionMetadata partitionMetadata;
+  private Path groupDataDirectory;
+  private ConcurrencyControl concurrencyControl;
+  boolean initialized = false;
 
-  private final String groupName;
-  private final NodePartitionMetadata metadata;
-  private final Path groupDataDirectory;
-  private final MessagingService messagingService;
-  private final ClusterCommunicationService communicationService;
-  private final MeterRegistry meterRegistry;
-  private final Map<Integer, RaftPartition> partitions = new ConcurrentHashMap<>();
-
-  protected RaftGroupContext(
-      final String groupName,
-      final NodePartitionMetadata metadata,
-      final Path groupDataDirectory,
-      final MessagingService messagingService,
-      final ClusterCommunicationService communicationService,
-      final MeterRegistry meterRegistry) {
-    this.groupName = groupName;
-    this.metadata = metadata;
+  /**
+   * 由 raft 内部完成初始化
+   */
+  protected void init(final PartitionMetadata partitionMetadata,
+                      final Path groupDataDirectory,
+                      final ConcurrencyControl concurrencyControl) {
+    this.partitionMetadata = partitionMetadata;
     this.groupDataDirectory = groupDataDirectory;
-    this.messagingService = messagingService;
-    this.communicationService = communicationService;
-    this.meterRegistry = meterRegistry;
+    this.concurrencyControl = concurrencyControl;
+  }
+
+  public ConcurrencyControl concurrencyControl() {
+    if (!initialized) {
+      throw new IllegalStateException("RaftGroupContext has not been initialized");
+    }
+    return concurrencyControl;
   }
 
   /** 分区组名 */
   public String groupName() {
-    return groupName;
+    if (!initialized) {
+      throw new IllegalStateException("RaftGroupContext has not been initialized");
+    }
+    return partitionMetadata.id().group();
   }
 
   /** 分区组元数据 */
-  public NodePartitionMetadata metadata() {
-    return metadata;
+  public PartitionMetadata metadata() {
+    if (!initialized) {
+      throw new IllegalStateException("RaftGroupContext has not been initialized");
+    }
+    return partitionMetadata;
   }
 
   /** 分区组数据目录（data/&lt;groupName&gt;/） */
   public Path groupDataDirectory() {
-    return groupDataDirectory;
-  }
-
-  /** raft 通信框架 */
-  public MessagingService messagingService() {
-    return messagingService;
-  }
-
-  /** 集群通信服务 */
-  public ClusterCommunicationService communicationService() {
-    return communicationService;
-  }
-
-  /** 指标注册中心 */
-  public MeterRegistry meterRegistry() {
-    return meterRegistry;
-  }
-
-  /** 获取指定分区 */
-  public RaftPartition partition(final int partitionId) {
-    final var partition = partitions.get(partitionId);
-    if (partition == null) {
-      throw new IllegalStateException("分区未创建: " + groupName + "-" + partitionId);
+    if (!initialized) {
+      throw new IllegalStateException("RaftGroupContext has not been initialized");
     }
-    return partition;
-  }
-
-  /** 全部分区 */
-  public Map<Integer, RaftPartition> partitions() {
-    return Map.copyOf(partitions);
-  }
-
-  /** 是否有分区已启动 */
-  public boolean hasPartitions() {
-    return !partitions.isEmpty();
-  }
-
-  /** 获取指定分区的当前角色 */
-  public Role role(final int partitionId) {
-    final var partition = partitions.get(partitionId);
-    return partition != null && partition.getRole() != null ? partition.getRole() : Role.INACTIVE;
-  }
-
-  /** 本节点是否为指定分区的 leader */
-  public boolean isLeader(final int partitionId) {
-    return role(partitionId) == Role.LEADER;
-  }
-
-  /** 内部注入（由 RaftPartitionGroupStartupStep 调用） */
-  void attachPartition(final int partitionId, final RaftPartition partition) {
-    partitions.put(partitionId, partition);
-  }
-
-  /** 内部清除（由 RaftPartitionGroupStartupStep.shutdown 调用） */
-  void detachAllPartitions() {
-    partitions.clear();
+    return groupDataDirectory;
   }
 }

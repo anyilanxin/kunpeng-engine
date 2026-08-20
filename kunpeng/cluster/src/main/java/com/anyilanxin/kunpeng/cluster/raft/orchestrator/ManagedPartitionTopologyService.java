@@ -14,21 +14,18 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.anyilanxin.kunpeng.cluster.raft.journal.util.health;
+package com.anyilanxin.kunpeng.cluster.raft.orchestrator;
 
-import com.anyilanxin.kunpeng.cluster.raft.partition.PartitionMetadata;
+import com.anyilanxin.kunpeng.cluster.raft.RaftRoleChangeListener;
+import com.anyilanxin.kunpeng.cluster.raft.journal.util.health.FailureListener;
+import com.anyilanxin.kunpeng.cluster.utils.Managed;
 
-/** 组件故障/恢复回调：携带分区元数据，便于全局组件区分分区 */
-public interface FailureListener {
-
-  /** 组件进入不健康状态 */
-  void onFailure(PartitionMetadata metadata, HealthReport report);
-
-  /** 组件进入不可恢复状态（进程应退出） */
-  default void onUnrecoverableFailure(PartitionMetadata metadata, HealthReport report) {
-    onFailure(metadata, report);
-  }
-
-  /** 组件从故障中恢复 */
-  void onRecovered(PartitionMetadata metadata);
-}
+/**
+ * 可管理的分区拓扑服务：增加生命周期，并作为分区角色/故障监听器注入分区。
+ *
+ * <p>实例由 {@code RaftPartition} 构造时注册进 deferred 监听器集合，
+ * 分区 server 创建后自动收到角色/故障回调。
+ */
+public interface ManagedPartitionTopologyService
+    extends PartitionTopologyService, Managed<PartitionTopologyService>,
+        RaftRoleChangeListener, FailureListener {}

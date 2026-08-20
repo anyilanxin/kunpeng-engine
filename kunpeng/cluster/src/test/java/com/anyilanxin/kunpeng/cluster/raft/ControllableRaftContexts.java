@@ -24,6 +24,8 @@ import static org.mockito.Mockito.mock;
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.raft.impl.RaftContext;
+import com.anyilanxin.kunpeng.cluster.raft.partition.PartitionId;
+import com.anyilanxin.kunpeng.cluster.raft.partition.PartitionMetadata;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftElectionConfig;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartitionConfig;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.ControllableRaftServerProtocol;
@@ -165,7 +167,13 @@ public final class ControllableRaftContexts {
             () -> random,
             RaftElectionConfig.ofDefaultElection(),
             new RaftPartitionConfig(),
-            new io.micrometer.core.instrument.simple.SimpleMeterRegistry());
+            new io.micrometer.core.instrument.simple.SimpleMeterRegistry(),
+            new PartitionMetadata(
+                PartitionId.from("test", 1),
+                Set.of(memberId),
+                Map.of(),
+                0,
+                null));
     raft.setEntryValidator(new NoopEntryValidator());
     return raft;
   }

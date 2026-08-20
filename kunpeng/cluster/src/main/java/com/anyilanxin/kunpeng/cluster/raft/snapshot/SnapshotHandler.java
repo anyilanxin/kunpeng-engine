@@ -19,6 +19,7 @@ package com.anyilanxin.kunpeng.cluster.raft.snapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.ArchivedSnapshot;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 import java.nio.file.Path;
+import java.util.Map;
 
 /**
  * 快照操作处理器：由创建 {@code RaftPartition} 的调用方（业务层）实现，
@@ -91,4 +92,27 @@ public interface SnapshotHandler {
    * @return 合并完成
    */
   ActorFuture<Void> onMergeSnapshot(ArchivedSnapshot archivedSnapshot);
+
+  /**
+   * 关闭业务系统资源。
+   *
+   * <p>由 Raft 层在分区关闭时调用：引擎先拍摄一次终局快照（经
+   * {@link #onTakeSnapshot}，业务位置沿用最近一次快照），完成后调用本方法释放资源。
+   *
+   * @return 关闭完成
+   */
+  ActorFuture<Void> onClose();
+
+  /**
+   * 提供快照目录的逐文件校验和（如存储引擎级校验和，适配不同校验算法）。
+   *
+   * <p>引擎构建快照清单时调用：未覆盖的文件回退为引擎计算的 CRC32C；
+   * 默认返回空映射（全部走引擎 CRC32C）。
+   *
+   * @param snapshotPath 快照目录
+   * @return 文件相对路径 → 校验和字符串
+   */
+  default Map<String, String> onSnapshotChecksums(final Path snapshotPath) {
+    return Map.of();
+  }
 }

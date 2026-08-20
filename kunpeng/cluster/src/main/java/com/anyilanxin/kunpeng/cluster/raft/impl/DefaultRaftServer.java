@@ -441,7 +441,8 @@ public class DefaultRaftServer implements RaftServer {
               randomSupplier,
               electionConfig,
               partitionConfig,
-              registry);
+              registry,
+              partitionMetadata);
       raft.setEntryValidator(entryValidator);
 
       return new DefaultRaftServer(raft);

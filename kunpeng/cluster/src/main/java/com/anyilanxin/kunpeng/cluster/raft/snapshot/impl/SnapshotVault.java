@@ -16,8 +16,8 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.snapshot.impl;
 
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.ArchivedSnapshotListener;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChecksumProvider;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshotListener;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotHandler;
 import io.micrometer.core.instrument.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +48,7 @@ public final class SnapshotVault implements AutoCloseable {
   private final Path snapshotsRoot;
   private final Path bootstrapRoot;
   private final Path mergeRoot;
-  private final SnapshotChecksumProvider checksumProvider;
+  private final SnapshotHandler snapshotHandler;
 
   private final AtomicReference<ArchivedSnapshot> active = new AtomicReference<>();
   private final AtomicReference<ArchivedSnapshot> activeBootstrap = new AtomicReference<>();
@@ -56,7 +56,7 @@ public final class SnapshotVault implements AutoCloseable {
   // 串行线程独占
   private final Map<SnapshotRef, ArchivedSnapshot> known = new HashMap<>();
   private final Set<Object> inProgress = new HashSet<>();
-  private final List<ArchivedSnapshotListener> listeners = new CopyOnWriteArrayList<>();
+  private final List<PersistedSnapshotListener> listeners = new CopyOnWriteArrayList<>();
 
   private final ExecutorService serializer =
       Executors.newSingleThreadExecutor(
@@ -73,12 +73,12 @@ public final class SnapshotVault implements AutoCloseable {
 
   public SnapshotVault(
       final Path partitionRoot,
-      final SnapshotChecksumProvider checksumProvider,
+      final SnapshotHandler snapshotHandler,
       final MeterRegistry registry) {
     snapshotsRoot = partitionRoot.resolve(SnapshotLayout.SNAPSHOTS_DIR);
     bootstrapRoot = partitionRoot.resolve(SnapshotLayout.BOOTSTRAP_DIR);
     mergeRoot = partitionRoot.resolve(SnapshotLayout.MERGE_DIR);
-    this.checksumProvider = checksumProvider;
+    this.snapshotHandler = snapshotHandler;
     if (registry != null) {
       Gauge.builder("snapshotVault.known", knownGauge, AtomicLong::doubleValue)
           .description("已落档快照数")
@@ -141,11 +141,11 @@ public final class SnapshotVault implements AutoCloseable {
     return snapshotsRoot;
   }
 
-  public void addSnapshotListener(final ArchivedSnapshotListener listener) {
+  public void addSnapshotListener(final PersistedSnapshotListener listener) {
     listeners.add(listener);
   }
 
-  public void removeSnapshotListener(final ArchivedSnapshotListener listener) {
+  public void removeSnapshotListener(final PersistedSnapshotListener listener) {
     listeners.remove(listener);
   }
 
@@ -325,13 +325,13 @@ public final class SnapshotVault implements AutoCloseable {
   // ===== 包内（串行线程或被串行作业调用） =====
 
   /**
-   * 构建目录清单：优先外部提供，否则逐文件 CRC32C
+   * 构建目录清单：优先业务提供的校验和，否则逐文件 CRC32C
    */
   ChecksumManifest buildManifest(final Path directory) {
     final ChecksumManifest manifest = ChecksumManifest.empty();
     Map<String, String> provided = null;
-    if (checksumProvider != null) {
-      provided = checksumProvider.getSnapshotChecksums(directory);
+    if (snapshotHandler != null) {
+      provided = snapshotHandler.onSnapshotChecksums(directory);
     }
     try {
       for (final String name : VaultFiles.listFilesSorted(directory)) {
@@ -375,7 +375,7 @@ public final class SnapshotVault implements AutoCloseable {
       committed.increment();
     }
     purgeSuperseded();
-    listeners.forEach(listener -> listener.onArchived(archived));
+    listeners.forEach(listener -> listener.onNewSnapshot(new VaultPersistedSnapshot(archived)));
   }
 
   private void purgeSuperseded() {
@@ -395,7 +395,7 @@ public final class SnapshotVault implements AutoCloseable {
         if (purged != null) {
           purged.increment();
         }
-        listeners.forEach(listener -> listener.onPurged(candidate));
+        listeners.forEach(listener -> listener.onSnapshotRemoved(new VaultPersistedSnapshot(candidate)));
       } catch (final IOException e) {
         LOG.warn("旧快照淘汰失败: {}", candidate.directory(), e);
         known.put(entry.getKey(), candidate);

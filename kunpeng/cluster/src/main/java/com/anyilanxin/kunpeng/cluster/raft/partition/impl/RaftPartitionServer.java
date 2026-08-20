@@ -30,6 +30,7 @@ import com.anyilanxin.kunpeng.cluster.raft.partition.*;
 import com.anyilanxin.kunpeng.cluster.raft.roles.RaftRole;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.ReceivableSnapshotStore;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.SnapshotVault;
 import com.anyilanxin.kunpeng.cluster.raft.storage.RaftStorage;
 import com.anyilanxin.kunpeng.cluster.raft.storage.StorageException;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLogReader;
@@ -88,7 +89,7 @@ public class RaftPartitionServer implements Managed<RaftPartitionServer>, Health
       final ClusterCommunicationService clusterCommunicator,
       final PartitionMetadata partitionMetadata,
       final MeterRegistry meterRegistry,
-      final com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.SnapshotVault snapshotVault) {
+      final SnapshotVault snapshotVault) {
     this.partition = partition;
     this.partitionConfig = partitionConfig;
     this.localMemberId = localMemberId;
@@ -217,6 +218,7 @@ public class RaftPartitionServer implements Managed<RaftPartitionServer>, Health
     return RaftServer.builder(localMemberId)
         .withName(partition.name())
         .withPartitionId(partitionId)
+      .withPartitionMetadata(partitionMetadata)
         .withMembershipService(membershipService)
         .withProtocol(createServerProtocol())
         .withPartitionConfig(partitionConfig)

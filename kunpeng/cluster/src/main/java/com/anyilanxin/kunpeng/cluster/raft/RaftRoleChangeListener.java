@@ -1,7 +1,7 @@
 /*
  * Copyright 2016-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,9 @@
 package com.anyilanxin.kunpeng.cluster.raft;
 
 import com.anyilanxin.kunpeng.cluster.raft.RaftServer.Role;
+import com.anyilanxin.kunpeng.cluster.raft.partition.PartitionMetadata;
 
+/** 分区角色变更监听器：携带分区元数据，便于拓扑服务等全局组件区分分区 */
 public interface RaftRoleChangeListener {
-  void onNewRole(Role newRole, long newTerm);
+  void onNewRole(PartitionMetadata metadata, Role newRole, long newTerm);
 }
