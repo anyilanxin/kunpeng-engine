@@ -19,7 +19,7 @@ package com.anyilanxin.kunpeng.cluster.raft;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
-import io.camunda.zeebe.util.FileUtil;
+import com.anyilanxin.kunpeng.utils.FileUtil;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -63,7 +63,7 @@ public class RandomizedRaftTest {
   @AfterTry
   public void shutDownRaftNodes() throws IOException {
     raftContexts.shudown();
-    FileUtil.deleteFolder(raftDataDirectory);
+    FileUtil.deleteTree(raftDataDirectory);
     raftDataDirectory = null;
   }
 

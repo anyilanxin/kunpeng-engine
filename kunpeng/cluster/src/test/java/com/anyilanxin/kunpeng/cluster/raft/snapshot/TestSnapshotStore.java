@@ -1,12 +1,12 @@
 /*
- * Copyright © 2020 camunda services GmbH (info@camunda.com)
+ * Copyright 2020 camunda services GmbH (info@camunda.com)
  * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,15 +16,10 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.snapshot;
 
-import io.camunda.zeebe.snapshots.PersistedSnapshot;
-import io.camunda.zeebe.snapshots.PersistedSnapshotListener;
-import io.camunda.zeebe.snapshots.ReceivableSnapshotStore;
-import io.camunda.zeebe.snapshots.ReceivedSnapshot;
-import io.camunda.zeebe.util.sched.future.ActorFuture;
-import io.camunda.zeebe.util.sched.future.CompletableActorFuture;
-import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -38,10 +33,9 @@ public class TestSnapshotStore implements ReceivableSnapshotStore {
     currentPersistedSnapshot = persistedSnapshotRef;
   }
 
-  @Override
-  public boolean hasSnapshotId(final String id) {
-    return currentPersistedSnapshot.get() != null
-        && currentPersistedSnapshot.get().getId().equals(id);
+  void newSnapshot(final InMemorySnapshot snapshot) {
+    currentPersistedSnapshot.set(snapshot);
+    listeners.forEach(listener -> listener.onNewSnapshot(snapshot));
   }
 
   @Override
@@ -50,24 +44,38 @@ public class TestSnapshotStore implements ReceivableSnapshotStore {
   }
 
   @Override
-  public ActorFuture<Void> purgePendingSnapshots() {
+  public Iterable<PersistedSnapshot> getAvailableSnapshots() {
+    return Collections.singletonList(currentPersistedSnapshot.get());
+  }
+
+  @Override
+  public long getCompactionBound() {
+    return getCurrentSnapshotIndex();
+  }
+
+  @Override
+  public ReceivedSnapshot newReceivedSnapshot(final String snapshotId) {
+    final var snapshot = new InMemorySnapshot(this, snapshotId);
+    receivedSnapshots.add(snapshot);
+    return snapshot;
+  }
+
+  @Override
+  public CompletableFuture<Void> purgePendingSnapshots() {
     receivedSnapshots.clear();
-    return CompletableActorFuture.completed(null);
+    return CompletableFuture.completedFuture(null);
   }
 
   @Override
-  public ActorFuture<Boolean> addSnapshotListener(final PersistedSnapshotListener listener) {
+  public void addSnapshotListener(final PersistedSnapshotListener listener) {
     listeners.add(listener);
-    return null;
   }
 
   @Override
-  public ActorFuture<Boolean> removeSnapshotListener(final PersistedSnapshotListener listener) {
+  public void removeSnapshotListener(final PersistedSnapshotListener listener) {
     listeners.remove(listener);
-    return null;
   }
 
-  @Override
   public long getCurrentSnapshotIndex() {
     if (currentPersistedSnapshot.get() == null) {
       return 0;
@@ -76,35 +84,5 @@ public class TestSnapshotStore implements ReceivableSnapshotStore {
   }
 
   @Override
-  public ActorFuture<Void> delete() {
-    currentPersistedSnapshot.set(null);
-    receivedSnapshots.clear();
-    return null;
-  }
-
-  @Override
-  public Path getPath() {
-    return null;
-  }
-
-  @Override
-  public ActorFuture<Void> copySnapshot(
-      final PersistedSnapshot snapshot, final Path targetDirectory) {
-    return null;
-  }
-
-  @Override
-  public ReceivedSnapshot newReceivedSnapshot(final String snapshotId) {
-    final var newSnapshot = new InMemorySnapshot(this, snapshotId);
-    receivedSnapshots.add(newSnapshot);
-    return newSnapshot;
-  }
-
-  @Override
   public void close() {}
-
-  public void newSnapshot(final InMemorySnapshot persistedSnapshot) {
-    currentPersistedSnapshot.set(persistedSnapshot);
-    listeners.forEach(l -> l.onNewSnapshot(persistedSnapshot));
-  }
 }

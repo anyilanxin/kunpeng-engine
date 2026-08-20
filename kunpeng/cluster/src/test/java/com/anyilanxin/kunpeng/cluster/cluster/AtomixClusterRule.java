@@ -18,7 +18,7 @@ package com.anyilanxin.kunpeng.cluster.cluster;
 
 import com.anyilanxin.kunpeng.cluster.cluster.discovery.BootstrapDiscoveryProvider;
 import com.anyilanxin.kunpeng.cluster.utils.net.Address;
-import io.camunda.zeebe.test.util.socket.SocketUtil;
+import com.anyilanxin.kunpeng.cluster.cluster.socket.EphemeralPort;
 import io.netty.util.NetUtil;
 import org.junit.rules.ExternalResource;
 import org.junit.rules.TemporaryFolder;
@@ -98,7 +98,7 @@ public final class AtomixClusterRule extends ExternalResource {
     return addressMap.computeIfAbsent(
         memberId,
         newId -> {
-          final var nextInetAddress = SocketUtil.getNextAddress();
+          final var nextInetAddress = EphemeralPort.getNextAddress();
           final var addressString = NetUtil.toSocketAddressString(nextInetAddress);
           return Address.from(addressString);
         });

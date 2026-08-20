@@ -17,7 +17,7 @@
  */
 package com.anyilanxin.kunpeng.cluster.cluster.messaging.impl;
 
-import static io.camunda.zeebe.test.util.TestUtil.waitUntil;
+import static com.anyilanxin.kunpeng.cluster.test.TestUtil.waitUntil;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 

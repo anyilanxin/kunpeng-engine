@@ -20,7 +20,7 @@ import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ApplicationEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.InitialEntry;
 import com.anyilanxin.kunpeng.cluster.raft.zeebe.EntryValidator;
 import com.anyilanxin.kunpeng.cluster.raft.zeebe.ValidationResult;
-import io.camunda.zeebe.test.util.TestUtil;
+import com.anyilanxin.kunpeng.cluster.test.TestUtil;
 import org.junit.Rule;
 import org.junit.Test;
 

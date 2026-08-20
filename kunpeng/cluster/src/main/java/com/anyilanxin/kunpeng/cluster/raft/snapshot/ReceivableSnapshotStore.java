@@ -32,4 +32,9 @@ public interface ReceivableSnapshotStore extends PersistedSnapshotStore {
 
   /** 移除快照事件监听 */
   void removeSnapshotListener(PersistedSnapshotListener listener);
+
+  /** 最新快照的 raft 日志索引（无快照时 0） */
+  default long getCurrentSnapshotIndex() {
+    return getLatestSnapshot().map(PersistedSnapshot::getIndex).orElse(0L);
+  }
 }

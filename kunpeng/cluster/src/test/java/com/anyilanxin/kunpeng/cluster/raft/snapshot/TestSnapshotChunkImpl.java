@@ -16,7 +16,7 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.snapshot;
 
-import io.camunda.zeebe.snapshots.SnapshotChunk;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChunk;
 
 class TestSnapshotChunkImpl implements SnapshotChunk {
 

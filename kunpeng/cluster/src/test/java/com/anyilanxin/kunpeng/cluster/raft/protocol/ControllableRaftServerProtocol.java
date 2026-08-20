@@ -17,9 +17,10 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.protocol;
 
+import com.anyilanxin.kunpeng.cluster.test.Tuple;
+
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.utils.concurrent.Futures;
-import io.camunda.zeebe.util.collection.Tuple;
 import java.net.ConnectException;
 import java.time.Duration;
 import java.util.HashMap;
@@ -380,3 +381,4 @@ public class ControllableRaftServerProtocol implements RaftServerProtocol {
     }
   }
 }
+

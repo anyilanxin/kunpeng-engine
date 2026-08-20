@@ -22,7 +22,7 @@ import com.anyilanxin.kunpeng.cluster.cluster.messaging.ManagedMessagingService;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingConfig;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingConfig.CompressionAlgorithm;
 import com.anyilanxin.kunpeng.cluster.utils.net.Address;
-import io.camunda.zeebe.test.util.socket.SocketUtil;
+import com.anyilanxin.kunpeng.cluster.cluster.socket.EphemeralPort;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -34,7 +34,7 @@ class NettyMessagingServiceCompressionTest {
   @EnumSource(CompressionAlgorithm.class)
   void shouldSendAndReceiveMessagesWhenCompressionEnabled(final CompressionAlgorithm algorithm) {
     // given
-    final var senderAddress = Address.from(SocketUtil.getNextAddress().getPort());
+    final var senderAddress = Address.from(EphemeralPort.getNextAddress().getPort());
     final var config =
         new MessagingConfig()
             .setShutdownQuietPeriod(Duration.ofMillis(50))
@@ -44,7 +44,7 @@ class NettyMessagingServiceCompressionTest {
         (ManagedMessagingService)
             new NettyMessagingService("test", senderAddress, config).start().join();
 
-    final var receiverAddress = Address.from(SocketUtil.getNextAddress().getPort());
+    final var receiverAddress = Address.from(EphemeralPort.getNextAddress().getPort());
     final var receiverNetty =
         (ManagedMessagingService)
             new NettyMessagingService("test", receiverAddress, config).start().join();

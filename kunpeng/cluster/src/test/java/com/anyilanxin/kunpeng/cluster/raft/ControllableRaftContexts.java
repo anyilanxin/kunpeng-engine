@@ -16,6 +16,8 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft;
 
+import com.anyilanxin.kunpeng.cluster.test.Tuple;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
@@ -32,7 +34,6 @@ import com.anyilanxin.kunpeng.cluster.raft.storage.log.IndexedRaftLogEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLogReader;
 import com.anyilanxin.kunpeng.cluster.raft.zeebe.NoopEntryValidator;
 import com.anyilanxin.kunpeng.cluster.raft.zeebe.ZeebeLogAppender.AppendListener;
-import io.camunda.zeebe.util.collection.Tuple;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -163,7 +164,8 @@ public final class ControllableRaftContexts {
             getRaftThreadContextFactory(memberId),
             () -> random,
             RaftElectionConfig.ofDefaultElection(),
-            new RaftPartitionConfig());
+            new RaftPartitionConfig(),
+            new io.micrometer.core.instrument.simple.SimpleMeterRegistry());
     raft.setEntryValidator(new NoopEntryValidator());
     return raft;
   }
@@ -427,3 +429,4 @@ public final class ControllableRaftContexts {
     }
   }
 }
+

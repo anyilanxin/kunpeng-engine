@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingConfig;
 import com.anyilanxin.kunpeng.cluster.utils.net.Address;
-import io.camunda.zeebe.test.util.socket.SocketUtil;
+import com.anyilanxin.kunpeng.cluster.cluster.socket.EphemeralPort;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
 import java.net.ConnectException;
 import java.security.cert.CertificateException;
@@ -106,7 +106,7 @@ final class NettyMessagingServiceTlsTest {
 
   private NettyMessagingService createInsecureMessagingService() {
     final var config =
-        new MessagingConfig().setPort(SocketUtil.getNextAddress().getPort()).setTlsEnabled(false);
+        new MessagingConfig().setPort(EphemeralPort.getNextAddress().getPort()).setTlsEnabled(false);
     return new NettyMessagingService("cluster", Address.from(config.getPort()), config);
   }
 
@@ -114,7 +114,7 @@ final class NettyMessagingServiceTlsTest {
       final SelfSignedCertificate certificate) {
     final var config =
         new MessagingConfig()
-            .setPort(SocketUtil.getNextAddress().getPort())
+            .setPort(EphemeralPort.getNextAddress().getPort())
             .setTlsEnabled(true)
             .setCertificateChain(certificate.certificate())
             .setPrivateKey(certificate.privateKey());

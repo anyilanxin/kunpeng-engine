@@ -32,7 +32,7 @@ import com.anyilanxin.kunpeng.cluster.cluster.messaging.ManagedMessagingService;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingConfig;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException;
 import com.anyilanxin.kunpeng.cluster.utils.net.Address;
-import io.camunda.zeebe.test.util.socket.SocketUtil;
+import com.anyilanxin.kunpeng.cluster.cluster.socket.EphemeralPort;
 import java.net.ConnectException;
 import java.time.Duration;
 import java.util.Arrays;
@@ -79,40 +79,40 @@ public class NettyMessagingServiceTest {
 
   @Before
   public void setUp() throws Exception {
-    address1 = Address.from(SocketUtil.getNextAddress().getPort());
+    address1 = Address.from(EphemeralPort.getNextAddress().getPort());
     final var config = new MessagingConfig().setShutdownQuietPeriod(Duration.ofMillis(50));
 
     netty1 =
         (ManagedMessagingService)
             new NettyMessagingService("test", address1, config).start().join();
 
-    address2 = Address.from(SocketUtil.getNextAddress().getPort());
+    address2 = Address.from(EphemeralPort.getNextAddress().getPort());
     netty2 =
         (ManagedMessagingService)
             new NettyMessagingService("test", address2, config).start().join();
 
-    addressv11 = Address.from(SocketUtil.getNextAddress().getPort());
+    addressv11 = Address.from(EphemeralPort.getNextAddress().getPort());
     nettyv11 =
         (ManagedMessagingService)
             new NettyMessagingService("test", addressv11, config, ProtocolVersion.V1)
                 .start()
                 .join();
 
-    addressv12 = Address.from(SocketUtil.getNextAddress().getPort());
+    addressv12 = Address.from(EphemeralPort.getNextAddress().getPort());
     nettyv12 =
         (ManagedMessagingService)
             new NettyMessagingService("test", addressv12, config, ProtocolVersion.V1)
                 .start()
                 .join();
 
-    addressv21 = Address.from(SocketUtil.getNextAddress().getPort());
+    addressv21 = Address.from(EphemeralPort.getNextAddress().getPort());
     nettyv21 =
         (ManagedMessagingService)
             new NettyMessagingService("test", addressv21, config, ProtocolVersion.V2)
                 .start()
                 .join();
 
-    addressv22 = Address.from(SocketUtil.getNextAddress().getPort());
+    addressv22 = Address.from(EphemeralPort.getNextAddress().getPort());
     nettyv22 =
         (ManagedMessagingService)
             new NettyMessagingService("test", addressv22, config, ProtocolVersion.V2)
@@ -418,7 +418,7 @@ public class NettyMessagingServiceTest {
   @Test
   public void shouldNotBindToAdvertisedAddress() {
     // given
-    final var bindingAddress = Address.from(SocketUtil.getNextAddress().getPort());
+    final var bindingAddress = Address.from(EphemeralPort.getNextAddress().getPort());
     final MessagingConfig config = new MessagingConfig();
     config.setInterfaces(List.of(bindingAddress.host()));
     config.setPort(bindingAddress.port());

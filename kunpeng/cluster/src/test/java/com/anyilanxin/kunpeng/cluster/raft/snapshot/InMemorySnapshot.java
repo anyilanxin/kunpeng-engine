@@ -1,12 +1,12 @@
 /*
- * Copyright © 2020 camunda services GmbH (info@camunda.com)
+ * Copyright 2020 camunda services GmbH (info@camunda.com)
  * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,23 +16,15 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.snapshot;
 
-import io.camunda.zeebe.snapshots.PersistedSnapshot;
-import io.camunda.zeebe.snapshots.ReceivedSnapshot;
-import io.camunda.zeebe.snapshots.SnapshotChunk;
-import io.camunda.zeebe.snapshots.SnapshotChunkReader;
-import io.camunda.zeebe.snapshots.SnapshotId;
-import io.camunda.zeebe.util.StringUtil;
-import io.camunda.zeebe.util.buffer.BufferUtil;
-import io.camunda.zeebe.util.sched.future.ActorFuture;
-import io.camunda.zeebe.util.sched.future.CompletableActorFuture;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.NavigableMap;
 import java.util.Objects;
 import java.util.TreeMap;
+import java.util.concurrent.CompletableFuture;
 import java.util.zip.CRC32C;
 import java.util.zip.Checksum;
-import org.agrona.concurrent.UnsafeBuffer;
 
 public class InMemorySnapshot implements PersistedSnapshot, ReceivedSnapshot {
 
@@ -40,7 +32,7 @@ public class InMemorySnapshot implements PersistedSnapshot, ReceivedSnapshot {
   private final long index;
   private final long term;
   private final String id;
-  private final NavigableMap<String, String> chunks = new TreeMap<>();
+  private final NavigableMap<String, byte[]> chunks = new TreeMap<>();
   private final Checksum checksumCalculator = new CRC32C();
 
   private long checksum;
@@ -64,14 +56,14 @@ public class InMemorySnapshot implements PersistedSnapshot, ReceivedSnapshot {
       final long index, final long term, final int size, final TestSnapshotStore snapshotStore) {
     final var snapshot = new InMemorySnapshot(snapshotStore, index, term);
     for (int i = 0; i < size; i++) {
-      snapshot.writeChunks("chunk-" + i, "test".getBytes());
+      snapshot.writeChunks("chunk-" + i, "test".getBytes(StandardCharsets.UTF_8));
     }
     snapshot.persist();
     return snapshot;
   }
 
   void writeChunks(final String id, final byte[] chunk) {
-    chunks.put(id, StringUtil.fromBytes(chunk));
+    chunks.put(id, chunk);
     checksumCalculator.update(chunk);
   }
 
@@ -93,12 +85,12 @@ public class InMemorySnapshot implements PersistedSnapshot, ReceivedSnapshot {
   @Override
   public SnapshotChunkReader newChunkReader() {
     return new SnapshotChunkReader() {
-      private NavigableMap<String, String> iterator = chunks;
+      private NavigableMap<String, byte[]> iterator = chunks;
 
       @Override
-      public void seek(final ByteBuffer id) {
-        final var chunkId = BufferUtil.bufferAsString(new UnsafeBuffer(id));
-        iterator = chunks.tailMap(chunkId, true);
+      public void seek(final ByteBuffer chunkId) {
+        final String key = new String(chunkId.array(), 0, chunkId.remaining());
+        iterator = chunks.tailMap(key, true);
       }
 
       @Override
@@ -106,12 +98,7 @@ public class InMemorySnapshot implements PersistedSnapshot, ReceivedSnapshot {
         if (!hasNext()) {
           return null;
         }
-        return ByteBuffer.wrap(iterator.firstEntry().getKey().getBytes());
-      }
-
-      @Override
-      public void close() {
-        iterator = null;
+        return ByteBuffer.wrap(iterator.firstEntry().getKey().getBytes(StandardCharsets.UTF_8));
       }
 
       @Override
@@ -124,22 +111,9 @@ public class InMemorySnapshot implements PersistedSnapshot, ReceivedSnapshot {
         final var nextEntry = iterator.firstEntry();
         iterator = chunks.tailMap(nextEntry.getKey(), false);
         return new TestSnapshotChunkImpl(
-            id, nextEntry.getKey(), StringUtil.getBytes(nextEntry.getValue()), chunks.size());
+            id, nextEntry.getKey(), nextEntry.getValue(), chunks.size());
       }
     };
-  }
-
-  @Override
-  public void delete() {}
-
-  @Override
-  public Path getPath() {
-    return null;
-  }
-
-  @Override
-  public long getCompactionBound() {
-    return index;
   }
 
   @Override
@@ -149,11 +123,15 @@ public class InMemorySnapshot implements PersistedSnapshot, ReceivedSnapshot {
 
   @Override
   public long getChecksum() {
-    return 0;
+    return checksum;
   }
 
   @Override
-  public void close() {}
+  public Path getPath() {
+    return null;
+  }
+
+  // ===== ReceivedSnapshot =====
 
   @Override
   public long index() {
@@ -161,51 +139,19 @@ public class InMemorySnapshot implements PersistedSnapshot, ReceivedSnapshot {
   }
 
   @Override
-  public ActorFuture<Void> apply(final SnapshotChunk chunk) {
-    chunks.put(chunk.getChunkName(), StringUtil.fromBytes(chunk.getContent()));
-    return CompletableActorFuture.completed(null);
+  public CompletableFuture<Void> apply(final SnapshotChunk chunk) {
+    chunks.put(chunk.getChunkName(), chunk.getContent());
+    return CompletableFuture.completedFuture(null);
   }
 
   @Override
-  public ActorFuture<Void> abort() {
-    return CompletableActorFuture.completed(null);
-  }
+  public void abort() {}
 
   @Override
-  public ActorFuture<PersistedSnapshot> persist() {
+  public CompletableFuture<PersistedSnapshot> persist() {
     testSnapshotStore.newSnapshot(this);
     checksum = checksumCalculator.getValue();
-    return CompletableActorFuture.completed(this);
-  }
-
-  @Override
-  public SnapshotId snapshotId() {
-    return new SnapshotId() {
-      @Override
-      public long getIndex() {
-        return index;
-      }
-
-      @Override
-      public long getTerm() {
-        return term;
-      }
-
-      @Override
-      public long getProcessedPosition() {
-        return 0;
-      }
-
-      @Override
-      public long getExportedPosition() {
-        return 0;
-      }
-
-      @Override
-      public String getSnapshotIdAsString() {
-        return id;
-      }
-    };
+    return CompletableFuture.completedFuture(this);
   }
 
   @Override

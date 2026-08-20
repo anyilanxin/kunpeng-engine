@@ -29,7 +29,7 @@ import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ApplicationEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ConfigurationEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.InitialEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.RaftLogEntry;
-import io.camunda.zeebe.journal.Journal;
+import com.anyilanxin.kunpeng.cluster.raft.journal.Journal;
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

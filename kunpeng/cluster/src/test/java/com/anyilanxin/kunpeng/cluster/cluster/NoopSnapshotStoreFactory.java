@@ -17,8 +17,8 @@
  */
 package com.anyilanxin.kunpeng.cluster.cluster;
 
-import io.camunda.zeebe.snapshots.ReceivableSnapshotStore;
-import io.camunda.zeebe.snapshots.ReceivableSnapshotStoreFactory;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.ReceivableSnapshotStore;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.ReceivableSnapshotStoreFactory;
 import java.nio.file.Path;
 
 public class NoopSnapshotStoreFactory implements ReceivableSnapshotStoreFactory {

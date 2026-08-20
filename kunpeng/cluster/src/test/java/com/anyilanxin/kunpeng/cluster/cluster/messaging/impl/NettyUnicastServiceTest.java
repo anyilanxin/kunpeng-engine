@@ -25,7 +25,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.ManagedUnicastService;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingConfig;
 import com.anyilanxin.kunpeng.cluster.utils.net.Address;
-import io.camunda.zeebe.test.util.socket.SocketUtil;
+import com.anyilanxin.kunpeng.cluster.cluster.socket.EphemeralPort;
 import net.jodah.concurrentunit.ConcurrentTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -69,8 +69,8 @@ public class NettyUnicastServiceTest extends ConcurrentTestCase {
 
   @Before
   public void setUp() throws Exception {
-    address1 = Address.from("127.0.0.1", SocketUtil.getNextAddress().getPort());
-    address2 = Address.from("127.0.0.1", SocketUtil.getNextAddress().getPort());
+    address1 = Address.from("127.0.0.1", EphemeralPort.getNextAddress().getPort());
+    address2 = Address.from("127.0.0.1", EphemeralPort.getNextAddress().getPort());
 
     final String clusterId = "testClusterId";
     service1 = new NettyUnicastService(clusterId, address1, new MessagingConfig());

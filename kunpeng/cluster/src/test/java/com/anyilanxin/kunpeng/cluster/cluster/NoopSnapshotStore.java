@@ -17,21 +17,17 @@
  */
 package com.anyilanxin.kunpeng.cluster.cluster;
 
-import io.camunda.zeebe.snapshots.PersistedSnapshot;
-import io.camunda.zeebe.snapshots.PersistedSnapshotListener;
-import io.camunda.zeebe.snapshots.ReceivableSnapshotStore;
-import io.camunda.zeebe.snapshots.ReceivedSnapshot;
-import io.camunda.zeebe.util.sched.future.ActorFuture;
-import io.camunda.zeebe.util.sched.future.CompletableActorFuture;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshotListener;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.ReceivableSnapshotStore;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.ReceivedSnapshot;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChunkReader;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 class NoopSnapshotStore implements ReceivableSnapshotStore {
-
-  @Override
-  public boolean hasSnapshotId(final String id) {
-    return false;
-  }
 
   @Override
   public Optional<PersistedSnapshot> getLatestSnapshot() {
@@ -39,45 +35,30 @@ class NoopSnapshotStore implements ReceivableSnapshotStore {
   }
 
   @Override
-  public ActorFuture<Void> purgePendingSnapshots() {
-    return null;
+  public Iterable<PersistedSnapshot> getAvailableSnapshots() {
+    return Collections.emptyList();
   }
 
   @Override
-  public ActorFuture<Boolean> addSnapshotListener(final PersistedSnapshotListener listener) {
-    return null;
-  }
-
-  @Override
-  public ActorFuture<Boolean> removeSnapshotListener(final PersistedSnapshotListener listener) {
-    return null;
-  }
-
-  @Override
-  public long getCurrentSnapshotIndex() {
+  public long getCompactionBound() {
     return 0;
-  }
-
-  @Override
-  public ActorFuture<Void> delete() {
-    return null;
-  }
-
-  @Override
-  public Path getPath() {
-    return null;
-  }
-
-  @Override
-  public ActorFuture<Void> copySnapshot(
-      final PersistedSnapshot snapshot, final Path targetDirectory) {
-    return CompletableActorFuture.completed(null);
   }
 
   @Override
   public ReceivedSnapshot newReceivedSnapshot(final String snapshotId) {
     return null;
   }
+
+  @Override
+  public CompletableFuture<Void> purgePendingSnapshots() {
+    return CompletableFuture.completedFuture(null);
+  }
+
+  @Override
+  public void addSnapshotListener(final PersistedSnapshotListener listener) {}
+
+  @Override
+  public void removeSnapshotListener(final PersistedSnapshotListener listener) {}
 
   @Override
   public void close() {}

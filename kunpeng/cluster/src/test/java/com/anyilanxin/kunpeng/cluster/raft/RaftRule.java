@@ -37,9 +37,10 @@ import com.anyilanxin.kunpeng.cluster.raft.zeebe.ZeebeLogAppender;
 import com.anyilanxin.kunpeng.cluster.utils.AbstractIdentifier;
 import com.anyilanxin.kunpeng.cluster.utils.concurrent.SingleThreadContext;
 import com.anyilanxin.kunpeng.cluster.utils.concurrent.ThreadContext;
-import io.camunda.zeebe.snapshots.PersistedSnapshot;
-import io.camunda.zeebe.snapshots.PersistedSnapshotStore;
-import io.camunda.zeebe.util.FileUtil;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshotStore;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.ReceivableSnapshotStore;
+import com.anyilanxin.kunpeng.utils.FileUtil;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.awaitility.Awaitility;
 import org.junit.rules.ExternalResource;
@@ -347,7 +348,7 @@ public final class RaftRule extends ExternalResource {
     return servers.values().stream()
             .map(RaftServer::getContext)
             .map(RaftContext::getPersistedSnapshotStore)
-            .map(PersistedSnapshotStore::getCurrentSnapshotIndex)
+            .map(ReceivableSnapshotStore::getCurrentSnapshotIndex)
             .filter(idx -> idx == index)
             .count()
         == servers.values().size();
@@ -585,12 +586,12 @@ public final class RaftRule extends ExternalResource {
             .orElseThrow();
 
     final var memberDirectory = getMemberDirectory(directory, member);
-    FileUtil.deleteFolder(memberDirectory.toPath());
+    FileUtil.deleteTree(memberDirectory.toPath());
     // Clear in memory snapshots
     snapshots.remove(node);
   }
 
-  public PersistedSnapshotStore getPersistedSnapshotStore(final String followerB) {
+  public ReceivableSnapshotStore getPersistedSnapshotStore(final String followerB) {
     return servers.get(followerB).getContext().getPersistedSnapshotStore();
   }
 
