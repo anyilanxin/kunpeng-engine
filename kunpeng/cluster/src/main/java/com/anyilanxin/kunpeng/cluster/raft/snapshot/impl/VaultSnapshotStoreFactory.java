@@ -18,6 +18,7 @@ package com.anyilanxin.kunpeng.cluster.raft.snapshot.impl;
 
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.ReceivableSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.ReceivableSnapshotStoreFactory;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChecksumProvider;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.nio.file.Path;
 
@@ -36,8 +37,8 @@ public final class VaultSnapshotStoreFactory implements ReceivableSnapshotStoreF
 
   @Override
   public ReceivableSnapshotStore createReceivableSnapshotStore(
-      final Path dataDirectory, final int partitionId) {
-    final var vault = new SnapshotVault(dataDirectory, null, meterRegistry);
+    final Path dataDirectory, final SnapshotChecksumProvider checksumProvider, final int partitionId) {
+    final var vault = new SnapshotVault(dataDirectory, checksumProvider, meterRegistry);
     return new VaultSnapshotStore(vault);
   }
 }

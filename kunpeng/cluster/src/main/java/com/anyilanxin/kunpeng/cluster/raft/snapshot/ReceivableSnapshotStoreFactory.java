@@ -22,5 +22,5 @@ import java.nio.file.Path;
 public interface ReceivableSnapshotStoreFactory {
 
   /** 为指定分区数据目录创建可接收快照存储 */
-  ReceivableSnapshotStore createReceivableSnapshotStore(Path dataDirectory, int partitionId);
+  ReceivableSnapshotStore createReceivableSnapshotStore(Path dataDirectory, final SnapshotChecksumProvider checksumProvider, int partitionId);
 }

@@ -57,22 +57,32 @@ public class RaftPartitionGroup implements ManagedPartitionGroup {
   private final Map<PartitionId, RaftPartition> partitions = Maps.newConcurrentMap();
   private final List<PartitionId> sortedPartitionIds = Lists.newCopyOnWriteArrayList();
   private final String snapshotSubject;
+  private final com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChecksumProviderFactory checksumProviderFactory;
   private Collection<PartitionMetadata> metadata;
   private ClusterCommunicationService communicationService;
 
   public RaftPartitionGroup(final RaftPartitionGroupConfig config) {
-    this(config, new SimpleMeterRegistry());
+    this(config, new SimpleMeterRegistry(), null);
   }
 
   /** 可注入指标注册中心的构造器 */
   public RaftPartitionGroup(final RaftPartitionGroupConfig config, final MeterRegistry meterRegistry) {
+    this(config, meterRegistry, null);
+  }
+
+  /** 可注入指标注册中心与校验和提供方工厂的构造器 */
+  public RaftPartitionGroup(
+      final RaftPartitionGroupConfig config,
+      final MeterRegistry meterRegistry,
+      final com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChecksumProviderFactory checksumProviderFactory) {
     this.config = config;
+    this.checksumProviderFactory = checksumProviderFactory;
 
     name = config.getName();
     replicationFactor = config.getReplicationFactor();
     snapshotSubject = "raft-partition-group-" + name + "-snapshot";
 
-    buildPartitions(config, meterRegistry)
+    buildPartitions(config, meterRegistry, checksumProviderFactory)
         .forEach(
             p -> {
               partitions.put(p.id(), p);
@@ -82,7 +92,9 @@ public class RaftPartitionGroup implements ManagedPartitionGroup {
   }
 
   private static Collection<RaftPartition> buildPartitions(
-      final RaftPartitionGroupConfig config, final MeterRegistry meterRegistry) {
+      final RaftPartitionGroupConfig config,
+      final MeterRegistry meterRegistry,
+      final com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChecksumProviderFactory checksumProviderFactory) {
     final File partitionsDir =
         new File(config.getStorageConfig().getDirectory(config.getName()), "partitions");
     final List<RaftPartition> partitions = new ArrayList<>(config.getPartitionCount());
@@ -92,7 +104,8 @@ public class RaftPartitionGroup implements ManagedPartitionGroup {
               PartitionId.from(config.getName(), i + 1),
               config,
               new File(partitionsDir, String.valueOf(i + 1)),
-              meterRegistry));
+              meterRegistry,
+              checksumProviderFactory));
     }
     return partitions;
   }
@@ -251,6 +264,7 @@ public class RaftPartitionGroup implements ManagedPartitionGroup {
   public static class Builder extends PartitionGroup.Builder<RaftPartitionGroupConfig> {
 
     private MeterRegistry meterRegistry;
+    private com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChecksumProviderFactory checksumProviderFactory;
 
     protected Builder(final RaftPartitionGroupConfig config) {
       super(config);
@@ -512,7 +526,17 @@ public class RaftPartitionGroup implements ManagedPartitionGroup {
 
     @Override
     public RaftPartitionGroup build() {
-      return new RaftPartitionGroup(config, meterRegistry == null ? new SimpleMeterRegistry() : meterRegistry);
+      return new RaftPartitionGroup(
+          config,
+          meterRegistry == null ? new SimpleMeterRegistry() : meterRegistry,
+          checksumProviderFactory);
+    }
+
+    /** Sets the checksum provider factory for snapshot verification. */
+    public Builder withChecksumProviderFactory(
+        final com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChecksumProviderFactory factory) {
+      this.checksumProviderFactory = factory;
+      return this;
     }
 
     /** Sets the meter registry used by the raft metrics. */

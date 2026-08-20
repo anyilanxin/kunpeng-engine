@@ -24,6 +24,8 @@ import com.anyilanxin.kunpeng.cluster.raft.journal.util.health.FailureListener;
 import com.anyilanxin.kunpeng.cluster.raft.journal.util.health.HealthMonitorable;
 import com.anyilanxin.kunpeng.cluster.raft.journal.util.health.HealthReport;
 import com.anyilanxin.kunpeng.cluster.raft.partition.impl.RaftPartitionServer;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChecksumProvider;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChecksumProviderFactory;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +48,7 @@ public class RaftPartition implements Partition, HealthMonitorable {
   private final RaftPartitionGroupConfig config;
   private final File dataDirectory;
   private final MeterRegistry meterRegistry;
+  private final SnapshotChecksumProviderFactory checksumProviderFactory;
   private final Set<RaftRoleChangeListener> deferredRoleChangeListeners =
       new CopyOnWriteArraySet<>();
   private PartitionMetadata partitionMetadata;
@@ -55,11 +58,13 @@ public class RaftPartition implements Partition, HealthMonitorable {
       final PartitionId partitionId,
       final RaftPartitionGroupConfig config,
       final File dataDirectory,
-      final MeterRegistry meterRegistry) {
+      final MeterRegistry meterRegistry,
+      final SnapshotChecksumProviderFactory checksumProviderFactory) {
     this.partitionId = partitionId;
     this.config = config;
     this.dataDirectory = dataDirectory;
     this.meterRegistry = meterRegistry;
+    this.checksumProviderFactory = checksumProviderFactory;
   }
 
   public void addRoleChangeListener(final RaftRoleChangeListener listener) {
@@ -121,6 +126,11 @@ public class RaftPartition implements Partition, HealthMonitorable {
 
   /** Creates a Raft server. */
   protected RaftPartitionServer createServer(final PartitionManagementService managementService) {
+    // 用工厂为本分区创建专属校验和提供方
+    final SnapshotChecksumProvider checksumProvider =
+        checksumProviderFactory != null
+            ? checksumProviderFactory.create(partitionId.id(), dataDirectory.toPath())
+            : null;
     return new RaftPartitionServer(
         this,
         config,
@@ -128,7 +138,8 @@ public class RaftPartition implements Partition, HealthMonitorable {
         managementService.getMembershipService(),
         managementService.getMessagingService(),
         partitionMetadata,
-        meterRegistry);
+        meterRegistry,
+        checksumProvider);
   }
 
   /**

@@ -75,6 +75,7 @@ public class RaftPartitionServer implements Managed<RaftPartitionServer>, Health
   private final PartitionMetadata partitionMetadata;
   private final Duration requestTimeout;
   private final MeterRegistry meterRegistry;
+  private final com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChecksumProvider checksumProvider;
 
   private RaftServer server;
   private ReceivableSnapshotStore persistedSnapshotStore;
@@ -87,6 +88,19 @@ public class RaftPartitionServer implements Managed<RaftPartitionServer>, Health
       final ClusterCommunicationService clusterCommunicator,
       final PartitionMetadata partitionMetadata,
       final MeterRegistry meterRegistry) {
+    this(partition, config, localMemberId, membershipService, clusterCommunicator,
+        partitionMetadata, meterRegistry, null);
+  }
+
+  public RaftPartitionServer(
+      final RaftPartition partition,
+      final RaftPartitionGroupConfig config,
+      final MemberId localMemberId,
+      final ClusterMembershipService membershipService,
+      final ClusterCommunicationService clusterCommunicator,
+      final PartitionMetadata partitionMetadata,
+      final MeterRegistry meterRegistry,
+      final com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChecksumProvider checksumProvider) {
     this.partition = partition;
     this.config = config;
     this.localMemberId = localMemberId;
@@ -98,6 +112,7 @@ public class RaftPartitionServer implements Managed<RaftPartitionServer>, Health
             LoggerContext.builder(RaftPartitionServer.class).addValue(partition.name()).build());
     this.partitionMetadata = partitionMetadata;
     this.meterRegistry = meterRegistry;
+    this.checksumProvider = checksumProvider;
     requestTimeout = config.getPartitionConfig().getRequestTimeout();
   }
 
@@ -171,7 +186,8 @@ public class RaftPartitionServer implements Managed<RaftPartitionServer>, Health
         config
             .getStorageConfig()
             .getPersistedSnapshotStoreFactory()
-            .createReceivableSnapshotStore(partition.dataDirectory().toPath(), partitionId);
+            .createReceivableSnapshotStore(
+                partition.dataDirectory().toPath(), checksumProvider, partitionId);
 
     final var partitionConfig = config.getPartitionConfig();
 
