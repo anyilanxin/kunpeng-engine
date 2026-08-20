@@ -29,13 +29,14 @@ import com.anyilanxin.kunpeng.cluster.raft.partition.impl.RaftPartitionServer;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChecksumProvider;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChecksumProviderFactory;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Raft 分区：自包含的生命周期管理单元。
@@ -58,7 +59,6 @@ public class RaftPartition implements Partition, HealthMonitorable {
 
   private final PartitionMetadata metadata;
   private final RaftPartitionConfig config;
-  private final RaftStorageConfig storageConfig;
   private final File dataDirectory;
   private final MeterRegistry meterRegistry;
   private final SnapshotChecksumProviderFactory checksumProviderFactory;
@@ -72,7 +72,6 @@ public class RaftPartition implements Partition, HealthMonitorable {
   public RaftPartition(
       final PartitionMetadata metadata,
       final RaftPartitionConfig config,
-      final RaftStorageConfig storageConfig,
       final File dataDirectory,
       final MeterRegistry meterRegistry,
       final SnapshotChecksumProviderFactory checksumProviderFactory,
@@ -80,7 +79,6 @@ public class RaftPartition implements Partition, HealthMonitorable {
       final ClusterCommunicationService communicationService) {
     this.metadata = metadata;
     this.config = config;
-    this.storageConfig = storageConfig;
     this.dataDirectory = dataDirectory;
     this.meterRegistry = meterRegistry;
     this.checksumProviderFactory = checksumProviderFactory;
@@ -146,7 +144,7 @@ public class RaftPartition implements Partition, HealthMonitorable {
   public CompletableFuture<Void> delete() {
     final var srv = server;
     if (srv != null) {
-      return srv.stop().thenRun(() -> srv.delete());
+      return srv.stop().thenRun(srv::delete);
     }
     return CompletableFuture.completedFuture(null);
   }
@@ -180,7 +178,6 @@ public class RaftPartition implements Partition, HealthMonitorable {
     return new RaftPartitionServer(
         this,
         config,
-        storageConfig,
         getLocalMemberId(),
         membershipService,
         communicationService,

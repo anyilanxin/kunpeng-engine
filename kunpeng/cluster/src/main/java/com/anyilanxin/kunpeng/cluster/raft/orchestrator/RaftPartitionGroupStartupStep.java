@@ -20,7 +20,6 @@ import com.anyilanxin.kunpeng.cluster.raft.partition.PartitionId;
 import com.anyilanxin.kunpeng.cluster.raft.partition.PartitionMetadata;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartition;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartitionConfig;
-import com.anyilanxin.kunpeng.cluster.raft.partition.RaftStorageConfig;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 import com.anyilanxin.kunpeng.scheduler.future.CompletableActorFuture;
 import java.io.File;
@@ -41,12 +40,9 @@ public final class RaftPartitionGroupStartupStep<T extends RaftGroupContext>
   private static final Logger LOG = LoggerFactory.getLogger(RaftPartitionGroupStartupStep.class);
 
   private final RaftPartitionConfig partitionConfig;
-  private final RaftStorageConfig storageConfig;
 
-  public RaftPartitionGroupStartupStep(
-      final RaftPartitionConfig partitionConfig, final RaftStorageConfig storageConfig) {
+  public RaftPartitionGroupStartupStep(final RaftPartitionConfig partitionConfig) {
     this.partitionConfig = partitionConfig;
-    this.storageConfig = storageConfig;
   }
 
   @Override
@@ -72,7 +68,7 @@ public final class RaftPartitionGroupStartupStep<T extends RaftGroupContext>
             null);
         final var dataDir = new File(context.groupDataDirectory().toFile(), String.valueOf(i));
         final var partition = new RaftPartition(
-            metadata, partitionConfig, storageConfig, dataDir,
+            metadata, partitionConfig, dataDir,
             context.meterRegistry(), null,
             null, context.communicationService());
         context.attachPartition(i, partition);

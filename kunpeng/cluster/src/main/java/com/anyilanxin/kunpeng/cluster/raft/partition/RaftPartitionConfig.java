@@ -17,9 +17,11 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.partition;
 
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.ReceivableSnapshotStoreFactory;
+import com.anyilanxin.kunpeng.cluster.utils.memory.MemorySize;
 import java.time.Duration;
 
-/** Configurations for a single partition. */
+/** 分区配置（含选举、复制、存储） */
 public class RaftPartitionConfig {
 
   private static final Duration DEFAULT_ELECTION_TIMEOUT = Duration.ofMillis(2500);
@@ -29,7 +31,13 @@ public class RaftPartitionConfig {
   private static final int DEFAULT_MIN_STEP_DOWN_FAILURE_COUNT = 3;
   private static final Duration DEFAULT_MAX_QUORUM_RESPONSE_TIMEOUT = Duration.ofSeconds(0);
   private static final int DEFAULT_SNAPSHOT_REPLICATION_THRESHOLD = 100;
+  private static final String DATA_PREFIX = ".data";
+  private static final int DEFAULT_MAX_SEGMENT_SIZE = 1024 * 1024 * 32;
+  private static final boolean DEFAULT_FLUSH_EXPLICITLY = true;
+  private static final long DEFAULT_FREE_DISK_SPACE = 1024L * 1024 * 1024;
+  private static final int DEFAULT_JOURNAL_INDEX_DENSITY = 100;
 
+  // ===== 选举与复制 =====
   private Duration electionTimeout = DEFAULT_ELECTION_TIMEOUT;
   private Duration heartbeatInterval = DEFAULT_HEARTBEAT_INTERVAL;
   private int maxAppendsPerFollower = 2;
@@ -40,41 +48,27 @@ public class RaftPartitionConfig {
   private Duration maxQuorumResponseTimeout = DEFAULT_MAX_QUORUM_RESPONSE_TIMEOUT;
   private int preferSnapshotReplicationThreshold = DEFAULT_SNAPSHOT_REPLICATION_THRESHOLD;
 
-  /**
-   * Returns the Raft leader election timeout.
-   *
-   * @return the Raft leader election timeout
-   */
+  // ===== 存储 =====
+  private String directory;
+  private long segmentSize = DEFAULT_MAX_SEGMENT_SIZE;
+  private boolean flushExplicitly = DEFAULT_FLUSH_EXPLICITLY;
+  private long freeDiskSpace = DEFAULT_FREE_DISK_SPACE;
+  private int journalIndexDensity = DEFAULT_JOURNAL_INDEX_DENSITY;
+  private ReceivableSnapshotStoreFactory persistedSnapshotStoreFactory;
+
   public Duration getElectionTimeout() {
     return electionTimeout;
   }
 
-  /**
-   * Sets the leader election timeout.
-   *
-   * @param electionTimeout the leader election timeout
-   * @return the Raft partition group configuration
-   */
   public RaftPartitionConfig setElectionTimeout(final Duration electionTimeout) {
     this.electionTimeout = electionTimeout;
     return this;
   }
 
-  /**
-   * Returns the heartbeat interval.
-   *
-   * @return the heartbeat interval
-   */
   public Duration getHeartbeatInterval() {
     return heartbeatInterval;
   }
 
-  /**
-   * Sets the heartbeat interval.
-   *
-   * @param heartbeatInterval the heartbeat interval
-   * @return the Raft partition group configuration
-   */
   public RaftPartitionConfig setHeartbeatInterval(final Duration heartbeatInterval) {
     this.heartbeatInterval = heartbeatInterval;
     return this;
@@ -84,78 +78,129 @@ public class RaftPartitionConfig {
     return maxAppendsPerFollower;
   }
 
-  public void setMaxAppendsPerFollower(final int maxAppendsPerFollower) {
+  public RaftPartitionConfig setMaxAppendsPerFollower(final int maxAppendsPerFollower) {
     this.maxAppendsPerFollower = maxAppendsPerFollower;
+    return this;
   }
 
   public int getMaxAppendBatchSize() {
     return maxAppendBatchSize;
   }
 
-  public void setMaxAppendBatchSize(final int maxAppendBatchSize) {
+  public RaftPartitionConfig setMaxAppendBatchSize(final int maxAppendBatchSize) {
     this.maxAppendBatchSize = maxAppendBatchSize;
+    return this;
   }
 
   public boolean isPriorityElectionEnabled() {
     return priorityElectionEnabled;
   }
 
-  public void setPriorityElectionEnabled(final boolean enable) {
+  public RaftPartitionConfig setPriorityElectionEnabled(final boolean enable) {
     priorityElectionEnabled = enable;
+    return this;
   }
 
   public Duration getRequestTimeout() {
     return requestTimeout;
   }
 
-  /**
-   * Sets the timeout for every requests send between the replicas.
-   *
-   * @param requestTimeout the request timeout
-   */
-  public void setRequestTimeout(final Duration requestTimeout) {
+  public RaftPartitionConfig setRequestTimeout(final Duration requestTimeout) {
     this.requestTimeout = requestTimeout;
+    return this;
   }
 
   public int getMinStepDownFailureCount() {
     return minStepDownFailureCount;
   }
 
-  /**
-   * If the leader is not able to reach the quorum, the leader may step down. This is triggered
-   * after minStepDownFailureCount number of requests fails to get a response from the quorum of
-   * followers as well as if the last response was received before maxQuorumResponseTime.
-   *
-   * @param minStepDownFailureCount The number of failures after which a leader considers stepping
-   *     down.
-   */
-  public void setMinStepDownFailureCount(final int minStepDownFailureCount) {
+  public RaftPartitionConfig setMinStepDownFailureCount(final int minStepDownFailureCount) {
     this.minStepDownFailureCount = minStepDownFailureCount;
+    return this;
   }
 
   public Duration getMaxQuorumResponseTimeout() {
     return maxQuorumResponseTimeout;
   }
 
-  /**
-   * If the leader is not able to reach the quorum, the leader may step down. This is triggered
-   * after minStepDownFailureCount number of requests fails to get a response from the quorum of
-   * followers as well as if the last response was received before maxQuorumResponseTime.
-   *
-   * <p>When this value is zero, it uses a default value of electionTimeout * 2
-   *
-   * @param maxQuorumResponseTimeout the quorum response time out to trigger leader step down
-   */
-  public void setMaxQuorumResponseTimeout(final Duration maxQuorumResponseTimeout) {
+  public RaftPartitionConfig setMaxQuorumResponseTimeout(
+      final Duration maxQuorumResponseTimeout) {
     this.maxQuorumResponseTimeout = maxQuorumResponseTimeout;
+    return this;
   }
-
 
   public int getPreferSnapshotReplicationThreshold() {
     return preferSnapshotReplicationThreshold;
   }
 
-  public void setPreferSnapshotReplicationThreshold(final int preferSnapshotReplicationThreshold) {
+  public RaftPartitionConfig setPreferSnapshotReplicationThreshold(
+      final int preferSnapshotReplicationThreshold) {
     this.preferSnapshotReplicationThreshold = preferSnapshotReplicationThreshold;
+    return this;
+  }
+
+  // ===== 存储配置 =====
+
+  /** 分区数据目录 */
+  public String getDirectory(final String groupName) {
+    return directory != null
+        ? directory
+        : System.getProperty("atomix.data", DATA_PREFIX) + "/" + groupName;
+  }
+
+  public RaftPartitionConfig setDirectory(final String directory) {
+    this.directory = directory;
+    return this;
+  }
+
+  /** 日志段大小 */
+  public MemorySize getSegmentSize() {
+    return MemorySize.from(segmentSize);
+  }
+
+  public RaftPartitionConfig setSegmentSize(final MemorySize segmentSize) {
+    this.segmentSize = segmentSize.bytes();
+    return this;
+  }
+
+  /** 是否显式刷盘保证正确性（follower 每次追加刷、leader 提交时刷） */
+  public boolean shouldFlushExplicitly() {
+    return flushExplicitly;
+  }
+
+  public RaftPartitionConfig setFlushExplicitly(final boolean flushExplicitly) {
+    this.flushExplicitly = flushExplicitly;
+    return this;
+  }
+
+  /** 分配新日志段时的最小剩余磁盘空间 */
+  public long getFreeDiskSpace() {
+    return freeDiskSpace;
+  }
+
+  public RaftPartitionConfig setFreeDiskSpace(final long freeDiskSpace) {
+    this.freeDiskSpace = freeDiskSpace;
+    return this;
+  }
+
+  /** 日志索引密度 */
+  public int getJournalIndexDensity() {
+    return journalIndexDensity;
+  }
+
+  public RaftPartitionConfig setJournalIndexDensity(final int journalIndexDensity) {
+    this.journalIndexDensity = journalIndexDensity;
+    return this;
+  }
+
+  /** 快照存储工厂 */
+  public ReceivableSnapshotStoreFactory getPersistedSnapshotStoreFactory() {
+    return persistedSnapshotStoreFactory;
+  }
+
+  public RaftPartitionConfig setPersistedSnapshotStoreFactory(
+      final ReceivableSnapshotStoreFactory persistedSnapshotStoreFactory) {
+    this.persistedSnapshotStoreFactory = persistedSnapshotStoreFactory;
+    return this;
   }
 }

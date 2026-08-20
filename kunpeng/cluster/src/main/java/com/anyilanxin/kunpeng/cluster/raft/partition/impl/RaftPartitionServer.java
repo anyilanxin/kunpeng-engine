@@ -67,7 +67,6 @@ public class RaftPartitionServer implements Managed<RaftPartitionServer>, Health
   private final MemberId localMemberId;
   private final RaftPartition partition;
   private final RaftPartitionConfig partitionConfig;
-  private final RaftStorageConfig storageConfig;
   private final ClusterMembershipService membershipService;
   private final ClusterCommunicationService clusterCommunicator;
   private final Set<RaftRoleChangeListener> deferredRoleChangeListeners =
@@ -84,7 +83,6 @@ public class RaftPartitionServer implements Managed<RaftPartitionServer>, Health
   public RaftPartitionServer(
       final RaftPartition partition,
       final RaftPartitionConfig partitionConfig,
-      final RaftStorageConfig storageConfig,
       final MemberId localMemberId,
       final ClusterMembershipService membershipService,
       final ClusterCommunicationService clusterCommunicator,
@@ -93,7 +91,6 @@ public class RaftPartitionServer implements Managed<RaftPartitionServer>, Health
       final com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChecksumProvider checksumProvider) {
     this.partition = partition;
     this.partitionConfig = partitionConfig;
-    this.storageConfig = storageConfig;
     this.localMemberId = localMemberId;
     this.membershipService = membershipService;
     this.clusterCommunicator = clusterCommunicator;
@@ -208,7 +205,7 @@ public class RaftPartitionServer implements Managed<RaftPartitionServer>, Health
   private RaftServer buildServer() {
     final var partitionId = partition.id().id();
     persistedSnapshotStore =
-        storageConfig.getPersistedSnapshotStoreFactory()
+        partitionConfig.getPersistedSnapshotStoreFactory()
             .createReceivableSnapshotStore(
                 partition.dataDirectory().toPath(), checksumProvider, partitionId);
 
@@ -386,11 +383,11 @@ public class RaftPartitionServer implements Managed<RaftPartitionServer>, Health
     return RaftStorage.builder()
         .withPrefix(partition.name())
         .withDirectory(partition.dataDirectory())
-        .withMaxSegmentSize((int) storageConfig.getSegmentSize().bytes())
-        .withFlushExplicitly(storageConfig.shouldFlushExplicitly())
-        .withFreeDiskSpace(storageConfig.getFreeDiskSpace())
+        .withMaxSegmentSize((int) partitionConfig.getSegmentSize().bytes())
+        .withFlushExplicitly(partitionConfig.shouldFlushExplicitly())
+        .withFreeDiskSpace(partitionConfig.getFreeDiskSpace())
         .withSnapshotStore(persistedSnapshotStore)
-        .withJournalIndexDensity(storageConfig.getJournalIndexDensity())
+        .withJournalIndexDensity(partitionConfig.getJournalIndexDensity())
         .withMeterRegistry(meterRegistry)
         .build();
   }
