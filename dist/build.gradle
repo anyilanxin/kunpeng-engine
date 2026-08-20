@@ -23,6 +23,8 @@ plugins {
 }
 
 dependencies {
+    implementation project(':kunpeng:cluster')
+    implementation project(':kunpeng:utils')
     implementation 'org.springframework.boot:spring-boot'
     implementation 'org.springframework.boot:spring-boot-autoconfigure'
     implementation 'org.springframework.boot:spring-boot-starter-validation'

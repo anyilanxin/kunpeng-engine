@@ -17,36 +17,14 @@
  */
 package com.anyilanxin.kunpeng.cluster.utils.serializer;
 
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multisets;
-import com.google.common.collect.Sets;
 import com.anyilanxin.kunpeng.cluster.utils.Version;
-import com.anyilanxin.kunpeng.cluster.utils.serializer.serializers.ArraysAsListSerializer;
-import com.anyilanxin.kunpeng.cluster.utils.serializer.serializers.AtomicBooleanSerializer;
-import com.anyilanxin.kunpeng.cluster.utils.serializer.serializers.AtomicIntegerSerializer;
-import com.anyilanxin.kunpeng.cluster.utils.serializer.serializers.AtomicLongSerializer;
-import com.anyilanxin.kunpeng.cluster.utils.serializer.serializers.ByteBufferSerializer;
-import com.anyilanxin.kunpeng.cluster.utils.serializer.serializers.ImmutableListSerializer;
-import com.anyilanxin.kunpeng.cluster.utils.serializer.serializers.ImmutableMapSerializer;
-import com.anyilanxin.kunpeng.cluster.utils.serializer.serializers.ImmutableSetSerializer;
-import com.anyilanxin.kunpeng.cluster.utils.time.LogicalTimestamp;
-import com.anyilanxin.kunpeng.cluster.utils.time.WallClockTimestamp;
+import com.anyilanxin.kunpeng.cluster.utils.serializer.serializers.*;
+import com.esotericsoftware.kryo.serializers.JavaSerializer;
+import com.google.common.collect.*;
+
 import java.nio.ByteBuffer;
 import java.time.Duration;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.Optional;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -93,7 +71,7 @@ public final class Namespaces {
           .register(HashMultiset.class)
           .register(Multisets.immutableEntry("", 0).getClass())
           .register(Sets.class)
-          .register(Maps.immutableEntry("a", "b").getClass())
+              .register(new JavaSerializer(), Maps.immutableEntry("a", "b").getClass())
           .register(new ArraysAsListSerializer(), Arrays.asList().getClass())
           .register(Collections.singletonList(1).getClass())
           .register(Duration.class)
@@ -111,8 +89,8 @@ public final class Namespaces {
           .register(String[].class)
           .register(boolean[].class)
           .register(Object[].class)
-          .register(LogicalTimestamp.class)
-          .register(WallClockTimestamp.class)
+              .register(Void.class) // placeholder for the deleted LogicalTimestamp class
+              .register(Void.class) // placeholder for the deleted WallClockTimestamp class
           .register(Version.class)
           .register(
               new ByteBufferSerializer(),

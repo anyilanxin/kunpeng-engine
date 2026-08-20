@@ -17,9 +17,6 @@
  */
 package com.anyilanxin.kunpeng.cluster.utils.serializer;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static org.slf4j.LoggerFactory.getLogger;
-
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Serializer;
 import com.esotericsoftware.kryo.io.ByteBufferOutput;
@@ -28,13 +25,17 @@ import com.esotericsoftware.kryo.util.Pool;
 import com.esotericsoftware.minlog.Log;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
+import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+
 import java.io.ByteArrayInputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static org.slf4j.LoggerFactory.getLogger;
 
 /** Pool of Kryo instances, with classes pre-registered. */
 public class Namespace {

@@ -115,18 +115,14 @@ subprojects {
 
 		tasks.withType(JavaExec).configureEach {
 			jvmArgs += [
-					"--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED",
-					"-Xshare:auto",
-					"-Xshare:on"
+					"--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED"
 			]
 		}
 
 		tasks.withType(Test).configureEach {
 			useJUnitPlatform()
 			jvmArgs += [
-					"--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED",
-					"-Xshare:auto",
-					"-Xshare:on"
+					"--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED"
 			]
 		}
 

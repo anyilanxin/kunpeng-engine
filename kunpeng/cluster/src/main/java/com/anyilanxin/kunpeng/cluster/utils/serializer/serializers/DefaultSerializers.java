@@ -17,6 +17,7 @@
  */
 package com.anyilanxin.kunpeng.cluster.utils.serializer.serializers;
 
+
 import com.anyilanxin.kunpeng.cluster.utils.serializer.Serializer;
 
 /** Default serializers. */

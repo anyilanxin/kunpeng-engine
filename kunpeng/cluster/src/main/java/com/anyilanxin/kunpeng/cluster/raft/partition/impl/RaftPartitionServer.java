@@ -382,7 +382,7 @@ public class RaftPartitionServer implements Managed<RaftPartitionServer>, Health
     return RaftStorage.builder()
         .withPrefix(partition.name())
         .withDirectory(partition.dataDirectory())
-        .withMaxSegmentSize((int) partitionConfig.getSegmentSize().bytes())
+      .withMaxSegmentSize(partitionConfig.getSegmentSize())
         .withFlushExplicitly(partitionConfig.shouldFlushExplicitly())
         .withFreeDiskSpace(partitionConfig.getFreeDiskSpace())
         .withSnapshotStore(persistedSnapshotStore)

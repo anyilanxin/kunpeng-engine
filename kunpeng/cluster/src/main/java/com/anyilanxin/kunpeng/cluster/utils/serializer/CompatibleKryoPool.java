@@ -16,9 +16,6 @@
  */
 package com.anyilanxin.kunpeng.cluster.utils.serializer;
 
-import static com.anyilanxin.kunpeng.cluster.utils.serializer.Namespace.FLOATING_ID;
-import static org.slf4j.LoggerFactory.getLogger;
-
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Registration;
 import com.esotericsoftware.kryo.Serializer;
@@ -26,24 +23,27 @@ import com.esotericsoftware.kryo.SerializerFactory.CompatibleFieldSerializerFact
 import com.esotericsoftware.kryo.serializers.CompatibleFieldSerializer.CompatibleFieldSerializerConfig;
 import com.esotericsoftware.kryo.util.DefaultInstantiatorStrategy;
 import com.esotericsoftware.kryo.util.Pool;
-import com.anyilanxin.kunpeng.cluster.utils.serializer.Namespace.RegistrationBlock;
-import java.util.Arrays;
-import java.util.List;
 import org.apache.commons.lang3.tuple.Pair;
 import org.objenesis.strategy.StdInstantiatorStrategy;
 import org.slf4j.Logger;
+
+import java.util.Arrays;
+import java.util.List;
+
+import static com.anyilanxin.kunpeng.cluster.utils.serializer.Namespace.FLOATING_ID;
+import static org.slf4j.LoggerFactory.getLogger;
 
 public class CompatibleKryoPool extends Pool<Kryo> {
 
   private static final Logger LOGGER = getLogger(CompatibleKryoPool.class);
   private final String friendlyName;
   private final ClassLoader classLoader;
-  private final List<RegistrationBlock> registeredBlocks;
+  private final List<Namespace.RegistrationBlock> registeredBlocks;
 
   public CompatibleKryoPool(
       final String friendlyName,
       final ClassLoader classLoader,
-      final List<RegistrationBlock> registeredBlocks) {
+      final List<Namespace.RegistrationBlock> registeredBlocks) {
     super(true, true);
 
     this.friendlyName = friendlyName;
@@ -65,7 +65,7 @@ public class CompatibleKryoPool extends Pool<Kryo> {
     kryo.setClassLoader(classLoader);
     kryo.setInstantiatorStrategy(new DefaultInstantiatorStrategy(new StdInstantiatorStrategy()));
 
-    for (final RegistrationBlock block : registeredBlocks) {
+    for (final Namespace.RegistrationBlock block : registeredBlocks) {
       int id = block.begin();
       if (id == FLOATING_ID) {
         id = kryo.getNextRegistrationId();

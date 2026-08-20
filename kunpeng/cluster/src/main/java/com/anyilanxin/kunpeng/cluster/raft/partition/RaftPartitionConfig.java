@@ -17,7 +17,6 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.partition;
 
-import com.anyilanxin.kunpeng.cluster.utils.memory.MemorySize;
 import java.time.Duration;
 
 /** 分区配置（含选举、复制、存储） */
@@ -49,7 +48,7 @@ public class RaftPartitionConfig {
 
   // ===== 存储 =====
   private String directory;
-  private long segmentSize = DEFAULT_MAX_SEGMENT_SIZE;
+  private int segmentSize = DEFAULT_MAX_SEGMENT_SIZE;
   private boolean flushExplicitly = DEFAULT_FLUSH_EXPLICITLY;
   private long freeDiskSpace = DEFAULT_FREE_DISK_SPACE;
   private int journalIndexDensity = DEFAULT_JOURNAL_INDEX_DENSITY;
@@ -152,12 +151,12 @@ public class RaftPartitionConfig {
   }
 
   /** 日志段大小 */
-  public MemorySize getSegmentSize() {
-    return MemorySize.from(segmentSize);
+  public int getSegmentSize() {
+    return segmentSize;
   }
 
-  public RaftPartitionConfig setSegmentSize(final MemorySize segmentSize) {
-    this.segmentSize = segmentSize.bytes();
+  public RaftPartitionConfig setSegmentSize(final int segmentSize) {
+    this.segmentSize = segmentSize;
     return this;
   }
 
