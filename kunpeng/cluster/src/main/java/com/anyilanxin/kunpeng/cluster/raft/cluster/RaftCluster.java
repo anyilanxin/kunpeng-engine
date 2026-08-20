@@ -147,6 +147,18 @@ public interface RaftCluster {
   CompletableFuture<Void> bootstrap(Collection<MemberId> cluster);
 
   /**
+   * Joins the cluster using the provided cluster configuration.
+   *
+   * <p>The local member starts as PASSIVE and sends a reconfiguration request to an existing
+   * member. When accepted, the configuration change is committed through Raft consensus and
+   * this server transitions to its configured role.
+   *
+   * @param cluster The members of the cluster to join.
+   * @return A completable future to be completed once the server has joined.
+   */
+  CompletableFuture<Void> join(Collection<MemberId> cluster);
+
+  /**
    * Returns the current cluster leader.
    *
    * <p>If no leader has been elected for the current {@link #getTerm() term}, the leader will be

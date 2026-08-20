@@ -82,6 +82,14 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
   protected final ThreadContext threadContext;
   protected final ClusterMembershipService membershipService;
   protected final RaftClusterContext cluster;
+  protected final com.anyilanxin.kunpeng.cluster.raft.LeadershipTransferWriteBarrier leadershipTransferBarrier =
+      com.anyilanxin.kunpeng.cluster.raft.LeadershipTransferWriteBarrier.NONE;
+  protected final com.anyilanxin.kunpeng.cluster.raft.LeadershipTransferCoordinatorCheck leadershipTransferCheck =
+      com.anyilanxin.kunpeng.cluster.raft.LeadershipTransferCoordinatorCheck.NONE;
+  protected final com.anyilanxin.kunpeng.cluster.raft.RebalanceConfiguration rebalanceConfiguration =
+      com.anyilanxin.kunpeng.cluster.raft.RebalanceConfiguration.ofDefault();
+  protected final ConfigurationChangeContext configurationChangeContext =
+      new ConfigurationChangeContext(this);
   protected final RaftServerProtocol protocol;
   protected final RaftStorage storage;
   private final Logger log;
@@ -126,6 +134,7 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
   private final RaftPartitionConfig partitionConfig;
   private final int partitionId;
   private final MeterRegistry meterRegistry;
+  private volatile int electionPriority;
 
   public RaftContext(
       final String name,
@@ -961,6 +970,16 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
    *
    * @return The server protocol.
    */
+  /** 配置变更状态机（联合共识） */
+  public ConfigurationChangeContext getConfigurationChangeContext() {
+    return configurationChangeContext;
+  }
+
+  /** rebalance 指标（暂为空实现） */
+  public RebalanceMetrics getRebalanceMetrics() {
+    return new RebalanceMetrics(meterRegistry);
+  }
+
   public RaftServerProtocol getProtocol() {
     return protocol;
   }
@@ -1059,6 +1078,46 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
    */
   public ThreadContext getThreadContext() {
     return threadContext;
+  }
+
+  /** 获取领导权转移写屏障 */
+  public com.anyilanxin.kunpeng.cluster.raft.LeadershipTransferWriteBarrier getLeadershipTransferWriteBarrier() {
+    return leadershipTransferBarrier;
+  }
+
+  /** 获取领导权转移协调检查 */
+  public com.anyilanxin.kunpeng.cluster.raft.LeadershipTransferCoordinatorCheck getLeadershipTransferCoordinatorCheck() {
+    return leadershipTransferCheck;
+  }
+
+  /** 获取 rebalance 配置 */
+  public com.anyilanxin.kunpeng.cluster.raft.RebalanceConfiguration getRebalanceConfiguration() {
+    return rebalanceConfiguration;
+  }
+
+  /** 选举优先级（可动态调整） */
+  public int getElectionPriority() {
+    return electionPriority;
+  }
+
+  /** 更新选举优先级 */
+  public void setElectionPriority(final int priority) {
+    electionPriority = priority;
+  }
+
+  /** 暂停追加以进行领导权转移；委托当前 LeaderRole */
+  public long pauseForTransfer(final Duration timeout, final long writesFrozenSinceMs) {
+    if (role instanceof LeaderRole leaderRole) {
+      return leaderRole.pauseForTransfer(timeout, writesFrozenSinceMs);
+    }
+    return 0;
+  }
+
+  /** 从领导权转移中恢复追加；委托当前 LeaderRole */
+  public void resumeFromTransfer() {
+    if (role instanceof LeaderRole leaderRole) {
+      leaderRole.resumeFromTransfer();
+    }
   }
 
   /**

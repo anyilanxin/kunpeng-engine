@@ -17,30 +17,27 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.cluster.impl;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.raft.RaftException;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftCluster;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember.Type;
 import com.anyilanxin.kunpeng.cluster.raft.impl.RaftContext;
+import com.anyilanxin.kunpeng.cluster.raft.protocol.RaftResponse;
+import com.anyilanxin.kunpeng.cluster.raft.protocol.ReconfigureRequest;
 import com.anyilanxin.kunpeng.cluster.raft.storage.system.Configuration;
+
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /** Manages the persistent state of the Raft cluster from the perspective of a single server. */
 public final class RaftClusterContext implements RaftCluster, AutoCloseable {
@@ -104,6 +101,58 @@ public final class RaftClusterContext implements RaftCluster, AutoCloseable {
       return localMember;
     }
     return getRemoteMember(id);
+  }
+
+  /**
+   * 加入已有集群：以 PASSIVE 启动 → 向已知成员逐个发 ReconfigureRequest → leader 接受后
+   * 将本节点写入配置并经共识提交 → 本节点经日志复制收到新配置 → 转入对应角色。
+   */
+  @Override
+  public CompletableFuture<Void> join(final Collection<MemberId> cluster) {
+    // 以 PASSIVE 身份加入，确保不影响已有 quorum
+    localMember.setType(Type.PASSIVE);
+
+    final var future = new CompletableFuture<Void>();
+    raft.getThreadContext()
+      .execute(
+        () -> {
+          // 按序尝试向已知成员发起加入请求
+          final var iterator = cluster.iterator();
+          tryNextMember(iterator, future);
+        });
+    return future;
+  }
+
+  private void tryNextMember(
+    final java.util.Iterator<MemberId> iterator, final CompletableFuture<Void> future) {
+    if (!iterator.hasNext()) {
+      future.completeExceptionally(
+        new RaftException.ProtocolException("无法加入集群：所有已知成员均未应答"));
+      return;
+    }
+    final var target = iterator.next();
+    if (target.equals(localMember.memberId())) {
+      tryNextMember(iterator, future);
+      return;
+    }
+    final var request =
+      ReconfigureRequest.builder()
+        .withIndex(0)
+        .withTerm(raft.getTerm())
+        .withMember(localMember)
+        .build();
+    raft.getProtocol()
+      .reconfigure(target, request)
+      .whenComplete(
+        (response, error) -> {
+          if (error == null && response.status() == RaftResponse.Status.OK) {
+            // leader 已接受，配置变更经共识提交后本节点将收到新配置
+            future.complete(null);
+          } else {
+            // 该成员不可用或非 leader，尝试下一个
+            tryNextMember(iterator, future);
+          }
+        });
   }
 
   @Override
@@ -231,6 +280,19 @@ public final class RaftClusterContext implements RaftCluster, AutoCloseable {
    */
   public RaftMemberContext getMemberState(final MemberId id) {
     return membersMap.get(id);
+  }
+
+  /**
+   * 是否为当前配置成员
+   */
+  public boolean isMember(final MemberId id) {
+    return membersMap.containsKey(id);
+  }
+
+  /** 是否处于联合共识阶段 */
+  public boolean inJointConsensus() {
+    final var config = configurationRef.get();
+    return config != null && config.requiresJointConsensus();
   }
 
   /**

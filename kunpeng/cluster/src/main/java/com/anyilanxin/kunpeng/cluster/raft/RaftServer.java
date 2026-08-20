@@ -39,6 +39,7 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
@@ -291,11 +292,69 @@ public interface RaftServer {
   }
 
   /**
+   * Starts this raft server by joining an existing replication group. A
+   * {@link com.anyilanxin.kunpeng.cluster.raft.protocol.JoinRequest} is sent to an arbitrary member
+   * of the cluster.
+   *
+   * @param cluster a list of member ids that are part of the cluster and assist in joining.
+   * @return A completable future to be completed once the server has joined the cluster.
+   */
+  CompletableFuture<RaftServer> join(Collection<MemberId> cluster);
+
+  /**
+   * Starts this raft server by joining an existing replication group.
+   *
+   * @param cluster a list of member ids that are part of the cluster and assist in joining.
+   * @return A completable future to be completed once the server has joined the cluster.
+   */
+  default CompletableFuture<RaftServer> join(final MemberId... cluster) {
+    return join(Arrays.asList(cluster));
+  }
+
+  /**
+   * Requests to leave the replication group by sending a
+   * {@link com.anyilanxin.kunpeng.cluster.raft.protocol.LeaveRequest} to an arbitrary member of the
+   * cluster, as provided by the {@link ClusterMembershipService}.
+   *
+   * @return A future to be completed successfully once the server has left the cluster.
+   */
+  CompletableFuture<RaftServer> leave();
+
+  /**
    * Promotes the server to leader if possible.
    *
    * @return a future to be completed once the server has been promoted
    */
   CompletableFuture<RaftServer> promote();
+
+  /**
+   * Force configure the partition to remove all members which are not part of the given
+   * membersToRetain.
+   *
+   * <p>This method is typically called to remove a set of unreachable members when there is no
+   * leader.
+   *
+   * @param membersToRetain The members to retain in the partition
+   * @return a future to be completed once the server has been force configured
+   */
+  CompletableFuture<RaftServer> forceConfigure(Map<MemberId, RaftMember.Type> membersToRetain);
+
+  /**
+   * Update priority of this server used for priority election. If priority election is not
+   * enabled, this method has no effect. To get the desired result, priority of all replicas must
+   * be updated accordingly. This method only updates the local server's priority.
+   *
+   * @param newPriority the priority to be set
+   * @return a future to be completed when the new priority is applied
+   */
+  CompletableFuture<Void> reconfigurePriority(int newPriority);
+
+  /**
+   * Ensures that all records written to the log are flushed to disk.
+   *
+   * @return a future which will be completed after the log is flushed to disk
+   */
+  CompletableFuture<Void> flushLog();
 
   /**
    * Compacts server logs.
@@ -373,6 +432,25 @@ public interface RaftServer {
    * Steps down from the current leadership, which means tries to transition directly to follower.
    */
   CompletableFuture<Void> stepDown();
+
+  /**
+   * Initiates a leadership transfer to the specified member (rebalance entry point).
+   *
+   * <p>Only the current leader can initiate a transfer; calling this on a follower or candidate
+   * completes exceptionally. The transfer pauses appends, waits for the target to catch up, and
+   * sends a TimeoutNow to trigger an immediate election.
+   *
+   * @param target the member to transfer leadership to
+   * @return a future completed with the transfer result
+   */
+  CompletableFuture<LeadershipTransferResult> transferLeadershipTo(MemberId target);
+
+  /**
+   * Returns whether a leadership transfer is currently in progress on this server.
+   *
+   * @return whether a transfer is in progress
+   */
+  boolean isLeadershipTransferInProgress();
 
   /**
    * Builds a single-use Raft server.

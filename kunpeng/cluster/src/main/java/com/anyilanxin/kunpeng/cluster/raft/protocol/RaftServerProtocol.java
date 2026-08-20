@@ -60,6 +60,17 @@ public interface RaftServerProtocol {
    */
   CompletableFuture<TransferResponse> transfer(MemberId memberId, TransferRequest request);
 
+  /** 发送 TimeoutNow 请求触发立即选举 */
+  default CompletableFuture<Void> timeoutNow(MemberId memberId, TimeoutNowRequest request) {
+    return CompletableFuture.completedFuture(null);
+  }
+
+  /** 发送领导权转移结果通知 */
+  default CompletableFuture<Void> leadershipTransferResult(
+      MemberId memberId, LeadershipTransferResultRequest request) {
+    return CompletableFuture.completedFuture(null);
+  }
+
   /**
    * Sends a poll request to the given node.
    *

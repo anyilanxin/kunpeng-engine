@@ -52,8 +52,39 @@ import java.util.concurrent.CompletionException;
 /** Leader state. */
 public final class LeaderRole extends ActiveRole implements ZeebeLogAppender {
 
+  /** 暂停追加以进行领导权转移（rebalance 用；返回冻结时的日志索引） */
+  public long pauseForTransfer(final java.time.Duration timeout, final long writesFrozenSinceMs) {
+    raft.checkThread();
+    // 取消追加定时器, 停止向 follower 发送新条目
+    if (appendTimer != null) {
+      appendTimer.cancel();
+      appendTimer = null;
+    }
+    // 返回当前已提交的最高索引作为冻结点
+    return raft.getCommitIndex();
+  }
+
+  /** 从领导权转移中恢复追加（rebalance 用） */
+  public void resumeFromTransfer() {
+    raft.checkThread();
+    if (appendTimer == null) {
+      appendTimer =
+          raft.getThreadContext()
+              .schedule(Duration.ZERO, raft.getHeartbeatInterval(), this::appendMembers);
+    }
+  }
+
+  /** 配置变更正在进行中异常 */
+  public static class ConfigurationChangeInProgressException extends RuntimeException {
+
+    public ConfigurationChangeInProgressException(final String message) {
+      super(message);
+    }
+  }
+
   private static final int MAX_APPEND_ATTEMPTS = 5;
   private final LeaderAppender appender;
+  private final com.anyilanxin.kunpeng.cluster.raft.rebalance.LeadershipTransferRunner transferRunner;
   private Scheduled appendTimer;
   private long configuring;
   private CompletableFuture<Void> commitInitialEntriesFuture;
@@ -62,6 +93,18 @@ public final class LeaderRole extends ActiveRole implements ZeebeLogAppender {
   public LeaderRole(final RaftContext context) {
     super(context);
     appender = new LeaderAppender(this);
+    transferRunner =
+        new com.anyilanxin.kunpeng.cluster.raft.rebalance.LeadershipTransferRunner(
+            context,
+            this,
+            () -> appendTimer == null,
+            this::initializing,
+            this::configuring);
+  }
+
+  /** 获取领导权转移执行器（rebalance 入口） */
+  public com.anyilanxin.kunpeng.cluster.raft.rebalance.LeadershipTransferRunner getTransferRunner() {
+    return transferRunner;
   }
 
   @Override
@@ -300,37 +343,32 @@ public final class LeaderRole extends ActiveRole implements ZeebeLogAppender {
     return appender.getIndex() == 0 || raft.getCommitIndex() < appender.getIndex();
   }
 
-  /** Commits the given configuration. */
-  protected CompletableFuture<Long> configure(final Collection<RaftMember> members) {
+  /**
+   * 通过联合共识（两阶段）提交配置变更。
+   *
+   * <p>第一阶段写旧∪新联合条目（等双 majority），第二阶段写最终配置条目（等新 majority）。
+   * 若 Leader 自身被移除，最终提交后自动退位。
+   */
+  protected CompletableFuture<Long> configure(final Collection<RaftMember> newMembers) {
     raft.checkThread();
 
+    final var oldMembers = raft.getCluster().getMembers();
     final long term = raft.getTerm();
+    configuring = term; // 标记配置变更进行中
 
-    final ConfigurationEntry configurationEntry =
-        new ConfigurationEntry(System.currentTimeMillis(), members);
-    return append(new RaftLogEntry(term, configurationEntry))
-        .thenCompose(
-            entry -> {
-              // Store the index of the configuration entry in order to prevent other configurations
-              // from
-              // being logged and committed concurrently. This is an important safety property of
-              // Raft.
-              configuring = entry.index();
-              raft.getCluster()
-                  .configure(
-                      new Configuration(
-                          entry.index(),
-                          entry.term(),
-                          configurationEntry.timestamp(),
-                          configurationEntry.members()));
-
-              return appender
-                  .appendEntries(entry.index())
-                  .whenComplete(
-                      (commitIndex, commitError) -> {
-                        raft.checkThread();
-                        configuring = 0;
-                      });
+    return raft
+        .getConfigurationChangeContext()
+        .change(oldMembers, newMembers)
+        .thenApply(
+            ignored -> {
+              configuring = 0;
+              // 联合共识完成后，最终配置已提交；返回最终条目索引
+              return raft.getLog().getLastIndex();
+            })
+        .exceptionally(
+            error -> {
+              configuring = 0;
+              throw new CompletionException(error);
             });
   }
 

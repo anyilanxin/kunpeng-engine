@@ -19,6 +19,7 @@ package com.anyilanxin.kunpeng.cluster.raft.roles;
 
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.NoRemoteHandler;
 import com.anyilanxin.kunpeng.cluster.raft.RaftServer;
+import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.impl.DefaultRaftMember;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.impl.RaftMemberContext;
 import com.anyilanxin.kunpeng.cluster.raft.impl.RaftContext;
@@ -41,6 +42,8 @@ import java.util.stream.Collectors;
 public final class CandidateRole extends ActiveRole {
 
   private Scheduled currentTimer;
+  /** 联合共识计票器（非联合态为 null） */
+  private com.anyilanxin.kunpeng.cluster.raft.utils.JointConsensusQuorum jointQuorum;
 
   public CandidateRole(final RaftContext context) {
     super(context);
@@ -111,25 +114,70 @@ public final class CandidateRole extends ActiveRole {
                 .map(RaftMemberContext::getMember)
                 .collect(Collectors.toList()));
 
+    // 联合共识阶段需同时收集旧∪新两组成员的投票，各自过半才算当选
+    final var config = raft.getCluster().getConfiguration();
+    final boolean jointConsensus = config != null && config.requiresJointConsensus();
+
+    final Runnable onElected = () -> {
+      if (!isRunning()) {
+        return;
+      }
+      complete.set(true);
+      raft.transition(RaftServer.Role.LEADER);
+    };
+    final Runnable onFailed = () -> {
+      if (!isRunning()) {
+        return;
+      }
+      complete.set(true);
+      raft.transition(RaftServer.Role.FOLLOWER);
+    };
+
     // Send vote requests to all nodes. The vote request that is sent
     // to this node will be automatically successful.
-    // First check if the quorum is null. If the quorum isn't null then that
-    // indicates that another vote is already going on.
-    final Quorum quorum =
-        new Quorum(
-            raft.getCluster().getQuorum(),
-            (elected) -> {
-              if (!isRunning()) {
-                return;
-              }
-
-              complete.set(true);
-              if (elected) {
-                raft.transition(RaftServer.Role.LEADER);
-              } else {
-                raft.transition(RaftServer.Role.FOLLOWER);
-              }
-            });
+    final Quorum quorum;
+    if (jointConsensus) {
+      // 联合共识：双 majority 计票
+      final var oldIds =
+          config.oldMembers().stream()
+              .map(RaftMember::memberId)
+              .collect(java.util.stream.Collectors.toSet());
+      final var newIds =
+          config.members().stream()
+              .map(RaftMember::memberId)
+              .collect(java.util.stream.Collectors.toSet());
+      final var jointQuorum =
+          new com.anyilanxin.kunpeng.cluster.raft.utils.JointConsensusQuorum(
+              newIds, oldIds, elected -> {
+                if (elected) {
+                  onElected.run();
+                } else {
+                  onFailed.run();
+                }
+              });
+      // 适配为 Quorum 接口供 voteRequest 回调使用
+      quorum = new Quorum(Integer.MAX_VALUE, elected -> {
+        // 不直接使用；投票成功时调 jointQuorum.succeed(memberId)
+      });
+      // 存储联合计票器供后续使用
+      this.jointQuorum = jointQuorum;
+    } else {
+      quorum =
+          new Quorum(
+              raft.getCluster().getQuorum(),
+              (elected) -> {
+                if (!isRunning()) {
+                  return;
+                }
+                complete.set(true);
+                if (elected) {
+                  raft.transition(RaftServer.Role.LEADER);
+                } else {
+                  raft.transition(RaftServer.Role.FOLLOWER);
+                }
+              });
+      this.jointQuorum = null;
+    }
 
     final Duration delay =
         raft.getElectionTimeout()
@@ -216,12 +264,22 @@ public final class CandidateRole extends ActiveRole {
       } else if (!response.voted()) {
         log.debug("Received rejected vote from {}", member);
         quorum.fail();
+        if (jointQuorum != null) {
+          jointQuorum.fail();
+        }
       } else if (response.term() != raft.getTerm()) {
         log.debug("Received successful vote for a different term from {}", member);
         quorum.fail();
+        if (jointQuorum != null) {
+          jointQuorum.fail();
+        }
       } else {
         log.debug("Received successful vote from {}", member);
         quorum.succeed();
+        if (jointQuorum != null) {
+          // 联合共识：按成员 ID 计入双 majority
+          jointQuorum.succeed(member.memberId());
+        }
       }
     }
   }

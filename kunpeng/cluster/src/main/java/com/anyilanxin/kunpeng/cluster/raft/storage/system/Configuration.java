@@ -25,63 +25,67 @@ import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember;
 import com.anyilanxin.kunpeng.cluster.utils.misc.TimestampPrinter;
 import java.util.Collection;
 
-/** Represents a persisted server configuration. */
+/**
+ * 持久化的集群配置。
+ *
+ * <p>联合共识（joint consensus）状态下 {@code oldMembers} 非空：此时共识提交与选举均需
+ * 新旧两个成员集合各自过半（Raft 论文 §6），保证变更过程中任意时刻旧 quorum 与新 quorum
+ * 始终有交集，防止脑裂。
+ */
 public class Configuration {
 
   private final long index;
   private final long term;
   private final long time;
   private final Collection<RaftMember> members;
+  /** 联合共识阶段的旧成员集合；非联合态为 null */
+  private final Collection<RaftMember> oldMembers;
 
   public Configuration(
       final long index, final long term, final long time, final Collection<RaftMember> members) {
+    this(index, term, time, members, null);
+  }
+
+  public Configuration(
+      final long index,
+      final long term,
+      final long time,
+      final Collection<RaftMember> members,
+      final Collection<RaftMember> oldMembers) {
     checkArgument(time > 0, "time must be positive");
     checkNotNull(members, "members cannot be null");
     this.index = index;
     this.term = term;
     this.time = time;
     this.members = members;
+    this.oldMembers = oldMembers;
   }
 
-  /**
-   * Returns the configuration index.
-   *
-   * <p>The index is the index of the {@link com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ConfigurationEntry
-   * ConfigurationEntry} which resulted in this configuration.
-   *
-   * @return The configuration index.
-   */
   public long index() {
     return index;
   }
 
-  /**
-   * Returns the configuration term.
-   *
-   * <p>The term is the term of the leader at the time the configuration change was committed.
-   *
-   * @return The configuration term.
-   */
   public long term() {
     return term;
   }
 
-  /**
-   * Returns the configuration time.
-   *
-   * @return The time at which the configuration was committed.
-   */
   public long time() {
     return time;
   }
 
-  /**
-   * Returns the cluster membership for this configuration.
-   *
-   * @return The cluster membership.
-   */
+  /** 当前（新）成员集合 */
   public Collection<RaftMember> members() {
     return members;
+  }
+
+  /** 联合共识阶段的旧成员集合；非联合态返回 {@code null} */
+    public Collection<RaftMember> oldMembers() {
+    return oldMembers;
+  }
+
+  /** 是否处于联合共识阶段 */
+  public boolean requiresJointConsensus() {
+    return oldMembers != null;
   }
 
   @Override
@@ -90,6 +94,7 @@ public class Configuration {
         .add("index", index)
         .add("time", new TimestampPrinter(time))
         .add("members", members)
+        .add("oldMembers", oldMembers)
         .toString();
   }
 }

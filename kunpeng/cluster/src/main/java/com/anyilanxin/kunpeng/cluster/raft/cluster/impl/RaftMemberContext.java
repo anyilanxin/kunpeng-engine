@@ -33,6 +33,21 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /** Cluster member state. */
 public final class RaftMemberContext {
 
+  /** 最近一次 Append 是否已确认 */
+  public boolean hasAckedAppend() {
+    return appendSucceeded;
+  }
+
+  /** 当前复制延迟（以条目数估算；上游接口名义为字节数，实际按条目差计） */
+  public long getReplicationLagBytes() {
+    final RaftLog log = getLog();
+    return log == null ? 0 : Math.max(0, log.getLastIndex() - matchIndex);
+  }
+
+  private RaftLog getLog() {
+    return member.getCluster() != null ? member.getCluster().getContext().getLog() : null;
+  }
+
   private static final int APPEND_WINDOW_SIZE = 8;
   private final DefaultRaftMember member;
   private final DescriptiveStatistics timeStats = new DescriptiveStatistics(APPEND_WINDOW_SIZE);

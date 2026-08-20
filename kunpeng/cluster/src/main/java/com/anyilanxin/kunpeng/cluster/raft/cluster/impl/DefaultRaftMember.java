@@ -229,6 +229,10 @@ public final class DefaultRaftMember implements RaftMember, AutoCloseable {
   }
 
   /** Sets the member's parent cluster. */
+  RaftClusterContext getCluster() {
+    return cluster;
+  }
+
   DefaultRaftMember setCluster(final RaftClusterContext cluster) {
     this.cluster = cluster;
     return this;
