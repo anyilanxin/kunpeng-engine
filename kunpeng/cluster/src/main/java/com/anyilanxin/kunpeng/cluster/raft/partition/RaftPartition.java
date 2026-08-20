@@ -126,13 +126,16 @@ public class RaftPartition implements Partition, HealthMonitorable {
    * </ol>
    *
    * @param sourcePartitionId 引导快照的来源分区（可以是同组或跨组的分区）
+   * @param sourceNode 源分区所在节点
    * @return 引导快照恢复完成后返回本分区
    */
-  public CompletableFuture<RaftPartition> bootstrap(final PartitionId sourcePartitionId) {
-    LOG.info("Bootstrap partition {} with bootstrap snapshot from {}",
-        name(), sourcePartitionId);
+  public CompletableFuture<RaftPartition> bootstrap(
+      final PartitionId sourcePartitionId,
+      final com.anyilanxin.kunpeng.cluster.cluster.MemberId sourceNode) {
+    LOG.info("Bootstrap partition {} with bootstrap snapshot from {} (node={})",
+        name(), sourcePartitionId, sourceNode);
     return bootstrap()
-        .thenCompose(v -> pullBootstrapSnapshot(sourcePartitionId))
+        .thenCompose(v -> pullBootstrapSnapshot(sourceNode))
         .thenCompose(archivedSnapshot -> {
           if (archivedSnapshot != null) {
             LOG.info("Bootstrap snapshot received from {}, recovering", sourcePartitionId);
@@ -144,23 +147,49 @@ public class RaftPartition implements Partition, HealthMonitorable {
   }
 
   /**
-   * 从指定分区拉取引导快照：通过通信服务向源分区发起引导请求，
-   * 源分区调用其 handler.onTakeBootstrapSnapshot 产生数据，快照传输到本节点的 vault。
+   * 启动引导快照服务（在源分区的 leader 节点调用）：
+   * 监听引导请求 → 若无引导快照则创建 → 逐块返回 SnapshotBlock。
    *
-   * @param sourcePartitionId 来源分区
+   * <p>由 orchestrator 在分区就绪后调用。
+   */
+  public CompletableFuture<Void> startBootstrapServing() {
+    final var service = getOrCreateBootstrapTransferService();
+    return service.startServing();
+  }
+
+  /** 停止引导快照服务 */
+  public void stopBootstrapServing() {
+    final var srv = bootstrapTransferService;
+    if (srv != null) {
+      srv.stopServing();
+    }
+  }
+
+  private com.anyilanxin.kunpeng.cluster.raft.snapshot.BootstrapTransferService bootstrapTransferService;
+
+  private com.anyilanxin.kunpeng.cluster.raft.snapshot.BootstrapTransferService
+      getOrCreateBootstrapTransferService() {
+    var svc = bootstrapTransferService;
+    if (svc == null) {
+      svc = new com.anyilanxin.kunpeng.cluster.raft.snapshot.BootstrapTransferService(
+          communicationService, snapshotVault, snapshotHandler, metadata.id());
+      bootstrapTransferService = svc;
+    }
+    return svc;
+  }
+
+  /**
+   * 从指定分区的指定节点拉取引导快照：init → 逐块拉取 → 写入本地 vault → 落档。
+   *
+   * <p>源分区节点需已调用 {@link #startBootstrapServing()}。
+   *
+   * @param sourceNode 源分区所在节点
    * @return 接收落档后的快照；不可用时返回 null
    */
-  protected CompletableFuture<com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.ArchivedSnapshot>
-      pullBootstrapSnapshot(final PartitionId sourcePartitionId) {
-    // 引导快照拉取：向源分区所在节点发送引导请求，源分区产生快照并传输
-    // 实际传输由 ReplicaPullTransfer / BootstrapReplicaSender 完成
-    // 此处返回 vault 中已存在的 bootstrap 快照（如传输已完成）
-    final var bootstrapSnapshot = snapshotVault.getBootstrapSnapshot();
-    if (bootstrapSnapshot.isPresent()) {
-      return CompletableFuture.completedFuture(bootstrapSnapshot.get());
-    }
-    LOG.warn("Bootstrap snapshot from {} not yet available in vault", sourcePartitionId);
-    return CompletableFuture.completedFuture(null);
+  public CompletableFuture<com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.ArchivedSnapshot>
+      pullBootstrapSnapshot(final com.anyilanxin.kunpeng.cluster.cluster.MemberId sourceNode) {
+    final var service = getOrCreateBootstrapTransferService();
+    return service.pullBootstrapSnapshot(sourceNode);
   }
 
   /**
