@@ -21,11 +21,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.file.AtomicMoveNotSupportedException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.*;
 import java.util.zip.CRC32C;
 
 /**
@@ -41,7 +37,7 @@ import java.util.zip.CRC32C;
  *
  * <p>崩溃安全策略与原版一致：同目录 {@code <file>.tmp} + DSYNC 落盘 → 原子 rename 覆盖；目标 文件任意时刻要么完整旧版要么完整新版。
  */
-public final class FileDataStoreUtils2 {
+public final class FileDataStoreUtils {
 
   private static final byte VERSION = 1;
 
@@ -51,7 +47,8 @@ public final class FileDataStoreUtils2 {
   /** 超过该字节数走 mmap 读路径 */
   private static final long MMAP_THRESHOLD_BYTES = 64 * 1024;
 
-  private FileDataStoreUtils2() {}
+  private FileDataStoreUtils() {
+  }
 
   /** 原子写入（版本头 + CRC32C 校验头 + body）；失败时清理临时文件并抛 RuntimeException */
   public static void writeToFile(final Path targetFile, final byte[] body) {
