@@ -72,6 +72,7 @@ public final class RaftPartitionGroupStartupStep<T extends RaftGroupContext>
         final var partition = new RaftPartition(
             metadata, partitionConfig, dataDir,
             context.meterRegistry(), vault,
+            null, // snapshotHandler 由工厂体系提供
             null, context.communicationService());
         context.attachPartition(i, partition);
         LOG.debug("已创建分区 {}-{}", context.groupName(), i);
