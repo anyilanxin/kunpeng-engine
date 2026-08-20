@@ -53,12 +53,12 @@ public class ReplicaTransferHub implements ReplicaSenderService {
 
   @Override
   public synchronized ActorFuture<SnapshotBlock> getLatestSnapshot(
-      final int partition, final long lastProcessedPosition, final UUID transferId) {
+      final int partition, final long upToIndex, final UUID transferId) {
     if (closed) {
       return refused("传输服务已关闭");
     }
     final var future = new CompletableActorFuture<SnapshotBlock>();
-    resolveSnapshot(lastProcessedPosition)
+    resolveSnapshot(upToIndex)
         .onComplete(
             (snapshot, error) -> {
               if (error != null) {
@@ -130,14 +130,14 @@ public class ReplicaTransferHub implements ReplicaSenderService {
     return CompletableActorFuture.completed(null);
   }
 
-  private ActorFuture<ArchivedSnapshot> resolveSnapshot(final long lastProcessedPosition) {
+  private ActorFuture<ArchivedSnapshot> resolveSnapshot(final long upToIndex) {
     final Optional<ArchivedSnapshot> current = currentCached();
-    if (current.isPresent() && current.orElseThrow().ref().index() >= lastProcessedPosition) {
+    if (current.isPresent() && current.orElseThrow().ref().index() >= upToIndex) {
       return CompletableActorFuture.completed(current.orElseThrow());
     }
     final var future = new CompletableActorFuture<ArchivedSnapshot>();
     taker
-        .takeSnapshot(lastProcessedPosition)
+        .takeSnapshot(upToIndex)
         .onComplete(
             (ignored, error) -> {
               if (error != null) {

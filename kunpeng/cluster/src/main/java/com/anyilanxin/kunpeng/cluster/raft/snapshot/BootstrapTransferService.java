@@ -103,7 +103,7 @@ public final class BootstrapTransferService {
       if (bootstrap.isEmpty() && vault.getLatestSnapshot().isPresent()) {
         // 复制最新快照到 bootstrap 区
         final var latest = vault.getLatestSnapshot().get();
-        vault.copyForBootstrap(latest.ref().toString(), 0).join();
+        vault.copyForBootstrap(latest.ref().toString()).join();
         bootstrap = vault.getBootstrapSnapshot();
       }
       if (bootstrap.isEmpty()) {

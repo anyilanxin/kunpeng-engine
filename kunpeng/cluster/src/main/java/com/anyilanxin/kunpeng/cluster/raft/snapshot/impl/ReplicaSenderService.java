@@ -25,7 +25,7 @@ public interface ReplicaSenderService extends AsyncClosable {
 
   /** 建立会话并返回首块；副本过旧时经 takeSnapshot 回调补拍 */
   ActorFuture<SnapshotBlock> getLatestSnapshot(
-      int partition, long lastProcessedPosition, UUID transferId);
+      int partition, long upToIndex, UUID transferId);
 
   /** 会话内顺序取下一块（校验 snapshotId 与上一块游标） */
   ActorFuture<SnapshotBlock> getNextChunk(
@@ -37,6 +37,6 @@ public interface ReplicaSenderService extends AsyncClosable {
   /** 补拍回调（由分区状态控制器提供） */
   interface SnapshotTaker {
 
-    ActorFuture<ArchivedSnapshot> takeSnapshot(long lastProcessedPosition);
+    ActorFuture<ArchivedSnapshot> takeSnapshot(long upToIndex);
   }
 }

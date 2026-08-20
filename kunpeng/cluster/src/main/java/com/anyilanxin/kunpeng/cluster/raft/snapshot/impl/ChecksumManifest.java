@@ -16,9 +16,7 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.snapshot.impl;
 
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.VaultCodec.Reader;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.VaultCodec.VaultCodecException;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.VaultCodec.Writer;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -28,14 +26,17 @@ import java.util.TreeMap;
 import java.util.zip.CRC32C;
 
 /**
- * 落档快照的逐文件校验清单（vault codec 二进制 manifest）。
+ * 落档快照的逐文件校验清单（SFV 风格文本，一行一条：相对路径 + 校验和）。
  *
- * <p>校验和以字符串存储以适配不同校验算法（CRC32C hex、SHA-256 hex 等）。
+ * <p>格式：首行为 {@code ;} 引导的注释头，之后每行
+ * {@code 文件相对路径<三空格>校验和字符串}；校验和以字符串存储以适配不同校验算法
+ * （CRC32C hex、SHA-256 hex 等）。
  * 综合校验 = 按文件名排序后对 (utf8 名字节 + 校验和字符串 utf8 字节) 序列做一次 CRC32C。
  */
 public final class ChecksumManifest {
 
-  private static final int VERSION = 2;
+  private static final String FILE_HEADER = "; Simple file verification - auto generated, do not modify.";
+  private static final String ENTRY_SEPARATOR = "   ";
 
   private final TreeMap<String, String> entries;
   private long combined;
@@ -78,38 +79,53 @@ public final class ChecksumManifest {
     return combined == other.combined && entries.equals(other.entries);
   }
 
+  /** SFV 文本编码（UTF-8，一行一条） */
   public byte[] encode() {
-    final var writer = new Writer();
-    writer.writeByte(VERSION);
-    VaultCodec.putArrayHeader(writer, entries.size());
+    final var text = new StringBuilder();
+    text.append(FILE_HEADER).append('\n');
     for (final Map.Entry<String, String> entry : entries.entrySet()) {
-      VaultCodec.putString(writer, entry.getKey());
-      VaultCodec.putString(writer, entry.getValue());
+      text.append(entry.getKey())
+          .append(ENTRY_SEPARATOR)
+          .append(entry.getValue())
+          .append('\n');
     }
-    VaultCodec.putLong(writer, combined);
-    return writer.toByteArray();
+    return text.toString().getBytes(StandardCharsets.UTF_8);
   }
 
+  /**
+   * 解析 SFV 文本清单：跳过 {@code ;} 注释行与空行；
+   * 每行以最后一段连续空白分隔，前段为相对路径（允许含空格），末段为校验和。
+   */
   public static ChecksumManifest decode(final byte[] bytes) {
-    final var reader = new Reader(bytes);
-    final int version = reader.readByte();
-    if (version != VERSION) {
-      throw new VaultCodecException("manifest 版本不支持: " + version);
+    final TreeMap<String, String> loaded = new TreeMap<>();
+    final String[] lines = new String(bytes, StandardCharsets.UTF_8).split("\n", -1);
+    for (final String rawLine : lines) {
+      final String line = rawLine.stripTrailing();
+      if (line.isEmpty() || line.startsWith(";")) {
+        continue;
+      }
+      final int split = startOfTrailingToken(line);
+      final String name = line.substring(0, split).stripTrailing();
+      final String checksum = line.substring(split).strip();
+      if (name.isEmpty() || checksum.isEmpty()) {
+        throw new VaultCodecException("checksum 清单行格式不符: " + line);
+      }
+      loaded.put(name, checksum);
     }
-    final int count = VaultCodec.nextArrayHeader(reader);
-    final TreeMap<String, String> entries = new TreeMap<>();
-    for (int i = 0; i < count; i++) {
-      final String name = VaultCodec.nextString(reader);
-      final String checksum = VaultCodec.nextString(reader);
-      entries.put(name, checksum);
+    return new ChecksumManifest(loaded);
+  }
+
+  /** 末段非空白 token 的起始下标（其前至少存在一段空白分隔） */
+  private static int startOfTrailingToken(final String line) {
+    int end = line.length();
+    while (end > 0 && Character.isWhitespace(line.charAt(end - 1))) {
+      end--;
     }
-    final long storedCombined = VaultCodec.nextLong(reader);
-    VaultCodec.expectEnd(reader);
-    final var manifest = new ChecksumManifest(entries);
-    if (manifest.combined != storedCombined) {
-      throw new VaultCodecException("manifest 综合校验不符");
+    int start = end;
+    while (start > 0 && !Character.isWhitespace(line.charAt(start - 1))) {
+      start--;
     }
-    return manifest;
+    return start;
   }
 
   static long computeCombined(final TreeMap<String, String> entries) {

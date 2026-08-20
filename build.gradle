@@ -124,6 +124,8 @@ subprojects {
 			jvmArgs += [
 					"--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED"
 			]
+			// 关闭 jqwik 测试运行数据库（不再生成 .jqwik-database 文件）
+			systemProperty 'jqwik.database', ''
 		}
 
 		configurations {

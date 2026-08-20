@@ -72,4 +72,8 @@ dependencies {
     testImplementation 'org.bouncycastle:bcpkix-jdk18on'
     testImplementation 'org.bouncycastle:bcprov-jdk18on'
     testImplementation 'org.awaitility:awaitility'
+    testImplementation 'org.apache.logging.log4j:log4j-core'
+    testImplementation 'org.apache.logging.log4j:log4j-api'
+    testImplementation 'org.apache.logging.log4j:log4j-slf4j2-impl'
+    testImplementation 'org.slf4j:slf4j-api'
 }

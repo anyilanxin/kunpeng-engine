@@ -24,9 +24,9 @@
   </Appenders>
 
   <Loggers>
-    <Logger name="io.camunda.zeebe" level="debug"/>
-    <Logger name="com.anyilanxin.kunpeng.cluster" level="trace"/>
-
+    <Logger name="com.anyilanxin.kunpeng.cluster" level="debug"/>
+    <Logger name="com.anyilanxin.kunpeng.cluster.cluster.messaging" level="info"/>
+    <Logger name="com.anyilanxin.kunpeng.cluster.cluster.protocol.SwimMembershipProtocol" level="info"/>
     <Root level="info">
       <AppenderRef ref="Console"/>
     </Root>

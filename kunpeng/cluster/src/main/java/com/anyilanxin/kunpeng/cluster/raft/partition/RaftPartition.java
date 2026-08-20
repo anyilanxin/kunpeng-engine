@@ -30,15 +30,21 @@ import com.anyilanxin.kunpeng.cluster.raft.orchestrator.ManagedPartitionTopology
 import com.anyilanxin.kunpeng.cluster.raft.partition.impl.RaftPartitionServer;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotHandler;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.SnapshotVault;
+import com.anyilanxin.kunpeng.cluster.utils.concurrent.Scheduled;
+import com.anyilanxin.kunpeng.cluster.utils.concurrent.ThreadContext;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.time.Duration;
 
 import java.io.File;
 import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
 /**
  * Raft 分区：自包含的生命周期管理单元。
@@ -74,6 +80,11 @@ public class RaftPartition implements Partition, HealthMonitorable {
   private final Set<RaftCommitListener> deferredCommitListeners =
       new CopyOnWriteArraySet<>();
   private volatile RaftPartitionServer server;
+  private volatile Scheduled snapshotTimer;
+  private volatile boolean snapshotScheduleEnabled;
+  /** 进行中的快照流程（同一分区同时只允许一个；并发调用复用在途 future） */
+  private final AtomicReference<CompletableFuture<Void>> inFlightSnapshot =
+      new AtomicReference<>();
 
   public RaftPartition(
       final PartitionMetadata metadata,
@@ -119,7 +130,12 @@ public class RaftPartition implements Partition, HealthMonitorable {
     final var clusterMembers = metadata.members().stream()
         .filter(id -> !id.equals(getLocalMemberId()))
         .toList();
-    return srv.bootstrap(clusterMembers).thenApply(v -> this);
+    return srv.bootstrap(clusterMembers)
+        .thenApply(v -> {
+          // server 就绪后自动启动周期快照
+          startSnapshotSchedule();
+          return this;
+        });
   }
 
   /**
@@ -214,7 +230,12 @@ public class RaftPartition implements Partition, HealthMonitorable {
     final var clusterMembers = metadata.members().stream()
         .filter(id -> !id.equals(getLocalMemberId()))
         .toList();
-    return srv.join(clusterMembers).thenApply(v -> this);
+    return srv.join(clusterMembers)
+        .thenApply(v -> {
+          // server 就绪后自动启动周期快照
+          startSnapshotSchedule();
+          return this;
+        });
   }
 
   /**
@@ -240,8 +261,67 @@ public class RaftPartition implements Partition, HealthMonitorable {
     return takeCloseSnapshot().thenCompose(v -> closeSnapshotHandler());
   }
 
+  /**
+   * 启动周期快照（bootstrap/join 完成后自动调用，幂等）：到达
+   * {@code RaftPartitionConfig.snapshotInterval} 周期时自动经
+   * {@code SnapshotHandler.onTakeSnapshot} 拍摄（非正数周期表示关闭）。
+   */
+  private void startSnapshotSchedule() {
+    if (snapshotScheduleEnabled) {
+      return;
+    }
+    final var interval = config.getSnapshotInterval();
+    if (interval == null || !interval.isPositive()) {
+      return;
+    }
+    final var srv = server;
+    if (srv == null) {
+      return;
+    }
+    final ThreadContext threadContext = srv.getThreadContext();
+    if (threadContext == null) {
+      return;
+    }
+    snapshotScheduleEnabled = true;
+    scheduleNextSnapshot(threadContext, interval);
+  }
+
+  /** 停止周期快照 */
+  public void stopSnapshotSchedule() {
+    snapshotScheduleEnabled = false;
+    final var timer = snapshotTimer;
+    if (timer != null) {
+      timer.cancel();
+      snapshotTimer = null;
+    }
+  }
+
+  private void scheduleNextSnapshot(final ThreadContext threadContext, final Duration interval) {
+    snapshotTimer = threadContext.schedule(interval, () -> {
+      if (!snapshotScheduleEnabled) {
+        return;
+      }
+      takePeriodicSnapshot();
+      scheduleNextSnapshot(threadContext, interval);
+    });
+  }
+
+  /** 周期快照（best-effort）：上一轮仍在进行则跳过本轮 */
+  private void takePeriodicSnapshot() {
+    if (inFlightSnapshot.get() != null) {
+      LOG.debug("Skip periodic snapshot for {}, previous snapshot still in flight", name());
+      return;
+    }
+    LOG.info("Take periodic snapshot for {}", name());
+    takeSnapshot(true).exceptionally(error -> {
+      LOG.warn("Periodic snapshot failed for {}", name(), error);
+      return null;
+    });
+  }
+
   /** 关闭分区（不离开集群，仅停止本节点的 Raft 服务） */
   public CompletableFuture<Void> close() {
+    stopSnapshotSchedule();
     final var srv = server;
     if (srv != null) {
       return srv.stop().exceptionally(error -> {
@@ -253,18 +333,14 @@ public class RaftPartition implements Partition, HealthMonitorable {
   }
 
   /**
-   * 终局快照：关闭前主动拍摄一次（业务位置沿用最近一次快照；失败不阻断关闭）
+   * 终局快照：关闭前主动拍摄一次（失败不阻断关闭）
    */
   private CompletableFuture<Void> takeCloseSnapshot() {
     if (snapshotHandler == null) {
       return CompletableFuture.completedFuture(null);
     }
-    final var latest = snapshotVault.getLatestSnapshot();
-    final long processed = latest.map(s -> s.ref().processedPosition()).orElse(0L);
-    final long exported = latest.map(s -> s.ref().exportedPosition()).orElse(0L);
-    LOG.info("Take final snapshot on close for {} (processed={}, exported={})",
-      name(), processed, exported);
-    return takeSnapshot(processed, exported, true).exceptionally(error -> {
+    LOG.info("Take final snapshot on close for {}", name());
+    return takeSnapshot(true).exceptionally(error -> {
       LOG.warn("Final snapshot on close failed for {}, continuing shutdown", name(), error);
       return null;
     });
@@ -285,6 +361,7 @@ public class RaftPartition implements Partition, HealthMonitorable {
 
   /** 删除分区（停止 + 清理数据） */
   public CompletableFuture<Void> delete() {
+    stopSnapshotSchedule();
     final var srv = server;
     if (srv != null) {
       return srv.stop().thenRun(srv::delete);
@@ -295,26 +372,36 @@ public class RaftPartition implements Partition, HealthMonitorable {
   // ===== 快照操作（外部触发 → 内部编排 handler 回调） =====
 
   /**
+   * 主动拍摄快照（用户调用）：立即拍摄一次；
+   * 已有快照流程进行中时复用其 future，不会并发拍摄。
+   *
+   * @return 完成即快照流程结束（失败以异常完成，由调用方处理）
+   */
+  public CompletableFuture<Void> takeSnapshotNow() {
+    LOG.info("Take snapshot now for {}", name());
+    return takeSnapshot(true);
+  }
+
+  /**
    * 拍摄常规快照（外部触发）：vault 暂存 → {@code handler.onTakeSnapshot(dir)} 写入业务数据
    * → vault 提交落档 → 可选复制到 bootstrap/merge 副本区。
    *
    * <p>之后可由 Leader 通过 Install 协议发送给落后节点，或由本节点日志压缩时使用。
    *
-   * @param processedPosition 业务已处理位置
-   * @param exportedPosition 业务已导出位置
    * @param force 是否强制拍摄（忽略"已有更新快照"检查）
-   * @return 完成即快照已落档
+   * @return 完成即快照已落档；已有快照流程进行中时复用其 future
    */
-  public CompletableFuture<Void> takeSnapshot(
-      final long processedPosition, final long exportedPosition, final boolean force) {
-    final long index = getCurrentIndex();
-    final long term = getCurrentTerm();
-    LOG.info("Take snapshot for {} (index={}, term={})", name(), index, term);
-    return snapshotVault
-        .stage(processedPosition, exportedPosition, index, term, getLocalMemberId().id(), force)
-        .thenCompose(staged ->
-            snapshotVault.capture(staged, dir ->
-                snapshotHandler.onTakeSnapshot(dir).toCompletableFuture()));
+  public CompletableFuture<Void> takeSnapshot(final boolean force) {
+    return exclusiveSnapshot(() -> {
+      final long index = getCurrentIndex();
+      final long term = getCurrentTerm();
+      LOG.info("Take snapshot for {} (index={}, term={})", name(), index, term);
+      return snapshotVault
+          .stage(index, term, getLocalMemberId().id(), force)
+          .thenCompose(staged ->
+              snapshotVault.capture(staged, dir ->
+                  snapshotHandler.onTakeSnapshot(dir).toCompletableFuture()));
+    });
   }
 
   /**
@@ -324,28 +411,26 @@ public class RaftPartition implements Partition, HealthMonitorable {
    *
    * <p>目标节点接收后调用 {@link #recoverFromSnapshot} 恢复。
    *
-   * @param processedPosition 业务已处理位置
-   * @param exportedPosition 业务已导出位置
-   * @return 完成即快照已落档并复制到 bootstrap 区
+   * @return 完成即快照已落档并复制到 bootstrap 区；已有快照流程进行中时复用其 future
    */
-  public CompletableFuture<Void> takeBootstrapSnapshot(
-      final long processedPosition, final long exportedPosition) {
-    final long index = getCurrentIndex();
-    final long term = getCurrentTerm();
-    LOG.info("Take bootstrap snapshot for {} (index={}, term={})", name(), index, term);
-    return snapshotVault
-        .stage(processedPosition, exportedPosition, index, term, getLocalMemberId().id(), true)
-        .thenCompose(staged ->
-            snapshotVault.capture(staged, dir ->
-                snapshotHandler.onTakeBootstrapSnapshot(dir).toCompletableFuture()))
-        .thenCompose(v -> {
-          final var latest = snapshotVault.getLatestSnapshot();
-          if (latest.isPresent()) {
-            return snapshotVault.copyForBootstrap(
-                latest.get().ref().toString(), processedPosition);
-          }
-          return CompletableFuture.completedFuture(null);
-        });
+  public CompletableFuture<Void> takeBootstrapSnapshot() {
+    return exclusiveSnapshot(() -> {
+      final long index = getCurrentIndex();
+      final long term = getCurrentTerm();
+      LOG.info("Take bootstrap snapshot for {} (index={}, term={})", name(), index, term);
+      return snapshotVault
+          .stage(index, term, getLocalMemberId().id(), true)
+          .thenCompose(staged ->
+              snapshotVault.capture(staged, dir ->
+                  snapshotHandler.onTakeBootstrapSnapshot(dir).toCompletableFuture()))
+          .thenCompose(v -> {
+            final var latest = snapshotVault.getLatestSnapshot();
+            if (latest.isPresent()) {
+              return snapshotVault.copyForBootstrap(latest.get().ref().toString());
+            }
+            return CompletableFuture.completedFuture(null);
+          });
+    });
   }
 
   /**
@@ -371,28 +456,26 @@ public class RaftPartition implements Partition, HealthMonitorable {
    * {@code handler.onTakeMergeSnapshot(dir)} 写入业务数据 → vault 提交 →
    * 复制到 merge 副本区 → 由 MergeReplicaSender 传输到目标分区。
    *
-   * @param processedPosition 业务已处理位置
-   * @param exportedPosition 业务已导出位置
-   * @return 完成即快照已落档并复制到 merge 区
+   * @return 完成即快照已落档并复制到 merge 区；已有快照流程进行中时复用其 future
    */
-  public CompletableFuture<Void> takeMergeSnapshot(
-      final long processedPosition, final long exportedPosition) {
-    final long index = getCurrentIndex();
-    final long term = getCurrentTerm();
-    LOG.info("Take merge snapshot for {} (index={}, term={})", name(), index, term);
-    return snapshotVault
-        .stage(processedPosition, exportedPosition, index, term, getLocalMemberId().id(), true)
-        .thenCompose(staged ->
-            snapshotVault.capture(staged, dir ->
-                snapshotHandler.onTakeMergeSnapshot(dir).toCompletableFuture()))
-        .thenCompose(v -> {
-          final var latest = snapshotVault.getLatestSnapshot();
-          if (latest.isPresent()) {
-            return snapshotVault.copyForMerge(
-                latest.get().ref().toString(), processedPosition);
-          }
-          return CompletableFuture.completedFuture(null);
-        });
+  public CompletableFuture<Void> takeMergeSnapshot() {
+    return exclusiveSnapshot(() -> {
+      final long index = getCurrentIndex();
+      final long term = getCurrentTerm();
+      LOG.info("Take merge snapshot for {} (index={}, term={})", name(), index, term);
+      return snapshotVault
+          .stage(index, term, getLocalMemberId().id(), true)
+          .thenCompose(staged ->
+              snapshotVault.capture(staged, dir ->
+                  snapshotHandler.onTakeMergeSnapshot(dir).toCompletableFuture()))
+          .thenCompose(v -> {
+            final var latest = snapshotVault.getLatestSnapshot();
+            if (latest.isPresent()) {
+              return snapshotVault.copyForMerge(latest.get().ref().toString());
+            }
+            return CompletableFuture.completedFuture(null);
+          });
+    });
   }
 
   /**
@@ -407,7 +490,37 @@ public class RaftPartition implements Partition, HealthMonitorable {
     return snapshotHandler.onMergeSnapshot(archivedSnapshot).toCompletableFuture();
   }
 
+  /**
+   * 快照互斥执行：同一分区同时只允许一个快照流程。
+   *
+   * <p>已有流程进行中时，后续调用直接返回该在途 future（不重复拍摄）。
+   */
+  private CompletableFuture<Void> exclusiveSnapshot(
+      final Supplier<CompletableFuture<Void>> flow) {
+    if (inFlightSnapshot.get() != null) {
+      return inFlightSnapshot.get();
+    }
+    final var created = new CompletableFuture<Void>();
+    if (inFlightSnapshot.compareAndSet(null, created)) {
+      flow.get().whenComplete((v, error) -> {
+        inFlightSnapshot.compareAndSet(created, null);
+        if (error == null) {
+          created.complete(null);
+        } else {
+          created.completeExceptionally(error);
+        }
+      });
+      return created;
+    }
+    return inFlightSnapshot.get();
+  }
+
+  /** 快照索引取当前 raft 提交索引（server 未创建时回退最近快照索引） */
   private long getCurrentIndex() {
+    final var srv = server;
+    if (srv != null) {
+      return srv.getCommitIndex();
+    }
     return snapshotVault.getCurrentSnapshotIndex();
   }
 

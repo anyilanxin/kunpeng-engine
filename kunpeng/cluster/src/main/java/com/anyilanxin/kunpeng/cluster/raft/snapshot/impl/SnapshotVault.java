@@ -18,6 +18,7 @@ package com.anyilanxin.kunpeng.cluster.raft.snapshot.impl;
 
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshotListener;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotHandler;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotMeta;
 import io.micrometer.core.instrument.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,9 +76,10 @@ public final class SnapshotVault implements AutoCloseable {
       final Path partitionRoot,
       final SnapshotHandler snapshotHandler,
       final MeterRegistry registry) {
-    snapshotsRoot = partitionRoot.resolve(SnapshotLayout.SNAPSHOTS_DIR);
-    bootstrapRoot = partitionRoot.resolve(SnapshotLayout.BOOTSTRAP_DIR);
-    mergeRoot = partitionRoot.resolve(SnapshotLayout.MERGE_DIR);
+    final Path snapshotsBase = partitionRoot.resolve(SnapshotLayout.SNAPSHOTS_DIR);
+    snapshotsRoot = snapshotsBase.resolve(SnapshotLayout.SNAPSHOT_DIR);
+    bootstrapRoot = snapshotsBase.resolve(SnapshotLayout.BOOTSTRAP_DIR);
+    mergeRoot = snapshotsBase.resolve(SnapshotLayout.MERGE_DIR);
     this.snapshotHandler = snapshotHandler;
     if (registry != null) {
       Gauge.builder("snapshotVault.known", knownGauge, AtomicLong::doubleValue)
@@ -153,25 +155,11 @@ public final class SnapshotVault implements AutoCloseable {
 
   /** 建立暂存快照（之后调用 {@link #capture} 完成拍摄） */
   public CompletableFuture<StagedSnapshot> stage(
-      final long processedPosition,
-      final long exportedPosition,
-      final long index,
-      final long term,
-      final String brokerId,
-      final boolean force) {
+      final long index, final long term, final String brokerId, final boolean force) {
     return submit(
         () -> {
-          if (processedPosition < 0 || exportedPosition < 0) {
-            throw new SnapshotStoreException.WriteFailure(
-                "快照位置不可为负: processed="
-                    + processedPosition
-                    + " exported="
-                    + exportedPosition,
-                null);
-          }
           final var current = active.get();
-          final var ref =
-              new SnapshotRef(index, term, processedPosition, exportedPosition, brokerId);
+          final var ref = new SnapshotRef(index, term, brokerId);
           if (!force && current != null && current.ref().compareTo(ref) >= 0) {
             throw new SnapshotStoreException.AlreadyExists("已有更新的快照: " + current.ref());
           }
@@ -183,24 +171,54 @@ public final class SnapshotVault implements AutoCloseable {
         });
   }
 
-  /** 执行拍摄并提交（taker 写内容 → 清单/元数据/原子改名/commit） */
-  public CompletableFuture<Void> capture(final StagedSnapshot staged, final Consumer<Path> taker) {
-    return submitVoid(
-        () -> {
-          try {
-            staged.take(taker);
-            staged.persist();
-          } catch (final SnapshotStoreException.AlreadyExists duplicate) {
-            // 并发拍摄同内容快照(校验和相同→同名): 幂等成功, 读取方取既有落档即可
-            LOG.info("同内容快照已由并发拍摄落档, 幂等跳过: {}", duplicate.getMessage());
-            staged.abort();
-          } catch (final Exception e) {
-            staged.abort();
-            throw e;
-          } finally {
-            inProgress.remove(staged);
-          }
-        });
+  /**
+   * 执行拍摄并提交：taker 写内容并返回快照元数据 →
+   * vault 串行线程上序列化元数据写 snapshot.metadata → 清单/原子改名/commit。
+   */
+  public CompletableFuture<Void> capture(
+      final StagedSnapshot staged,
+      final java.util.function.Function<Path, CompletableFuture<SnapshotMeta>> taker) {
+    final CompletableFuture<SnapshotMeta> content;
+    try {
+      content = taker.apply(staged.stagingDirectory());
+    } catch (final Exception e) {
+      staged.abort();
+      inProgress.remove(staged);
+      return CompletableFuture.failedFuture(e);
+    }
+    return content.thenCompose(
+        meta ->
+            submitVoid(
+                () -> {
+                  try {
+                    staged.verifyContent();
+                    staged.persist(meta);
+                  } catch (final SnapshotStoreException.AlreadyExists duplicate) {
+                    // 并发拍摄同内容快照(校验和相同→同名): 幂等成功, 读取方取既有落档即可
+                    LOG.info("同内容快照已由并发拍摄落档, 幂等跳过: {}", duplicate.getMessage());
+                    staged.abort();
+                  } catch (final Exception e) {
+                    staged.abort();
+                    throw e;
+                  } finally {
+                    inProgress.remove(staged);
+                  }
+                }));
+  }
+
+  /** 经 handler 序列化快照元数据（无 handler 或元数据为空返回空字节） */
+  byte[] encodeSnapshotMeta(final SnapshotMeta meta) {
+    return meta != null && snapshotHandler != null
+        ? snapshotHandler.encodeSnapshotMeta(meta)
+        : new byte[0];
+  }
+
+  /** 经 handler 反序列化快照元数据（无 handler 或空内容返回 null） */
+  SnapshotMeta decodeSnapshotMeta(final byte[] bytes) {
+    if (snapshotHandler == null || bytes == null || bytes.length == 0) {
+      return null;
+    }
+    return snapshotHandler.decodeSnapshotMeta(bytes);
   }
 
   /** 建立接收会话：目标目录若存在但无清单则删除重来；有清单则 AlreadyExists */
@@ -214,7 +232,7 @@ public final class SnapshotVault implements AutoCloseable {
             throw new IllegalArgumentException(snapshotIdName, e);
           }
           final Path target = snapshotsRoot.resolve(snapshotIdName);
-          if (Files.exists(target.resolve(SnapshotLayout.MANIFEST_FILE))) {
+          if (Files.exists(SnapshotLayout.manifestPath(target))) {
             throw new SnapshotStoreException.AlreadyExists("快照已存在: " + snapshotIdName);
           }
           try {
@@ -272,11 +290,11 @@ public final class SnapshotVault implements AutoCloseable {
   }
 
   /** 复制指定快照到 bootstrap 副本区（不及最新则先由调用方触发拍摄） */
-  public CompletableFuture<Void> copyForBootstrap(final String snapshotIdName, final long position) {
+  public CompletableFuture<Void> copyForBootstrap(final String snapshotIdName) {
     return copyToRegion(snapshotIdName, Region.BOOTSTRAP);
   }
 
-  public CompletableFuture<Void> copyForMerge(final String snapshotIdName, final long position) {
+  public CompletableFuture<Void> copyForMerge(final String snapshotIdName) {
     return copyToRegion(snapshotIdName, Region.MERGE);
   }
 
@@ -298,16 +316,20 @@ public final class SnapshotVault implements AutoCloseable {
     return submitVoid(
         () -> {
           final Path source = snapshotsRoot.resolve(snapshotIdName);
-          if (!Files.exists(source.resolve(SnapshotLayout.MANIFEST_FILE))) {
+          if (!Files.exists(SnapshotLayout.manifestPath(source))) {
             throw new SnapshotStoreException.NotFound("快照不存在: " + snapshotIdName);
           }
           final Path root = region == Region.BOOTSTRAP ? bootstrapRoot : mergeRoot;
           VaultFiles.deleteRecursively(root);
           VaultFiles.ensureDirectory(root);
           final Path target = root.resolve(snapshotIdName);
-          // 复制而非移动：保留主快照区档位，副本区独立持有拷贝
+          // 复制而非移动：保留主快照区档位，副本区独立持有拷贝（清单为同级文件，一并复制）
           VaultFiles.copySnapshot(source, target);
-          final var archived = ArchivedSnapshot.load(target);
+          Files.copy(
+              SnapshotLayout.manifestPath(source),
+              SnapshotLayout.manifestPath(target),
+              java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+          final var archived = ArchivedSnapshot.load(target, snapshotHandler);
           (region == Region.BOOTSTRAP ? activeBootstrap : activeMerge).set(archived);
         });
   }
@@ -335,9 +357,6 @@ public final class SnapshotVault implements AutoCloseable {
     }
     try {
       for (final String name : VaultFiles.listFilesSorted(directory)) {
-        if (SnapshotLayout.MANIFEST_FILE.equals(name)) {
-          continue;
-        }
         final String checksum =
             provided != null && provided.containsKey(name)
                 ? provided.get(name)
@@ -361,7 +380,7 @@ public final class SnapshotVault implements AutoCloseable {
     if (current != null && current.ref().compareTo(ref) > 0 && !forced) {
       LOG.info("提交的快照过期, 丢弃: {} (当前 {})", ref, current.ref());
       try {
-        VaultFiles.deleteRecursively(directory);
+        deleteArchived(directory);
       } catch (final IOException e) {
         LOG.warn("过期快照删除失败: {}", directory, e);
       }
@@ -391,7 +410,7 @@ public final class SnapshotVault implements AutoCloseable {
       known.remove(entry.getKey());
       knownGauge.set(known.size());
       try {
-        VaultFiles.deleteRecursively(candidate.directory());
+        deleteArchived(candidate.directory());
         if (purged != null) {
           purged.increment();
         }
@@ -421,21 +440,13 @@ public final class SnapshotVault implements AutoCloseable {
         deleteQuietly(directory, "暂存残留");
         continue;
       }
-      if (!Files.exists(directory.resolve(SnapshotLayout.MANIFEST_FILE))) {
+      if (!Files.exists(SnapshotLayout.manifestPath(directory))) {
         deleteQuietly(directory, "部分写或旧格式快照(升级后首启将重拍)");
         continue;
       }
       try {
-        final var archived = ArchivedSnapshot.load(directory);
-        final var recomputed = buildManifest(directory);
-        if (recomputed.combined() != archived.manifest().combined()) {
-          if (corrupted != null) {
-            corrupted.increment();
-          }
-          deleteQuietly(directory, "清单校验不符");
-          continue;
-        }
-        loaded.add(archived);
+        // 清单直接读同级 .sfv 文件，不再扫描目录重算校验
+        loaded.add(ArchivedSnapshot.load(directory, snapshotHandler));
       } catch (final Exception e) {
         LOG.warn("快照目录装载失败: {}", directory, e);
         deleteQuietly(directory, "装载异常");
@@ -460,9 +471,15 @@ public final class SnapshotVault implements AutoCloseable {
     }
   }
 
+  /** 删除落档目录与其同级清单文件 */
+  static void deleteArchived(final Path directory) throws IOException {
+    VaultFiles.deleteRecursively(directory);
+    Files.deleteIfExists(SnapshotLayout.manifestPath(directory));
+  }
+
   private void deleteQuietly(final Path directory, final String reason) {
     try {
-      VaultFiles.deleteRecursively(directory);
+      deleteArchived(directory);
       LOG.info("删除快照目录 {} ({})", directory.getFileName(), reason);
     } catch (final IOException e) {
       LOG.warn("快照目录删除失败: {}", directory, e);

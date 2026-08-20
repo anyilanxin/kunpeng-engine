@@ -16,17 +16,22 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.snapshot.impl;
 
+import java.nio.file.Path;
+
 /** 快照磁盘布局常量（落档目录名 = SnapshotRef 六段字符串） */
 public final class SnapshotLayout {
 
-  /** 主快照目录 */
+  /** 快照根目录（三个区在其下一层） */
   public static final String SNAPSHOTS_DIR = "snapshots";
 
-  /** bootstrap 副本缓存目录 */
-  public static final String BOOTSTRAP_DIR = "bootstrap-snapshots";
+  /** 主快照区（{@code onTakeSnapshot} 常规快照落档） */
+  public static final String SNAPSHOT_DIR = "snapshot";
 
-  /** merge 副本缓存目录 */
-  public static final String MERGE_DIR = "merge-snapshots";
+  /** bootstrap 副本区 */
+  public static final String BOOTSTRAP_DIR = "bootstrap";
+
+  /** merge 副本区 */
+  public static final String MERGE_DIR = "merge";
 
   /** merge 运行时目录 */
   public static final String MERGE_RUNTIME_DIR = "merge-runtime";
@@ -34,11 +39,17 @@ public final class SnapshotLayout {
   /** 暂存目录前缀（写入中/接收中） */
   public static final String STAGING_PREFIX = "staging-";
 
-  /** 目录内清单文件名（无此文件 = 部分写，扫描时删除） */
-  public static final String MANIFEST_FILE = "manifest.bin";
+  /** SFV 清单文件后缀（与快照目录同级的同名文件，无此文件 = 部分写，扫描时删除） */
+  public static final String MANIFEST_SUFFIX = ".sfv";
 
   /** 目录内元数据文件名 */
   public static final String METADATA_FILE = "snapshot.metadata";
+
+  /** 快照目录对应的同级 SFV 清单文件（&lt;快照目录名&gt;.sfv） */
+  public static Path manifestPath(final Path snapshotDirectory) {
+    return snapshotDirectory.resolveSibling(
+        snapshotDirectory.getFileName() + MANIFEST_SUFFIX);
+  }
 
   private SnapshotLayout() {}
 }

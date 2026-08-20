@@ -164,7 +164,7 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
 
     log =
         ContextualLoggerFactory.getLogger(
-            getClass(), LoggerContext.builder(RaftServer.class).addValue(name).build());
+          getClass(), LoggerContext.builder("com.anyilanxin.kunpeng.cluster.raft").addValue(name).build());
     this.electionConfig = electionConfig;
     if (electionConfig.isPriorityElectionEnabled()) {
       log.debug(
@@ -259,9 +259,11 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
     try {
       if (error instanceof UnrecoverableException) {
         health = HealthReport.dead(this).withIssue(error);
+        log.info("{} on unrecoverable failure to {} ", partitionMetadata.id(), health);
         failureListeners.forEach((l) -> l.onUnrecoverableFailure(partitionMetadata, health));
       } else {
         health = HealthReport.unhealthy(this).withIssue(error);
+        log.info("{} failure to {} ", partitionMetadata.id(), health);
         failureListeners.forEach((l) -> l.onFailure(partitionMetadata, health));
       }
     } catch (final Exception e) {
@@ -313,6 +315,7 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
    * @param listener The role change listener.
    */
   public void addRoleChangeListener(final RaftRoleChangeListener listener) {
+    log.debug("{} transition to {} on term {} requested.", partitionMetadata.id(), role.role(), term);
     threadContext.execute(
         () -> {
           roleChangeListeners.add(listener);
@@ -658,6 +661,7 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
 
     if (!this.role.role().active() && role.active()) {
       health = HealthReport.healthy(this);
+      log.debug("{} on on recovered failure to {} ", partitionMetadata.id(), health);
       failureListeners.forEach(l -> l.onRecovered(partitionMetadata));
     }
 
@@ -693,6 +697,7 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
 
   private void notifyRoleChangeListeners() {
     try {
+      log.debug("{} transition to {} on term {} requested.", partitionMetadata.id(), role.role(), term);
       roleChangeListeners.forEach(l -> l.onNewRole(partitionMetadata, role.role(), getTerm()));
     } catch (final Exception exception) {
       log.error("Unexpected error on calling role change listeners.", exception);
@@ -706,25 +711,24 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
 
   /** Creates an internal state for the given state type. */
   private RaftRole createRole(final Role role) {
-    switch (role) {
-      case INACTIVE:
-        return new InactiveRole(this);
-      case PASSIVE:
-        return new PassiveRole(this);
-      case PROMOTABLE:
-        return new PromotableRole(this);
-      case FOLLOWER:
+    return switch (role) {
+      case INACTIVE -> new InactiveRole(this);
+      case PASSIVE -> new PassiveRole(this);
+      case PROMOTABLE -> new PromotableRole(this);
+      case FOLLOWER -> {
         raftRoleMetrics.becomingFollower();
-        return new FollowerRole(this, this::createElectionTimer);
-      case CANDIDATE:
+        yield new FollowerRole(this, this::createElectionTimer);
+      }
+      case CANDIDATE -> {
         raftRoleMetrics.becomingCandidate();
-        return new CandidateRole(this);
-      case LEADER:
+        yield new CandidateRole(this);
+      }
+      case LEADER -> {
         raftRoleMetrics.becomingLeader();
-        return new LeaderRole(this);
-      default:
-        throw new AssertionError();
-    }
+        yield new LeaderRole(this);
+      }
+      default -> throw new AssertionError();
+    };
   }
 
   private ElectionTimer createElectionTimer(final Runnable triggerElection, final Logger log) {
@@ -1116,7 +1120,7 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
 
   /** 暂停追加以进行领导权转移；委托当前 LeaderRole */
   public long pauseForTransfer(final Duration timeout, final long writesFrozenSinceMs) {
-    if (role instanceof LeaderRole leaderRole) {
+    if (role instanceof final LeaderRole leaderRole) {
       return leaderRole.pauseForTransfer(timeout, writesFrozenSinceMs);
     }
     return 0;
@@ -1124,7 +1128,7 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
 
   /** 从领导权转移中恢复追加；委托当前 LeaderRole */
   public void resumeFromTransfer() {
-    if (role instanceof LeaderRole leaderRole) {
+    if (role instanceof final LeaderRole leaderRole) {
       leaderRole.resumeFromTransfer();
     }
   }

@@ -27,7 +27,7 @@ public interface ReplicaTransferClient extends AsyncClosable {
 
   /** 建立会话并取首块（无可用快照时完成于 null） */
   ActorFuture<SnapshotBlock> getLatestSnapshot(
-      int partition, long lastProcessedPosition, UUID transferId, ReplicaChannel channel);
+      int partition, long upToIndex, UUID transferId, ReplicaChannel channel);
 
   /** 会话内顺序取下一块（读完返回 null） */
   ActorFuture<SnapshotBlock> getNextChunk(

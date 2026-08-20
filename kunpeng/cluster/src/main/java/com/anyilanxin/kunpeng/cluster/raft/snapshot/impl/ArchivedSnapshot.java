@@ -16,6 +16,9 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.snapshot.impl;
 
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotHandler;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotMeta;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -40,14 +43,19 @@ public final class ArchivedSnapshot {
     this.meta = meta;
   }
 
-  /** 从落档目录装载（目录内必须有 manifest.bin 与 snapshot.metadata） */
-  static ArchivedSnapshot load(final Path directory) {
+  /**
+   * 从落档目录装载：清单直接读同级 {@code <目录名>.sfv} 文件（不扫描目录），
+   * 元数据读目录内 snapshot.metadata 并经 handler 反序列化。
+   */
+  static ArchivedSnapshot load(final Path directory, final SnapshotHandler snapshotHandler) {
     final SnapshotRef ref = SnapshotRef.parse(directory.getFileName().toString());
     try {
-      final var manifestBytes = Files.readAllBytes(directory.resolve(SnapshotLayout.MANIFEST_FILE));
+      final var manifestBytes = Files.readAllBytes(SnapshotLayout.manifestPath(directory));
       final var metaBytes = Files.readAllBytes(directory.resolve(SnapshotLayout.METADATA_FILE));
-      return new ArchivedSnapshot(
-          ref, directory, ChecksumManifest.decode(manifestBytes), SnapshotMeta.decode(metaBytes));
+      final SnapshotMeta meta = snapshotHandler != null
+          ? snapshotHandler.decodeSnapshotMeta(metaBytes)
+          : null;
+      return new ArchivedSnapshot(ref, directory, ChecksumManifest.decode(manifestBytes), meta);
     } catch (final Exception e) {
       throw new SnapshotStoreException.WriteFailure("落档目录内容不可读: " + directory, e);
     }

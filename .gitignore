@@ -29,4 +29,5 @@
 *.iml
 *.ipr
 *.iws
-/kunpeng/cluster/docs/
+/kunpeng/cluster/.jqwik-database
+/kunpeng/cluster/data/

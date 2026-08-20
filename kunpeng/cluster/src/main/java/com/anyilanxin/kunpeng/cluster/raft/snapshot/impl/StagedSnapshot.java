@@ -16,6 +16,7 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.snapshot.impl;
 
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotMeta;
 import com.anyilanxin.kunpeng.utils.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,11 +25,11 @@ import java.io.IOException;
 import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.function.Consumer;
 
 /**
- * 暂存快照（写入中）：taker 写入 {@code staging-<hex>} 目录 → persist 时计算清单、写元数据
- * （DSYNC）、目录原子改名为最终六段名并提交。
+ * 暂存快照（写入中）：taker 写入 {@code staging-<hex>} 目录并返回元数据 →
+ * persist 时经 handler 序列化元数据写 snapshot.metadata、计算清单、
+ * 目录原子改名为最终六段名并提交。
  */
 public final class StagedSnapshot {
 
@@ -62,40 +63,38 @@ public final class StagedSnapshot {
     return stagingDirectory;
   }
 
-  /** 调用方写入快照内容；空目录视为失败 */
-  public void take(final Consumer<Path> taker) {
+  /** 校验 taker 写入的内容；空目录视为失败（vault 串行线程上执行） */
+  public void verifyContent() {
     if (aborted || persisted) {
       throw new IllegalStateException("暂存快照已终结: " + ref);
     }
     try {
-      taker.accept(stagingDirectory);
       if (!Files.exists(stagingDirectory) || VaultFiles.listFilesSorted(stagingDirectory).isEmpty()) {
         throw new SnapshotStoreException.WriteFailure(
             "暂存目录为空, taker 未写入任何内容: " + stagingDirectory, null);
       }
     } catch (final Exception e) {
-      LOG.warn("快照内容写入失败: {}", ref, e);
+      LOG.warn("快照内容校验失败: {}", ref, e);
       throw e instanceof final RuntimeException runtime ? runtime : new IllegalStateException(e);
     }
   }
 
-  /** 计算清单 + 写元数据 + 原子改名 + 提交（vault 串行线程上执行） */
-  public void persist() throws IOException {
+  /** 序列化元数据 + 计算清单 + 原子改名 + 提交（vault 串行线程上执行） */
+  public void persist(final SnapshotMeta meta) throws IOException {
     if (aborted) {
       throw new IllegalStateException("暂存快照已中止: " + ref);
     }
     if (persisted) {
       throw new IllegalStateException("暂存快照已提交: " + ref);
     }
-    final var meta = new SnapshotMeta(ref.processedPosition(), -1, false, ref.exportedPosition());
-    VaultFiles.writeDurably(stagingDirectory.resolve(SnapshotLayout.METADATA_FILE), meta.encode());
+    VaultFiles.writeDurably(
+        stagingDirectory.resolve(SnapshotLayout.METADATA_FILE), vault.encodeSnapshotMeta(meta));
     final var complete = vault.buildManifest(stagingDirectory);
-    ref.checksum(Long.toHexString(complete.combined()));
 
     final Path target = stagingDirectory.resolveSibling(ref.toString());
-    // 同内容快照校验和相同→目标名相同: 上次"改名成功但 manifest 未写"崩溃会留下同名半成品
+    // 同内容快照校验和相同→目标名相同: 上次"改名成功但清单未写"崩溃会留下同名半成品
     if (Files.exists(target)) {
-      if (Files.exists(target.resolve(SnapshotLayout.MANIFEST_FILE))) {
+      if (Files.exists(SnapshotLayout.manifestPath(target))) {
         throw new SnapshotStoreException.AlreadyExists("落档快照已存在: " + ref);
       }
       VaultFiles.deleteRecursively(target);
@@ -106,7 +105,7 @@ public final class StagedSnapshot {
         | java.nio.file.FileAlreadyExistsException existing) {
       throw new SnapshotStoreException.AlreadyExists("落档快照已存在: " + ref);
     }
-    VaultFiles.writeDurably(target.resolve(SnapshotLayout.MANIFEST_FILE), complete.encode());
+    VaultFiles.writeDurably(SnapshotLayout.manifestPath(target), complete.encode());
     persisted = true;
     vault.commit(ref, target, complete, meta, forced);
   }

@@ -21,7 +21,6 @@ import com.google.common.base.Preconditions;
 
 import java.util.Objects;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /** {@link PartitionMetadata} identifier. */
@@ -85,6 +84,6 @@ public class PartitionId extends AbstractIdentifier<Integer> implements Comparab
 
   @Override
   public String toString() {
-    return toStringHelper(this).add("id", id()).add("group", group).toString();
+    return group + "@" + id();
   }
 }

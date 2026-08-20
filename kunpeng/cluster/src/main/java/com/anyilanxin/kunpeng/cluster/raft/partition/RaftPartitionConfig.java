@@ -29,6 +29,7 @@ public class RaftPartitionConfig {
   private static final int DEFAULT_MIN_STEP_DOWN_FAILURE_COUNT = 3;
   private static final Duration DEFAULT_MAX_QUORUM_RESPONSE_TIMEOUT = Duration.ofSeconds(0);
   private static final int DEFAULT_SNAPSHOT_REPLICATION_THRESHOLD = 100;
+  private static final Duration DEFAULT_SNAPSHOT_INTERVAL = Duration.ofMinutes(10);
   private static final String DATA_PREFIX = ".data";
   private static final int DEFAULT_MAX_SEGMENT_SIZE = 1024 * 1024 * 32;
   private static final boolean DEFAULT_FLUSH_EXPLICITLY = true;
@@ -45,6 +46,8 @@ public class RaftPartitionConfig {
   private int minStepDownFailureCount = DEFAULT_MIN_STEP_DOWN_FAILURE_COUNT;
   private Duration maxQuorumResponseTimeout = DEFAULT_MAX_QUORUM_RESPONSE_TIMEOUT;
   private int preferSnapshotReplicationThreshold = DEFAULT_SNAPSHOT_REPLICATION_THRESHOLD;
+  /** 拍摄快照周期（达到周期时 raft 自动经 SnapshotHandler.onTakeSnapshot 拍摄；非正数关闭） */
+  private Duration snapshotInterval = DEFAULT_SNAPSHOT_INTERVAL;
 
   // ===== 存储 =====
   private String directory;
@@ -133,6 +136,16 @@ public class RaftPartitionConfig {
   public RaftPartitionConfig setPreferSnapshotReplicationThreshold(
       final int preferSnapshotReplicationThreshold) {
     this.preferSnapshotReplicationThreshold = preferSnapshotReplicationThreshold;
+    return this;
+  }
+
+  /** 拍摄快照周期 */
+  public Duration getSnapshotInterval() {
+    return snapshotInterval;
+  }
+
+  public RaftPartitionConfig setSnapshotInterval(final Duration snapshotInterval) {
+    this.snapshotInterval = snapshotInterval;
     return this;
   }
 

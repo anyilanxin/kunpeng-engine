@@ -16,6 +16,7 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.snapshot.impl;
 
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotMeta;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -143,15 +144,13 @@ public final class IncomingReplica {
           SnapshotLayout.METADATA_FILE,
           Long.toHexString(VaultFiles.fileCrc(targetDirectory.resolve(SnapshotLayout.METADATA_FILE))));
     }
-    ref.checksum(Long.toHexString(manifest.combined()));
-    VaultFiles.writeDurably(
-        targetDirectory.resolve(SnapshotLayout.MANIFEST_FILE), manifest.encode());
+    VaultFiles.writeDurably(SnapshotLayout.manifestPath(targetDirectory), manifest.encode());
     persisted = true;
     vault.commit(
         ref,
         targetDirectory,
         manifest,
-        SnapshotMeta.decode(
+        vault.decodeSnapshotMeta(
             Files.readAllBytes(targetDirectory.resolve(SnapshotLayout.METADATA_FILE))),
         false);
   }
@@ -164,7 +163,7 @@ public final class IncomingReplica {
     return out;
   }
 
-  /** 放弃：删除目标目录（幂等） */
+  /** 放弃：删除目标目录与其同级清单文件（幂等） */
   public void abort() {
     if (persisted) {
       LOG.warn("已提交的接收副本不可中止: {}", ref);
@@ -172,7 +171,7 @@ public final class IncomingReplica {
     }
     aborted = true;
     try {
-      VaultFiles.deleteRecursively(targetDirectory);
+      SnapshotVault.deleteArchived(targetDirectory);
     } catch (final IOException e) {
       LOG.warn("接收目录删除失败: {}", targetDirectory, e);
     }

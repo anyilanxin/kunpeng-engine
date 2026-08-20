@@ -154,6 +154,16 @@ public class RaftPartitionServer implements Managed<RaftPartitionServer>, Health
     return server != null && server.isRunning();
   }
 
+  /** Raft 线程上下文（server 未创建时为 null） */
+  public com.anyilanxin.kunpeng.cluster.utils.concurrent.ThreadContext getThreadContext() {
+    return server != null ? server.getContext().getThreadContext() : null;
+  }
+
+  /** 当前已提交日志索引（server 未创建时为 0） */
+  public long getCommitIndex() {
+    return server != null ? server.getContext().getCommitIndex() : 0;
+  }
+
   /** 首次创建集群（本节点与已知成员形成新 Raft 集群） */
   public CompletableFuture<RaftServer> bootstrap(final java.util.Collection<MemberId> clusterMembers) {
     ensureServer();

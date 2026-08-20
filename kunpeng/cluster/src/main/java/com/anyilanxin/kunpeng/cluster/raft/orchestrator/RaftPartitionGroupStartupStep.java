@@ -123,7 +123,8 @@ public final class RaftPartitionGroupStartupStep<T extends RaftGroupContext>
       LOG.info("关闭分区组 {} 的全部分区", context.groupName());
       final var futures = new ArrayList<CompletableFuture<Void>>();
       for (final var partition : partitionRegistry.values()) {
-        // 先拍终局快照并关闭业务资源，再停 raft server
+        // 先停周期快照，再拍终局快照并关闭业务资源，最后停 raft server
+        partition.stopSnapshotSchedule();
         futures.add(partition.closeHandler().thenCompose(v -> partition.close()));
       }
       CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
