@@ -1,7 +1,7 @@
 /*
  * Copyright 2017-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,9 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.partition;
 
+import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationService;
 import com.anyilanxin.kunpeng.cluster.raft.RaftRoleChangeListener;
 import com.anyilanxin.kunpeng.cluster.raft.RaftServer.Role;
 import com.anyilanxin.kunpeng.cluster.raft.journal.util.health.FailureListener;
@@ -27,128 +29,222 @@ import com.anyilanxin.kunpeng.cluster.raft.partition.impl.RaftPartitionServer;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChecksumProvider;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChecksumProviderFactory;
 import io.micrometer.core.instrument.MeterRegistry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-
-/** Abstract partition. */
+/**
+ * Raft 分区：自包含的生命周期管理单元。
+ *
+ * <p>{@link PartitionMetadata} 已包含分区组信息（组名在 {@code PartitionId.group()}），
+ * 因此无需外层的 RaftPartitionGroup——分区组的成员分配与元数据由
+ * {@code RaftOrchestrationService} 持有和管理，本类只关注单个分区的 Raft 生命周期。
+ *
+ * <p>生命周期方法：
+ * <ul>
+ *   <li>{@link #bootstrap()}——首次创建集群（本节点 + 已知成员形成新集群）</li>
+ *   <li>{@link #join()}——加入已有集群（以 PASSIVE 启动，由 leader 提升为 ACTIVE）</li>
+ *   <li>{@link #leave()}——离开集群（通知 leader 移除自身 → 完整 shutdown）</li>
+ * </ul>
+ */
 public class RaftPartition implements Partition, HealthMonitorable {
 
   private static final Logger LOG = LoggerFactory.getLogger(RaftPartition.class);
   private static final String PARTITION_NAME_FORMAT = "%s-partition-%d";
-  private final PartitionId partitionId;
-  private final RaftPartitionGroupConfig config;
+
+  private final PartitionMetadata metadata;
+  private final RaftPartitionConfig config;
+  private final RaftStorageConfig storageConfig;
   private final File dataDirectory;
   private final MeterRegistry meterRegistry;
   private final SnapshotChecksumProviderFactory checksumProviderFactory;
+  private final ClusterMembershipService membershipService;
+  private final ClusterCommunicationService communicationService;
   private final Set<RaftRoleChangeListener> deferredRoleChangeListeners =
       new CopyOnWriteArraySet<>();
-  private PartitionMetadata partitionMetadata;
-  private RaftPartitionServer server;
+  private final Set<FailureListener> deferredFailureListeners = new CopyOnWriteArraySet<>();
+  private volatile RaftPartitionServer server;
 
   public RaftPartition(
-      final PartitionId partitionId,
-      final RaftPartitionGroupConfig config,
+      final PartitionMetadata metadata,
+      final RaftPartitionConfig config,
+      final RaftStorageConfig storageConfig,
       final File dataDirectory,
       final MeterRegistry meterRegistry,
-      final SnapshotChecksumProviderFactory checksumProviderFactory) {
-    this.partitionId = partitionId;
+      final SnapshotChecksumProviderFactory checksumProviderFactory,
+      final ClusterMembershipService membershipService,
+      final ClusterCommunicationService communicationService) {
+    this.metadata = metadata;
     this.config = config;
+    this.storageConfig = storageConfig;
     this.dataDirectory = dataDirectory;
     this.meterRegistry = meterRegistry;
     this.checksumProviderFactory = checksumProviderFactory;
+    this.membershipService = membershipService;
+    this.communicationService = communicationService;
   }
 
-  public void addRoleChangeListener(final RaftRoleChangeListener listener) {
-    if (server == null) {
-      deferredRoleChangeListeners.add(listener);
-    } else {
-      server.addRoleChangeListener(listener);
+  // ===== 生命周期 =====
+
+  /**
+   * 首次创建集群：本节点与已知成员形成新 Raft 集群。
+   *
+   * <p>仅适用于尚无集群的场景（首次部署或数据目录为空）。
+   */
+  public CompletableFuture<RaftPartition> bootstrap() {
+    LOG.info("Bootstrap partition: {} (members={})", name(), metadata.members());
+    final var srv = getOrCreateServer();
+    final var clusterMembers = metadata.members().stream()
+        .filter(id -> !id.equals(getLocalMemberId()))
+        .toList();
+    return srv.bootstrap(clusterMembers).thenApply(v -> this);
+  }
+
+  /**
+   * 加入已有集群：以 PASSIVE 启动 → 向已知成员发 ReconfigureRequest →
+   * leader 接受后将本节点写入配置 → 通过日志复制收到新配置 → 提升为 ACTIVE。
+   */
+  public CompletableFuture<RaftPartition> join() {
+    LOG.info("Join partition: {} (members={})", name(), metadata.members());
+    final var srv = getOrCreateServer();
+    final var clusterMembers = metadata.members().stream()
+        .filter(id -> !id.equals(getLocalMemberId()))
+        .toList();
+    return srv.join(clusterMembers).thenApply(v -> this);
+  }
+
+  /**
+   * 离开集群：向 leader 宣告离开（best-effort）→ 完整 shutdown（停定时器 →
+   * INACTIVE → 关闭日志/存储/快照/网络）。
+   */
+  public CompletableFuture<RaftPartition> leave() {
+    LOG.info("Leave partition: {}", name());
+    final var srv = server;
+    if (srv == null) {
+      return CompletableFuture.completedFuture(this);
     }
+    return srv.leave().thenApply(v -> this);
   }
 
-  public void removeRoleChangeListener(final RaftRoleChangeListener listener) {
-    deferredRoleChangeListeners.remove(listener);
-    server.removeRoleChangeListener(listener);
-  }
-
-  /**
-   * Returns the partition data directory.
-   *
-   * @return the partition data directory
-   */
-  public File dataDirectory() {
-    return dataDirectory;
-  }
-
-  /**
-   * Takes a snapshot of the partition.
-   *
-   * @return a future to be completed once the snapshot is complete
-   */
-  public CompletableFuture<Void> snapshot() {
-    final RaftPartitionServer server = this.server;
-    if (server != null) {
-      return server.snapshot();
+  /** 关闭分区（不离开集群，仅停止本节点的 Raft 服务） */
+  public CompletableFuture<Void> close() {
+    final var srv = server;
+    if (srv != null) {
+      return srv.stop().exceptionally(error -> {
+        LOG.error("Error on shutdown partition: {}", metadata.id(), error);
+        return null;
+      });
     }
     return CompletableFuture.completedFuture(null);
   }
 
-  /** Opens the partition. */
-  CompletableFuture<Partition> open(
-      final PartitionMetadata metadata, final PartitionManagementService managementService) {
-    partitionMetadata = metadata;
-    if (partitionMetadata
-        .members()
-        .contains(managementService.getMembershipService().getLocalMember().id())) {
-      initServer(managementService);
-      return server.start().thenApply(v -> null);
+  /** 删除分区（停止 + 清理数据） */
+  public CompletableFuture<Void> delete() {
+    final var srv = server;
+    if (srv != null) {
+      return srv.stop().thenRun(() -> srv.delete());
     }
-    return CompletableFuture.completedFuture(this);
+    return CompletableFuture.completedFuture(null);
   }
 
-  private void initServer(final PartitionManagementService managementService) {
-    server = createServer(managementService);
+  // ===== 内部 =====
 
-    if (!deferredRoleChangeListeners.isEmpty()) {
-      deferredRoleChangeListeners.forEach(server::addRoleChangeListener);
-      deferredRoleChangeListeners.clear();
-    }
+  private MemberId getLocalMemberId() {
+    return membershipService.getLocalMember().id();
   }
 
-  /** Creates a Raft server. */
-  protected RaftPartitionServer createServer(final PartitionManagementService managementService) {
-    // 用工厂为本分区创建专属校验和提供方
+  private RaftPartitionServer getOrCreateServer() {
+    var srv = server;
+    if (srv == null) {
+      synchronized (this) {
+        srv = server;
+        if (srv == null) {
+          srv = createServer();
+          server = srv;
+          flushDeferredListeners(srv);
+        }
+      }
+    }
+    return srv;
+  }
+
+  private RaftPartitionServer createServer() {
     final SnapshotChecksumProvider checksumProvider =
         checksumProviderFactory != null
-            ? checksumProviderFactory.create(partitionId.id(), dataDirectory.toPath())
+            ? checksumProviderFactory.create(metadata.id().id(), dataDirectory.toPath())
             : null;
     return new RaftPartitionServer(
         this,
         config,
-        managementService.getMembershipService().getLocalMember().id(),
-        managementService.getMembershipService(),
-        managementService.getMessagingService(),
-        partitionMetadata,
+        storageConfig,
+        getLocalMemberId(),
+        membershipService,
+        communicationService,
+        metadata,
         meterRegistry,
         checksumProvider);
   }
 
-  /**
-   * Returns the partition name.
-   *
-   * @return the partition name
-   */
+  private void flushDeferredListeners(final RaftPartitionServer srv) {
+    if (!deferredRoleChangeListeners.isEmpty()) {
+      deferredRoleChangeListeners.forEach(srv::addRoleChangeListener);
+      deferredRoleChangeListeners.clear();
+    }
+    if (!deferredFailureListeners.isEmpty()) {
+      deferredFailureListeners.forEach(srv::addFailureListener);
+      deferredFailureListeners.clear();
+    }
+  }
+
+  // ===== 查询 =====
+
+  /** 分区名（组名-分区号） */
   public String name() {
-    return String.format(PARTITION_NAME_FORMAT, partitionId.group(), partitionId.id());
+    return String.format(PARTITION_NAME_FORMAT, metadata.id().group(), metadata.id().id());
+  }
+
+  /** 分区元数据（含组名、成员、优先级、primary） */
+  public PartitionMetadata metadata() {
+    return metadata;
+  }
+
+  /** 分区数据目录 */
+  public File dataDirectory() {
+    return dataDirectory;
+  }
+
+  /** 分区配置 */
+  public RaftPartitionConfig config() {
+    return config;
+  }
+
+  /** 拍快照 */
+  public CompletableFuture<Void> snapshot() {
+    final var srv = server;
+    return srv != null ? srv.snapshot() : CompletableFuture.completedFuture(null);
+  }
+
+  /** 步退（Leader → Follower） */
+  public CompletableFuture<Void> stepDown() {
+    final var srv = server;
+    return srv != null ? srv.stepDown() : CompletableFuture.completedFuture(null);
+  }
+
+  /** 转入 INACTIVE（不离开集群） */
+  public CompletableFuture<Void> goInactive() {
+    final var srv = server;
+    return srv != null ? srv.goInactive() : CompletableFuture.completedFuture(null);
+  }
+
+  // ===== Partition 接口 =====
+
+  @Override
+  public PartitionId id() {
+    return metadata.id();
   }
 
   @Override
@@ -157,112 +253,73 @@ public class RaftPartition implements Partition, HealthMonitorable {
   }
 
   @Override
-  public HealthReport getHealthReport() {
-    return server.getHealthReport();
-  }
-
-  @Override
-  public void addFailureListener(final FailureListener failureListener) {
-    server.addFailureListener(failureListener);
-  }
-
-  @Override
-  public void removeFailureListener(final FailureListener failureListener) {
-    server.removeFailureListener(failureListener);
-  }
-
-  /** Closes the partition. */
-  CompletableFuture<Void> close() {
-    return closeServer()
-        .exceptionally(
-            error -> {
-              LOG.error("Error on shutdown partition: {}.", partitionId, error);
-              return null;
-            });
-  }
-
-  private CompletableFuture<Void> closeServer() {
-    if (server != null) {
-      return server.stop();
-    }
-    return CompletableFuture.completedFuture(null);
-  }
-
-  /**
-   * Deletes the partition.
-   *
-   * @return future to be completed once the partition has been deleted
-   */
-  public CompletableFuture<Void> delete() {
-    return server
-        .stop()
-        .thenRun(
-            () -> {
-              if (server != null) {
-                server.delete();
-              }
-            });
-  }
-
-  @Override
-  public String toString() {
-    return toStringHelper(this).add("partitionId", id()).toString();
-  }
-
-  @Override
-  public PartitionId id() {
-    return partitionId;
-  }
-
-  @Override
   public long term() {
-    return server != null ? server.getTerm() : 0;
+    final var srv = server;
+    return srv != null ? srv.getTerm() : 0;
   }
 
   @Override
   public Collection<MemberId> members() {
-    return partitionMetadata != null ? partitionMetadata.members() : Collections.emptyList();
+    return metadata.members();
+  }
+
+  // ===== HealthMonitorable 接口 =====
+
+  @Override
+  public HealthReport getHealthReport() {
+    final var srv = server;
+    return srv != null ? srv.getHealthReport() : HealthReport.healthy(this);
+  }
+
+  @Override
+  public void addFailureListener(final FailureListener listener) {
+    final var srv = server;
+    if (srv != null) {
+      srv.addFailureListener(listener);
+    } else {
+      deferredFailureListeners.add(listener);
+    }
+  }
+
+  @Override
+  public void removeFailureListener(final FailureListener listener) {
+    deferredFailureListeners.remove(listener);
+    final var srv = server;
+    if (srv != null) {
+      srv.removeFailureListener(listener);
+    }
+  }
+
+  // ===== 事件 =====
+
+  public void addRoleChangeListener(final RaftRoleChangeListener listener) {
+    final var srv = server;
+    if (srv != null) {
+      srv.addRoleChangeListener(listener);
+    } else {
+      deferredRoleChangeListeners.add(listener);
+    }
+  }
+
+  public void removeRoleChangeListener(final RaftRoleChangeListener listener) {
+    deferredRoleChangeListeners.remove(listener);
+    final var srv = server;
+    if (srv != null) {
+      srv.removeRoleChangeListener(listener);
+    }
   }
 
   public Role getRole() {
-    return server != null ? server.getRole() : null;
+    final var srv = server;
+    return srv != null ? srv.getRole() : null;
   }
 
   public RaftPartitionServer getServer() {
     return server;
   }
 
-  public CompletableFuture<Void> stepDown() {
-    return server.stepDown();
-  }
-
-  /**
-   * Tries to step down if the following conditions are met:
-   *
-   * <ul>
-   *   <li>priority election is enabled
-   *   <li>the partition distributor determined a primary node
-   *   <li>this node is not the primary
-   * </ul>
-   */
-  public CompletableFuture<Void> stepDownIfNotPrimary() {
-    if (shouldStepDown()) {
-      return stepDown();
-    } else {
-      return CompletableFuture.completedFuture(null);
-    }
-  }
-
-  private boolean shouldStepDown() {
-    final var primary = partitionMetadata.getPrimary();
-    final var partitionConfig = config.getPartitionConfig();
-    return server != null
-        && partitionConfig.isPriorityElectionEnabled()
-        && primary.isPresent()
-        && primary.get() != server.getMemberId();
-  }
-
-  public CompletableFuture<Void> goInactive() {
-    return server.goInactive();
+  @Override
+  public String toString() {
+    return "RaftPartition{id=" + metadata.id() + ", members=" + metadata.members() + "}";
   }
 }

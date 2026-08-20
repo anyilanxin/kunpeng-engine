@@ -27,7 +27,7 @@ import java.util.List;
  *
  * <p>每种分区组类型（如 "engine"、"metadata"）注册一个工厂实例；
  * {@link #startupSteps(RaftGroupContext)} 返回的有序步骤列表中，
- * {@code RaftPartitionGroupStartupStep} 之前的是前置启动，之后的是后置启动。
+ * {@code RaftPartition 集合StartupStep} 之前的是前置启动，之后的是后置启动。
  *
  * @param <T> 该类型分区组的上下文类型
  */
@@ -53,7 +53,7 @@ public interface PartitionGroupTypeFactory<T extends RaftGroupContext> {
    * 有序启动步骤列表。
    *
    * <p>StartupProcess 顺序执行 startup、倒序执行 shutdown。
-   * RaftPartitionGroupStartupStep 之前的是前置启动，之后的是后置启动。
+   * RaftPartition 集合StartupStep 之前的是前置启动，之后的是后置启动。
    */
   List<PartitionStartup<T>> startupSteps(T context);
 

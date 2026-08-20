@@ -66,7 +66,8 @@ public class RaftPartitionServer implements Managed<RaftPartitionServer>, Health
 
   private final MemberId localMemberId;
   private final RaftPartition partition;
-  private final RaftPartitionGroupConfig config;
+  private final RaftPartitionConfig partitionConfig;
+  private final RaftStorageConfig storageConfig;
   private final ClusterMembershipService membershipService;
   private final ClusterCommunicationService clusterCommunicator;
   private final Set<RaftRoleChangeListener> deferredRoleChangeListeners =
@@ -82,19 +83,8 @@ public class RaftPartitionServer implements Managed<RaftPartitionServer>, Health
 
   public RaftPartitionServer(
       final RaftPartition partition,
-      final RaftPartitionGroupConfig config,
-      final MemberId localMemberId,
-      final ClusterMembershipService membershipService,
-      final ClusterCommunicationService clusterCommunicator,
-      final PartitionMetadata partitionMetadata,
-      final MeterRegistry meterRegistry) {
-    this(partition, config, localMemberId, membershipService, clusterCommunicator,
-        partitionMetadata, meterRegistry, null);
-  }
-
-  public RaftPartitionServer(
-      final RaftPartition partition,
-      final RaftPartitionGroupConfig config,
+      final RaftPartitionConfig partitionConfig,
+      final RaftStorageConfig storageConfig,
       final MemberId localMemberId,
       final ClusterMembershipService membershipService,
       final ClusterCommunicationService clusterCommunicator,
@@ -102,7 +92,8 @@ public class RaftPartitionServer implements Managed<RaftPartitionServer>, Health
       final MeterRegistry meterRegistry,
       final com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChecksumProvider checksumProvider) {
     this.partition = partition;
-    this.config = config;
+    this.partitionConfig = partitionConfig;
+    this.storageConfig = storageConfig;
     this.localMemberId = localMemberId;
     this.membershipService = membershipService;
     this.clusterCommunicator = clusterCommunicator;
@@ -113,7 +104,7 @@ public class RaftPartitionServer implements Managed<RaftPartitionServer>, Health
     this.partitionMetadata = partitionMetadata;
     this.meterRegistry = meterRegistry;
     this.checksumProvider = checksumProvider;
-    requestTimeout = config.getPartitionConfig().getRequestTimeout();
+    requestTimeout = partitionConfig.getRequestTimeout();
   }
 
   @Override
@@ -162,7 +153,41 @@ public class RaftPartitionServer implements Managed<RaftPartitionServer>, Health
 
   @Override
   public boolean isRunning() {
-    return server.isRunning();
+    return server != null && server.isRunning();
+  }
+
+  /** 首次创建集群（本节点与已知成员形成新 Raft 集群） */
+  public CompletableFuture<RaftServer> bootstrap(final java.util.Collection<MemberId> clusterMembers) {
+    ensureServer();
+    return server.bootstrap(clusterMembers);
+  }
+
+  /** 加入已有集群（以 PASSIVE 启动 → 由 leader 提升为 ACTIVE） */
+  public CompletableFuture<RaftServer> join(final java.util.Collection<MemberId> clusterMembers) {
+    ensureServer();
+    return server.join(clusterMembers);
+  }
+
+  /** 离开集群（通知 leader 移除自身 → 完整 shutdown） */
+  public CompletableFuture<RaftServer> leave() {
+    if (server == null) {
+      return CompletableFuture.completedFuture(null);
+    }
+    return server.leave();
+  }
+
+  private void ensureServer() {
+    if (server == null) {
+      synchronized (this) {
+        if (server == null) {
+          try {
+            initServer();
+          } catch (final StorageException e) {
+            throw new RuntimeException("Failed to initialize Raft server for partition " + partition.id(), e);
+          }
+        }
+      }
+    }
   }
 
   @Override
@@ -183,13 +208,11 @@ public class RaftPartitionServer implements Managed<RaftPartitionServer>, Health
   private RaftServer buildServer() {
     final var partitionId = partition.id().id();
     persistedSnapshotStore =
-        config
-            .getStorageConfig()
-            .getPersistedSnapshotStoreFactory()
+        storageConfig.getPersistedSnapshotStoreFactory()
             .createReceivableSnapshotStore(
                 partition.dataDirectory().toPath(), checksumProvider, partitionId);
 
-    final var partitionConfig = config.getPartitionConfig();
+    // partitionConfig 已在构造器中注入
 
     final var electionConfig =
         partitionConfig.isPriorityElectionEnabled()
@@ -205,7 +228,7 @@ public class RaftPartitionServer implements Managed<RaftPartitionServer>, Health
         .withPartitionConfig(partitionConfig)
         .withStorage(createRaftStorage())
         .withMeterRegistry(meterRegistry)
-        .withEntryValidator(config.getEntryValidator())
+        .withEntryValidator(null) // TODO: entryValidator 由工厂体系提供
         .withElectionConfig(electionConfig)
         .build();
   }
@@ -359,7 +382,7 @@ public class RaftPartitionServer implements Managed<RaftPartitionServer>, Health
   }
 
   private RaftStorage createRaftStorage() {
-    final RaftStorageConfig storageConfig = config.getStorageConfig();
+    // storageConfig 已在构造器中注入
     return RaftStorage.builder()
         .withPrefix(partition.name())
         .withDirectory(partition.dataDirectory())

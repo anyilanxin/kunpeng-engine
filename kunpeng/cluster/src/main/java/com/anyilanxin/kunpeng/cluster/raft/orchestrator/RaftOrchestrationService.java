@@ -265,7 +265,7 @@ public final class RaftOrchestrationService implements AutoCloseable {
     LOG.info("远程调度离开分区组: {}", groupName);
     final var future = new java.util.concurrent.CompletableFuture<Void>();
     final var context = contexts.get(groupName);
-    if (context != null && context.isPartitionGroupStarted()) {
+    if (context != null && context.hasPartitions()) {
       // 先停止分区组，再移除元数据
       stopPartitionGroup(groupName).onComplete(
           (result, error) -> {

@@ -145,7 +145,7 @@ public final class RemoteScheduleHandler {
     }
     final var data = new java.util.HashMap<String, String>();
     data.put("groupName", context.get().groupName());
-    data.put("started", String.valueOf(context.get().isPartitionGroupStarted()));
+    data.put("started", String.valueOf(context.get().hasPartitions()));
     return CompletableFuture.completedFuture(
         RaftScheduleResponse.ok(request.requestId(), data));
   }

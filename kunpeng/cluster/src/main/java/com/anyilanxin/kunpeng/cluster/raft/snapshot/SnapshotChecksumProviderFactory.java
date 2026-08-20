@@ -21,7 +21,7 @@ import java.nio.file.Path;
 /**
  * {@link SnapshotChecksumProvider} 工厂：每个分区创建独立的校验和提供方实例。
  *
- * <p>由 {@code RaftPartitionGroup} 持有并传入各个 {@code RaftPartition}，
+ * <p>由 {@code RaftPartition} 持有并传入各个 {@code RaftPartition}，
  * 后者在创建 {@code RaftPartitionServer} 时调用 {@link #create(int, Path)}
  * 生成该分区的专属实例。
  */
