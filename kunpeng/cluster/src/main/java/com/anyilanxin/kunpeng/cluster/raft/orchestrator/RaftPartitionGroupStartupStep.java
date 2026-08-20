@@ -67,9 +67,11 @@ public final class RaftPartitionGroupStartupStep<T extends RaftGroupContext>
             0,
             null);
         final var dataDir = new File(context.groupDataDirectory().toFile(), String.valueOf(i));
+        final var vault = new com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.SnapshotVault(
+            dataDir.toPath(), null, context.meterRegistry());
         final var partition = new RaftPartition(
             metadata, partitionConfig, dataDir,
-            context.meterRegistry(), null,
+            context.meterRegistry(), vault,
             null, context.communicationService());
         context.attachPartition(i, partition);
         LOG.debug("已创建分区 {}-{}", context.groupName(), i);

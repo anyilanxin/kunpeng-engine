@@ -17,7 +17,6 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.partition;
 
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.ReceivableSnapshotStoreFactory;
 import com.anyilanxin.kunpeng.cluster.utils.memory.MemorySize;
 import java.time.Duration;
 
@@ -54,7 +53,6 @@ public class RaftPartitionConfig {
   private boolean flushExplicitly = DEFAULT_FLUSH_EXPLICITLY;
   private long freeDiskSpace = DEFAULT_FREE_DISK_SPACE;
   private int journalIndexDensity = DEFAULT_JOURNAL_INDEX_DENSITY;
-  private ReceivableSnapshotStoreFactory persistedSnapshotStoreFactory;
 
   public Duration getElectionTimeout() {
     return electionTimeout;
@@ -190,17 +188,6 @@ public class RaftPartitionConfig {
 
   public RaftPartitionConfig setJournalIndexDensity(final int journalIndexDensity) {
     this.journalIndexDensity = journalIndexDensity;
-    return this;
-  }
-
-  /** 快照存储工厂 */
-  public ReceivableSnapshotStoreFactory getPersistedSnapshotStoreFactory() {
-    return persistedSnapshotStoreFactory;
-  }
-
-  public RaftPartitionConfig setPersistedSnapshotStoreFactory(
-      final ReceivableSnapshotStoreFactory persistedSnapshotStoreFactory) {
-    this.persistedSnapshotStoreFactory = persistedSnapshotStoreFactory;
     return this;
   }
 }

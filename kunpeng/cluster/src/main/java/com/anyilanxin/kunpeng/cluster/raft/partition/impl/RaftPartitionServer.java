@@ -75,7 +75,7 @@ public class RaftPartitionServer implements Managed<RaftPartitionServer>, Health
   private final PartitionMetadata partitionMetadata;
   private final Duration requestTimeout;
   private final MeterRegistry meterRegistry;
-  private final com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChecksumProvider checksumProvider;
+  private final com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.SnapshotVault snapshotVault;
 
   private RaftServer server;
   private ReceivableSnapshotStore persistedSnapshotStore;
@@ -88,7 +88,7 @@ public class RaftPartitionServer implements Managed<RaftPartitionServer>, Health
       final ClusterCommunicationService clusterCommunicator,
       final PartitionMetadata partitionMetadata,
       final MeterRegistry meterRegistry,
-      final com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChecksumProvider checksumProvider) {
+      final com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.SnapshotVault snapshotVault) {
     this.partition = partition;
     this.partitionConfig = partitionConfig;
     this.localMemberId = localMemberId;
@@ -100,7 +100,7 @@ public class RaftPartitionServer implements Managed<RaftPartitionServer>, Health
             LoggerContext.builder(RaftPartitionServer.class).addValue(partition.name()).build());
     this.partitionMetadata = partitionMetadata;
     this.meterRegistry = meterRegistry;
-    this.checksumProvider = checksumProvider;
+    this.snapshotVault = snapshotVault;
     requestTimeout = partitionConfig.getRequestTimeout();
   }
 
@@ -204,10 +204,7 @@ public class RaftPartitionServer implements Managed<RaftPartitionServer>, Health
 
   private RaftServer buildServer() {
     final var partitionId = partition.id().id();
-    persistedSnapshotStore =
-        partitionConfig.getPersistedSnapshotStoreFactory()
-            .createReceivableSnapshotStore(
-                partition.dataDirectory().toPath(), checksumProvider, partitionId);
+    persistedSnapshotStore = new com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.VaultSnapshotStore(snapshotVault);
 
     // partitionConfig 已在构造器中注入
 

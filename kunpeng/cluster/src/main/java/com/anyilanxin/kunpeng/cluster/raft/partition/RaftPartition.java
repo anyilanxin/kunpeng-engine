@@ -26,8 +26,8 @@ import com.anyilanxin.kunpeng.cluster.raft.journal.util.health.FailureListener;
 import com.anyilanxin.kunpeng.cluster.raft.journal.util.health.HealthMonitorable;
 import com.anyilanxin.kunpeng.cluster.raft.journal.util.health.HealthReport;
 import com.anyilanxin.kunpeng.cluster.raft.partition.impl.RaftPartitionServer;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChecksumProvider;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChecksumProviderFactory;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.SnapshotVault;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.VaultSnapshotStore;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,7 +61,7 @@ public class RaftPartition implements Partition, HealthMonitorable {
   private final RaftPartitionConfig config;
   private final File dataDirectory;
   private final MeterRegistry meterRegistry;
-  private final SnapshotChecksumProviderFactory checksumProviderFactory;
+  private final SnapshotVault snapshotVault;
   private final ClusterMembershipService membershipService;
   private final ClusterCommunicationService communicationService;
   private final Set<RaftRoleChangeListener> deferredRoleChangeListeners =
@@ -74,14 +74,14 @@ public class RaftPartition implements Partition, HealthMonitorable {
       final RaftPartitionConfig config,
       final File dataDirectory,
       final MeterRegistry meterRegistry,
-      final SnapshotChecksumProviderFactory checksumProviderFactory,
+      final SnapshotVault snapshotVault,
       final ClusterMembershipService membershipService,
       final ClusterCommunicationService communicationService) {
     this.metadata = metadata;
     this.config = config;
     this.dataDirectory = dataDirectory;
     this.meterRegistry = meterRegistry;
-    this.checksumProviderFactory = checksumProviderFactory;
+    this.snapshotVault = snapshotVault;
     this.membershipService = membershipService;
     this.communicationService = communicationService;
   }
@@ -171,10 +171,6 @@ public class RaftPartition implements Partition, HealthMonitorable {
   }
 
   private RaftPartitionServer createServer() {
-    final SnapshotChecksumProvider checksumProvider =
-        checksumProviderFactory != null
-            ? checksumProviderFactory.create(metadata.id().id(), dataDirectory.toPath())
-            : null;
     return new RaftPartitionServer(
         this,
         config,
@@ -183,7 +179,7 @@ public class RaftPartition implements Partition, HealthMonitorable {
         communicationService,
         metadata,
         meterRegistry,
-        checksumProvider);
+        snapshotVault);
   }
 
   private void flushDeferredListeners(final RaftPartitionServer srv) {
