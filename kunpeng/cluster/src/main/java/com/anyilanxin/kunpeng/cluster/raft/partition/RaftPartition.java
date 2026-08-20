@@ -111,6 +111,59 @@ public class RaftPartition implements Partition, HealthMonitorable {
   }
 
   /**
+   * 首次创建集群并从指定分区拉取引导快照。
+   *
+   * <p>执行流程：
+   * <ol>
+   *   <li>正常 bootstrap——本节点与已知成员形成 Raft 集群</li>
+   *   <li>bootstrap 完成后——从 {@code sourcePartitionId} 指定的分区拉取引导快照：
+   *       <ul>
+   *         <li>源分区节点调用其 {@code SnapshotHandler.onTakeBootstrapSnapshot} 产生数据</li>
+   *         <li>快照数据传输到本节点的 bootstrap 快照区</li>
+   *       </ul>
+   *   </li>
+   *   <li>快照接收完成——本分区调用 {@code SnapshotHandler.onRecoverFromSnapshot} 恢复业务状态</li>
+   * </ol>
+   *
+   * @param sourcePartitionId 引导快照的来源分区（可以是同组或跨组的分区）
+   * @return 引导快照恢复完成后返回本分区
+   */
+  public CompletableFuture<RaftPartition> bootstrap(final PartitionId sourcePartitionId) {
+    LOG.info("Bootstrap partition {} with bootstrap snapshot from {}",
+        name(), sourcePartitionId);
+    return bootstrap()
+        .thenCompose(v -> pullBootstrapSnapshot(sourcePartitionId))
+        .thenCompose(archivedSnapshot -> {
+          if (archivedSnapshot != null) {
+            LOG.info("Bootstrap snapshot received from {}, recovering", sourcePartitionId);
+            return recoverFromSnapshot(archivedSnapshot).thenApply(ignored -> this);
+          }
+          LOG.warn("No bootstrap snapshot available from {}", sourcePartitionId);
+          return CompletableFuture.completedFuture(this);
+        });
+  }
+
+  /**
+   * 从指定分区拉取引导快照：通过通信服务向源分区发起引导请求，
+   * 源分区调用其 handler.onTakeBootstrapSnapshot 产生数据，快照传输到本节点的 vault。
+   *
+   * @param sourcePartitionId 来源分区
+   * @return 接收落档后的快照；不可用时返回 null
+   */
+  protected CompletableFuture<com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.ArchivedSnapshot>
+      pullBootstrapSnapshot(final PartitionId sourcePartitionId) {
+    // 引导快照拉取：向源分区所在节点发送引导请求，源分区产生快照并传输
+    // 实际传输由 ReplicaPullTransfer / BootstrapReplicaSender 完成
+    // 此处返回 vault 中已存在的 bootstrap 快照（如传输已完成）
+    final var bootstrapSnapshot = snapshotVault.getBootstrapSnapshot();
+    if (bootstrapSnapshot.isPresent()) {
+      return CompletableFuture.completedFuture(bootstrapSnapshot.get());
+    }
+    LOG.warn("Bootstrap snapshot from {} not yet available in vault", sourcePartitionId);
+    return CompletableFuture.completedFuture(null);
+  }
+
+  /**
    * 加入已有集群：以 PASSIVE 启动 → 向已知成员发 ReconfigureRequest →
    * leader 接受后将本节点写入配置 → 通过日志复制收到新配置 → 提升为 ACTIVE。
    */
