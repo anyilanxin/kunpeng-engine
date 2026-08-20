@@ -122,15 +122,17 @@ public class RaftPartition implements Partition, HealthMonitorable {
   /**
    * 首次创建集群：本节点与已知成员形成新 Raft 集群。
    *
-   * <p>仅适用于尚无集群的场景（首次部署或数据目录为空）。
+   * <p>仅当本节点是分区成员时启动 raft server；传入<b>全量</b>成员列表
+   * （不可过滤本机——重启时需与持久化配置在 ensureConfigurationIsConsistent
+   * 中比对成员数与成员一致性）。
    */
   public CompletableFuture<RaftPartition> bootstrap() {
+    if (!metadata.members().contains(getLocalMemberId())) {
+      return CompletableFuture.completedFuture(this);
+    }
     LOG.info("Bootstrap partition: {} (members={})", name(), metadata.members());
     final var srv = getOrCreateServer();
-    final var clusterMembers = metadata.members().stream()
-        .filter(id -> !id.equals(getLocalMemberId()))
-        .toList();
-    return srv.bootstrap(clusterMembers)
+    return srv.bootstrap(metadata.members())
         .thenApply(v -> {
           // server 就绪后自动启动周期快照
           startSnapshotSchedule();
@@ -223,14 +225,20 @@ public class RaftPartition implements Partition, HealthMonitorable {
   /**
    * 加入已有集群：以 PASSIVE 启动 → 向已知成员发 ReconfigureRequest →
    * leader 接受后将本节点写入配置 → 通过日志复制收到新配置 → 提升为 ACTIVE。
+   *
+   * <p>仅当本节点是分区成员时启动 raft server；参数为<b>非本机</b>的成员列表
+   * （join 的联系对象，不含本机）。
    */
   public CompletableFuture<RaftPartition> join() {
-    LOG.info("Join partition: {} (members={})", name(), metadata.members());
-    final var srv = getOrCreateServer();
-    final var clusterMembers = metadata.members().stream()
+    if (!metadata.members().contains(getLocalMemberId())) {
+      return CompletableFuture.completedFuture(this);
+    }
+    final var contactMembers = metadata.members().stream()
         .filter(id -> !id.equals(getLocalMemberId()))
         .toList();
-    return srv.join(clusterMembers)
+    LOG.info("Join partition: {} (contacts={})", name(), contactMembers);
+    final var srv = getOrCreateServer();
+    return srv.join(contactMembers)
         .thenApply(v -> {
           // server 就绪后自动启动周期快照
           startSnapshotSchedule();
