@@ -19,7 +19,6 @@ package org.camunda.bpm.dmn.engine.impl.hitpolicy;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
 import org.camunda.bpm.dmn.engine.delegate.DmnDecisionTableEvaluationEvent;
 import org.camunda.bpm.dmn.engine.delegate.DmnEvaluatedDecisionRule;
 import org.camunda.bpm.dmn.engine.delegate.DmnEvaluatedOutput;
@@ -38,13 +37,15 @@ public class AnyHitPolicyHandler implements DmnHitPolicyHandler {
     return HIT_POLICY;
   }
 
-  public DmnDecisionTableEvaluationEvent apply(DmnDecisionTableEvaluationEvent decisionTableEvaluationEvent) {
+  public DmnDecisionTableEvaluationEvent apply(
+      DmnDecisionTableEvaluationEvent decisionTableEvaluationEvent) {
     List<DmnEvaluatedDecisionRule> matchingRules = decisionTableEvaluationEvent.getMatchingRules();
 
     if (!matchingRules.isEmpty()) {
       if (allOutputsAreEqual(matchingRules)) {
         DmnEvaluatedDecisionRule firstMatchingRule = matchingRules.get(0);
-        ((DmnDecisionTableEvaluationEventImpl) decisionTableEvaluationEvent).setMatchingRules(Collections.singletonList(firstMatchingRule));
+        ((DmnDecisionTableEvaluationEventImpl) decisionTableEvaluationEvent)
+            .setMatchingRules(Collections.singletonList(firstMatchingRule));
       } else {
         throw LOG.anyHitPolicyRequiresThatAllOutputsAreEqual(matchingRules);
       }
@@ -75,5 +76,4 @@ public class AnyHitPolicyHandler implements DmnHitPolicyHandler {
   public String toString() {
     return "AnyHitPolicyHandler{}";
   }
-
 }

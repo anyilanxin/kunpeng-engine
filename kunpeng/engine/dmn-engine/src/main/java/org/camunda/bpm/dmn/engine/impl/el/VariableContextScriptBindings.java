@@ -21,20 +21,18 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import javax.script.Bindings;
-
 import org.camunda.bpm.engine.variable.context.VariableContext;
 import org.camunda.bpm.engine.variable.value.TypedValue;
 
 /**
- * A Script {@link Bindings} implementation wrapping a provided
- * {@link VariableContext} and {@link Bindings} instance.
+ * A Script {@link Bindings} implementation wrapping a provided {@link VariableContext} and {@link
+ * Bindings} instance.
  *
- * Enhances the Bindings with the variables resolvable through the {@link VariableContext}.
- * The variables are treated as read only: all mutating operations write through to the
- * wrapped {@link Bindings}.
+ * <p>Enhances the Bindings with the variables resolvable through the {@link VariableContext}. The
+ * variables are treated as read only: all mutating operations write through to the wrapped {@link
+ * Bindings}.
  *
  * @author Daniel Meyer
- *
  */
 public class VariableContextScriptBindings implements Bindings {
 
@@ -48,30 +46,30 @@ public class VariableContextScriptBindings implements Bindings {
   }
 
   /**
-   * Dedicated implementation which does not fall back on the {@link #calculateBindingMap()} for performance reasons
+   * Dedicated implementation which does not fall back on the {@link #calculateBindingMap()} for
+   * performance reasons
    */
   public boolean containsKey(Object key) {
-    if(wrappedBindings.containsKey(key)) {
+    if (wrappedBindings.containsKey(key)) {
       return true;
     }
     if (key instanceof String) {
       return variableContext.containsVariable((String) key);
-    }
-    else {
+    } else {
       return false;
     }
   }
 
   /**
-   * Dedicated implementation which does not fall back on the {@link #calculateBindingMap()} for performance reasons
+   * Dedicated implementation which does not fall back on the {@link #calculateBindingMap()} for
+   * performance reasons
    */
   public Object get(Object key) {
     Object result = null;
 
-    if(wrappedBindings.containsKey(key)) {
+    if (wrappedBindings.containsKey(key)) {
       result = wrappedBindings.get(key);
-    }
-    else {
+    } else {
       if (key instanceof String) {
         TypedValue resolvedValue = variableContext.resolve((String) key);
         result = unpack(resolvedValue);
@@ -82,7 +80,8 @@ public class VariableContextScriptBindings implements Bindings {
   }
 
   /**
-   * Dedicated implementation which does not fall back on the {@link #calculateBindingMap()} for performance reasons
+   * Dedicated implementation which does not fall back on the {@link #calculateBindingMap()} for
+   * performance reasons
    */
   public Object put(String name, Object value) {
     // only write to the wrapped bindings
@@ -105,7 +104,7 @@ public class VariableContextScriptBindings implements Bindings {
     return calculateBindingMap().values();
   }
 
-  public void putAll(Map< ? extends String, ?> toMerge) {
+  public void putAll(Map<? extends String, ?> toMerge) {
     for (Entry<? extends String, ?> entry : toMerge.entrySet()) {
       put(entry.getKey(), entry.getValue());
     }
@@ -145,14 +144,14 @@ public class VariableContextScriptBindings implements Bindings {
   }
 
   protected Object unpack(TypedValue resolvedValue) {
-    if(resolvedValue != null) {
+    if (resolvedValue != null) {
       return resolvedValue.getValue();
     }
     return null;
   }
 
-  public static VariableContextScriptBindings wrap(Bindings wrappedBindings, VariableContext variableContext) {
+  public static VariableContextScriptBindings wrap(
+      Bindings wrappedBindings, VariableContext variableContext) {
     return new VariableContextScriptBindings(wrappedBindings, variableContext);
   }
-
 }

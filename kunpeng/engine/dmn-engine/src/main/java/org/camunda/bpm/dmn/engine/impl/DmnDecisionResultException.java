@@ -18,10 +18,7 @@ package org.camunda.bpm.dmn.engine.impl;
 
 import org.camunda.bpm.dmn.engine.DmnEngineException;
 
-/**
- * Exception throw for errors during the result creation of
- * a decision.
- */
+/** Exception throw for errors during the result creation of a decision. */
 public class DmnDecisionResultException extends DmnEngineException {
 
   public DmnDecisionResultException(String message) {
@@ -31,5 +28,4 @@ public class DmnDecisionResultException extends DmnEngineException {
   public DmnDecisionResultException(String message, Throwable cause) {
     super(message, cause);
   }
-
 }

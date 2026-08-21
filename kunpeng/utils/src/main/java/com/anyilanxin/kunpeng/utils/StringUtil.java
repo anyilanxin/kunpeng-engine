@@ -25,7 +25,8 @@ public final class StringUtil {
 
   /** 列表清洗器：去除每项首尾空白并过滤空白项 */
   public static final UnaryOperator<List<String>> LIST_SANITIZER =
-      list -> list.stream().map(String::trim).filter(s -> !s.isEmpty()).collect(Collectors.toList());
+      list ->
+          list.stream().map(String::trim).filter(s -> !s.isEmpty()).collect(Collectors.toList());
 
   private StringUtil() {}
 

@@ -18,7 +18,6 @@ package org.camunda.bpm.dmn.engine.impl.delegate;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.camunda.bpm.dmn.engine.DmnDecision;
 import org.camunda.bpm.dmn.engine.delegate.DmnDecisionTableEvaluationEvent;
 import org.camunda.bpm.dmn.engine.delegate.DmnEvaluatedDecisionRule;
@@ -29,7 +28,8 @@ public class DmnDecisionTableEvaluationEventImpl implements DmnDecisionTableEval
 
   protected DmnDecision decision;
   protected List<DmnEvaluatedInput> inputs = new ArrayList<DmnEvaluatedInput>();
-  protected List<DmnEvaluatedDecisionRule> matchingRules = new ArrayList<DmnEvaluatedDecisionRule>();
+  protected List<DmnEvaluatedDecisionRule> matchingRules =
+      new ArrayList<DmnEvaluatedDecisionRule>();
   protected String collectResultName;
   protected TypedValue collectResultValue;
   protected long executedDecisionElements;
@@ -43,7 +43,7 @@ public class DmnDecisionTableEvaluationEventImpl implements DmnDecisionTableEval
   }
 
   public void setDecisionTable(DmnDecision decision) {
-   this.decision = decision;
+    this.decision = decision;
   }
 
   public List<DmnEvaluatedInput> getInputs() {
@@ -88,16 +88,24 @@ public class DmnDecisionTableEvaluationEventImpl implements DmnDecisionTableEval
 
   @Override
   public String toString() {
-    return "DmnDecisionTableEvaluationEventImpl{" +
-      " key="+ decision.getKey() +
-      ", name="+ decision.getName() +
-      ", decisionLogic=" + decision.getDecisionLogic() +
-      ", inputs=" + inputs +
-      ", matchingRules=" + matchingRules +
-      ", collectResultName='" + collectResultName + '\'' +
-      ", collectResultValue=" + collectResultValue +
-      ", executedDecisionElements=" + executedDecisionElements +
-      '}';
+    return "DmnDecisionTableEvaluationEventImpl{"
+        + " key="
+        + decision.getKey()
+        + ", name="
+        + decision.getName()
+        + ", decisionLogic="
+        + decision.getDecisionLogic()
+        + ", inputs="
+        + inputs
+        + ", matchingRules="
+        + matchingRules
+        + ", collectResultName='"
+        + collectResultName
+        + '\''
+        + ", collectResultValue="
+        + collectResultValue
+        + ", executedDecisionElements="
+        + executedDecisionElements
+        + '}';
   }
-
 }

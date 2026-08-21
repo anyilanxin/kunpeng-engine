@@ -29,51 +29,56 @@ import org.camunda.bpm.model.dmn.instance.UnaryTests;
 
 public class DmnExpressionTransformHelper {
 
-  public static DmnTypeDefinition createTypeDefinition(DmnElementTransformContext context, LiteralExpression expression) {
+  public static DmnTypeDefinition createTypeDefinition(
+      DmnElementTransformContext context, LiteralExpression expression) {
     return createTypeDefinition(context, expression.getTypeRef());
   }
 
-  public static DmnTypeDefinition createTypeDefinition(DmnElementTransformContext context, InformationItem informationItem) {
+  public static DmnTypeDefinition createTypeDefinition(
+      DmnElementTransformContext context, InformationItem informationItem) {
     return createTypeDefinition(context, informationItem.getTypeRef());
   }
 
-  protected static DmnTypeDefinition createTypeDefinition(DmnElementTransformContext context, String typeRef) {
+  protected static DmnTypeDefinition createTypeDefinition(
+      DmnElementTransformContext context, String typeRef) {
     if (typeRef != null) {
-      DmnDataTypeTransformer transformer = context.getDataTypeTransformerRegistry().getTransformer(typeRef);
+      DmnDataTypeTransformer transformer =
+          context.getDataTypeTransformerRegistry().getTransformer(typeRef);
       return new DmnTypeDefinitionImpl(typeRef, transformer);
-    }
-    else {
+    } else {
       return new DefaultTypeDefinition();
     }
   }
 
-  public static String getExpressionLanguage(DmnElementTransformContext context, LiteralExpression expression) {
+  public static String getExpressionLanguage(
+      DmnElementTransformContext context, LiteralExpression expression) {
     return getExpressionLanguage(context, expression.getExpressionLanguage());
   }
 
-  public static String getExpressionLanguage(DmnElementTransformContext context, UnaryTests expression) {
+  public static String getExpressionLanguage(
+      DmnElementTransformContext context, UnaryTests expression) {
     return getExpressionLanguage(context, expression.getExpressionLanguage());
   }
 
-  protected static String getExpressionLanguage(DmnElementTransformContext context, String expressionLanguage) {
+  protected static String getExpressionLanguage(
+      DmnElementTransformContext context, String expressionLanguage) {
     if (expressionLanguage != null) {
       return expressionLanguage;
-    }
-    else {
+    } else {
       return getGlobalExpressionLanguage(context);
     }
   }
 
   protected static String getGlobalExpressionLanguage(DmnElementTransformContext context) {
     String expressionLanguage = context.getModelInstance().getDefinitions().getExpressionLanguage();
-    if (!DefaultDmnEngineConfiguration.FEEL_EXPRESSION_LANGUAGE.equals(expressionLanguage) &&
-        !DefaultDmnEngineConfiguration.FEEL_EXPRESSION_LANGUAGE_DMN12.equals(expressionLanguage) &&
-        !DefaultDmnEngineConfiguration.FEEL_EXPRESSION_LANGUAGE_DMN13.equals(expressionLanguage) &&
-        !DefaultDmnEngineConfiguration.FEEL_EXPRESSION_LANGUAGE_DMN14.equals(expressionLanguage) &&
-        !DefaultDmnEngineConfiguration.FEEL_EXPRESSION_LANGUAGE_DMN15.equals(expressionLanguage)) {
+    if (!DefaultDmnEngineConfiguration.FEEL_EXPRESSION_LANGUAGE.equals(expressionLanguage)
+        && !DefaultDmnEngineConfiguration.FEEL_EXPRESSION_LANGUAGE_DMN12.equals(expressionLanguage)
+        && !DefaultDmnEngineConfiguration.FEEL_EXPRESSION_LANGUAGE_DMN13.equals(expressionLanguage)
+        && !DefaultDmnEngineConfiguration.FEEL_EXPRESSION_LANGUAGE_DMN14.equals(expressionLanguage)
+        && !DefaultDmnEngineConfiguration.FEEL_EXPRESSION_LANGUAGE_DMN15.equals(
+            expressionLanguage)) {
       return expressionLanguage;
-    }
-    else {
+    } else {
       return null;
     }
   }
@@ -95,6 +100,4 @@ public class DmnExpressionTransformHelper {
     }
     return null;
   }
-
-
 }

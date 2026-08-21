@@ -15,9 +15,8 @@ package com.anyilanxin.kunpeng.utils;
 /**
  * 关闭时不抛出受检异常的资源接口。
  *
- * <p>继承 {@link AutoCloseable} 并将 {@link #close()} 声明为不抛出任何受检异常，
- * 资源可直接用于 try-with-resources 语句而无需强制捕获关闭异常。
- * 实现类应在内部消化关闭过程中出现的错误(如记录日志)，保证关闭操作对外始终安全。
+ * <p>继承 {@link AutoCloseable} 并将 {@link #close()} 声明为不抛出任何受检异常， 资源可直接用于 try-with-resources
+ * 语句而无需强制捕获关闭异常。 实现类应在内部消化关闭过程中出现的错误(如记录日志)，保证关闭操作对外始终安全。
  *
  * @author zxuanhong
  */

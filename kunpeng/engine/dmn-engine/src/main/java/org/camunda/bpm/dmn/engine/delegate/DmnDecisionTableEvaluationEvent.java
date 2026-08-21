@@ -17,14 +17,11 @@
 package org.camunda.bpm.dmn.engine.delegate;
 
 import java.util.List;
-
 import org.camunda.bpm.dmn.engine.DmnDecision;
 import org.camunda.bpm.engine.variable.value.TypedValue;
 import org.camunda.bpm.model.dmn.HitPolicy;
 
-/**
- * Event which represents the evaluation of a decision table
- */
+/** Event which represents the evaluation of a decision table */
 public interface DmnDecisionTableEvaluationEvent extends DmnDecisionLogicEvaluationEvent {
 
   /**
@@ -43,12 +40,14 @@ public interface DmnDecisionTableEvaluationEvent extends DmnDecisionLogicEvaluat
   List<DmnEvaluatedDecisionRule> getMatchingRules();
 
   /**
-   * @return the result name of the collect operation if the {@link HitPolicy#COLLECT} was used with an aggregator otherwise null
+   * @return the result name of the collect operation if the {@link HitPolicy#COLLECT} was used with
+   *     an aggregator otherwise null
    */
   String getCollectResultName();
 
   /**
-   * @return the result value of the collect operation if the {@link HitPolicy#COLLECT} was used with an aggregator otherwise null
+   * @return the result value of the collect operation if the {@link HitPolicy#COLLECT} was used
+   *     with an aggregator otherwise null
    */
   TypedValue getCollectResultValue();
 
@@ -56,5 +55,4 @@ public interface DmnDecisionTableEvaluationEvent extends DmnDecisionLogicEvaluat
    * @return the number of executed decision elements during the evaluation
    */
   long getExecutedDecisionElements();
-
 }

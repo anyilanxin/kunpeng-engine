@@ -18,9 +18,7 @@ package org.camunda.bpm.dmn.engine.delegate;
 
 import java.util.Map;
 
-/**
- * A evaluated decision rule.
- */
+/** A evaluated decision rule. */
 public interface DmnEvaluatedDecisionRule {
 
   /**
@@ -32,5 +30,4 @@ public interface DmnEvaluatedDecisionRule {
    * @return the evaluated output entries for the decision rule
    */
   Map<String, DmnEvaluatedOutput> getOutputEntries();
-
 }

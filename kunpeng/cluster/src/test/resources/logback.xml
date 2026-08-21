@@ -1,6 +1,5 @@
 <!--
   ~ Copyright 2018-present Open Networking Laboratory
-  ~ Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -22,8 +21,8 @@
     </encoder>
   </appender>
 
-  <logger level="${root.logging.level:-TRACE}" name="com.anyilanxin.kunpeng.cluster"/>
-  <logger level="INFO" name="com.anyilanxin.kunpeng.cluster.messaging"/>
+  <logger level="${root.logging.level:-TRACE}" name="io.atomix"/>
+  <logger level="INFO" name="io.atomix.messaging"/>
 
   <root level="${root.logging.level:-INFO}">
     <appender-ref ref="STDOUT"/>

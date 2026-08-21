@@ -18,9 +18,7 @@ package org.camunda.bpm.dmn.engine.delegate;
 
 import java.util.Collection;
 
-/**
- * Event which represents the evaluation of a decision
- */
+/** Event which represents the evaluation of a decision */
 public interface DmnDecisionEvaluationEvent {
 
   /**

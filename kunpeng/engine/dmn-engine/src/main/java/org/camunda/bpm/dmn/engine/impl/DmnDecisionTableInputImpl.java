@@ -53,8 +53,7 @@ public class DmnDecisionTableInputImpl {
   public String getInputVariable() {
     if (inputVariable != null) {
       return inputVariable;
-    }
-    else {
+    } else {
       return DEFAULT_INPUT_VARIABLE_NAME;
     }
   }
@@ -65,12 +64,18 @@ public class DmnDecisionTableInputImpl {
 
   @Override
   public String toString() {
-    return "DmnDecisionTableInputImpl{" +
-      "id='" + id + '\'' +
-      ", name='" + name + '\'' +
-      ", expression=" + expression +
-      ", inputVariable='" + inputVariable + '\'' +
-      '}';
+    return "DmnDecisionTableInputImpl{"
+        + "id='"
+        + id
+        + '\''
+        + ", name='"
+        + name
+        + '\''
+        + ", expression="
+        + expression
+        + ", inputVariable='"
+        + inputVariable
+        + '\''
+        + '}';
   }
-
 }

@@ -19,14 +19,11 @@ package org.camunda.bpm.dmn.engine.impl.spi.transform;
 import java.io.File;
 import java.io.InputStream;
 import java.util.List;
-
 import org.camunda.bpm.dmn.engine.DmnDecision;
 import org.camunda.bpm.dmn.engine.DmnDecisionRequirementsGraph;
 import org.camunda.bpm.model.dmn.DmnModelInstance;
 
-/**
- * A transform of a DMN model instance
- */
+/** A transform of a DMN model instance */
 public interface DmnTransform {
 
   /**
@@ -74,15 +71,12 @@ public interface DmnTransform {
    */
   DmnTransform modelInstance(DmnModelInstance modelInstance);
 
-  /**
-   * Transform all decisions of the DMN model instance.
-   */
+  /** Transform all decisions of the DMN model instance. */
   <T extends DmnDecision> List<T> transformDecisions();
 
   /**
-   * Transform the decision requirements graph and all containing decisions of
-   * the DMN model instance.
+   * Transform the decision requirements graph and all containing decisions of the DMN model
+   * instance.
    */
   <T extends DmnDecisionRequirementsGraph> T transformDecisionRequirementsGraph();
-
 }

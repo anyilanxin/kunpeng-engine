@@ -20,10 +20,8 @@ import static org.camunda.commons.utils.EnsureUtil.ensureNotNull;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
-
 import org.camunda.bpm.dmn.engine.impl.spi.el.DmnScriptEngineResolver;
 
 public class DefaultScriptEngineResolver implements DmnScriptEngineResolver {
@@ -57,5 +55,4 @@ public class DefaultScriptEngineResolver implements DmnScriptEngineResolver {
 
     return scriptEngine;
   }
-
 }

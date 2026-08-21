@@ -17,7 +17,6 @@
 package org.camunda.bpm.dmn.engine.impl.evaluation;
 
 import java.util.Collections;
-
 import org.camunda.bpm.dmn.engine.DmnDecision;
 import org.camunda.bpm.dmn.engine.DmnDecisionResult;
 import org.camunda.bpm.dmn.engine.DmnDecisionResultEntries;
@@ -33,7 +32,8 @@ import org.camunda.bpm.dmn.engine.impl.delegate.DmnDecisionLiteralExpressionEval
 import org.camunda.bpm.engine.variable.context.VariableContext;
 import org.camunda.bpm.engine.variable.value.TypedValue;
 
-public class DecisionLiteralExpressionEvaluationHandler implements DmnDecisionLogicEvaluationHandler {
+public class DecisionLiteralExpressionEvaluationHandler
+    implements DmnDecisionLogicEvaluationHandler {
 
   protected final ExpressionEvaluationHandler expressionEvaluationHandler;
 
@@ -46,12 +46,15 @@ public class DecisionLiteralExpressionEvaluationHandler implements DmnDecisionLo
   }
 
   @Override
-  public DmnDecisionLogicEvaluationEvent evaluate(DmnDecision decision, VariableContext variableContext) {
-    DmnDecisionLiteralExpressionEvaluationEventImpl evaluationResult = new DmnDecisionLiteralExpressionEvaluationEventImpl();
+  public DmnDecisionLogicEvaluationEvent evaluate(
+      DmnDecision decision, VariableContext variableContext) {
+    DmnDecisionLiteralExpressionEvaluationEventImpl evaluationResult =
+        new DmnDecisionLiteralExpressionEvaluationEventImpl();
     evaluationResult.setDecision(decision);
     evaluationResult.setExecutedDecisionElements(1);
 
-    DmnDecisionLiteralExpressionImpl dmnDecisionLiteralExpression = (DmnDecisionLiteralExpressionImpl) decision.getDecisionLogic();
+    DmnDecisionLiteralExpressionImpl dmnDecisionLiteralExpression =
+        (DmnDecisionLiteralExpressionImpl) decision.getDecisionLogic();
     DmnVariableImpl variable = dmnDecisionLiteralExpression.getVariable();
     DmnExpressionImpl expression = dmnDecisionLiteralExpression.getExpression();
 
@@ -64,22 +67,24 @@ public class DecisionLiteralExpressionEvaluationHandler implements DmnDecisionLo
     return evaluationResult;
   }
 
-  protected Object evaluateLiteralExpression(DmnExpressionImpl expression, VariableContext variableContext) {
+  protected Object evaluateLiteralExpression(
+      DmnExpressionImpl expression, VariableContext variableContext) {
     String expressionLanguage = expression.getExpressionLanguage();
     if (expressionLanguage == null) {
       expressionLanguage = literalExpressionLanguage;
     }
-    return expressionEvaluationHandler.evaluateExpression(expressionLanguage, expression, variableContext);
+    return expressionEvaluationHandler.evaluateExpression(
+        expressionLanguage, expression, variableContext);
   }
 
   @Override
   public DmnDecisionResult generateDecisionResult(DmnDecisionLogicEvaluationEvent event) {
-    DmnDecisionLiteralExpressionEvaluationEvent evaluationEvent = (DmnDecisionLiteralExpressionEvaluationEvent) event;
+    DmnDecisionLiteralExpressionEvaluationEvent evaluationEvent =
+        (DmnDecisionLiteralExpressionEvaluationEvent) event;
 
     DmnDecisionResultEntriesImpl result = new DmnDecisionResultEntriesImpl();
     result.putValue(evaluationEvent.getOutputName(), evaluationEvent.getOutputValue());
 
-    return new DmnDecisionResultImpl(Collections.<DmnDecisionResultEntries> singletonList(result));
+    return new DmnDecisionResultImpl(Collections.<DmnDecisionResultEntries>singletonList(result));
   }
-
 }

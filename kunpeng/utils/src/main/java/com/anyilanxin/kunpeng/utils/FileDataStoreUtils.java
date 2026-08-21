@@ -47,8 +47,7 @@ public final class FileDataStoreUtils {
   /** 超过该字节数走 mmap 读路径 */
   private static final long MMAP_THRESHOLD_BYTES = 64 * 1024;
 
-  private FileDataStoreUtils() {
-  }
+  private FileDataStoreUtils() {}
 
   /** 原子写入（版本头 + CRC32C 校验头 + body）；失败时清理临时文件并抛 RuntimeException */
   public static void writeToFile(final Path targetFile, final byte[] body) {

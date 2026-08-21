@@ -46,23 +46,25 @@ public interface ActorFuture<T> {
                 return failed;
               }
             })
-        .whenComplete((v, e) -> {
-          if (e != null) {
-            out.completeExceptionally(e);
-          } else {
-            out.complete(v);
-          }
-        });
+        .whenComplete(
+            (v, e) -> {
+              if (e != null) {
+                out.completeExceptionally(e);
+              } else {
+                out.complete(v);
+              }
+            });
     return new CompletableActorFuture<>(out);
   }
 
   /** 失败时回调 */
   default ActorFuture<T> onError(final Consumer<Throwable> handler) {
-    toCompletableFuture().exceptionally(
-        error -> {
-          handler.accept(error);
-          return null;
-        });
+    toCompletableFuture()
+        .exceptionally(
+            error -> {
+              handler.accept(error);
+              return null;
+            });
     return this;
   }
 

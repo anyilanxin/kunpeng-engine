@@ -18,10 +18,7 @@ package org.camunda.bpm.dmn.engine.impl.hitpolicy;
 
 import org.camunda.bpm.dmn.engine.DmnEngineException;
 
-/**
- * Exception throw if a hit policy is not applicable for a
- * decision result.
- */
+/** Exception throw if a hit policy is not applicable for a decision result. */
 public class DmnHitPolicyException extends DmnEngineException {
 
   public DmnHitPolicyException(String message) {
@@ -31,5 +28,4 @@ public class DmnHitPolicyException extends DmnEngineException {
   public DmnHitPolicyException(String message, Throwable cause) {
     super(message, cause);
   }
-
 }

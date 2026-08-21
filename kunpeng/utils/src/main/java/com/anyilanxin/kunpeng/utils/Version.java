@@ -23,26 +23,25 @@ import java.util.regex.Pattern;
 /**
  * 不可变的语义化版本号(Semantic Versioning)实现。
  *
- * <p>版本号格式: {@code 主版本.次版本.修订号[-先行版本][+构建元数据]}，例如 {@code 8.0.4-rc.1+build.20260819}。
- * 完整规范参见 <a href="https://semver.org/">Semantic Versioning</a>。
+ * <p>版本号格式: {@code 主版本.次版本.修订号[-先行版本][+构建元数据]}，例如 {@code 8.0.4-rc.1+build.20260819}。 完整规范参见 <a
+ * href="https://semver.org/">Semantic Versioning</a>。
  *
  * <p>比较与相等性遵循 SemVer 优先级规则：
  *
  * <ul>
  *   <li>按主版本、次版本、修订号依次数值比较；
  *   <li>不含先行版本的版本优先级高于含先行版本的版本(如 {@code 1.0.0} 高于 {@code 1.0.0-rc.1})；
- *   <li>先行版本按点分隔的标识符逐个比较：纯数字标识符按数值比较且低于字母数字标识符，
- *       字母数字标识符按 ASCII 字典序比较；标识符数量多者优先级高；
+ *   <li>先行版本按点分隔的标识符逐个比较：纯数字标识符按数值比较且低于字母数字标识符， 字母数字标识符按 ASCII 字典序比较；标识符数量多者优先级高；
  *   <li>构建元数据不参与优先级比较，{@link #equals(Object)} 与 {@link #hashCode()} 同样忽略它。
  * </ul>
  */
 public final class Version implements Comparable<Version> {
 
   private static final Pattern VERSION_PATTERN =
-    Pattern.compile(
-      "^(\\d+)\\.(\\d+)\\.(\\d+)"
-        + "(?:-([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?"
-        + "(?:\\+([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?$");
+      Pattern.compile(
+          "^(\\d+)\\.(\\d+)\\.(\\d+)"
+              + "(?:-([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?"
+              + "(?:\\+([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?$");
 
   private final int major;
   private final int minor;
@@ -51,11 +50,11 @@ public final class Version implements Comparable<Version> {
   private final String buildMetadata;
 
   private Version(
-    final int major,
-    final int minor,
-    final int patch,
-    final String preRelease,
-    final String buildMetadata) {
+      final int major,
+      final int minor,
+      final int patch,
+      final String preRelease,
+      final String buildMetadata) {
     this.major = major;
     this.minor = minor;
     this.patch = patch;
@@ -63,37 +62,27 @@ public final class Version implements Comparable<Version> {
     this.buildMetadata = buildMetadata;
   }
 
-  /**
-   * 主版本号。
-   */
+  /** 主版本号。 */
   public int major() {
     return major;
   }
 
-  /**
-   * 次版本号。
-   */
+  /** 次版本号。 */
   public int minor() {
     return minor;
   }
 
-  /**
-   * 修订号。
-   */
+  /** 修订号。 */
   public int patch() {
     return patch;
   }
 
-  /**
-   * 先行版本号，如 {@code 8.0.4-rc.1} 中的 {@code rc.1}，可能为 {@code null}。
-   */
+  /** 先行版本号，如 {@code 8.0.4-rc.1} 中的 {@code rc.1}，可能为 {@code null}。 */
   public String preRelease() {
     return preRelease;
   }
 
-  /**
-   * 构建元数据，如 {@code 8.0.4+build.42} 中的 {@code build.42}，可能为 {@code null}。
-   */
+  /** 构建元数据，如 {@code 8.0.4+build.42} 中的 {@code build.42}，可能为 {@code null}。 */
   public String buildMetadata() {
     return buildMetadata;
   }
@@ -109,20 +98,17 @@ public final class Version implements Comparable<Version> {
     final Matcher matcher = VERSION_PATTERN.matcher(version);
     if (!matcher.matches()) {
       throw new IllegalArgumentException(
-        "版本号格式不合法，期望格式为 major.minor.patch[-先行版本][+构建元数据]，实际为 [%s]"
-          .formatted(version));
+          "版本号格式不合法，期望格式为 major.minor.patch[-先行版本][+构建元数据]，实际为 [%s]".formatted(version));
     }
     return new Version(
-      Integer.parseInt(matcher.group(1)),
-      Integer.parseInt(matcher.group(2)),
-      Integer.parseInt(matcher.group(3)),
-      matcher.group(4),
-      matcher.group(5));
+        Integer.parseInt(matcher.group(1)),
+        Integer.parseInt(matcher.group(2)),
+        Integer.parseInt(matcher.group(3)),
+        matcher.group(4),
+        matcher.group(5));
   }
 
-  /**
-   * 按 SemVer 优先级规则比较，构建元数据不参与比较。
-   */
+  /** 按 SemVer 优先级规则比较，构建元数据不参与比较。 */
   @Override
   public int compareTo(final Version that) {
     int result = Integer.compare(major, that.major);
@@ -166,8 +152,7 @@ public final class Version implements Comparable<Version> {
     final boolean leftNumeric = isNumeric(left);
     final boolean rightNumeric = isNumeric(right);
     if (leftNumeric && rightNumeric) {
-      final int result =
-        Integer.compare(left.length(), right.length());
+      final int result = Integer.compare(left.length(), right.length());
       return result != 0 ? result : left.compareTo(right);
     }
     if (leftNumeric) {
@@ -189,9 +174,7 @@ public final class Version implements Comparable<Version> {
     return true;
   }
 
-  /**
-   * 构建元数据不参与相等性判断，与 {@link #compareTo(Version)} 语义保持一致。
-   */
+  /** 构建元数据不参与相等性判断，与 {@link #compareTo(Version)} 语义保持一致。 */
   @Override
   public boolean equals(final Object object) {
     if (this == object) {
@@ -202,9 +185,9 @@ public final class Version implements Comparable<Version> {
     }
     final Version that = (Version) object;
     return major == that.major
-      && minor == that.minor
-      && patch == that.patch
-      && Objects.equals(preRelease, that.preRelease);
+        && minor == that.minor
+        && patch == that.patch
+        && Objects.equals(preRelease, that.preRelease);
   }
 
   @Override
@@ -214,7 +197,8 @@ public final class Version implements Comparable<Version> {
 
   @Override
   public String toString() {
-    final StringBuilder builder = new StringBuilder().append(major).append('.').append(minor).append('.').append(patch);
+    final StringBuilder builder =
+        new StringBuilder().append(major).append('.').append(minor).append('.').append(patch);
     if (preRelease != null) {
       builder.append('-').append(preRelease);
     }

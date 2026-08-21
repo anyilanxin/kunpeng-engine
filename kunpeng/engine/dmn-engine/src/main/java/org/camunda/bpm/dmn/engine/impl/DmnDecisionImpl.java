@@ -19,7 +19,6 @@ package org.camunda.bpm.dmn.engine.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
 import org.camunda.bpm.dmn.engine.DmnDecision;
 import org.camunda.bpm.dmn.engine.DmnDecisionLogic;
 
@@ -72,11 +71,15 @@ public class DmnDecisionImpl implements DmnDecision {
 
   @Override
   public String toString() {
-    return "DmnDecisionTableImpl{" +
-      " key= "+ key +
-      ", name= "+ name +
-      ", requiredDecision=" + requiredDecision +
-      ", decisionLogic=" + decisionLogic +
-      '}';
+    return "DmnDecisionTableImpl{"
+        + " key= "
+        + key
+        + ", name= "
+        + name
+        + ", requiredDecision="
+        + requiredDecision
+        + ", decisionLogic="
+        + decisionLogic
+        + '}';
   }
 }

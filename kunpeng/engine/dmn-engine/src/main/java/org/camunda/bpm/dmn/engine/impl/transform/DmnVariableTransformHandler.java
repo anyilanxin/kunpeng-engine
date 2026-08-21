@@ -24,13 +24,15 @@ import org.camunda.bpm.dmn.engine.impl.spi.transform.DmnElementTransformHandler;
 import org.camunda.bpm.dmn.engine.impl.spi.type.DmnTypeDefinition;
 import org.camunda.bpm.model.dmn.instance.Variable;
 
-public class DmnVariableTransformHandler implements DmnElementTransformHandler<Variable, DmnVariableImpl> {
+public class DmnVariableTransformHandler
+    implements DmnElementTransformHandler<Variable, DmnVariableImpl> {
 
   public DmnVariableImpl handleElement(DmnElementTransformContext context, Variable variable) {
     return createFromVariable(context, variable);
   }
 
-  protected DmnVariableImpl createFromVariable(DmnElementTransformContext context, Variable variable) {
+  protected DmnVariableImpl createFromVariable(
+      DmnElementTransformContext context, Variable variable) {
     DmnVariableImpl dmnVariable = createDmnElement(context, variable);
 
     dmnVariable.setId(variable.getId());
@@ -42,8 +44,8 @@ public class DmnVariableTransformHandler implements DmnElementTransformHandler<V
     return dmnVariable;
   }
 
-  protected DmnVariableImpl createDmnElement(DmnElementTransformContext context, Variable variable) {
+  protected DmnVariableImpl createDmnElement(
+      DmnElementTransformContext context, Variable variable) {
     return new DmnVariableImpl();
   }
-
 }

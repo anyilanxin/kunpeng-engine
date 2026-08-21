@@ -23,8 +23,8 @@ import io.micrometer.core.instrument.Timer;
 /**
  * 基于 Micrometer 的耗时统计句柄。
  *
- * <p>典型用法是配合 try-with-resources：进入代码块时通过 {@link #start()} 开始采样，
- * 代码块结束时由 {@link #close()} 停止采样并将耗时记录到指定的 {@link Timer}：
+ * <p>典型用法是配合 try-with-resources：进入代码块时通过 {@link #start()} 开始采样， 代码块结束时由 {@link #close()}
+ * 停止采样并将耗时记录到指定的 {@link Timer}：
  *
  * <pre>{@code
  * try (CloseableTime time = new CloseableTime(timer, registry).start()) {
@@ -41,7 +41,7 @@ public final class CloseableTime implements CloseableSilently {
   private Timer.Sample sample;
 
   /**
-   * @param timer    耗时最终记录到的目标计时器
+   * @param timer 耗时最终记录到的目标计时器
    * @param registry 采样所用的指标注册中心
    */
   public CloseableTime(final Timer timer, final MeterRegistry registry) {
@@ -49,9 +49,7 @@ public final class CloseableTime implements CloseableSilently {
     this.registry = registry;
   }
 
-  /**
-   * 停止采样并将耗时记录到目标 {@link Timer}；若尚未 {@link #start()} 则不做任何事。
-   */
+  /** 停止采样并将耗时记录到目标 {@link Timer}；若尚未 {@link #start()} 则不做任何事。 */
   @Override
   public void close() {
     if (sample != null) {
@@ -59,9 +57,7 @@ public final class CloseableTime implements CloseableSilently {
     }
   }
 
-  /**
-   * 开始计时采样，返回自身以支持链式调用与 try-with-resources。
-   */
+  /** 开始计时采样，返回自身以支持链式调用与 try-with-resources。 */
   public CloseableTime start() {
     sample = Timer.start(registry);
     return this;

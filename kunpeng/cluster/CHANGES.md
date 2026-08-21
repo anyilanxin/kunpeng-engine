@@ -5,8 +5,8 @@
 The code in this module originates from the hard fork of Atomix maintained by Camunda (Zeebe):
 
 - Upstream repository: <https://github.com/camunda/camunda>
-- Source commit: <https://github.com/camunda/camunda/commit/d9de58a0cee5a84df87cba1ebc0d4fee64836e7d> (corresponding to the Camunda 8.0.4 tag)
-- Archived fork of the upstream repository (used as our code archive): <https://github.com/anyilanxin/camunda/commit/d9de58a0cee5a84df87cba1ebc0d4fee64836e7d>
+- Source commit: <https://github.com/camunda/camunda/commit/a8fb2a5868e54f118a085bc688338c49950adf0c> (pulled from the main branch on Aug 19, 2026)
+- Archived fork of the upstream repository (used as our code archive): <https://github.com/anyilanxin/camunda/commit/a8fb2a5868e54f118a085bc688338c49950adf0c>
 
 ## Upstream Background (Camunda's hard fork of Atomix)
 
@@ -26,12 +26,15 @@ the beginning and longer build times.
 
 ## Changes in This Repository
 
-On top of the Camunda 8.0.4 code base, this repository made further trimming and adjustments with the
-goal of **easier maintenance**:
+The main motivations for the changes are: **resolving license conflicts** and **making the code easier
+to maintain and iterate on for our own use**. On top of the upstream code base, this repository made
+the following adjustments:
 
-1. **Only the atomix and journal code is kept**; all other modules were removed.
-2. **Code distributed under the Camunda License 1.0 was removed**. The remaining code in this module is
-   licensed under Apache-2.0 (see the license headers of the respective files).
+1. **All code not licensed under Apache-2.0 was removed** (e.g. code distributed under the Camunda
+   License 1.0) to resolve license conflicts. All remaining code in this module is licensed under
+   Apache-2.0 (see the license headers of the respective files).
+2. **Only the code that is really needed is kept** (atomix and journal); all other modules were
+   removed, so the code base stays small and easy to maintain and iterate on.
 3. The build was migrated from Maven to Gradle and integrated into this repository's unified build.
 4. **For new files added from now on, the applicable license is determined by the license header and
    copyright notice of each file**, rather than the Apache license.

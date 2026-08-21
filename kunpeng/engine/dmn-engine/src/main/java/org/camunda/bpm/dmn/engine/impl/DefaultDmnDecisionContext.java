@@ -22,7 +22,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import org.camunda.bpm.dmn.engine.DmnDecision;
 import org.camunda.bpm.dmn.engine.DmnDecisionLogic;
 import org.camunda.bpm.dmn.engine.DmnDecisionResult;
@@ -38,26 +37,31 @@ import org.camunda.bpm.engine.variable.Variables;
 import org.camunda.bpm.engine.variable.context.VariableContext;
 import org.camunda.bpm.model.dmn.HitPolicy;
 
-/**
- * Context which evaluates a decision on a given input
- */
+/** Context which evaluates a decision on a given input */
 public class DefaultDmnDecisionContext {
 
   protected static final DmnEngineLogger LOG = DmnEngineLogger.ENGINE_LOGGER;
 
-  protected static final HitPolicyEntry COLLECT_HIT_POLICY = new HitPolicyEntry(HitPolicy.COLLECT, null);
-  protected static final HitPolicyEntry RULE_ORDER_HIT_POLICY = new HitPolicyEntry(HitPolicy.RULE_ORDER, null);
+  protected static final HitPolicyEntry COLLECT_HIT_POLICY =
+      new HitPolicyEntry(HitPolicy.COLLECT, null);
+  protected static final HitPolicyEntry RULE_ORDER_HIT_POLICY =
+      new HitPolicyEntry(HitPolicy.RULE_ORDER, null);
 
   protected final List<DmnDecisionEvaluationListener> evaluationListeners;
 
-  protected final Map<Class<? extends DmnDecisionLogic>, DmnDecisionLogicEvaluationHandler> evaluationHandlers;
+  protected final Map<Class<? extends DmnDecisionLogic>, DmnDecisionLogicEvaluationHandler>
+      evaluationHandlers;
 
   public DefaultDmnDecisionContext(DefaultDmnEngineConfiguration configuration) {
     evaluationListeners = configuration.getDecisionEvaluationListeners();
 
-    evaluationHandlers = new HashMap<Class<? extends DmnDecisionLogic>, DmnDecisionLogicEvaluationHandler>();
-    evaluationHandlers.put(DmnDecisionTableImpl.class, new DecisionTableEvaluationHandler(configuration));
-    evaluationHandlers.put(DmnDecisionLiteralExpressionImpl.class, new DecisionLiteralExpressionEvaluationHandler(configuration));
+    evaluationHandlers =
+        new HashMap<Class<? extends DmnDecisionLogic>, DmnDecisionLogicEvaluationHandler>();
+    evaluationHandlers.put(
+        DmnDecisionTableImpl.class, new DecisionTableEvaluationHandler(configuration));
+    evaluationHandlers.put(
+        DmnDecisionLiteralExpressionImpl.class,
+        new DecisionLiteralExpressionEvaluationHandler(configuration));
   }
 
   /**
@@ -69,7 +73,7 @@ public class DefaultDmnDecisionContext {
    */
   public DmnDecisionResult evaluateDecision(DmnDecision decision, VariableContext variableContext) {
 
-    if(decision.getKey() == null) {
+    if (decision.getKey() == null) {
       throw LOG.unableToFindAnyDecisionTable();
     }
     VariableMap variableMap = buildVariableMapFromVariableContext(variableContext);
@@ -77,16 +81,18 @@ public class DefaultDmnDecisionContext {
     List<DmnDecision> requiredDecisions = new ArrayList<DmnDecision>();
     buildDecisionTree(decision, requiredDecisions);
 
-    List<DmnDecisionLogicEvaluationEvent> evaluatedEvents = new ArrayList<DmnDecisionLogicEvaluationEvent>();
+    List<DmnDecisionLogicEvaluationEvent> evaluatedEvents =
+        new ArrayList<DmnDecisionLogicEvaluationEvent>();
     DmnDecisionResult evaluatedResult = null;
 
     for (DmnDecision evaluateDecision : requiredDecisions) {
       DmnDecisionLogicEvaluationHandler handler = getDecisionEvaluationHandler(evaluateDecision);
-      DmnDecisionLogicEvaluationEvent evaluatedEvent = handler.evaluate(evaluateDecision, variableMap.asVariableContext());
+      DmnDecisionLogicEvaluationEvent evaluatedEvent =
+          handler.evaluate(evaluateDecision, variableMap.asVariableContext());
       evaluatedEvents.add(evaluatedEvent);
 
       evaluatedResult = handler.generateDecisionResult(evaluatedEvent);
-      if(decision != evaluateDecision) {
+      if (decision != evaluateDecision) {
         addResultToVariableContext(evaluatedResult, variableMap, evaluateDecision);
       }
     }
@@ -100,7 +106,7 @@ public class DefaultDmnDecisionContext {
     VariableMap variableMap = Variables.createVariables();
 
     Set<String> variables = variableContext.keySet();
-    for(String variable: variables) {
+    for (String variable : variables) {
       variableMap.put(variable, variableContext.resolve(variable));
     }
 
@@ -112,7 +118,7 @@ public class DefaultDmnDecisionContext {
       return;
     }
 
-    for(DmnDecision dmnDecision : decision.getRequiredDecisions()){
+    for (DmnDecision dmnDecision : decision.getRequiredDecisions()) {
       buildDecisionTree(dmnDecision, requiredDecisions);
     }
 
@@ -129,12 +135,14 @@ public class DefaultDmnDecisionContext {
     }
   }
 
-  protected void addResultToVariableContext(DmnDecisionResult evaluatedResult, VariableMap variableMap, DmnDecision evaluatedDecision) {
+  protected void addResultToVariableContext(
+      DmnDecisionResult evaluatedResult, VariableMap variableMap, DmnDecision evaluatedDecision) {
     List<Map<String, Object>> resultList = evaluatedResult.getResultList();
 
     if (resultList.isEmpty()) {
       return;
-    } else if (resultList.size() == 1 && !isDecisionTableWithCollectOrRuleOrderHitPolicy(evaluatedDecision)) {
+    } else if (resultList.size() == 1
+        && !isDecisionTableWithCollectOrRuleOrderHitPolicy(evaluatedDecision)) {
       variableMap.putAll(evaluatedResult.getSingleResult());
     } else {
       Set<String> outputs = new HashSet<String>();
@@ -154,21 +162,25 @@ public class DefaultDmnDecisionContext {
     boolean isDecisionTableWithCollectHitPolicy = false;
 
     if (evaluatedDecision.isDecisionTable()) {
-      DmnDecisionTableImpl decisionTable = (DmnDecisionTableImpl) evaluatedDecision.getDecisionLogic();
-      isDecisionTableWithCollectHitPolicy = COLLECT_HIT_POLICY.equals(decisionTable.getHitPolicyHandler().getHitPolicyEntry())
-        || RULE_ORDER_HIT_POLICY.equals(decisionTable.getHitPolicyHandler().getHitPolicyEntry());
+      DmnDecisionTableImpl decisionTable =
+          (DmnDecisionTableImpl) evaluatedDecision.getDecisionLogic();
+      isDecisionTableWithCollectHitPolicy =
+          COLLECT_HIT_POLICY.equals(decisionTable.getHitPolicyHandler().getHitPolicyEntry())
+              || RULE_ORDER_HIT_POLICY.equals(
+                  decisionTable.getHitPolicyHandler().getHitPolicyEntry());
     }
 
     return isDecisionTableWithCollectHitPolicy;
   }
 
-  protected void generateDecisionEvaluationEvent(List<DmnDecisionLogicEvaluationEvent> evaluatedEvents) {
+  protected void generateDecisionEvaluationEvent(
+      List<DmnDecisionLogicEvaluationEvent> evaluatedEvents) {
 
     DmnDecisionLogicEvaluationEvent rootEvaluatedEvent = null;
     DmnDecisionEvaluationEventImpl decisionEvaluationEvent = new DmnDecisionEvaluationEventImpl();
     long executedDecisionElements = 0L;
 
-    for(DmnDecisionLogicEvaluationEvent evaluatedEvent: evaluatedEvents) {
+    for (DmnDecisionLogicEvaluationEvent evaluatedEvent : evaluatedEvents) {
       executedDecisionElements += evaluatedEvent.getExecutedDecisionElements();
       rootEvaluatedEvent = evaluatedEvent;
     }
@@ -184,5 +196,4 @@ public class DefaultDmnDecisionContext {
       evaluationListener.notify(decisionEvaluationEvent);
     }
   }
-
 }

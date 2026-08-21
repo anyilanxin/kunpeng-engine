@@ -16,8 +16,6 @@
  */
 package com.anyilanxin.kunpeng.utils;
 
-import org.agrona.SystemUtil;
-
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.file.*;
@@ -29,6 +27,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import org.agrona.SystemUtil;
 
 /**
  * 文件工具（高效版）：相对 {@link FileUtil} 的性能差异——
@@ -44,23 +43,18 @@ import java.util.concurrent.Future;
  */
 public final class FileUtil {
 
-  private FileUtil() {
-  }
+  private FileUtil() {}
 
   // ===== 持久化 =====
 
-  /**
-   * fsync 单个文件；已有打开通道时直接用 {@link FileChannel#force(boolean)} 更省一次 open
-   */
+  /** fsync 单个文件；已有打开通道时直接用 {@link FileChannel#force(boolean)} 更省一次 open */
   public static void flush(final Path path) throws IOException {
     try (final var channel = FileChannel.open(path, StandardOpenOption.READ)) {
       channel.force(true);
     }
   }
 
-  /**
-   * fsync 目录（Windows 为 no-op：NTFS 无需且 JDK 不支持）
-   */
+  /** fsync 目录（Windows 为 no-op：NTFS 无需且 JDK 不支持） */
   public static void flushDirectory(final Path path) throws IOException {
     if (SystemUtil.isWindows()) {
       return;
@@ -68,21 +62,17 @@ public final class FileUtil {
     flush(path);
   }
 
-  /**
-   * 移动 + fsync 父目录（防 0 长度经典问题）
-   */
+  /** 移动 + fsync 父目录（防 0 长度经典问题） */
   public static void moveDurably(
-    final Path source, final Path target, final StandardCopyOption... options)
-    throws IOException {
+      final Path source, final Path target, final StandardCopyOption... options)
+      throws IOException {
     Files.move(source, target, options);
     flushDirectory(target.getParent());
   }
 
   // ===== 目录 =====
 
-  /**
-   * 确保目录存在：单次 createDirectories，已存在且非目录时抛 {@link NotDirectoryException}
-   */
+  /** 确保目录存在：单次 createDirectories，已存在且非目录时抛 {@link NotDirectoryException} */
   /** 确保目录存在（ensureDirectory 别名） */
   public static void ensureDirectoryExists(final Path directory) throws IOException {
     ensureDirectory(directory);
@@ -98,9 +88,7 @@ public final class FileUtil {
     }
   }
 
-  /**
-   * 目录不存在或为空即 true；非目录路径仅当不存在时 true
-   */
+  /** 目录不存在或为空即 true；非目录路径仅当不存在时 true */
   public static boolean isEmpty(final Path path) throws IOException {
     if (!Files.isDirectory(path)) {
       return !Files.exists(path);
@@ -112,9 +100,7 @@ public final class FileUtil {
 
   // ===== 删除 =====
 
-  /**
-   * 递归删除整棵目录树（含根）；任一文件删除失败立即失败
-   */
+  /** 递归删除整棵目录树（含根）；任一文件删除失败立即失败 */
   public static void deleteTree(final Path root) throws IOException {
     final List<Path> ordered = collectPostOrder(root);
     for (final Path path : ordered) {
@@ -122,18 +108,14 @@ public final class FileUtil {
     }
   }
 
-  /**
-   * 同 {@link #deleteTree}，根不存在时静默成功
-   */
+  /** 同 {@link #deleteTree}，根不存在时静默成功 */
   public static void deleteTreeIfExists(final Path root) throws IOException {
     if (Files.exists(root)) {
       deleteTree(root);
     }
   }
 
-  /**
-   * 清空目录内容但保留根目录（挂载卷等不可删场景）
-   */
+  /** 清空目录内容但保留根目录（挂载卷等不可删场景） */
   public static void clearDirectory(final Path root) throws IOException {
     final List<Path> ordered = collectPostOrder(root);
     for (final Path path : ordered) {
@@ -143,27 +125,25 @@ public final class FileUtil {
     }
   }
 
-  /**
-   * 深度逆序列表（先文件后由深到浅的目录），删除前全量收集
-   */
+  /** 深度逆序列表（先文件后由深到浅的目录），删除前全量收集 */
   private static List<Path> collectPostOrder(final Path root) throws IOException {
     final List<Path> paths = new ArrayList<>();
     Files.walkFileTree(
-      root,
-      new SimpleFileVisitor<>() {
-        @Override
-        public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) {
-          paths.add(file);
-          return FileVisitResult.CONTINUE;
-        }
+        root,
+        new SimpleFileVisitor<>() {
+          @Override
+          public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) {
+            paths.add(file);
+            return FileVisitResult.CONTINUE;
+          }
 
-        @Override
-        public FileVisitResult preVisitDirectory(
-          final Path dir, final BasicFileAttributes attrs) {
-          paths.add(dir);
-          return FileVisitResult.CONTINUE;
-        }
-      });
+          @Override
+          public FileVisitResult preVisitDirectory(
+              final Path dir, final BasicFileAttributes attrs) {
+            paths.add(dir);
+            return FileVisitResult.CONTINUE;
+          }
+        });
     // 收集序为前序(父在前); 逆序即得后序删除序(子先于父), 无需逐元素比较
     paths.sort(Comparator.reverseOrder());
     return paths;
@@ -171,9 +151,7 @@ public final class FileUtil {
 
   // ===== 复制 =====
 
-  /**
-   * 零拷贝复制目录树（保留基本时间属性）
-   */
+  /** 零拷贝复制目录树（保留基本时间属性） */
   public static void copyTree(final Path source, final Path target) throws IOException {
     try (final var walk = Files.walk(source)) {
       walk.forEach(path -> copyEntry(source, target, path));
@@ -186,24 +164,24 @@ public final class FileUtil {
    * @param concurrency 最大并行文件数
    */
   public static void copyTreeConcurrent(final Path source, final Path target, final int concurrency)
-    throws IOException {
+      throws IOException {
     final List<Path> directories = new ArrayList<>();
     final List<Path> files = new ArrayList<>();
     try (final var walk = Files.walk(source)) {
       walk.forEach(
-        path -> {
-          if (Files.isDirectory(path)) {
-            directories.add(path);
-          } else {
-            files.add(path);
-          }
-        });
+          path -> {
+            if (Files.isDirectory(path)) {
+              directories.add(path);
+            } else {
+              files.add(path);
+            }
+          });
     }
     for (final Path dir : directories) {
       Files.createDirectories(target.resolve(source.relativize(dir)));
     }
     final ExecutorService executor =
-      concurrency > 1 ? Executors.newVirtualThreadPerTaskExecutor() : null;
+        concurrency > 1 ? Executors.newVirtualThreadPerTaskExecutor() : null;
     try {
       if (executor == null) {
         for (final Path file : files) {
@@ -213,20 +191,20 @@ public final class FileUtil {
       }
       final List<Future<?>> pending = new ArrayList<>(files.size());
       final java.util.concurrent.Semaphore permits =
-        new java.util.concurrent.Semaphore(concurrency);
+          new java.util.concurrent.Semaphore(concurrency);
       for (final Path file : files) {
         permits.acquireUninterruptibly();
         pending.add(
-          executor.submit(
-            () -> {
-              try {
-                copyFileZeroCopy(file, target.resolve(source.relativize(file)));
-              } catch (final IOException e) {
-                throw new java.io.UncheckedIOException(e);
-              } finally {
-                permits.release();
-              }
-            }));
+            executor.submit(
+                () -> {
+                  try {
+                    copyFileZeroCopy(file, target.resolve(source.relativize(file)));
+                  } catch (final IOException e) {
+                    throw new java.io.UncheckedIOException(e);
+                  } finally {
+                    permits.release();
+                  }
+                }));
       }
       for (final Future<?> task : pending) {
         task.get();
@@ -256,17 +234,15 @@ public final class FileUtil {
     }
   }
 
-  /**
-   * 单文件零拷贝 + 基本时间属性保留
-   */
+  /** 单文件零拷贝 + 基本时间属性保留 */
   private static void copyFileZeroCopy(final Path source, final Path target) throws IOException {
     try (final FileChannel in = FileChannel.open(source, StandardOpenOption.READ);
-         final FileChannel out =
-           FileChannel.open(
-             target,
-             StandardOpenOption.CREATE,
-             StandardOpenOption.WRITE,
-             StandardOpenOption.TRUNCATE_EXISTING)) {
+        final FileChannel out =
+            FileChannel.open(
+                target,
+                StandardOpenOption.CREATE,
+                StandardOpenOption.WRITE,
+                StandardOpenOption.TRUNCATE_EXISTING)) {
       long transferred = 0;
       final long size = in.size();
       while (transferred < size) {
@@ -275,6 +251,6 @@ public final class FileUtil {
     }
     final BasicFileAttributes attributes = Files.readAttributes(source, BasicFileAttributes.class);
     Files.getFileAttributeView(target, BasicFileAttributeView.class)
-      .setTimes(attributes.lastModifiedTime(), attributes.lastAccessTime(), null);
+        .setTimes(attributes.lastModifiedTime(), attributes.lastAccessTime(), null);
   }
 }

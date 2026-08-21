@@ -27,9 +27,7 @@ import org.camunda.bpm.model.dmn.instance.Input;
 import org.camunda.bpm.model.dmn.instance.Output;
 import org.camunda.bpm.model.dmn.instance.Rule;
 
-/**
- * Listener for a DMN transformation
- */
+/** Listener for a DMN transformation */
 public interface DmnTransformListener {
 
   /**
@@ -66,10 +64,10 @@ public interface DmnTransformListener {
 
   /**
    * Notified after a Decision Requirements Graph was transformed
-   * 
+   *
    * @param definitions
    * @param dmnDecisionGraph
    */
-  void transformDecisionRequirementsGraph(Definitions definitions, DmnDecisionRequirementsGraph dmnDecisionRequirementsGraph);
-  
+  void transformDecisionRequirementsGraph(
+      Definitions definitions, DmnDecisionRequirementsGraph dmnDecisionRequirementsGraph);
 }

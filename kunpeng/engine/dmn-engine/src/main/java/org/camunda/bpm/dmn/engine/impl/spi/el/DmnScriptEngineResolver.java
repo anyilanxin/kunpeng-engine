@@ -18,9 +18,7 @@ package org.camunda.bpm.dmn.engine.impl.spi.el;
 
 import javax.script.ScriptEngine;
 
-/**
- * Resolver for available script engines.
- */
+/** Resolver for available script engines. */
 public interface DmnScriptEngineResolver {
 
   /**
@@ -30,6 +28,4 @@ public interface DmnScriptEngineResolver {
    * @return the script engine or null if no script engine for this language exists
    */
   ScriptEngine getScriptEngineForLanguage(String language);
-
 }
-

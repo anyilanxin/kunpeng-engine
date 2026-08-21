@@ -16,6 +16,11 @@
  */
 package org.camunda.bpm.dmn.engine.impl.el;
 
+import org.camunda.bpm.dmn.engine.impl.spi.el.ElExpression;
+import org.camunda.bpm.dmn.engine.impl.spi.el.ElProvider;
+import org.camunda.bpm.impl.juel.ExpressionFactoryImpl;
+import org.camunda.bpm.impl.juel.SimpleContext;
+import org.camunda.bpm.impl.juel.TreeValueExpression;
 import org.camunda.bpm.impl.juel.jakarta.el.ArrayELResolver;
 import org.camunda.bpm.impl.juel.jakarta.el.BeanELResolver;
 import org.camunda.bpm.impl.juel.jakarta.el.CompositeELResolver;
@@ -25,18 +30,10 @@ import org.camunda.bpm.impl.juel.jakarta.el.ListELResolver;
 import org.camunda.bpm.impl.juel.jakarta.el.MapELResolver;
 import org.camunda.bpm.impl.juel.jakarta.el.ResourceBundleELResolver;
 
-import org.camunda.bpm.dmn.engine.impl.spi.el.ElExpression;
-import org.camunda.bpm.dmn.engine.impl.spi.el.ElProvider;
-
-import org.camunda.bpm.impl.juel.ExpressionFactoryImpl;
-import org.camunda.bpm.impl.juel.TreeValueExpression;
-import org.camunda.bpm.impl.juel.SimpleContext;
-
 /**
  * A simple implementation of {@link ElProvider} using Juel.
  *
  * @author Daniel Meyer
- *
  */
 public class JuelElProvider implements ElProvider {
 
@@ -48,7 +45,8 @@ public class JuelElProvider implements ElProvider {
     this(new ExpressionFactoryImpl(), new JuelElContextFactory(createDefaultResolver()));
   }
 
-  public JuelElProvider(ExpressionFactoryImpl expressionFactory, JuelElContextFactory elContextFactory) {
+  public JuelElProvider(
+      ExpressionFactoryImpl expressionFactory, JuelElContextFactory elContextFactory) {
     this.factory = expressionFactory;
     this.elContextFactory = elContextFactory;
     this.parsingElContext = createDefaultParsingElContext();
@@ -59,7 +57,8 @@ public class JuelElProvider implements ElProvider {
   }
 
   public ElExpression createExpression(String expression) {
-    TreeValueExpression juelExpr = factory.createValueExpression(parsingElContext, expression, Object.class);
+    TreeValueExpression juelExpr =
+        factory.createValueExpression(parsingElContext, expression, Object.class);
     return new JuelExpression(juelExpr, elContextFactory);
   }
 

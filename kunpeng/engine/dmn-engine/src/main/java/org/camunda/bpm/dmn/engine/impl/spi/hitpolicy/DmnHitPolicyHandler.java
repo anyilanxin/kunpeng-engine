@@ -20,26 +20,22 @@ import org.camunda.bpm.dmn.engine.DmnEngineException;
 import org.camunda.bpm.dmn.engine.delegate.DmnDecisionTableEvaluationEvent;
 import org.camunda.bpm.dmn.engine.impl.hitpolicy.HitPolicyEntry;
 
-/**
- * Handler for a DMN decision table hit policy.
- */
+/** Handler for a DMN decision table hit policy. */
 public interface DmnHitPolicyHandler {
 
   /**
-   * Applies hit policy. Depending on the hit policy this can mean filtering and sorting of matching rules or
-   * aggregating results.
+   * Applies hit policy. Depending on the hit policy this can mean filtering and sorting of matching
+   * rules or aggregating results.
    *
    * @param decisionTableEvaluationEvent the evaluation event of the decision table
    * @return the final evaluation result
-   *
-   * @throws DmnEngineException
-   *           if the hit policy cannot be applied to the decision outputs
+   * @throws DmnEngineException if the hit policy cannot be applied to the decision outputs
    */
-  DmnDecisionTableEvaluationEvent apply(DmnDecisionTableEvaluationEvent decisionTableEvaluationEvent);
+  DmnDecisionTableEvaluationEvent apply(
+      DmnDecisionTableEvaluationEvent decisionTableEvaluationEvent);
 
   /**
    * @return the implemented hit policy and aggregator
    */
   HitPolicyEntry getHitPolicyEntry();
-
 }

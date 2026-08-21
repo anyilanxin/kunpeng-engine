@@ -28,7 +28,8 @@ public class CollectHitPolicyHandler implements DmnHitPolicyHandler {
     return HIT_POLICY;
   }
 
-  public DmnDecisionTableEvaluationEvent apply(DmnDecisionTableEvaluationEvent decisionTableEvaluationEvent) {
+  public DmnDecisionTableEvaluationEvent apply(
+      DmnDecisionTableEvaluationEvent decisionTableEvaluationEvent) {
     return decisionTableEvaluationEvent;
   }
 
@@ -36,5 +37,4 @@ public class CollectHitPolicyHandler implements DmnHitPolicyHandler {
   public String toString() {
     return "CollectHitPolicyHandler{}";
   }
-
 }

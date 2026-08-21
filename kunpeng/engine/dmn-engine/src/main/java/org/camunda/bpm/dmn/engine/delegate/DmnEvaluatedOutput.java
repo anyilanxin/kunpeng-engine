@@ -21,30 +21,18 @@ import org.camunda.bpm.engine.variable.value.TypedValue;
 /**
  * The output for a evaluated decision.
  *
- * <p>
- *   In a decision table implementation an output can have a human readable
- *   name and a name which can be used to reference the output value in
- *   the decision result.
- * </p>
+ * <p>In a decision table implementation an output can have a human readable name and a name which
+ * can be used to reference the output value in the decision result.
  *
- * <p>
- *   The human readable name is the {@code label} attribute of the DMN XML
- *   {@code output} element. You can access this name by the {@link #getName()}
- *   getter.
- * </p>
+ * <p>The human readable name is the {@code label} attribute of the DMN XML {@code output} element.
+ * You can access this name by the {@link #getName()} getter.
  *
- * <p>
- *   The output name to reference the output value in the decision result
- *   is the {@code name} attribute of the DMN XML {@code output} element.
- *   You can access this output name by the {@link #getOutputName()}
- *   getter.
- * </p>
+ * <p>The output name to reference the output value in the decision result is the {@code name}
+ * attribute of the DMN XML {@code output} element. You can access this output name by the {@link
+ * #getOutputName()} getter.
  *
- * <p>
- *   The {@code id} and {@code value} of the evaluated decision table
- *   output entry can be access by the {@link #getId()} and {@link #getValue()}
- *   getter.
- * </p>
+ * <p>The {@code id} and {@code value} of the evaluated decision table output entry can be access by
+ * the {@link #getId()} and {@link #getValue()} getter.
  */
 public interface DmnEvaluatedOutput {
 
@@ -67,5 +55,4 @@ public interface DmnEvaluatedOutput {
    * @return the value of the evaluated output or null if non set
    */
   TypedValue getValue();
-
 }

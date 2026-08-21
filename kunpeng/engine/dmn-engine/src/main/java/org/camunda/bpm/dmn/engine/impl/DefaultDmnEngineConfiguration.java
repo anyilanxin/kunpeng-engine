@@ -19,7 +19,6 @@ package org.camunda.bpm.dmn.engine.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
 import org.camunda.bpm.dmn.engine.DmnEngine;
 import org.camunda.bpm.dmn.engine.DmnEngineConfiguration;
 import org.camunda.bpm.dmn.engine.delegate.DmnDecisionEvaluationListener;
@@ -52,28 +51,28 @@ public class DefaultDmnEngineConfiguration extends DmnEngineConfiguration {
 
   protected DmnEngineMetricCollector engineMetricCollector;
 
-  protected List<DmnDecisionTableEvaluationListener> customPreDecisionTableEvaluationListeners = new ArrayList<>();
-  protected List<DmnDecisionTableEvaluationListener> customPostDecisionTableEvaluationListeners = new ArrayList<>();
+  protected List<DmnDecisionTableEvaluationListener> customPreDecisionTableEvaluationListeners =
+      new ArrayList<>();
+  protected List<DmnDecisionTableEvaluationListener> customPostDecisionTableEvaluationListeners =
+      new ArrayList<>();
   protected List<DmnDecisionTableEvaluationListener> decisionTableEvaluationListeners;
 
   // Decision evaluation listeners
   protected List<DmnDecisionEvaluationListener> decisionEvaluationListeners;
-  protected List<DmnDecisionEvaluationListener> customPreDecisionEvaluationListeners = new ArrayList<>();
-  protected List<DmnDecisionEvaluationListener> customPostDecisionEvaluationListeners = new ArrayList<>();
+  protected List<DmnDecisionEvaluationListener> customPreDecisionEvaluationListeners =
+      new ArrayList<>();
+  protected List<DmnDecisionEvaluationListener> customPostDecisionEvaluationListeners =
+      new ArrayList<>();
 
   protected DmnScriptEngineResolver scriptEngineResolver;
   protected ElProvider elProvider;
   protected FeelEngineFactory feelEngineFactory;
   protected FeelEngine feelEngine;
 
-  /**
-   * a list of DMN FEEL custom function providers
-   */
+  /** a list of DMN FEEL custom function providers */
   protected List<FeelCustomFunctionProvider> feelCustomFunctionProviders;
 
-  /**
-   * Enable FEEL legacy behavior
-   */
+  /** Enable FEEL legacy behavior */
   protected boolean enableFeelLegacyBehavior = false;
 
   protected String defaultInputExpressionExpressionLanguage = null;
@@ -129,7 +128,6 @@ public class DefaultDmnEngineConfiguration extends DmnEngineConfiguration {
       if (defaultLiteralExpressionLanguage == null) {
         defaultLiteralExpressionLanguage(FEEL_EXPRESSION_LANGUAGE);
       }
-
     }
   }
 
@@ -141,11 +139,13 @@ public class DefaultDmnEngineConfiguration extends DmnEngineConfiguration {
 
   protected void initDecisionTableEvaluationListener() {
     List<DmnDecisionTableEvaluationListener> listeners = new ArrayList<>();
-    if (customPreDecisionTableEvaluationListeners != null && !customPreDecisionTableEvaluationListeners.isEmpty()) {
+    if (customPreDecisionTableEvaluationListeners != null
+        && !customPreDecisionTableEvaluationListeners.isEmpty()) {
       listeners.addAll(customPreDecisionTableEvaluationListeners);
     }
 
-    if (customPostDecisionTableEvaluationListeners != null && !customPostDecisionTableEvaluationListeners.isEmpty()) {
+    if (customPostDecisionTableEvaluationListeners != null
+        && !customPostDecisionTableEvaluationListeners.isEmpty()) {
       listeners.addAll(customPostDecisionTableEvaluationListeners);
     }
     decisionTableEvaluationListeners = listeners;
@@ -153,19 +153,22 @@ public class DefaultDmnEngineConfiguration extends DmnEngineConfiguration {
 
   protected void initDecisionEvaluationListener() {
     List<DmnDecisionEvaluationListener> listeners = new ArrayList<>();
-    if (customPreDecisionEvaluationListeners != null && !customPreDecisionEvaluationListeners.isEmpty()) {
+    if (customPreDecisionEvaluationListeners != null
+        && !customPreDecisionEvaluationListeners.isEmpty()) {
       listeners.addAll(customPreDecisionEvaluationListeners);
     }
 
     listeners.addAll(getDefaultDmnDecisionEvaluationListeners());
 
-    if (customPostDecisionEvaluationListeners != null && !customPostDecisionEvaluationListeners.isEmpty()) {
+    if (customPostDecisionEvaluationListeners != null
+        && !customPostDecisionEvaluationListeners.isEmpty()) {
       listeners.addAll(customPostDecisionEvaluationListeners);
     }
     decisionEvaluationListeners = listeners;
   }
 
-  protected Collection<? extends DmnDecisionEvaluationListener> getDefaultDmnDecisionEvaluationListeners() {
+  protected Collection<? extends DmnDecisionEvaluationListener>
+      getDefaultDmnDecisionEvaluationListeners() {
     List<DmnDecisionEvaluationListener> defaultListeners = new ArrayList<>();
 
     if (engineMetricCollector instanceof DmnDecisionEvaluationListener) {
@@ -178,7 +181,7 @@ public class DefaultDmnEngineConfiguration extends DmnEngineConfiguration {
   }
 
   protected void initElProvider() {
-    if(elProvider == null) {
+    if (elProvider == null) {
       elProvider = new JuelElProvider();
     }
   }
@@ -196,7 +199,6 @@ public class DefaultDmnEngineConfiguration extends DmnEngineConfiguration {
 
       } else {
         feelEngineFactory = new FeelEngineFactoryImpl();
-
       }
     }
 
@@ -216,7 +218,8 @@ public class DefaultDmnEngineConfiguration extends DmnEngineConfiguration {
   }
 
   @Override
-  public DefaultDmnEngineConfiguration engineMetricCollector(DmnEngineMetricCollector engineMetricCollector) {
+  public DefaultDmnEngineConfiguration engineMetricCollector(
+      DmnEngineMetricCollector engineMetricCollector) {
     setEngineMetricCollector(engineMetricCollector);
     return this;
   }
@@ -227,12 +230,14 @@ public class DefaultDmnEngineConfiguration extends DmnEngineConfiguration {
   }
 
   @Override
-  public void setCustomPreDecisionTableEvaluationListeners(List<DmnDecisionTableEvaluationListener> decisionTableEvaluationListeners) {
+  public void setCustomPreDecisionTableEvaluationListeners(
+      List<DmnDecisionTableEvaluationListener> decisionTableEvaluationListeners) {
     this.customPreDecisionTableEvaluationListeners = decisionTableEvaluationListeners;
   }
 
   @Override
-  public DefaultDmnEngineConfiguration customPreDecisionTableEvaluationListeners(List<DmnDecisionTableEvaluationListener> decisionTableEvaluationListeners) {
+  public DefaultDmnEngineConfiguration customPreDecisionTableEvaluationListeners(
+      List<DmnDecisionTableEvaluationListener> decisionTableEvaluationListeners) {
     setCustomPreDecisionTableEvaluationListeners(decisionTableEvaluationListeners);
     return this;
   }
@@ -243,12 +248,14 @@ public class DefaultDmnEngineConfiguration extends DmnEngineConfiguration {
   }
 
   @Override
-  public void setCustomPostDecisionTableEvaluationListeners(List<DmnDecisionTableEvaluationListener> decisionTableEvaluationListeners) {
+  public void setCustomPostDecisionTableEvaluationListeners(
+      List<DmnDecisionTableEvaluationListener> decisionTableEvaluationListeners) {
     this.customPostDecisionTableEvaluationListeners = decisionTableEvaluationListeners;
   }
 
   @Override
-  public DefaultDmnEngineConfiguration customPostDecisionTableEvaluationListeners(List<DmnDecisionTableEvaluationListener> decisionTableEvaluationListeners) {
+  public DefaultDmnEngineConfiguration customPostDecisionTableEvaluationListeners(
+      List<DmnDecisionTableEvaluationListener> decisionTableEvaluationListeners) {
     setCustomPostDecisionTableEvaluationListeners(decisionTableEvaluationListeners);
     return this;
   }
@@ -259,12 +266,14 @@ public class DefaultDmnEngineConfiguration extends DmnEngineConfiguration {
   }
 
   @Override
-  public void setCustomPreDecisionEvaluationListeners(List<DmnDecisionEvaluationListener> decisionEvaluationListeners) {
+  public void setCustomPreDecisionEvaluationListeners(
+      List<DmnDecisionEvaluationListener> decisionEvaluationListeners) {
     this.customPreDecisionEvaluationListeners = decisionEvaluationListeners;
   }
 
   @Override
-  public DefaultDmnEngineConfiguration customPreDecisionEvaluationListeners(List<DmnDecisionEvaluationListener> decisionEvaluationListeners) {
+  public DefaultDmnEngineConfiguration customPreDecisionEvaluationListeners(
+      List<DmnDecisionEvaluationListener> decisionEvaluationListeners) {
     setCustomPreDecisionEvaluationListeners(decisionEvaluationListeners);
     return this;
   }
@@ -275,19 +284,21 @@ public class DefaultDmnEngineConfiguration extends DmnEngineConfiguration {
   }
 
   @Override
-  public void setCustomPostDecisionEvaluationListeners(List<DmnDecisionEvaluationListener> decisionEvaluationListeners) {
+  public void setCustomPostDecisionEvaluationListeners(
+      List<DmnDecisionEvaluationListener> decisionEvaluationListeners) {
     this.customPostDecisionEvaluationListeners = decisionEvaluationListeners;
   }
 
   @Override
-  public DefaultDmnEngineConfiguration customPostDecisionEvaluationListeners(List<DmnDecisionEvaluationListener> decisionEvaluationListeners) {
+  public DefaultDmnEngineConfiguration customPostDecisionEvaluationListeners(
+      List<DmnDecisionEvaluationListener> decisionEvaluationListeners) {
     setCustomPostDecisionEvaluationListeners(decisionEvaluationListeners);
     return this;
   }
+
   /**
-   * The list of decision table evaluation listeners of the configuration. Contains
-   * the pre, default and post decision table evaluation listeners. Is set during
-   * the build of an engine.
+   * The list of decision table evaluation listeners of the configuration. Contains the pre, default
+   * and post decision table evaluation listeners. Is set during the build of an engine.
    *
    * @return the list of decision table evaluation listeners
    */
@@ -296,9 +307,8 @@ public class DefaultDmnEngineConfiguration extends DmnEngineConfiguration {
   }
 
   /**
-   * The list of decision evaluation listeners of the configuration. Contains
-   * the pre, default and post decision evaluation listeners. Is set during
-   * the build of an engine.
+   * The list of decision evaluation listeners of the configuration. Contains the pre, default and
+   * post decision evaluation listeners. Is set during the build of an engine.
    *
    * @return the list of decision table evaluation listeners
    */
@@ -314,8 +324,8 @@ public class DefaultDmnEngineConfiguration extends DmnEngineConfiguration {
   }
 
   /**
-   * Set the script engine resolver which is used by the engine to get
-   * an instance of a script engine to evaluated expressions.
+   * Set the script engine resolver which is used by the engine to get an instance of a script
+   * engine to evaluated expressions.
    *
    * @param scriptEngineResolver the script engine resolver
    */
@@ -324,13 +334,14 @@ public class DefaultDmnEngineConfiguration extends DmnEngineConfiguration {
   }
 
   /**
-   * Set the script engine resolver which is used by the engine to get
-   * an instance of a script engine to evaluated expressions.
+   * Set the script engine resolver which is used by the engine to get an instance of a script
+   * engine to evaluated expressions.
    *
    * @param scriptEngineResolver the script engine resolver
    * @return this
    */
-  public DefaultDmnEngineConfiguration scriptEngineResolver(DmnScriptEngineResolver scriptEngineResolver) {
+  public DefaultDmnEngineConfiguration scriptEngineResolver(
+      DmnScriptEngineResolver scriptEngineResolver) {
     setScriptEngineResolver(scriptEngineResolver);
     return this;
   }
@@ -343,8 +354,7 @@ public class DefaultDmnEngineConfiguration extends DmnEngineConfiguration {
   }
 
   /**
-   * Set the el provider which is used by the engine to
-   * evaluate an el expression.
+   * Set the el provider which is used by the engine to evaluate an el expression.
    *
    * @param elProvider the el provider
    */
@@ -353,8 +363,7 @@ public class DefaultDmnEngineConfiguration extends DmnEngineConfiguration {
   }
 
   /**
-   * Set the el provider which is used by the engine to
-   * evaluate an el expression.
+   * Set the el provider which is used by the engine to evaluate an el expression.
    *
    * @param elProvider the el provider
    * @return this
@@ -393,8 +402,7 @@ public class DefaultDmnEngineConfiguration extends DmnEngineConfiguration {
   }
 
   /**
-   * The feel engine used by the engine. Is initialized during the build of
-   * the engine.
+   * The feel engine used by the engine. Is initialized during the build of the engine.
    *
    * @return the feel engine
    */
@@ -410,9 +418,8 @@ public class DefaultDmnEngineConfiguration extends DmnEngineConfiguration {
   }
 
   /**
-   * Set the default expression language which is used to evaluate input expressions.
-   * It is used for all input expressions which do not have a expression
-   * language set.
+   * Set the default expression language which is used to evaluate input expressions. It is used for
+   * all input expressions which do not have a expression language set.
    *
    * @param expressionLanguage the default expression language for input expressions
    */
@@ -421,14 +428,14 @@ public class DefaultDmnEngineConfiguration extends DmnEngineConfiguration {
   }
 
   /**
-   * Set the default expression language which is used to evaluate input expressions.
-   * It is used for all input expressions which do not have a expression
-   * language set.
+   * Set the default expression language which is used to evaluate input expressions. It is used for
+   * all input expressions which do not have a expression language set.
    *
    * @param expressionLanguage the default expression language for input expressions
    * @return this configuration
    */
-  public DefaultDmnEngineConfiguration defaultInputExpressionExpressionLanguage(String expressionLanguage) {
+  public DefaultDmnEngineConfiguration defaultInputExpressionExpressionLanguage(
+      String expressionLanguage) {
     setDefaultInputExpressionExpressionLanguage(expressionLanguage);
     return this;
   }
@@ -441,9 +448,8 @@ public class DefaultDmnEngineConfiguration extends DmnEngineConfiguration {
   }
 
   /**
-   * Set the default expression language which is used to evaluate input entries.
-   * It is used for all input entries which do not have a expression
-   * language set.
+   * Set the default expression language which is used to evaluate input entries. It is used for all
+   * input entries which do not have a expression language set.
    *
    * @param expressionLanguage the default expression language for input entries
    */
@@ -452,14 +458,14 @@ public class DefaultDmnEngineConfiguration extends DmnEngineConfiguration {
   }
 
   /**
-   * Set the default expression language which is used to evaluate input entries.
-   * It is used for all input entries which do not have a expression
-   * language set.
+   * Set the default expression language which is used to evaluate input entries. It is used for all
+   * input entries which do not have a expression language set.
    *
    * @param expressionLanguage the default expression language for input entries
    * @return this configuration
    */
-  public DefaultDmnEngineConfiguration defaultInputEntryExpressionLanguage(String expressionLanguage) {
+  public DefaultDmnEngineConfiguration defaultInputEntryExpressionLanguage(
+      String expressionLanguage) {
     setDefaultInputEntryExpressionLanguage(expressionLanguage);
     return this;
   }
@@ -472,9 +478,8 @@ public class DefaultDmnEngineConfiguration extends DmnEngineConfiguration {
   }
 
   /**
-   * Set the default expression language which is used to evaluate output entries.
-   * It is used for all output entries which do not have a expression
-   * language set.
+   * Set the default expression language which is used to evaluate output entries. It is used for
+   * all output entries which do not have a expression language set.
    *
    * @param expressionLanguage the default expression language for output entries
    */
@@ -483,14 +488,14 @@ public class DefaultDmnEngineConfiguration extends DmnEngineConfiguration {
   }
 
   /**
-   * Set the default expression language which is used to evaluate output entries.
-   * It is used for all output entries which do not have a expression
-   * language set.
+   * Set the default expression language which is used to evaluate output entries. It is used for
+   * all output entries which do not have a expression language set.
    *
    * @param expressionLanguage the default expression language for output entries
    * @return this configuration
    */
-  public DefaultDmnEngineConfiguration defaultOutputEntryExpressionLanguage(String expressionLanguage) {
+  public DefaultDmnEngineConfiguration defaultOutputEntryExpressionLanguage(
+      String expressionLanguage) {
     setDefaultOutputEntryExpressionLanguage(expressionLanguage);
     return this;
   }
@@ -503,9 +508,8 @@ public class DefaultDmnEngineConfiguration extends DmnEngineConfiguration {
   }
 
   /**
-   * Set the default expression language which is used to evaluate literal expressions.
-   * It is used for all literal expressions which do not have a expression
-   * language set.
+   * Set the default expression language which is used to evaluate literal expressions. It is used
+   * for all literal expressions which do not have a expression language set.
    *
    * @param expressionLanguage the default expression language for literal expressions
    */
@@ -514,9 +518,8 @@ public class DefaultDmnEngineConfiguration extends DmnEngineConfiguration {
   }
 
   /**
-   * Set the default expression language which is used to evaluate literal expressions.
-   * It is used for all literal expressions which do not have a expression
-   * language set.
+   * Set the default expression language which is used to evaluate literal expressions. It is used
+   * for all literal expressions which do not have a expression language set.
    *
    * @param expressionLanguage the default expression language for literal expressions
    * @return this configuration
@@ -565,7 +568,8 @@ public class DefaultDmnEngineConfiguration extends DmnEngineConfiguration {
    *
    * @param feelCustomFunctionProviders a list of FEEL Custom Function Providers
    */
-  public void setFeelCustomFunctionProviders(List<FeelCustomFunctionProvider> feelCustomFunctionProviders) {
+  public void setFeelCustomFunctionProviders(
+      List<FeelCustomFunctionProvider> feelCustomFunctionProviders) {
     this.feelCustomFunctionProviders = feelCustomFunctionProviders;
   }
 
@@ -575,7 +579,8 @@ public class DefaultDmnEngineConfiguration extends DmnEngineConfiguration {
    * @param feelCustomFunctionProviders a list of FEEL Custom Function Providers
    * @return this
    */
-  public DefaultDmnEngineConfiguration feelCustomFunctionProviders(List<FeelCustomFunctionProvider> feelCustomFunctionProviders) {
+  public DefaultDmnEngineConfiguration feelCustomFunctionProviders(
+      List<FeelCustomFunctionProvider> feelCustomFunctionProviders) {
     setFeelCustomFunctionProviders(feelCustomFunctionProviders);
     return this;
   }
@@ -617,12 +622,13 @@ public class DefaultDmnEngineConfiguration extends DmnEngineConfiguration {
   /**
    * Controls whether blank table outputs are swallowed or returned as {@code null}.
    *
-   * @param returnBlankTableOutputAsNull toggles whether blank table outputs are swallowed or returned as {@code null}.
+   * @param returnBlankTableOutputAsNull toggles whether blank table outputs are swallowed or
+   *     returned as {@code null}.
    * @return this
    */
-  public DefaultDmnEngineConfiguration setReturnBlankTableOutputAsNull(boolean returnBlankTableOutputAsNull) {
+  public DefaultDmnEngineConfiguration setReturnBlankTableOutputAsNull(
+      boolean returnBlankTableOutputAsNull) {
     this.returnBlankTableOutputAsNull = returnBlankTableOutputAsNull;
     return this;
   }
-
 }

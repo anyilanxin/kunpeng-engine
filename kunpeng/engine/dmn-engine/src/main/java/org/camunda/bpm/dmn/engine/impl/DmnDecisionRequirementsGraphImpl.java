@@ -20,7 +20,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-
 import org.camunda.bpm.dmn.engine.DmnDecision;
 import org.camunda.bpm.dmn.engine.DmnDecisionRequirementsGraph;
 
@@ -69,9 +68,12 @@ public class DmnDecisionRequirementsGraphImpl implements DmnDecisionRequirements
 
   @Override
   public String toString() {
-    return "DmnDecisionRequirementsGraphImpl [key=" + key + ", name=" + name + ", decisions=" + decisions + "]";
+    return "DmnDecisionRequirementsGraphImpl [key="
+        + key
+        + ", name="
+        + name
+        + ", decisions="
+        + decisions
+        + "]";
   }
-
-
-
 }

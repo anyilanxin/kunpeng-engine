@@ -24,13 +24,16 @@ import org.camunda.bpm.dmn.engine.impl.spi.transform.DmnElementTransformContext;
 import org.camunda.bpm.dmn.engine.impl.spi.transform.DmnElementTransformHandler;
 import org.camunda.bpm.model.dmn.instance.LiteralExpression;
 
-public class DmnLiternalExpressionTransformHandler implements DmnElementTransformHandler<LiteralExpression, DmnExpressionImpl> {
+public class DmnLiternalExpressionTransformHandler
+    implements DmnElementTransformHandler<LiteralExpression, DmnExpressionImpl> {
 
-  public DmnExpressionImpl handleElement(DmnElementTransformContext context, LiteralExpression literalExpression) {
+  public DmnExpressionImpl handleElement(
+      DmnElementTransformContext context, LiteralExpression literalExpression) {
     return createFromLiteralExpressionEntry(context, literalExpression);
   }
 
-  protected DmnExpressionImpl createFromLiteralExpressionEntry(DmnElementTransformContext context, LiteralExpression literalExpression) {
+  protected DmnExpressionImpl createFromLiteralExpressionEntry(
+      DmnElementTransformContext context, LiteralExpression literalExpression) {
     DmnExpressionImpl dmnExpression = createDmnElement(context, literalExpression);
 
     dmnExpression.setId(literalExpression.getId());
@@ -41,8 +44,8 @@ public class DmnLiternalExpressionTransformHandler implements DmnElementTransfor
     return dmnExpression;
   }
 
-  protected DmnExpressionImpl createDmnElement(DmnElementTransformContext context, LiteralExpression inputEntry) {
+  protected DmnExpressionImpl createDmnElement(
+      DmnElementTransformContext context, LiteralExpression inputEntry) {
     return new DmnExpressionImpl();
   }
-
 }

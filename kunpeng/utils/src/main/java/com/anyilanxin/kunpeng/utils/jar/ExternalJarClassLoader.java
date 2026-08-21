@@ -16,9 +16,6 @@
  */
 package com.anyilanxin.kunpeng.utils.jar;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -29,6 +26,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 外部 jar 隔离加载器：直接以 {@link JarFile} 读取字节并 {@link ClassLoader#defineClass} 装载， jar
@@ -60,9 +59,7 @@ public final class ExternalJarClassLoader extends ClassLoader implements AutoClo
     this.checksum = checksum;
   }
 
-  /**
-   * 从 jar 路径构建：校验和经 JDK {@link MessageDigest} 流式计算
-   */
+  /** 从 jar 路径构建：校验和经 JDK {@link MessageDigest} 流式计算 */
   public static ExternalJarClassLoader ofPath(final Path jarPath) throws ExternalJarLoadException {
     final String checksum;
     try {
@@ -94,9 +91,7 @@ public final class ExternalJarClassLoader extends ClassLoader implements AutoClo
     close(true);
   }
 
-  /**
-   * 关闭加载器；verbose 时打印警告（提前关闭可能导致后续类加载 ClassNotFoundException）
-   */
+  /** 关闭加载器；verbose 时打印警告（提前关闭可能导致后续类加载 ClassNotFoundException） */
   public void close(final boolean verbose) throws IOException {
     if (verbose && !closed) {
       LOGGER.warn("关闭外部 jar 加载器 {}，后续类加载可能抛 ClassNotFoundException", jarPath);
@@ -108,12 +103,10 @@ public final class ExternalJarClassLoader extends ClassLoader implements AutoClo
     }
   }
 
-  /**
-   * 子优先装载：java.* 委派系统 → 已定义缓存 → jar 内定义 → 父加载器回退
-   */
+  /** 子优先装载：java.* 委派系统 → 已定义缓存 → jar 内定义 → 父加载器回退 */
   @Override
   protected Class<?> loadClass(final String name, final boolean resolve)
-    throws ClassNotFoundException {
+      throws ClassNotFoundException {
     synchronized (getClassLoadingLock(name)) {
       if (name.startsWith("java.")) {
         return getSystemClassLoader().loadClass(name);

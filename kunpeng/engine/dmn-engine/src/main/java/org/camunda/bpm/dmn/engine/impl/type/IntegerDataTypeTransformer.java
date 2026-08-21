@@ -44,7 +44,7 @@ public class IntegerDataTypeTransformer implements DmnDataTypeTransformer {
   }
 
   protected int transformNumber(Number value) {
-    if(isInteger(value)){
+    if (isInteger(value)) {
       return value.intValue();
     } else {
       throw new IllegalArgumentException();
@@ -59,5 +59,4 @@ public class IntegerDataTypeTransformer implements DmnDataTypeTransformer {
   protected int transformString(String value) {
     return Integer.parseInt(value);
   }
-
 }

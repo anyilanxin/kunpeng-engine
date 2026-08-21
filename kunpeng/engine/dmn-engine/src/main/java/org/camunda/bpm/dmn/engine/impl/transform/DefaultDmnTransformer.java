@@ -18,7 +18,6 @@ package org.camunda.bpm.dmn.engine.impl.transform;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.camunda.bpm.dmn.engine.impl.hitpolicy.DefaultHitPolicyHandlerRegistry;
 import org.camunda.bpm.dmn.engine.impl.spi.hitpolicy.DmnHitPolicyHandlerRegistry;
 import org.camunda.bpm.dmn.engine.impl.spi.transform.DmnElementTransformHandlerRegistry;
@@ -33,9 +32,12 @@ public class DefaultDmnTransformer implements DmnTransformer {
 
   protected DmnTransformFactory transformFactory = new DefaultTransformFactory();
   protected List<DmnTransformListener> transformListeners = new ArrayList<DmnTransformListener>();
-  protected DmnElementTransformHandlerRegistry elementTransformHandlerRegistry = new DefaultElementTransformHandlerRegistry();
-  protected DmnDataTypeTransformerRegistry dataTypeTransformerRegistry = new DefaultDataTypeTransformerRegistry();
-  protected DmnHitPolicyHandlerRegistry hitPolicyHandlerRegistry = new DefaultHitPolicyHandlerRegistry();
+  protected DmnElementTransformHandlerRegistry elementTransformHandlerRegistry =
+      new DefaultElementTransformHandlerRegistry();
+  protected DmnDataTypeTransformerRegistry dataTypeTransformerRegistry =
+      new DefaultDataTypeTransformerRegistry();
+  protected DmnHitPolicyHandlerRegistry hitPolicyHandlerRegistry =
+      new DefaultHitPolicyHandlerRegistry();
 
   public DmnTransformFactory getTransformFactory() {
     return transformFactory;
@@ -58,11 +60,13 @@ public class DefaultDmnTransformer implements DmnTransformer {
     return elementTransformHandlerRegistry;
   }
 
-  public void setElementTransformHandlerRegistry(DmnElementTransformHandlerRegistry elementTransformHandlerRegistry) {
+  public void setElementTransformHandlerRegistry(
+      DmnElementTransformHandlerRegistry elementTransformHandlerRegistry) {
     this.elementTransformHandlerRegistry = elementTransformHandlerRegistry;
   }
 
-  public DmnTransformer elementTransformHandlerRegistry(DmnElementTransformHandlerRegistry elementTransformHandlerRegistry) {
+  public DmnTransformer elementTransformHandlerRegistry(
+      DmnElementTransformHandlerRegistry elementTransformHandlerRegistry) {
     setElementTransformHandlerRegistry(elementTransformHandlerRegistry);
     return this;
   }
@@ -71,11 +75,13 @@ public class DefaultDmnTransformer implements DmnTransformer {
     return dataTypeTransformerRegistry;
   }
 
-  public void setDataTypeTransformerRegistry(DmnDataTypeTransformerRegistry dataTypeTransformerRegistry) {
+  public void setDataTypeTransformerRegistry(
+      DmnDataTypeTransformerRegistry dataTypeTransformerRegistry) {
     this.dataTypeTransformerRegistry = dataTypeTransformerRegistry;
   }
 
-  public DmnTransformer dataTypeTransformerRegistry(DmnDataTypeTransformerRegistry dataTypeTransformerRegistry) {
+  public DmnTransformer dataTypeTransformerRegistry(
+      DmnDataTypeTransformerRegistry dataTypeTransformerRegistry) {
     setDataTypeTransformerRegistry(dataTypeTransformerRegistry);
     return this;
   }
@@ -88,7 +94,8 @@ public class DefaultDmnTransformer implements DmnTransformer {
     this.hitPolicyHandlerRegistry = hitPolicyHandlerRegistry;
   }
 
-  public DmnTransformer hitPolicyHandlerRegistry(DmnHitPolicyHandlerRegistry hitPolicyHandlerRegistry) {
+  public DmnTransformer hitPolicyHandlerRegistry(
+      DmnHitPolicyHandlerRegistry hitPolicyHandlerRegistry) {
     setHitPolicyHandlerRegistry(hitPolicyHandlerRegistry);
     return this;
   }
@@ -96,5 +103,4 @@ public class DefaultDmnTransformer implements DmnTransformer {
   public DmnTransform createTransform() {
     return transformFactory.createTransform(this);
   }
-
 }

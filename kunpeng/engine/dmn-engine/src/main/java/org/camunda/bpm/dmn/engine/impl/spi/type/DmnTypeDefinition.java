@@ -18,10 +18,7 @@ package org.camunda.bpm.dmn.engine.impl.spi.type;
 
 import org.camunda.bpm.engine.variable.value.TypedValue;
 
-/**
- * The definition of a type used in the DMN engine to
- * transform data
- */
+/** The definition of a type used in the DMN engine to transform data */
 public interface DmnTypeDefinition {
 
   /**
@@ -34,10 +31,7 @@ public interface DmnTypeDefinition {
    *
    * @param value to transform into the specified type
    * @return value of specified type
-   *
-   * @throws IllegalArgumentException
-   *           if the value can not be transformed
+   * @throws IllegalArgumentException if the value can not be transformed
    */
   TypedValue transform(Object value) throws IllegalArgumentException;
-
 }

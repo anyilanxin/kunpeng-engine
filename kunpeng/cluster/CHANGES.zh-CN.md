@@ -5,8 +5,8 @@
 本模块的代码来源于 Camunda（Zeebe）仓库的 hard fork 版本 Atomix：
 
 - 上游仓库：<https://github.com/camunda/camunda>
-- 来源提交：<https://github.com/camunda/camunda/commit/d9de58a0cee5a84df87cba1ebc0d4fee64836e7d>（对应 Camunda 8.0.4 tag）
-- 上游仓库的 fork 存档：<https://github.com/anyilanxin/camunda/commit/d9de58a0cee5a84df87cba1ebc0d4fee64836e7d>
+- 来源提交：<https://github.com/camunda/camunda/commit/a8fb2a5868e54f118a085bc688338c49950adf0c>（2026-08-19 取自主分支）
+- 上游仓库的 fork 存档：<https://github.com/anyilanxin/camunda/commit/a8fb2a5868e54f118a085bc688338c49950adf0c>
 
 ## 上游背景（Camunda 对 Atomix 的 hard fork 说明）
 
@@ -24,10 +24,10 @@ Camunda 决定将 fork 直接合入自己的仓库，并裁剪到只保留真正
 
 ## 本仓库的更改
 
-在 Camunda 8.0.4 版本的基础上，本仓库做了进一步的裁剪与调整，目的是**方便维护**：
+本次更改的主要目的是：**解决协议冲突**，以及**方便自己维护和迭代**。在上游代码的基础上，本仓库做了如下调整：
 
-1. **只保留 atomix 与 journal 相关代码**，其余模块全部删除。
-2. **删除了以 Camunda License 1.0 协议发布的代码**，本模块内剩余代码均为 Apache-2.0 许可（详见各自文件的 license header）。
+1. **删除了所有非 Apache-2.0 协议的代码**（例如以 Camunda License 1.0 协议发布的代码），以解决协议冲突。本模块内剩余代码均为 Apache-2.0 许可（详见各自文件的 license header）。
+2. **只保留真正需要的代码**（atomix 与 journal），其余模块全部删除，让代码库保持精简、便于维护和迭代。
 3. 构建方式由 Maven 迁移至 Gradle，并合入本仓库统一构建。
 4. **后续新增的文件，其适用协议以文件自身的 license header 与版权声明为准**，不再采用 Apache 协议。
 

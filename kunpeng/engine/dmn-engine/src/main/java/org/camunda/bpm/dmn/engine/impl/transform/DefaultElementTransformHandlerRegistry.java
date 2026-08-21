@@ -18,7 +18,6 @@ package org.camunda.bpm.dmn.engine.impl.transform;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import org.camunda.bpm.dmn.engine.impl.spi.transform.DmnElementTransformHandler;
 import org.camunda.bpm.dmn.engine.impl.spi.transform.DmnElementTransformHandlerRegistry;
 import org.camunda.bpm.model.dmn.instance.Decision;
@@ -36,10 +35,13 @@ import org.camunda.bpm.model.dmn.instance.Variable;
 
 public class DefaultElementTransformHandlerRegistry implements DmnElementTransformHandlerRegistry {
 
-  protected final Map<Class<? extends DmnModelElementInstance>, DmnElementTransformHandler> handlers = getDefaultElementTransformHandlers();
+  protected final Map<Class<? extends DmnModelElementInstance>, DmnElementTransformHandler>
+      handlers = getDefaultElementTransformHandlers();
 
-  protected static Map<Class<? extends DmnModelElementInstance>, DmnElementTransformHandler> getDefaultElementTransformHandlers() {
-    Map<Class<? extends DmnModelElementInstance>, DmnElementTransformHandler> handlers = new HashMap<>();
+  protected static Map<Class<? extends DmnModelElementInstance>, DmnElementTransformHandler>
+      getDefaultElementTransformHandlers() {
+    Map<Class<? extends DmnModelElementInstance>, DmnElementTransformHandler> handlers =
+        new HashMap<>();
 
     handlers.put(Definitions.class, new DmnDecisionRequirementsGraphTransformHandler());
     handlers.put(Decision.class, new DmnDecisionTransformHandler());
@@ -58,13 +60,14 @@ public class DefaultElementTransformHandlerRegistry implements DmnElementTransfo
     return handlers;
   }
 
-  public <Source extends DmnModelElementInstance, Target> void addHandler(Class<Source> sourceClass, DmnElementTransformHandler<Source, Target> handler) {
+  public <Source extends DmnModelElementInstance, Target> void addHandler(
+      Class<Source> sourceClass, DmnElementTransformHandler<Source, Target> handler) {
     handlers.put(sourceClass, handler);
   }
 
   @SuppressWarnings("unchecked")
-  public <Source extends DmnModelElementInstance, Target> DmnElementTransformHandler<Source, Target> getHandler(Class<Source> sourceClass) {
+  public <Source extends DmnModelElementInstance, Target>
+      DmnElementTransformHandler<Source, Target> getHandler(Class<Source> sourceClass) {
     return handlers.get(sourceClass);
   }
-
 }

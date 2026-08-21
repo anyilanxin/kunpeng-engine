@@ -25,7 +25,6 @@ import org.camunda.bpm.engine.variable.value.TypedValue;
  * Transform values of type {@link Number} and {@link String} into {@link LongValue}.
  *
  * @author Philipp Ossler
- *
  */
 public class LongDataTypeTransformer implements DmnDataTypeTransformer {
 
@@ -45,7 +44,7 @@ public class LongDataTypeTransformer implements DmnDataTypeTransformer {
   }
 
   protected long transformNumber(Number value) {
-    if(isLong(value)) {
+    if (isLong(value)) {
       return value.longValue();
     } else {
       throw new IllegalArgumentException();
@@ -60,5 +59,4 @@ public class LongDataTypeTransformer implements DmnDataTypeTransformer {
   protected long transformString(String value) {
     return Long.parseLong(value);
   }
-
 }

@@ -35,28 +35,20 @@ import java.util.function.Function;
  */
 public sealed interface Either<L, R> {
 
-  /**
-   * 包装成功值
-   */
+  /** 包装成功值 */
   static <L, R> Either<L, R> right(final R right) {
     return new Right<>(right);
   }
 
-  /**
-   * 包装错误值
-   */
+  /** 包装错误值 */
   static <L, R> Either<L, R> left(final L left) {
     return new Left<>(left);
   }
 
-  /**
-   * 是否为成功值
-   */
+  /** 是否为成功值 */
   boolean isRight();
 
-  /**
-   * 是否为错误值
-   */
+  /** 是否为错误值 */
   boolean isLeft();
 
   /**
@@ -66,9 +58,7 @@ public sealed interface Either<L, R> {
    */
   R get();
 
-  /**
-   * 取成功值；为 {@link Left} 时返回默认值
-   */
+  /** 取成功值；为 {@link Left} 时返回默认值 */
   R getOrElse(R defaultValue);
 
   /**
@@ -78,14 +68,10 @@ public sealed interface Either<L, R> {
    */
   L getLeft();
 
-  /**
-   * 映射成功值；为 {@link Left} 时原样返回
-   */
+  /** 映射成功值；为 {@link Left} 时原样返回 */
   <T> Either<L, T> map(Function<? super R, ? extends T> right);
 
-  /**
-   * 左右互换
-   */
+  /** 左右互换 */
   default Either<R, L> swap() {
     if (isRight()) {
       return Either.left(get());
@@ -94,44 +80,28 @@ public sealed interface Either<L, R> {
     }
   }
 
-  /**
-   * 映射错误值；为 {@link Right} 时原样返回
-   */
+  /** 映射错误值；为 {@link Right} 时原样返回 */
   <T> Either<T, R> mapLeft(Function<? super L, ? extends T> left);
 
-  /**
-   * 成功值flatMap为新的 Either（可转为 Left）；为 {@link Left} 时原样返回
-   */
+  /** 成功值flatMap为新的 Either（可转为 Left）；为 {@link Left} 时原样返回 */
   <T> Either<L, T> flatMap(Function<? super R, ? extends Either<L, T>> right);
 
-  /**
-   * 对成功值执行副作用后返回自身（支持链式）；为 {@link Left} 时不执行
-   */
+  /** 对成功值执行副作用后返回自身（支持链式）；为 {@link Left} 时不执行 */
   Either<L, R> thenDo(Consumer<R> action);
 
-  /**
-   * 为 {@link Right} 时消费成功值，否则不执行
-   */
+  /** 为 {@link Right} 时消费成功值，否则不执行 */
   void ifRight(Consumer<R> action);
 
-  /**
-   * 为 {@link Left} 时消费错误值，否则不执行
-   */
+  /** 为 {@link Left} 时消费错误值，否则不执行 */
   void ifLeft(Consumer<L> action);
 
-  /**
-   * 按左右分别消费对应值
-   */
+  /** 按左右分别消费对应值 */
   void ifRightOrLeft(Consumer<R> rightAction, Consumer<L> leftAction);
 
-  /**
-   * 按左右分别映射后折叠为同一结果类型
-   */
+  /** 按左右分别映射后折叠为同一结果类型 */
   <T> T fold(Function<? super L, ? extends T> leftFn, Function<? super R, ? extends T> rightFn);
 
-  /**
-   * 成功值载体
-   */
+  /** 成功值载体 */
   @SuppressWarnings("java:S2972")
   record Right<L, R>(R value) implements Either<L, R> {
     @Override
@@ -198,15 +168,13 @@ public sealed interface Either<L, R> {
 
     @Override
     public <T> T fold(
-      final Function<? super L, ? extends T> leftFn,
-      final Function<? super R, ? extends T> rightFn) {
+        final Function<? super L, ? extends T> leftFn,
+        final Function<? super R, ? extends T> rightFn) {
       return rightFn.apply(value);
     }
   }
 
-  /**
-   * 错误值载体
-   */
+  /** 错误值载体 */
   @SuppressWarnings("java:S2972")
   record Left<L, R>(L value) implements Either<L, R> {
 
@@ -274,15 +242,13 @@ public sealed interface Either<L, R> {
 
     @Override
     public <T> T fold(
-      final Function<? super L, ? extends T> leftFn,
-      final Function<? super R, ? extends T> rightFn) {
+        final Function<? super L, ? extends T> leftFn,
+        final Function<? super R, ? extends T> rightFn) {
       return leftFn.apply(value);
     }
   }
 
-  /**
-   * Optional 到 Either 的桥接：空时转为指定的 Left
-   */
+  /** Optional 到 Either 的桥接：空时转为指定的 Left */
   record EitherOptional<R>(Optional<R> right) {
     public <L> Either<L, R> orElse(final L left) {
       return right.<Either<L, R>>map(Either::right).orElse(Either.left(left));

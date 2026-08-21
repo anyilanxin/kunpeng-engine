@@ -18,9 +18,7 @@ package org.camunda.bpm.dmn.engine.impl.spi.transform;
 
 import org.camunda.bpm.model.dmn.instance.DmnModelElementInstance;
 
-/**
- * Registry of DMN model element transformers
- */
+/** Registry of DMN model element transformers */
 public interface DmnElementTransformHandlerRegistry {
 
   /**
@@ -29,9 +27,11 @@ public interface DmnElementTransformHandlerRegistry {
    * @param sourceClass the class of the source type
    * @param <Source> the type of the transformation input
    * @param <Target> the type of the transformation output
-   * @return the {@link DmnElementTransformHandler} or null if none is registered for this source type
+   * @return the {@link DmnElementTransformHandler} or null if none is registered for this source
+   *     type
    */
-  <Source extends DmnModelElementInstance, Target> DmnElementTransformHandler<Source, Target> getHandler(Class<Source> sourceClass);
+  <Source extends DmnModelElementInstance, Target>
+      DmnElementTransformHandler<Source, Target> getHandler(Class<Source> sourceClass);
 
   /**
    * Register a {@link DmnElementTransformHandler} for a source type
@@ -41,6 +41,6 @@ public interface DmnElementTransformHandlerRegistry {
    * @param <Source> the type of the transformation input
    * @param <Target> the type of the transformation output
    */
-  <Source extends DmnModelElementInstance, Target> void addHandler(Class<Source> sourceClass, DmnElementTransformHandler<Source, Target> handler);
-
+  <Source extends DmnModelElementInstance, Target> void addHandler(
+      Class<Source> sourceClass, DmnElementTransformHandler<Source, Target> handler);
 }

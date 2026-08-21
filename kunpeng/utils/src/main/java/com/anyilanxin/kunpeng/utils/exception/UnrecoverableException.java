@@ -37,4 +37,3 @@ public class UnrecoverableException extends RuntimeException {
     super(cause);
   }
 }
-

@@ -27,7 +27,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import org.camunda.bpm.dmn.engine.DmnDecision;
 import org.camunda.bpm.dmn.engine.DmnDecisionRequirementsGraph;
 import org.camunda.bpm.dmn.engine.impl.DmnDecisionImpl;
@@ -94,8 +93,7 @@ public class DefaultDmnTransform implements DmnTransform, DmnElementTransformCon
     ensureNotNull("file", file);
     try {
       modelInstance = Dmn.readModelFromFile(file);
-    }
-    catch (DmnModelException e) {
+    } catch (DmnModelException e) {
       throw LOG.unableToTransformDecisionsFromFile(file, e);
     }
   }
@@ -109,8 +107,7 @@ public class DefaultDmnTransform implements DmnTransform, DmnElementTransformCon
     ensureNotNull("inputStream", inputStream);
     try {
       modelInstance = Dmn.readModelFromStream(inputStream);
-    }
-    catch (DmnModelException e) {
+    } catch (DmnModelException e) {
       throw LOG.unableToTransformDecisionsFromInputStream(e);
     }
   }
@@ -137,14 +134,14 @@ public class DefaultDmnTransform implements DmnTransform, DmnElementTransformCon
     try {
       Definitions definitions = modelInstance.getDefinitions();
       return (T) transformDefinitions(definitions);
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       throw LOG.errorWhileTransformingDefinitions(e);
     }
   }
 
   protected DmnDecisionRequirementsGraph transformDefinitions(Definitions definitions) {
-    DmnElementTransformHandler<Definitions, DmnDecisionRequirementsGraphImpl> handler = handlerRegistry.getHandler(Definitions.class);
+    DmnElementTransformHandler<Definitions, DmnDecisionRequirementsGraphImpl> handler =
+        handlerRegistry.getHandler(Definitions.class);
     DmnDecisionRequirementsGraphImpl dmnDrg = handler.handleElement(this, definitions);
 
     // validate id of drd
@@ -168,18 +165,17 @@ public class DefaultDmnTransform implements DmnTransform, DmnElementTransformCon
       Definitions definitions = modelInstance.getDefinitions();
       Collection<Decision> decisions = definitions.getChildElementsByType(Decision.class);
       return (List<T>) transformDecisions(decisions);
-    }
-    catch (Exception e) {
+    } catch (Exception e) {
       throw LOG.errorWhileTransformingDecisions(e);
     }
   }
 
   protected List<DmnDecision> transformDecisions(Collection<Decision> decisions) {
-    Map<String,DmnDecisionImpl> dmnDecisions = transformIndividualDecisions(decisions);
+    Map<String, DmnDecisionImpl> dmnDecisions = transformIndividualDecisions(decisions);
     buildDecisionRequirements(decisions, dmnDecisions);
     List<DmnDecision> dmnDecisionList = new ArrayList<DmnDecision>(dmnDecisions.values());
 
-    for(Decision decision: decisions) {
+    for (Decision decision : decisions) {
       DmnDecision dmnDecision = dmnDecisions.get(decision.getId());
       notifyTransformListeners(decision, dmnDecision);
     }
@@ -188,7 +184,8 @@ public class DefaultDmnTransform implements DmnTransform, DmnElementTransformCon
     return dmnDecisionList;
   }
 
-  protected Map<String,DmnDecisionImpl> transformIndividualDecisions(Collection<Decision> decisions) {
+  protected Map<String, DmnDecisionImpl> transformIndividualDecisions(
+      Collection<Decision> decisions) {
     Map<String, DmnDecisionImpl> dmnDecisions = new HashMap<String, DmnDecisionImpl>();
 
     for (Decision decision : decisions) {
@@ -200,12 +197,13 @@ public class DefaultDmnTransform implements DmnTransform, DmnElementTransformCon
     return dmnDecisions;
   }
 
-  protected void buildDecisionRequirements(Collection<Decision> decisions, Map<String, DmnDecisionImpl> dmnDecisions) {
-    for(Decision decision: decisions) {
+  protected void buildDecisionRequirements(
+      Collection<Decision> decisions, Map<String, DmnDecisionImpl> dmnDecisions) {
+    for (Decision decision : decisions) {
       List<DmnDecision> requiredDmnDecisions = getRequiredDmnDecisions(decision, dmnDecisions);
       DmnDecisionImpl dmnDecision = dmnDecisions.get(decision.getId());
 
-      if(requiredDmnDecisions.size() > 0) {
+      if (requiredDmnDecisions.size() > 0) {
         dmnDecision.setRequiredDecision(requiredDmnDecisions);
       }
     }
@@ -214,12 +212,13 @@ public class DefaultDmnTransform implements DmnTransform, DmnElementTransformCon
   protected void ensureNoLoopInDecisions(List<DmnDecision> dmnDecisionList) {
     List<String> visitedDecisions = new ArrayList<String>();
 
-    for(DmnDecision decision: dmnDecisionList) {
+    for (DmnDecision decision : dmnDecisionList) {
       ensureNoLoopInDecision(decision, new ArrayList<String>(), visitedDecisions);
     }
   }
 
-  protected void ensureNoLoopInDecision(DmnDecision decision, List<String> parentDecisionList, List<String> visitedDecisions) {
+  protected void ensureNoLoopInDecision(
+      DmnDecision decision, List<String> parentDecisionList, List<String> visitedDecisions) {
 
     if (visitedDecisions.contains(decision.getKey())) {
       return;
@@ -227,23 +226,25 @@ public class DefaultDmnTransform implements DmnTransform, DmnElementTransformCon
 
     parentDecisionList.add(decision.getKey());
 
-    for(DmnDecision requiredDecision : decision.getRequiredDecisions()){
+    for (DmnDecision requiredDecision : decision.getRequiredDecisions()) {
 
       if (parentDecisionList.contains(requiredDecision.getKey())) {
         throw LOG.requiredDecisionLoopDetected(requiredDecision.getKey());
       }
 
-      ensureNoLoopInDecision(requiredDecision, new ArrayList<String>(parentDecisionList), visitedDecisions);
+      ensureNoLoopInDecision(
+          requiredDecision, new ArrayList<String>(parentDecisionList), visitedDecisions);
     }
     visitedDecisions.add(decision.getKey());
   }
 
-  protected List<DmnDecision> getRequiredDmnDecisions(Decision decision, Map<String, DmnDecisionImpl> dmnDecisions) {
+  protected List<DmnDecision> getRequiredDmnDecisions(
+      Decision decision, Map<String, DmnDecisionImpl> dmnDecisions) {
     List<DmnDecision> requiredDecisionList = new ArrayList<DmnDecision>();
-    for(InformationRequirement informationRequirement: decision.getInformationRequirements()) {
+    for (InformationRequirement informationRequirement : decision.getInformationRequirements()) {
 
       Decision requiredDecision = informationRequirement.getRequiredDecision();
-      if(requiredDecision != null) {
+      if (requiredDecision != null) {
         DmnDecision requiredDmnDecision = dmnDecisions.get(requiredDecision.getId());
         requiredDecisionList.add(requiredDmnDecision);
       }
@@ -253,7 +254,8 @@ public class DefaultDmnTransform implements DmnTransform, DmnElementTransformCon
 
   protected DmnDecisionImpl transformDecision(Decision decision) {
 
-    DmnElementTransformHandler<Decision, DmnDecisionImpl> handler = handlerRegistry.getHandler(Decision.class);
+    DmnElementTransformHandler<Decision, DmnDecisionImpl> handler =
+        handlerRegistry.getHandler(Decision.class);
     DmnDecisionImpl dmnDecision = handler.handleElement(this, decision);
     this.decision = dmnDecision;
     // validate decision id
@@ -272,7 +274,8 @@ public class DefaultDmnTransform implements DmnTransform, DmnElementTransformCon
       dmnDecision.setDecisionLogic(dmnDecisionTable);
 
     } else if (expression instanceof LiteralExpression) {
-      DmnDecisionLiteralExpressionImpl dmnDecisionLiteralExpression = transformDecisionLiteralExpression(decision, (LiteralExpression) expression);
+      DmnDecisionLiteralExpressionImpl dmnDecisionLiteralExpression =
+          transformDecisionLiteralExpression(decision, (LiteralExpression) expression);
       dmnDecision.setDecisionLogic(dmnDecisionLiteralExpression);
 
     } else {
@@ -284,7 +287,8 @@ public class DefaultDmnTransform implements DmnTransform, DmnElementTransformCon
   }
 
   protected DmnDecisionTableImpl transformDecisionTable(DecisionTable decisionTable) {
-    DmnElementTransformHandler<DecisionTable, DmnDecisionTableImpl> handler = handlerRegistry.getHandler(DecisionTable.class);
+    DmnElementTransformHandler<DecisionTable, DmnDecisionTableImpl> handler =
+        handlerRegistry.getHandler(DecisionTable.class);
     DmnDecisionTableImpl dmnDecisionTable = handler.handleElement(this, decisionTable);
 
     for (Input input : decisionTable.getInputs()) {
@@ -333,7 +337,8 @@ public class DefaultDmnTransform implements DmnTransform, DmnElementTransformCon
   }
 
   protected DmnDecisionTableInputImpl transformDecisionTableInput(Input input) {
-    DmnElementTransformHandler<Input, DmnDecisionTableInputImpl> handler = handlerRegistry.getHandler(Input.class);
+    DmnElementTransformHandler<Input, DmnDecisionTableInputImpl> handler =
+        handlerRegistry.getHandler(Input.class);
     DmnDecisionTableInputImpl dmnInput = handler.handleElement(this, input);
 
     // validate input id
@@ -354,7 +359,8 @@ public class DefaultDmnTransform implements DmnTransform, DmnElementTransformCon
   }
 
   protected DmnDecisionTableOutputImpl transformDecisionTableOutput(Output output) {
-    DmnElementTransformHandler<Output, DmnDecisionTableOutputImpl> handler = handlerRegistry.getHandler(Output.class);
+    DmnElementTransformHandler<Output, DmnDecisionTableOutputImpl> handler =
+        handlerRegistry.getHandler(Output.class);
     DmnDecisionTableOutputImpl dmnOutput = handler.handleElement(this, output);
 
     // validate output id
@@ -366,7 +372,8 @@ public class DefaultDmnTransform implements DmnTransform, DmnElementTransformCon
   }
 
   protected DmnDecisionTableRuleImpl transformDecisionTableRule(Rule rule) {
-    DmnElementTransformHandler<Rule, DmnDecisionTableRuleImpl> handler = handlerRegistry.getHandler(Rule.class);
+    DmnElementTransformHandler<Rule, DmnDecisionTableRuleImpl> handler =
+        handlerRegistry.getHandler(Rule.class);
     DmnDecisionTableRuleImpl dmnRule = handler.handleElement(this, rule);
 
     // validate rule id
@@ -390,7 +397,8 @@ public class DefaultDmnTransform implements DmnTransform, DmnElementTransformCon
     List<DmnDecisionTableOutputImpl> outputs = this.decisionTable.getOutputs();
     List<OutputEntry> outputEntries = new ArrayList<OutputEntry>(rule.getOutputEntries());
     if (outputs.size() != outputEntries.size()) {
-      throw LOG.differentNumberOfOutputsAndOutputEntries(outputs.size(), outputEntries.size(), dmnRule);
+      throw LOG.differentNumberOfOutputsAndOutputEntries(
+          outputs.size(), outputEntries.size(), dmnRule);
     }
 
     for (OutputEntry outputEntry : outputEntries) {
@@ -403,22 +411,27 @@ public class DefaultDmnTransform implements DmnTransform, DmnElementTransformCon
   }
 
   protected DmnExpressionImpl transformInputExpression(InputExpression inputExpression) {
-    DmnElementTransformHandler<InputExpression, DmnExpressionImpl> handler = handlerRegistry.getHandler(InputExpression.class);
+    DmnElementTransformHandler<InputExpression, DmnExpressionImpl> handler =
+        handlerRegistry.getHandler(InputExpression.class);
     return handler.handleElement(this, inputExpression);
   }
 
   protected DmnExpressionImpl transformInputEntry(InputEntry inputEntry) {
-    DmnElementTransformHandler<InputEntry, DmnExpressionImpl> handler = handlerRegistry.getHandler(InputEntry.class);
+    DmnElementTransformHandler<InputEntry, DmnExpressionImpl> handler =
+        handlerRegistry.getHandler(InputEntry.class);
     return handler.handleElement(this, inputEntry);
   }
 
   protected DmnExpressionImpl transformOutputEntry(OutputEntry outputEntry) {
-    DmnElementTransformHandler<OutputEntry, DmnExpressionImpl> handler = handlerRegistry.getHandler(OutputEntry.class);
+    DmnElementTransformHandler<OutputEntry, DmnExpressionImpl> handler =
+        handlerRegistry.getHandler(OutputEntry.class);
     return handler.handleElement(this, outputEntry);
   }
 
-  protected DmnDecisionLiteralExpressionImpl transformDecisionLiteralExpression(Decision decision, LiteralExpression literalExpression) {
-    DmnDecisionLiteralExpressionImpl dmnDecisionLiteralExpression = new DmnDecisionLiteralExpressionImpl();
+  protected DmnDecisionLiteralExpressionImpl transformDecisionLiteralExpression(
+      Decision decision, LiteralExpression literalExpression) {
+    DmnDecisionLiteralExpressionImpl dmnDecisionLiteralExpression =
+        new DmnDecisionLiteralExpressionImpl();
 
     Variable variable = decision.getVariable();
     if (variable == null) {
@@ -435,12 +448,14 @@ public class DefaultDmnTransform implements DmnTransform, DmnElementTransformCon
   }
 
   protected DmnExpressionImpl transformLiteralExpression(LiteralExpression literalExpression) {
-    DmnElementTransformHandler<LiteralExpression, DmnExpressionImpl> handler = handlerRegistry.getHandler(LiteralExpression.class);
+    DmnElementTransformHandler<LiteralExpression, DmnExpressionImpl> handler =
+        handlerRegistry.getHandler(LiteralExpression.class);
     return handler.handleElement(this, literalExpression);
   }
 
   protected DmnVariableImpl transformVariable(Variable variable) {
-    DmnElementTransformHandler<Variable, DmnVariableImpl> handler = handlerRegistry.getHandler(Variable.class);
+    DmnElementTransformHandler<Variable, DmnVariableImpl> handler =
+        handlerRegistry.getHandler(Variable.class);
     return handler.handleElement(this, variable);
   }
 
@@ -458,9 +473,11 @@ public class DefaultDmnTransform implements DmnTransform, DmnElementTransformCon
     }
   }
 
-  protected void notifyTransformListeners(Definitions definitions, DmnDecisionRequirementsGraphImpl dmnDecisionRequirementsGraph) {
+  protected void notifyTransformListeners(
+      Definitions definitions, DmnDecisionRequirementsGraphImpl dmnDecisionRequirementsGraph) {
     for (DmnTransformListener transformListener : transformListeners) {
-      transformListener.transformDecisionRequirementsGraph(definitions, dmnDecisionRequirementsGraph);
+      transformListener.transformDecisionRequirementsGraph(
+          definitions, dmnDecisionRequirementsGraph);
     }
   }
 
@@ -497,5 +514,4 @@ public class DefaultDmnTransform implements DmnTransform, DmnElementTransformCon
   public DmnHitPolicyHandlerRegistry getHitPolicyHandlerRegistry() {
     return hitPolicyHandlerRegistry;
   }
-
 }

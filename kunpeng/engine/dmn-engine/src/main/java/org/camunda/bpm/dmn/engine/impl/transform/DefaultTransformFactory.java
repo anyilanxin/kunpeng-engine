@@ -25,5 +25,4 @@ public class DefaultTransformFactory implements DmnTransformFactory {
   public DmnTransform createTransform(DmnTransformer transformer) {
     return new DefaultDmnTransform(transformer);
   }
-
 }

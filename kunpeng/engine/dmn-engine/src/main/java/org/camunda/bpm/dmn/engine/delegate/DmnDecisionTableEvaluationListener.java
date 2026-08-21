@@ -16,10 +16,7 @@
  */
 package org.camunda.bpm.dmn.engine.delegate;
 
-/**
- * A listener which will be notified after a decision table
- * was evaluated.
- */
+/** A listener which will be notified after a decision table was evaluated. */
 public interface DmnDecisionTableEvaluationListener {
 
   /**
@@ -28,5 +25,4 @@ public interface DmnDecisionTableEvaluationListener {
    * @param evaluationEvent the evaluation event
    */
   void notify(DmnDecisionTableEvaluationEvent evaluationEvent);
-
 }

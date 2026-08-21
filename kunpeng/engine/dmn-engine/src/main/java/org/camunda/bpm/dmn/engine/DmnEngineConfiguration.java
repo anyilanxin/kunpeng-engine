@@ -17,27 +17,20 @@
 package org.camunda.bpm.dmn.engine;
 
 import java.util.List;
-
 import org.camunda.bpm.dmn.engine.delegate.DmnDecisionEvaluationListener;
 import org.camunda.bpm.dmn.engine.delegate.DmnDecisionTableEvaluationListener;
 import org.camunda.bpm.dmn.engine.impl.DefaultDmnEngineConfiguration;
 import org.camunda.bpm.dmn.engine.spi.DmnEngineMetricCollector;
 
 /**
- * The configuration of a {@link DmnEngine}. It can be used
- * to build a new engine using {@link #buildEngine()}.
+ * The configuration of a {@link DmnEngine}. It can be used to build a new engine using {@link
+ * #buildEngine()}.
  *
- * <p>
- *   To create a new default DMN engine configuration the
- *   method {@link #createDefaultDmnEngineConfiguration()}
- *   can be used.
- * </p>
+ * <p>To create a new default DMN engine configuration the method {@link
+ * #createDefaultDmnEngineConfiguration()} can be used.
  *
- * <p>
- *   Please be aware that changes to the configuration can also
- *   influence the behavior of engines which were already created
- *   by this configuration instance.
- * </p>
+ * <p>Please be aware that changes to the configuration can also influence the behavior of engines
+ * which were already created by this configuration instance.
  */
 public abstract class DmnEngineConfiguration {
 
@@ -66,51 +59,58 @@ public abstract class DmnEngineConfiguration {
    * @param engineMetricCollector the engine metric collector to use
    * @return this configuration
    */
-  public abstract DmnEngineConfiguration engineMetricCollector(DmnEngineMetricCollector engineMetricCollector);
+  public abstract DmnEngineConfiguration engineMetricCollector(
+      DmnEngineMetricCollector engineMetricCollector);
 
   /**
    * @return the list of custom pre decision table evaluation listeners
    */
-  public abstract List<DmnDecisionTableEvaluationListener> getCustomPreDecisionTableEvaluationListeners();
+  public abstract List<DmnDecisionTableEvaluationListener>
+      getCustomPreDecisionTableEvaluationListeners();
 
   /**
-   * Set the list of pre decision table evaluation listeners. They will be notified before
-   * the default decision table evaluation listeners.
+   * Set the list of pre decision table evaluation listeners. They will be notified before the
+   * default decision table evaluation listeners.
    *
    * @param decisionTableEvaluationListeners the list of pre decision table evaluation listeners
    */
-  public abstract void setCustomPreDecisionTableEvaluationListeners(List<DmnDecisionTableEvaluationListener> decisionTableEvaluationListeners);
+  public abstract void setCustomPreDecisionTableEvaluationListeners(
+      List<DmnDecisionTableEvaluationListener> decisionTableEvaluationListeners);
 
   /**
-   * Set the list of pre decision table evaluation listeners. They will be notified before
-   * the default decision table evaluation listeners.
+   * Set the list of pre decision table evaluation listeners. They will be notified before the
+   * default decision table evaluation listeners.
    *
    * @param decisionTableEvaluationListeners the list of pre decision table evaluation listeners
    * @return this configuration
    */
-  public abstract DmnEngineConfiguration customPreDecisionTableEvaluationListeners(List<DmnDecisionTableEvaluationListener> decisionTableEvaluationListeners);
+  public abstract DmnEngineConfiguration customPreDecisionTableEvaluationListeners(
+      List<DmnDecisionTableEvaluationListener> decisionTableEvaluationListeners);
 
   /**
    * @return the list of custom post decision table evaluation listeners
    */
-  public abstract List<DmnDecisionTableEvaluationListener> getCustomPostDecisionTableEvaluationListeners();
+  public abstract List<DmnDecisionTableEvaluationListener>
+      getCustomPostDecisionTableEvaluationListeners();
 
   /**
-   * Set the list of post decision table evaluation listeners. They will be notified after
-   * the default decision table evaluation listeners.
+   * Set the list of post decision table evaluation listeners. They will be notified after the
+   * default decision table evaluation listeners.
    *
    * @param decisionTableEvaluationListeners the list of post decision table evaluation listeners
    */
-  public abstract void setCustomPostDecisionTableEvaluationListeners(List<DmnDecisionTableEvaluationListener> decisionTableEvaluationListeners);
+  public abstract void setCustomPostDecisionTableEvaluationListeners(
+      List<DmnDecisionTableEvaluationListener> decisionTableEvaluationListeners);
 
   /**
-   * Set the list of post decision table evaluation listeners. They will be notified after
-   * the default decision table evaluation listeners.
+   * Set the list of post decision table evaluation listeners. They will be notified after the
+   * default decision table evaluation listeners.
    *
    * @param decisionTableEvaluationListeners the list of post decision table evaluation listeners
    * @return this configuration
    */
-  public abstract DmnEngineConfiguration customPostDecisionTableEvaluationListeners(List<DmnDecisionTableEvaluationListener> decisionTableEvaluationListeners);
+  public abstract DmnEngineConfiguration customPostDecisionTableEvaluationListeners(
+      List<DmnDecisionTableEvaluationListener> decisionTableEvaluationListeners);
 
   /**
    * @return the list of custom pre decision evaluation listeners
@@ -118,21 +118,23 @@ public abstract class DmnEngineConfiguration {
   public abstract List<DmnDecisionEvaluationListener> getCustomPreDecisionEvaluationListeners();
 
   /**
-   * Set the list of pre decision evaluation listeners. They will be notified before
-   * the default decision evaluation listeners.
+   * Set the list of pre decision evaluation listeners. They will be notified before the default
+   * decision evaluation listeners.
    *
    * @param decisionTableEvaluationListeners the list of pre decision table evaluation listeners
    */
-  public abstract void setCustomPreDecisionEvaluationListeners(List<DmnDecisionEvaluationListener> decisionEvaluationListeners);
+  public abstract void setCustomPreDecisionEvaluationListeners(
+      List<DmnDecisionEvaluationListener> decisionEvaluationListeners);
 
   /**
-   * Set the list of pre decision evaluation listeners. They will be notified before
-   * the default decision evaluation listeners.
+   * Set the list of pre decision evaluation listeners. They will be notified before the default
+   * decision evaluation listeners.
    *
    * @param decisionEvaluationListeners the list of pre decision evaluation listeners
    * @return this configuration
    */
-  public abstract DmnEngineConfiguration customPreDecisionEvaluationListeners(List<DmnDecisionEvaluationListener> decisionEvaluationListeners);
+  public abstract DmnEngineConfiguration customPreDecisionEvaluationListeners(
+      List<DmnDecisionEvaluationListener> decisionEvaluationListeners);
 
   /**
    * @return the list of custom post decision evaluation listeners
@@ -140,22 +142,23 @@ public abstract class DmnEngineConfiguration {
   public abstract List<DmnDecisionEvaluationListener> getCustomPostDecisionEvaluationListeners();
 
   /**
-   * Set the list of post decision evaluation listeners. They will be notified after
-   * the default decision evaluation listeners.
+   * Set the list of post decision evaluation listeners. They will be notified after the default
+   * decision evaluation listeners.
    *
    * @param decisionEvaluationListeners the list of post decision table evaluation listeners
    */
-  public abstract void setCustomPostDecisionEvaluationListeners(List<DmnDecisionEvaluationListener> decisionEvaluationListeners);
+  public abstract void setCustomPostDecisionEvaluationListeners(
+      List<DmnDecisionEvaluationListener> decisionEvaluationListeners);
 
   /**
-   * Set the list of post decision evaluation listeners. They will be notified after
-   * the default decision evaluation listeners.
+   * Set the list of post decision evaluation listeners. They will be notified after the default
+   * decision evaluation listeners.
    *
    * @param decisionTableEvaluationListeners the list of post decision evaluation listeners
    * @return this configuration
    */
-
-  public abstract DmnEngineConfiguration customPostDecisionEvaluationListeners(List<DmnDecisionEvaluationListener> decisionEvaluationListeners);
+  public abstract DmnEngineConfiguration customPostDecisionEvaluationListeners(
+      List<DmnDecisionEvaluationListener> decisionEvaluationListeners);
 
   /**
    * Create a {@link DmnEngine} with this configuration
@@ -163,5 +166,4 @@ public abstract class DmnEngineConfiguration {
    * @return the created {@link DmnEngine}
    */
   public abstract DmnEngine buildEngine();
-
 }

@@ -18,9 +18,7 @@ package org.camunda.bpm.dmn.engine.delegate;
 
 import org.camunda.bpm.dmn.engine.DmnDecision;
 
-/**
- * Event which represents the evaluation of a decision.
- */
+/** Event which represents the evaluation of a decision. */
 public interface DmnDecisionLogicEvaluationEvent {
 
   /**
@@ -32,5 +30,4 @@ public interface DmnDecisionLogicEvaluationEvent {
    * @return the number of executed decision elements during the evaluation
    */
   long getExecutedDecisionElements();
-
 }

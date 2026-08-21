@@ -18,12 +18,8 @@ package org.camunda.bpm.dmn.engine.impl;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.camunda.bpm.dmn.engine.DmnDecisionLogic;
-import org.camunda.bpm.dmn.engine.impl.hitpolicy.DefaultHitPolicyHandlerRegistry;
 import org.camunda.bpm.dmn.engine.impl.spi.hitpolicy.DmnHitPolicyHandler;
-import org.camunda.bpm.model.dmn.BuiltinAggregator;
-import org.camunda.bpm.model.dmn.HitPolicy;
 
 public class DmnDecisionTableImpl implements DmnDecisionLogic {
 
@@ -67,11 +63,15 @@ public class DmnDecisionTableImpl implements DmnDecisionLogic {
 
   @Override
   public String toString() {
-    return "DmnDecisionTableImpl{" +
-      " hitPolicyHandler=" + hitPolicyHandler +
-      ", inputs=" + inputs +
-      ", outputs=" + outputs +
-      ", rules=" + rules +
-      '}';
+    return "DmnDecisionTableImpl{"
+        + " hitPolicyHandler="
+        + hitPolicyHandler
+        + ", inputs="
+        + inputs
+        + ", outputs="
+        + outputs
+        + ", rules="
+        + rules
+        + '}';
   }
 }

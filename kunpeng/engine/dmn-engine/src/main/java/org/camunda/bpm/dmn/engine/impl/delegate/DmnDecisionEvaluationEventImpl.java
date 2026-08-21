@@ -18,7 +18,6 @@ package org.camunda.bpm.dmn.engine.impl.delegate;
 
 import java.util.ArrayList;
 import java.util.Collection;
-
 import org.camunda.bpm.dmn.engine.DmnDecision;
 import org.camunda.bpm.dmn.engine.delegate.DmnDecisionEvaluationEvent;
 import org.camunda.bpm.dmn.engine.delegate.DmnDecisionLogicEvaluationEvent;
@@ -26,7 +25,8 @@ import org.camunda.bpm.dmn.engine.delegate.DmnDecisionLogicEvaluationEvent;
 public class DmnDecisionEvaluationEventImpl implements DmnDecisionEvaluationEvent {
 
   protected DmnDecisionLogicEvaluationEvent decisionResult;
-  protected Collection<DmnDecisionLogicEvaluationEvent> requiredDecisionResults = new ArrayList<DmnDecisionLogicEvaluationEvent>();
+  protected Collection<DmnDecisionLogicEvaluationEvent> requiredDecisionResults =
+      new ArrayList<DmnDecisionLogicEvaluationEvent>();
   protected long executedDecisionInstances;
   protected long executedDecisionElements;
 
@@ -44,7 +44,8 @@ public class DmnDecisionEvaluationEventImpl implements DmnDecisionEvaluationEven
     return requiredDecisionResults;
   }
 
-  public void setRequiredDecisionResults(Collection<DmnDecisionLogicEvaluationEvent> requiredDecisionResults) {
+  public void setRequiredDecisionResults(
+      Collection<DmnDecisionLogicEvaluationEvent> requiredDecisionResults) {
     this.requiredDecisionResults = requiredDecisionResults;
   }
 
@@ -69,14 +70,19 @@ public class DmnDecisionEvaluationEventImpl implements DmnDecisionEvaluationEven
   @Override
   public String toString() {
     DmnDecision dmnDecision = decisionResult.getDecision();
-    return "DmnDecisionEvaluationEventImpl{" +
-      " key="+ dmnDecision.getKey() +
-      ", name="+ dmnDecision.getName() +
-      ", decisionLogic=" + dmnDecision.getDecisionLogic() +
-      ", requiredDecisionResults=" + requiredDecisionResults +
-      ", executedDecisionInstances=" + executedDecisionInstances +
-      ", executedDecisionElements=" + executedDecisionElements +
-      '}';
+    return "DmnDecisionEvaluationEventImpl{"
+        + " key="
+        + dmnDecision.getKey()
+        + ", name="
+        + dmnDecision.getName()
+        + ", decisionLogic="
+        + dmnDecision.getDecisionLogic()
+        + ", requiredDecisionResults="
+        + requiredDecisionResults
+        + ", executedDecisionInstances="
+        + executedDecisionInstances
+        + ", executedDecisionElements="
+        + executedDecisionElements
+        + '}';
   }
-
 }

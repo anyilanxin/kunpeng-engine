@@ -20,7 +20,8 @@ import org.camunda.bpm.dmn.engine.DmnDecision;
 import org.camunda.bpm.dmn.engine.delegate.DmnDecisionLiteralExpressionEvaluationEvent;
 import org.camunda.bpm.engine.variable.value.TypedValue;
 
-public class DmnDecisionLiteralExpressionEvaluationEventImpl implements DmnDecisionLiteralExpressionEvaluationEvent {
+public class DmnDecisionLiteralExpressionEvaluationEventImpl
+    implements DmnDecisionLiteralExpressionEvaluationEvent {
 
   protected DmnDecision decision;
 
@@ -63,16 +64,19 @@ public class DmnDecisionLiteralExpressionEvaluationEventImpl implements DmnDecis
 
   @Override
   public String toString() {
-    return "DmnDecisionLiteralExpressionEvaluationEventImpl [" +
-        " key="+ decision.getKey() +
-        ", name="+ decision.getName() +
-        ", decisionLogic=" + decision.getDecisionLogic() +
-        ", outputName=" + outputName +
-        ", outputValue=" + outputValue +
-        ", executedDecisionElements=" + executedDecisionElements +
-        "]";
+    return "DmnDecisionLiteralExpressionEvaluationEventImpl ["
+        + " key="
+        + decision.getKey()
+        + ", name="
+        + decision.getName()
+        + ", decisionLogic="
+        + decision.getDecisionLogic()
+        + ", outputName="
+        + outputName
+        + ", outputValue="
+        + outputValue
+        + ", executedDecisionElements="
+        + executedDecisionElements
+        + "]";
   }
-
-
-
 }

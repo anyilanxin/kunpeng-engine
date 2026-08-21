@@ -20,7 +20,6 @@ package org.camunda.bpm.dmn.engine.impl.spi.el;
  * Provider for Java Expression Language (EL) support.
  *
  * @author Daniel Meyer
- *
  */
 public interface ElProvider {
 
@@ -30,5 +29,4 @@ public interface ElProvider {
    * @return an InternalExpression
    */
   ElExpression createExpression(String expression);
-
 }

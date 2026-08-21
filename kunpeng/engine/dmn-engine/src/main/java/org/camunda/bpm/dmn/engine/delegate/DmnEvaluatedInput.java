@@ -18,9 +18,7 @@ package org.camunda.bpm.dmn.engine.delegate;
 
 import org.camunda.bpm.engine.variable.value.TypedValue;
 
-/**
- * The input for a evaluated decision.
- */
+/** The input for a evaluated decision. */
 public interface DmnEvaluatedInput {
 
   /**
@@ -42,5 +40,4 @@ public interface DmnEvaluatedInput {
    * @return the value of the evaluated input or null if non set
    */
   TypedValue getValue();
-
 }

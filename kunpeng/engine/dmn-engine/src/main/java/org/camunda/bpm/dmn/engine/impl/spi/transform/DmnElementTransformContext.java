@@ -21,9 +21,7 @@ import org.camunda.bpm.dmn.engine.impl.spi.hitpolicy.DmnHitPolicyHandlerRegistry
 import org.camunda.bpm.dmn.engine.impl.spi.type.DmnDataTypeTransformerRegistry;
 import org.camunda.bpm.model.dmn.DmnModelInstance;
 
-/**
- * Context available during the DMN transformation
- */
+/** Context available during the DMN transformation */
 public interface DmnElementTransformContext {
 
   /**
@@ -50,5 +48,4 @@ public interface DmnElementTransformContext {
    * @return the {@link DmnHitPolicyHandlerRegistry} to use
    */
   DmnHitPolicyHandlerRegistry getHitPolicyHandlerRegistry();
-
 }

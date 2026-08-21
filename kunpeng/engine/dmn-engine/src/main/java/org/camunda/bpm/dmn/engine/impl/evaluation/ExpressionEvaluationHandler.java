@@ -23,7 +23,6 @@ import javax.script.Compilable;
 import javax.script.CompiledScript;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
-
 import org.camunda.bpm.dmn.engine.impl.CachedCompiledScriptSupport;
 import org.camunda.bpm.dmn.engine.impl.CachedExpressionSupport;
 import org.camunda.bpm.dmn.engine.impl.DefaultDmnEngineConfiguration;
@@ -51,7 +50,8 @@ public class ExpressionEvaluationHandler {
     this.feelEngine = configuration.getFeelEngine();
   }
 
-  public Object evaluateExpression(String expressionLanguage, DmnExpressionImpl expression, VariableContext variableContext) {
+  public Object evaluateExpression(
+      String expressionLanguage, DmnExpressionImpl expression, VariableContext variableContext) {
     String expressionText = getExpressionTextForLanguage(expression, expressionLanguage);
     if (expressionText != null) {
 
@@ -59,21 +59,28 @@ public class ExpressionEvaluationHandler {
         return evaluateFeelSimpleExpression(expressionText, variableContext);
 
       } else if (isElExpression(expressionLanguage)) {
-        return evaluateElExpression(expressionLanguage, expressionText, variableContext, expression);
+        return evaluateElExpression(
+            expressionLanguage, expressionText, variableContext, expression);
 
       } else {
-        return evaluateScriptExpression(expressionLanguage, variableContext, expressionText, expression);
+        return evaluateScriptExpression(
+            expressionLanguage, variableContext, expressionText, expression);
       }
     } else {
       return null;
     }
   }
 
-  protected Object evaluateScriptExpression(String expressionLanguage, VariableContext variableContext, String expressionText, CachedCompiledScriptSupport cachedCompiledScriptSupport) {
+  protected Object evaluateScriptExpression(
+      String expressionLanguage,
+      VariableContext variableContext,
+      String expressionText,
+      CachedCompiledScriptSupport cachedCompiledScriptSupport) {
     ScriptEngine scriptEngine = getScriptEngineForName(expressionLanguage);
     // wrap script engine bindings + variable context and pass enhanced
     // bindings to the script engine.
-    Bindings bindings = VariableContextScriptBindings.wrap(scriptEngine.createBindings(), variableContext);
+    Bindings bindings =
+        VariableContextScriptBindings.wrap(scriptEngine.createBindings(), variableContext);
     bindings.put("variableContext", variableContext);
 
     try {
@@ -84,7 +91,7 @@ public class ExpressionEvaluationHandler {
           synchronized (cachedCompiledScriptSupport) {
             compiledScript = cachedCompiledScriptSupport.getCachedCompiledScript();
 
-            if(compiledScript == null) {
+            if (compiledScript == null) {
               Compilable compilableScriptEngine = (Compilable) scriptEngine;
               compiledScript = compilableScriptEngine.compile(expressionText);
 
@@ -94,24 +101,27 @@ public class ExpressionEvaluationHandler {
         }
 
         return compiledScript.eval(bindings);
-      }
-      else {
+      } else {
         return scriptEngine.eval(expressionText, bindings);
       }
-    }
-    catch (ScriptException e) {
-      throw LOG.unableToEvaluateExpression(expressionText, scriptEngine.getFactory().getLanguageName(), e);
+    } catch (ScriptException e) {
+      throw LOG.unableToEvaluateExpression(
+          expressionText, scriptEngine.getFactory().getLanguageName(), e);
     }
   }
 
-  protected Object evaluateElExpression(String expressionLanguage, String expressionText, VariableContext variableContext, CachedExpressionSupport cachedExpressionSupport) {
+  protected Object evaluateElExpression(
+      String expressionLanguage,
+      String expressionText,
+      VariableContext variableContext,
+      CachedExpressionSupport cachedExpressionSupport) {
     try {
       ElExpression elExpression = cachedExpressionSupport.getCachedExpression();
 
       if (elExpression == null) {
         synchronized (cachedExpressionSupport) {
           elExpression = cachedExpressionSupport.getCachedExpression();
-          if(elExpression == null) {
+          if (elExpression == null) {
             elExpression = elProvider.createExpression(expressionText);
             cachedExpressionSupport.setCachedExpression(elExpression);
           }
@@ -121,18 +131,20 @@ public class ExpressionEvaluationHandler {
       return elExpression.getValue(variableContext);
     }
     // yes, we catch all exceptions
-    catch(Exception e) {
+    catch (Exception e) {
       throw LOG.unableToEvaluateExpression(expressionText, expressionLanguage, e);
     }
   }
 
-  protected Object evaluateFeelSimpleExpression(String expressionText, VariableContext variableContext) {
+  protected Object evaluateFeelSimpleExpression(
+      String expressionText, VariableContext variableContext) {
     return feelEngine.evaluateSimpleExpression(expressionText, variableContext);
   }
 
   // helper ///////////////////////////////////////////////////////////////////
 
-  protected String getExpressionTextForLanguage(DmnExpressionImpl expression, String expressionLanguage) {
+  protected String getExpressionTextForLanguage(
+      DmnExpressionImpl expression, String expressionLanguage) {
     String expressionText = expression.getExpression();
     if (expressionText != null) {
       if (isJuelExpression(expressionLanguage) && !StringUtil.isExpression(expressionText)) {
@@ -146,7 +158,8 @@ public class ExpressionEvaluationHandler {
   }
 
   private boolean isJuelExpression(String expressionLanguage) {
-    return DefaultDmnEngineConfiguration.JUEL_EXPRESSION_LANGUAGE.equalsIgnoreCase(expressionLanguage);
+    return DefaultDmnEngineConfiguration.JUEL_EXPRESSION_LANGUAGE.equalsIgnoreCase(
+        expressionLanguage);
   }
 
   protected ScriptEngine getScriptEngineForName(String expressionLanguage) {
@@ -166,12 +179,13 @@ public class ExpressionEvaluationHandler {
 
   public boolean isFeelExpressionLanguage(String expressionLanguage) {
     ensureNotNull("expressionLanguage", expressionLanguage);
-    return expressionLanguage.equals(DefaultDmnEngineConfiguration.FEEL_EXPRESSION_LANGUAGE) ||
-      expressionLanguage.toLowerCase().equals(DefaultDmnEngineConfiguration.FEEL_EXPRESSION_LANGUAGE_ALTERNATIVE) ||
-      expressionLanguage.equals(DefaultDmnEngineConfiguration.FEEL_EXPRESSION_LANGUAGE_DMN12) ||
-      expressionLanguage.equals(DefaultDmnEngineConfiguration.FEEL_EXPRESSION_LANGUAGE_DMN13) ||
-      expressionLanguage.equals(DefaultDmnEngineConfiguration.FEEL_EXPRESSION_LANGUAGE_DMN14) ||
-      expressionLanguage.equals(DefaultDmnEngineConfiguration.FEEL_EXPRESSION_LANGUAGE_DMN15);
+    return expressionLanguage.equals(DefaultDmnEngineConfiguration.FEEL_EXPRESSION_LANGUAGE)
+        || expressionLanguage
+            .toLowerCase()
+            .equals(DefaultDmnEngineConfiguration.FEEL_EXPRESSION_LANGUAGE_ALTERNATIVE)
+        || expressionLanguage.equals(DefaultDmnEngineConfiguration.FEEL_EXPRESSION_LANGUAGE_DMN12)
+        || expressionLanguage.equals(DefaultDmnEngineConfiguration.FEEL_EXPRESSION_LANGUAGE_DMN13)
+        || expressionLanguage.equals(DefaultDmnEngineConfiguration.FEEL_EXPRESSION_LANGUAGE_DMN14)
+        || expressionLanguage.equals(DefaultDmnEngineConfiguration.FEEL_EXPRESSION_LANGUAGE_DMN15);
   }
-
 }

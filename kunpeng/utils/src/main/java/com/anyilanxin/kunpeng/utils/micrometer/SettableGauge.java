@@ -19,15 +19,13 @@ package com.anyilanxin.kunpeng.utils.micrometer;
 import com.anyilanxin.kunpeng.utils.CloseableSilently;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
-
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * 可设值的 Micrometer Gauge 句柄：内部以 {@link AtomicLong} 持有当前值，
- * 提供 set/inc/dec 语义（对应 Prometheus simpleclient 的 Gauge 用法）。
+ * 可设值的 Micrometer Gauge 句柄：内部以 {@link AtomicLong} 持有当前值， 提供 set/inc/dec 语义（对应 Prometheus
+ * simpleclient 的 Gauge 用法）。
  *
- * <p>Micrometer 的 {@link Gauge} 只能通过观测函数取值且为弱引用，
- * 本类通过 {@code strongReference} 与自身持有的数值对象保证指标不被回收。
+ * <p>Micrometer 的 {@link Gauge} 只能通过观测函数取值且为弱引用， 本类通过 {@code strongReference} 与自身持有的数值对象保证指标不被回收。
  * 关闭时从注册中心移除该指标。
  *
  * @author zxuanhong
@@ -38,7 +36,10 @@ public final class SettableGauge implements CloseableSilently {
   private final Gauge gauge;
   private final AtomicLong value;
 
-  SettableGauge(final String name, final String description, final MeterRegistry registry,
+  SettableGauge(
+      final String name,
+      final String description,
+      final MeterRegistry registry,
       final String... tags) {
     this.registry = registry;
     this.value = new AtomicLong();

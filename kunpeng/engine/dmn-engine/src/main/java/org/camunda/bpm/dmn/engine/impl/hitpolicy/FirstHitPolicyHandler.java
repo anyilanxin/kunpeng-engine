@@ -17,21 +17,22 @@
 package org.camunda.bpm.dmn.engine.impl.hitpolicy;
 
 import java.util.Collections;
-
 import org.camunda.bpm.dmn.engine.delegate.DmnDecisionTableEvaluationEvent;
 import org.camunda.bpm.dmn.engine.delegate.DmnEvaluatedDecisionRule;
 import org.camunda.bpm.dmn.engine.impl.delegate.DmnDecisionTableEvaluationEventImpl;
 import org.camunda.bpm.dmn.engine.impl.spi.hitpolicy.DmnHitPolicyHandler;
 import org.camunda.bpm.model.dmn.HitPolicy;
 
-
 public class FirstHitPolicyHandler implements DmnHitPolicyHandler {
   protected static final HitPolicyEntry HIT_POLICY = new HitPolicyEntry(HitPolicy.FIRST, null);
 
-  public DmnDecisionTableEvaluationEvent apply(DmnDecisionTableEvaluationEvent decisionTableEvaluationEvent) {
+  public DmnDecisionTableEvaluationEvent apply(
+      DmnDecisionTableEvaluationEvent decisionTableEvaluationEvent) {
     if (!decisionTableEvaluationEvent.getMatchingRules().isEmpty()) {
-      DmnEvaluatedDecisionRule firstMatchedRule = decisionTableEvaluationEvent.getMatchingRules().get(0);
-      ((DmnDecisionTableEvaluationEventImpl) decisionTableEvaluationEvent).setMatchingRules(Collections.singletonList(firstMatchedRule));
+      DmnEvaluatedDecisionRule firstMatchedRule =
+          decisionTableEvaluationEvent.getMatchingRules().get(0);
+      ((DmnDecisionTableEvaluationEventImpl) decisionTableEvaluationEvent)
+          .setMatchingRules(Collections.singletonList(firstMatchedRule));
     }
     return decisionTableEvaluationEvent;
   }
@@ -45,5 +46,4 @@ public class FirstHitPolicyHandler implements DmnHitPolicyHandler {
   public String toString() {
     return "FirstHitPolicyHandler{}";
   }
-
 }

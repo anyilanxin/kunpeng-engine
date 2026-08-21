@@ -17,18 +17,12 @@
 package com.anyilanxin.kunpeng.utils.micrometer;
 
 import io.micrometer.core.instrument.docs.MeterDocumentation;
-
 import java.time.Duration;
 
-/**
- * 指标文档接口：在 {@link MeterDocumentation} 基础上补充静态描述（help/description）与
- * SLO 桶定义，作为各模块指标枚举的统一基接口。
- */
+/** 指标文档接口：在 {@link MeterDocumentation} 基础上补充静态描述（help/description）与 SLO 桶定义，作为各模块指标枚举的统一基接口。 */
 public interface CustomMeterDocumentation extends MeterDocumentation {
 
-  /**
-   * 默认 Prometheus 直方图桶（严格递增、无重复）：亚毫秒级调度 → 毫秒级 IO → 秒级慢操作。
-   */
+  /** 默认 Prometheus 直方图桶（严格递增、无重复）：亚毫秒级调度 → 毫秒级 IO → 秒级慢操作。 */
   Duration[] DEFAULT_PROMETHEUS_BUCKETS = {
     Duration.ofMillis(1),
     Duration.ofMillis(5),
@@ -49,21 +43,15 @@ public interface CustomMeterDocumentation extends MeterDocumentation {
 
   double[] EMPTY_DISTRIBUTION_SLOS = new double[0];
 
-  /**
-   * 指标描述（Prometheus 的 help 文案）
-   */
+  /** 指标描述（Prometheus 的 help 文案） */
   String getDescription();
 
-  /**
-   * TIMER 类指标的 SLO 桶
-   */
+  /** TIMER 类指标的 SLO 桶 */
   default Duration[] getTimerSLOs() {
     return DEFAULT_PROMETHEUS_BUCKETS;
   }
 
-  /**
-   * DISTRIBUTION_SUMMARY 类指标的 SLO 桶（默认空）
-   */
+  /** DISTRIBUTION_SUMMARY 类指标的 SLO 桶（默认空） */
   default double[] getDistributionSLOs() {
     return EMPTY_DISTRIBUTION_SLOS;
   }

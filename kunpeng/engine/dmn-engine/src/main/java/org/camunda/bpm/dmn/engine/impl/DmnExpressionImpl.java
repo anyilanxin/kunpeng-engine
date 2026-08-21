@@ -17,7 +17,6 @@
 package org.camunda.bpm.dmn.engine.impl;
 
 import javax.script.CompiledScript;
-
 import org.camunda.bpm.dmn.engine.impl.spi.el.ElExpression;
 import org.camunda.bpm.dmn.engine.impl.spi.type.DmnTypeDefinition;
 
@@ -75,13 +74,22 @@ public class DmnExpressionImpl implements CachedCompiledScriptSupport, CachedExp
 
   @Override
   public String toString() {
-    return "DmnExpressionImpl{" +
-      "id='" + id + '\'' +
-      ", name='" + name + '\'' +
-      ", typeDefinition=" + typeDefinition +
-      ", expressionLanguage='" + expressionLanguage + '\'' +
-      ", expression='" + expression + '\'' +
-      '}';
+    return "DmnExpressionImpl{"
+        + "id='"
+        + id
+        + '\''
+        + ", name='"
+        + name
+        + '\''
+        + ", typeDefinition="
+        + typeDefinition
+        + ", expressionLanguage='"
+        + expressionLanguage
+        + '\''
+        + ", expression='"
+        + expression
+        + '\''
+        + '}';
   }
 
   public void cacheCompiledScript(CompiledScript compiledScript) {

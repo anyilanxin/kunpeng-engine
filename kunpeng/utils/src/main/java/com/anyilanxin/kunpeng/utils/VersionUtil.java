@@ -16,13 +16,12 @@
  */
 package com.anyilanxin.kunpeng.utils;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
 import java.util.Properties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class VersionUtil {
 
@@ -38,8 +37,7 @@ public final class VersionUtil {
   private static String versionLowerCase;
   private static String lastVersion;
 
-  private VersionUtil() {
-  }
+  private VersionUtil() {}
 
   /**
    * @return the current version or 'development' if none can be determined.
@@ -49,17 +47,17 @@ public final class VersionUtil {
       return version;
     }
     final var foundVersion =
-      Optional.ofNullable(System.getenv(VERSION_OVERRIDE_ENV_NAME))
-        .or(() -> Optional.ofNullable(readProperty(VERSION_PROPERTY_NAME)))
-        .or(
-          () ->
-            Optional.ofNullable(VersionUtil.class.getPackage().getImplementationVersion()));
+        Optional.ofNullable(System.getenv(VERSION_OVERRIDE_ENV_NAME))
+            .or(() -> Optional.ofNullable(readProperty(VERSION_PROPERTY_NAME)))
+            .or(
+                () ->
+                    Optional.ofNullable(VersionUtil.class.getPackage().getImplementationVersion()));
     if (foundVersion.isPresent()) {
       version = foundVersion.get();
     } else {
       LOG.warn(
-        "Version is not found in env, version file or package, using '%s' instead"
-          .formatted(VERSION_DEV));
+          "Version is not found in env, version file or package, using '%s' instead"
+              .formatted(VERSION_DEV));
       version = VERSION_DEV;
     }
     return version;
@@ -98,7 +96,7 @@ public final class VersionUtil {
 
   private static String readProperty(final String property) {
     try (final InputStream lastVersionFileStream =
-           VersionUtil.class.getResourceAsStream(VERSION_PROPERTIES_PATH)) {
+        VersionUtil.class.getResourceAsStream(VERSION_PROPERTIES_PATH)) {
       final Properties props = new Properties();
       props.load(lastVersionFileStream);
 

@@ -17,7 +17,6 @@
 package org.camunda.bpm.dmn.engine.impl.delegate;
 
 import java.util.Map;
-
 import org.camunda.bpm.dmn.engine.delegate.DmnEvaluatedDecisionRule;
 import org.camunda.bpm.dmn.engine.delegate.DmnEvaluatedOutput;
 import org.camunda.bpm.dmn.engine.impl.DmnDecisionTableRuleImpl;
@@ -49,10 +48,12 @@ public class DmnEvaluatedDecisionRuleImpl implements DmnEvaluatedDecisionRule {
 
   @Override
   public String toString() {
-    return "DmnEvaluatedDecisionRuleImpl{" +
-      "id='" + id + '\'' +
-      ", outputEntries=" + outputEntries +
-      '}';
+    return "DmnEvaluatedDecisionRuleImpl{"
+        + "id='"
+        + id
+        + '\''
+        + ", outputEntries="
+        + outputEntries
+        + '}';
   }
-
 }

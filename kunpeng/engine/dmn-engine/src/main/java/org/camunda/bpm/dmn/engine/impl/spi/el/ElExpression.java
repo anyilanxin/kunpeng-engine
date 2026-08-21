@@ -20,7 +20,6 @@ import org.camunda.bpm.engine.variable.context.VariableContext;
 
 /**
  * @author Daniel Meyer
- *
  */
 public interface ElExpression {
 
@@ -31,5 +30,4 @@ public interface ElExpression {
    * @return the value
    */
   Object getValue(VariableContext variableContext);
-
 }

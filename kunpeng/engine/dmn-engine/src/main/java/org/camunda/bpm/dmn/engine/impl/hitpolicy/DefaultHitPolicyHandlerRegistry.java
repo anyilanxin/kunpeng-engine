@@ -18,7 +18,6 @@ package org.camunda.bpm.dmn.engine.impl.hitpolicy;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import org.camunda.bpm.dmn.engine.impl.spi.hitpolicy.DmnHitPolicyHandler;
 import org.camunda.bpm.dmn.engine.impl.spi.hitpolicy.DmnHitPolicyHandlerRegistry;
 import org.camunda.bpm.model.dmn.BuiltinAggregator;
@@ -29,17 +28,26 @@ public class DefaultHitPolicyHandlerRegistry implements DmnHitPolicyHandlerRegis
   protected static final Map<HitPolicyEntry, DmnHitPolicyHandler> handlers = getDefaultHandlers();
 
   protected static Map<HitPolicyEntry, DmnHitPolicyHandler> getDefaultHandlers() {
-    Map<HitPolicyEntry, DmnHitPolicyHandler> handlers = new HashMap<HitPolicyEntry, DmnHitPolicyHandler>();
+    Map<HitPolicyEntry, DmnHitPolicyHandler> handlers =
+        new HashMap<HitPolicyEntry, DmnHitPolicyHandler>();
 
     handlers.put(new HitPolicyEntry(HitPolicy.UNIQUE, null), new UniqueHitPolicyHandler());
     handlers.put(new HitPolicyEntry(HitPolicy.FIRST, null), new FirstHitPolicyHandler());
     handlers.put(new HitPolicyEntry(HitPolicy.ANY, null), new AnyHitPolicyHandler());
     handlers.put(new HitPolicyEntry(HitPolicy.RULE_ORDER, null), new RuleOrderHitPolicyHandler());
     handlers.put(new HitPolicyEntry(HitPolicy.COLLECT, null), new CollectHitPolicyHandler());
-    handlers.put(new HitPolicyEntry(HitPolicy.COLLECT, BuiltinAggregator.COUNT), new CollectCountHitPolicyHandler());
-    handlers.put(new HitPolicyEntry(HitPolicy.COLLECT, BuiltinAggregator.SUM), new CollectSumHitPolicyHandler());
-    handlers.put(new HitPolicyEntry(HitPolicy.COLLECT, BuiltinAggregator.MIN), new CollectMinHitPolicyHandler());
-    handlers.put(new HitPolicyEntry(HitPolicy.COLLECT, BuiltinAggregator.MAX), new CollectMaxHitPolicyHandler());
+    handlers.put(
+        new HitPolicyEntry(HitPolicy.COLLECT, BuiltinAggregator.COUNT),
+        new CollectCountHitPolicyHandler());
+    handlers.put(
+        new HitPolicyEntry(HitPolicy.COLLECT, BuiltinAggregator.SUM),
+        new CollectSumHitPolicyHandler());
+    handlers.put(
+        new HitPolicyEntry(HitPolicy.COLLECT, BuiltinAggregator.MIN),
+        new CollectMinHitPolicyHandler());
+    handlers.put(
+        new HitPolicyEntry(HitPolicy.COLLECT, BuiltinAggregator.MAX),
+        new CollectMaxHitPolicyHandler());
 
     return handlers;
   }
@@ -48,8 +56,10 @@ public class DefaultHitPolicyHandlerRegistry implements DmnHitPolicyHandlerRegis
     return handlers.get(new HitPolicyEntry(hitPolicy, builtinAggregator));
   }
 
-  public void addHandler(HitPolicy hitPolicy, BuiltinAggregator builtinAggregator, DmnHitPolicyHandler hitPolicyHandler) {
+  public void addHandler(
+      HitPolicy hitPolicy,
+      BuiltinAggregator builtinAggregator,
+      DmnHitPolicyHandler hitPolicyHandler) {
     handlers.put(new HitPolicyEntry(hitPolicy, builtinAggregator), hitPolicyHandler);
   }
-
 }

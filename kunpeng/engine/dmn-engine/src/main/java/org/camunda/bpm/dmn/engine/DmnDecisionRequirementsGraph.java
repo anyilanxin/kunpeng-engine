@@ -20,8 +20,8 @@ import java.util.Collection;
 import java.util.Set;
 
 /**
- * Container of {@link DmnDecision}s which belongs to the same decision
- * requirements graph (i.e. DMN resource).
+ * Container of {@link DmnDecision}s which belongs to the same decision requirements graph (i.e. DMN
+ * resource).
  */
 public interface DmnDecisionRequirementsGraph {
 
@@ -49,8 +49,7 @@ public interface DmnDecisionRequirementsGraph {
   /**
    * Gets the containing decision with the given key.
    *
-   * @param key
-   *          the identifier of the decision
+   * @param key the identifier of the decision
    * @return the decision or null if not exists
    */
   DmnDecision getDecision(String key);
@@ -61,5 +60,4 @@ public interface DmnDecisionRequirementsGraph {
    * @return the decision keys.
    */
   Set<String> getDecisionKeys();
-
 }

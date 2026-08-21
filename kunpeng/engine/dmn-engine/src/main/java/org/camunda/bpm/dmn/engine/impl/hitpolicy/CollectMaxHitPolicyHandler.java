@@ -18,12 +18,12 @@ package org.camunda.bpm.dmn.engine.impl.hitpolicy;
 
 import java.util.Collections;
 import java.util.List;
-
 import org.camunda.bpm.model.dmn.BuiltinAggregator;
 import org.camunda.bpm.model.dmn.HitPolicy;
 
 public class CollectMaxHitPolicyHandler extends AbstractCollectNumberHitPolicyHandler {
-  protected static final HitPolicyEntry HIT_POLICY = new HitPolicyEntry(HitPolicy.COLLECT, BuiltinAggregator.MAX);
+  protected static final HitPolicyEntry HIT_POLICY =
+      new HitPolicyEntry(HitPolicy.COLLECT, BuiltinAggregator.MAX);
 
   @Override
   public HitPolicyEntry getHitPolicyEntry() {
@@ -53,5 +53,4 @@ public class CollectMaxHitPolicyHandler extends AbstractCollectNumberHitPolicyHa
   public String toString() {
     return "CollectMaxHitPolicyHandler{}";
   }
-
 }
