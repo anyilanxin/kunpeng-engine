@@ -15,27 +15,24 @@
  */
 package io.atomix.raft.storage.serializer;
 
-import static io.atomix.raft.storage.serializer.SerializerUtil.getRaftMemberType;
-import static io.atomix.raft.storage.serializer.SerializerUtil.getSBEType;
-
 import io.atomix.cluster.MemberId;
 import io.atomix.raft.cluster.RaftMember;
 import io.atomix.raft.cluster.impl.DefaultRaftMember;
-import io.atomix.raft.storage.log.entry.ApplicationEntry;
-import io.atomix.raft.storage.log.entry.ConfigurationEntry;
-import io.atomix.raft.storage.log.entry.InitialEntry;
-import io.atomix.raft.storage.log.entry.RaftLogEntry;
-import io.atomix.raft.storage.log.entry.SerializedApplicationEntry;
+import io.atomix.raft.journal.file.RecordDataEncoder;
+import io.atomix.raft.storage.log.entry.*;
 import io.atomix.raft.storage.serializer.ConfigurationEntryDecoder.NewMembersDecoder;
 import io.atomix.raft.storage.serializer.ConfigurationEntryDecoder.OldMembersDecoder;
-import io.camunda.zeebe.journal.file.RecordDataEncoder;
 import io.camunda.zeebe.util.SbeUtil;
-import java.nio.ByteOrder;
-import java.time.Instant;
-import java.util.ArrayList;
 import org.agrona.DirectBuffer;
 import org.agrona.MutableDirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
+
+import java.nio.ByteOrder;
+import java.time.Instant;
+import java.util.ArrayList;
+
+import static io.atomix.raft.storage.serializer.SerializerUtil.getRaftMemberType;
+import static io.atomix.raft.storage.serializer.SerializerUtil.getSBEType;
 
 public class RaftEntrySBESerializer implements RaftEntrySerializer {
   final MessageHeaderEncoder headerEncoder = new MessageHeaderEncoder();

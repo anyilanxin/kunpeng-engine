@@ -16,60 +16,27 @@
  */
 package io.atomix.raft.impl;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
-import static io.atomix.utils.concurrent.Threads.namedThreads;
-
 import io.atomix.cluster.ClusterMembershipService;
 import io.atomix.cluster.MemberId;
-import io.atomix.raft.ElectionTimer;
-import io.atomix.raft.LeadershipTransferCoordinatorCheck;
-import io.atomix.raft.LeadershipTransferWriteBarrier;
-import io.atomix.raft.RaftApplicationEntryCommittedPositionListener;
-import io.atomix.raft.RaftCommitListener;
+import io.atomix.raft.*;
 import io.atomix.raft.RaftException.CommitFailedException;
-import io.atomix.raft.RaftRoleChangeListener;
 import io.atomix.raft.RaftServer.Role;
-import io.atomix.raft.RaftThreadContextFactory;
-import io.atomix.raft.RebalanceConfiguration;
-import io.atomix.raft.SnapshotReplicationListener;
 import io.atomix.raft.cluster.RaftMember;
 import io.atomix.raft.cluster.RaftMember.Type;
 import io.atomix.raft.cluster.impl.DefaultRaftMember;
 import io.atomix.raft.cluster.impl.RaftClusterContext;
+import io.atomix.raft.journal.CheckedJournalException.FlushException;
+import io.atomix.raft.journal.SegmentInfo;
 import io.atomix.raft.metrics.RaftReplicationMetrics;
 import io.atomix.raft.metrics.RaftRoleMetrics;
 import io.atomix.raft.metrics.RaftServiceMetrics;
 import io.atomix.raft.metrics.RebalanceMetrics;
 import io.atomix.raft.partition.RaftElectionConfig;
 import io.atomix.raft.partition.RaftPartitionConfig;
-import io.atomix.raft.protocol.AppendResponse;
-import io.atomix.raft.protocol.ConfigureResponse;
-import io.atomix.raft.protocol.ForceConfigureResponse;
-import io.atomix.raft.protocol.InstallResponse;
-import io.atomix.raft.protocol.JoinResponse;
-import io.atomix.raft.protocol.LeadershipTransferInitiateResponse;
-import io.atomix.raft.protocol.LeaveResponse;
-import io.atomix.raft.protocol.PollResponse;
-import io.atomix.raft.protocol.ProtocolVersionHandler;
-import io.atomix.raft.protocol.RaftRequest;
-import io.atomix.raft.protocol.RaftResponse;
+import io.atomix.raft.protocol.*;
 import io.atomix.raft.protocol.RaftResponse.Builder;
 import io.atomix.raft.protocol.RaftResponse.Status;
-import io.atomix.raft.protocol.RaftServerProtocol;
-import io.atomix.raft.protocol.ReconfigureResponse;
-import io.atomix.raft.protocol.TimeoutNowResponse;
-import io.atomix.raft.protocol.TransferResponse;
-import io.atomix.raft.protocol.VoteResponse;
-import io.atomix.raft.roles.ActiveRole;
-import io.atomix.raft.roles.CandidateRole;
-import io.atomix.raft.roles.FollowerRole;
-import io.atomix.raft.roles.InactiveRole;
-import io.atomix.raft.roles.LeaderRole;
-import io.atomix.raft.roles.PassiveRole;
-import io.atomix.raft.roles.PromotableRole;
-import io.atomix.raft.roles.RaftRole;
+import io.atomix.raft.roles.*;
 import io.atomix.raft.storage.RaftStorage;
 import io.atomix.raft.storage.StorageException;
 import io.atomix.raft.storage.log.RaftLog;
@@ -78,8 +45,6 @@ import io.atomix.raft.utils.StateUtil;
 import io.atomix.raft.zeebe.EntryValidator;
 import io.atomix.utils.concurrent.ThreadContext;
 import io.camunda.cluster.PartitionId;
-import io.camunda.zeebe.journal.CheckedJournalException.FlushException;
-import io.camunda.zeebe.journal.SegmentInfo;
 import io.camunda.zeebe.snapshots.PersistedSnapshot;
 import io.camunda.zeebe.snapshots.ReceivableSnapshotStore;
 import io.camunda.zeebe.util.CheckedRunnable;
@@ -89,6 +54,10 @@ import io.camunda.zeebe.util.health.HealthMonitorable;
 import io.camunda.zeebe.util.health.HealthReport;
 import io.camunda.zeebe.util.logging.ThrottledLogger;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
@@ -99,9 +68,9 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
+
+import static com.google.common.base.Preconditions.*;
+import static io.atomix.utils.concurrent.Threads.namedThreads;
 
 /**
  * Manages the volatile state and state transitions of a Raft server.

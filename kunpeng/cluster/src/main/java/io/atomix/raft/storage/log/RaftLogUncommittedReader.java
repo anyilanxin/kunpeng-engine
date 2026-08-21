@@ -16,11 +16,12 @@
  */
 package io.atomix.raft.storage.log;
 
+import io.atomix.raft.journal.JournalReader;
+import io.atomix.raft.journal.JournalRecord;
 import io.atomix.raft.storage.log.entry.RaftLogEntry;
 import io.atomix.raft.storage.serializer.RaftEntrySBESerializer;
 import io.atomix.raft.storage.serializer.RaftEntrySerializer;
-import io.camunda.zeebe.journal.JournalReader;
-import io.camunda.zeebe.journal.JournalRecord;
+
 import java.util.NoSuchElementException;
 
 /**

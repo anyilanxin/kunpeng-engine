@@ -15,7 +15,7 @@
  */
 package io.atomix.raft.protocol;
 
-import io.camunda.zeebe.journal.JournalRecord;
+import io.atomix.raft.journal.JournalRecord;
 import org.agrona.DirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
 

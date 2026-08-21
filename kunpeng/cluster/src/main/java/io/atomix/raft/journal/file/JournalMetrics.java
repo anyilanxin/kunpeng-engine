@@ -13,9 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.camunda.zeebe.journal.file;
-
-import static io.camunda.zeebe.journal.file.JournalMetricsDoc.*;
+package io.atomix.raft.journal.file;
 
 import io.camunda.zeebe.util.CloseableSilently;
 import io.camunda.zeebe.util.micrometer.MicrometerUtil;
@@ -23,7 +21,10 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+
 import java.util.concurrent.atomic.AtomicLong;
+
+import static io.atomix.raft.journal.file.JournalMetricsDoc.*;
 
 final class JournalMetrics {
   private final Timer segmentCreationTime;

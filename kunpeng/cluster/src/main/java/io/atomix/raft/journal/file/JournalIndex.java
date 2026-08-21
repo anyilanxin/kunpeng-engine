@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.camunda.zeebe.journal.file;
+package io.atomix.raft.journal.file;
 
-import io.camunda.zeebe.journal.JournalRecord;
+import io.atomix.raft.journal.JournalRecord;
 import org.jspecify.annotations.Nullable;
 
 /**

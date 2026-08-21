@@ -16,23 +16,24 @@
  */
 package io.atomix.raft.storage.log;
 
-import static io.camunda.zeebe.journal.file.SegmentedJournal.ASQN_IGNORE;
-
+import io.atomix.raft.journal.CheckedJournalException.FlushException;
+import io.atomix.raft.journal.Journal;
+import io.atomix.raft.journal.JournalRecord;
+import io.atomix.raft.journal.SegmentInfo;
 import io.atomix.raft.protocol.PersistedRaftRecord;
 import io.atomix.raft.protocol.ReplicatableJournalRecord;
 import io.atomix.raft.storage.log.RaftLogFlusher.Factory;
 import io.atomix.raft.storage.log.entry.RaftLogEntry;
 import io.atomix.raft.storage.serializer.RaftEntrySBESerializer;
 import io.atomix.raft.storage.serializer.RaftEntrySerializer;
-import io.camunda.zeebe.journal.CheckedJournalException.FlushException;
-import io.camunda.zeebe.journal.Journal;
-import io.camunda.zeebe.journal.JournalRecord;
-import io.camunda.zeebe.journal.SegmentInfo;
 import io.micrometer.core.instrument.MeterRegistry;
-import java.io.Closeable;
 import org.agrona.CloseHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.Closeable;
+
+import static io.atomix.raft.journal.file.SegmentedJournal.ASQN_IGNORE;
 
 /** Raft log. */
 public final class RaftLog implements Closeable {

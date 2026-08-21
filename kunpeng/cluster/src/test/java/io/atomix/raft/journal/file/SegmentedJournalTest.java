@@ -13,43 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.camunda.zeebe.journal.file;
+package io.atomix.raft.journal.file;
 
-import static io.camunda.zeebe.journal.file.SegmentedJournal.ASQN_IGNORE;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
-
-import io.camunda.zeebe.journal.JournalException.InvalidAsqn;
-import io.camunda.zeebe.journal.JournalException.OutOfDiskSpace;
-import io.camunda.zeebe.journal.JournalReader;
-import io.camunda.zeebe.journal.JournalRecord;
-import io.camunda.zeebe.journal.record.PersistedJournalRecord;
-import io.camunda.zeebe.journal.record.RecordData;
-import io.camunda.zeebe.journal.util.MockJournalMetastore;
-import io.camunda.zeebe.journal.util.PosixPathAssert;
+import io.atomix.raft.journal.JournalException.InvalidAsqn;
+import io.atomix.raft.journal.JournalException.OutOfDiskSpace;
+import io.atomix.raft.journal.JournalReader;
+import io.atomix.raft.journal.JournalRecord;
+import io.atomix.raft.journal.record.PersistedJournalRecord;
+import io.atomix.raft.journal.record.RecordData;
+import io.atomix.raft.journal.util.MockJournalMetastore;
+import io.atomix.raft.journal.util.PosixPathAssert;
 import io.camunda.zeebe.util.CheckedRunnable;
 import io.camunda.zeebe.util.buffer.BufferUtil;
 import io.camunda.zeebe.util.buffer.DirectBufferWriter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import java.io.File;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.SortedMap;
-import java.util.TreeMap;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Phaser;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.agrona.CloseHelper;
 import org.agrona.concurrent.UnsafeBuffer;
 import org.assertj.core.api.Assertions;
@@ -60,6 +38,23 @@ import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mockito;
+
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.time.Duration;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Phaser;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static io.atomix.raft.journal.file.SegmentedJournal.ASQN_IGNORE;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
 
 @SuppressWarnings("resource")
 class SegmentedJournalTest {

@@ -14,13 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.camunda.zeebe.journal.file;
+package io.atomix.raft.journal.file;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import org.jspecify.annotations.Nullable;
 
 import java.io.File;
 import java.nio.file.Path;
-import org.jspecify.annotations.Nullable;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Segment file utility.

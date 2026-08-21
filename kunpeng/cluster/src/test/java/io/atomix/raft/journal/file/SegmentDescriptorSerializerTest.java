@@ -14,13 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.camunda.zeebe.journal.file;
+package io.atomix.raft.journal.file;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.camunda.zeebe.journal.CorruptedJournalException;
-import io.camunda.zeebe.journal.util.ChecksumGenerator;
+import io.atomix.raft.journal.CorruptedJournalException;
+import io.atomix.raft.journal.util.ChecksumGenerator;
 import java.nio.ByteBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
 import org.junit.jupiter.api.Test;

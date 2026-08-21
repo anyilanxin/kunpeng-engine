@@ -14,12 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.camunda.zeebe.journal.file;
+package io.atomix.raft.journal.file;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.camunda.zeebe.journal.JournalRecord;
-import io.camunda.zeebe.journal.util.TestJournalRecord;
+import io.atomix.raft.journal.JournalRecord;
+import io.atomix.raft.journal.util.TestJournalRecord;
 import org.junit.jupiter.api.Test;
 
 /** Sparse journal index test. */

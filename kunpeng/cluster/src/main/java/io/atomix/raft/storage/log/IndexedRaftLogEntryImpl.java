@@ -16,11 +16,11 @@
  */
 package io.atomix.raft.storage.log;
 
+import io.atomix.raft.journal.JournalRecord;
 import io.atomix.raft.protocol.PersistedRaftRecord;
 import io.atomix.raft.protocol.ReplicatableJournalRecord;
 import io.atomix.raft.storage.log.entry.ApplicationEntry;
 import io.atomix.raft.storage.log.entry.RaftEntry;
-import io.camunda.zeebe.journal.JournalRecord;
 
 /** Indexed journal entry. */
 record IndexedRaftLogEntryImpl(long index, long term, RaftEntry entry, JournalRecord record)

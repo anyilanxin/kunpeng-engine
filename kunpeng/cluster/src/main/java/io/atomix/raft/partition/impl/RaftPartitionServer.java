@@ -16,23 +16,16 @@
  */
 package io.atomix.raft.partition.impl;
 
-import static io.atomix.raft.partition.RaftPartition.PARTITION_NAME_FORMAT;
-
 import io.atomix.cluster.ClusterMembershipService;
 import io.atomix.cluster.MemberId;
 import io.atomix.cluster.messaging.ClusterCommunicationService;
 import io.atomix.primitive.partition.Partition;
 import io.atomix.primitive.partition.PartitionMetadata;
-import io.atomix.raft.LeadershipTransferCoordinatorCheck;
-import io.atomix.raft.LeadershipTransferWriteBarrier;
-import io.atomix.raft.RaftApplicationEntryCommittedPositionListener;
-import io.atomix.raft.RaftCommitListener;
-import io.atomix.raft.RaftRoleChangeListener;
-import io.atomix.raft.RaftServer;
+import io.atomix.raft.*;
 import io.atomix.raft.RaftServer.Role;
-import io.atomix.raft.SnapshotReplicationListener;
 import io.atomix.raft.cluster.RaftMember;
 import io.atomix.raft.cluster.RaftMember.Type;
+import io.atomix.raft.journal.SegmentInfo;
 import io.atomix.raft.metrics.RaftRequestMetrics;
 import io.atomix.raft.metrics.RaftStartupMetrics;
 import io.atomix.raft.partition.RaftElectionConfig;
@@ -45,7 +38,6 @@ import io.atomix.raft.storage.log.RaftLogReader;
 import io.atomix.raft.zeebe.ZeebeLogAppender;
 import io.atomix.utils.serializer.Serializer;
 import io.camunda.cluster.PhysicalTenantIds;
-import io.camunda.zeebe.journal.SegmentInfo;
 import io.camunda.zeebe.snapshots.PersistedSnapshotStore;
 import io.camunda.zeebe.snapshots.ReceivableSnapshotStore;
 import io.camunda.zeebe.util.FileUtil;
@@ -54,6 +46,9 @@ import io.camunda.zeebe.util.health.FailureListener;
 import io.camunda.zeebe.util.health.HealthMonitorable;
 import io.camunda.zeebe.util.health.HealthReport;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Collection;
@@ -61,8 +56,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import static io.atomix.raft.partition.RaftPartition.PARTITION_NAME_FORMAT;
 
 /** {@link Partition} server. */
 public class RaftPartitionServer implements HealthMonitorable {

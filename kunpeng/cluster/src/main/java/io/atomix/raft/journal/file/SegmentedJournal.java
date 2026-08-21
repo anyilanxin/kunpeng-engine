@@ -14,30 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.camunda.zeebe.journal.file;
-
-import static com.google.common.base.Preconditions.checkState;
-import static java.util.Objects.requireNonNull;
+package io.atomix.raft.journal.file;
 
 import com.google.common.collect.Sets;
-import io.camunda.zeebe.journal.CheckedJournalException.FlushException;
-import io.camunda.zeebe.journal.Journal;
-import io.camunda.zeebe.journal.JournalMetaStore;
-import io.camunda.zeebe.journal.JournalReader;
-import io.camunda.zeebe.journal.JournalRecord;
-import io.camunda.zeebe.journal.SegmentInfo;
+import io.atomix.raft.journal.CheckedJournalException.FlushException;
+import io.atomix.raft.journal.*;
 import io.camunda.zeebe.util.VisibleForTesting;
 import io.camunda.zeebe.util.buffer.BufferWriter;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Collection;
 import java.util.Objects;
 import java.util.OptionalLong;
 import java.util.SortedMap;
 import java.util.concurrent.locks.StampedLock;
 import java.util.stream.Collectors;
-import org.jspecify.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import static com.google.common.base.Preconditions.checkState;
 
 /** A file based journal. The journal is split into multiple segments files. */
 public final class SegmentedJournal implements Journal {

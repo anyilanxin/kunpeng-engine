@@ -14,32 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.camunda.zeebe.journal.file;
+package io.atomix.raft.journal.file;
 
-import static io.camunda.zeebe.journal.file.SegmentedJournal.ASQN_IGNORE;
-
-import io.camunda.zeebe.journal.CorruptedJournalException;
-import io.camunda.zeebe.journal.JournalException.InvalidAsqn;
-import io.camunda.zeebe.journal.JournalException.InvalidChecksum;
-import io.camunda.zeebe.journal.JournalException.InvalidIndex;
-import io.camunda.zeebe.journal.JournalException.SegmentFull;
-import io.camunda.zeebe.journal.JournalRecord;
-import io.camunda.zeebe.journal.record.JournalRecordReaderUtil;
-import io.camunda.zeebe.journal.record.JournalRecordSerializer;
-import io.camunda.zeebe.journal.record.PersistedJournalRecord;
-import io.camunda.zeebe.journal.record.RecordMetadata;
-import io.camunda.zeebe.journal.record.SBESerializer;
-import io.camunda.zeebe.journal.util.ChecksumGenerator;
+import io.atomix.raft.journal.CorruptedJournalException;
+import io.atomix.raft.journal.JournalException.InvalidAsqn;
+import io.atomix.raft.journal.JournalException.InvalidChecksum;
+import io.atomix.raft.journal.JournalException.InvalidIndex;
+import io.atomix.raft.journal.JournalException.SegmentFull;
+import io.atomix.raft.journal.JournalRecord;
+import io.atomix.raft.journal.record.*;
+import io.atomix.raft.journal.util.ChecksumGenerator;
 import io.camunda.zeebe.util.Either;
 import io.camunda.zeebe.util.buffer.BufferWriter;
 import io.camunda.zeebe.util.buffer.DirectBufferWriter;
-import java.nio.BufferUnderflowException;
-import java.nio.MappedByteBuffer;
 import org.agrona.MutableDirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.nio.BufferUnderflowException;
+import java.nio.MappedByteBuffer;
+
+import static io.atomix.raft.journal.file.SegmentedJournal.ASQN_IGNORE;
 
 /** Segment writer. */
 final class SegmentWriter {

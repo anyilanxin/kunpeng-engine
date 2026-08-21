@@ -48,7 +48,7 @@ import io.atomix.raft.zeebe.EntryValidator.ValidationResult;
 import io.atomix.raft.zeebe.ZeebeLogAppender.AppendListener;
 import io.atomix.raft.zeebe.util.TestAppender;
 import io.atomix.utils.concurrent.SingleThreadContext;
-import io.camunda.zeebe.journal.JournalException;
+import io.atomix.raft.journal.JournalException;
 import io.camunda.zeebe.scheduler.future.CompletableActorFuture;
 import io.camunda.zeebe.snapshots.ReceivableSnapshotStore;
 import io.micrometer.core.instrument.MeterRegistry;

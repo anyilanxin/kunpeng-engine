@@ -16,25 +16,26 @@
  */
 package io.atomix.raft.storage.system;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
-
 import com.google.common.base.Preconditions;
 import io.atomix.cluster.MemberId;
+import io.atomix.raft.journal.JournalMetaStore;
 import io.atomix.raft.metrics.MetaStoreMetrics;
 import io.atomix.raft.storage.RaftStorage;
 import io.atomix.raft.storage.StorageException;
 import io.atomix.raft.storage.serializer.MetaEncoder;
 import io.atomix.raft.storage.serializer.MetaStoreSerializer;
-import io.camunda.zeebe.journal.JournalMetaStore;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import static com.google.common.base.MoreObjects.toStringHelper;
 
 /**
  * Manages persistence of server configurations.

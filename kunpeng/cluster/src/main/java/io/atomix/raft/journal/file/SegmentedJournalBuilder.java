@@ -14,16 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.camunda.zeebe.journal.file;
+package io.atomix.raft.journal.file;
+
+import io.atomix.raft.journal.JournalMetaStore;
+import io.micrometer.core.instrument.MeterRegistry;
+import org.jspecify.annotations.Nullable;
+
+import java.io.File;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Objects.requireNonNull;
-
-import io.camunda.zeebe.journal.JournalMetaStore;
-import io.micrometer.core.instrument.MeterRegistry;
-import java.io.File;
-import org.jspecify.annotations.Nullable;
 
 /** Raft log builder. */
 @SuppressWarnings("UnusedReturnValue")
