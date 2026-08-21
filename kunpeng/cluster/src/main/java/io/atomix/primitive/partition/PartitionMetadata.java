@@ -1,7 +1,7 @@
 /*
  * Copyright 2015-present Open Networking Foundation
- * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 package io.atomix.primitive.partition;
 
 import io.atomix.cluster.MemberId;
-import io.camunda.cluster.PartitionId;
+import io.atomix.cluster.PartitionId;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;

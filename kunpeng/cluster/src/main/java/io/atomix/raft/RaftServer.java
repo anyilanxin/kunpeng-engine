@@ -1,7 +1,7 @@
 /*
  * Copyright 2015-present Open Networking Foundation
- * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,12 +32,13 @@ import io.atomix.raft.partition.RaftPartitionConfig;
 import io.atomix.raft.protocol.RaftServerProtocol;
 import io.atomix.raft.storage.RaftStorage;
 import io.atomix.raft.storage.log.RaftLog;
+import io.atomix.raft.snapshot.SnapshotProvider;
 import io.atomix.raft.zeebe.EntryValidator;
 import io.atomix.raft.zeebe.EntryValidator.NoopEntryValidator;
 import io.atomix.utils.Builder;
-import io.camunda.cluster.PartitionId;
-import io.camunda.cluster.PhysicalTenantIds;
-import io.camunda.zeebe.util.health.FailureListener;
+import io.atomix.cluster.PartitionId;
+import io.atomix.cluster.PhysicalTenantIds;
+import io.atomix.utils.health.FailureListener;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -196,6 +197,17 @@ public interface RaftServer {
    */
   void removeRoleChangeListener(RaftRoleChangeListener listener);
 
+  /**
+   * 注册业务三态状态监听器（角色变更与快照复制事件聚合为 LEADER/FOLLOWER/INACTIVE 视图），
+   * 注册后立即回调一次当前状态。
+   *
+   * @param listener 业务状态监听器
+   */
+  void addRoleStateListener(RaftRoleStateListener listener);
+
+  /** 注销业务三态状态监听器。 */
+  void removeRoleStateListener(RaftRoleStateListener listener);
+
   /** Adds a failure listener */
   void addFailureListener(FailureListener listener);
 
@@ -352,6 +364,16 @@ public interface RaftServer {
   CompletableFuture<Void> reconfigurePriority(int newPriority);
 
   /**
+   * Transfers leadership to the given member (jraft's {@code transferLeadershipTo} equivalent).
+   * The leader pauses writes, catches the target up to the frozen log head and promotes it with
+   * TimeoutNow. The future completes once the target is observed as leader.
+   *
+   * @param newLeader the member that should take over leadership
+   * @return a future to be completed once the leadership has been transferred
+   */
+  CompletableFuture<Void> transferLeadership(MemberId newLeader);
+
+  /**
    * Ensures that all records written to the log are flushed to disk
    *
    * @return a future which will be completed after the log is flushed to disk
@@ -471,6 +493,18 @@ public interface RaftServer {
     protected PartitionId partitionId =
         new PartitionId(PhysicalTenantIds.DEFAULT_PHYSICAL_TENANT_ID, 0);
     protected MeterRegistry meterRegistry;
+    protected SnapshotProvider snapshotProvider;
+
+    /**
+     * 注入业务快照拍摄 SPI：快照模块编排拍摄与提交，内容由该实现生成。
+     *
+     * @param snapshotProvider 业务拍摄实现
+     * @return The Raft server builder.
+     */
+    public Builder withSnapshotProvider(final SnapshotProvider snapshotProvider) {
+      this.snapshotProvider = checkNotNull(snapshotProvider, "snapshotProvider cannot be null");
+      return this;
+    }
 
     protected Builder(final MemberId localMemberId) {
       this.localMemberId = checkNotNull(localMemberId, "localMemberId cannot be null");

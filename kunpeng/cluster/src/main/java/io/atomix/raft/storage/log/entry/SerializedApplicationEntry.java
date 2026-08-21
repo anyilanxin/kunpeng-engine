@@ -16,25 +16,56 @@
  */
 package io.atomix.raft.storage.log.entry;
 
+import com.anyilanxin.kunpeng.structpack.buffer.BufferWriter;
+import com.anyilanxin.kunpeng.structpack.buffer.DirectBufferWriter;
 import io.atomix.raft.storage.serializer.RaftEntrySerializer;
 import io.atomix.raft.storage.serializer.RaftEntrySerializer.SerializedBufferWriterAdapter;
-import io.camunda.zeebe.util.buffer.BufferWriter;
-import io.camunda.zeebe.util.buffer.DirectBufferWriter;
 import java.nio.ByteBuffer;
+import java.util.Objects;
 import org.agrona.DirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
 
 /**
- * Stores an entry that contains serialized records, ordered by their position; the lowestPosition
- * and highestPosition metadata allow for fast binary search over a collection of entries to quickly
- * find a particular record.
+ * 已序列化的 {@link ApplicationEntry}：负载按条目位置有序存放，lowestPosition 与
+ * highestPosition 元数据支持在条目集合上做二分查找，快速定位某个记录。
  */
-public record SerializedApplicationEntry(
-    long lowestPosition, long highestPosition, DirectBuffer data) implements ApplicationEntry {
+public final class SerializedApplicationEntry implements ApplicationEntry {
 
+  /** 本条目覆盖的最小条目位置。 */
+  private final long lowestPosition;
+
+  /** 本条目覆盖的最大条目位置。 */
+  private final long highestPosition;
+
+  /** 已序列化的负载数据。 */
+  private final DirectBuffer data;
+
+  public SerializedApplicationEntry(
+      final long lowestPosition, final long highestPosition, final DirectBuffer data) {
+    this.lowestPosition = lowestPosition;
+    this.highestPosition = highestPosition;
+    this.data = data;
+  }
+
+  /** 便捷构造：把 {@link ByteBuffer} 包装为 {@link UnsafeBuffer} 作为负载。 */
   public SerializedApplicationEntry(
       final long lowestPosition, final long highestPosition, final ByteBuffer data) {
     this(lowestPosition, highestPosition, new UnsafeBuffer(data));
+  }
+
+  @Override
+  public long lowestPosition() {
+    return lowestPosition;
+  }
+
+  @Override
+  public long highestPosition() {
+    return highestPosition;
+  }
+
+  /** 已序列化的负载数据。 */
+  public DirectBuffer data() {
+    return data;
   }
 
   @Override
@@ -46,6 +77,36 @@ public record SerializedApplicationEntry(
 
   @Override
   public BufferWriter dataWriter() {
-    return new DirectBufferWriter(data);
+    return new DirectBufferWriter().wrap(data);
+  }
+
+  @Override
+  public boolean equals(final Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof SerializedApplicationEntry)) {
+      return false;
+    }
+    final SerializedApplicationEntry that = (SerializedApplicationEntry) o;
+    return lowestPosition == that.lowestPosition
+        && highestPosition == that.highestPosition
+        && Objects.equals(data, that.data);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(lowestPosition, highestPosition, data);
+  }
+
+  @Override
+  public String toString() {
+    return "SerializedApplicationEntry{lowestPosition="
+        + lowestPosition
+        + ", highestPosition="
+        + highestPosition
+        + ", capacity="
+        + (data == null ? 0 : data.capacity())
+        + '}';
   }
 }

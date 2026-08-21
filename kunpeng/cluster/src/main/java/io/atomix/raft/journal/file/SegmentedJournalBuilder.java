@@ -1,7 +1,7 @@
 /*
  * Copyright 2017-present Open Networking Foundation
- * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,15 +17,14 @@
  */
 package io.atomix.raft.journal.file;
 
-import io.atomix.raft.journal.JournalMetaStore;
-import io.micrometer.core.instrument.MeterRegistry;
-import org.jspecify.annotations.Nullable;
-
-import java.io.File;
-
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Objects.requireNonNull;
+
+import io.atomix.raft.journal.JournalMetaStore;
+import io.micrometer.core.instrument.MeterRegistry;
+import java.io.File;
+import org.jspecify.annotations.Nullable;
 
 /** Raft log builder. */
 @SuppressWarnings("UnusedReturnValue")
@@ -171,7 +170,7 @@ public class SegmentedJournalBuilder {
 
   public SegmentedJournal build() {
     final var journalIndex = new SparseJournalIndex(journalIndexDensity);
-    final var journalMetrics = new JournalMetrics(meterRegistry);
+    final var journalMetrics = new JournalMetrics(name, meterRegistry);
     final var segmentLoader = new SegmentLoader(freeDiskSpace, journalMetrics, segmentAllocator);
     final var metaStore = requireNonNull(journalMetaStore, "must specify a journal meta store");
     final var segmentsManager =

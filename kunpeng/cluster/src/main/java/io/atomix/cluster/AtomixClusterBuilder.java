@@ -1,7 +1,7 @@
 /*
  * Copyright 2018-present Open Networking Foundation
- * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import io.atomix.cluster.protocol.GroupMembershipProtocol;
 import io.atomix.utils.Builder;
 import io.atomix.utils.Version;
 import io.atomix.utils.net.Address;
-import io.camunda.zeebe.util.VersionUtil;
+import com.anyilanxin.kunpeng.utils.VersionUtil;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.io.File;
 import java.util.Collection;

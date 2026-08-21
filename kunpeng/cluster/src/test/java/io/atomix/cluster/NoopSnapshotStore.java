@@ -1,39 +1,31 @@
 /*
- * Copyright 2018-present Open Networking Foundation
  * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
- * Copyright © 2020 camunda services GmbH (info@camunda.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package io.atomix.cluster;
 
-import io.camunda.zeebe.scheduler.future.ActorFuture;
-import io.camunda.zeebe.scheduler.future.CompletableActorFuture;
-import io.camunda.zeebe.snapshots.PersistedSnapshot;
-import io.camunda.zeebe.snapshots.PersistedSnapshotListener;
-import io.camunda.zeebe.snapshots.ReceivableSnapshotStore;
-import io.camunda.zeebe.snapshots.ReceivedSnapshot;
-import java.nio.file.Path;
+import io.atomix.raft.snapshot.PersistedSnapshot;
+import io.atomix.raft.snapshot.PersistedSnapshotListener;
+import io.atomix.raft.snapshot.ReceivableSnapshotStore;
+import io.atomix.raft.snapshot.ReceivedSnapshot;
+import io.atomix.raft.snapshot.TransientSnapshot;
 import java.util.Optional;
-import java.util.Set;
-import java.util.function.BiConsumer;
+import java.util.concurrent.CompletableFuture;
 
+/** A no-op snapshot store which never holds any snapshots. */
 public class NoopSnapshotStore implements ReceivableSnapshotStore {
-
-  @Override
-  public boolean hasSnapshotId(final String id) {
-    return false;
-  }
 
   @Override
   public Optional<PersistedSnapshot> getLatestSnapshot() {
@@ -41,66 +33,65 @@ public class NoopSnapshotStore implements ReceivableSnapshotStore {
   }
 
   @Override
-  public ActorFuture<Set<PersistedSnapshot>> getAvailableSnapshots() {
-    return null;
-  }
-
-  @Override
-  public ActorFuture<Long> getCompactionBound() {
-    return null;
-  }
-
-  @Override
-  public ActorFuture<Void> abortPendingSnapshots() {
-    return null;
-  }
-
-  @Override
-  public ActorFuture<Boolean> addSnapshotListener(final PersistedSnapshotListener listener) {
-    return null;
-  }
-
-  @Override
-  public ActorFuture<Boolean> removeSnapshotListener(final PersistedSnapshotListener listener) {
-    return null;
-  }
-
-  @Override
-  public long getCurrentSnapshotIndex() {
-    return 0;
-  }
-
-  @Override
-  public ActorFuture<Void> delete() {
-    return null;
-  }
-
-  @Override
-  public Path getPath() {
-    return null;
-  }
-
-  @Override
-  public ActorFuture<ReceivedSnapshot> newReceivedSnapshot(final String snapshotId) {
-    return null;
-  }
-
-  @Override
-  public void close() {}
-
-  @Override
-  public Optional<PersistedSnapshot> getBootstrapSnapshot() {
+  public Optional<PersistedSnapshot> getSnapshotAt(final long index) {
     return Optional.empty();
   }
 
   @Override
-  public ActorFuture<PersistedSnapshot> copyForBootstrap(
-      final PersistedSnapshot persistedSnapshot, final BiConsumer<Path, Path> copySnapshot) {
-    return CompletableActorFuture.completed(null);
+  public CompletableFuture<Long> getCompactionBound() {
+    return CompletableFuture.completedFuture(0L);
   }
 
   @Override
-  public ActorFuture<Void> deleteBootstrapSnapshots() {
-    return CompletableActorFuture.completed();
+  public int getMaxSnapshotCount() {
+    return 0;
+  }
+
+  @Override
+  public CompletableFuture<Integer> deleteSnapshotsFrom(final long index) {
+    return CompletableFuture.completedFuture(0);
+  }
+
+  @Override
+  public CompletableFuture<Void> abortPendingSnapshots() {
+    return CompletableFuture.completedFuture(null);
+  }
+
+  @Override
+  public Optional<TransientSnapshot> newTransientSnapshot(
+      final long index,
+      final long term,
+      final String nodeId,
+      final int replicationThreads,
+      final io.atomix.raft.snapshot.SnapshotType type,
+      final int version,
+      final java.util.Map<String, String> businessInfo) {
+    return Optional.of(
+        new TransientSnapshot() {
+          @Override
+          public CompletableFuture<Void> take(final java.util.function.Consumer<java.nio.file.Path> writer) {
+            return CompletableFuture.completedFuture(null);
+          }
+
+          @Override
+          public CompletableFuture<PersistedSnapshot> commit() {
+            return CompletableFuture.completedFuture(null);
+          }
+
+          @Override
+          public void abort() {}
+        });
+  }
+
+  @Override
+  public void addSnapshotListener(final PersistedSnapshotListener listener) {}
+
+  @Override
+  public void removeSnapshotListener(final PersistedSnapshotListener listener) {}
+
+  @Override
+  public CompletableFuture<ReceivedSnapshot> newReceivedSnapshot(final String snapshotId) {
+    return CompletableFuture.failedFuture(
+        new UnsupportedOperationException("NoopSnapshotStore cannot receive snapshots"));
   }
 }

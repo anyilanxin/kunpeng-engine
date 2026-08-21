@@ -16,24 +16,36 @@
  */
 package io.atomix.raft.storage.serializer;
 
+import static io.atomix.raft.storage.serializer.SerializerUtil.getRaftMemberType;
+import static io.atomix.raft.storage.serializer.SerializerUtil.getSBEType;
+
 import io.atomix.cluster.MemberId;
 import io.atomix.raft.cluster.RaftMember;
 import io.atomix.raft.cluster.impl.DefaultRaftMember;
-import io.atomix.raft.journal.file.RecordDataEncoder;
-import io.atomix.raft.storage.log.entry.*;
-import io.atomix.raft.storage.serializer.ConfigurationEntryDecoder.NewMembersDecoder;
-import io.atomix.raft.storage.serializer.ConfigurationEntryDecoder.OldMembersDecoder;
-import io.camunda.zeebe.util.SbeUtil;
-import org.agrona.DirectBuffer;
-import org.agrona.MutableDirectBuffer;
-import org.agrona.concurrent.UnsafeBuffer;
-
+import io.atomix.raft.storage.log.entry.ApplicationEntry;
+import io.atomix.raft.storage.log.entry.ConfigurationEntry;
+import io.atomix.raft.storage.log.entry.InitialEntry;
+import io.atomix.raft.storage.log.entry.RaftLogEntry;
+import io.atomix.raft.storage.log.entry.SerializedApplicationEntry;
+import com.anyilanxin.kunpeng.cluster.raft.journal.file.RecordDataEncoder;
+import com.anyilanxin.kunpeng.cluster.raft.storage.serializer.ApplicationEntryDecoder;
+import com.anyilanxin.kunpeng.cluster.raft.storage.serializer.EntryType;
+import com.anyilanxin.kunpeng.cluster.raft.storage.serializer.ApplicationEntryEncoder;
+import com.anyilanxin.kunpeng.cluster.raft.storage.serializer.ConfigurationEntryDecoder;
+import com.anyilanxin.kunpeng.cluster.raft.storage.serializer.ConfigurationEntryDecoder.NewMembersDecoder;
+import com.anyilanxin.kunpeng.cluster.raft.storage.serializer.ConfigurationEntryDecoder.OldMembersDecoder;
+import com.anyilanxin.kunpeng.cluster.raft.storage.serializer.ConfigurationEntryEncoder;
+import com.anyilanxin.kunpeng.cluster.raft.storage.serializer.MessageHeaderDecoder;
+import com.anyilanxin.kunpeng.cluster.raft.storage.serializer.MessageHeaderEncoder;
+import com.anyilanxin.kunpeng.cluster.raft.storage.serializer.RaftLogEntryDecoder;
+import com.anyilanxin.kunpeng.cluster.raft.storage.serializer.RaftLogEntryEncoder;
+import io.atomix.utils.sbe.SbeUtil;
 import java.nio.ByteOrder;
 import java.time.Instant;
 import java.util.ArrayList;
-
-import static io.atomix.raft.storage.serializer.SerializerUtil.getRaftMemberType;
-import static io.atomix.raft.storage.serializer.SerializerUtil.getSBEType;
+import org.agrona.DirectBuffer;
+import org.agrona.MutableDirectBuffer;
+import org.agrona.concurrent.UnsafeBuffer;
 
 public class RaftEntrySBESerializer implements RaftEntrySerializer {
   final MessageHeaderEncoder headerEncoder = new MessageHeaderEncoder();
@@ -98,11 +110,14 @@ public class RaftEntrySBESerializer implements RaftEntrySerializer {
         .version(applicationEntryEncoder.sbeSchemaVersion());
     applicationEntryEncoder.wrap(buffer, offset + entryOffset + headerEncoder.encodedLength());
     applicationEntryEncoder.lowestAsqn(entry.lowestPosition()).highestAsqn(entry.highestPosition());
-    SbeUtil.writeNested(
-        entry.dataWriter(),
-        ApplicationEntryEncoder.applicationDataHeaderLength(),
-        applicationEntryEncoder,
-        ByteOrder.LITTLE_ENDIAN);
+    final int newLimit =
+        SbeUtil.writeNested(
+            entry.dataWriter(),
+            ApplicationEntryEncoder.applicationDataHeaderLength(),
+            buffer,
+            applicationEntryEncoder.limit(),
+            ByteOrder.LITTLE_ENDIAN);
+    applicationEntryEncoder.limit(newLimit);
 
     return entryOffset + headerEncoder.encodedLength() + applicationEntryEncoder.encodedLength();
   }

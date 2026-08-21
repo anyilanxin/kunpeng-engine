@@ -1,110 +1,113 @@
 /*
- * Copyright © 2017 camunda services GmbH (info@camunda.com)
  * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package io.atomix.raft.journal.file;
 
-import io.camunda.zeebe.util.CloseableSilently;
-import io.camunda.zeebe.util.micrometer.MicrometerUtil;
+import static io.atomix.raft.journal.file.JournalMetricsDoc.APPEND_DATA_RATE;
+import static io.atomix.raft.journal.file.JournalMetricsDoc.APPEND_LATENCY;
+import static io.atomix.raft.journal.file.JournalMetricsDoc.APPEND_RATE;
+import static io.atomix.raft.journal.file.JournalMetricsDoc.JOURNAL_FLUSH_TIME;
+import static io.atomix.raft.journal.file.JournalMetricsDoc.JOURNAL_OPEN_DURATION;
+import static io.atomix.raft.journal.file.JournalMetricsDoc.JOURNAL_SIZE_BYTES;
+import static io.atomix.raft.journal.file.JournalMetricsDoc.SEEK_LATENCY;
+import static io.atomix.raft.journal.file.JournalMetricsDoc.SEGMENT_ALLOCATION_TIME;
+import static io.atomix.raft.journal.file.JournalMetricsDoc.SEGMENT_COUNT;
+import static io.atomix.raft.journal.file.JournalMetricsDoc.SEGMENT_CREATION_TIME;
+import static io.atomix.raft.journal.file.JournalMetricsDoc.SEGMENT_FLUSH_TIME;
+import static io.atomix.raft.journal.file.JournalMetricsDoc.SEGMENT_TRUNCATE_TIME;
+
+import com.anyilanxin.kunpeng.utils.micrometer.Micrometers;
+import com.anyilanxin.kunpeng.utils.micrometer.SettableGauge;
+import io.atomix.raft.metrics.RaftMetrics;
 import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 
-import java.util.concurrent.atomic.AtomicLong;
+/** 分段 journal（预写日志）相关指标采集，按分区名打标签 */
+final class JournalMetrics extends RaftMetrics {
 
-import static io.atomix.raft.journal.file.JournalMetricsDoc.*;
+  /** 计时采样句柄，关闭时停止计时 */
+  interface Measurement extends AutoCloseable {
+    @Override
+    void close();
+  }
 
-final class JournalMetrics {
+  private final MeterRegistry registry;
   private final Timer segmentCreationTime;
   private final Timer segmentTruncateTime;
   private final Timer segmentFlushTime;
   private final Timer journalFlushTime;
-  private final AtomicLong segmentCount;
-  private final AtomicLong journalOpenDuration;
   private final Timer segmentAllocationTime;
   private final Timer appendLatency;
+  private final Timer seekLatency;
   private final Counter appendRate;
   private final Counter appendDataRate;
-  private final Timer seekLatency;
-  private final MeterRegistry registry;
+  private final SettableGauge segmentCount;
+  private final SettableGauge journalOpenDuration;
+  private final SettableGauge journalSizeBytes;
 
-  JournalMetrics(final MeterRegistry registry) {
+  JournalMetrics(final String journalName, final MeterRegistry registry) {
+    super(journalName);
     this.registry = registry;
     segmentCreationTime = makeTimer(SEGMENT_CREATION_TIME);
     segmentTruncateTime = makeTimer(SEGMENT_TRUNCATE_TIME);
     segmentFlushTime = makeTimer(SEGMENT_FLUSH_TIME);
     journalFlushTime = makeTimer(JOURNAL_FLUSH_TIME);
-
-    segmentCount = new AtomicLong(0L);
-    Gauge.builder(SEGMENT_COUNT.getName(), segmentCount::get)
-        .description(SEGMENT_COUNT.getDescription())
-        .register(registry);
-
-    journalOpenDuration = new AtomicLong(0L);
-    Gauge.builder(JOURNAL_OPERATION_DURATION.getName(), journalOpenDuration::get)
-        .description(JOURNAL_OPERATION_DURATION.getDescription())
-        .register(registry);
-
     segmentAllocationTime = makeTimer(SEGMENT_ALLOCATION_TIME);
     appendLatency = makeTimer(APPEND_LATENCY);
-    appendRate =
-        Counter.builder(APPEND_RATE.getName())
-            .description(APPEND_RATE.getDescription())
-            .register(registry);
-    appendDataRate =
-        Counter.builder(APPEND_DATA_RATE.getName())
-            .description(APPEND_DATA_RATE.getDescription())
-            .register(registry);
     seekLatency = makeTimer(SEEK_LATENCY);
+    appendRate = Micrometers.counter(APPEND_RATE, registry, partitionTags());
+    appendDataRate = Micrometers.counter(APPEND_DATA_RATE, registry, partitionTags());
+    segmentCount = Micrometers.gauge(SEGMENT_COUNT, registry, partitionTags());
+    journalOpenDuration = Micrometers.gauge(JOURNAL_OPEN_DURATION, registry, partitionTags());
+    journalSizeBytes = Micrometers.gauge(JOURNAL_SIZE_BYTES, registry, partitionTags());
   }
 
   void observeSegmentCreation(final Runnable segmentCreation) {
     segmentCreationTime.record(segmentCreation);
   }
 
-  CloseableSilently observeSegmentFlush() {
-    return MicrometerUtil.timer(segmentFlushTime, Timer.start(registry));
-  }
-
-  CloseableSilently observeJournalFlush() {
-    return MicrometerUtil.timer(journalFlushTime, Timer.start(registry));
-  }
-
   void observeSegmentTruncation(final Runnable segmentTruncation) {
     segmentTruncateTime.record(segmentTruncation);
   }
 
-  CloseableSilently startJournalOpenDurationTimer() {
-    final var now = registry.config().clock().monotonicTime();
-    return () -> {
-      final var end = registry.config().clock().monotonicTime();
-      journalOpenDuration.set(end - now);
-    };
+  Measurement observeSegmentFlush() {
+    return start(segmentFlushTime);
   }
 
-  void incSegmentCount() {
-    segmentCount.incrementAndGet();
+  Measurement observeJournalFlush() {
+    return start(journalFlushTime);
   }
 
-  void decSegmentCount() {
-    segmentCount.decrementAndGet();
+  Measurement observeSegmentAllocation() {
+    return start(segmentAllocationTime);
   }
 
-  CloseableSilently observeSegmentAllocation() {
-    return MicrometerUtil.timer(segmentAllocationTime, Timer.start(registry));
+  Measurement observeAppendLatency() {
+    return start(appendLatency);
+  }
+
+  Measurement observeSeekLatency() {
+    return start(seekLatency);
+  }
+
+  /** 打开耗时的采样句柄，关闭时把纳秒差存入 gauge */
+  Measurement startJournalOpenDurationTimer() {
+    final long start = registry.config().clock().monotonicTime();
+    return () -> journalOpenDuration.set(registry.config().clock().monotonicTime() - start);
   }
 
   void observeAppend(final long appendedBytes) {
@@ -112,18 +115,29 @@ final class JournalMetrics {
     appendDataRate.increment(appendedBytes / 1024f);
   }
 
-  CloseableSilently observeAppendLatency() {
-    return MicrometerUtil.timer(appendLatency, Timer.start(registry));
+  void incSegmentCount() {
+    segmentCount.inc();
   }
 
-  CloseableSilently observeSeekLatency() {
-    return MicrometerUtil.timer(seekLatency, Timer.start(registry));
+  void decSegmentCount() {
+    segmentCount.dec();
+  }
+
+  /** 记录 journal 磁盘占用（segment 文件总字节数） */
+  void setJournalSize(final long bytes) {
+    journalSizeBytes.set(bytes);
+  }
+
+  private Measurement start(final Timer timer) {
+    final Timer.Sample sample = Timer.start(registry);
+    return () -> sample.stop(timer);
   }
 
   private Timer makeTimer(final JournalMetricsDoc meter) {
-    return Timer.builder(meter.getName())
-        .description(meter.getDescription())
-        .serviceLevelObjectives(meter.getTimerSLOs())
-        .register(registry);
+    return Micrometers.timer(meter, registry, partitionTags());
+  }
+
+  private String[] partitionTags() {
+    return new String[] {"partitionGroupName", partitionGroupName, "partition", partition};
   }
 }

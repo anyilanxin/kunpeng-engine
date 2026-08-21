@@ -17,6 +17,7 @@
 package com.anyilanxin.kunpeng.utils.micrometer;
 
 import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 
@@ -55,5 +56,15 @@ public final class Micrometers {
   public static SettableGauge gauge(
       final CustomMeterDocumentation doc, final MeterRegistry registry, final String... tags) {
     return new SettableGauge(doc.getName(), doc.getDescription(), registry, tags);
+  }
+
+  /** 构建带文档 SLO 桶的分布摘要 */
+  public static DistributionSummary summary(
+      final CustomMeterDocumentation doc, final MeterRegistry registry, final String... tags) {
+    return DistributionSummary.builder(doc.getName())
+        .description(doc.getDescription())
+        .tags(tags)
+        .serviceLevelObjectives(doc.getDistributionSLOs())
+        .register(registry);
   }
 }

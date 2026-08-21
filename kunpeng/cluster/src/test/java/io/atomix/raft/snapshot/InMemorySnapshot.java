@@ -1,65 +1,50 @@
 /*
- * Copyright © 2020 camunda services GmbH (info@camunda.com)
  * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package io.atomix.raft.snapshot;
 
-import io.camunda.zeebe.scheduler.future.ActorFuture;
-import io.camunda.zeebe.scheduler.future.CompletableActorFuture;
-import io.camunda.zeebe.snapshots.ImmutableChecksumsSFV;
-import io.camunda.zeebe.snapshots.PersistedSnapshot;
-import io.camunda.zeebe.snapshots.ReceivedSnapshot;
-import io.camunda.zeebe.snapshots.SnapshotChunk;
-import io.camunda.zeebe.snapshots.SnapshotChunkReader;
-import io.camunda.zeebe.snapshots.SnapshotId;
-import io.camunda.zeebe.snapshots.SnapshotMetadata;
-import io.camunda.zeebe.snapshots.SnapshotReservation;
-import io.camunda.zeebe.snapshots.impl.FileBasedSnapshotMetadata;
-import io.camunda.zeebe.snapshots.impl.FileBasedSnapshotStoreImpl;
-import io.camunda.zeebe.snapshots.impl.SfvChecksumImpl;
-import io.camunda.zeebe.util.StringUtil;
-import io.camunda.zeebe.util.buffer.BufferUtil;
+import com.anyilanxin.kunpeng.utils.CloseableSilently;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.NavigableMap;
 import java.util.Objects;
-import java.util.Set;
 import java.util.TreeMap;
-import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.zip.CRC32C;
-import java.util.zip.Checksum;
-import org.agrona.concurrent.UnsafeBuffer;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+/** In-memory test double implementing both {@link PersistedSnapshot} and {@link ReceivedSnapshot}. */
 public final class InMemorySnapshot implements PersistedSnapshot, ReceivedSnapshot {
 
   private final TestSnapshotStore testSnapshotStore;
-  private final long index;
-  private final long term;
+  private final SnapshotMetadata metadata;
   private final String id;
-  private final NavigableMap<String, String> chunks = new TreeMap<>();
-  private final Checksum checksumCalculator = new CRC32C();
-  private final Set<SnapshotReservation> reservations = new CopyOnWriteArraySet<>();
-
-  private ImmutableChecksumsSFV checksum;
+  private final NavigableMap<String, byte[]> chunks = new TreeMap<>();
+  private final AtomicBoolean reserved = new AtomicBoolean(false);
 
   InMemorySnapshot(final TestSnapshotStore testSnapshotStore, final String snapshotId) {
     this.testSnapshotStore = testSnapshotStore;
     id = snapshotId;
     final var parts = snapshotId.split("-");
-    index = Long.parseLong(parts[0]);
-    term = Long.parseLong(parts[1]);
+    metadata =
+        SnapshotMetadata.of(
+            Long.parseLong(parts[0]),
+            Long.parseLong(parts[1]),
+            parts[2],
+            SnapshotType.REGULAR);
   }
 
   InMemorySnapshot(
@@ -68,9 +53,8 @@ public final class InMemorySnapshot implements PersistedSnapshot, ReceivedSnapsh
       final long term,
       final int nodeId) {
     this.testSnapshotStore = testSnapshotStore;
-    this.index = index;
-    this.term = term;
     id = String.format("%d-%d-%d", index, term, nodeId);
+    metadata = SnapshotMetadata.of(index, term, String.valueOf(nodeId), SnapshotType.REGULAR);
   }
 
   public static InMemorySnapshot newPersistedSnapshot(
@@ -91,19 +75,19 @@ public final class InMemorySnapshot implements PersistedSnapshot, ReceivedSnapsh
       final boolean withMetadata) {
     final var snapshot = new InMemorySnapshot(snapshotStore, index, term, nodeId);
     for (int i = 0; i < size; i++) {
-      snapshot.writeChunks("chunk-" + i, ("test-" + i).getBytes());
+      snapshot.writeChunks("chunk-" + i, ("test-" + i).getBytes(StandardCharsets.UTF_8));
     }
     if (withMetadata) {
-      // Mirror a real snapshot, which ships a metadata chunk excluded from the total size in bytes.
-      snapshot.writeChunks(FileBasedSnapshotStoreImpl.METADATA_FILE_NAME, "metadata".getBytes());
+      // Mirror a real snapshot, which ships a metadata chunk excluded from the total size in
+      // bytes.
+      snapshot.writeChunks("metadata", "metadata".getBytes(StandardCharsets.UTF_8));
     }
     snapshot.persist();
     return snapshot;
   }
 
   void writeChunks(final String id, final byte[] chunk) {
-    chunks.put(id, StringUtil.fromBytes(chunk));
-    checksumCalculator.update(chunk);
+    chunks.put(id, chunk);
   }
 
   @Override
@@ -112,19 +96,24 @@ public final class InMemorySnapshot implements PersistedSnapshot, ReceivedSnapsh
   }
 
   @Override
-  public long getIndex() {
-    return index;
+  public SnapshotMetadata getMetadata() {
+    return metadata;
   }
 
   @Override
-  public long getTerm() {
-    return term;
+  public long size() {
+    return chunks.values().stream().mapToLong(chunk -> chunk.length).sum();
+  }
+
+  @Override
+  public Path getPath() {
+    return null;
   }
 
   @Override
   public SnapshotChunkReader newChunkReader() {
     return new SnapshotChunkReader() {
-      private NavigableMap<String, String> iterator = chunks;
+      private NavigableMap<String, byte[]> iterator = chunks;
 
       @Override
       public void reset() {
@@ -133,7 +122,7 @@ public final class InMemorySnapshot implements PersistedSnapshot, ReceivedSnapsh
 
       @Override
       public void seek(final ByteBuffer id) {
-        final var chunkId = BufferUtil.bufferAsString(new UnsafeBuffer(id));
+        final var chunkId = StandardCharsets.UTF_8.decode(id).toString();
         iterator = chunks.tailMap(chunkId, true);
       }
 
@@ -142,7 +131,7 @@ public final class InMemorySnapshot implements PersistedSnapshot, ReceivedSnapsh
         if (!hasNext()) {
           return null;
         }
-        return ByteBuffer.wrap(iterator.firstEntry().getKey().getBytes());
+        return ByteBuffer.wrap(iterator.firstEntry().getKey().getBytes(StandardCharsets.UTF_8));
       }
 
       @Override
@@ -163,124 +152,36 @@ public final class InMemorySnapshot implements PersistedSnapshot, ReceivedSnapsh
         final var nextEntry = iterator.firstEntry();
         iterator = chunks.tailMap(nextEntry.getKey(), false);
         return new TestSnapshotChunkImpl(
-            id, nextEntry.getKey(), StringUtil.getBytes(nextEntry.getValue()), chunks.size());
+            id, nextEntry.getKey(), nextEntry.getValue(), chunks.size());
       }
     };
   }
 
   @Override
-  public Path getPath() {
-    return null;
+  public void delete() {
+    if (testSnapshotStore != null) {
+      testSnapshotStore.removeSnapshot(this);
+    }
   }
 
   @Override
-  public Path getChecksumPath() {
-    return null;
+  public boolean isCorrupt() {
+    return false;
   }
 
-  @Override
-  public long getCompactionBound() {
-    return index;
+  /** 预留该快照以防被存储删除，返回的句柄关闭时解除预留。 */
+  public CloseableSilently reserve() {
+    reserved.set(true);
+    return () -> reserved.set(false);
   }
 
-  @Override
-  public String getId() {
-    return id;
-  }
-
-  @Override
-  public ImmutableChecksumsSFV getChecksums() {
-    return checksum;
-  }
-
-  @Override
-  public SnapshotMetadata getMetadata() {
-    return new FileBasedSnapshotMetadata(1, 0L, 0L, 0L, 0L, false, 0L);
-  }
-
-  @Override
-  public long getTotalSizeInBytes() {
-    return chunks.entrySet().stream()
-        .mapToLong(entry -> StringUtil.getBytes(entry.getValue()).length)
-        .sum();
-  }
-
-  @Override
-  public ActorFuture<SnapshotReservation> reserve() {
-    final var reservation =
-        new SnapshotReservation() {
-          @Override
-          public ActorFuture<Void> release() {
-            reservations.remove(this);
-            return CompletableActorFuture.completed(null);
-          }
-        };
-
-    reservations.add(reservation);
-    return CompletableActorFuture.completed(reservation);
-  }
-
-  @Override
-  public boolean isReserved() {
-    return !reservations.isEmpty();
-  }
-
-  @Override
-  public long index() {
-    return index;
-  }
-
-  @Override
-  public ActorFuture<Void> apply(final SnapshotChunk chunk) {
-    chunks.put(chunk.getChunkName(), StringUtil.fromBytes(chunk.getContent()));
-    return CompletableActorFuture.completed(null);
-  }
-
-  @Override
-  public ActorFuture<Void> abort() {
-    return CompletableActorFuture.completed(null);
-  }
-
-  @Override
-  public ActorFuture<PersistedSnapshot> persist() {
-    testSnapshotStore.newSnapshot(this);
-    checksum = new SfvChecksumImpl();
-    return CompletableActorFuture.completed(this);
-  }
-
-  @Override
-  public SnapshotId snapshotId() {
-    return new SnapshotId() {
-      @Override
-      public long getIndex() {
-        return index;
-      }
-
-      @Override
-      public long getTerm() {
-        return term;
-      }
-
-      @Override
-      public long getProcessedPosition() {
-        return 0;
-      }
-
-      @Override
-      public long getExportedPosition() {
-        return 0;
-      }
-
-      @Override
-      public String getSnapshotIdAsString() {
-        return id;
-      }
-    };
+  boolean isReserved() {
+    return reserved.get();
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(index, term, id);
+    return Objects.hash(getIndex(), getTerm(), id);
   }
 
   @Override
@@ -292,8 +193,8 @@ public final class InMemorySnapshot implements PersistedSnapshot, ReceivedSnapsh
       return false;
     }
     final InMemorySnapshot that = (InMemorySnapshot) o;
-    return index == that.index
-        && term == that.term
+    return getIndex() == that.getIndex()
+        && getTerm() == that.getTerm()
         && id.equals(that.id)
         && chunks.equals(that.chunks);
   }
@@ -302,14 +203,35 @@ public final class InMemorySnapshot implements PersistedSnapshot, ReceivedSnapsh
   public String toString() {
     return "InMemorySnapshot{"
         + "index="
-        + index
+        + getIndex()
         + ", term="
-        + term
+        + getTerm()
         + ", id='"
         + id
-        + '\''
-        + ", checksum="
-        + checksum
-        + '}';
+        + "'}";
   }
+
+  // ReceivedSnapshot
+
+  @Override
+  public SnapshotMetadata snapshotId() {
+    return metadata;
+  }
+
+  @Override
+  public CompletableFuture<Void> apply(final SnapshotChunk chunk) {
+    chunks.put(chunk.getChunkName(), chunk.getContent());
+    return CompletableFuture.completedFuture(null);
+  }
+
+  @Override
+  public CompletableFuture<PersistedSnapshot> persist() {
+    if (testSnapshotStore != null) {
+      testSnapshotStore.newSnapshot(this);
+    }
+    return CompletableFuture.completedFuture(this);
+  }
+
+  @Override
+  public void abort() {}
 }

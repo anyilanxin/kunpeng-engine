@@ -1,19 +1,18 @@
 /*
- * Copyright 2017-present Open Networking Foundation
  * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
- * Copyright © 2020 camunda services GmbH (info@camunda.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package io.atomix.cluster.messaging.impl;
 
@@ -22,15 +21,12 @@ import static org.assertj.core.api.Assertions.*;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.sun.security.auth.module.UnixSystem;
-import io.atomix.cluster.messaging.HeartbeatRequestDecoder;
-import io.atomix.cluster.messaging.HeartbeatResponseDecoder;
 import io.atomix.cluster.messaging.ManagedMessagingService;
-import io.atomix.cluster.messaging.MessageHeaderDecoder;
 import io.atomix.cluster.messaging.MessagingConfig;
 import io.atomix.cluster.messaging.MessagingException;
 import io.atomix.utils.net.Address;
-import io.camunda.zeebe.test.util.junit.RegressionTest;
-import io.camunda.zeebe.test.util.socket.SocketUtil;
+import io.atomix.test.util.RegressionTest;
+import io.atomix.test.util.SocketUtil;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.netty.channel.ChannelHandlerContext;
@@ -61,7 +57,6 @@ import java.util.function.BiFunction;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.agrona.collections.MutableReference;
-import org.agrona.concurrent.UnsafeBuffer;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AutoClose;
 import org.junit.jupiter.api.BeforeEach;
@@ -159,17 +154,14 @@ final class NettyMessagingServiceTest {
         serverNetty.start().join();
 
         // Track heartbeats from client - capture both empty and payload heartbeats
-        final var heartbeatFromClient = new MutableReference<HeartbeatRequestDecoder>(null);
+        final var heartbeatFromClient = new MutableReference<HeartbeatWireFormat.Ping>(null);
         final var emptyHeartbeatFromClientReceived = new AtomicBoolean(false);
         serverNetty.registerHandler(
             HeartbeatHandler.HEARTBEAT_SUBJECT,
             (BiConsumer<Address, byte[]>)
                 (addr, payload) -> {
                   if (payload != null && payload.length > 0) {
-                    heartbeatFromClient.set(
-                        new HeartbeatRequestDecoder()
-                            .wrapAndApplyHeader(
-                                new UnsafeBuffer(payload), 0, new MessageHeaderDecoder()));
+                    heartbeatFromClient.set(HeartbeatWireFormat.decodePing(payload));
                   } else {
                     emptyHeartbeatFromClientReceived.set(true);
                   }
@@ -178,7 +170,7 @@ final class NettyMessagingServiceTest {
 
         // when - connect and intercept heartbeat responses from server
         final var heartbeatResponseFromServer =
-            new MutableReference<HeartbeatResponseDecoder>(null);
+            new MutableReference<HeartbeatWireFormat.Pong>(null);
         final var emptyHeartbeatResponseFromServerReceived = new AtomicBoolean(false);
         final var clientChannel =
             clientNetty.getChannelPool().getChannel(serverNetty.address(), "test").join();
@@ -198,9 +190,7 @@ final class NettyMessagingServiceTest {
                 if (msg instanceof final ProtocolReply reply) {
                   if (reply.payload() != null && reply.payload().length > 0) {
                     heartbeatResponseFromServer.set(
-                        new HeartbeatResponseDecoder()
-                            .wrapAndApplyHeader(
-                                new UnsafeBuffer(reply.payload()), 0, new MessageHeaderDecoder()));
+                        HeartbeatWireFormat.decodePong(reply.payload()));
                   } else {
                     emptyHeartbeatResponseFromServerReceived.set(true);
                   }
@@ -222,10 +212,11 @@ final class NettyMessagingServiceTest {
                     // Both support payloads: verify payloads with timestamps
                     assertThat(heartbeatFromClient.get())
                         .isNotNull()
-                        .satisfies(heartbeat -> assertThat(heartbeat.sentAt()).isPositive());
+                        .satisfies(heartbeat -> assertThat(heartbeat.sentAtMillis()).isPositive());
                     assertThat(heartbeatResponseFromServer.get())
                         .isNotNull()
-                        .satisfies(heartbeat -> assertThat(heartbeat.receivedAt()).isPositive());
+                        .satisfies(
+                            heartbeat -> assertThat(heartbeat.receivedAtMillis()).isPositive());
                   } else {
                     // At least one party doesn't support payloads: negotiation requires both to
                     // agree, so empty heartbeats are exchanged

@@ -20,7 +20,7 @@ import io.atomix.raft.storage.log.entry.ApplicationEntry;
 import io.atomix.raft.storage.log.entry.ConfigurationEntry;
 import io.atomix.raft.storage.log.entry.InitialEntry;
 import io.atomix.raft.storage.log.entry.RaftLogEntry;
-import io.camunda.zeebe.util.buffer.BufferWriter;
+import com.anyilanxin.kunpeng.structpack.buffer.BufferWriter;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 import org.agrona.DirectBuffer;
@@ -106,8 +106,8 @@ public interface RaftEntrySerializer {
     }
 
     @Override
-    public int write(final MutableDirectBuffer writeBuffer, final int offset) {
-      return writeFunction.apply(writeBuffer, offset);
+    public void write(final MutableDirectBuffer writeBuffer, final int offset) {
+      writeFunction.apply(writeBuffer, offset);
     }
   }
 }

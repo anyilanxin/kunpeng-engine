@@ -1,7 +1,7 @@
 /*
  * Copyright 2016-present Open Networking Foundation
- * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,39 +17,53 @@
  */
 package io.atomix.raft.partition.impl;
 
+import static io.atomix.raft.partition.RaftPartition.PARTITION_NAME_FORMAT;
+
 import io.atomix.cluster.ClusterMembershipService;
 import io.atomix.cluster.MemberId;
+import io.atomix.cluster.PartitionId;
 import io.atomix.cluster.messaging.ClusterCommunicationService;
 import io.atomix.primitive.partition.Partition;
 import io.atomix.primitive.partition.PartitionMetadata;
-import io.atomix.raft.*;
+import io.atomix.raft.LeadershipTransferCoordinatorCheck;
+import io.atomix.raft.LeadershipTransferWriteBarrier;
+import io.atomix.raft.RaftApplicationEntryCommittedPositionListener;
+import io.atomix.raft.RaftCommitListener;
+import io.atomix.raft.RaftRoleChangeListener;
+import io.atomix.raft.RaftRoleStateListener;
+import io.atomix.raft.RaftServer;
 import io.atomix.raft.RaftServer.Role;
+import io.atomix.raft.SnapshotReplicationListener;
 import io.atomix.raft.cluster.RaftMember;
 import io.atomix.raft.cluster.RaftMember.Type;
-import io.atomix.raft.journal.SegmentInfo;
 import io.atomix.raft.metrics.RaftRequestMetrics;
 import io.atomix.raft.metrics.RaftStartupMetrics;
 import io.atomix.raft.partition.RaftElectionConfig;
 import io.atomix.raft.partition.RaftPartition;
 import io.atomix.raft.partition.RaftPartitionConfig;
+import io.atomix.raft.partition.RaftPartitionTopology;
 import io.atomix.raft.partition.RaftStorageConfig;
 import io.atomix.raft.roles.RaftRole;
 import io.atomix.raft.storage.RaftStorage;
 import io.atomix.raft.storage.log.RaftLogReader;
 import io.atomix.raft.zeebe.ZeebeLogAppender;
 import io.atomix.utils.serializer.Serializer;
-import io.camunda.cluster.PhysicalTenantIds;
-import io.camunda.zeebe.snapshots.PersistedSnapshotStore;
-import io.camunda.zeebe.snapshots.ReceivableSnapshotStore;
-import io.camunda.zeebe.util.FileUtil;
-import io.camunda.zeebe.util.VisibleForTesting;
-import io.camunda.zeebe.util.health.FailureListener;
-import io.camunda.zeebe.util.health.HealthMonitorable;
-import io.camunda.zeebe.util.health.HealthReport;
+import io.atomix.cluster.PhysicalTenantIds;
+import io.atomix.raft.journal.SegmentInfo;
+import io.atomix.raft.snapshot.PersistedSnapshot;
+import io.atomix.raft.snapshot.PersistedSnapshotStore;
+import io.atomix.raft.snapshot.ReceivableSnapshotStore;
+import io.atomix.raft.snapshot.SnapshotException;
+import io.atomix.raft.snapshot.SnapshotProvider;
+import io.atomix.raft.snapshot.SnapshotType;
+import io.atomix.raft.snapshot.transfer.SnapshotTransferClient;
+import io.atomix.raft.snapshot.transfer.SnapshotTransferServer;
+import com.anyilanxin.kunpeng.utils.FileUtil;
+import io.atomix.utils.VisibleForTesting;
+import io.atomix.utils.health.FailureListener;
+import io.atomix.utils.health.HealthMonitorable;
+import io.atomix.utils.health.HealthReport;
 import io.micrometer.core.instrument.MeterRegistry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Collection;
@@ -57,8 +71,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-
-import static io.atomix.raft.partition.RaftPartition.PARTITION_NAME_FORMAT;
+import java.util.concurrent.CompletionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** {@link Partition} server. */
 public class RaftPartitionServer implements HealthMonitorable {
@@ -77,6 +92,9 @@ public class RaftPartitionServer implements HealthMonitorable {
   private final ReceivableSnapshotStore persistedSnapshotStore;
   private final RaftServer server;
   private final MeterRegistry meterRegistry;
+  private final SnapshotTransferServer snapshotTransferServer;
+  /** 业务快照拍摄 SPI，由分区构造链传入；为 null 时不支持业务快照拍摄。 */
+  private final SnapshotProvider snapshotProvider;
 
   public RaftPartitionServer(
       final RaftPartition partition,
@@ -86,7 +104,8 @@ public class RaftPartitionServer implements HealthMonitorable {
       final ClusterCommunicationService clusterCommunicator,
       final ReceivableSnapshotStore persistedSnapshotStore,
       final PartitionMetadata partitionMetadata,
-      final MeterRegistry meterRegistry) {
+      final MeterRegistry meterRegistry,
+      final SnapshotProvider snapshotProvider) {
     this.partition = partition;
     this.config = config;
     this.localMemberId = localMemberId;
@@ -95,10 +114,34 @@ public class RaftPartitionServer implements HealthMonitorable {
     this.meterRegistry = meterRegistry;
     this.persistedSnapshotStore = persistedSnapshotStore;
     this.partitionMetadata = partitionMetadata;
+    this.snapshotProvider =
+        snapshotProvider != null ? snapshotProvider : new SnapshotProvider.NoopSnapshotProvider();
     requestTimeout = config.getRequestTimeout();
     snapshotRequestTimeout = config.getSnapshotRequestTimeout();
     configurationChangeTimeout = config.getConfigurationChangeTimeout();
     server = buildServer(meterRegistry);
+    snapshotTransferServer =
+        new SnapshotTransferServer(clusterCommunicator, partition.name(), persistedSnapshotStore);
+    // 角色变更时：把分区角色写入本节点成员属性广播集群；成为 leader 才注册快照传输服务，离开即卸载
+    server.addRoleChangeListener(this::onPartitionRoleChanged);
+  }
+
+  private void onPartitionRoleChanged(final RaftServer.Role newRole, final long term) {
+    publishPartitionRole(newRole);
+    if (newRole == RaftServer.Role.LEADER) {
+      snapshotTransferServer.register();
+      LOGGER.info("Leader registered snapshot transfer handler for partition {}", partition.id());
+    } else {
+      snapshotTransferServer.unregister();
+    }
+  }
+
+  /** 把本分区的最新角色写入本地成员属性，经成员元数据传播机制广播到集群。 */
+  private void publishPartitionRole(final RaftServer.Role role) {
+    membershipService
+        .getLocalMember()
+        .properties()
+        .setProperty(RaftPartitionTopology.rolePropertyKey(partition.name()), role.name());
   }
 
   public CompletableFuture<RaftPartitionServer> bootstrap() {
@@ -156,7 +199,72 @@ public class RaftPartitionServer implements HealthMonitorable {
   }
 
   public CompletableFuture<Void> stop() {
+    snapshotTransferServer.unregister();
     return server != null ? server.shutdown() : CompletableFuture.completedFuture(null);
+  }
+
+  /**
+   * 从源分区的当前 leader 节点拉取指定类型的最新快照（引导/合并快照跨分区传输入口），接收并提交到
+   * 本分区的快照存储。目标节点经集群分区拓扑（成员属性广播）自动解析，调用方只需给出源分区 ID。
+   */
+  public CompletableFuture<PersistedSnapshot> pullSnapshot(
+      final PartitionId sourcePartitionId, final SnapshotType type, final int preferredChunkSize) {
+    final var topology = new RaftPartitionTopology(membershipService);
+    final var leader = topology.leaderOf(sourcePartitionId);
+    if (leader.isEmpty()) {
+      return CompletableFuture.failedFuture(
+          new SnapshotException(
+              "No known leader for partition " + sourcePartitionId + "; cannot pull snapshot"));
+    }
+    final var client = new SnapshotTransferClient(clusterCommunicator, snapshotRequestTimeout);
+    return client.pull(
+        RaftPartitionTopology.partitionNameOf(sourcePartitionId),
+        leader.get().id(),
+        type,
+        preferredChunkSize,
+        persistedSnapshotStore);
+  }
+
+  /**
+   * 拍摄本节点当前已提交位点的常规快照：内容生成委托给业务注入的 {@link SnapshotProvider}，
+   * 快照模块负责临时目录、manifest（含业务元数据）、逐文件校验与原子提交。
+   */
+  public CompletableFuture<PersistedSnapshot> takeSnapshot() {
+    final var provider = snapshotProvider;
+    final var context = server.getContext();
+
+    final long commitIndex = context.getCommitIndex();
+    final long term = context.getTerm();
+    final var transientSnapshot =
+        persistedSnapshotStore
+            .newTransientSnapshot(
+                commitIndex,
+                term,
+                localMemberId.id(),
+                1,
+                SnapshotType.REGULAR,
+                provider.snapshotVersion(),
+                provider.businessInfo())
+            .orElse(null);
+    if (transientSnapshot == null) {
+      return CompletableFuture.failedFuture(
+          new SnapshotException(
+              "A newer snapshot already exists in partition "
+                  + partition.id()
+                  + "; skipped taking snapshot at index "
+                  + commitIndex));
+    }
+
+    return transientSnapshot
+        .take(
+            directory -> {
+              try {
+                provider.takeSnapshot(directory);
+              } catch (final Exception e) {
+                throw new CompletionException(e);
+              }
+            })
+        .thenCompose(ignored -> transientSnapshot.commit());
   }
 
   public CompletableFuture<Void> reconfigurePriority(final int newPriority) {
@@ -193,6 +301,16 @@ public class RaftPartitionServer implements HealthMonitorable {
 
   public void addRoleChangeListener(final RaftRoleChangeListener listener) {
     server.addRoleChangeListener(listener);
+  }
+
+  /** 注册业务三态状态监听器（LEADER/FOLLOWER/INACTIVE 聚合视图），注册后立即回调当前状态。 */
+  public void addRoleStateListener(final RaftRoleStateListener listener) {
+    server.addRoleStateListener(listener);
+  }
+
+  /** 注销业务三态状态监听器。 */
+  public void removeRoleStateListener(final RaftRoleStateListener listener) {
+    server.removeRoleStateListener(listener);
   }
 
   @Override
@@ -274,7 +392,7 @@ public class RaftPartitionServer implements HealthMonitorable {
   /** Deletes the server. */
   public void delete() {
     try {
-      FileUtil.deleteFolderIfExists(partition.dataDirectory().toPath());
+      FileUtil.deleteTreeIfExists(partition.dataDirectory().toPath());
     } catch (final IOException e) {
       LOGGER.error("Failed to delete partition: {}", partition, e);
     }

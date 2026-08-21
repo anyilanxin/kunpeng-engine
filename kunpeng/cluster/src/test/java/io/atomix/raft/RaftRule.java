@@ -1,18 +1,18 @@
 /*
- * Copyright © 2020 camunda services GmbH (info@camunda.com)
  * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package io.atomix.raft;
 
@@ -44,11 +44,9 @@ import io.atomix.raft.zeebe.ZeebeLogAppender;
 import io.atomix.utils.AbstractIdentifier;
 import io.atomix.utils.concurrent.SingleThreadContext;
 import io.atomix.utils.concurrent.ThreadContext;
-import io.camunda.zeebe.snapshots.PersistedSnapshot;
-import io.camunda.zeebe.snapshots.PersistedSnapshotStore;
-import io.camunda.zeebe.util.FileUtil;
-import io.camunda.zeebe.util.buffer.BufferUtil;
-import io.camunda.zeebe.util.micrometer.MicrometerUtil;
+import io.atomix.raft.snapshot.PersistedSnapshot;
+import io.atomix.raft.snapshot.PersistedSnapshotStore;
+import com.anyilanxin.kunpeng.utils.FileUtil;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.io.File;
@@ -170,7 +168,7 @@ public final class RaftRule extends ExternalResource {
     memberLog = null;
     position = 0;
     directory = null;
-    MicrometerUtil.close(meterRegistry);
+    meterRegistry.close();
   }
 
   /**
@@ -424,7 +422,7 @@ public final class RaftRule extends ExternalResource {
     return servers.values().stream()
             .map(RaftServer::getContext)
             .map(RaftContext::getPersistedSnapshotStore)
-            .map(PersistedSnapshotStore::getCurrentSnapshotIndex)
+            .map(store -> store.getLatestSnapshot().map(PersistedSnapshot::getIndex).orElse(0L))
             .filter(idx -> idx == index)
             .count()
         == servers.values().size();
@@ -651,14 +649,14 @@ public final class RaftRule extends ExternalResource {
     boolean deletedMemberDirectory = false;
     while (!deletedMemberDirectory) {
       try {
-        FileUtil.deleteFolderIfExists(memberDirectory.toPath());
+        FileUtil.deleteTreeIfExists(memberDirectory.toPath());
         deletedMemberDirectory = true;
       } catch (final DirectoryNotEmptyException e) {
         // Deleting the directory may fail when journal asynchronously creates the next segment. In
         // that case we can simply retry deleting the directory. Eventually we should be able to
         // delete during a timeframe where the journal is not concurrently creating the next
         // segment.
-        FileUtil.deleteFolderIfExists(memberDirectory.toPath());
+        FileUtil.deleteTreeIfExists(memberDirectory.toPath());
       }
     }
 
@@ -753,7 +751,7 @@ public final class RaftRule extends ExternalResource {
       if (entry.entry() instanceof final SerializedApplicationEntry app) {
         copiedEntry =
             new SerializedApplicationEntry(
-                app.lowestPosition(), app.highestPosition(), BufferUtil.cloneBuffer(app.data()));
+                app.lowestPosition(), app.highestPosition(), new org.agrona.concurrent.UnsafeBuffer(java.util.Arrays.copyOf(app.data().byteArray(), app.data().capacity())));
       } else {
         copiedEntry = entry.entry();
       }

@@ -1,7 +1,7 @@
 /*
  * Copyright 2014-present Open Networking Foundation
- * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,10 @@
  */
 package io.atomix.cluster;
 
-import static io.camunda.zeebe.util.MemberIdUtil.validateZone;
+import static io.atomix.utils.MemberIdUtil.validateZone;
 
-import io.camunda.zeebe.util.MemberIdUtil;
-import io.camunda.zeebe.util.VisibleForTesting;
+import io.atomix.utils.MemberIdUtil;
+import io.atomix.utils.VisibleForTesting;
 import java.util.Comparator;
 import java.util.Objects;
 import java.util.UUID;

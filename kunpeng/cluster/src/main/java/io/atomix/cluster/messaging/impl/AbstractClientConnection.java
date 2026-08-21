@@ -1,7 +1,7 @@
 /*
  * Copyright 2018-present Open Networking Foundation
- * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ package io.atomix.cluster.messaging.impl;
 
 import com.google.common.collect.Maps;
 import io.atomix.cluster.messaging.MessagingException;
-import io.camunda.zeebe.util.StringUtil;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -63,7 +62,7 @@ abstract class AbstractClientConnection implements ClientConnection {
     String exceptionMessage = null;
 
     if (payload != null && payload.length > 0) {
-      exceptionMessage = StringUtil.fromBytes(payload);
+      exceptionMessage = new String(payload, java.nio.charset.StandardCharsets.UTF_8);
     }
     return exceptionMessage;
   }

@@ -1,7 +1,7 @@
 /*
  * Copyright 2017-present Open Networking Foundation
- * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,13 @@
  */
 package io.atomix.raft.journal.file;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.Sets;
 import io.atomix.raft.journal.CheckedJournalException.FlushException;
 import io.atomix.raft.journal.JournalException;
-import io.camunda.zeebe.util.FileUtil;
-import org.agrona.IoUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.anyilanxin.kunpeng.utils.FileUtil;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
@@ -32,9 +31,9 @@ import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
 import java.nio.file.Files;
 import java.util.Set;
-
-import static com.google.common.base.MoreObjects.toStringHelper;
-import static com.google.common.base.Preconditions.checkState;
+import org.agrona.IoUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Log segment.

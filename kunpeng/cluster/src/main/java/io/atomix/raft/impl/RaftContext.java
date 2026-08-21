@@ -1,7 +1,7 @@
 /*
  * Copyright 2015-present Open Networking Foundation
- * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,14 @@
  */
 package io.atomix.raft.impl;
 
+import com.anyilanxin.kunpeng.utils.exception.UnrecoverableException;
+import com.anyilanxin.kunpeng.utils.jar.CheckedRunnable;
 import io.atomix.cluster.ClusterMembershipService;
 import io.atomix.cluster.MemberId;
+import io.atomix.cluster.PartitionId;
 import io.atomix.raft.*;
 import io.atomix.raft.RaftException.CommitFailedException;
+import io.atomix.raft.RaftException.ProtocolException;
 import io.atomix.raft.RaftServer.Role;
 import io.atomix.raft.cluster.RaftMember;
 import io.atomix.raft.cluster.RaftMember.Type;
@@ -38,22 +42,21 @@ import io.atomix.raft.protocol.*;
 import io.atomix.raft.protocol.RaftResponse.Builder;
 import io.atomix.raft.protocol.RaftResponse.Status;
 import io.atomix.raft.roles.*;
+import io.atomix.raft.snapshot.PersistedSnapshot;
+import io.atomix.raft.snapshot.ReceivableSnapshotStore;
+import io.atomix.raft.snapshot.SnapshotProvider;
 import io.atomix.raft.storage.RaftStorage;
 import io.atomix.raft.storage.StorageException;
 import io.atomix.raft.storage.log.RaftLog;
+import io.atomix.raft.storage.system.Configuration;
 import io.atomix.raft.storage.system.MetaStore;
 import io.atomix.raft.utils.StateUtil;
 import io.atomix.raft.zeebe.EntryValidator;
 import io.atomix.utils.concurrent.ThreadContext;
-import io.camunda.cluster.PartitionId;
-import io.camunda.zeebe.snapshots.PersistedSnapshot;
-import io.camunda.zeebe.snapshots.ReceivableSnapshotStore;
-import io.camunda.zeebe.util.CheckedRunnable;
-import io.camunda.zeebe.util.exception.UnrecoverableException;
-import io.camunda.zeebe.util.health.FailureListener;
-import io.camunda.zeebe.util.health.HealthMonitorable;
-import io.camunda.zeebe.util.health.HealthReport;
-import io.camunda.zeebe.util.logging.ThrottledLogger;
+import io.atomix.utils.health.FailureListener;
+import io.atomix.utils.health.HealthMonitorable;
+import io.atomix.utils.health.HealthReport;
+import io.atomix.utils.logging.ThrottledLogger;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,10 +64,9 @@ import org.slf4j.MDC;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Objects;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
@@ -107,6 +109,11 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
   private final Set<SnapshotReplicationListener> snapshotReplicationListeners =
       new CopyOnWriteArraySet<>();
   private final Set<FailureListener> failureListeners = new CopyOnWriteArraySet<>();
+  /**
+   * 业务三态监听器到其聚合适配器的映射，注销时反查。
+   */
+  private final Map<RaftRoleStateListener, RaftRoleStateAdapter> roleStateAdapters =
+    new ConcurrentHashMap<>();
   private final RaftRoleMetrics raftRoleMetrics;
   private final RebalanceMetrics rebalanceMetrics;
   private final RaftReplicationMetrics replicationMetrics;
@@ -126,6 +133,8 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
   private long firstCommitIndex;
   private volatile boolean started;
   private EntryValidator entryValidator;
+  /** 业务快照拍摄 SPI，创建 Raft 服务时注入，未注入时不支持业务快照拍摄。 */
+  private SnapshotProvider snapshotProvider;
   private LeadershipTransferWriteBarrier leadershipTransferWriteBarrier =
       LeadershipTransferWriteBarrier.NONE;
   private LeadershipTransferCoordinatorCheck leadershipTransferCoordinatorCheck =
@@ -628,6 +637,99 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
     threadContext.execute(() -> snapshotReplicationListeners.remove(snapshotReplicationListener));
   }
 
+  /**
+   * 注册业务三态状态监听器（把角色变更与快照复制事件聚合为 LEADER/FOLLOWER/INACTIVE 视图），
+   * 注册后在 Raft 线程上立即回调一次当前状态。
+   *
+   * @param roleStateListener 业务监听器
+   */
+  public void addRoleStateListener(final RaftRoleStateListener roleStateListener) {
+    threadContext.execute(
+      () -> {
+        final RaftRoleStateAdapter adapter = new RaftRoleStateAdapter(roleStateListener);
+        roleStateAdapters.put(roleStateListener, adapter);
+        roleChangeListeners.add(adapter);
+        snapshotReplicationListeners.add(adapter);
+        // 先回调当前角色状态，再补发错过的快照复制周期，保证终止状态与真实进度一致
+        adapter.onNewRole(role.role(), term);
+        replayMissedReplicationEvents(adapter);
+      });
+  }
+
+  /**
+   * 为晚注册的监听器补发错过的快照复制事件，映射与运行期完全一致（开始→INACTIVE，结束→FOLLOWER）。
+   */
+  private void replayMissedReplicationEvents(final RaftRoleStateAdapter adapter) {
+    if (role.role() != Role.FOLLOWER) {
+      return;
+    }
+    switch (missedSnapshotReplicationEvents) {
+      case STARTED -> adapter.onSnapshotReplicationStarted();
+      case COMPLETED -> {
+        adapter.onSnapshotReplicationStarted();
+        adapter.onSnapshotReplicationCompleted(term);
+      }
+      default -> {
+        // 无错过事件
+      }
+    }
+  }
+
+  /**
+   * 注销业务三态状态监听器。
+   */
+  public void removeRoleStateListener(final RaftRoleStateListener roleStateListener) {
+    threadContext.execute(
+      () -> {
+        final RaftRoleStateAdapter adapter = roleStateAdapters.remove(roleStateListener);
+        if (adapter != null) {
+          roleChangeListeners.remove(adapter);
+          snapshotReplicationListeners.remove(adapter);
+        }
+      });
+  }
+
+  /**
+   * 把 Raft 角色变更与快照复制事件聚合为业务三态视图的适配器。
+   */
+  private static final class RaftRoleStateAdapter
+    implements RaftRoleChangeListener, SnapshotReplicationListener {
+
+    private final RaftRoleStateListener listener;
+    private volatile long currentTerm;
+
+    private RaftRoleStateAdapter(final RaftRoleStateListener listener) {
+      this.listener = listener;
+    }
+
+    @Override
+    public void onNewRole(final Role newRole, final long term) {
+      currentTerm = term;
+      dispatch(newRole, term);
+    }
+
+    @Override
+    public void onSnapshotReplicationStarted() {
+      // 快照复制进行中：日志将被重置、消费者需全部关闭，业务视角确定为不可用（INACTIVE）
+      listener.onInactive(currentTerm);
+    }
+
+    @Override
+    public void onSnapshotReplicationCompleted(final long term) {
+      currentTerm = term;
+      // 快照复制结束：确定性地恢复为 FOLLOWER，不依赖当时的具体角色
+      listener.onFollower(term);
+    }
+
+    private void dispatch(final Role role, final long term) {
+      switch (role) {
+        case LEADER -> listener.onLeader(term);
+        case FOLLOWER -> listener.onFollower(term);
+        default -> listener.onInactive(term);
+      }
+    }
+  }
+
   public void notifySnapshotReplicationStarted() {
     threadContext.execute(
         () -> {
@@ -795,26 +897,28 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
 
   /** Creates an internal state for the given state type. */
   private RaftRole createRole(final Role role) {
-    switch (role) {
-      case INACTIVE:
+    raftRoleMetrics.setTerm(getTerm());
+    return switch (role) {
+      case INACTIVE -> {
         raftRoleMetrics.becomingInactive();
-        return new InactiveRole(this);
-      case PASSIVE:
-        return new PassiveRole(this);
-      case PROMOTABLE:
-        return new PromotableRole(this);
-      case FOLLOWER:
+        yield new InactiveRole(this);
+      }
+      case PASSIVE -> new PassiveRole(this);
+      case PROMOTABLE -> new PromotableRole(this);
+      case FOLLOWER -> {
         raftRoleMetrics.becomingFollower();
-        return new FollowerRole(this, this::createElectionTimer);
-      case CANDIDATE:
+        yield new FollowerRole(this, this::createElectionTimer);
+      }
+      case CANDIDATE -> {
         raftRoleMetrics.becomingCandidate();
-        return new CandidateRole(this);
-      case LEADER:
+        yield new CandidateRole(this);
+      }
+      case LEADER -> {
         raftRoleMetrics.becomingLeader();
-        return new LeaderRole(this);
-      default:
-        throw new AssertionError();
-    }
+        yield new LeaderRole(this);
+      }
+      default -> throw new AssertionError();
+    };
   }
 
   private ElectionTimer createElectionTimer(final Runnable triggerElection, final Logger log) {
@@ -1023,6 +1127,17 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
   public void setEntryValidator(final EntryValidator validator) {
     entryValidator = validator;
   }
+
+  /** 返回业务快照拍摄 SPI；未注入时为 null（不可拍摄业务快照）。 */
+  public SnapshotProvider getSnapshotProvider() {
+    return snapshotProvider;
+  }
+
+  /** 注入业务快照拍摄 SPI，由创建 Raft 服务的一侧传入。 */
+  public void setSnapshotProvider(final SnapshotProvider provider) {
+    snapshotProvider = provider;
+  }
+
 
   /**
    * The broker-supplied barrier the leader uses to freeze/unfreeze the partition's writes during a
@@ -1387,6 +1502,107 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
           configureFuture.complete(null);
         });
     return configureFuture;
+  }
+
+  /**
+   * Transfers leadership to the given member (jraft's {@code transferLeadershipTo} equivalent),
+   * reusing the coordinated transfer machinery: the leader pauses writes, catches the desired
+   * leader up to the frozen log head and promotes it with TimeoutNow. The future completes once
+   * the target has been observed as leader, and fails if another member is elected instead or the
+   * transfer is rejected.
+   *
+   * <pre>{@code
+   *  Caller                Local Node (leader)              Target Member
+   *     |                        |                                |
+   *     | transferLeadership(t)  |                                |
+   *     |----------------------->|                                |
+   *     |                        | register leader-election listener
+   *     |                        | onLeadershipTransferInitiate   |
+   *     |                        | (admission: single in-flight,  |
+   *     |                        |  no config change, reachable)  |
+   *     |                        | freeze log head (pause writes) |
+   *     |                        |-- AppendRequest (catch-up) --->|
+   *     |                        |<-- AppendResponse (match=head)-|
+   *     |                        |-- TimeoutNowRequest ---------->|
+   *     |                        |                                | start election immediately
+   *     |                        |<-- VoteRequest ----------------|
+   *     |                        |--- vote for target ------------>|
+   *     |                        |          (target becomes leader, listener fires)
+   *     |<--- complete OK -------|                                |
+   * }</pre>
+   *
+   * <p>When the local node is not the leader, the initiate request is forwarded to the known leader
+   * instead; the completion path (election listener) is identical.
+   *
+   * @param targetMember the member that should take over leadership
+   */
+  public CompletableFuture<Void> transferLeadership(final MemberId targetMember) {
+    final CompletableFuture<Void> result = new CompletableFuture<>();
+    threadContext.execute(() -> startLocalLeadershipTransfer(targetMember, result));
+    return result;
+  }
+
+  private void startLocalLeadershipTransfer(
+    final MemberId targetMember, final CompletableFuture<Void> result) {
+    final var localMemberId = getCluster().getLocalMember().memberId();
+
+    final Consumer<RaftMember> electionListener =
+      new Consumer<>() {
+        @Override
+        public void accept(final RaftMember electedLeader) {
+          if (targetMember.equals(electedLeader.memberId())) {
+            result.complete(null);
+          } else {
+            result.completeExceptionally(
+              new ProtocolException(
+                "Leadership transfer to %s failed: %s was elected instead"
+                  .formatted(targetMember, electedLeader.memberId())));
+          }
+          removeLeaderElectionListener(this);
+        }
+      };
+    addLeaderElectionListener(electionListener);
+    result.whenComplete((ignored, error) -> removeLeaderElectionListener(electionListener));
+
+    final var request =
+      LeadershipTransferInitiateRequest.builder()
+        .withDesiredLeader(targetMember)
+        .withCoordinator(localMemberId)
+        .withCoordinatorConfigVersion(
+          Optional.ofNullable(getCluster().getConfiguration())
+            .map(Configuration::index)
+            .orElse(0L))
+        .build();
+
+    final java.util.function.BiConsumer<LeadershipTransferInitiateResponse, Throwable> onResponse =
+      (response, error) -> {
+        if (error != null) {
+          result.completeExceptionally(error);
+        } else if (response.status() != Status.OK) {
+          result.completeExceptionally(response.error().createException());
+        } else if (!response.accepted()) {
+          result.completeExceptionally(
+            new ProtocolException(
+              "Leadership transfer to %s was rejected: %s"
+                .formatted(targetMember, response.rejectionReason())));
+        }
+      };
+
+    if (getRole() == Role.LEADER) {
+      role.onLeadershipTransferInitiate(request).whenCompleteAsync(onResponse, threadContext);
+      return;
+    }
+
+    final var leader = getLeader();
+    if (leader == null) {
+      result.completeExceptionally(
+        new RaftError(RaftError.Type.NO_LEADER, "Cannot transfer leadership without a leader")
+          .createException());
+      return;
+    }
+    getProtocol()
+      .leadershipTransferInitiate(leader.memberId(), request)
+      .whenCompleteAsync(onResponse, threadContext);
   }
 
   public int getPartitionId() {

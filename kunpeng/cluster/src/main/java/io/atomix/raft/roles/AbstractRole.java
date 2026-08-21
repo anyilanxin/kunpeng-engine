@@ -1,7 +1,7 @@
 /*
  * Copyright 2015-present Open Networking Foundation
- * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import io.atomix.raft.cluster.impl.DefaultRaftMember;
 import io.atomix.raft.impl.RaftContext;
 import io.atomix.raft.protocol.RaftRequest;
 import io.atomix.raft.protocol.RaftResponse;
-import io.camunda.zeebe.util.Either;
+import com.anyilanxin.kunpeng.utils.Either;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
 import org.slf4j.Logger;

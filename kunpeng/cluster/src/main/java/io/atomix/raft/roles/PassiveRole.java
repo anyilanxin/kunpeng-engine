@@ -1,7 +1,7 @@
 /*
  * Copyright 2015-present Open Networking Foundation
- * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,13 +53,13 @@ import io.atomix.raft.journal.CheckedJournalException.FlushException;
 import io.atomix.raft.journal.JournalException;
 import io.atomix.raft.journal.JournalException.InvalidChecksum;
 import io.atomix.raft.journal.JournalException.InvalidIndex;
-import io.camunda.zeebe.snapshots.PersistedSnapshot;
-import io.camunda.zeebe.snapshots.ReceivedSnapshot;
-import io.camunda.zeebe.snapshots.SnapshotException.SnapshotAlreadyExistsException;
-import io.camunda.zeebe.snapshots.impl.SnapshotChunkId;
-import io.camunda.zeebe.util.CheckedRunnable;
-import io.camunda.zeebe.util.Either;
-import io.camunda.zeebe.util.logging.ThrottledLogger;
+import io.atomix.raft.snapshot.PersistedSnapshot;
+import io.atomix.raft.snapshot.ReceivedSnapshot;
+import io.atomix.raft.snapshot.SnapshotException.SnapshotAlreadyExistsException;
+import io.atomix.raft.snapshot.impl.SnapshotChunkId;
+import com.anyilanxin.kunpeng.utils.jar.CheckedRunnable;
+import com.anyilanxin.kunpeng.utils.Either;
+import io.atomix.utils.logging.ThrottledLogger;
 import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.util.List;
@@ -212,6 +212,8 @@ public class PassiveRole extends InactiveRole {
       // listeners in advance so that they can close all consumers of the log.
       raft.notifySnapshotReplicationStarted();
     }
+
+    snapshotReplicationMetrics.observeChunk(request.data().remaining());
 
     try {
       pendingSnapshot.apply(snapshotChunk).join();
@@ -427,7 +429,13 @@ public class PassiveRole extends InactiveRole {
     raft.checkThread();
     logRequest(request);
     updateTermAndLeader(request.term(), null);
-    return CompletableFuture.completedFuture(logResponse(handleVote(request)));
+    final var response = handleVote(request);
+    if (response.voted()) {
+      raft.getRaftRoleMetrics().countVoteGranted();
+    } else {
+      raft.getRaftRoleMetrics().countVoteRejected();
+    }
+    return CompletableFuture.completedFuture(logResponse(response));
   }
 
   /** Handles a poll request. */

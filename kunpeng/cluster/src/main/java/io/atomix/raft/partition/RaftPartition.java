@@ -1,7 +1,7 @@
 /*
  * Copyright 2017-present Open Networking Foundation
- * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,14 +24,17 @@ import io.atomix.primitive.partition.Partition;
 import io.atomix.primitive.partition.PartitionManagementService;
 import io.atomix.primitive.partition.PartitionMetadata;
 import io.atomix.raft.RaftRoleChangeListener;
+import io.atomix.raft.RaftRoleStateListener;
 import io.atomix.raft.RaftServer.Role;
 import io.atomix.raft.cluster.RaftMember;
 import io.atomix.raft.partition.impl.RaftPartitionServer;
-import io.camunda.cluster.PartitionId;
-import io.camunda.zeebe.snapshots.ReceivableSnapshotStore;
-import io.camunda.zeebe.util.health.FailureListener;
-import io.camunda.zeebe.util.health.HealthMonitorable;
-import io.camunda.zeebe.util.health.HealthReport;
+import io.atomix.cluster.PartitionId;
+import io.atomix.raft.snapshot.PersistedSnapshot;
+import io.atomix.raft.snapshot.ReceivableSnapshotStore;
+import io.atomix.raft.snapshot.SnapshotProvider;
+import io.atomix.utils.health.FailureListener;
+import io.atomix.utils.health.HealthMonitorable;
+import io.atomix.utils.health.HealthReport;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.io.File;
 import java.util.Collection;
@@ -53,7 +56,11 @@ public final class RaftPartition implements Partition, HealthMonitorable {
   private final RaftPartitionConfig config;
   private final File dataDirectory;
   private final MeterRegistry meterRegistry;
+  /** 业务快照拍摄 SPI，构造时由业务组装层传入；为 null 时不支持业务快照拍摄。 */
+  private final SnapshotProvider snapshotProvider;
   private final Set<RaftRoleChangeListener> deferredRoleChangeListeners =
+      new CopyOnWriteArraySet<>();
+  private final Set<RaftRoleStateListener> deferredRoleStateListeners =
       new CopyOnWriteArraySet<>();
   private final PartitionMetadata partitionMetadata;
   private RaftPartitionServer server;
@@ -63,11 +70,22 @@ public final class RaftPartition implements Partition, HealthMonitorable {
       final RaftPartitionConfig config,
       final File dataDirectory,
       final MeterRegistry meterRegistry) {
+    this(partitionMetadata, config, dataDirectory, meterRegistry, null);
+  }
+
+  public RaftPartition(
+      final PartitionMetadata partitionMetadata,
+      final RaftPartitionConfig config,
+      final File dataDirectory,
+      final MeterRegistry meterRegistry,
+      final SnapshotProvider snapshotProvider) {
     partitionId = partitionMetadata.id();
     this.partitionMetadata = partitionMetadata;
     this.config = config;
     this.dataDirectory = dataDirectory;
     this.meterRegistry = meterRegistry;
+    this.snapshotProvider =
+        snapshotProvider != null ? snapshotProvider : new SnapshotProvider.NoopSnapshotProvider();
   }
 
   public void addRoleChangeListener(final RaftRoleChangeListener listener) {
@@ -75,6 +93,37 @@ public final class RaftPartition implements Partition, HealthMonitorable {
       deferredRoleChangeListeners.add(listener);
     } else {
       server.addRoleChangeListener(listener);
+    }
+  }
+
+  /** 拍摄本分区当前已提交位点的业务快照（创建服务时需注入 SnapshotProvider）。 */
+  public CompletableFuture<PersistedSnapshot> takeSnapshot() {
+    if (server == null) {
+      return CompletableFuture.failedFuture(
+          new IllegalStateException("Partition server is not initialized; cannot take snapshot"));
+    }
+    return server.takeSnapshot();
+  }
+
+  /**
+   * 注册业务三态状态监听器（角色变更与快照复制事件聚合为 LEADER/FOLLOWER/INACTIVE 视图），
+   * 注册后立即回调一次当前状态；分区服务器尚未创建时延迟到初始化完成时注册。
+   *
+   * @param listener 业务状态监听器
+   */
+  public void addRoleStateListener(final RaftRoleStateListener listener) {
+    if (server == null) {
+      deferredRoleStateListeners.add(listener);
+    } else {
+      server.addRoleStateListener(listener);
+    }
+  }
+
+  /** 注销业务三态状态监听器。 */
+  public void removeRoleStateListener(final RaftRoleStateListener listener) {
+    deferredRoleStateListeners.remove(listener);
+    if (server != null) {
+      server.removeRoleStateListener(listener);
     }
   }
 
@@ -125,6 +174,10 @@ public final class RaftPartition implements Partition, HealthMonitorable {
       deferredRoleChangeListeners.forEach(server::addRoleChangeListener);
       deferredRoleChangeListeners.clear();
     }
+    if (!deferredRoleStateListeners.isEmpty()) {
+      deferredRoleStateListeners.forEach(server::addRoleStateListener);
+      deferredRoleStateListeners.clear();
+    }
   }
 
   /** Creates a Raft server. */
@@ -139,7 +192,8 @@ public final class RaftPartition implements Partition, HealthMonitorable {
         managementService.getMessagingService(),
         snapshotStore,
         partitionMetadata,
-        meterRegistry);
+        meterRegistry,
+        snapshotProvider);
   }
 
   /**

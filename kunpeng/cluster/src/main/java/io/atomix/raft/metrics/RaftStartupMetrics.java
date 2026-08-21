@@ -16,36 +16,33 @@
  */
 package io.atomix.raft.metrics;
 
-import static io.atomix.raft.metrics.RaftStartupMetricsDoc.*;
+import static io.atomix.raft.metrics.RaftStartupMetricsDoc.BOOTSTRAP_DURATION;
+import static io.atomix.raft.metrics.RaftStartupMetricsDoc.JOIN_DURATION;
 
-import io.camunda.zeebe.util.micrometer.StatefulGauge;
+import com.anyilanxin.kunpeng.utils.micrometer.Micrometers;
+import com.anyilanxin.kunpeng.utils.micrometer.SettableGauge;
 import io.micrometer.core.instrument.MeterRegistry;
 
+/** Raft 分区服务启动相关指标采集 */
 public class RaftStartupMetrics extends RaftMetrics {
 
-  private final StatefulGauge bootstrapDuration;
-  private final StatefulGauge joinDuration;
+  private final SettableGauge bootstrapDuration;
+  private final SettableGauge joinDuration;
 
   public RaftStartupMetrics(final String partitionName, final MeterRegistry registry) {
     super(partitionName);
-
     bootstrapDuration =
-        StatefulGauge.builder(BOOTSTRAP_DURATION.getName())
-            .description(BOOTSTRAP_DURATION.getDescription())
-            .tag(RaftKeyNames.PARTITION_GROUP.asString(), partitionGroupName)
-            .register(registry);
-
+        Micrometers.gauge(BOOTSTRAP_DURATION, registry, "partitionGroupName", partitionGroupName);
     joinDuration =
-        StatefulGauge.builder(JOIN_DURATION.getName())
-            .description(JOIN_DURATION.getDescription())
-            .tag(RaftKeyNames.PARTITION_GROUP.asString(), partitionGroupName)
-            .register(registry);
+        Micrometers.gauge(JOIN_DURATION, registry, "partitionGroupName", partitionGroupName);
   }
 
+  /** 记录分区服务引导启动耗时 */
   public void observeBootstrapDuration(final long durationMillis) {
     bootstrapDuration.set(durationMillis);
   }
 
+  /** 记录分区服务加入集群耗时 */
   public void observeJoinDuration(final long durationMillis) {
     joinDuration.set(durationMillis);
   }

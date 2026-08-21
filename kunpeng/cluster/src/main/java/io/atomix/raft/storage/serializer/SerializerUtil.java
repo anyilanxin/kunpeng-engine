@@ -16,6 +16,7 @@
  */
 package io.atomix.raft.storage.serializer;
 
+import com.anyilanxin.kunpeng.cluster.raft.storage.serializer.MemberType;
 import io.atomix.raft.cluster.RaftMember;
 
 public class SerializerUtil {

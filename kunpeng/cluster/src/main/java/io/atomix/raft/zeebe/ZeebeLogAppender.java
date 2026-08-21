@@ -20,7 +20,7 @@ import io.atomix.raft.storage.log.IndexedRaftLogEntry;
 import io.atomix.raft.storage.log.entry.ApplicationEntry;
 import io.atomix.raft.storage.log.entry.SerializedApplicationEntry;
 import io.atomix.raft.storage.log.entry.UnserializedApplicationEntry;
-import io.camunda.zeebe.util.buffer.BufferWriter;
+import com.anyilanxin.kunpeng.structpack.buffer.BufferWriter;
 import java.nio.ByteBuffer;
 
 /**

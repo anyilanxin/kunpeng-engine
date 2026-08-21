@@ -17,11 +17,10 @@
 package io.atomix.raft.journal.file;
 
 import io.atomix.raft.journal.JournalRecord;
-import org.jspecify.annotations.Nullable;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+import org.jspecify.annotations.Nullable;
 
 final class SparseJournalIndex implements JournalIndex {
 

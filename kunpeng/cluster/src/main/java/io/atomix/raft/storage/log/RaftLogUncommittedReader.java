@@ -1,7 +1,7 @@
 /*
  * Copyright 2017-present Open Networking Foundation
- * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,11 @@
  */
 package io.atomix.raft.storage.log;
 
-import io.atomix.raft.journal.JournalReader;
-import io.atomix.raft.journal.JournalRecord;
 import io.atomix.raft.storage.log.entry.RaftLogEntry;
 import io.atomix.raft.storage.serializer.RaftEntrySBESerializer;
 import io.atomix.raft.storage.serializer.RaftEntrySerializer;
-
+import io.atomix.raft.journal.JournalReader;
+import io.atomix.raft.journal.JournalRecord;
 import java.util.NoSuchElementException;
 
 /**

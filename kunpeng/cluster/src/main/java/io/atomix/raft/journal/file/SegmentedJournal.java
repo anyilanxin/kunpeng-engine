@@ -1,7 +1,7 @@
 /*
  * Copyright 2017-present Open Networking Foundation
- * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,24 +17,27 @@
  */
 package io.atomix.raft.journal.file;
 
+import static com.google.common.base.Preconditions.checkState;
+import static java.util.Objects.requireNonNull;
+
 import com.google.common.collect.Sets;
 import io.atomix.raft.journal.CheckedJournalException.FlushException;
-import io.atomix.raft.journal.*;
-import io.camunda.zeebe.util.VisibleForTesting;
-import io.camunda.zeebe.util.buffer.BufferWriter;
+import io.atomix.raft.journal.Journal;
+import io.atomix.raft.journal.JournalMetaStore;
+import io.atomix.raft.journal.JournalReader;
+import io.atomix.raft.journal.JournalRecord;
+import io.atomix.raft.journal.SegmentInfo;
+import com.anyilanxin.kunpeng.structpack.buffer.BufferWriter;
 import io.micrometer.core.instrument.MeterRegistry;
-import org.jspecify.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.Collection;
 import java.util.Objects;
 import java.util.OptionalLong;
 import java.util.SortedMap;
 import java.util.concurrent.locks.StampedLock;
 import java.util.stream.Collectors;
-
-import static com.google.common.base.Preconditions.checkState;
+import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** A file based journal. The journal is split into multiple segments files. */
 public final class SegmentedJournal implements Journal {
@@ -333,8 +336,8 @@ public final class SegmentedJournal implements Journal {
     rwlock.unlockRead(stamp);
   }
 
-  @VisibleForTesting(
-      "The simplest way to guarantee certain methods acquire/release the write lock is to access directly")
+  // exposed for tests: the simplest way to guarantee certain methods acquire/release the write
+  // lock is to access the lock directly
   StampedLock rwlock() {
     return rwlock;
   }

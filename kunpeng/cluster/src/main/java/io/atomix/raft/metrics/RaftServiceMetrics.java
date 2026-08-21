@@ -1,7 +1,7 @@
 /*
  * Copyright 2016-present Open Networking Foundation
- * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,13 @@ package io.atomix.raft.metrics;
 
 import static io.atomix.raft.metrics.RaftServiceMetricsDoc.COMPACTION_TIME;
 
-import io.camunda.zeebe.util.CloseableSilently;
-import io.camunda.zeebe.util.micrometer.MicrometerUtil;
+import com.anyilanxin.kunpeng.utils.CloseableSilently;
+import com.anyilanxin.kunpeng.utils.micrometer.CloseableTime;
+import com.anyilanxin.kunpeng.utils.micrometer.Micrometers;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 
+/** Raft 日志压缩相关指标采集 */
 public final class RaftServiceMetrics extends RaftMetrics {
 
   private final Timer compactionTime;
@@ -31,17 +33,13 @@ public final class RaftServiceMetrics extends RaftMetrics {
 
   public RaftServiceMetrics(final String partitionName, final MeterRegistry registry) {
     super(partitionName);
-
     compactionTime =
-        Timer.builder(COMPACTION_TIME.getName())
-            .description(COMPACTION_TIME.getDescription())
-            .serviceLevelObjectives(COMPACTION_TIME.getTimerSLOs())
-            .tag(RaftKeyNames.PARTITION_GROUP.asString(), partitionGroupName)
-            .register(registry);
+        Micrometers.timer(COMPACTION_TIME, registry, "partitionGroupName", partitionGroupName);
     this.registry = registry;
   }
 
+  /** 压缩计时句柄，关闭时记录一次压缩耗时 */
   public CloseableSilently compactionTime() {
-    return MicrometerUtil.timer(compactionTime, Timer.start(registry.config().clock()));
+    return new CloseableTime(compactionTime, registry).start();
   }
 }

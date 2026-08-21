@@ -1,7 +1,7 @@
 /*
  * Copyright 2016-present Open Networking Foundation
- * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,144 +17,126 @@
  */
 package io.atomix.raft.metrics;
 
-import io.camunda.zeebe.util.CloseableSilently;
-import io.camunda.zeebe.util.micrometer.PartitionKeyNames;
-import io.camunda.zeebe.util.micrometer.StatefulGauge;
+import static io.atomix.raft.metrics.LeaderMetricsDoc.APPEND_DATA_RATE;
+import static io.atomix.raft.metrics.LeaderMetricsDoc.APPEND_ENTRIES_LATENCY;
+import static io.atomix.raft.metrics.LeaderMetricsDoc.APPEND_RATE;
+import static io.atomix.raft.metrics.LeaderMetricsDoc.COMMIT_RATE;
+import static io.atomix.raft.metrics.LeaderMetricsDoc.NON_COMMITTED_ENTRIES;
+import static io.atomix.raft.metrics.LeaderMetricsDoc.NON_REPLICATED_ENTRIES;
+import static io.atomix.raft.metrics.LeaderMetricsDoc.REPLICATION_LAG_BYTES;
+import static io.atomix.raft.metrics.LeaderMetricsDoc.SNAPSHOT_INSTALL_SENT_BYTES;
+
+import com.anyilanxin.kunpeng.utils.CloseableSilently;
+import com.anyilanxin.kunpeng.utils.micrometer.Micrometers;
+import com.anyilanxin.kunpeng.utils.micrometer.SettableGauge;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Timer;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
+/** Leader 追加与复制相关指标采集 */
 public class LeaderAppenderMetrics extends RaftMetrics implements CloseableSilently {
   private final MeterRegistry meterRegistry;
-  private final Map<String, Timer> appendLatency;
-  private final Map<String, Counter> appendDataRate;
-  private final Map<String, Counter> appendRate;
   private final Counter commitRate;
-  private final StatefulGauge nonCommittedEntriesValue;
-  private final Map<String, StatefulGauge> nonReplicatedEntries;
-  private final Map<String, StatefulGauge> replicationLagBytes;
+  private final SettableGauge nonCommittedEntriesValue;
+  private final Map<String, SettableGauge> nonReplicatedEntries = new ConcurrentHashMap<>();
+  private final Map<String, SettableGauge> replicationLagBytes = new ConcurrentHashMap<>();
 
   public LeaderAppenderMetrics(final String partitionName, final MeterRegistry meterRegistry) {
     super(partitionName);
     this.meterRegistry = meterRegistry;
-    appendLatency = new HashMap<>();
-    appendDataRate = new HashMap<>();
-    appendRate = new HashMap<>();
-    nonReplicatedEntries = new HashMap<>();
-    replicationLagBytes = new HashMap<>();
-
     commitRate =
-        Counter.builder(LeaderMetricsDoc.COMMIT_RATE.getName())
-            .description(LeaderMetricsDoc.COMMIT_RATE.getDescription())
-            .tag(RaftKeyNames.PARTITION_GROUP.asString(), partitionGroupName)
-            .register(meterRegistry);
-
+        Micrometers.counter(COMMIT_RATE, meterRegistry, "partitionGroupName", partitionGroupName);
     nonCommittedEntriesValue =
-        StatefulGauge.builder(LeaderMetricsDoc.NON_COMMITTED_ENTRIES.getName())
-            .description(LeaderMetricsDoc.NON_COMMITTED_ENTRIES.getDescription())
-            .tag(RaftKeyNames.PARTITION_GROUP.asString(), partitionGroupName)
-            .register(meterRegistry);
+        Micrometers.gauge(
+            NON_COMMITTED_ENTRIES, meterRegistry, "partitionGroupName", partitionGroupName);
   }
 
+  /** 记录一次向 Follower 追加条目的完成耗时 */
   public void appendComplete(final long latencyms, final String memberId) {
-    getAppendLatency(memberId).record(latencyms, TimeUnit.MILLISECONDS);
+    Micrometers.timer(
+            APPEND_ENTRIES_LATENCY,
+            meterRegistry,
+            "follower",
+            memberId,
+            "partitionGroupName",
+            partitionGroupName,
+            "partition",
+            partition)
+        .record(latencyms, TimeUnit.MILLISECONDS);
   }
 
+  /** 记录一次向 Follower 追加的条目数与数据量 */
   public void observeAppend(
       final String memberId, final int appendedEntries, final long appendedBytes) {
-    getAppendRate(memberId).increment(appendedEntries);
-    getAppendDataRate(memberId).increment(appendedBytes / 1024f);
+    Micrometers.counter(APPEND_RATE, meterRegistry, "follower", memberId, "partitionGroupName", partitionGroupName)
+        .increment(appendedEntries);
+    Micrometers.counter(APPEND_DATA_RATE, meterRegistry, "follower", memberId, "partitionGroupName", partitionGroupName)
+        .increment(appendedBytes / 1024f);
   }
 
+  /** 记录一次条目提交 */
   public void observeCommit() {
     commitRate.increment();
   }
 
+  /** 记录 Leader 上尚未提交的条目数 */
   public void observeNonCommittedEntries(final long remainingEntries) {
     nonCommittedEntriesValue.set(remainingEntries);
   }
 
+  /** 记录各 Follower 尚未复制的条目数 */
   public void observeRemainingEntries(final String memberId, final long remainingEntries) {
     nonReplicatedEntries
-        .computeIfAbsent(memberId, this::registerNonReplicatedEntries)
+        .computeIfAbsent(
+            memberId,
+            id ->
+                Micrometers.gauge(
+                    NON_REPLICATED_ENTRIES,
+                    meterRegistry,
+                    "follower",
+                    id,
+                    "partitionGroupName",
+                    partitionGroupName))
         .set(remainingEntries);
   }
 
+  /** 记录各 Follower 的复制滞后字节数 */
   public void observeReplicationLagBytes(final String memberId, final long lagBytes) {
-    replicationLagBytes.computeIfAbsent(memberId, this::registerReplicationLagBytes).set(lagBytes);
+    replicationLagBytes
+        .computeIfAbsent(
+            memberId,
+            id ->
+                Micrometers.gauge(
+                    REPLICATION_LAG_BYTES,
+                    meterRegistry,
+                    "partition",
+                    partition,
+                    "physicalTenant",
+                    partitionGroupName,
+                    "follower",
+                    id))
+        .set(lagBytes);
   }
 
-  private Timer getAppendLatency(final String memberId) {
-    return appendLatency.computeIfAbsent(
-        memberId,
-        id ->
-            Timer.builder(LeaderMetricsDoc.APPEND_ENTRIES_LATENCY.getName())
-                .description(LeaderMetricsDoc.APPEND_ENTRIES_LATENCY.getDescription())
-                .serviceLevelObjectives(LeaderMetricsDoc.APPEND_ENTRIES_LATENCY.getTimerSLOs())
-                .tags(
-                    RaftKeyNames.FOLLOWER.asString(),
-                    memberId,
-                    RaftKeyNames.PARTITION_GROUP.asString(),
-                    partitionGroupName)
-                .register(meterRegistry));
-  }
-
-  private Counter getAppendDataRate(final String memberId) {
-    return appendDataRate.computeIfAbsent(
-        memberId,
-        id ->
-            Counter.builder(LeaderMetricsDoc.APPEND_DATA_RATE.getName())
-                .description(LeaderMetricsDoc.APPEND_DATA_RATE.getDescription())
-                .tags(
-                    RaftKeyNames.FOLLOWER.asString(),
-                    id,
-                    RaftKeyNames.PARTITION_GROUP.asString(),
-                    partitionGroupName)
-                .register(meterRegistry));
-  }
-
-  private Counter getAppendRate(final String memberId) {
-    return appendRate.computeIfAbsent(
-        memberId,
-        id ->
-            Counter.builder(LeaderMetricsDoc.APPEND_RATE.getName())
-                .description(LeaderMetricsDoc.APPEND_RATE.getDescription())
-                .tags(
-                    RaftKeyNames.FOLLOWER.asString(),
-                    id,
-                    RaftKeyNames.PARTITION_GROUP.asString(),
-                    partitionGroupName)
-                .register(meterRegistry));
-  }
-
-  private StatefulGauge registerNonReplicatedEntries(final String memberId) {
-    return StatefulGauge.builder(LeaderMetricsDoc.NON_REPLICATED_ENTRIES.getName())
-        .description(LeaderMetricsDoc.NON_REPLICATED_ENTRIES.getDescription())
-        .tag(RaftKeyNames.FOLLOWER.asString(), memberId)
-        .tag(RaftKeyNames.PARTITION_GROUP.asString(), partitionGroupName)
-        .register(meterRegistry);
-  }
-
-  private StatefulGauge registerReplicationLagBytes(final String memberId) {
-    return StatefulGauge.builder(LeaderMetricsDoc.REPLICATION_LAG_BYTES.getName())
-        .description(LeaderMetricsDoc.REPLICATION_LAG_BYTES.getDescription())
-        .tag(PartitionKeyNames.PARTITION.asString(), partition)
-        .tag(PartitionKeyNames.PHYSICAL_TENANT.asString(), partitionGroupName)
-        .tag(RaftKeyNames.FOLLOWER.asString(), memberId)
-        .register(meterRegistry);
+  /** 记录向 Follower 发送快照安装分片的字节数 */
+  public void observeInstallSent(final String memberId, final long bytes) {
+    Micrometers.counter(
+            SNAPSHOT_INSTALL_SENT_BYTES,
+            meterRegistry,
+            "follower",
+            memberId,
+            "partitionGroupName",
+            partitionGroupName)
+        .increment(bytes);
   }
 
   @Override
   public void close() {
     meterRegistry.remove(commitRate);
-    meterRegistry.remove(nonCommittedEntriesValue);
-    appendLatency.values().forEach(meterRegistry::remove);
-    appendRate.values().forEach(meterRegistry::remove);
-    appendDataRate.values().forEach(meterRegistry::remove);
-    nonReplicatedEntries.values().forEach(meterRegistry::remove);
-    replicationLagBytes.values().forEach(meterRegistry::remove);
+    nonCommittedEntriesValue.close();
+    nonReplicatedEntries.values().forEach(SettableGauge::close);
+    replicationLagBytes.values().forEach(SettableGauge::close);
   }
 }

@@ -1,7 +1,7 @@
 /*
  * Copyright 2017-present Open Networking Foundation
- * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,18 +17,19 @@
  */
 package io.atomix.raft.journal.file;
 
+import static java.util.Objects.requireNonNull;
+
 import io.atomix.raft.journal.CheckedJournalException.FlushException;
 import io.atomix.raft.journal.JournalException.SegmentFull;
 import io.atomix.raft.journal.JournalException.SegmentSizeTooSmall;
 import io.atomix.raft.journal.JournalMetaStore;
 import io.atomix.raft.journal.JournalRecord;
-import io.camunda.zeebe.util.Either;
-import io.camunda.zeebe.util.buffer.BufferWriter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import io.atomix.utils.Either;
+import com.anyilanxin.kunpeng.structpack.buffer.BufferWriter;
 import java.util.Collection;
 import java.util.function.Function;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 final class SegmentedJournalWriter {
   private static final Logger LOGGER = LoggerFactory.getLogger(SegmentedJournalWriter.class);

@@ -1,7 +1,7 @@
 /*
  * Copyright 2016-present Open Networking Foundation
- * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,63 +17,45 @@
  */
 package io.atomix.raft.metrics;
 
-import static io.atomix.raft.metrics.RaftRequestMetricsDoc.*;
+import static io.atomix.raft.metrics.RaftRequestMetricsDoc.RAFT_MESSAGE_RECEIVED;
+import static io.atomix.raft.metrics.RaftRequestMetricsDoc.RAFT_MESSAGE_SEND;
 
-import io.camunda.zeebe.util.collection.Table;
-import io.micrometer.core.instrument.Counter;
+import com.anyilanxin.kunpeng.utils.micrometer.Micrometers;
 import io.micrometer.core.instrument.MeterRegistry;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
+/** Raft 协议消息收发相关指标采集 */
 public class RaftRequestMetrics extends RaftMetrics {
 
-  private final Map<String, Counter> raftMessagesReceived;
   private final MeterRegistry registry;
-  private final Table<String, String, Counter> raftMessagesSend;
 
   public RaftRequestMetrics(final String partitionName, final MeterRegistry registry) {
     super(partitionName);
-    raftMessagesReceived = new ConcurrentHashMap<>(32);
-    raftMessagesSend = Table.concurrent();
     this.registry = registry;
   }
 
+  /** 记录收到一条 Raft 消息 */
   public void receivedMessage(final String type) {
-    getMessageReceived(type).increment();
+    Micrometers.counter(
+            RAFT_MESSAGE_RECEIVED,
+            registry,
+            "type",
+            type,
+            "partitionGroupName",
+            partitionGroupName)
+        .increment();
   }
 
+  /** 记录发出一条 Raft 消息 */
   public void sendMessage(final String memberId, final String type) {
-    getMessageSent(memberId, type).increment();
-  }
-
-  private Counter getMessageReceived(final String type) {
-    return raftMessagesReceived.computeIfAbsent(
-        type,
-        tpe ->
-            Counter.builder(RAFT_MESSAGE_RECEIVED.getName())
-                .description(RAFT_MESSAGE_RECEIVED.getDescription())
-                .tags(
-                    RaftKeyNames.TYPE.asString(),
-                    type,
-                    RaftKeyNames.PARTITION_GROUP.asString(),
-                    partitionGroupName)
-                .register(registry));
-  }
-
-  private Counter getMessageSent(final String memberId, final String type) {
-    return raftMessagesSend.computeIfAbsent(
-        memberId,
-        type,
-        (member, tpe) ->
-            Counter.builder(RAFT_MESSAGE_SEND.getName())
-                .description(RAFT_MESSAGE_SEND.getDescription())
-                .tags(
-                    RaftKeyNames.TO.asString(),
-                    member,
-                    RaftKeyNames.TYPE.asString(),
-                    tpe,
-                    RaftKeyNames.PARTITION_GROUP.asString(),
-                    partitionGroupName)
-                .register(registry));
+    Micrometers.counter(
+            RAFT_MESSAGE_SEND,
+            registry,
+            "to",
+            memberId,
+            "type",
+            type,
+            "partitionGroupName",
+            partitionGroupName)
+        .increment();
   }
 }

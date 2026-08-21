@@ -1,7 +1,7 @@
 /*
  * Copyright 2015-present Open Networking Foundation
- * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,8 +24,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import io.atomix.raft.storage.log.IndexedRaftLogEntry;
 import io.atomix.raft.storage.log.RaftLog;
 import io.atomix.raft.storage.log.RaftLogReader;
-import io.camunda.zeebe.snapshots.PersistedSnapshot;
-import io.camunda.zeebe.snapshots.SnapshotChunkReader;
+import io.atomix.raft.snapshot.PersistedSnapshot;
+import io.atomix.raft.snapshot.SnapshotChunkReader;
 import java.nio.ByteBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,6 +52,8 @@ public final class RaftMemberContext {
   private boolean installing;
   private int failures;
   private long failureTime;
+  /** 被动成员追平后的自动晋升是否已发起（防重复触发重配置）。 */
+  private boolean promotionTriggered;
   private volatile RaftLogReader reader;
   private SnapshotChunkReader snapshotChunkReader;
   private IndexedRaftLogEntry currentEntry;
@@ -102,6 +104,7 @@ public final class RaftMemberContext {
     snapshotReplicationLag = 0;
     snapshotChunkBytesInFlight = 0;
     logReplicationLag = 0;
+    promotionTriggered = false;
     acknowledgedAppendWatermark = sentAppendWatermark;
 
     if (reader != null) {
@@ -390,6 +393,16 @@ public final class RaftMemberContext {
    *
    * @param matchIndex The member's match index.
    */
+  /** 被动成员的自动晋升是否已发起。 */
+  public boolean isPromotionTriggered() {
+    return promotionTriggered;
+  }
+
+  /** 标记被动成员的自动晋升已发起。 */
+  public void markPromotionTriggered() {
+    promotionTriggered = true;
+  }
+
   public void setMatchIndex(final long matchIndex) {
     checkArgument(matchIndex >= 0, "matchIndex must be positive");
     this.matchIndex = matchIndex;

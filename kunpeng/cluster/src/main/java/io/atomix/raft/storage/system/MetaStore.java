@@ -1,7 +1,7 @@
 /*
  * Copyright 2015-present Open Networking Foundation
- * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,26 +17,25 @@
  */
 package io.atomix.raft.storage.system;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
+
 import com.google.common.base.Preconditions;
 import io.atomix.cluster.MemberId;
-import io.atomix.raft.journal.JournalMetaStore;
 import io.atomix.raft.metrics.MetaStoreMetrics;
 import io.atomix.raft.storage.RaftStorage;
 import io.atomix.raft.storage.StorageException;
-import io.atomix.raft.storage.serializer.MetaEncoder;
+import com.anyilanxin.kunpeng.cluster.raft.storage.serializer.MetaEncoder;
 import io.atomix.raft.storage.serializer.MetaStoreSerializer;
+import io.atomix.raft.journal.JournalMetaStore;
 import io.micrometer.core.instrument.MeterRegistry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
-
-import static com.google.common.base.MoreObjects.toStringHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Manages persistence of server configurations.

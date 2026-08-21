@@ -19,22 +19,22 @@ package io.atomix.raft.journal;
 import io.atomix.raft.journal.CheckedJournalException.FlushException;
 import io.atomix.raft.journal.JournalException.InvalidChecksum;
 import io.atomix.raft.journal.JournalException.InvalidIndex;
-import io.camunda.zeebe.util.buffer.BufferWriter;
+import com.anyilanxin.kunpeng.structpack.buffer.BufferWriter;
 
 public interface Journal extends AutoCloseable {
 
   /**
-   * Appends a new {@link io.atomix.raft.journal.JournalRecord} that contains the data to be written by the
+   * Appends a new {@link JournalRecord} that contains the data to be written by the
    * recordDataWriter. Use this for records that do not have a specific applicationSqNum. Examples
    * for such record is raft record that indicates a leader change.
    *
    * @param recordDataWriter a writer that outputs the data of the record
    * @return the journal record that was appended
    */
-  io.atomix.raft.journal.JournalRecord append(BufferWriter recordDataWriter);
+  JournalRecord append(BufferWriter recordDataWriter);
 
   /**
-   * Appends a new {@link io.atomix.raft.journal.JournalRecord} that contains the data to be written by the
+   * Appends a new {@link JournalRecord} that contains the data to be written by the
    * recordDataWriter. asqn refers to Application Sequence Number. It is a sequence number provided
    * by the application. The given asqn must be positive and, it must be greater than the asqn of
    * the previous record.
@@ -43,10 +43,10 @@ public interface Journal extends AutoCloseable {
    * @param recordDataWriter a writer that outputs the data of the record
    * @return the journal record that was appended
    */
-  io.atomix.raft.journal.JournalRecord append(long asqn, BufferWriter recordDataWriter);
+  JournalRecord append(long asqn, BufferWriter recordDataWriter);
 
   /**
-   * Appends a {@link io.atomix.raft.journal.JournalRecord}. If the index of the record is not the next expected index, the
+   * Appends a {@link JournalRecord}. If the index of the record is not the next expected index, the
    * append will fail.
    *
    * @deprecated This method was used to append entries received via replication. {@link
@@ -56,15 +56,15 @@ public interface Journal extends AutoCloseable {
    * @exception InvalidChecksum if the checksum in record does not match the checksum of the data
    */
   @Deprecated(since = "8.4.0")
-  void append(io.atomix.raft.journal.JournalRecord record);
+  void append(JournalRecord record);
 
   /**
-   * Appends already serialized journal record. See {@link io.atomix.raft.journal.JournalRecord#serializedRecord()}
+   * Appends already serialized journal record. See {@link JournalRecord#serializedRecord()}
    *
    * @param checksum checksum of serializedRecord
    * @param serializedRecord serializedRecord
    */
-  io.atomix.raft.journal.JournalRecord append(long checksum, byte[] serializedRecord);
+  JournalRecord append(long checksum, byte[] serializedRecord);
 
   /**
    * Delete all records after indexExclusive. After a call to this method, {@link
@@ -89,7 +89,7 @@ public interface Journal extends AutoCloseable {
    * {@link Journal#append(long, BufferWriter)} will append at index nextIndex.
    *
    * <p>After this operation, all readers must be reset explicitly. The readers that are not reset
-   * will return false for {@link io.atomix.raft.journal.JournalReader#hasNext()}, cannot read any record.
+   * will return false for {@link JournalReader#hasNext()}, cannot read any record.
    *
    * @param nextIndex the next index of the journal.
    */
@@ -124,11 +124,11 @@ public interface Journal extends AutoCloseable {
   void flush() throws FlushException;
 
   /**
-   * Opens a new {@link io.atomix.raft.journal.JournalReader}
+   * Opens a new {@link JournalReader}
    *
    * @return a journal reader
    */
-  io.atomix.raft.journal.JournalReader openReader();
+  JournalReader openReader();
 
   /**
    * Check if the journal is open
@@ -144,5 +144,5 @@ public interface Journal extends AutoCloseable {
    * @param index The index from which to get the tail segments.
    * @return The tail segments including paths and the first ASQN in the first segment.
    */
-  io.atomix.raft.journal.SegmentInfo getTailSegments(long index);
+  SegmentInfo getTailSegments(long index);
 }

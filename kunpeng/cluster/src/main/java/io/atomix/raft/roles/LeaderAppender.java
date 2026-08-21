@@ -1,7 +1,7 @@
 /*
  * Copyright 2015-present Open Networking Foundation
- * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,9 +41,9 @@ import io.atomix.raft.protocol.ReplicatableJournalRecord;
 import io.atomix.raft.protocol.VersionedAppendRequest;
 import io.atomix.raft.snapshot.impl.SnapshotChunkImpl;
 import io.atomix.raft.storage.log.IndexedRaftLogEntry;
-import io.camunda.zeebe.snapshots.PersistedSnapshot;
-import io.camunda.zeebe.snapshots.SnapshotChunk;
-import io.camunda.zeebe.snapshots.SnapshotChunkReader;
+import io.atomix.raft.snapshot.PersistedSnapshot;
+import io.atomix.raft.snapshot.SnapshotChunk;
+import io.atomix.raft.snapshot.SnapshotChunkReader;
 import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -268,6 +268,26 @@ final class LeaderAppender {
     // If the replica returned a valid match index then update the existing match index.
     member.setMatchIndex(response.lastLogIndex());
     observeRemainingMemberEntries(member);
+    promoteIfCaughtUp(member);
+  }
+
+  /**
+   * 追平门控（参考 SOFAJRaft 的 catch-up 语义）：PASSIVE 成员追平 leader 最新日志后自动晋升为
+   * 投票成员（ACTIVE），晋升走联合共识重配置；未追平或掉线的成员不进入投票集，避免拖累 quorum。
+   */
+  private void promoteIfCaughtUp(final RaftMemberContext member) {
+    if (member.isPromotionTriggered()
+        || member.getMember().getType() != RaftMember.Type.PASSIVE
+        || member.getMatchIndex() < raft.getLog().getLastIndex()) {
+      return;
+    }
+
+    member.markPromotionTriggered();
+    LOGGER.info(
+        "Passive member {} caught up to log index {}, promoting to ACTIVE",
+        member.getMember().memberId(),
+        member.getMatchIndex());
+    member.getMember().promote(RaftMember.Type.ACTIVE);
   }
 
   /** Resets the match index when a response fails. */
@@ -487,6 +507,8 @@ final class LeaderAppender {
     member.startInstall();
 
     final long timestamp = System.currentTimeMillis();
+
+    metrics.observeInstallSent(member.getMember().memberId().id(), request.data().remaining());
 
     LOGGER.trace("Sending {} to {}", request, member.getMember().memberId());
     raft.getProtocol()

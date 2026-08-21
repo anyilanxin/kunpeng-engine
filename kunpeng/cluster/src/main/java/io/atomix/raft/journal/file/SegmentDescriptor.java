@@ -1,7 +1,7 @@
 /*
  * Copyright 2017-present Open Networking Foundation
- * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,20 +21,14 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * The segment descriptor stores the metadata of a single segment {@link Segment} of a {@link
- * SegmentedJournal}. The descriptor is stored in the first bytes of the segment. The number of
- * bytes requires for the descriptor is dependent on the encoding used. The first byte of the
- * segment contains the version of the descriptor. The subsequent bytes contains the following
- * fields encoded using the SBE schema.
+ * The descriptor is stored in the first bytes of the segment. The first byte contains the
+ * descriptor version; the remaining fields are encoded by the current {@link
+ * SegmentDescriptorSerializer} in a fixed-layout binary frame protected by a checksum.
  *
  * <p>{@code maxSegmentSize}
  *
- * @param version
- *     <p>version in the header. Increment this version if there is non-backward compatible changes
- *     in the serialization format.
- * @param actingSchemaVersion
- *     <p>version of sbe schema. The version will be incremented if fields are added or removed from
- *     the sbe schema of descriptor. As long as these changes are backward compatible, there is no
- *     need to increment `CUR_VERSION`
+ * @param version version in the header; increment on non-backward compatible format changes
+ * @param actingSchemaVersion minor format version, bumped on backward compatible changes
  * @param id
  *     <p>(64-bit signed integer) - A unique segment identifier. This is a monotonically increasing
  *     number within each journal. Segments with in-sequence identifiers should contain in-sequence
@@ -139,7 +133,7 @@ record SegmentDescriptor(
     SegmentDescriptor build() {
       return new SegmentDescriptor(
           SegmentDescriptorSerializer.CUR_VERSION,
-          (byte) SegmentDescriptorEncoder.SCHEMA_VERSION,
+          (byte) BinarySegmentDescriptorSerializer.DESCRIPTOR_VERSION,
           id,
           index,
           maxSegmentSize,

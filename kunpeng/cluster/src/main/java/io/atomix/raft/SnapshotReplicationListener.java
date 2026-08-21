@@ -1,7 +1,7 @@
 /*
  * Copyright 2016-present Open Networking Foundation
- * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,8 +24,8 @@ package io.atomix.raft;
  * its internal state so that it can start with a new log and a new snapshot.
  *
  * <p>The difference between this listener and {@link
- * io.camunda.zeebe.snapshots.PersistedSnapshotListener} is that {@link
- * io.camunda.zeebe.snapshots.PersistedSnapshotListener} notifies when a snapshot is taken locally
+ * io.atomix.raft.snapshot.PersistedSnapshotListener} is that {@link
+ * io.atomix.raft.snapshot.PersistedSnapshotListener} notifies when a snapshot is taken locally
  * and when a snapshot is received via replication. This listener only notifies when a snapshot is
  * received via raft replication, which happens only when the follower's log is lagging behind the
  * leader.

@@ -1,7 +1,7 @@
 /*
  * Copyright 2015-present Open Networking Foundation
- * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,13 +22,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import io.atomix.cluster.MemberId;
 import io.atomix.raft.RaftRoleChangeListener;
+import io.atomix.raft.RaftRoleStateListener;
 import io.atomix.raft.RaftServer;
 import io.atomix.raft.RaftThreadContextFactory;
 import io.atomix.raft.cluster.RaftCluster;
 import io.atomix.raft.cluster.RaftMember.Type;
 import io.atomix.raft.impl.RaftContext.State;
 import io.atomix.raft.storage.RaftStorage;
-import io.camunda.zeebe.util.health.FailureListener;
+import io.atomix.utils.health.FailureListener;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Random;
@@ -84,6 +85,16 @@ public class DefaultRaftServer implements RaftServer {
   }
 
   @Override
+  public void addRoleStateListener(final RaftRoleStateListener listener) {
+    context.addRoleStateListener(listener);
+  }
+
+  @Override
+  public void removeRoleStateListener(final RaftRoleStateListener listener) {
+    context.removeRoleStateListener(listener);
+  }
+
+  @Override
   public void addFailureListener(final FailureListener listener) {
     context.addFailureListener(listener);
   }
@@ -121,6 +132,11 @@ public class DefaultRaftServer implements RaftServer {
   @Override
   public CompletableFuture<Void> reconfigurePriority(final int newPriority) {
     return context.reconfigurePriority(newPriority);
+  }
+
+  @Override
+  public CompletableFuture<Void> transferLeadership(final MemberId newLeader) {
+    return context.transferLeadership(newLeader);
   }
 
   @Override
@@ -256,6 +272,9 @@ public class DefaultRaftServer implements RaftServer {
               partitionConfig,
               meterRegistry);
       raft.setEntryValidator(entryValidator);
+      if (snapshotProvider != null) {
+        raft.setSnapshotProvider(snapshotProvider);
+      }
 
       return new DefaultRaftServer(raft);
     }

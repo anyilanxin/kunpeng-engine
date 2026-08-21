@@ -1,36 +1,40 @@
 /*
- * Copyright © 2020 camunda services GmbH (info@camunda.com)
  * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package io.atomix.raft.snapshot;
 
-import io.camunda.zeebe.snapshots.SnapshotChunk;
-
+/** 测试用的快照分片桩实现，除身份与内容字段外其余属性均取默认值。 */
 class TestSnapshotChunkImpl implements SnapshotChunk {
 
-  final int totalCount;
-  final String chunkName;
-  private final byte[] content;
   private final String snapshotId;
+  private final String chunkName;
+  private final byte[] chunkContent;
+  private final int chunksTotal;
 
   TestSnapshotChunkImpl(
       final String snapshotId, final String chunkName, final byte[] content, final int totalCount) {
-    this.content = content;
     this.snapshotId = snapshotId;
-    this.totalCount = totalCount;
     this.chunkName = chunkName;
+    this.chunkContent = content;
+    this.chunksTotal = totalCount;
+  }
+
+  @Override
+  public SnapshotType getType() {
+    return SnapshotType.REGULAR;
   }
 
   @Override
@@ -39,37 +43,40 @@ class TestSnapshotChunkImpl implements SnapshotChunk {
   }
 
   @Override
-  public int getTotalCount() {
-    return totalCount;
-  }
-
-  @Override
   public String getChunkName() {
     return chunkName;
   }
 
   @Override
+  public byte[] getContent() {
+    return chunkContent;
+  }
+
+  @Override
+  public int getTotalCount() {
+    return chunksTotal;
+  }
+
+  @Override
+  public long getContentLength() {
+    return chunkContent.length;
+  }
+
+  /** 测试桩不参与校验和计算，恒返回 0。 */
+  @Override
   public long getChecksum() {
     return 0;
   }
 
-  @Override
-  public byte[] getContent() {
-    return content;
-  }
-
+  /** 测试桩不关心分片落盘位置，恒返回 0。 */
   @Override
   public long getFileBlockPosition() {
     return 0;
   }
 
+  /** 测试桩不感知文件大小，恒返回 0。 */
   @Override
   public long getTotalFileSize() {
     return 0;
-  }
-
-  @Override
-  public long getContentLength() {
-    return content.length;
   }
 }

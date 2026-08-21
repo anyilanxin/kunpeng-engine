@@ -1,69 +1,74 @@
 /*
- * Copyright © 2020 camunda services GmbH (info@camunda.com)
  * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package io.atomix.raft.metrics;
 
-import static io.atomix.raft.metrics.SnapshotReplicationMetricsDoc.*;
+import static io.atomix.raft.metrics.SnapshotReplicationMetricsDoc.COUNT;
+import static io.atomix.raft.metrics.SnapshotReplicationMetricsDoc.DURATION;
+import static io.atomix.raft.metrics.SnapshotReplicationMetricsDoc.RECEIVED_BYTES;
+import static io.atomix.raft.metrics.SnapshotReplicationMetricsDoc.RECEIVED_CHUNKS;
 
-import io.camunda.zeebe.util.CloseableSilently;
-import io.camunda.zeebe.util.micrometer.StatefulGauge;
+import com.anyilanxin.kunpeng.utils.CloseableSilently;
+import com.anyilanxin.kunpeng.utils.micrometer.Micrometers;
+import com.anyilanxin.kunpeng.utils.micrometer.SettableGauge;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
+import java.util.concurrent.TimeUnit;
 
+/** 快照复制（接收侧）相关指标采集 */
 public class SnapshotReplicationMetrics extends RaftMetrics implements CloseableSilently {
 
   private final MeterRegistry meterRegistry;
-  private final StatefulGauge count;
-  private final StatefulGauge duration;
+  private final SettableGauge count;
+  private final Timer duration;
 
   public SnapshotReplicationMetrics(final String partitionName, final MeterRegistry meterRegistry) {
     super(partitionName);
     this.meterRegistry = meterRegistry;
-
-    count =
-        StatefulGauge.builder(COUNT.getName())
-            .description(COUNT.getDescription())
-            .tag(RaftKeyNames.PARTITION_GROUP.asString(), partitionGroupName)
-            .register(meterRegistry);
-
-    duration =
-        StatefulGauge.builder(DURATION.getName())
-            .description(DURATION.getDescription())
-            .tag(RaftKeyNames.PARTITION_GROUP.asString(), partitionGroupName)
-            .register(meterRegistry);
+    count = Micrometers.gauge(COUNT, meterRegistry, "partitionGroupName", partitionGroupName);
+    duration = Micrometers.timer(DURATION, meterRegistry, "partitionGroupName", partitionGroupName);
   }
 
   public void incrementCount() {
-    count.increment();
+    count.inc();
   }
 
   public void decrementCount() {
-    count.decrement();
+    count.dec();
   }
 
   public void setCount(final int value) {
     count.set(value);
   }
 
+  /** 记录一次快照复制的总耗时 */
   public void observeDuration(final long durationMillis) {
-    duration.set(durationMillis);
+    duration.record(durationMillis, TimeUnit.MILLISECONDS);
+  }
+
+  /** 记录接收到一个快照分片（字节数与分片数） */
+  public void observeChunk(final long bytes) {
+    Micrometers.counter(RECEIVED_BYTES, meterRegistry, "partitionGroupName", partitionGroupName)
+        .increment(bytes);
+    Micrometers.counter(RECEIVED_CHUNKS, meterRegistry, "partitionGroupName", partitionGroupName)
+        .increment();
   }
 
   @Override
   public void close() {
-    meterRegistry.remove(count);
-    meterRegistry.remove(duration);
+    count.close();
   }
 }

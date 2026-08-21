@@ -1,7 +1,7 @@
 /*
  * Copyright 2017-present Open Networking Foundation
- * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,27 +17,30 @@
  */
 package io.atomix.raft.journal.file;
 
+import static io.atomix.raft.journal.file.SegmentedJournal.ASQN_IGNORE;
+
 import io.atomix.raft.journal.CorruptedJournalException;
 import io.atomix.raft.journal.JournalException.InvalidAsqn;
 import io.atomix.raft.journal.JournalException.InvalidChecksum;
 import io.atomix.raft.journal.JournalException.InvalidIndex;
 import io.atomix.raft.journal.JournalException.SegmentFull;
 import io.atomix.raft.journal.JournalRecord;
-import io.atomix.raft.journal.record.*;
+import io.atomix.raft.journal.record.JournalRecordReaderUtil;
+import io.atomix.raft.journal.record.JournalRecordSerializer;
+import io.atomix.raft.journal.record.PersistedJournalRecord;
+import io.atomix.raft.journal.record.RecordMetadata;
+import io.atomix.raft.journal.record.BinaryRecordSerializer;
 import io.atomix.raft.journal.util.ChecksumGenerator;
-import io.camunda.zeebe.util.Either;
-import io.camunda.zeebe.util.buffer.BufferWriter;
-import io.camunda.zeebe.util.buffer.DirectBufferWriter;
+import io.atomix.utils.Either;
+import com.anyilanxin.kunpeng.structpack.buffer.BufferWriter;
+import com.anyilanxin.kunpeng.structpack.buffer.DirectBufferWriter;
+import java.nio.BufferUnderflowException;
+import java.nio.MappedByteBuffer;
 import org.agrona.MutableDirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.nio.BufferUnderflowException;
-import java.nio.MappedByteBuffer;
-
-import static io.atomix.raft.journal.file.SegmentedJournal.ASQN_IGNORE;
 
 /** Segment writer. */
 final class SegmentWriter {
@@ -54,7 +57,7 @@ final class SegmentWriter {
   private int lastEntryPosition;
   private final JournalRecordReaderUtil recordUtil;
   private final ChecksumGenerator checksumGenerator = new ChecksumGenerator();
-  private final JournalRecordSerializer serializer = new SBESerializer();
+  private final JournalRecordSerializer serializer = new BinaryRecordSerializer();
   private final MutableDirectBuffer writeBuffer = new UnsafeBuffer();
   private final int descriptorLength;
   private final JournalMetrics metrics;
@@ -119,7 +122,7 @@ final class SegmentWriter {
   Either<SegmentFull, JournalRecord> append(final JournalRecord record) {
     final var entryIndex = record.index();
     final var asqn = record.asqn();
-    final var recordDataWriter = new DirectBufferWriter(record.data());
+    final var recordDataWriter = DirectBufferWriter.writerFor(record.data());
     final var expectedChecksum = record.checksum();
 
     verifyAsqnIsIncreasing(asqn);
