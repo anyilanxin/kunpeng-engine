@@ -2,7 +2,9 @@
 
 [中文](./CHANGES.zh-CN.md)
 
-The code in this module originates from the hard fork of Atomix maintained by Camunda (Zeebe):
+The code in this module originates from the Camunda (Zeebe) code base: the hard fork of Atomix
+maintained by Camunda, and the Zeebe journal (write-ahead log) implementation. Both parts were
+pulled from the same commit:
 
 - Upstream repository: <https://github.com/camunda/camunda>
 - Source commit: <https://github.com/camunda/camunda/commit/a8fb2a5868e54f118a085bc688338c49950adf0c> (pulled from the main branch on Aug 19, 2026)
@@ -36,7 +38,12 @@ the following adjustments:
 2. **Only the code that is really needed is kept** (atomix and journal); all other modules were
    removed, so the code base stays small and easy to maintain and iterate on.
 3. The build was migrated from Maven to Gradle and integrated into this repository's unified build.
-4. **For new files added from now on, the applicable license is determined by the license header and
+4. **The journal code was merged into this module**: the former standalone kunpeng/journal module
+   (Zeebe journal implementation, same origin as above) was moved into this module under
+   `src/**/java/io/atomix/raft/journal/` while keeping the original package name
+   `io.camunda.zeebe.journal`, together with its tests and the `journal-schema.xml` resource; the
+   standalone journal module was removed.
+5. **For new files added from now on, the applicable license is determined by the license header and
    copyright notice of each file**, rather than the Apache license.
 
 ## Copyright and License Notes

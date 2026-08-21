@@ -2,7 +2,7 @@
 
 [English](./CHANGES.md)
 
-本模块的代码来源于 Camunda（Zeebe）仓库的 hard fork 版本 Atomix：
+本模块的代码来源于 Camunda（Zeebe）仓库：既包含 Camunda 维护的 Atomix hard fork，也包含 Zeebe 的 journal（预写日志）实现，两部分取自同一提交：
 
 - 上游仓库：<https://github.com/camunda/camunda>
 - 来源提交：<https://github.com/camunda/camunda/commit/a8fb2a5868e54f118a085bc688338c49950adf0c>（2026-08-19 取自主分支）
@@ -29,7 +29,8 @@ Camunda 决定将 fork 直接合入自己的仓库，并裁剪到只保留真正
 1. **删除了所有非 Apache-2.0 协议的代码**（例如以 Camunda License 1.0 协议发布的代码），以解决协议冲突。本模块内剩余代码均为 Apache-2.0 许可（详见各自文件的 license header）。
 2. **只保留真正需要的代码**（atomix 与 journal），其余模块全部删除，让代码库保持精简、便于维护和迭代。
 3. 构建方式由 Maven 迁移至 Gradle，并合入本仓库统一构建。
-4. **后续新增的文件，其适用协议以文件自身的 license header 与版权声明为准**，不再采用 Apache 协议。
+4. **journal 代码已并入本模块**：原独立的 kunpeng/journal 模块（Zeebe journal 实现，来源同上）整体迁入本模块 `src/**/java/io/atomix/raft/journal/` 目录下，保留原包名 `io.camunda.zeebe.journal` 不变，测试与 `journal-schema.xml` 资源一并迁移；独立的 journal 模块已删除。
+5. **后续新增的文件，其适用协议以文件自身的 license header 与版权声明为准**，不再采用 Apache 协议。
 
 ## 版权与许可注意事项
 
