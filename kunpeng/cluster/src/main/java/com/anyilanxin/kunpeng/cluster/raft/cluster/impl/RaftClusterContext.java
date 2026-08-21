@@ -1,0 +1,532 @@
+/*
+ * Copyright 2015-present Open Networking Foundation
+ * Copyright © 2020 camunda services GmbH (info@camunda.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.anyilanxin.kunpeng.cluster.raft.cluster.impl;
+
+import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import com.google.common.collect.Comparators;
+import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftCluster;
+import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember;
+import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember.Type;
+import com.anyilanxin.kunpeng.cluster.raft.impl.RaftContext;
+import com.anyilanxin.kunpeng.cluster.raft.impl.ReconfigurationHelper;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.IndexedRaftLogEntry;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ConfigurationEntry;
+import com.anyilanxin.kunpeng.cluster.raft.storage.system.Configuration;
+import com.anyilanxin.kunpeng.cluster.raft.utils.JointConsensusVoteQuorum;
+import com.anyilanxin.kunpeng.cluster.raft.utils.SimpleVoteQuorum;
+import com.anyilanxin.kunpeng.cluster.raft.utils.Quorum;
+import com.anyilanxin.kunpeng.cluster.raft.utils.VoteQuorum;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.Objects;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/** Manages the persistent state of the Raft cluster from the perspective of a single server. */
+public final class RaftClusterContext implements RaftCluster, AutoCloseable {
+  private static final Logger LOGGER = LoggerFactory.getLogger(RaftClusterContext.class);
+
+  private final RaftContext raft;
+  private final DefaultRaftMember localMember;
+  private final Map<MemberId, RaftMemberContext> remoteMemberContexts = new HashMap<>();
+  private final Set<RaftMemberContext> replicationTargets = new HashSet<>();
+  private final Set<RaftMemberContext> remoteActiveMembers = new HashSet<>();
+  private boolean hasRemoteActiveMembers = false;
+  private Configuration configuration;
+
+  public RaftClusterContext(final MemberId localMemberId, final RaftContext raft) {
+    final Instant time = Instant.now();
+    localMember =
+        new DefaultRaftMember(localMemberId, RaftMember.Type.PASSIVE, time).setCluster(this);
+    this.raft = checkNotNull(raft, "context cannot be null");
+  }
+
+  @Override
+  public String toString() {
+    return toStringHelper(this).add("server", raft.getName()).toString();
+  }
+
+  @Override
+  public CompletableFuture<Void> bootstrap(final Collection<MemberId> cluster) {
+    final var bootstrapFuture = new CompletableFuture<Void>();
+    raft.getThreadContext()
+        .execute(
+            () -> {
+              // Start from the stored configuration, which reflects the newest committed
+              // configuration, and apply any newer configuration entry from the log on top:
+              // configurations take effect as soon as they are appended, so an appended but not
+              // yet committed configuration must survive a restart. Only if neither source has a
+              // configuration, configure the server with the user provided configuration.
+              final var storedConfiguration = raft.getMetaStore().loadConfiguration();
+              if (storedConfiguration != null) {
+                updateConfiguration(storedConfiguration);
+              }
+              reloadConfigurationFromLog();
+              if (configuration == null) {
+                createInitialConfig(cluster);
+              }
+              raft.transition(localMember.getType());
+              bootstrapFuture.complete(null);
+            });
+
+    return bootstrapFuture;
+  }
+
+  @Override
+  public CompletableFuture<Void> join(final Collection<MemberId> cluster) {
+    return new ReconfigurationHelper(raft)
+        .join(cluster)
+        // Usually the transition is triggered by `onConfigure` when the leader sends the updated
+        // configuration. If the join is attempted again, it can be accepted without a configuration
+        // change and nothing triggers the transition.
+        // To avoid this, always transition to the configured role when joining completes
+        // successfully. If this is the first join attempt, it's likely that this transition is from
+        // inactive to inactive and the actual transition to the active role will happen when the
+        // leader sends the updated configuration.
+        .thenRunAsync(() -> raft.transition(localMember.getType()), raft.getThreadContext());
+  }
+
+  @Override
+  public DefaultRaftMember getMember(final MemberId id) {
+    if (localMember.memberId().equals(id)) {
+      return localMember;
+    }
+    final var context = remoteMemberContexts.get(id);
+    return context != null ? context.getMember() : null;
+  }
+
+  @Override
+  public RaftMember getLocalMember() {
+    return localMember;
+  }
+
+  @Override
+  public Collection<RaftMember> getMembers() {
+    return configuration != null ? configuration.allMembers() : null;
+  }
+
+  private void createInitialConfig(final Collection<MemberId> cluster) {
+    localMember.setType(Type.ACTIVE);
+
+    // Create a set of active members.
+    final Set<RaftMember> activeMembers =
+        cluster.stream()
+            .filter(m -> !m.equals(localMember.memberId()))
+            .map(m -> new DefaultRaftMember(m, Type.ACTIVE, localMember.getLastUpdated()))
+            .collect(Collectors.toSet());
+
+    // Add the local member to the set of active members.
+    activeMembers.add(localMember);
+
+    // Create a new configuration and store it on disk to ensure the cluster can fall back to the
+    // configuration.
+    final var initialConfiguration =
+        new Configuration(0, 0, localMember.getLastUpdated().toEpochMilli(), activeMembers);
+    configure(initialConfiguration);
+    commitCurrentConfiguration();
+  }
+
+  /** Returns the context for a given member. */
+  public RaftMemberContext getMemberContext(final MemberId id) {
+    return remoteMemberContexts.get(id);
+  }
+
+  /**
+   * Calculates the smallest value that is reported for a majority of this cluster, assuming that
+   * the local node always has the highest value.
+   *
+   * @param calculateMemberValue a function that calculates a value for a given member. Will be
+   *     evaluated at least once for every remote member.
+   * @return empty when no remote members are present, otherwise the smallest value that is reported
+   *     by enough remote members to form a quorum with the local member.
+   */
+  public <T extends Comparable<T>> Optional<T> getQuorumFor(
+      final Function<RaftMemberContext, T> calculateMemberValue) {
+    if (configuration.requiresJointConsensus()) {
+      final var oldMembers = configuration.oldMembers();
+      final var newMembers = configuration.newMembers();
+
+      final var oldQuorum = getQuorumFor(oldMembers, calculateMemberValue);
+      final var newQuorum = getQuorumFor(newMembers, calculateMemberValue);
+      if (oldQuorum.isPresent() && newQuorum.isPresent()) {
+        return Optional.of(Comparators.min(oldQuorum.get(), newQuorum.get()));
+      } else if (oldQuorum.isPresent()) {
+        return oldQuorum;
+      } else {
+        return newQuorum;
+      }
+    }
+
+    return getQuorumFor(configuration.newMembers(), calculateMemberValue);
+  }
+
+  private <T extends Comparable<T>> Optional<T> getQuorumFor(
+      final Collection<RaftMember> members,
+      final Function<RaftMemberContext, T> calculateMemberValue) {
+    // Under joint consensus, `remoteMemberContexts` is not authoritative, because it contains
+    // entries from old and new configurations. So filter for members that actually are in the
+    // configuration.
+    final var activeMembers =
+        members.stream().filter(member -> member.getType() == Type.ACTIVE).toList();
+    final boolean localMemberVoting =
+        activeMembers.stream().anyMatch(member -> member.memberId().equals(localMember.memberId()));
+    final var reportedValues =
+        activeMembers.stream()
+            .filter(member -> !member.memberId().equals(localMember.memberId()))
+            .map(member -> remoteMemberContexts.get(member.memberId()))
+            .filter(Objects::nonNull)
+            .map(calculateMemberValue)
+            .toList();
+
+    if (reportedValues.isEmpty()) {
+      return Optional.empty();
+    }
+
+    // Ballot-style acknowledgement counting (jraft Ballot/Configuration#quorum): try candidate
+    // values from the largest down and count how many members reported at least that value. The
+    // local member, which by assumption always holds the highest value, counts as an
+    // acknowledgement for every candidate when it is a voting member.
+    final int votingSetSize = reportedValues.size() + (localMemberVoting ? 1 : 0);
+    final int majority = Quorum.majorityOf(votingSetSize);
+    final int localAcks = localMemberVoting ? 1 : 0;
+
+    for (final T candidate :
+        reportedValues.stream().distinct().sorted(Comparator.reverseOrder()).toList()) {
+      int acknowledgements = localAcks;
+      for (final T value : reportedValues) {
+        if (value.compareTo(candidate) >= 0) {
+          acknowledgements++;
+        }
+      }
+      if (acknowledgements >= majority) {
+        return Optional.of(candidate);
+      }
+    }
+
+    // Unreachable: the smallest reported value is held by at least one member, which alone forms
+    // a majority in a set of one. Retained as a safety net.
+    return reportedValues.stream().min(Comparator.naturalOrder());
+  }
+
+  /**
+   * @return true if the cluster has no remote active members and only the local member is active.
+   */
+  public boolean isSingleMemberCluster() {
+    return !hasRemoteActiveMembers;
+  }
+
+  /**
+   * @return A list remote members which participate in voting, i.e. are active.
+   */
+  public Set<RaftMember> getVotingMembers() {
+    return remoteActiveMembers.stream()
+        .map(RaftMemberContext::getMember)
+        .collect(Collectors.toSet());
+  }
+
+  /**
+   * @return A list of remote members that a leader should replicate to.
+   */
+  public Set<RaftMemberContext> getReplicationTargets() {
+    return replicationTargets;
+  }
+
+  /**
+   * @return true if the given member is part of the cluster, false otherwise
+   */
+  public boolean isMember(final MemberId memberId) {
+    // Configuration-derived rather than context-derived: remoteMemberContexts keeps a removed
+    // member alive as a replication target until the removal commits (see updateConfiguration),
+    // but such a member must not become a valid leadership-transfer target (its only caller,
+    // LeaderRole.onTransfer) during that window - membership-blind votes could actually elect it
+    // into a configuration that no longer includes it.
+    return localMember.memberId().equals(memberId)
+        || (configuration != null && configuration.hasMember(memberId));
+  }
+
+  /**
+   * @return true if the current configuration is a join consensus configuration.
+   */
+  public boolean inJointConsensus() {
+    return configuration.requiresJointConsensus();
+  }
+
+  public Configuration getConfiguration() {
+    return configuration;
+  }
+
+  public RaftContext getContext() {
+    return raft;
+  }
+
+  public VoteQuorum getVoteQuorum(final Consumer<Boolean> callback) {
+    final VoteQuorum quorum;
+    if (configuration.requiresJointConsensus()) {
+      quorum =
+          new JointConsensusVoteQuorum(
+              callback,
+              configuration.oldMembers().stream()
+                  .filter(member -> member.getType() == Type.ACTIVE)
+                  .map(RaftMember::memberId)
+                  .collect(Collectors.toSet()),
+              configuration.newMembers().stream()
+                  .filter(member -> member.getType() == Type.ACTIVE)
+                  .map(RaftMember::memberId)
+                  .collect(Collectors.toSet()));
+    } else {
+      quorum =
+          new SimpleVoteQuorum(
+              callback,
+              configuration.newMembers().stream()
+                  .filter(member -> member.getType() == Type.ACTIVE)
+                  .map(RaftMember::memberId)
+                  .collect(Collectors.toSet()));
+    }
+    quorum.succeed(localMember.memberId());
+    return quorum;
+  }
+
+  /**
+   * Applies the newest configuration entry from the log if it is newer than the current
+   * configuration. Configurations take effect as soon as they are appended, so the newest
+   * configuration entry in the log is authoritative, whether it is committed or not.
+   */
+  public void reloadConfigurationFromLog() {
+    raft.checkThread();
+    final var currentConfiguration = configuration;
+    if (currentConfiguration != null && currentConfiguration.force()) {
+      // A forced configuration is authoritative until a new leader appends the configuration that
+      // leaves the forced state. The log may still contain a stale, higher-index configuration
+      // entry from a reconfiguration that was in flight before the force - recovering it would
+      // resurrect exactly the configuration that the force configure was meant to replace. The
+      // force-leaving configuration is not needed from the log either, a leader will disseminate
+      // it via configure requests.
+      return;
+    }
+    IndexedRaftLogEntry lastConfigurationEntry = null;
+    // The reader needs to be uncommitted because the configuration entry might not be committed yet
+    // on this node, but committed on the leader already.
+    try (final var reader = raft.getLog().openUncommittedReader()) {
+      if (currentConfiguration != null) {
+        // Entries covered by the current configuration or the commit index can be skipped: the
+        // configuration guard ignores older indexes anyway, and a committed configuration entry is
+        // always persisted before the commit index that covers it, so it is already reflected in
+        // the current configuration. Without a current configuration (the join path and members
+        // without a meta store), the whole log has to be searched.
+        reader.seek(Math.max(currentConfiguration.index(), raft.getCommitIndex()) + 1);
+      }
+      while (reader.hasNext()) {
+        final var entry = reader.next();
+        if (entry.entry() instanceof ConfigurationEntry) {
+          lastConfigurationEntry = entry;
+        }
+      }
+      if (lastConfigurationEntry != null) {
+        final var configurationEntry = (ConfigurationEntry) lastConfigurationEntry.entry();
+        LOGGER.info(
+            "Reloading configuration {} from log entry at index {}",
+            configurationEntry,
+            lastConfigurationEntry.index());
+        configure(
+            new Configuration(
+                lastConfigurationEntry.index(),
+                lastConfigurationEntry.term(),
+                configurationEntry.timestamp(),
+                configurationEntry.newMembers(),
+                configurationEntry.oldMembers(),
+                false));
+      }
+    }
+  }
+
+  /**
+   * Configures the cluster state.
+   *
+   * @param configuration The cluster configuration.
+   */
+  public void configure(final Configuration configuration) {
+    checkNotNull(configuration, "configuration cannot be null");
+
+    // If the configuration index is less than the currently configured index, ignore it.
+    // Configurations can be persisted and applying old configurations can revert newer
+    // configurations.
+    final var currentConfig = this.configuration;
+    if (currentConfig != null && configuration.index() <= currentConfig.index()) {
+      return;
+    }
+
+    final var initialType = localMember.getType();
+    updateConfiguration(configuration);
+    final var newType = localMember.getType();
+    if (initialType.ordinal() < newType.ordinal()) {
+      // Promotions transition at append, unlike demotions/removals which transition at commit
+      // (see commitCurrentConfiguration). Delaying PASSIVE->ACTIVE to commit has a liveness
+      // counterexample: if the promoted member holds the longest log and the leader dies before
+      // C-new commits, C-new's majority may require the promoted member's vote, and the
+      // log-up-to-date check (dissertation §4.1) makes every other member unelectable - so it
+      // must be able to stand for election under its appended configuration. Likewise, deferring
+      // INACTIVE->PASSIVE would stall log catch-up, since only PassiveRole accepts appends.
+      raft.transition(localMember.getType());
+    }
+
+    // Store the configuration if it's already committed.
+    if (raft.getCommitIndex() >= configuration.index()) {
+      commitCurrentConfiguration();
+    }
+  }
+
+  private void updateConfiguration(final Configuration configuration) {
+    final var time = Instant.ofEpochMilli(configuration.time());
+
+    final var membersInNewConfiguration = configuration.allMembers();
+
+    // Update the local member's type if it has changed
+    if (!membersInNewConfiguration.contains(localMember)) {
+      localMember.update(Type.INACTIVE, time);
+    }
+
+    final var membersToRemove =
+        remoteMemberContexts.values().stream()
+            .map(RaftMemberContext::getMember)
+            .filter(Predicate.not(membersInNewConfiguration::contains))
+            .toList();
+    if (configuration.force()) {
+      // A forced configuration is authoritative without waiting for a commit: the orchestrator
+      // that issues it (ReconfigurationHelper.triggerForceConfigure) wins its election before this
+      // server would ever reach commitCurrentConfiguration, so deferring pruning to commit would
+      // keep presumably-dead members as replication targets of the new leader.
+      for (final var member : membersToRemove) {
+        removeMemberContext(member);
+      }
+    } else {
+      // raft.pdf §6: servers removed by a reconfiguration may only be shut down once the new
+      // configuration commits. Keep their contexts and replication targets alive here - they are
+      // fully pruned in commitCurrentConfiguration() once the outcome is decided - so the leader
+      // keeps replicating and heartbeating to a removed member while its fate is still undecided,
+      // keeping it reachable and its election timer quiet. Only the active-voting bookkeeping,
+      // which election/quorum logic reads at append time, is updated immediately.
+      for (final var member : membersToRemove) {
+        final var context = remoteMemberContexts.get(member.memberId());
+        if (context != null && remoteActiveMembers.remove(context)) {
+          hasRemoteActiveMembers = !remoteActiveMembers.isEmpty();
+        }
+      }
+    }
+
+    // Add or update contexts for members in the new configuration
+    for (final var member : membersInNewConfiguration) {
+      updateMemberContext(member, time);
+    }
+    this.configuration = configuration;
+  }
+
+  private void removeMemberContext(final RaftMember member) {
+    final var memberId = member.memberId();
+    final var context = remoteMemberContexts.get(memberId);
+    if (context != null) {
+      context.close();
+      remoteMemberContexts.remove(memberId);
+      remoteActiveMembers.remove(context);
+      replicationTargets.remove(context);
+      hasRemoteActiveMembers = !remoteActiveMembers.isEmpty();
+    }
+  }
+
+  private void updateMemberContext(final RaftMember member, final Instant time) {
+    if (member.equals(localMember)) {
+      localMember.update(member.getType(), time);
+      return;
+    }
+
+    // Lookup context or create a new one.
+    final var context =
+        remoteMemberContexts.computeIfAbsent(
+            member.memberId(),
+            memberId ->
+                new RaftMemberContext(
+                    new DefaultRaftMember(memberId, member.getType(), time),
+                    this,
+                    raft.getMaxAppendsPerFollower()));
+
+    // If the member type has changed, update the member type and reset its state.
+    if (context.getMember().getType() != member.getType()) {
+      context.getMember().update(member.getType(), time);
+      context.resetState(raft.getLog());
+    }
+
+    if (member.getType() == Type.ACTIVE) {
+      remoteActiveMembers.add(context);
+      hasRemoteActiveMembers = true;
+    } else if (remoteActiveMembers.remove(context)) {
+      hasRemoteActiveMembers = !remoteActiveMembers.isEmpty();
+    }
+
+    if (member.getType() != Type.INACTIVE) {
+      replicationTargets.add(context);
+    }
+  }
+
+  /** Commit the current configuration to disk. */
+  public void commitCurrentConfiguration() {
+    // If the local stored configuration is older than the committed configuration, overwrite it.
+    final var storedConfiguration = raft.getMetaStore().loadConfiguration();
+    if (storedConfiguration == null || storedConfiguration.index() < configuration.index()) {
+      raft.getMetaStore().storeConfiguration(configuration);
+    }
+
+    // Members kept alive as replication targets while the configuration was appended but not yet
+    // committed (see updateConfiguration) can finally be shut down now (raft.pdf §6). This is
+    // idempotent reconciliation: a forced configuration is already pruned by the time this runs,
+    // and every caller (the commit-index hook, an already-committed configure(), the initial
+    // config, PassiveRole/InactiveRole onConfigure, force-configure) may invoke this repeatedly for
+    // the same configuration.
+    final var membersInConfiguration = configuration.allMembers();
+    final var membersToRemove =
+        remoteMemberContexts.values().stream()
+            .map(RaftMemberContext::getMember)
+            .filter(Predicate.not(membersInConfiguration::contains))
+            .toList();
+    for (final var member : membersToRemove) {
+      removeMemberContext(member);
+    }
+
+    // Apply the configuration to the local server state.
+    raft.transition(localMember.getType());
+  }
+
+  @Override
+  public void close() {
+    remoteMemberContexts.values().forEach(RaftMemberContext::close);
+    localMember.close();
+  }
+}
