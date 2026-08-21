@@ -124,18 +124,16 @@ public class SwimMembershipProtocol
       (address, payload) -> SERIALIZER.encode(handleProbe(SERIALIZER.decode(payload)));
 
   SwimMembershipProtocol(
-      final SwimMembershipProtocolConfig config,
-      final String actorSchedulerName,
-      final MeterRegistry registry) {
+      final SwimMembershipProtocolConfig config, final MeterRegistry registry) {
     this.config = config;
     swimMembershipProtocolMetrics = new SwimMembershipProtocolMetrics(registry);
 
     swimScheduler =
         Executors.newSingleThreadScheduledExecutor(
-            namedThreads("atomix-cluster-heartbeat-sender", LOGGER, actorSchedulerName));
+            namedThreads("atomix-cluster-heartbeat-sender", LOGGER));
     eventExecutor =
         Executors.newSingleThreadExecutor(
-            namedThreads("atomix-cluster-events", LOGGER, actorSchedulerName));
+            namedThreads("atomix-cluster-events", LOGGER));
   }
 
   /**
@@ -956,10 +954,8 @@ public class SwimMembershipProtocol
 
     @Override
     public GroupMembershipProtocol newProtocol(
-        final SwimMembershipProtocolConfig config,
-        final String actorSchedulerName,
-        final MeterRegistry registry) {
-      return new SwimMembershipProtocol(config, actorSchedulerName, registry);
+        final SwimMembershipProtocolConfig config, final MeterRegistry registry) {
+      return new SwimMembershipProtocol(config, registry);
     }
   }
 

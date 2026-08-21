@@ -88,7 +88,7 @@ final class NettyMessagingServiceTest {
 
   private NettyMessagingService newMessagingService() {
     return new NettyMessagingService(
-        CLUSTER_NAME, newAddress(), defaultConfig(), "testingPrefix", registry);
+        CLUSTER_NAME, newAddress(), defaultConfig(), registry);
   }
 
   private Address newAddress() {
@@ -326,7 +326,7 @@ final class NettyMessagingServiceTest {
       final var nonBindableAddress = new Address("invalid.host", 1);
       try (final var service =
           new NettyMessagingService(
-              "test", nonBindableAddress, config, "testingPrefix", registry)) {
+              "test", nonBindableAddress, config, registry)) {
         // then - should not fail by using advertisedAddress for binding
         assertThat(service.start()).succeedsWithin(Duration.ofSeconds(5));
         assertThat(service.bindingAddresses()).contains(bindingAddress);
@@ -890,7 +890,7 @@ final class NettyMessagingServiceTest {
           .setHeartbeatInterval(Duration.ofMillis(1));
       try (final var netty3 =
           new NettyMessagingService(
-              CLUSTER_NAME, newAddress(), netty3Config, "testingPrefix", registry)) {
+              CLUSTER_NAME, newAddress(), netty3Config, registry)) {
         startMessagingServices(netty3);
         // when
         final var clientChannel =

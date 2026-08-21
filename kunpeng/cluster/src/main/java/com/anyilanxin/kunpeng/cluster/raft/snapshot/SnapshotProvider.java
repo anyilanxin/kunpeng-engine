@@ -20,12 +20,22 @@ import java.nio.file.Path;
 import java.util.Map;
 
 /**
- * 快照内容拍摄 SPI：具体"拍什么、怎么拍"由业务系统实现，创建 Raft 服务时通过
- * {@code RaftServer.builder().withSnapshotProvider(...)} 注入。
+ * 快照内容拍摄 SPI：具体"拍什么、怎么拍"由业务系统在外部实现，拍摄编排也由业务侧自行驱动。
  *
- * <p>快照模块负责编排：为拍摄准备临时目录并回调 {@link #takeSnapshot(Path)}，业务把内容文件
- * 写入该目录；拍摄完成后由模块生成 manifest（含业务元数据）、逐文件 CRC 校验、原子提交与保留
- * 策略。业务通过 {@link #snapshotVersion()} 与 {@link #businessInfo()} 提供随快照持久化的元数据。
+ * <p>本模块不再内置拍摄编排，业务侧的典型用法（把实现与快照存储串起来）：
+ *
+ * <pre>{@code
+ * SnapshotProvider provider = ...; // 业务实现
+ * var store = raftPartitionServer.getPersistedSnapshotStore();
+ * store.newTransientSnapshot(index, term, nodeId, threads, SnapshotType.REGULAR,
+ *         provider.snapshotVersion(), provider.businessInfo())
+ *     .ifPresent(transient -> transient
+ *         .take(dir -> provider.takeSnapshot(dir))
+ *         .thenCompose(v -> transient.commit()));
+ * }</pre>
+ *
+ * <p>快照模块负责的部分：为拍摄准备临时目录、生成 manifest（含业务元数据）、逐文件 CRC 校验、
+ * 原子提交、保留策略以及提交后的日志自动压缩。
  */
 public interface SnapshotProvider {
 
@@ -47,16 +57,5 @@ public interface SnapshotProvider {
   /** 业务信息键值清单，随 manifest 持久化，缺省为空；key/value 不得包含 '=' 与换行。 */
   default Map<String, String> businessInfo() {
     return Map.of();
-  }
-
-  /** 缺省占位实现：未注入业务实现时使用，拍摄时抛出明确异常提示接入方式。 */
-  final class NoopSnapshotProvider implements SnapshotProvider {
-
-    @Override
-    public void takeSnapshot(final Path snapshotDirectory) {
-      throw new SnapshotException(
-          "No business SnapshotProvider configured; implement SnapshotProvider and pass it via"
-              + " the RaftPartition constructor to enable snapshots");
-    }
   }
 }

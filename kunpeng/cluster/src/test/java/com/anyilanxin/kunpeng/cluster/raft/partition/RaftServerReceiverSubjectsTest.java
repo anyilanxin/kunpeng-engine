@@ -87,7 +87,7 @@ public class RaftServerReceiverSubjectsTest {
     final var meta =
         new PartitionMetadata(
             new PartitionId(group, PARTITION_NO), Set.of(), Map.of(), 1, NODE);
-    final var partition = new RaftPartition(meta, cfg, dir.toFile(), registry);
+    final var partition = new RaftPartition(meta, cfg, dir.toFile(), registry, null, null);
     return new RaftPartitionServer(
         partition,
         cfg,
@@ -96,8 +96,7 @@ public class RaftServerReceiverSubjectsTest {
         communicationService,
         snapshotStore,
         meta,
-        registry,
-        null);
+        registry);
   }
 
   @ParameterizedTest(name = "group={0}, legacy={1}")

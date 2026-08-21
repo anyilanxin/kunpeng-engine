@@ -62,8 +62,6 @@ public class AtomixClusterBuilder implements Builder<AtomixCluster> {
 
   protected final ClusterConfig config;
   private final MeterRegistry meterRegistry;
-  private String schedulerPrefix;
-
   public AtomixClusterBuilder(final ClusterConfig config, final MeterRegistry meterRegistry) {
     this.config = checkNotNull(config, "config cannot be null");
     this.meterRegistry = checkNotNull(meterRegistry, "meterRegistry cannot be null");
@@ -254,14 +252,9 @@ public class AtomixClusterBuilder implements Builder<AtomixCluster> {
     return this;
   }
 
-  public AtomixClusterBuilder withSchedulerPrefix(final String schedulerPrefix) {
-    this.schedulerPrefix = schedulerPrefix;
-    return this;
-  }
 
   @Override
   public AtomixCluster build() {
-    return new AtomixCluster(
-        config, Version.from(VersionUtil.getVersion()), schedulerPrefix, meterRegistry);
+    return new AtomixCluster(config, Version.from(VersionUtil.getVersion()), meterRegistry);
   }
 }

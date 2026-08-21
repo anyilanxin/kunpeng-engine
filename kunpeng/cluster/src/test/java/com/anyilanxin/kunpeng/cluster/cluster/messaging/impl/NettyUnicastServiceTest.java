@@ -71,11 +71,11 @@ public class NettyUnicastServiceTest extends ConcurrentTestCase {
 
     final String clusterId = "testClusterId";
     service1 =
-        new NettyUnicastService(clusterId, address1, new MessagingConfig(), "Unicast-1", registry);
+        new NettyUnicastService(clusterId, address1, new MessagingConfig(), registry);
     service1.start().join();
 
     service2 =
-        new NettyUnicastService(clusterId, address2, new MessagingConfig(), "Unicast-2", registry);
+        new NettyUnicastService(clusterId, address2, new MessagingConfig(), registry);
     service2.start().join();
   }
 

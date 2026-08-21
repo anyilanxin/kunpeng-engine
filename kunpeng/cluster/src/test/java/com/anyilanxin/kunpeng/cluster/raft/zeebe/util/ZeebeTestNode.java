@@ -24,6 +24,7 @@ import com.anyilanxin.kunpeng.cluster.cluster.NoopSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.cluster.discovery.BootstrapDiscoveryProvider;
 import com.anyilanxin.kunpeng.cluster.cluster.discovery.NodeDiscoveryProvider;
 import com.anyilanxin.kunpeng.cluster.raft.partition.PartitionMetadata;
+import com.anyilanxin.kunpeng.cluster.raft.partition.PartitionManagementService;
 import com.anyilanxin.kunpeng.cluster.raft.partition.impl.DefaultPartitionManagementService;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartition;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartitionConfig;
@@ -86,23 +87,23 @@ public class ZeebeTestNode {
             new PartitionMetadata(
                 partitionId, members, priorityMap, primary.getValue(), primary.getKey()));
 
-    partitions = buildPartitions(partitionDistribution);
     final var managementService =
         new DefaultPartitionManagementService(
             cluster.getMembershipService(), cluster.getCommunicationService());
+    partitions = buildPartitions(partitionDistribution, managementService);
     return cluster
         .start()
         .thenCompose(
             ignored ->
                 CompletableFuture.allOf(
                     partitions.stream()
-                        .map(
-                            partition ->
-                                partition.bootstrap(managementService, new NoopSnapshotStore()))
+                        .map(partition -> partition.bootstrap())
                         .toArray(CompletableFuture[]::new)));
   }
 
-  private List<RaftPartition> buildPartitions(final Set<PartitionMetadata> partitionDistribution) {
+  private List<RaftPartition> buildPartitions(
+      final Set<PartitionMetadata> partitionDistribution,
+      final PartitionManagementService managementService) {
     return partitionDistribution.stream()
         .map(
             partitionMetadata -> {
@@ -116,7 +117,9 @@ public class ZeebeTestNode {
                   partitionMetadata,
                   raftPartitionConfig,
                   new File(new File(directory, "log"), "" + member.id()),
-                  meterRegistry);
+                  meterRegistry,
+                  managementService,
+                  new NoopSnapshotStore());
             })
         .toList();
   }

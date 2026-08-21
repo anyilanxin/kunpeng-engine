@@ -145,7 +145,6 @@ public final class NettyMessagingService implements ManagedMessagingService {
   private DnsAddressResolverGroup dnsResolverGroup;
   private final MessagingMetrics messagingMetrics;
   private final MeterRegistry registry;
-  private final String actorSchedulerName;
 
   // flag for passing heartbeats down the pipeline
   private boolean forwardHeartbeats = false;
@@ -157,17 +156,7 @@ public final class NettyMessagingService implements ManagedMessagingService {
       final Address advertisedAddress,
       final MessagingConfig config,
       final MeterRegistry registry) {
-    this(cluster, advertisedAddress, config, ProtocolVersion.latest(), "", registry);
-  }
-
-  public NettyMessagingService(
-      final String cluster,
-      final Address advertisedAddress,
-      final MessagingConfig config,
-      final String actorSchedulerName,
-      final MeterRegistry registry) {
-    this(
-        cluster, advertisedAddress, config, ProtocolVersion.latest(), actorSchedulerName, registry);
+    this(cluster, advertisedAddress, config, ProtocolVersion.latest(), registry);
   }
 
   NettyMessagingService(
@@ -175,7 +164,6 @@ public final class NettyMessagingService implements ManagedMessagingService {
       final Address advertisedAddress,
       final MessagingConfig config,
       final ProtocolVersion protocolVersion,
-      final String actorSchedulerName,
       final MeterRegistry registry) {
     preamble = cluster.hashCode();
     this.advertisedAddress = advertisedAddress;
@@ -183,7 +171,6 @@ public final class NettyMessagingService implements ManagedMessagingService {
     this.config = verifyHeartbeatConfig(config);
     // pool of client connections
     channelPool = new ChannelPool(this::openChannel);
-    this.actorSchedulerName = actorSchedulerName;
     messagingMetrics = new MessagingMetricsImpl(registry);
     this.registry = registry;
 
@@ -517,6 +504,12 @@ public final class NettyMessagingService implements ManagedMessagingService {
     return CompletableFuture.completedFuture(null);
   }
 
+  /** 密钥库口令转字符数组；未配置口令返回 null（无口令密钥库）。 */
+  private char[] keyStorePassword() {
+    final var password = config.getKeyStorePassword();
+    return password == null ? null : password.toCharArray();
+  }
+
   private CompletableFuture<Void> loadClientSslContext() {
     try {
 
@@ -524,7 +517,8 @@ public final class NettyMessagingService implements ManagedMessagingService {
 
       if (config.getKeyStore() != null) {
         sslContextBuilder.trustManager(
-            TlsConfigUtil.getCertificateChain(config.getKeyStore(), config.getKeyStorePassword()));
+            TlsConfigUtil.readTrustedCertificates(
+                config.getKeyStore().toPath(), keyStorePassword()));
       } else {
         sslContextBuilder.trustManager(config.getCertificateChain());
       }
@@ -549,12 +543,12 @@ public final class NettyMessagingService implements ManagedMessagingService {
       final SslContextBuilder sslContextBuilder;
 
       if (config.getKeyStore() != null) {
-        final var privateKey =
-            TlsConfigUtil.getPrivateKey(config.getKeyStore(), config.getKeyStorePassword());
-        final var certChain =
-            TlsConfigUtil.getCertificateChain(config.getKeyStore(), config.getKeyStorePassword());
-
-        sslContextBuilder = SslContextBuilder.forServer(privateKey, certChain);
+        final var serverIdentity =
+            TlsConfigUtil.loadServerIdentity(
+                config.getKeyStore().toPath(), keyStorePassword());
+        sslContextBuilder =
+            SslContextBuilder.forServer(
+                serverIdentity.privateKey(), serverIdentity.certificateChain());
       } else {
         sslContextBuilder =
             SslContextBuilder.forServer(config.getCertificateChain(), config.getPrivateKey());
@@ -618,10 +612,10 @@ public final class NettyMessagingService implements ManagedMessagingService {
   private void initEpollTransport() {
     clientGroup =
         new EpollEventLoopGroup(
-            0, namedThreads("netty-messaging-event-epoll-client-%d", log, actorSchedulerName));
+            0, namedThreads("netty-messaging-event-epoll-client-%d", log));
     serverGroup =
         new EpollEventLoopGroup(
-            0, namedThreads("netty-messaging-event-epoll-server-%d", log, actorSchedulerName));
+            0, namedThreads("netty-messaging-event-epoll-server-%d", log));
     serverChannelClass = EpollServerSocketChannel.class;
     clientChannelClass = EpollSocketChannel.class;
     clientDataGramChannelClass = EpollDatagramChannel.class;
@@ -630,10 +624,10 @@ public final class NettyMessagingService implements ManagedMessagingService {
   private void initNioTransport() {
     clientGroup =
         new NioEventLoopGroup(
-            0, namedThreads("netty-messaging-event-nio-client-%d", log, actorSchedulerName));
+            0, namedThreads("netty-messaging-event-nio-client-%d", log));
     serverGroup =
         new NioEventLoopGroup(
-            0, namedThreads("netty-messaging-event-nio-server-%d", log, actorSchedulerName));
+            0, namedThreads("netty-messaging-event-nio-server-%d", log));
     serverChannelClass = NioServerSocketChannel.class;
     clientChannelClass = NioSocketChannel.class;
     clientDataGramChannelClass = NioDatagramChannel.class;

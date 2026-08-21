@@ -49,7 +49,7 @@ final class StepDownTest {
     final var meta = new PartitionMetadata(id, Set.of(), Map.of(), 1, null);
     final var cfg = new RaftPartitionConfig();
     cfg.setPriorityElectionEnabled(priorityElectionEnabled);
-    return new RaftPartition(meta, cfg, dir.toFile(), registry);
+    return new RaftPartition(meta, cfg, dir.toFile(), registry, null, null);
   }
 
   /** 通过反射把一个 mock server 塞进分区，免去真正启动服务的开销。 */

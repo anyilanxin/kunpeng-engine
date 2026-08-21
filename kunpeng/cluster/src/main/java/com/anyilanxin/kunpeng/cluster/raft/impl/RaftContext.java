@@ -44,7 +44,6 @@ import com.anyilanxin.kunpeng.cluster.raft.protocol.RaftResponse.Status;
 import com.anyilanxin.kunpeng.cluster.raft.roles.*;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.ReceivableSnapshotStore;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotProvider;
 import com.anyilanxin.kunpeng.cluster.raft.storage.RaftStorage;
 import com.anyilanxin.kunpeng.cluster.raft.storage.StorageException;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLog;
@@ -133,8 +132,6 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
   private long firstCommitIndex;
   private volatile boolean started;
   private EntryValidator entryValidator;
-  /** 业务快照拍摄 SPI，创建 Raft 服务时注入，未注入时不支持业务快照拍摄。 */
-  private SnapshotProvider snapshotProvider;
   private LeadershipTransferWriteBarrier leadershipTransferWriteBarrier =
       LeadershipTransferWriteBarrier.NONE;
   private LeadershipTransferCoordinatorCheck leadershipTransferCoordinatorCheck =
@@ -1126,16 +1123,6 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
    */
   public void setEntryValidator(final EntryValidator validator) {
     entryValidator = validator;
-  }
-
-  /** 返回业务快照拍摄 SPI；未注入时为 null（不可拍摄业务快照）。 */
-  public SnapshotProvider getSnapshotProvider() {
-    return snapshotProvider;
-  }
-
-  /** 注入业务快照拍摄 SPI，由创建 Raft 服务的一侧传入。 */
-  public void setSnapshotProvider(final SnapshotProvider provider) {
-    snapshotProvider = provider;
   }
 
 

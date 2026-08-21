@@ -54,7 +54,6 @@ import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.ReceivableSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotException;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotProvider;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotType;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.transfer.SnapshotTransferClient;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.transfer.SnapshotTransferServer;
@@ -93,8 +92,6 @@ public class RaftPartitionServer implements HealthMonitorable {
   private final RaftServer server;
   private final MeterRegistry meterRegistry;
   private final SnapshotTransferServer snapshotTransferServer;
-  /** 业务快照拍摄 SPI，由分区构造链传入；为 null 时不支持业务快照拍摄。 */
-  private final SnapshotProvider snapshotProvider;
 
   public RaftPartitionServer(
       final RaftPartition partition,
@@ -104,8 +101,7 @@ public class RaftPartitionServer implements HealthMonitorable {
       final ClusterCommunicationService clusterCommunicator,
       final ReceivableSnapshotStore persistedSnapshotStore,
       final PartitionMetadata partitionMetadata,
-      final MeterRegistry meterRegistry,
-      final SnapshotProvider snapshotProvider) {
+      final MeterRegistry meterRegistry) {
     this.partition = partition;
     this.config = config;
     this.localMemberId = localMemberId;
@@ -114,8 +110,6 @@ public class RaftPartitionServer implements HealthMonitorable {
     this.meterRegistry = meterRegistry;
     this.persistedSnapshotStore = persistedSnapshotStore;
     this.partitionMetadata = partitionMetadata;
-    this.snapshotProvider =
-        snapshotProvider != null ? snapshotProvider : new SnapshotProvider.NoopSnapshotProvider();
     requestTimeout = config.getRequestTimeout();
     snapshotRequestTimeout = config.getSnapshotRequestTimeout();
     configurationChangeTimeout = config.getConfigurationChangeTimeout();
@@ -225,47 +219,6 @@ public class RaftPartitionServer implements HealthMonitorable {
         persistedSnapshotStore);
   }
 
-  /**
-   * 拍摄本节点当前已提交位点的常规快照：内容生成委托给业务注入的 {@link SnapshotProvider}，
-   * 快照模块负责临时目录、manifest（含业务元数据）、逐文件校验与原子提交。
-   */
-  public CompletableFuture<PersistedSnapshot> takeSnapshot() {
-    final var provider = snapshotProvider;
-    final var context = server.getContext();
-
-    final long commitIndex = context.getCommitIndex();
-    final long term = context.getTerm();
-    final var transientSnapshot =
-        persistedSnapshotStore
-            .newTransientSnapshot(
-                commitIndex,
-                term,
-                localMemberId.id(),
-                1,
-                SnapshotType.REGULAR,
-                provider.snapshotVersion(),
-                provider.businessInfo())
-            .orElse(null);
-    if (transientSnapshot == null) {
-      return CompletableFuture.failedFuture(
-          new SnapshotException(
-              "A newer snapshot already exists in partition "
-                  + partition.id()
-                  + "; skipped taking snapshot at index "
-                  + commitIndex));
-    }
-
-    return transientSnapshot
-        .take(
-            directory -> {
-              try {
-                provider.takeSnapshot(directory);
-              } catch (final Exception e) {
-                throw new CompletionException(e);
-              }
-            })
-        .thenCompose(ignored -> transientSnapshot.commit());
-  }
 
   public CompletableFuture<Void> reconfigurePriority(final int newPriority) {
     return server.reconfigurePriority(newPriority);

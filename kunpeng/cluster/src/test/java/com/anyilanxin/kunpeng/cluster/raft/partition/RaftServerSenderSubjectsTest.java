@@ -85,7 +85,7 @@ public class RaftServerSenderSubjectsTest {
   private RaftServerProtocol protocolUnderTest(final Path dir) {
     final var cfg = new RaftPartitionConfig();
     cfg.setStorageConfig(new RaftStorageConfig());
-    final var partition = new RaftPartition(META, cfg, dir.toFile(), registry);
+    final var partition = new RaftPartition(META, cfg, dir.toFile(), registry, null, null);
     final var server =
         new RaftPartitionServer(
             partition,
@@ -95,8 +95,7 @@ public class RaftServerSenderSubjectsTest {
             communicationService,
             snapshotStore,
             META,
-            registry,
-            null);
+            registry);
     return server.getServer().getContext().getProtocol();
   }
 

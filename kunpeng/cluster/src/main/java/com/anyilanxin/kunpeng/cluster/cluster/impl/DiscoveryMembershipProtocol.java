@@ -171,7 +171,7 @@ public final class DiscoveryMembershipProtocol
 
     @Override
     public GroupMembershipProtocol newProtocol(
-        final Config config, final String actorSchedulerName, final MeterRegistry registry) {
+        final Config config, final MeterRegistry registry) {
       return new DiscoveryMembershipProtocol(config);
     }
   }

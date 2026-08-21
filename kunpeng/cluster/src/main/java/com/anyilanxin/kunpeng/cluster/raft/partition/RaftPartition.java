@@ -31,7 +31,6 @@ import com.anyilanxin.kunpeng.cluster.raft.partition.impl.RaftPartitionServer;
 import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.ReceivableSnapshotStore;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotProvider;
 import com.anyilanxin.kunpeng.cluster.utils.health.FailureListener;
 import com.anyilanxin.kunpeng.cluster.utils.health.HealthMonitorable;
 import com.anyilanxin.kunpeng.cluster.utils.health.HealthReport;
@@ -56,36 +55,31 @@ public final class RaftPartition implements Partition, HealthMonitorable {
   private final RaftPartitionConfig config;
   private final File dataDirectory;
   private final MeterRegistry meterRegistry;
-  /** 业务快照拍摄 SPI，构造时由业务组装层传入；为 null 时不支持业务快照拍摄。 */
-  private final SnapshotProvider snapshotProvider;
   private final Set<RaftRoleChangeListener> deferredRoleChangeListeners =
       new CopyOnWriteArraySet<>();
   private final Set<RaftRoleStateListener> deferredRoleStateListeners =
       new CopyOnWriteArraySet<>();
   private final PartitionMetadata partitionMetadata;
+  /** 分区管理服务（成员发现与集群通信），构造时注入。 */
+  private final PartitionManagementService managementService;
+  /** 本分区的快照存储，构造时注入。 */
+  private final ReceivableSnapshotStore snapshotStore;
   private RaftPartitionServer server;
 
   public RaftPartition(
       final PartitionMetadata partitionMetadata,
       final RaftPartitionConfig config,
       final File dataDirectory,
-      final MeterRegistry meterRegistry) {
-    this(partitionMetadata, config, dataDirectory, meterRegistry, null);
-  }
-
-  public RaftPartition(
-      final PartitionMetadata partitionMetadata,
-      final RaftPartitionConfig config,
-      final File dataDirectory,
       final MeterRegistry meterRegistry,
-      final SnapshotProvider snapshotProvider) {
+      final PartitionManagementService managementService,
+      final ReceivableSnapshotStore snapshotStore) {
     partitionId = partitionMetadata.id();
     this.partitionMetadata = partitionMetadata;
     this.config = config;
     this.dataDirectory = dataDirectory;
     this.meterRegistry = meterRegistry;
-    this.snapshotProvider =
-        snapshotProvider != null ? snapshotProvider : new SnapshotProvider.NoopSnapshotProvider();
+    this.managementService = managementService;
+    this.snapshotStore = snapshotStore;
   }
 
   public void addRoleChangeListener(final RaftRoleChangeListener listener) {
@@ -94,15 +88,6 @@ public final class RaftPartition implements Partition, HealthMonitorable {
     } else {
       server.addRoleChangeListener(listener);
     }
-  }
-
-  /** 拍摄本分区当前已提交位点的业务快照（创建服务时需注入 SnapshotProvider）。 */
-  public CompletableFuture<PersistedSnapshot> takeSnapshot() {
-    if (server == null) {
-      return CompletableFuture.failedFuture(
-          new IllegalStateException("Partition server is not initialized; cannot take snapshot"));
-    }
-    return server.takeSnapshot();
   }
 
   /**
@@ -141,23 +126,20 @@ public final class RaftPartition implements Partition, HealthMonitorable {
     return dataDirectory;
   }
 
-  /** Bootstraps a partition. */
-  public CompletableFuture<RaftPartition> bootstrap(
-      final PartitionManagementService managementService,
-      final ReceivableSnapshotStore snapshotStore) {
+  /** 引导分区（本节点是初始成员时创建 Raft 服务并引导集群）。 */
+  public CompletableFuture<RaftPartition> bootstrap() {
     if (partitionMetadata
         .members()
         .contains(managementService.getMembershipService().getLocalMember().id())) {
-      initServer(managementService, snapshotStore);
+      initServer();
       return server.bootstrap().thenApply(v -> this);
     }
     return CompletableFuture.completedFuture(this);
   }
 
-  public CompletableFuture<RaftPartition> join(
-      final PartitionManagementService managementService,
-      final ReceivableSnapshotStore snapshotStore) {
-    initServer(managementService, snapshotStore);
+  /** 以加入者身份加入分区集群。 */
+  public CompletableFuture<RaftPartition> join() {
+    initServer();
     return server.join().thenApply(v -> this);
   }
 
@@ -165,10 +147,8 @@ public final class RaftPartition implements Partition, HealthMonitorable {
     return server.leave().thenApply(v -> this);
   }
 
-  private void initServer(
-      final PartitionManagementService managementService,
-      final ReceivableSnapshotStore snapshotStore) {
-    server = createServer(managementService, snapshotStore);
+  private void initServer() {
+    server = createServer();
 
     if (!deferredRoleChangeListeners.isEmpty()) {
       deferredRoleChangeListeners.forEach(server::addRoleChangeListener);
@@ -181,9 +161,7 @@ public final class RaftPartition implements Partition, HealthMonitorable {
   }
 
   /** Creates a Raft server. */
-  private RaftPartitionServer createServer(
-      final PartitionManagementService managementService,
-      final ReceivableSnapshotStore snapshotStore) {
+  private RaftPartitionServer createServer() {
     return new RaftPartitionServer(
         this,
         config,
@@ -192,8 +170,7 @@ public final class RaftPartition implements Partition, HealthMonitorable {
         managementService.getMessagingService(),
         snapshotStore,
         partitionMetadata,
-        meterRegistry,
-        snapshotProvider);
+        meterRegistry);
   }
 
   /**

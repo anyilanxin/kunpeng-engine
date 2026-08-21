@@ -88,21 +88,10 @@ public class NettyUnicastService implements ManagedUnicastService {
 
   private DnsAddressResolverGroup dnsAddressResolverGroup;
 
-  private final String actorSchedulerName;
-
   public NettyUnicastService(
       final String clusterId,
       final Address advertisedAddress,
       final MessagingConfig config,
-      final MeterRegistry registry) {
-    this(clusterId, advertisedAddress, config, "", registry);
-  }
-
-  public NettyUnicastService(
-      final String clusterId,
-      final Address advertisedAddress,
-      final MessagingConfig config,
-      final String actorSchedulerName,
       final MeterRegistry registry) {
     this.advertisedAddress = advertisedAddress;
     this.config = config;
@@ -113,7 +102,6 @@ public class NettyUnicastService implements ManagedUnicastService {
     // don't support binding to multiple interfaces here; wouldn't make sense anyway
     final var port = config.getPort() != null ? config.getPort() : advertisedAddress.port();
     bindAddress = new Address(new InetSocketAddress(port));
-    this.actorSchedulerName = actorSchedulerName != null ? actorSchedulerName : "";
   }
 
   @Override
@@ -230,7 +218,7 @@ public class NettyUnicastService implements ManagedUnicastService {
   public CompletableFuture<UnicastService> start() {
     group =
         new NioEventLoopGroup(
-            0, namedThreads("netty-unicast-event-nio-client-%d", log, actorSchedulerName));
+            0, namedThreads("netty-unicast-event-nio-client-%d", log));
     return bootstrap()
         .thenRun(
             () -> {

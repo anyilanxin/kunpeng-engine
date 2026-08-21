@@ -32,7 +32,6 @@ import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartitionConfig;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.RaftServerProtocol;
 import com.anyilanxin.kunpeng.cluster.raft.storage.RaftStorage;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLog;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotProvider;
 import com.anyilanxin.kunpeng.cluster.raft.zeebe.EntryValidator;
 import com.anyilanxin.kunpeng.cluster.raft.zeebe.EntryValidator.NoopEntryValidator;
 import com.anyilanxin.kunpeng.cluster.utils.Builder;
@@ -493,18 +492,6 @@ public interface RaftServer {
     protected PartitionId partitionId =
         new PartitionId(PhysicalTenantIds.DEFAULT_PHYSICAL_TENANT_ID, 0);
     protected MeterRegistry meterRegistry;
-    protected SnapshotProvider snapshotProvider;
-
-    /**
-     * 注入业务快照拍摄 SPI：快照模块编排拍摄与提交，内容由该实现生成。
-     *
-     * @param snapshotProvider 业务拍摄实现
-     * @return The Raft server builder.
-     */
-    public Builder withSnapshotProvider(final SnapshotProvider snapshotProvider) {
-      this.snapshotProvider = checkNotNull(snapshotProvider, "snapshotProvider cannot be null");
-      return this;
-    }
 
     protected Builder(final MemberId localMemberId) {
       this.localMemberId = checkNotNull(localMemberId, "localMemberId cannot be null");

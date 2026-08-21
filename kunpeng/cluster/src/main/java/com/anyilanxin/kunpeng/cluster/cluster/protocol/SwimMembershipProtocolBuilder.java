@@ -142,6 +142,6 @@ public class SwimMembershipProtocolBuilder extends GroupMembershipProtocolBuilde
 
   @Override
   public GroupMembershipProtocol build() {
-    return new SwimMembershipProtocol(config, "", meterRegistry);
+    return new SwimMembershipProtocol(config, meterRegistry);
   }
 }

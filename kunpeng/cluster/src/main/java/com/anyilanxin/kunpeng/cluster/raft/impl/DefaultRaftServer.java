@@ -272,9 +272,6 @@ public class DefaultRaftServer implements RaftServer {
               partitionConfig,
               meterRegistry);
       raft.setEntryValidator(entryValidator);
-      if (snapshotProvider != null) {
-        raft.setSnapshotProvider(snapshotProvider);
-      }
 
       return new DefaultRaftServer(raft);
     }

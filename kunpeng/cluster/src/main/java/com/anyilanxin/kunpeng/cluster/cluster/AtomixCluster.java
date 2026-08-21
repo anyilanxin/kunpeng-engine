@@ -106,11 +106,8 @@ public class AtomixCluster implements BootstrapService, Managed<Void> {
   private final AtomicBoolean started = new AtomicBoolean();
 
   public AtomixCluster(
-      final ClusterConfig config,
-      final Version version,
-      final String actorSchedulerName,
-      final MeterRegistry registry) {
-    this(config, version, null, null, actorSchedulerName, registry);
+      final ClusterConfig config, final Version version, final MeterRegistry registry) {
+    this(config, version, null, null, registry);
   }
 
   protected AtomixCluster(
@@ -118,19 +115,14 @@ public class AtomixCluster implements BootstrapService, Managed<Void> {
       final Version version,
       final ManagedMessagingService messagingService,
       final ManagedUnicastService unicastService,
-      final String actorSchedulerName,
       final MeterRegistry registry) {
     this.messagingService =
-        messagingService != null
-            ? messagingService
-            : buildMessagingService(config, actorSchedulerName, registry);
+        messagingService != null ? messagingService : buildMessagingService(config, registry);
     this.unicastService =
-        unicastService != null
-            ? unicastService
-            : buildUnicastService(config, actorSchedulerName, registry);
+        unicastService != null ? unicastService : buildUnicastService(config, registry);
 
     discoveryProvider = buildLocationProvider(config);
-    membershipProtocol = buildMembershipProtocol(config, actorSchedulerName, registry);
+    membershipProtocol = buildMembershipProtocol(config, registry);
     membershipService =
         buildClusterMembershipService(config, this, discoveryProvider, membershipProtocol, version);
     communicationService =
@@ -302,23 +294,21 @@ public class AtomixCluster implements BootstrapService, Managed<Void> {
 
   /** Builds a default messaging service. */
   protected static ManagedMessagingService buildMessagingService(
-      final ClusterConfig config, final String actorSchedulerName, final MeterRegistry registry) {
+      final ClusterConfig config, final MeterRegistry registry) {
     return new NettyMessagingService(
         config.getClusterId(),
         config.getNodeConfig().getAddress(),
         config.getMessagingConfig(),
-        actorSchedulerName,
         registry);
   }
 
   /** Builds a default unicast service. */
   protected static ManagedUnicastService buildUnicastService(
-      final ClusterConfig config, final String actorSchedulerName, final MeterRegistry registry) {
+      final ClusterConfig config, final MeterRegistry registry) {
     return new NettyUnicastService(
         config.getClusterId(),
         config.getNodeConfig().getAddress(),
         config.getMessagingConfig(),
-        actorSchedulerName,
         registry);
   }
 
@@ -336,11 +326,11 @@ public class AtomixCluster implements BootstrapService, Managed<Void> {
   /** Builds the group membership protocol. */
   @SuppressWarnings("unchecked")
   protected static GroupMembershipProtocol buildMembershipProtocol(
-      final ClusterConfig config, final String actorSchedulerName, final MeterRegistry registry) {
+      final ClusterConfig config, final MeterRegistry registry) {
     return config
         .getProtocolConfig()
         .getType()
-        .newProtocol(config.getProtocolConfig(), actorSchedulerName, registry);
+        .newProtocol(config.getProtocolConfig(), registry);
   }
 
   /** Builds a cluster service. */

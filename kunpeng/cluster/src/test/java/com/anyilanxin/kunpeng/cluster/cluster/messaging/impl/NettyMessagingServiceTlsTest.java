@@ -141,7 +141,7 @@ final class NettyMessagingServiceTlsTest {
     final var config =
         new MessagingConfig().setPort(SocketUtil.getNextAddress().getPort()).setTlsEnabled(false);
     return new NettyMessagingService(
-        "cluster", Address.from(config.getPort()), config, "insecureTestPrefix", registry);
+        "cluster", Address.from(config.getPort()), config, registry);
   }
 
   private NettyMessagingService createSecureMessagingService(
@@ -161,10 +161,6 @@ final class NettyMessagingServiceTlsTest {
             .setCertificateChain(certificate.certificate())
             .setPrivateKey(certificate.privateKey());
     return new NettyMessagingService(
-        "cluster",
-        Address.from(address.getHostString(), address.getPort()),
-        config,
-        "secureTestPrefix",
-        registry);
+        "cluster", Address.from(address.getHostString(), address.getPort()), config, registry);
   }
 }
