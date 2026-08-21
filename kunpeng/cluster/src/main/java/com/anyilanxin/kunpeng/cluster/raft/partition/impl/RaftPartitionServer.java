@@ -73,6 +73,8 @@ public class RaftPartitionServer implements Managed<RaftPartitionServer>, Health
   private final Set<RaftRoleChangeListener> deferredRoleChangeListeners =
       new CopyOnWriteArraySet<>();
   private final Set<FailureListener> deferredFailureListeners = new CopyOnWriteArraySet<>();
+  private final Set<RaftRoleStateListener> deferredRoleStateListeners =
+      new CopyOnWriteArraySet<>();
   private final PartitionMetadata partitionMetadata;
   private final Duration requestTimeout;
   private final MeterRegistry meterRegistry;
@@ -211,6 +213,34 @@ public class RaftPartitionServer implements Managed<RaftPartitionServer>, Health
 
     deferredFailureListeners.forEach(server::addFailureListener);
     deferredFailureListeners.clear();
+
+    deferredRoleStateListeners.forEach(this::registerRoleStateListener);
+    deferredRoleStateListeners.clear();
+  }
+
+  private void registerRoleStateListener(final RaftRoleStateListener listener) {
+    server.getContext().addRoleStateListener(listener);
+  }
+
+  private void unregisterRoleStateListener(final RaftRoleStateListener listener) {
+    server.getContext().removeRoleStateListener(listener);
+  }
+
+  /** 添加业务角色状态监听器（server 未创建时延迟注册） */
+  public void addRoleStateListener(final RaftRoleStateListener listener) {
+    if (server == null) {
+      deferredRoleStateListeners.add(listener);
+    } else {
+      registerRoleStateListener(listener);
+    }
+  }
+
+  /** 移除业务角色状态监听器 */
+  public void removeRoleStateListener(final RaftRoleStateListener listener) {
+    deferredRoleStateListeners.remove(listener);
+    if (server != null) {
+      unregisterRoleStateListener(listener);
+    }
   }
 
   private RaftServer buildServer() {

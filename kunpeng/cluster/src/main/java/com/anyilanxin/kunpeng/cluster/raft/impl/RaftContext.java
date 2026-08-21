@@ -96,6 +96,8 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
   private final Logger log;
   private final RaftElectionConfig electionConfig;
   private final Set<RaftRoleChangeListener> roleChangeListeners = new CopyOnWriteArraySet<>();
+  private final Set<com.anyilanxin.kunpeng.cluster.raft.RaftRoleStateListener> roleStateListeners =
+      new CopyOnWriteArraySet<>();
   private final Set<Consumer<State>> stateChangeListeners = new CopyOnWriteArraySet<>();
   private final Set<Consumer<RaftMember>> electionListeners = new CopyOnWriteArraySet<>();
   private final Set<RaftCommitListener> commitListeners = new CopyOnWriteArraySet<>();
@@ -340,6 +342,46 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
   }
 
   /**
+   * Adds a role state listener. If there isn't currently a transition ongoing the listener is
+   * called immediately with the current state after adding the listener.
+   *
+   * @param listener The role state listener.
+   */
+  public void addRoleStateListener(
+      final com.anyilanxin.kunpeng.cluster.raft.RaftRoleStateListener listener) {
+    threadContext.execute(
+        () -> {
+          roleStateListeners.add(listener);
+
+          // When a transition is currently ongoing, then the given
+          // listener will be called when the transition completes.
+          if (!ongoingTransition) {
+            dispatchRoleState(listener, getTerm());
+          }
+        });
+  }
+
+  /**
+   * Removes a role state listener.
+   *
+   * @param listener The role state listener.
+   */
+  public void removeRoleStateListener(
+      final com.anyilanxin.kunpeng.cluster.raft.RaftRoleStateListener listener) {
+    roleStateListeners.remove(listener);
+  }
+
+  /** 按角色分发到单个监听器 */
+  private void dispatchRoleState(
+      final com.anyilanxin.kunpeng.cluster.raft.RaftRoleStateListener listener, final long term) {
+    switch (role.role()) {
+      case LEADER -> listener.toLeader(term);
+      case FOLLOWER -> listener.toFollower(term);
+      default -> listener.toInactive(term);
+    }
+  }
+
+  /**
    * Awaits a state change.
    *
    * @param state the state for which to wait
@@ -517,6 +559,8 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
           missedSnapshotReplicationEvents = MissedSnapshotReplicationEvents.STARTED;
           snapshotReplicationListeners.forEach(
               SnapshotReplicationListener::onSnapshotReplicationStarted);
+          // 快照复制开始：本节点状态将被替换，业务视角进入 inactive
+          roleStateListeners.forEach(l -> l.toInactive(term));
         });
   }
 
@@ -525,6 +569,8 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
         () -> {
           snapshotReplicationListeners.forEach(l -> l.onSnapshotReplicationCompleted(term));
           missedSnapshotReplicationEvents = MissedSnapshotReplicationEvents.COMPLETED;
+          // 快照复制完成：业务视角恢复 follower
+          roleStateListeners.forEach(l -> l.toFollower(term));
         });
   }
 
@@ -701,6 +747,21 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
       roleChangeListeners.forEach(l -> l.onNewRole(partitionMetadata, role.role(), getTerm()));
     } catch (final Exception exception) {
       log.error("Unexpected error on calling role change listeners.", exception);
+    }
+    notifyRoleStateListeners();
+  }
+
+  /** 按当前角色分发业务角色状态：LEADER→toLeader，FOLLOWER→toFollower，其余→toInactive */
+  private void notifyRoleStateListeners() {
+    final long currentTerm = getTerm();
+    try {
+      switch (role.role()) {
+        case LEADER -> roleStateListeners.forEach(l -> l.toLeader(currentTerm));
+        case FOLLOWER -> roleStateListeners.forEach(l -> l.toFollower(currentTerm));
+        default -> roleStateListeners.forEach(l -> l.toInactive(currentTerm));
+      }
+    } catch (final Exception exception) {
+      log.error("Unexpected error on calling role state listeners.", exception);
     }
   }
 

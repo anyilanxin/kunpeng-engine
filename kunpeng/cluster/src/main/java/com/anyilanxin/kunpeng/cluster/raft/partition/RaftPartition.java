@@ -22,6 +22,7 @@ import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationService;
 import com.anyilanxin.kunpeng.cluster.raft.RaftCommitListener;
 import com.anyilanxin.kunpeng.cluster.raft.RaftRoleChangeListener;
+import com.anyilanxin.kunpeng.cluster.raft.RaftRoleStateListener;
 import com.anyilanxin.kunpeng.cluster.raft.RaftServer.Role;
 import com.anyilanxin.kunpeng.cluster.raft.journal.util.health.FailureListener;
 import com.anyilanxin.kunpeng.cluster.raft.journal.util.health.HealthMonitorable;
@@ -78,6 +79,8 @@ public class RaftPartition implements Partition, HealthMonitorable {
       new CopyOnWriteArraySet<>();
   private final Set<FailureListener> deferredFailureListeners = new CopyOnWriteArraySet<>();
   private final Set<RaftCommitListener> deferredCommitListeners =
+      new CopyOnWriteArraySet<>();
+  private final Set<RaftRoleStateListener> deferredRoleStateListeners =
       new CopyOnWriteArraySet<>();
   private volatile RaftPartitionServer server;
   private volatile Scheduled snapshotTimer;
@@ -583,6 +586,10 @@ public class RaftPartition implements Partition, HealthMonitorable {
       deferredCommitListeners.forEach(srv::addCommitListener);
       deferredCommitListeners.clear();
     }
+    if (!deferredRoleStateListeners.isEmpty()) {
+      deferredRoleStateListeners.forEach(srv::addRoleStateListener);
+      deferredRoleStateListeners.clear();
+    }
   }
 
   // ===== 查询 =====
@@ -683,6 +690,25 @@ public class RaftPartition implements Partition, HealthMonitorable {
       srv.addRoleChangeListener(listener);
     } else {
       deferredRoleChangeListeners.add(listener);
+    }
+  }
+
+  /** 添加业务角色状态监听器（server 未创建时延迟注册） */
+  public void addRoleStateListener(final RaftRoleStateListener listener) {
+    final var srv = server;
+    if (srv != null) {
+      srv.addRoleStateListener(listener);
+    } else {
+      deferredRoleStateListeners.add(listener);
+    }
+  }
+
+  /** 移除业务角色状态监听器 */
+  public void removeRoleStateListener(final RaftRoleStateListener listener) {
+    deferredRoleStateListeners.remove(listener);
+    final var srv = server;
+    if (srv != null) {
+      srv.removeRoleStateListener(listener);
     }
   }
 
