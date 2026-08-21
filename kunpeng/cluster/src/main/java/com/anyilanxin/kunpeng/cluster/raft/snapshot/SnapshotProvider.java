@@ -27,11 +27,15 @@ import java.util.Map;
  * <pre>{@code
  * SnapshotProvider provider = ...; // 业务实现
  * var store = raftPartitionServer.getPersistedSnapshotStore();
- * store.newTransientSnapshot(index, term, nodeId, threads, SnapshotType.REGULAR,
- *         provider.snapshotVersion(), provider.businessInfo())
- *     .ifPresent(transient -> transient
- *         .take(dir -> provider.takeSnapshot(dir))
- *         .thenCompose(v -> transient.commit()));
+ * final var pending = store.newTransientSnapshot(index, term, provider.businessInfo());
+ * pending.ifRight(handle -> {
+ *   try {
+ *     provider.takeSnapshot(handle.getPath()); // 业务直接写目录
+ *     handle.persist();                        // 三阶段提交
+ *   } catch (final Exception e) {
+ *     handle.abort();
+ *   }
+ * });
  * }</pre>
  *
  * <p>快照模块负责的部分：为拍摄准备临时目录、生成 manifest（含业务元数据）、逐文件 CRC 校验、
@@ -55,7 +59,7 @@ public interface SnapshotProvider {
   }
 
   /** 业务信息键值清单，随 manifest 持久化，缺省为空；key/value 不得包含 '=' 与换行。 */
-  default Map<String, String> businessInfo() {
+  default Map<String, Object> businessInfo() {
     return Map.of();
   }
 }

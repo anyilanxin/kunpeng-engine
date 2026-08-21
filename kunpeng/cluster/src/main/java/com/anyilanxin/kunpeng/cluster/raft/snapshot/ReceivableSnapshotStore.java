@@ -18,16 +18,17 @@ package com.anyilanxin.kunpeng.cluster.raft.snapshot;
 
 import java.util.concurrent.CompletableFuture;
 
-/** A snapshot store which can also receive snapshots replicated from a leader, chunk by chunk. */
+/** 可接收式快照存储：在本地拍摄之外，支持按分片接收 leader 或跨分区传来的快照。 */
 public interface ReceivableSnapshotStore extends PersistedSnapshotStore {
 
   /**
-   * Creates a new received snapshot for the given snapshot id ({@code index-term-nodeId}). The
-   * returned snapshot writes into a temporary directory until committed.
+   * 为给定快照 id（{@code index-term-hex(nodeId)}）创建待接收快照的临时目录，返回其 pending
+   * 句柄；分片经 {@link SnapshotChunkAppender#of(PersistableSnapshot)} 逐片写入、校验，直到
+   * {@link PersistableSnapshot#persist()} 提交。
    *
    * @param snapshotId the id of the snapshot to receive
-   * @return a future completed with the received snapshot
+   * @return a future completed with the pending snapshot
    * @throws SnapshotException.SnapshotAlreadyExistsException if an identical snapshot exists
    */
-  CompletableFuture<ReceivedSnapshot> newReceivedSnapshot(String snapshotId);
+  CompletableFuture<PersistableSnapshot> newReceivedSnapshot(String snapshotId);
 }

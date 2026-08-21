@@ -18,9 +18,10 @@ package com.anyilanxin.kunpeng.cluster.raft.snapshot.transfer;
 
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationService;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistableSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.ReceivableSnapshotStore;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.ReceivedSnapshot;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChunkAppender;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotException;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotType;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.SnapshotChunkImpl;
@@ -29,9 +30,10 @@ import java.util.concurrent.CompletableFuture;
 import org.agrona.concurrent.UnsafeBuffer;
 
 /**
- * 跨分区快照传输客户端：向指定源节点逐块拉取指定类型的最新快照，写入本地接收式快照存储并提交。
+ * 跨分区快照传输客户端：向指定源节点逐批拉取指定类型的最新快照，写入本地接收式快照存储并提交。
  *
- * <p>逐块请求-应答（每块带超时），以"续传分片名"推进；任一块失败即中止本次接收，可整体重拉。
+ * <p>每批请求-应答（带超时）携带多个分片帧，以"上批末片名"续传推进；任一批失败即中止本次接收，
+ * 可整体重拉。全部批次完成后校验分片完整性并提交。
  */
 public final class SnapshotTransferClient {
 
@@ -61,6 +63,7 @@ public final class SnapshotTransferClient {
         Math.max(1, preferredChunkSize),
         null,
         null,
+        null,
         localStore);
   }
 
@@ -70,7 +73,8 @@ public final class SnapshotTransferClient {
       final SnapshotType type,
       final int chunkSize,
       final String afterChunkName,
-      final ReceivedSnapshot receiving,
+      final PersistableSnapshot receiving,
+      final SnapshotChunkAppender appender,
       final ReceivableSnapshotStore localStore) {
     final var request = new SnapshotTransferRequest(type, chunkSize, afterChunkName);
     return communicator
@@ -83,34 +87,45 @@ public final class SnapshotTransferClient {
             chunkTimeout)
         .thenCompose(
             response -> {
-              if (response.getChunkFrame().length == 0) {
+              if (response.getChunkFrames().isEmpty()) {
                 return finishEmpty(receiving);
               }
-              final var chunk = parseChunk(response.getChunkFrame());
-              final ReceivedSnapshot target =
-                  receiving != null
-                      ? receiving
-                      : localStore.newReceivedSnapshot(chunk.getSnapshotId()).join();
-              return target
-                  .apply(chunk)
-                  .thenCompose(
-                      ignored -> {
-                        if (response.hasMore()) {
-                          return transferNext(
-                              subject,
-                              sourceMember,
-                              type,
-                              chunkSize,
-                              chunk.getChunkName(),
-                              target,
-                              localStore);
-                        }
-                        return target.persist();
-                      });
+              PersistableSnapshot target = receiving;
+              SnapshotChunkAppender targetAppender = appender;
+              if (target == null) {
+                final var first = parseChunk(response.getChunkFrames().get(0));
+                target = localStore.newReceivedSnapshot(first.getSnapshotId()).join();
+                targetAppender = SnapshotChunkAppender.of(target);
+              }
+
+              final PersistableSnapshot finalTarget = target;
+              final SnapshotChunkAppender finalAppender = targetAppender;
+              CompletableFuture<Void> written =
+                  CompletableFuture.completedFuture(null);
+              for (final byte[] frame : response.getChunkFrames()) {
+                final var chunk = parseChunk(frame);
+                written = written.thenCompose(ignored -> finalAppender.append(chunk));
+              }
+              return written.thenCompose(
+                  ignored -> {
+                    if (response.hasMore()) {
+                      return transferNext(
+                          subject,
+                          sourceMember,
+                          type,
+                          chunkSize,
+                          response.getLastChunkName(),
+                          finalTarget,
+                          finalAppender,
+                          localStore);
+                    }
+                    finalAppender.verifyComplete();
+                    return finalTarget.persist().toCompletableFuture();
+                  });
             });
   }
 
-  private CompletableFuture<PersistedSnapshot> finishEmpty(final ReceivedSnapshot receiving) {
+  private CompletableFuture<PersistedSnapshot> finishEmpty(final PersistableSnapshot receiving) {
     if (receiving != null) {
       receiving.abort();
     }

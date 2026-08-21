@@ -55,7 +55,12 @@ public class RaftPartitionConfig {
   private EntryValidator entryValidator;
   private Duration configurationChangeTimeout = DEFAULT_CONFIGURATION_CHANGE_TIMEOUT;
   private int snapshotChunkSize;
+  /** 快照跨分区传输的批量分片累计字节上限（一批多片，单文件不限大小可跨批）。 */
+  private int snapshotTransferMaxBatchSize = DEFAULT_SNAPSHOT_TRANSFER_MAX_BATCH_SIZE;
   private boolean receiveOnLegacySubject = DEFAULT_RECEIVE_ON_LEGACY_SUBJECT;
+
+  /** 快照跨分区传输批量的缺省累计字节上限（4 MiB）。 */
+  private static final int DEFAULT_SNAPSHOT_TRANSFER_MAX_BATCH_SIZE = 4 * 1024 * 1024;
 
   /**
    * Returns the Raft leader election timeout.
@@ -153,6 +158,14 @@ public class RaftPartitionConfig {
 
   public void setSnapshotChunkSize(final int snapshotChunkSize) {
     this.snapshotChunkSize = snapshotChunkSize;
+  }
+
+  public int getSnapshotTransferMaxBatchSize() {
+    return snapshotTransferMaxBatchSize;
+  }
+
+  public void setSnapshotTransferMaxBatchSize(final int snapshotTransferMaxBatchSize) {
+    this.snapshotTransferMaxBatchSize = snapshotTransferMaxBatchSize;
   }
 
   public Duration getConfigurationChangeTimeout() {

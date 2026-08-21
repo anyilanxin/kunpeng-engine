@@ -16,30 +16,48 @@
  */
 package com.anyilanxin.kunpeng.cluster.cluster;
 
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.BootstrapSnapshot;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.MergeSnapshot;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistableSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshotListener;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.RaftSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.ReceivableSnapshotStore;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.ReceivedSnapshot;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.TransientSnapshot;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotException;
+import com.anyilanxin.kunpeng.scheduler.Either;
+import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
+import com.anyilanxin.kunpeng.scheduler.future.CompletableActorFuture;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
 
 /** A no-op snapshot store which never holds any snapshots. */
 public class NoopSnapshotStore implements ReceivableSnapshotStore {
 
   @Override
-  public Optional<PersistedSnapshot> getLatestSnapshot() {
+  public Optional<RaftSnapshot> getLatestSnapshot() {
     return Optional.empty();
   }
 
   @Override
-  public Optional<PersistedSnapshot> getSnapshotAt(final long index) {
+  public Optional<RaftSnapshot> getSnapshotAt(final long index) {
     return Optional.empty();
   }
 
   @Override
   public CompletableFuture<Long> getCompactionBound() {
     return CompletableFuture.completedFuture(0L);
+  }
+
+  @Override
+  public Optional<BootstrapSnapshot> getBootstrapSnapshot() {
+    return Optional.empty();
+  }
+
+  @Override
+  public Optional<MergeSnapshot> getMergeSnapshot() {
+    return Optional.empty();
   }
 
   @Override
@@ -53,34 +71,34 @@ public class NoopSnapshotStore implements ReceivableSnapshotStore {
   }
 
   @Override
-  public CompletableFuture<Void> abortPendingSnapshots() {
-    return CompletableFuture.completedFuture(null);
+  public ActorFuture<Void> abortPendingSnapshots() {
+    return CompletableActorFuture.completed();
   }
 
   @Override
-  public Optional<TransientSnapshot> newTransientSnapshot(
-      final long index,
-      final long term,
-      final String nodeId,
-      final int replicationThreads,
-      final com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotType type,
-      final int version,
-      final java.util.Map<String, String> businessInfo) {
-    return Optional.of(
-        new TransientSnapshot() {
-          @Override
-          public CompletableFuture<Void> take(final java.util.function.Consumer<java.nio.file.Path> writer) {
-            return CompletableFuture.completedFuture(null);
-          }
+  public Either<SnapshotException, PersistableSnapshot> newTransientSnapshot(
+      final long index, final long term, final Map<String, Object> businessInfo) {
+    return Either.left(
+        new SnapshotException("NoopSnapshotStore cannot take snapshots"));
+  }
 
-          @Override
-          public CompletableFuture<PersistedSnapshot> commit() {
-            return CompletableFuture.completedFuture(null);
-          }
+  @Override
+  public Either<SnapshotException, PersistableSnapshot> newBootstrapSnapshot(
+      final long index, final long term, final Map<String, Object> businessInfo) {
+    return newTransientSnapshot(index, term, businessInfo);
+  }
 
-          @Override
-          public void abort() {}
-        });
+  @Override
+  public Either<SnapshotException, PersistableSnapshot> newMergeSnapshot(
+      final long index, final long term, final Map<String, Object> businessInfo) {
+    return newTransientSnapshot(index, term, businessInfo);
+  }
+
+  @Override
+  public ActorFuture<PersistedSnapshot> copyForBootstrap(
+      final BiConsumer<java.nio.file.Path, java.nio.file.Path> copySnapshot) {
+    return CompletableActorFuture.completedExceptionally(
+        new SnapshotException("NoopSnapshotStore cannot copy snapshots"));
   }
 
   @Override
@@ -90,7 +108,7 @@ public class NoopSnapshotStore implements ReceivableSnapshotStore {
   public void removeSnapshotListener(final PersistedSnapshotListener listener) {}
 
   @Override
-  public CompletableFuture<ReceivedSnapshot> newReceivedSnapshot(final String snapshotId) {
+  public CompletableFuture<PersistableSnapshot> newReceivedSnapshot(final String snapshotId) {
     return CompletableFuture.failedFuture(
         new UnsupportedOperationException("NoopSnapshotStore cannot receive snapshots"));
   }

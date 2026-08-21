@@ -22,7 +22,6 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import org.agrona.DirectBuffer;
 import org.agrona.MutableDirectBuffer;
-import org.agrona.concurrent.UnsafeBuffer;
 
 /**
  * 快照分片的线格式实现，用于在安装快照请求中承载单个分片。
@@ -133,9 +132,10 @@ public final class SnapshotChunkImpl implements SnapshotChunk {
     return content.length;
   }
 
-  /** 将分片内容包装为只读视图。 */
-  public DirectBuffer getContentBuffer() {
-    return new UnsafeBuffer(content);
+  /** 将分片内容包装为只读视图（与 {@link SnapshotChunk} 契约一致）。 */
+  @Override
+  public ByteBuffer getContentBuffer() {
+    return ByteBuffer.wrap(content).asReadOnlyBuffer();
   }
 
   /** 序列化后该分片占用的总字节数。 */

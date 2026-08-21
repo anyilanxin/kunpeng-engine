@@ -16,6 +16,8 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.snapshot;
 
+import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
+import com.anyilanxin.kunpeng.scheduler.future.CompletableActorFuture;
 import com.anyilanxin.kunpeng.utils.CloseableSilently;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -26,8 +28,11 @@ import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/** In-memory test double implementing both {@link PersistedSnapshot} and {@link ReceivedSnapshot}. */
-public final class InMemorySnapshot implements PersistedSnapshot, ReceivedSnapshot {
+/**
+ * 内存版快照测试替身：同时实现持久快照（常规）、pending 快照与分片写入器三种契约。
+ */
+public final class InMemorySnapshot
+    implements RaftSnapshot, PersistableSnapshot, SnapshotChunkAppender {
 
   private final TestSnapshotStore testSnapshotStore;
   private final SnapshotMetadata metadata;
@@ -38,13 +43,7 @@ public final class InMemorySnapshot implements PersistedSnapshot, ReceivedSnapsh
   InMemorySnapshot(final TestSnapshotStore testSnapshotStore, final String snapshotId) {
     this.testSnapshotStore = testSnapshotStore;
     id = snapshotId;
-    final var parts = snapshotId.split("-");
-    metadata =
-        SnapshotMetadata.of(
-            Long.parseLong(parts[0]),
-            Long.parseLong(parts[1]),
-            parts[2],
-            SnapshotType.REGULAR);
+    this.metadata = SnapshotMetadata.fromSnapshotId(snapshotId);
   }
 
   InMemorySnapshot(
@@ -53,8 +52,9 @@ public final class InMemorySnapshot implements PersistedSnapshot, ReceivedSnapsh
       final long term,
       final int nodeId) {
     this.testSnapshotStore = testSnapshotStore;
-    id = String.format("%d-%d-%d", index, term, nodeId);
-    metadata = SnapshotMetadata.of(index, term, String.valueOf(nodeId), SnapshotType.REGULAR);
+    this.metadata =
+        SnapshotMetadata.of(index, term, String.valueOf(nodeId), SnapshotType.REGULAR);
+    id = metadata.getSnapshotIdAsString();
   }
 
   public static InMemorySnapshot newPersistedSnapshot(
@@ -211,27 +211,36 @@ public final class InMemorySnapshot implements PersistedSnapshot, ReceivedSnapsh
         + "'}";
   }
 
-  // ReceivedSnapshot
+  // PersistableSnapshot
 
   @Override
-  public SnapshotMetadata snapshotId() {
-    return metadata;
+  public SnapshotId snapshotId() {
+    return SnapshotId.fromMetadata(metadata);
   }
 
   @Override
-  public CompletableFuture<Void> apply(final SnapshotChunk chunk) {
+  public ActorFuture<PersistedSnapshot> persist() {
+    if (testSnapshotStore != null) {
+      testSnapshotStore.newSnapshot(this);
+    }
+    return CompletableActorFuture.completed(this);
+  }
+
+  @Override
+  public ActorFuture<Void> abort() {
+    return CompletableActorFuture.completed();
+  }
+
+  // SnapshotChunkAppender
+
+  @Override
+  public CompletableFuture<Void> append(final SnapshotChunk chunk) {
     chunks.put(chunk.getChunkName(), chunk.getContent());
     return CompletableFuture.completedFuture(null);
   }
 
   @Override
-  public CompletableFuture<PersistedSnapshot> persist() {
-    if (testSnapshotStore != null) {
-      testSnapshotStore.newSnapshot(this);
-    }
-    return CompletableFuture.completedFuture(this);
+  public void verifyComplete() {
+    // 内存替身不校验分片计数
   }
-
-  @Override
-  public void abort() {}
 }

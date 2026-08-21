@@ -16,13 +16,12 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.snapshot.impl;
 
-import com.anyilanxin.kunpeng.utils.CloseableSilently;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChunkReader;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotMetadata;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotType;
+import com.anyilanxin.kunpeng.utils.CloseableSilently;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
@@ -31,8 +30,10 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** A snapshot persisted as a directory containing a {@link SnapshotManifest} plus content files. */
-final class FilePersistedSnapshot implements PersistedSnapshot {
+/**
+ * 文件持久快照公共基类：目录 = manifest + 内容文件；三个子类固定快照的公共类型。
+ */
+abstract class FilePersistedSnapshot implements PersistedSnapshot {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(FilePersistedSnapshot.class);
   private static final int SNAPSHOT_VERSION = 1;
@@ -48,15 +49,22 @@ final class FilePersistedSnapshot implements PersistedSnapshot {
     this.manifest = manifest;
   }
 
+  /** 按 manifest 类型分派到对应类型子类。 */
+  static FilePersistedSnapshot of(final Path path, final SnapshotManifest manifest) {
+    return switch (manifest.type()) {
+      case REGULAR -> new FileRaftSnapshot(path, manifest);
+      case BOOTSTRAP -> new FileBootstrapSnapshot(path, manifest);
+      case MERGE -> new FileMergeSnapshot(path, manifest);
+    };
+  }
+
   /** Loads the snapshot stored in the given directory, marking it corrupt if unreadable. */
   static FilePersistedSnapshot load(final Path path) {
     try {
-      return new FilePersistedSnapshot(path, SnapshotManifest.read(path));
+      return of(path, SnapshotManifest.read(path));
     } catch (final Exception e) {
       LOGGER.warn("Snapshot directory {} has no valid manifest, marking corrupt", path, e);
-      final var corruptSnapshot =
-          new FilePersistedSnapshot(
-              path, new SnapshotManifest(corruptMetadata(path), List.of()));
+      final var corruptSnapshot = of(path, new SnapshotManifest(corruptMetadata(path), List.of()));
       corruptSnapshot.corrupt = true;
       return corruptSnapshot;
     }
@@ -150,6 +158,6 @@ final class FilePersistedSnapshot implements PersistedSnapshot {
 
   @Override
   public String toString() {
-    return "FilePersistedSnapshot{path=" + path + ", metadata=" + manifest.metadata + '}';
+    return getClass().getSimpleName() + "{path=" + path + ", metadata=" + manifest.metadata + '}';
   }
 }

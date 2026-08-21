@@ -16,42 +16,47 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.snapshot;
 
+import java.nio.ByteBuffer;
+
 /**
- * A single piece of a snapshot, transferred in an install request. A snapshot is split into blocks
- * of bounded size, each belonging to one of the snapshot's files. The checksum covers only this
- * chunk's content.
+ * 快照分片：传输的最小内容单元，一个分片属于快照内某个文件的一个字节区间。
+ *
+ * <p>checksum 仅覆盖本分片内容（CRC32）；{@code chunkName} 以 {@code 文件名@字节偏移} 编码，
+ * 与分片尺寸无关以支持断点续传。
  */
 public interface SnapshotChunk {
 
-  /** Returns the type of the snapshot this chunk belongs to; defaults to a regular snapshot. */
+  /** 该分片所属快照的类型，缺省为常规快照。 */
   default SnapshotType getType() {
     return SnapshotType.REGULAR;
   }
 
-  /** Returns the id of the snapshot this chunk belongs to ({@code index-term-nodeId}). */
+  /** 该分片所属快照的 id（{@code index-term-hex(nodeId)}）。 */
   String getSnapshotId();
 
-  /** Returns the total number of chunks of the snapshot, given the current chunk size. */
+  /** 该快照的总分片数（按当前分片尺寸）。 */
   int getTotalCount();
 
-  /**
-   * Returns the name of this chunk, which identifies the file and block within it, e.g. {@code
-   * <fileName>:<blockNumber>}.
-   */
+  /** 分片名：{@code 文件名@字节偏移}。 */
   String getChunkName();
 
-  /** Returns the CRC32 checksum of this chunk's content. */
+  /** 本分片内容的 CRC32 校验和。 */
   long getChecksum();
 
-  /** Returns the content of this chunk. */
+  /** 本分片内容。 */
   byte[] getContent();
 
-  /** Returns the position of this chunk's block within its file. */
+  /** 分片内容的只读 ByteBuffer 视图。 */
+  default ByteBuffer getContentBuffer() {
+    return ByteBuffer.wrap(getContent()).asReadOnlyBuffer();
+  }
+
+  /** 分片在所属文件内的字节偏移。 */
   long getFileBlockPosition();
 
-  /** Returns the total size of the file this chunk belongs to. */
+  /** 分片所属文件的总大小。 */
   long getTotalFileSize();
 
-  /** Returns the length of this chunk's content. */
+  /** 分片内容长度（字节）。 */
   long getContentLength();
 }

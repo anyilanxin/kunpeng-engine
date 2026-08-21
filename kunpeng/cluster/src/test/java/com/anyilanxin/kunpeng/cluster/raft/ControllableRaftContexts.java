@@ -238,7 +238,9 @@ public final class ControllableRaftContexts {
     final var memberId = MemberId.from(String.valueOf(nodeId));
     final var snapshotStore =
         new FileSnapshotStore(
-            getMemberDirectory(directory, memberId.toString()).toPath().resolve("snapshots"), 3);
+            getMemberDirectory(directory, memberId.toString()).toPath().resolve("snapshots"),
+            3,
+            memberId.toString());
     snapshotStores.put(memberId, snapshotStore);
     final RaftContext raftContext =
         createRaftContext(
@@ -458,16 +460,10 @@ public final class ControllableRaftContexts {
 
       try {
         testSnapshotStore
-            .newTransientSnapshot(
-                snapshotIndex,
-                term,
-                "0",
-                1,
-                com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotType.REGULAR,
-                1,
-                java.util.Map.of())
-            .orElseThrow()
-            .commit()
+            .newTransientSnapshot(snapshotIndex, term, java.util.Map.of())
+            .get()
+            .persist()
+            .toCompletableFuture()
             .get();
       } catch (final Exception e) {
         throw new java.util.concurrent.CompletionException(e);

@@ -53,8 +53,9 @@ import com.anyilanxin.kunpeng.cluster.raft.journal.CheckedJournalException.Flush
 import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException;
 import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException.InvalidChecksum;
 import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException.InvalidIndex;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistableSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.ReceivedSnapshot;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChunkAppender;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotException.SnapshotAlreadyExistsException;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.SnapshotChunkId;
 import com.anyilanxin.kunpeng.utils.jar.CheckedRunnable;
@@ -74,7 +75,8 @@ public class PassiveRole extends InactiveRole {
   private final ThrottledLogger throttledLogger = new ThrottledLogger(log, Duration.ofSeconds(5));
   private final SnapshotReplicationMetrics snapshotReplicationMetrics;
   private long pendingSnapshotStartTimestamp;
-  private ReceivedSnapshot pendingSnapshot;
+  private PersistableSnapshot pendingSnapshot;
+  private SnapshotChunkAppender pendingAppender;
   private ByteBuffer nextPendingSnapshotChunkId;
   private ByteBuffer previouslyReceivedSnapshotChunkId;
   private final int snapshotChunkSize;
@@ -154,10 +156,7 @@ public class PassiveRole extends InactiveRole {
     // snapshot, and so snapshots aren't simply sent at the beginning of the follower's log, but
     // rather the leader dictates when a snapshot needs to be sent.
     if (pendingSnapshot != null
-        && !pendingSnapshot
-            .snapshotId()
-            .getSnapshotIdAsString()
-            .equals(snapshotChunk.getSnapshotId())) {
+        && !pendingSnapshot.snapshotId().asString().equals(snapshotChunk.getSnapshotId())) {
       abortPendingSnapshots();
     }
 
@@ -189,6 +188,7 @@ public class PassiveRole extends InactiveRole {
             raft.getPersistedSnapshotStore()
                 .newReceivedSnapshot(snapshotChunk.getSnapshotId())
                 .get();
+        pendingAppender = SnapshotChunkAppender.of(pendingSnapshot);
       } catch (final ExecutionException errorCreatingPendingSnapshot) {
         return failIfSnapshotAlreadyExists(errorCreatingPendingSnapshot, snapshotChunk);
       } catch (final InterruptedException e) {
@@ -216,7 +216,7 @@ public class PassiveRole extends InactiveRole {
     snapshotReplicationMetrics.observeChunk(request.data().remaining());
 
     try {
-      pendingSnapshot.apply(snapshotChunk).join();
+      pendingAppender.append(snapshotChunk).join();
     } catch (final Exception e) {
       log.warn(
           "Failed to write pending snapshot chunk {}, rolling back snapshot {}",
@@ -243,9 +243,9 @@ public class PassiveRole extends InactiveRole {
       try {
         // Reset before committing to prevent the edge case where the system crashes after
         // committing the snapshot, and restart with a snapshot and invalid log.
-        resetLogOnReceivingSnapshot(pendingSnapshot.index());
+        resetLogOnReceivingSnapshot(pendingSnapshot.snapshotId().index());
 
-        persistedSnapshot = pendingSnapshot.persist().join();
+        persistedSnapshot = pendingSnapshot.persist().toCompletableFuture().join();
         log.info("Committed snapshot {}", persistedSnapshot);
       } catch (final Exception e) {
         log.error("Failed to commit pending snapshot {}, rolling back", pendingSnapshot, e);
@@ -260,6 +260,7 @@ public class PassiveRole extends InactiveRole {
       }
 
       pendingSnapshot = null;
+      pendingAppender = null;
       pendingSnapshotStartTimestamp = 0L;
       setNextExpected(null);
       previouslyReceivedSnapshotChunkId = null;
@@ -700,11 +701,12 @@ public class PassiveRole extends InactiveRole {
       previouslyReceivedSnapshotChunkId = null;
       log.info("Rolling back snapshot {}", pendingSnapshot);
       try {
-        pendingSnapshot.abort();
+        pendingSnapshot.abort().toCompletableFuture().join();
       } catch (final Exception e) {
         log.error("Failed to abort pending snapshot, clearing status anyway", e);
       }
       pendingSnapshot = null;
+      pendingAppender = null;
       pendingSnapshotStartTimestamp = 0L;
 
       snapshotReplicationMetrics.decrementCount();

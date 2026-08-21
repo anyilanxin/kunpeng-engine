@@ -16,15 +16,21 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.snapshot.impl;
 
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.BootstrapSnapshot;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.MergeSnapshot;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistableSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshotListener;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.RaftSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.ReceivableSnapshotStore;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.ReceivedSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotException;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotException.SnapshotAlreadyExistsException;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotId;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotMetadata;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotType;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.TransientSnapshot;
+import com.anyilanxin.kunpeng.scheduler.Either;
+import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
+import com.anyilanxin.kunpeng.scheduler.future.CompletableActorFuture;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.channels.FileChannel;
@@ -42,17 +48,17 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BiConsumer;
 import java.util.zip.CRC32;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * File-based snapshot store. Snapshots are grouped by type into the subdirectories {@code
- * snapshot/}（常规）、{@code bootstrap/}（引导）、{@code merge/}（合并）under the store root; each
- * snapshot lives in its own directory named {@code <index>-<term>-<nodeId>}, containing a {@code
- * manifest} file plus arbitrary content files. Snapshots are created in temporary directories and
- * moved into place atomically. Directories left directly under the root from an older layout are
- * loaded as legacy regular snapshots.
+ * 文件快照存储：按类型分目录存储三类快照，目录名 {@code <index>-<term>-<hex(nodeId)>}。
+ *
+ * <p>常规快照存于 {@code snapshot/}（按 {@code maxSnapshotCount} 保留），引导/合并快照分别存于
+ * {@code bootstrap/}、{@code merge/}（各只保留最新一个）。快照在临时目录中构建后原子 move 到
+ * 目标位置；根目录下的旧布局目录按常规快照加载。
  */
 public final class FileSnapshotStore implements ReceivableSnapshotStore {
 
@@ -69,13 +75,18 @@ public final class FileSnapshotStore implements ReceivableSnapshotStore {
 
   private final Path root;
   private final int maxSnapshotCount;
+  // 本节点 id：拍摄快照的标识三元组之一
+  private final String nodeId;
   private final List<PersistedSnapshotListener> listeners = new CopyOnWriteArrayList<>();
+  // 进行中的 pending 快照（拍摄/接收），供 abortPendingSnapshots 统一清理
+  private final List<FilePersistableSnapshot> pendingSnapshots = new CopyOnWriteArrayList<>();
   private final Map<String, FilePersistedSnapshot> snapshots = new ConcurrentHashMap<>();
   private final AtomicLong temporaryDirectoryIds = new AtomicLong();
 
-  public FileSnapshotStore(final Path root, final int maxSnapshotCount) {
+  public FileSnapshotStore(final Path root, final int maxSnapshotCount, final String nodeId) {
     this.root = root;
     this.maxSnapshotCount = maxSnapshotCount;
+    this.nodeId = nodeId;
     try {
       Files.createDirectories(root);
       for (final SnapshotType type : SnapshotType.values()) {
@@ -182,39 +193,49 @@ public final class FileSnapshotStore implements ReceivableSnapshotStore {
         .resolve(snapshotDirectory.getFileName().toString() + VERIFICATION_SUFFIX);
   }
 
+  /** 最新常规快照（仅 REGULAR 类型）。 */
   @Override
-  public Optional<PersistedSnapshot> getLatestSnapshot() {
-    return snapshots.values().stream()
-        .filter(snapshot -> !snapshot.isCorrupt())
-        .max(Comparator.comparingLong(PersistedSnapshot::getIndex))
-        .map(PersistedSnapshot.class::cast);
+  public Optional<RaftSnapshot> getLatestSnapshot() {
+    return latestOf(SnapshotType.REGULAR).map(RaftSnapshot.class::cast);
   }
 
   @Override
-  public Optional<PersistedSnapshot> getLatestSnapshot(final SnapshotType type) {
+  public Optional<RaftSnapshot> getSnapshotAt(final long index) {
     return snapshots.values().stream()
-        .filter(snapshot -> !snapshot.isCorrupt() && snapshot.getType() == type)
-        .max(Comparator.comparingLong(PersistedSnapshot::getIndex))
-        .map(PersistedSnapshot.class::cast);
-  }
-
-  @Override
-  public Optional<PersistedSnapshot> getSnapshotAt(final long index) {
-    return snapshots.values().stream()
+        .filter(snapshot -> snapshot.getType() == SnapshotType.REGULAR)
         .filter(snapshot -> snapshot.getIndex() == index)
         .findFirst()
-        .map(PersistedSnapshot.class::cast);
+        .map(RaftSnapshot.class::cast);
   }
 
+  /** 压缩下界：仅统计常规快照（引导/合并不参与日志压缩）。 */
   @Override
   public CompletableFuture<Long> getCompactionBound() {
     final long bound =
         snapshots.values().stream()
             .filter(snapshot -> !snapshot.isCorrupt())
+            .filter(snapshot -> snapshot.getType() == SnapshotType.REGULAR)
             .mapToLong(PersistedSnapshot::getIndex)
             .min()
             .orElse(0L);
     return CompletableFuture.completedFuture(bound);
+  }
+
+  @Override
+  public Optional<BootstrapSnapshot> getBootstrapSnapshot() {
+    return latestOf(SnapshotType.BOOTSTRAP).map(BootstrapSnapshot.class::cast);
+  }
+
+  @Override
+  public Optional<MergeSnapshot> getMergeSnapshot() {
+    return latestOf(SnapshotType.MERGE).map(MergeSnapshot.class::cast);
+  }
+
+  /** 给定类型的最新未损坏快照。 */
+  private Optional<FilePersistedSnapshot> latestOf(final SnapshotType type) {
+    return snapshots.values().stream()
+        .filter(snapshot -> !snapshot.isCorrupt() && snapshot.getType() == type)
+        .max(Comparator.comparingLong(PersistedSnapshot::getIndex));
   }
 
   @Override
@@ -246,32 +267,61 @@ public final class FileSnapshotStore implements ReceivableSnapshotStore {
   }
 
   @Override
-  public CompletableFuture<Void> abortPendingSnapshots() {
-    purgeTemporaryDirectories();
-    return CompletableFuture.completedFuture(null);
+  public ActorFuture<Void> abortPendingSnapshots() {
+    final var future = new CompletableActorFuture<Void>();
+    CompletableFuture.runAsync(
+            () -> {
+              pendingSnapshots.forEach(pending -> pending.abort().toCompletableFuture().join());
+              pendingSnapshots.clear();
+              purgeTemporaryDirectories();
+            })
+        .whenComplete(
+            (ignored, error) -> {
+              if (error != null) {
+                future.completeExceptionally(error.getCause() != null ? error.getCause() : error);
+              } else {
+                future.complete(null);
+              }
+            });
+    return future;
   }
 
   @Override
-  public Optional<TransientSnapshot> newTransientSnapshot(
-      final long index,
-      final long term,
-      final String nodeId,
-      final int replicationThreads,
-      final SnapshotType type,
-      final int version,
-      final Map<String, String> businessInfo) {
+  public Either<SnapshotException, PersistableSnapshot> newTransientSnapshot(
+      final long index, final long term, final Map<String, Object> businessInfo) {
+    return newPending(index, term, SnapshotType.REGULAR, businessInfo);
+  }
+
+  @Override
+  public Either<SnapshotException, PersistableSnapshot> newBootstrapSnapshot(
+      final long index, final long term, final Map<String, Object> businessInfo) {
+    return newPending(index, term, SnapshotType.BOOTSTRAP, businessInfo);
+  }
+
+  @Override
+  public Either<SnapshotException, PersistableSnapshot> newMergeSnapshot(
+      final long index, final long term, final Map<String, Object> businessInfo) {
+    return newPending(index, term, SnapshotType.MERGE, businessInfo);
+  }
+
+  /** 创建指定类型的 pending 快照：同 id 允许重拍，提交时按同位点替换。 */
+  private Either<SnapshotException, PersistableSnapshot> newPending(
+      final long index, final long term, final SnapshotType type,
+      final Map<String, Object> businessInfo) {
     final SnapshotMetadata metadata =
-        new SnapshotMetadata(index, term, nodeId, type, version, businessInfo);
-    // 同 id 快照允许重拍：创建不拦截，提交时按同位点替换
-    final Path temporaryDirectory = newTemporaryDirectory();
-    return Optional.of(new FileTransientSnapshot(this, metadata, temporaryDirectory));
+        SnapshotMetadata.ofBusinessInfo(index, term, nodeId, type, businessInfo);
+    final var pending =
+        new FilePersistableSnapshot(this, metadata, newTemporaryDirectory(), false);
+    pendingSnapshots.add(pending);
+    return Either.right(pending);
   }
 
   @Override
-  public CompletableFuture<ReceivedSnapshot> newReceivedSnapshot(final String snapshotId) {
+  public CompletableFuture<PersistableSnapshot> newReceivedSnapshot(final String snapshotId) {
     final SnapshotMetadata metadata;
     try {
-      metadata = SnapshotMetadata.fromSnapshotId(snapshotId);
+      final SnapshotId id = SnapshotId.fromString(snapshotId);
+      metadata = SnapshotMetadata.of(id.index(), id.term(), id.nodeId(), SnapshotType.REGULAR);
     } catch (final IllegalArgumentException e) {
       return CompletableFuture.failedFuture(e);
     }
@@ -284,9 +334,62 @@ public final class FileSnapshotStore implements ReceivableSnapshotStore {
               "Cannot receive snapshot " + snapshotId + "; an identical or newer snapshot exists"));
     }
 
-    final Path temporaryDirectory = newTemporaryDirectory();
-    return CompletableFuture.completedFuture(
-        new FileReceivedSnapshot(this, metadata, temporaryDirectory));
+    final var pending =
+        new FilePersistableSnapshot(this, metadata, newTemporaryDirectory(), true);
+    pendingSnapshots.add(pending);
+    return CompletableFuture.completedFuture(pending);
+  }
+
+  /** 从最新常规快照复制产生引导快照：回调负责把源目录内容复制到 pending 目录。 */
+  @Override
+  public ActorFuture<PersistedSnapshot> copyForBootstrap(
+      final BiConsumer<Path, Path> copySnapshot) {
+    final var future = new CompletableActorFuture<PersistedSnapshot>();
+    CompletableFuture.supplyAsync(
+            () -> {
+              final var source = getLatestSnapshot();
+              if (source.isEmpty()) {
+                throw new SnapshotException(
+                    "No regular snapshot to copy for bootstrap on " + nodeId);
+              }
+              final SnapshotMetadata sourceMetadata = source.get().getMetadata();
+              final SnapshotMetadata bootstrapMetadata =
+                  SnapshotMetadata.ofBusinessInfo(
+                      sourceMetadata.index(),
+                      sourceMetadata.term(),
+                      sourceMetadata.nodeId(),
+                      SnapshotType.BOOTSTRAP,
+                      Map.of());
+              final Path pendingDirectory = newTemporaryDirectory();
+              final var pending =
+                  new FilePersistableSnapshot(this, bootstrapMetadata, pendingDirectory, false);
+              pendingSnapshots.add(pending);
+              try {
+                Files.createDirectories(pendingDirectory);
+                copySnapshot.accept(source.get().getPath(), pendingDirectory);
+              } catch (final Exception e) {
+                pending.abort().toCompletableFuture().join();
+                throw new SnapshotException(
+                    "Failed to copy snapshot " + sourceMetadata.getSnapshotIdAsString()
+                        + " for bootstrap", e);
+              }
+              return pending.persist().toCompletableFuture().join();
+            })
+        .whenComplete(
+            (result, error) -> {
+              if (error != null) {
+                future.completeExceptionally(
+                    error.getCause() != null ? error.getCause() : error);
+              } else {
+                future.complete(result);
+              }
+            });
+    return future;
+  }
+
+  /** 提交完成/放弃时把 pending 移出跟踪列表。 */
+  void removePending(final FilePersistableSnapshot pending) {
+    pendingSnapshots.remove(pending);
   }
 
   /** Commits a fully written snapshot from its temporary directory into the store. */
@@ -294,8 +397,11 @@ public final class FileSnapshotStore implements ReceivableSnapshotStore {
     final SnapshotMetadata metadata = manifest.metadata;
     final String snapshotId = metadata.getSnapshotIdAsString();
 
-    // 幂等重拍：仅当存在 index 严格更大的快照时拒绝；同 id 视为替换提交
-    if (snapshots.values().stream().anyMatch(snapshot -> snapshot.getIndex() > metadata.index())) {
+    // 幂等重拍：仅当存在同类型 index 严格更大的快照时拒绝；同 id 视为替换提交
+    if (snapshots.values().stream()
+        .anyMatch(
+            snapshot ->
+                snapshot.getType() == manifest.type() && snapshot.getIndex() > metadata.index())) {
       FilePersistedSnapshot.deleteRecursively(temporaryDirectory);
       throw new SnapshotAlreadyExistsException(
           "Cannot commit snapshot " + snapshotId + "; a newer snapshot exists");
@@ -324,40 +430,52 @@ public final class FileSnapshotStore implements ReceivableSnapshotStore {
     // 原子 move 完成后才生成 .sfc 完整性标记：启动时缺失标记的目录视为未完整提交并清除
     writeVerificationFile(destination, manifest);
 
-    final FilePersistedSnapshot persistedSnapshot =
-        new FilePersistedSnapshot(destination, manifest);
+    final FilePersistedSnapshot persistedSnapshot = FilePersistedSnapshot.of(destination, manifest);
     snapshots.put(keyOf(manifest.type(), snapshotId), persistedSnapshot);
-    enforceRetention();
+    enforceRetention(manifest.type());
     LOGGER.debug("Committed snapshot {} at {}", snapshotId, destination);
     notifyListeners(persistedSnapshot);
     return persistedSnapshot;
   }
 
-  private void enforceRetention() {
+  /**
+   * 保留策略：常规按 maxSnapshotCount 保留；引导/合并只保留最新一个（新快照提交即删旧）。
+   */
+  private void enforceRetention(final SnapshotType committedType) {
     final List<FilePersistedSnapshot> retained =
         snapshots.values().stream()
+            .filter(snapshot -> snapshot.getType() == committedType)
+            .filter(
+                snapshot -> {
+                  if (snapshot.isReserved()) {
+                    LOGGER.debug(
+                        "Skipping reserved snapshot {} during retention enforcement",
+                        snapshot.getId());
+                    return false;
+                  }
+                  return true;
+                })
             .sorted(
                 Comparator.comparingLong(PersistedSnapshot::getIndex)
                     .reversed()
                     .thenComparing(PersistedSnapshot::getTerm, Comparator.reverseOrder()))
             .toList();
-    if (retained.size() <= maxSnapshotCount) {
+
+    final int keepCount =
+        committedType == SnapshotType.REGULAR ? Math.max(1, maxSnapshotCount) : 1;
+    if (retained.size() <= keepCount) {
       return;
     }
-    retained.subList(maxSnapshotCount, retained.size())
+    retained.subList(keepCount, retained.size())
         .forEach(
             snapshot -> {
-              if (snapshot.isReserved()) {
-                LOGGER.debug(
-                    "Skipping reserved snapshot {} during retention enforcement",
-                    snapshot.getId());
-                return;
-              }
               snapshots.remove(keyOf(snapshot.getType(), snapshot.getId()));
               snapshot.delete();
               deleteMarkerOf(snapshot.getPath());
               LOGGER.debug(
-                  "Deleted snapshot {} exceeding the maximum snapshot count", snapshot.getId());
+                  "Deleted snapshot {} exceeding the retention policy of type {}",
+                  snapshot.getId(),
+                  snapshot.getType());
             });
   }
 
@@ -439,17 +557,11 @@ public final class FileSnapshotStore implements ReceivableSnapshotStore {
     listeners.remove(listener);
   }
 
-  /** 删除整个快照存储根目录并清空内存快照表。 */
-  @Override
-  public CompletableFuture<Void> delete() {
-    snapshots.clear();
-    FilePersistedSnapshot.deleteRecursively(root);
-    return CompletableFuture.completedFuture(null);
-  }
-
   /** 关闭存储：清空内存状态，文件存储无需额外资源释放。 */
   @Override
-  public void close() {
+  public ActorFuture<Void> close() {
     snapshots.clear();
+    pendingSnapshots.clear();
+    return CompletableActorFuture.completed();
   }
 }

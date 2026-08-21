@@ -56,6 +56,8 @@ import com.anyilanxin.kunpeng.cluster.raft.snapshot.ReceivableSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotException;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotType;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.transfer.SnapshotTransferClient;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.transfer.SnapshotPushClient;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.transfer.SnapshotPushServer;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.transfer.SnapshotTransferServer;
 import com.anyilanxin.kunpeng.utils.FileUtil;
 import com.anyilanxin.kunpeng.cluster.utils.VisibleForTesting;
@@ -92,6 +94,8 @@ public class RaftPartitionServer implements HealthMonitorable {
   private final RaftServer server;
   private final MeterRegistry meterRegistry;
   private final SnapshotTransferServer snapshotTransferServer;
+  /** 合并快照推送接收端：目标分区 leader 角色时注册，接收源分区 leader 推来的分片。 */
+  private final SnapshotPushServer mergePushServer;
 
   public RaftPartitionServer(
       final RaftPartition partition,
@@ -114,8 +118,15 @@ public class RaftPartitionServer implements HealthMonitorable {
     snapshotRequestTimeout = config.getSnapshotRequestTimeout();
     configurationChangeTimeout = config.getConfigurationChangeTimeout();
     server = buildServer(meterRegistry);
+    mergePushServer =
+        new SnapshotPushServer(
+            clusterCommunicator, partition.name(), persistedSnapshotStore);
     snapshotTransferServer =
-        new SnapshotTransferServer(clusterCommunicator, partition.name(), persistedSnapshotStore);
+        new SnapshotTransferServer(
+            clusterCommunicator,
+            partition.name(),
+            persistedSnapshotStore,
+            config.getSnapshotTransferMaxBatchSize());
     // 角色变更时：把分区角色写入本节点成员属性广播集群；成为 leader 才注册快照传输服务，离开即卸载
     server.addRoleChangeListener(this::onPartitionRoleChanged);
   }
@@ -124,9 +135,11 @@ public class RaftPartitionServer implements HealthMonitorable {
     publishPartitionRole(newRole);
     if (newRole == RaftServer.Role.LEADER) {
       snapshotTransferServer.register();
+      mergePushServer.register();
       LOGGER.info("Leader registered snapshot transfer handler for partition {}", partition.id());
     } else {
       snapshotTransferServer.unregister();
+      mergePushServer.unregister();
     }
   }
 
@@ -194,6 +207,7 @@ public class RaftPartitionServer implements HealthMonitorable {
 
   public CompletableFuture<Void> stop() {
     snapshotTransferServer.unregister();
+    mergePushServer.unregister();
     return server != null ? server.shutdown() : CompletableFuture.completedFuture(null);
   }
 
@@ -217,6 +231,35 @@ public class RaftPartitionServer implements HealthMonitorable {
         type,
         preferredChunkSize,
         persistedSnapshotStore);
+  }
+
+  /**
+   * 把本分区最新的合并快照**主动推送**到目标分区的当前 leader（分区删除时的合并转移入口）。
+   * 目标节点经集群分区拓扑（成员属性广播）自动解析，调用方只需给出目标分区 ID；目标侧完成
+   * 接收、校验与提交后本次推送才算完成。
+   */
+  public CompletableFuture<Void> pushMergeSnapshot(
+      final PartitionId targetPartitionId, final int preferredChunkSize) {
+    final var mergeSnapshot = persistedSnapshotStore.getMergeSnapshot();
+    if (mergeSnapshot.isEmpty()) {
+      return CompletableFuture.failedFuture(
+          new SnapshotException(
+              "No MERGE snapshot on partition " + partition.id() + "; nothing to push"));
+    }
+    final var topology = new RaftPartitionTopology(membershipService);
+    final var leader = topology.leaderOf(targetPartitionId);
+    if (leader.isEmpty()) {
+      return CompletableFuture.failedFuture(
+          new SnapshotException(
+              "No known leader for partition " + targetPartitionId + "; cannot push merge snapshot"));
+    }
+    return new SnapshotPushClient(clusterCommunicator, snapshotRequestTimeout)
+        .push(
+            RaftPartitionTopology.partitionNameOf(targetPartitionId),
+            leader.get().id(),
+            mergeSnapshot.get(),
+            preferredChunkSize,
+            config.getSnapshotTransferMaxBatchSize());
   }
 
 

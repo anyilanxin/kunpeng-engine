@@ -39,9 +39,9 @@ import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLog;
 import com.anyilanxin.kunpeng.cluster.raft.journal.CheckedJournalException;
 import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException;
 import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException.InvalidChecksum;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistableSnapshot;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.RaftSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.ReceivableSnapshotStore;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.ReceivedSnapshot;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.io.IOException;
@@ -70,7 +70,7 @@ public class PassiveRoleTest {
     when(log.flushesDirectly()).thenReturn(true);
     when(ctx.getLog()).thenReturn(log);
 
-    final PersistedSnapshot snapshot = mock(PersistedSnapshot.class);
+    final RaftSnapshot snapshot = mock(RaftSnapshot.class);
     when(snapshot.getIndex()).thenReturn(1L);
     when(snapshot.getTerm()).thenReturn(1L);
 
@@ -264,7 +264,7 @@ public class PassiveRoleTest {
   @Test
   public void shouldNotAbortPendingSnapshotOnEmptyAppend() throws Exception {
     // given - a pending snapshot is in progress
-    final ReceivedSnapshot receivedSnapshot = mock(ReceivedSnapshot.class);
+    final PersistableSnapshot receivedSnapshot = mock(PersistableSnapshot.class);
     setPendingSnapshot(receivedSnapshot);
 
     // an empty append request (heartbeat)
@@ -289,7 +289,7 @@ public class PassiveRoleTest {
   @Test
   public void shouldAbortPendingSnapshotOnNonEmptyAppend() throws Exception {
     // given - a pending snapshot is in progress
-    final ReceivedSnapshot receivedSnapshot = mock(ReceivedSnapshot.class);
+    final PersistableSnapshot receivedSnapshot = mock(PersistableSnapshot.class);
     setPendingSnapshot(receivedSnapshot);
 
     // an append request with entries
@@ -315,7 +315,7 @@ public class PassiveRoleTest {
     assertThat(getPendingSnapshot()).as("pending snapshot should be cleared").isNull();
   }
 
-  private void setPendingSnapshot(final ReceivedSnapshot snapshot) throws Exception {
+  private void setPendingSnapshot(final PersistableSnapshot snapshot) throws Exception {
     final var field = PassiveRole.class.getDeclaredField("pendingSnapshot");
     field.setAccessible(true);
     field.set(role, snapshot);
