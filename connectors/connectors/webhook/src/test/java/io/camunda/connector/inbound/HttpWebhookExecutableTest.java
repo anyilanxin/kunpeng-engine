@@ -1,0 +1,750 @@
+/*
+ * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+ * under one or more contributor license agreements. Licensed under a proprietary license.
+ * See the License.txt file for more information. You may not use this file
+ * except in compliance with the proprietary license.
+ */
+package io.camunda.connector.inbound;
+
+import static io.camunda.connector.inbound.signature.HMACSwitchCustomerChoice.disabled;
+import static io.camunda.connector.inbound.signature.HMACSwitchCustomerChoice.enabled;
+import static io.camunda.connector.inbound.utils.HttpWebhookUtil.FORM_DATA_CONTENT_TYPE;
+import static io.camunda.connector.inbound.utils.HttpWebhookUtil.HEADER_CONTENT_TYPE;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchException;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import io.camunda.connector.api.error.ConnectorInputException;
+import io.camunda.connector.api.inbound.CorrelationResult;
+import io.camunda.connector.api.inbound.InboundConnectorContext;
+import io.camunda.connector.api.inbound.InboundConnectorDefinition;
+import io.camunda.connector.api.inbound.ProcessElement;
+import io.camunda.connector.api.inbound.webhook.*;
+import io.camunda.connector.inbound.model.DynamicWebhookProperties;
+import io.camunda.connector.inbound.model.DynamicWebhookProperties.DynamicWebhookPropertiesWrapper;
+import io.camunda.connector.inbound.signature.HMACAlgoCustomerChoice;
+import io.camunda.connector.inbound.utils.HttpMethods;
+import io.camunda.connector.runtime.test.inbound.InboundConnectorContextBuilder;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+
+class HttpWebhookExecutableTest {
+
+  private HttpWebhookExecutable testObject;
+
+  @BeforeEach
+  void beforeEach() {
+    testObject = new HttpWebhookExecutable();
+  }
+
+  private WebhookResult triggerSimpleWebhook() {
+    InboundConnectorContext ctx =
+        InboundConnectorContextBuilder.create()
+            .properties(
+                Map.of(
+                    "inbound",
+                    Map.of(
+                        "context",
+                        "webhookContext",
+                        "method",
+                        "any",
+                        "auth",
+                        Map.of("type", "NONE"))))
+            .build();
+    testObject.activate(ctx);
+    WebhookProcessingPayload payload = Mockito.mock(WebhookProcessingPayload.class);
+    Mockito.when(payload.method()).thenReturn(HttpMethods.any.name());
+    Mockito.when(payload.headers()).thenReturn(Map.of(HEADER_CONTENT_TYPE, "application/json"));
+    Mockito.when(payload.rawBody()).thenReturn("{}".getBytes(StandardCharsets.UTF_8));
+    return testObject.triggerWebhook(payload);
+  }
+
+  @Test
+  void response_resolvesResponseExpressionFromActivatedElement() {
+    // the response function (applied by the runtime after correlation) resolves from the element
+    // that actually matched, via its element-scoped properties
+    var result = triggerSimpleWebhook();
+    var wrapper =
+        new DynamicWebhookPropertiesWrapper(
+            new DynamicWebhookProperties(
+                c -> WebhookHttpResponse.ok("response-from-element"), null));
+    var activatedElement = Mockito.mock(ProcessElement.class);
+    Mockito.when(activatedElement.bindProperties(DynamicWebhookPropertiesWrapper.class))
+        .thenReturn(wrapper);
+    var success =
+        new CorrelationResult.Success.ProcessInstanceCreated(activatedElement, 1L, "<default>");
+    var resultContext =
+        new WebhookResultContext(
+            new MappedHttpRequest(Map.of(), Map.of(), Map.of()), Map.of(), success);
+
+    var response = result.response().apply(resultContext);
+
+    assertNotNull(response);
+    assertEquals("response-from-element", response.body());
+  }
+
+  @Test
+  void response_returnsNullWhenNoCorrelation() {
+    var result = triggerSimpleWebhook();
+    var resultContext =
+        new WebhookResultContext(
+            new MappedHttpRequest(Map.of(), Map.of(), Map.of()), Map.of(), null);
+    assertNull(result.response().apply(resultContext));
+  }
+
+  @Test
+  void activate_deprecatedResponseBodyExpression_failsDeploymentWithMigrationHint() {
+    InboundConnectorContext ctx =
+        contextWithElements(
+            elementWithRawProperties(
+                Map.of("inbound.responseBodyExpression", "={\"foo\": \"bar\"}")));
+
+    var exception = catchException(() -> testObject.activate(ctx));
+
+    assertThat(exception)
+        .isInstanceOf(ConnectorInputException.class)
+        .hasMessageContaining("responseBodyExpression")
+        .hasMessageContaining("responseExpression");
+  }
+
+  @Test
+  void activate_deprecatedResponseBodyExpressionOnNonFirstDeduplicatedElement_failsDeployment() {
+    // The representative (first) element only uses responseExpression; a second element in the same
+    // deduplication group carries the legacy property. Deployment must still fail, even though
+    // context.getProperties() only reflects the first element.
+    InboundConnectorContext ctx =
+        contextWithElements(
+            elementWithRawProperties(Map.of("inbound.responseExpression", "={body: request.body}")),
+            elementWithRawProperties(
+                Map.of("inbound.responseBodyExpression", "={\"foo\": \"bar\"}")));
+
+    var exception = catchException(() -> testObject.activate(ctx));
+
+    assertThat(exception).isInstanceOf(ConnectorInputException.class);
+  }
+
+  @Test
+  void activate_blankResponseBodyExpression_doesNotFailDeployment() {
+    InboundConnectorContext ctx =
+        contextWithElements(
+            elementWithRawProperties(Map.of("inbound.responseBodyExpression", "   ")));
+
+    assertThat(catchException(() -> testObject.activate(ctx))).isNull();
+  }
+
+  @Test
+  void activate_responseExpressionOnly_doesNotFailDeployment() {
+    InboundConnectorContext ctx =
+        contextWithElements(
+            elementWithRawProperties(
+                Map.of("inbound.responseExpression", "={body: request.body}")));
+
+    assertThat(catchException(() -> testObject.activate(ctx))).isNull();
+  }
+
+  private static ProcessElement elementWithRawProperties(Map<String, String> rawProperties) {
+    var element = Mockito.mock(ProcessElement.class);
+    Mockito.when(element.properties()).thenReturn(rawProperties);
+    return element;
+  }
+
+  private static InboundConnectorContext contextWithElements(ProcessElement... elements) {
+    var definition =
+        new InboundConnectorDefinition(
+            "io.camunda:webhook:1", "<default>", "dedup-id", List.of(elements), "default");
+    return InboundConnectorContextBuilder.create()
+        .properties(
+            Map.of(
+                "inbound",
+                Map.of(
+                    "context", "webhookContext",
+                    "method", "any",
+                    "auth", Map.of("type", "NONE"))))
+        .definition(definition)
+        .build();
+  }
+
+  @Test
+  void triggerWebhook_JsonBody_HappyCase() {
+    InboundConnectorContext ctx =
+        InboundConnectorContextBuilder.create()
+            .properties(
+                Map.of(
+                    "inbound",
+                    Map.of(
+                        "context", "webhookContext",
+                        "method", "any",
+                        "auth", Map.of("type", "NONE"))))
+            .build();
+
+    WebhookProcessingPayload payload = Mockito.mock(WebhookProcessingPayload.class);
+    Mockito.when(payload.method()).thenReturn(HttpMethods.any.name());
+    Mockito.when(payload.headers()).thenReturn(Map.of(HEADER_CONTENT_TYPE, "application/json"));
+    Mockito.when(payload.rawBody())
+        .thenReturn("{\"key\": \"value\"}".getBytes(StandardCharsets.UTF_8));
+
+    testObject.activate(ctx);
+    var result = testObject.triggerWebhook(payload);
+    assertThat((Map) result.request().body()).containsEntry("key", "value");
+  }
+
+  @Test
+  void triggerWebhook_ResponseExpression_HappyCase() {
+    InboundConnectorContext ctx =
+        InboundConnectorContextBuilder.create()
+            .properties(
+                Map.of(
+                    "inbound",
+                    Map.of(
+                        "context",
+                        "webhookContext",
+                        "method",
+                        "any",
+                        "auth",
+                        Map.of("type", "NONE"),
+                        "responseExpression",
+                        "=if request.body.key != null then {body: request.body.key} else null")))
+            .build();
+
+    WebhookProcessingPayload payload = Mockito.mock(WebhookProcessingPayload.class);
+    Mockito.when(payload.method()).thenReturn(HttpMethods.any.name());
+    Mockito.when(payload.headers()).thenReturn(Map.of(HEADER_CONTENT_TYPE, "application/json"));
+    Mockito.when(payload.rawBody())
+        .thenReturn("{\"key\": \"value\"}".getBytes(StandardCharsets.UTF_8));
+
+    testObject.activate(ctx);
+    var result = testObject.triggerWebhook(payload);
+
+    assertThat((Map) result.request().body()).containsEntry("key", "value");
+  }
+
+  @Test
+  void triggerWebhook_ResponseIsArrayOfPrimitive_HappyCase() {
+    InboundConnectorContext ctx =
+        InboundConnectorContextBuilder.create()
+            .properties(
+                Map.of(
+                    "inbound",
+                    Map.of(
+                        "context",
+                        "webhookContext",
+                        "method",
+                        "any",
+                        "auth",
+                        Map.of("type", "NONE"),
+                        "responseExpression",
+                        "=if request.body.key != null then {body: request.body.key} else null")))
+            .build();
+
+    WebhookProcessingPayload payload = Mockito.mock(WebhookProcessingPayload.class);
+    Mockito.when(payload.method()).thenReturn(HttpMethods.any.name());
+    Mockito.when(payload.headers()).thenReturn(Map.of(HEADER_CONTENT_TYPE, "application/json"));
+    Mockito.when(payload.rawBody())
+        .thenReturn(("[ \"test1\", \"test2\" ]").getBytes(StandardCharsets.UTF_8));
+
+    testObject.activate(ctx);
+    var result = testObject.triggerWebhook(payload);
+    assertThat((List<String>) result.request().body()).contains("test1", "test2");
+  }
+
+  @Test
+  void triggerWebhook_ResponseIsArrayOfObject_HappyCase() {
+    InboundConnectorContext ctx =
+        InboundConnectorContextBuilder.create()
+            .properties(
+                Map.of(
+                    "inbound",
+                    Map.of(
+                        "context",
+                        "webhookContext",
+                        "method",
+                        "any",
+                        "auth",
+                        Map.of("type", "NONE"),
+                        "responseExpression",
+                        "=if request.body.key != null then {body: request.body.key} else null")))
+            .build();
+
+    WebhookProcessingPayload payload = Mockito.mock(WebhookProcessingPayload.class);
+    Mockito.when(payload.method()).thenReturn(HttpMethods.any.name());
+    Mockito.when(payload.headers()).thenReturn(Map.of(HEADER_CONTENT_TYPE, "application/json"));
+    Mockito.when(payload.rawBody())
+        .thenReturn(
+            ("[{\"key\": \"value\"}, {\"key\": \"value\"}]").getBytes(StandardCharsets.UTF_8));
+
+    testObject.activate(ctx);
+    var result = testObject.triggerWebhook(payload);
+    assertThat((List<Map>) result.request().body())
+        .contains(Map.of("key", "value"), Map.of("key", "value"));
+  }
+
+  @Test
+  void triggerWebhook_FormDataBody_HappyCase() {
+    InboundConnectorContext ctx =
+        InboundConnectorContextBuilder.create()
+            .properties(
+                Map.of(
+                    "inbound",
+                    Map.of(
+                        "context", "webhookContext",
+                        "method", "any",
+                        "auth", Map.of("type", "NONE"))))
+            .build();
+    WebhookProcessingPayload payload = Mockito.mock(WebhookProcessingPayload.class);
+    Mockito.when(payload.method()).thenReturn(HttpMethods.any.name());
+    Mockito.when(payload.headers()).thenReturn(Map.of(HEADER_CONTENT_TYPE, FORM_DATA_CONTENT_TYPE));
+    Mockito.when(payload.rawBody())
+        .thenReturn("key1=value1&key2=value2".getBytes(StandardCharsets.UTF_8));
+
+    testObject.activate(ctx);
+    var result = testObject.triggerWebhook(payload);
+
+    assertThat((Map) result.request().body()).containsEntry("key1", "value1");
+    assertThat((Map) result.request().body()).containsEntry("key2", "value2");
+  }
+
+  @Test
+  void triggerWebhook_UnknownJsonLikeBody_HappyCase() {
+    InboundConnectorContext ctx =
+        InboundConnectorContextBuilder.create()
+            .properties(
+                Map.of(
+                    "inbound",
+                    Map.of(
+                        "context", "webhookContext",
+                        "method", "any",
+                        "auth", Map.of("type", "NONE"))))
+            .build();
+    WebhookProcessingPayload payload = Mockito.mock(WebhookProcessingPayload.class);
+    Mockito.when(payload.method()).thenReturn(HttpMethods.any.name());
+    Mockito.when(payload.headers()).thenReturn(Map.of(HEADER_CONTENT_TYPE, "application/geo+json"));
+    Mockito.when(payload.rawBody())
+        .thenReturn("{\"key\": \"value\"}".getBytes(StandardCharsets.UTF_8));
+
+    testObject.activate(ctx);
+    var result = testObject.triggerWebhook(payload);
+
+    assertThat((Map) result.request().body()).containsEntry("key", "value");
+  }
+
+  @Test
+  void triggerWebhook_BinaryData_RaisesException() {
+    InboundConnectorContext ctx =
+        InboundConnectorContextBuilder.create()
+            .properties(
+                Map.of(
+                    "inbound",
+                    Map.of(
+                        "context", "webhookContext",
+                        "method", "any",
+                        "auth", Map.of("type", "NONE"))))
+            .build();
+    WebhookProcessingPayload payload = Mockito.mock(WebhookProcessingPayload.class);
+    Mockito.when(payload.method()).thenReturn(HttpMethods.any.name());
+    Mockito.when(payload.headers())
+        .thenReturn(Map.of(HEADER_CONTENT_TYPE, "application/octet-stream"));
+    Mockito.when(payload.rawBody())
+        .thenReturn("Zm9sbG93IHRoZSB3aGl0ZSByYWJiaXQ=".getBytes(StandardCharsets.UTF_8));
+
+    testObject.activate(ctx);
+
+    assertThrows(Exception.class, () -> testObject.triggerWebhook(payload));
+  }
+
+  @Test
+  void triggerWebhook_HttpMethodNotAllowed_RaisesException() {
+    InboundConnectorContext ctx =
+        InboundConnectorContextBuilder.create()
+            .properties(
+                Map.of(
+                    "inbound",
+                    Map.of(
+                        "context", "webhookContext",
+                        "method", "get",
+                        "auth", Map.of("type", "NONE"))))
+            .build();
+    WebhookProcessingPayload payload = Mockito.mock(WebhookProcessingPayload.class);
+    Mockito.when(payload.method()).thenReturn(HttpMethods.post.name());
+    Mockito.when(payload.headers()).thenReturn(Map.of(HEADER_CONTENT_TYPE, "application/json"));
+    Mockito.when(payload.rawBody())
+        .thenReturn("{\"key\": \"value\"}".getBytes(StandardCharsets.UTF_8));
+
+    testObject.activate(ctx);
+
+    var exception = catchException(() -> testObject.triggerWebhook(payload));
+    assertThat(exception).isInstanceOf(WebhookConnectorException.class);
+    assertThat(((WebhookConnectorException) exception).getStatusCode()).isEqualTo(405);
+  }
+
+  @Test
+  void triggerWebhook_HmacSignatureMatches_HappyCase() {
+    InboundConnectorContext ctx =
+        InboundConnectorContextBuilder.create()
+            .properties(
+                Map.of(
+                    "inbound",
+                    Map.of(
+                        "context", "webhookContext",
+                        "method", "any",
+                        "shouldValidateHmac", enabled.name(),
+                        "hmacSecret", "mySecretKey",
+                        "hmacHeader", "X-HMAC-Sig",
+                        "hmacAlgorithm", HMACAlgoCustomerChoice.sha_256.name(),
+                        "auth", Map.of("type", "NONE"))))
+            .build();
+    WebhookProcessingPayload payload = Mockito.mock(WebhookProcessingPayload.class);
+    Mockito.when(payload.method()).thenReturn(HttpMethods.any.name());
+    Mockito.when(payload.headers())
+        .thenReturn(
+            Map.of(
+                HEADER_CONTENT_TYPE,
+                "application/json",
+                "X-HMAC-Sig",
+                "fa431d91a69beb76186b3b082c5bb87bab0702769d65761af2361cbf3a17cc09"));
+    Mockito.when(payload.rawBody())
+        .thenReturn("{\"key\": \"value\"}".getBytes(StandardCharsets.UTF_8));
+
+    testObject.activate(ctx);
+    var result = testObject.triggerWebhook(payload);
+
+    assertThat((Map) result.request().body()).containsEntry("key", "value");
+  }
+
+  @Test
+  void triggerWebhook_HmacSignatureDidntMatch_RaisesException() {
+    InboundConnectorContext ctx =
+        InboundConnectorContextBuilder.create()
+            .properties(
+                Map.of(
+                    "inbound",
+                    Map.of(
+                        "context", "webhookContext",
+                        "method", "any",
+                        "shouldValidateHmac", enabled.name(),
+                        "hmacSecret", "mySecretKey",
+                        "hmacHeader", "X-HMAC-Sig",
+                        "hmacAlgorithm", HMACAlgoCustomerChoice.sha_256.name(),
+                        "auth", Map.of("type", "NONE"))))
+            .build();
+    WebhookProcessingPayload payload = Mockito.mock(WebhookProcessingPayload.class);
+    Mockito.when(payload.method()).thenReturn(HttpMethods.any.name());
+    Mockito.when(payload.headers())
+        .thenReturn(
+            Map.of(
+                HEADER_CONTENT_TYPE,
+                "application/json",
+                "X-HMAC-Sig",
+                "123132313214533154234132534123452")); // not correct HMAC
+    Mockito.when(payload.rawBody())
+        .thenReturn("{\"key\": \"value\"}".getBytes(StandardCharsets.UTF_8));
+
+    testObject.activate(ctx);
+
+    var exception = catchException(() -> testObject.triggerWebhook(payload));
+    assertThat(exception).isInstanceOf(WebhookConnectorException.class);
+    assertThat(((WebhookConnectorException) exception).getStatusCode()).isEqualTo(401);
+  }
+
+  @Test
+  void triggerWebhook_BadApiKey_RaisesException() {
+    InboundConnectorContext ctx =
+        InboundConnectorContextBuilder.create()
+            .properties(
+                Map.of(
+                    "inbound",
+                    Map.of(
+                        "context",
+                        "webhookContext",
+                        "method",
+                        "any",
+                        "shouldValidateHmac",
+                        disabled.name(),
+                        "auth",
+                        Map.of(
+                            "type", "APIKEY",
+                            "apiKey", "myApiKey",
+                            "apiKeyLocator", "=request.headers.Authorization"))))
+            .build();
+
+    WebhookProcessingPayload payload = Mockito.mock(WebhookProcessingPayload.class);
+    Mockito.when(payload.method()).thenReturn(HttpMethods.any.name());
+    Mockito.when(payload.headers())
+        .thenReturn(
+            Map.of(
+                HEADER_CONTENT_TYPE,
+                "application/json",
+                "Authorization",
+                "notMyApiKey")); // not correct API key
+    Mockito.when(payload.rawBody())
+        .thenReturn("{\"key\": \"value\"}".getBytes(StandardCharsets.UTF_8));
+
+    testObject.activate(ctx);
+
+    var exception = catchException(() -> testObject.triggerWebhook(payload));
+    assertThat(exception).isInstanceOf(WebhookConnectorException.class);
+    assertThat(((WebhookConnectorException) exception).getStatusCode()).isEqualTo(401);
+  }
+
+  @Test
+  void triggerWebhook_MissingApiKey_RaisesException() {
+    InboundConnectorContext ctx =
+        InboundConnectorContextBuilder.create()
+            .properties(
+                Map.of(
+                    "inbound",
+                    Map.of(
+                        "context",
+                        "webhookContext",
+                        "method",
+                        "any",
+                        "shouldValidateHmac",
+                        disabled.name(),
+                        "auth",
+                        Map.of(
+                            "type", "APIKEY",
+                            "apiKey", "myApiKey",
+                            "apiKeyLocator", "=request.headers.authorization"))))
+            .build();
+
+    WebhookProcessingPayload payload = Mockito.mock(WebhookProcessingPayload.class);
+    Mockito.when(payload.method()).thenReturn(HttpMethods.any.name());
+    Mockito.when(payload.headers()).thenReturn(Map.of(HEADER_CONTENT_TYPE, "application/json"));
+    Mockito.when(payload.rawBody())
+        .thenReturn("{\"key\": \"value\"}".getBytes(StandardCharsets.UTF_8));
+
+    testObject.activate(ctx);
+
+    var exception = catchException(() -> testObject.triggerWebhook(payload));
+    assertThat(exception).isInstanceOf(WebhookConnectorException.class);
+    assertThat(((WebhookConnectorException) exception).getStatusCode()).isEqualTo(401);
+  }
+
+  @Test
+  void triggerWebhook_VerificationExpression_ReturnsChallenge() {
+    final var verificationExpression =
+        "=if request.body.challenge != null then {\"body\": {\"challenge\":request.body.challenge}} else null";
+    InboundConnectorContext ctx =
+        InboundConnectorContextBuilder.create()
+            .properties(
+                Map.of(
+                    "inbound",
+                    Map.of(
+                        "context",
+                        "webhookContext",
+                        "method",
+                        "any",
+                        "auth",
+                        Map.of("type", "NONE"),
+                        "verificationExpression",
+                        verificationExpression)))
+            .build();
+
+    WebhookProcessingPayload payload = Mockito.mock(WebhookProcessingPayload.class);
+    Mockito.when(payload.method()).thenReturn(HttpMethods.any.name());
+    Mockito.when(payload.headers()).thenReturn(Map.of(HEADER_CONTENT_TYPE, "application/json"));
+    Mockito.when(payload.rawBody())
+        .thenReturn("{\"challenge\": \"12345\"}".getBytes(StandardCharsets.UTF_8));
+
+    testObject.activate(ctx);
+    var result = testObject.verify(payload);
+
+    assertThat(result.body()).isInstanceOf(Map.class);
+    assertThat((Map) result.body()).containsEntry("challenge", "12345");
+  }
+
+  @Test
+  void triggerWebhook_VerificationExpressionWithModifiedBody_ReturnsChallenge() {
+    final var verificationExpression =
+        "=if request.body.challenge != null then {\"body\": {\"challenge123\":request.body.challenge + \"QQQ\"}} else null";
+    InboundConnectorContext ctx =
+        InboundConnectorContextBuilder.create()
+            .properties(
+                Map.of(
+                    "inbound",
+                    Map.of(
+                        "context",
+                        "webhookContext",
+                        "method",
+                        "any",
+                        "auth",
+                        Map.of("type", "NONE"),
+                        "verificationExpression",
+                        verificationExpression)))
+            .build();
+
+    WebhookProcessingPayload payload = Mockito.mock(WebhookProcessingPayload.class);
+    Mockito.when(payload.method()).thenReturn(HttpMethods.any.name());
+    Mockito.when(payload.headers()).thenReturn(Map.of(HEADER_CONTENT_TYPE, "application/json"));
+    Mockito.when(payload.rawBody())
+        .thenReturn("{\"challenge\": \"12345\"}".getBytes(StandardCharsets.UTF_8));
+
+    testObject.activate(ctx);
+    var result = testObject.verify(payload);
+
+    assertThat(result.body()).isInstanceOf(Map.class);
+    assertThat((Map) result.body()).containsEntry("challenge123", "12345QQQ");
+  }
+
+  @Test
+  void triggerWebhook_VerificationExpressionWithFoldedBody_ReturnsChallenge() {
+    final var verificationExpression =
+        "=if request.body.event_type = \"verification\" then {\"body\": {\"challenge\":request.body.event.challenge}} else null";
+    InboundConnectorContext ctx =
+        InboundConnectorContextBuilder.create()
+            .properties(
+                Map.of(
+                    "inbound",
+                    Map.of(
+                        "context",
+                        "webhookContext",
+                        "method",
+                        "any",
+                        "auth",
+                        Map.of("type", "NONE"),
+                        "verificationExpression",
+                        verificationExpression)))
+            .build();
+
+    WebhookProcessingPayload payload = Mockito.mock(WebhookProcessingPayload.class);
+    Mockito.when(payload.method()).thenReturn(HttpMethods.any.name());
+    Mockito.when(payload.headers()).thenReturn(Map.of(HEADER_CONTENT_TYPE, "application/json"));
+    Mockito.when(payload.rawBody())
+        .thenReturn(
+            "{\"event_type\": \"verification\", \"event\": {\"challenge\": \"12345\"}}"
+                .getBytes(StandardCharsets.UTF_8));
+
+    testObject.activate(ctx);
+    var result = testObject.verify(payload);
+
+    assertThat(result.body()).isInstanceOf(Map.class);
+    assertThat((Map) result.body()).containsEntry("challenge", "12345");
+  }
+
+  @Test
+  void triggerWebhook_VerificationExpressionWithStatusCode_ReturnsChallenge() {
+    final var verificationExpression =
+        "=if request.body.challenge != null then {\"body\": {\"challenge\":request.body.challenge}, \"statusCode\": 409} else null";
+    InboundConnectorContext ctx =
+        InboundConnectorContextBuilder.create()
+            .properties(
+                Map.of(
+                    "inbound",
+                    Map.of(
+                        "context",
+                        "webhookContext",
+                        "method",
+                        "any",
+                        "auth",
+                        Map.of("type", "NONE"),
+                        "verificationExpression",
+                        verificationExpression)))
+            .build();
+
+    WebhookProcessingPayload payload = Mockito.mock(WebhookProcessingPayload.class);
+    Mockito.when(payload.method()).thenReturn(HttpMethods.any.name());
+    Mockito.when(payload.headers()).thenReturn(Map.of(HEADER_CONTENT_TYPE, "application/json"));
+    Mockito.when(payload.rawBody())
+        .thenReturn("{\"challenge\": \"12345\"}".getBytes(StandardCharsets.UTF_8));
+
+    testObject.activate(ctx);
+    var result = testObject.verify(payload);
+
+    assertThat(result.statusCode()).isEqualTo(409);
+    assertThat(result.body()).isInstanceOf(Map.class);
+    assertThat((Map) result.body()).containsEntry("challenge", "12345");
+  }
+
+  @Test
+  void triggerWebhook_VerificationExpressionWithCustomHeaders_ReturnsChallenge() {
+    final var verificationExpression =
+        "=if request.body.challenge != null then {\"body\": {\"challenge\":request.body.challenge}, \"headers\":{\"Content-Type\":\"application/camunda-bin\"}} else null";
+    InboundConnectorContext ctx =
+        InboundConnectorContextBuilder.create()
+            .properties(
+                Map.of(
+                    "inbound",
+                    Map.of(
+                        "context",
+                        "webhookContext",
+                        "method",
+                        "any",
+                        "auth",
+                        Map.of("type", "NONE"),
+                        "verificationExpression",
+                        verificationExpression)))
+            .build();
+
+    WebhookProcessingPayload payload = Mockito.mock(WebhookProcessingPayload.class);
+    Mockito.when(payload.method()).thenReturn(HttpMethods.any.name());
+    Mockito.when(payload.headers()).thenReturn(Map.of(HEADER_CONTENT_TYPE, "application/json"));
+    Mockito.when(payload.rawBody())
+        .thenReturn("{\"challenge\": \"12345\"}".getBytes(StandardCharsets.UTF_8));
+
+    testObject.activate(ctx);
+    var result = testObject.verify(payload);
+
+    assertThat(result.body()).isInstanceOf(Map.class);
+    assertThat((Map) result.body()).containsEntry("challenge", "12345");
+    assertThat(result.headers()).containsEntry("Content-Type", "application/camunda-bin");
+    assertThat(result.headers()).hasSize(1);
+  }
+
+  @Test
+  void triggerWebhook_XmlBody_HappyCase() {
+    InboundConnectorContext ctx =
+        InboundConnectorContextBuilder.create()
+            .properties(
+                Map.of(
+                    "inbound",
+                    Map.of(
+                        "context", "webhookContext",
+                        "method", "any",
+                        "auth", Map.of("type", "NONE"))))
+            .build();
+
+    WebhookProcessingPayload payload = Mockito.mock(WebhookProcessingPayload.class);
+    Mockito.when(payload.method()).thenReturn(HttpMethods.any.name());
+    Mockito.when(payload.headers()).thenReturn(Map.of(HEADER_CONTENT_TYPE, "application/xml"));
+    Mockito.when(payload.rawBody())
+        .thenReturn(
+            "<request><id>123</id><status>active</status></request>"
+                .getBytes(StandardCharsets.UTF_8));
+
+    testObject.activate(ctx);
+    var result = testObject.triggerWebhook(payload);
+    // XML is stored as string
+    assertThat(result.request().body()).isInstanceOf(String.class);
+    assertThat((String) result.request().body()).contains("<id>123</id>");
+  }
+
+  @Test
+  void triggerWebhook_XmlBodyWithTextXmlContentType_HappyCase() {
+    InboundConnectorContext ctx =
+        InboundConnectorContextBuilder.create()
+            .properties(
+                Map.of(
+                    "inbound",
+                    Map.of(
+                        "context", "webhookContext",
+                        "method", "any",
+                        "auth", Map.of("type", "NONE"))))
+            .build();
+
+    WebhookProcessingPayload payload = Mockito.mock(WebhookProcessingPayload.class);
+    Mockito.when(payload.method()).thenReturn(HttpMethods.any.name());
+    Mockito.when(payload.headers()).thenReturn(Map.of(HEADER_CONTENT_TYPE, "text/xml"));
+    Mockito.when(payload.rawBody())
+        .thenReturn("<?xml version=\"1.0\"?><data>test</data>".getBytes(StandardCharsets.UTF_8));
+
+    testObject.activate(ctx);
+    var result = testObject.triggerWebhook(payload);
+    assertThat(result.request().body()).isInstanceOf(String.class);
+  }
+}

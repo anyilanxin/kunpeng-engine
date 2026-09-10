@@ -1,0 +1,38 @@
+[
+  {
+    "token": "xoxb-0123456789456-123467890987-thisIsTestToken",
+    "method": "chatpostMessage",
+    "data": {
+      "channel": "{{secrets.CHANNEL_NAME_KEY}}",
+      "text": "{{secrets.TEXT_KEY}}",
+      "thread" : "{{secrets.THREAD_NAME_KEY}}"
+    }
+  },
+  {
+    "token": "xoxb-0123456789456-123467890987-thisIsTestToken",
+    "method": null,
+    "data": {
+      "channel": "{{secrets.CHANNEL_NAME_KEY}}",
+      "text": "{{secrets.TEXT_KEY}}",
+      "thread" : "{{secrets.THREAD_NAME_KEY}}"
+    }
+  },
+  {
+    "token": "xoxb-0123456789456-123467890987-thisIsTestToken",
+    "method": " ",
+    "data": {
+      "channel": "channel",
+      "text": "some text",
+      "thread" : "normal_thread"
+    }
+  },
+  {
+    "token": "xoxb-0123456789456-123467890987-thisIsTestToken",
+    "method": "chat.getMessage",
+    "data": {
+      "channel": "channel",
+      "text": "some text",
+      "thread": "normal_thread"
+    }
+  }
+]

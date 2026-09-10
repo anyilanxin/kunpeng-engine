@@ -1,0 +1,28 @@
+/*
+ * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+ * under one or more contributor license agreements. Licensed under a proprietary license.
+ * See the License.txt file for more information. You may not use this file
+ * except in compliance with the proprietary license.
+ */
+package io.camunda.connector.model.request.data;
+
+import io.camunda.connector.generator.java.annotation.TemplateProperty;
+import io.camunda.connector.generator.java.annotation.TemplateSubType;
+import io.camunda.connector.model.MSTeamsMethodTypes;
+import jakarta.validation.constraints.NotBlank;
+
+@TemplateSubType(
+    id = MSTeamsMethodTypes.LIST_CHAT_MEMBERS,
+    label = "List chat members",
+    description = "List members of a Microsoft Teams chat",
+    keywords = {
+      "list chat members",
+      "chat members",
+      "get chat members",
+      "fetch participants",
+      "conversation members"
+    })
+public record ListChatMembers(
+    @NotBlank @TemplateProperty(group = "data", id = "listChatMembers.chatId", label = "Chat ID")
+        String chatId)
+    implements ChatData {}

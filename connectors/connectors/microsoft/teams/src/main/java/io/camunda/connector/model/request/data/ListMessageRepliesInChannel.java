@@ -1,0 +1,44 @@
+/*
+ * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+ * under one or more contributor license agreements. Licensed under a proprietary license.
+ * See the License.txt file for more information. You may not use this file
+ * except in compliance with the proprietary license.
+ */
+package io.camunda.connector.model.request.data;
+
+import io.camunda.connector.generator.java.annotation.TemplateProperty;
+import io.camunda.connector.generator.java.annotation.TemplateSubType;
+import io.camunda.connector.model.MSTeamsMethodTypes;
+import jakarta.validation.constraints.NotBlank;
+
+@TemplateSubType(
+    id = MSTeamsMethodTypes.LIST_MESSAGE_REPLIES_IN_CHANNEL,
+    label = "List message replies",
+    description = "List replies to a message in a Microsoft Teams channel",
+    keywords = {
+      "list replies",
+      "message replies",
+      "get replies",
+      "fetch thread replies",
+      "conversation thread"
+    })
+public record ListMessageRepliesInChannel(
+    @NotBlank
+        @TemplateProperty(
+            group = "data",
+            id = "listMessageRepliesInChannel.groupId",
+            label = "Group ID")
+        String groupId,
+    @NotBlank
+        @TemplateProperty(
+            group = "data",
+            id = "listMessageRepliesInChannel.channelId",
+            label = "Channel ID")
+        String channelId,
+    @NotBlank
+        @TemplateProperty(
+            group = "data",
+            id = "listMessageRepliesInChannel.messageId",
+            label = "Message ID")
+        String messageId)
+    implements ChannelData {}

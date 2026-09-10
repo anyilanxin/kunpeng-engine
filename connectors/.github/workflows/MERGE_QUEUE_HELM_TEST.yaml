@@ -1,0 +1,669 @@
+name: Merge queue Helm test
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+  merge_group:
+
+# Limit workflow to 1 concurrent run per ref (branch) and trigger event: new commit -> old runs are canceled to save costs.
+# Exception for main + stable/* branches: complete builds for every commit needed for confidence.
+concurrency:
+  group: ${{ format('{0}-{1}-{2}', github.workflow, github.event_name, (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/stable/')) && github.sha || github.ref) }}
+  cancel-in-progress: true
+
+jobs:
+  build-image:
+    name: Build and Publish Connectors Docker Image
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ github.event_name == 'merge_group' }}
+    outputs:
+      connectors-version: ${{ steps.connectors-version.outputs.connectors-version }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Import Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v4.0.0
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          exportEnv: false # we rely on step outputs, no need for environment variables
+          secrets: |
+            secret/data/products/connectors/ci/nexus USER | CI_NEXUS_USR;
+            secret/data/products/connectors/ci/nexus PASSWORD | CI_NEXUS_PSW;
+            secret/data/products/connectors/ci/common ARTIFACTORY_USR | CI_HARBOR_USR;
+            secret/data/products/connectors/ci/common ARTIFACTORY_PSW | CI_HARBOR_PSW;
+            secret/data/products/connectors/ci/common REGISTRY_MINIMUS_PSW;
+
+      - name: Restore cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21.0.9'
+
+      # Use CI Nexus as co-located pull-through cache for Maven artifacts via ~/.m2/settings.xml
+      - name: 'Create settings.xml'
+        uses: s4u/maven-settings-action@v4.0.0
+        with:
+          githubServer: false
+          servers: |
+            [{
+               "id": "camunda-nexus",
+               "username": "${{ steps.secrets.outputs.CI_NEXUS_USR }}",
+               "password": "${{ steps.secrets.outputs.CI_NEXUS_PSW }}"
+             }]
+          mirrors: '[{"url": "https://repository.nexus.camunda.cloud/content/groups/internal/", "id": "camunda-nexus", "mirrorOf": "*,!shibboleth,!confluent", "name": "camunda Nexus"}]'
+
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: '24'
+
+      - name: Install element templates CLI
+        run: npm install --global element-templates-cli
+
+      - name: Package Connectors
+        env:
+          PROJECTS: apps/bundle/default-bundle,apps/bundle/camunda-saas-bundle
+        run: ./mvnw --batch-mode compile generate-sources package -DskipTests --projects "${PROJECTS}" --also-make
+
+      - name: Check default-bundle jar exists
+        run: ls -lh apps/bundle/default-bundle/target/
+
+      - name: Check saas-bundle jar exists
+        run: ls -lh apps/bundle/camunda-saas-bundle/target/
+
+      - name: Set up Docker Build
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to Harbor
+        uses: docker/login-action@v4
+        with:
+          registry: registry.camunda.cloud
+          username: ${{ steps.secrets.outputs.CI_HARBOR_USR }}
+          password: ${{ steps.secrets.outputs.CI_HARBOR_PSW }}
+
+      - name: Set connectors version
+        id: connectors-version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_REF: ${{ github.event.merge_group.head_ref }}
+        run: |
+          set -euo pipefail
+
+          MAVEN_VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
+          BASE_VERSION="${MAVEN_VERSION%-SNAPSHOT}"
+
+          if [[ "${{ github.event_name }}" == "merge_group" ]]; then
+            # merge_group.head_ref looks like refs/heads/gh-readonly-queue/<base>/pr-<N>-<sha>
+            PR_NUMBER=$(printf '%s' "$HEAD_REF" | sed -nE 's|.*/pr-([0-9]+)-.*|\1|p')
+            if [[ -z "$PR_NUMBER" ]]; then
+              echo "::notice::No PR number could be extracted from merge_group head_ref: $HEAD_REF"
+              echo "should-push=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            TAG="${BASE_VERSION}-pr${PR_NUMBER}-run${GITHUB_RUN_ID}-a${GITHUB_RUN_ATTEMPT}"
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            # For manual dispatch: <base>-dispatch-run<run_id>-a<run_attempt>
+            TAG="${BASE_VERSION}-dispatch-run${GITHUB_RUN_ID}-a${GITHUB_RUN_ATTEMPT}"
+          else
+            # For push to main: <base>-main-run<run_id>-a<run_attempt>
+            TAG="${BASE_VERSION}-main-run${GITHUB_RUN_ID}-a${GITHUB_RUN_ATTEMPT}"
+          fi
+
+          echo "::notice::Tag: ${TAG}"
+          echo "connectors-version=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "should-push=true" >> "$GITHUB_OUTPUT"
+
+      - name: Login to Minimus
+        uses: docker/login-action@v4
+        with:
+          registry: reg.mini.dev
+          username: minimus
+          password: ${{ steps.secrets.outputs.REGISTRY_MINIMUS_PSW }}
+
+      # Publish Docker images for Preview environments
+      - name: Build and Push Docker Image tag ${{ env.TAG }} - bundle-default
+        if: ${{ steps.connectors-version.outputs.should-push == 'true' }}
+        env:
+          TAG: ${{ steps.connectors-version.outputs.connectors-version }}
+        uses: docker/build-push-action@v7
+        with:
+          context: apps/bundle/default-bundle/
+          provenance: false
+          push: true
+          tags: registry.camunda.cloud/team-connectors/connectors-bundle:${{ env.TAG }}
+
+      - name: Build and Push Docker Image tag ${{ env.TAG }} - bundle-saas
+        if: ${{ steps.connectors-version.outputs.should-push == 'true' }}
+        env:
+          TAG: ${{ steps.connectors-version.outputs.connectors-version }}
+        uses: docker/build-push-action@v7
+        with:
+          context: apps/bundle/camunda-saas-bundle/
+          provenance: false
+          push: true
+          tags: registry.camunda.cloud/team-connectors/connectors-bundle-saas:${{ env.TAG }}
+
+  trigger-sm-e2e:
+    name: Trigger SM E2E tests
+    needs: [ build-image ]
+    if: needs.build-image.outputs.connectors-version != ''
+    uses: ./.github/workflows/INTEGRATION_TEST.yml
+    secrets: inherit
+    with:
+      image-source: artifactory
+      connectors-version: ${{ needs.build-image.outputs.connectors-version }}
+      release-branch: main
+      # Route to the dedicated AlwaysGreen GKE namespace/node pool that finance tracks for cost.
+      scenario: alwaysgreen
+      shortname: agrn
+
+  sm-e2e-debug-summary:
+    name: AlwaysGreen failure feedback (SM E2E)
+    needs: trigger-sm-e2e
+    if: always() && needs.trigger-sm-e2e.result == 'failure'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: ${{ github.event_name == 'merge_group' }}
+    permissions:
+      pull-requests: write
+      contents: read
+    outputs:
+      # Triage replies in this message's thread rather than opening a second
+      # top-level alert for the same failure.
+      slack_ts: ${{ steps.feedback.outputs.slack_ts }}
+      slack_channel: ${{ steps.feedback.outputs.slack_channel }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: "24"
+      - name: Generate GitHub App Token
+        id: app-token
+        uses: camunda/infra-global-github-actions/generate-github-app-token-from-vault-secrets@main
+        with:
+          github-app-id-vault-key: GITHUB_APP_ID
+          github-app-id-vault-path: secret/data/products/qa/ci/github.com/apps/camunda/quality-assurance-ci
+          github-app-private-key-vault-key: GITHUB_APP_SECRET
+          github-app-private-key-vault-path: secret/data/products/qa/ci/github.com/apps/camunda/quality-assurance-ci
+          vault-auth-method: approle
+          vault-auth-role-id: ${{ secrets.VAULT_ROLE_ID }}
+          vault-auth-secret-id: ${{ secrets.VAULT_SECRET_ID }}
+          vault-url: ${{ secrets.VAULT_ADDR }}
+          owner: camunda
+          repositories: connectors
+      # Standardised AlwaysGreen feedback → job summary + PR comment (+ Slack once
+      # the channel is set below and the bot is invited to it). Best-effort.
+      - name: Post AlwaysGreen failure feedback
+        id: feedback
+        continue-on-error: true
+        uses: ./.github/actions/post-failure-feedback
+        with:
+          failure_category: unknown
+          stage: sm-e2e-helm
+          owner_team: "@camunda/connectors"
+          run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          status: failure
+          evidence: "SM E2E / Helm Integration Tests failed."
+          pr: ${{ github.event.merge_group.head_ref }}
+          # merge_group is the only trigger here that supplies a PR, and a
+          # draft cannot enter a merge queue — so state the answer instead of
+          # paying for a lookup that would also need pull-requests: read.
+          pr_is_draft: "false"
+          # Shared AlwaysGreen channel (#alwaysgreen-reliability) — consistent
+          # across all AlwaysGreen repos. The connectors bot must be a member.
+          slack_channel: "C0AK0AVKRL0"
+          slack_bot_token: ${{ secrets.CONNECTORS_SLACK_BOT_TOKEN }}
+          github_token: ${{ steps.app-token.outputs.token }}
+
+  trigger-saas-e2e:
+    name: Trigger SaaS E2E tests
+    runs-on: ubuntu-latest
+    needs: [ build-image ]
+    if: needs.build-image.outputs.connectors-version != ''
+    timeout-minutes: 25
+    continue-on-error: ${{ github.event_name == 'merge_group' }}
+    permissions: { }
+    outputs:
+      # Whether this job failed, stated explicitly. On merge_group the job carries
+      # continue-on-error, and GitHub does not document what needs.<job>.result then
+      # reports to a dependent job — so a gate built on that alone could silently never
+      # fire for the one event that supplies a PR to comment on.
+      status: ${{ steps.job-status.outputs.status }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Generate GitHub App Token (for dispatch)
+        id: github-token
+        uses: camunda/infra-global-github-actions/generate-github-app-token-from-vault-secrets@main
+        with:
+          github-app-id-vault-key: GITHUB_APP_ID
+          github-app-id-vault-path: secret/data/products/qa/ci/github.com/apps/camunda/quality-assurance-ci
+          github-app-private-key-vault-key: GITHUB_APP_SECRET
+          github-app-private-key-vault-path: secret/data/products/qa/ci/github.com/apps/camunda/quality-assurance-ci
+          vault-auth-method: approle
+          vault-auth-role-id: ${{ secrets.VAULT_ROLE_ID }}
+          vault-auth-secret-id: ${{ secrets.VAULT_SECRET_ID }}
+          vault-url: ${{ secrets.VAULT_ADDR }}
+          owner: camunda
+          repositories: connectors,c8-cross-component-e2e-tests
+
+      - name: Trigger repository_dispatch for SaaS Connectors
+        env:
+          GITHUB_TOKEN: ${{ steps.github-token.outputs.token }}
+          CORRELATION_ID: ${{ github.repository }}:${{ github.run_id }}:${{ github.run_attempt }}:${{ github.sha }}
+          IMAGE_TAG: ${{ needs.build-image.outputs.connectors-version }}
+        run: |
+          # Use the image tag as the generation name to match filter patterns
+          # e.g., "8.10.0-main-run12345678-a1" matches "**-main-run**-a**"
+          GEN_NAME="${IMAGE_TAG}"
+
+          curl -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            https://api.github.com/repos/camunda/c8-cross-component-e2e-tests/dispatches \
+            -d '{
+                  "event_type": "run-saas-generation-smoke-connectors",
+                  "client_payload": {
+                      "correlation_id": "'"$CORRELATION_ID"'",
+                      "source_repo": "${{ github.repository }}",
+                      "source_sha": "${{ github.sha }}",
+                      "gen_name": "'"${GEN_NAME}"'",
+                      "c8Version": "8.10",
+                      "zeebeVersion": "SNAPSHOT",
+                      "operateVersion": "SNAPSHOT",
+                      "tasklistVersion": "SNAPSHOT",
+                      "connectorsVersion": "${{ needs.build-image.outputs.connectors-version }}",
+                      "optimizeVersion": "SNAPSHOT"
+                  }
+                }'
+
+      - name: Observe build status
+        if: always()
+        continue-on-error: true
+        uses: ./.github/actions/observe-build-status
+        with:
+          build_status: ${{ job.status }}
+          job_name: trigger-saas-e2e
+          secret_vault_address: ${{ secrets.VAULT_ADDR }}
+          secret_vault_roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secret_vault_secretId: ${{ secrets.VAULT_SECRET_ID }}
+
+      - name: Wait for downstream workflow to finish
+        id: wait-downstream
+        env:
+          GH_TOKEN: ${{ steps.github-token.outputs.token }}
+          CORRELATION_ID: ${{ github.repository }}:${{ github.run_id }}:${{ github.run_attempt }}:${{ github.sha }}
+        run: |
+          set -euo pipefail
+          echo "Waiting for downstream E2E workflow run in camunda/c8-cross-component-e2e-tests for correlation id: $CORRELATION_ID"
+
+          TARGET_REPO="camunda/c8-cross-component-e2e-tests"
+          WORKFLOW_FILE="playwright_saas_pr_trigger_connectors.yml"
+
+          gh_api_with_retry() {
+            local endpoint="$1"
+            local max_attempts="${2:-6}"
+            local sleep_s="${3:-2}"
+            local attempt=1
+            local out
+
+            while true; do
+              if out="$(gh api "$endpoint" 2>&1)"; then
+                printf '%s' "$out"
+                return 0
+              fi
+
+              if echo "$out" | grep -Eq 'HTTP 502|HTTP 503|HTTP 504|TLS handshake timeout|timeout|temporarily unavailable|connection reset by peer|EOF'; then
+                if (( attempt >= max_attempts )); then
+                  echo "gh api failed after ${attempt}/${max_attempts} attempts for $endpoint" >&2
+                  echo "$out" >&2
+                  return 1
+                fi
+                echo "Transient gh/api error (attempt ${attempt}/${max_attempts}) for $endpoint:" >&2
+                echo "$out" >&2
+                sleep "$sleep_s"
+                attempt=$((attempt + 1))
+                sleep_s=$((sleep_s * 2))
+                continue
+              fi
+
+              echo "Non-retryable gh/api error for $endpoint:" >&2
+              echo "$out" >&2
+              return 1
+            done
+          }
+
+          RUN_ID=""
+
+          for _ in {1..80}; do
+            if [[ -z "$RUN_ID" ]]; then
+              RUN_ID=$(
+                gh_api_with_retry "/repos/$TARGET_REPO/actions/workflows/$WORKFLOW_FILE/runs?event=repository_dispatch&per_page=50" \
+                | jq -r --arg c "$CORRELATION_ID" '
+                    .workflow_runs
+                    | map(select(.display_title != null and (.display_title | contains($c))))
+                    | sort_by(.created_at)
+                    | last
+                    | .id // empty
+                  '
+              )
+
+              if [[ -z "$RUN_ID" ]]; then
+                echo "No downstream run found yet for correlation id. Sleeping..."
+                sleep 30
+                continue
+              fi
+
+              echo "Locked onto downstream run id: $RUN_ID"
+              echo "downstream_run_url=https://github.com/$TARGET_REPO/actions/runs/$RUN_ID" >> "$GITHUB_OUTPUT"
+            fi
+
+            RUN_JSON="$(gh_api_with_retry "/repos/$TARGET_REPO/actions/runs/$RUN_ID")"
+            STATUS="$(jq -r .status <<<"$RUN_JSON")"
+            CONCLUSION="$(jq -r .conclusion <<<"$RUN_JSON")"
+            echo "Workflow run $RUN_ID status: $STATUS ($CONCLUSION)"
+
+            if [[ "$STATUS" == "completed" ]]; then
+              if [[ "$CONCLUSION" == "success" ]]; then
+                echo "Downstream workflow succeeded!"
+                exit 0
+              else
+                echo "Downstream workflow failed: $CONCLUSION"
+                exit 1
+              fi
+            fi
+
+            sleep 30
+          done
+
+          echo "Timed out waiting for downstream workflow to complete."
+          exit 1
+
+      - name: Add SaaS downstream workflow link to Job Summary
+        if: always()
+        run: |
+          if [ -n "${{ steps.wait-downstream.outputs.downstream_run_url }}" ]; then
+            {
+              echo "### SaaS Downstream Workflow Run"
+              echo ""
+              echo "**Correlation ID:** \`${{ github.repository }}:${{ github.run_id }}:${{ github.run_attempt }}:${{ github.sha }}\`"
+              echo ""
+              echo "[Open the triggered SaaS E2E workflow run in camunda/c8-cross-component-e2e-tests](${{ steps.wait-downstream.outputs.downstream_run_url }})"
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No downstream workflow run URL found." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      # AlwaysGreen triage runs in this repository but the SaaS evidence lives on the
+      # downstream run in c8-cross-component-e2e-tests, and a job summary is not
+      # machine-readable. This artifact is the only channel that carries the link
+      # across; without it triage classifies every SaaS failure as saas-infra and
+      # dispatches nothing. Deliberately just the link: triage recomputes the
+      # category from the downstream report itself.
+      - name: Write SaaS downstream context for AlwaysGreen triage
+        id: saas-context
+        if: always() && steps.wait-downstream.outputs.downstream_run_url != ''
+        env:
+          DOWNSTREAM_RUN_URL: ${{ steps.wait-downstream.outputs.downstream_run_url }}
+        run: |
+          set -euo pipefail
+          jq -n \
+            --arg stage "${{ github.job }}" \
+            --arg run_url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            --arg downstream_run_url "${DOWNSTREAM_RUN_URL}" \
+            '{stage: $stage, run_url: $run_url, downstream_run_url: $downstream_run_url}' \
+            > "${RUNNER_TEMP}/alwaysgreen-saas-category.json"
+
+      - name: Upload SaaS downstream context artifact
+        if: always() && steps.saas-context.outcome == 'success'
+        uses: actions/upload-artifact@v7
+        with:
+          name: alwaysgreen-saas-category
+          path: ${{ runner.temp }}/alwaysgreen-saas-category.json
+          retention-days: 14
+          # Artifacts are immutable and a re-run reuses the run id, so without this the
+          # second attempt fails to upload and triage reads the first attempt's stale
+          # downstream link — pointing the fix agent at the wrong evidence.
+          overwrite: true
+
+      - name: Add debugging guidance on failure
+        if: steps.wait-downstream.outcome == 'failure'
+        run: |
+          DOWNSTREAM_URL="${{ steps.wait-downstream.outputs.downstream_run_url }}"
+          COOKBOOK_URL="https://github.com/camunda/c8-cross-component-e2e-tests/blob/main/docs/ci-debugging-cookbook.md"
+          {
+            echo ""
+            echo "### Debugging the SaaS E2E Failure"
+            echo ""
+            if [ -n "$DOWNSTREAM_URL" ]; then
+              echo "**Downstream run:** [$DOWNSTREAM_URL]($DOWNSTREAM_URL)"
+              echo ""
+            fi
+            echo "**Full guide:** [CI Debugging Cookbook — SaaS E2E section](${COOKBOOK_URL}#failure-type-5--saas-e2e-tests)"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Last step in the job, so job.status here reflects everything above it.
+      - name: Record job status
+        id: job-status
+        if: always()
+        run: echo "status=${{ job.status }}" >> "$GITHUB_OUTPUT"
+
+  # Mirror of sm-e2e-debug-summary. Until this existed a SaaS failure produced no
+  # Slack message and no PR comment at all — only the streak detector's aggregate,
+  # which fires at three consecutive failures and says nothing about a single one.
+  saas-e2e-debug-summary:
+    name: AlwaysGreen failure feedback (SaaS E2E)
+    needs: trigger-saas-e2e
+    # Two signals for one condition. `result` covers push, where the job fails
+    # normally; the explicit output covers merge_group, where continue-on-error may
+    # present the failure to dependents as a success. merge_group is the only trigger
+    # that supplies a PR, so relying on `result` alone risks the PR comment never
+    # being posted at all.
+    if: >-
+      always() && (needs.trigger-saas-e2e.result == 'failure' ||
+      needs.trigger-saas-e2e.outputs.status == 'failure')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: ${{ github.event_name == 'merge_group' }}
+    permissions:
+      pull-requests: write
+      contents: read
+    outputs:
+      slack_ts: ${{ steps.feedback.outputs.slack_ts }}
+      slack_channel: ${{ steps.feedback.outputs.slack_channel }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: "24"
+      - name: Generate GitHub App Token
+        id: app-token
+        uses: camunda/infra-global-github-actions/generate-github-app-token-from-vault-secrets@main
+        with:
+          github-app-id-vault-key: GITHUB_APP_ID
+          github-app-id-vault-path: secret/data/products/qa/ci/github.com/apps/camunda/quality-assurance-ci
+          github-app-private-key-vault-key: GITHUB_APP_SECRET
+          github-app-private-key-vault-path: secret/data/products/qa/ci/github.com/apps/camunda/quality-assurance-ci
+          vault-auth-method: approle
+          vault-auth-role-id: ${{ secrets.VAULT_ROLE_ID }}
+          vault-auth-secret-id: ${{ secrets.VAULT_SECRET_ID }}
+          vault-url: ${{ secrets.VAULT_ADDR }}
+          owner: camunda
+          repositories: connectors
+      - name: Post AlwaysGreen failure feedback
+        id: feedback
+        continue-on-error: true
+        uses: ./.github/actions/post-failure-feedback
+        with:
+          failure_category: unknown
+          stage: saas-e2e
+          owner_team: "@camunda/connectors"
+          run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          status: failure
+          evidence: "SaaS E2E tests failed. The downstream run in c8-cross-component-e2e-tests is linked from the Trigger SaaS E2E tests job summary."
+          pr: ${{ github.event.merge_group.head_ref }}
+          # merge_group is the only trigger here that supplies a PR, and a
+          # draft cannot enter a merge queue — so state the answer instead of
+          # paying for a lookup that would also need pull-requests: read.
+          pr_is_draft: "false"
+          slack_channel: "C0AK0AVKRL0"
+          slack_bot_token: ${{ secrets.CONNECTORS_SLACK_BOT_TOKEN }}
+          github_token: ${{ steps.app-token.outputs.token }}
+
+  run-ai-agent-cpt:
+    name: AI Agent E2E Tests (CPT)
+    runs-on: ubuntu-latest
+    needs: [ build-image ]
+    if: needs.build-image.outputs.connectors-version != ''
+    timeout-minutes: 20
+    continue-on-error: ${{ github.event_name == 'merge_group' }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check for agentic-ai changes
+        id: changes
+        uses: dorny/paths-filter@v4
+        with:
+          filters: |
+            ai:
+              - 'connectors/agentic-ai/**'
+              - 'connectors-e2e-test/connectors-e2e-test-agentic-ai/**'
+
+      - name: Import Secrets
+        if: steps.changes.outputs.ai == 'true'
+        id: secrets
+        uses: hashicorp/vault-action@v4.0.0
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          exportEnv: false
+          secrets: |
+            secret/data/products/connectors/ci/common ARTIFACTORY_USR | CI_LDAP_USER;
+            secret/data/products/connectors/ci/common ARTIFACTORY_PSW | CI_LDAP_PASSWORD;
+            secret/data/products/qa/ci/cross-component-e2e-test-suite OPENAI_API_KEY;
+
+      - uses: actions/setup-java@v5
+        if: steps.changes.outputs.ai == 'true'
+        with:
+          distribution: temurin
+          java-version: "21.0.9"
+
+      - name: Login to Harbor
+        if: steps.changes.outputs.ai == 'true'
+        uses: docker/login-action@v4
+        with:
+          registry: registry.camunda.cloud
+          username: ${{ steps.secrets.outputs.CI_LDAP_USER }}
+          password: ${{ steps.secrets.outputs.CI_LDAP_PASSWORD }}
+
+      - name: Create settings.xml
+        if: steps.changes.outputs.ai == 'true'
+        uses: s4u/maven-settings-action@v4.0.0
+        with:
+          githubServer: false
+          servers: |
+            [{
+               "id": "camunda-nexus",
+               "username": "${{ steps.secrets.outputs.CI_LDAP_USER }}",
+               "password": "${{ steps.secrets.outputs.CI_LDAP_PASSWORD }}"
+             }]
+          mirrors: '[{"url": "https://repository.nexus.camunda.cloud/content/groups/internal/", "id": "camunda-nexus", "mirrorOf": "*,!shibboleth,!confluent", "name": "camunda Nexus"}]'
+
+      - name: Restore Maven cache
+        if: steps.changes.outputs.ai == 'true'
+        uses: actions/cache@v6
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - uses: actions/setup-node@v7.0.0
+        if: steps.changes.outputs.ai == 'true'
+        with:
+          node-version: '24'
+
+      - name: Install element templates CLI
+        if: steps.changes.outputs.ai == 'true'
+        run: npm install --global element-templates-cli@$(jq -r '.devDependencies["element-templates-cli"]' .github/workflows/package.json)
+
+      - name: Run AI Agent E2E tests
+        if: steps.changes.outputs.ai == 'true'
+        env:
+          CONNECTORS_IMAGE_NAME: registry.camunda.cloud/team-connectors/connectors-bundle
+          CONNECTORS_IMAGE_VERSION: ${{ needs.build-image.outputs.connectors-version }}
+          OPENAI_API_KEY: ${{ steps.secrets.outputs.OPENAI_API_KEY }}
+        run: |
+          ./mvnw verify \
+            -pl connectors-e2e-test/connectors-e2e-test-agentic-ai \
+            -am \
+            -Pit-real-llm \
+            --batch-mode
+
+      - name: Observe build status
+        if: always()
+        continue-on-error: true
+        uses: ./.github/actions/observe-build-status
+        with:
+          build_status: ${{ job.status }}
+          job_name: run-ai-agent-cpt
+          secret_vault_address: ${{ secrets.VAULT_ADDR }}
+          secret_vault_roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secret_vault_secretId: ${{ secrets.VAULT_SECRET_ID }}
+
+  # Final job: hand a failed run to AlwaysGreen triage, which classifies the failure
+  # and dispatches the fix agent. github.run_id here is this run, so the SM Playwright
+  # report and the SaaS downstream-context artifact are both readable from it.
+  #
+  # tooling_ref pins the scripts to main. A reusable workflow's checkout follows the
+  # CALLER's ref, so without it a stable/8.x run would need the whole
+  # .github/scripts/alwaysgreen tree backported alongside this file.
+  #
+  # push only, for now. Half the failing jobs come from merge_group, but those belong
+  # to the PR under test — its author is already looking at it, and a fix PR in the
+  # e2e repository would not unblock that queue entry. Same gate as
+  # connectors-streak-detector.yml.
+  alwaysgreen-triage:
+    name: AlwaysGreen triage and fix dispatch
+    # run-ai-agent-cpt is deliberately absent: it exists only on main, and a `needs`
+    # entry naming a job the stable branches do not have makes the whole workflow
+    # invalid there — so this list stays backport-safe. Nothing is lost, because that
+    # surface is classified but never dispatched, and the streak detector already
+    # pages its owner.
+    needs:
+      - build-image
+      - trigger-sm-e2e
+      - sm-e2e-debug-summary
+      - trigger-saas-e2e
+      - saas-e2e-debug-summary
+    if: >-
+      always() && github.event_name == 'push' &&
+      contains(needs.*.result, 'failure')
+    permissions:
+      contents: read
+      actions: write
+      pull-requests: read
+    uses: ./.github/workflows/alwaysgreen-triage.yml
+    secrets: inherit
+    with:
+      base_ref: ${{ github.ref_name }}
+      tooling_ref: main
+      # Reply in whichever feedback message was posted, so one failure stays one
+      # Slack thread. Empty when neither stage failed or Slack was unavailable.
+      parent_slack_ts: ${{ needs.sm-e2e-debug-summary.outputs.slack_ts || needs.saas-e2e-debug-summary.outputs.slack_ts }}
+      parent_slack_channel: ${{ needs.sm-e2e-debug-summary.outputs.slack_channel || needs.saas-e2e-debug-summary.outputs.slack_channel }}

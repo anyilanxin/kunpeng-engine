@@ -1,0 +1,171 @@
+/*
+ * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+ * under one or more contributor license agreements. Licensed under a proprietary license.
+ * See the License.txt file for more information. You may not use this file
+ * except in compliance with the proprietary license.
+ */
+package io.camunda.connector.idp.extraction.service;
+
+import static io.camunda.connector.idp.extraction.error.IdpErrorCodes.INVALID_JSON_RESPONSE;
+import static io.camunda.connector.idp.extraction.error.IdpErrorCodes.JSON_PARSING_FAILED;
+import static io.camunda.connector.idp.extraction.utils.ProviderUtil.getAiClient;
+import static io.camunda.connector.idp.extraction.utils.ProviderUtil.getTextExtractor;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.langchain4j.model.chat.response.ChatResponse;
+import io.camunda.connector.api.error.ConnectorException;
+import io.camunda.connector.idp.extraction.client.ai.base.AiClient;
+import io.camunda.connector.idp.extraction.client.extraction.base.TextExtractor;
+import io.camunda.connector.idp.extraction.model.ClassificationMetadata;
+import io.camunda.connector.idp.extraction.model.ClassificationResult;
+import io.camunda.connector.idp.extraction.model.LlmModel;
+import io.camunda.connector.idp.extraction.request.classification.ClassificationRequest;
+import io.camunda.connector.idp.extraction.utils.GuardrailsUtil;
+import io.camunda.connector.idp.extraction.utils.StringUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class ClassificationService {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(ClassificationService.class);
+  private final ObjectMapper objectMapper = new ObjectMapper();
+
+  public ClassificationResult execute(ClassificationRequest request) throws Exception {
+    TextExtractor textExtractor = getTextExtractor(request.extractor());
+    AiClient aiClient = getAiClient(request.ai(), request.input().getConverseData());
+    String systemPrompt =
+        LlmModel.getClassificationSystemPrompt(request.input().getFallbackOutputValue());
+
+    ChatResponse aiResponse;
+    long latencyMs;
+    if (textExtractor == null) {
+      GuardrailsUtil.DocumentPreprocessingResult preprocessingResult =
+          GuardrailsUtil.preprocessDocumentForLlm(request.input().getDocument());
+      long aiStartTime = System.currentTimeMillis();
+      if (preprocessingResult.fallbackToTextPrompt()) {
+        LOGGER.info(
+            "Guardrails detected suspicious file content. Starting sanitized text-only {} classification",
+            aiClient.getClass().getSimpleName());
+        String userPrompt =
+            LlmModel.getClassificationUserPrompt(
+                request.input().getDocumentTypes(), preprocessingResult.sanitizedText());
+        aiResponse = aiClient.chat(systemPrompt, userPrompt);
+      } else {
+        String userPrompt =
+            LlmModel.getClassificationUserPrompt(request.input().getDocumentTypes());
+        LOGGER.info("Starting multimodal {} conversation", aiClient.getClass().getSimpleName());
+        aiResponse = aiClient.chat(systemPrompt, userPrompt, request.input().getDocument());
+      }
+      long aiEndTime = System.currentTimeMillis();
+      latencyMs = aiEndTime - aiStartTime;
+      LOGGER.info(
+          "Multimodal {} conversation took {} ms", aiClient.getClass().getSimpleName(), latencyMs);
+    } else {
+      long startTime = System.currentTimeMillis();
+      LOGGER.info("Extracting text through {}", textExtractor.getClass().getSimpleName());
+      String extractedText = textExtractor.extract(request.input().getDocument());
+      long extractionEndTime = System.currentTimeMillis();
+      LOGGER.info("Finished text extraction in {}ms", extractionEndTime - startTime);
+
+      String sanitizedText = GuardrailsUtil.sanitizeLlmInput(extractedText);
+      if (!sanitizedText.equals(extractedText)) {
+        LOGGER.info("Guardrails sanitized extracted text before classification LLM prompt");
+      }
+
+      String userPrompt =
+          LlmModel.getClassificationUserPrompt(request.input().getDocumentTypes(), sanitizedText);
+      long aiStartTime = System.currentTimeMillis();
+      LOGGER.info(
+          "Classifying with ai provider {} and model {}",
+          aiClient.getClass().getSimpleName(),
+          request.input().getConverseData().modelId());
+      aiResponse = aiClient.chat(systemPrompt, userPrompt);
+      long endTime = System.currentTimeMillis();
+      latencyMs = endTime - startTime;
+      LOGGER.info(
+          "Finished ai conversation in {}ms and in total took {}ms",
+          (endTime - aiStartTime),
+          latencyMs);
+    }
+    return parseClassificationResponse(aiResponse, aiClient, latencyMs);
+  }
+
+  private ClassificationResult parseClassificationResponse(
+      ChatResponse aiResponse, AiClient aiClient, long latencyMs) {
+    String llmResponse = aiResponse.aiMessage().text();
+    int totalTokenUsage = aiResponse.metadata().tokenUsage().totalTokenCount();
+    try {
+      return parseAndValidateClassificationResponse(
+          llmResponse, new ClassificationMetadata(totalTokenUsage, latencyMs));
+    } catch (JsonProcessingException | ConnectorException e) {
+      LOGGER.warn(
+          "Initial JSON parsing failed, attempting to clean up response with LLM. Error: {}",
+          e.getMessage());
+
+      // Try to fix the JSON with another LLM call
+      try {
+        long cleanupStartTime = System.currentTimeMillis();
+        LOGGER.info("Starting JSON cleanup {} conversation", aiClient.getClass().getSimpleName());
+        ChatResponse cleanupResponse =
+            aiClient.chat(
+                LlmModel.getJsonExtractionSystemPrompt(),
+                LlmModel.getJsonExtractionUserPrompt(llmResponse));
+        long cleanupEndTime = System.currentTimeMillis();
+        long cleanupLatencyMs = cleanupEndTime - cleanupStartTime;
+        LOGGER.info(
+            "JSON cleanup {} conversation took {} ms",
+            aiClient.getClass().getSimpleName(),
+            cleanupLatencyMs);
+
+        String cleanedResponse = cleanupResponse.aiMessage().text();
+        int aggregatedTokenUsage =
+            totalTokenUsage + cleanupResponse.metadata().tokenUsage().totalTokenCount();
+        long aggregatedLatencyMs = latencyMs + cleanupLatencyMs;
+        return parseAndValidateClassificationResponse(
+            cleanedResponse, new ClassificationMetadata(aggregatedTokenUsage, aggregatedLatencyMs));
+      } catch (Exception cleanupException) {
+        throw new ConnectorException(
+            JSON_PARSING_FAILED,
+            String.format(
+                "Failed to parse JSON even after cleanup attempt. Original response: %s",
+                llmResponse),
+            cleanupException);
+      }
+    }
+  }
+
+  private ClassificationResult parseAndValidateClassificationResponse(
+      String llmResponse, ClassificationMetadata metadata) throws JsonProcessingException {
+    // First filter out thinking content, then strip markdown code blocks
+    String thinkingRemoved = StringUtil.filterThinkingContent(llmResponse);
+    String cleanedResponse = StringUtil.stripMarkdownCodeBlocks(thinkingRemoved);
+    JsonNode llmResponseJson = objectMapper.readValue(cleanedResponse, JsonNode.class);
+
+    if (!llmResponseJson.isObject()) {
+      throw new ConnectorException(
+          INVALID_JSON_RESPONSE,
+          String.format("LLM response is not a JSON object: %s", llmResponse));
+    }
+
+    // Handle nested "response" wrapper if present
+    JsonNode dataNode = llmResponseJson;
+    if (llmResponseJson.has("response") && llmResponseJson.size() == 1) {
+      var nestedResponse = llmResponseJson.get("response");
+      if (nestedResponse.isObject()) {
+        dataNode = nestedResponse;
+      } else if (nestedResponse.isTextual()) {
+        dataNode = objectMapper.readValue(nestedResponse.asText(), JsonNode.class);
+      }
+    }
+
+    // Extract the required fields
+    String extractedValue =
+        dataNode.has("extractedValue") ? dataNode.get("extractedValue").asText() : null;
+    String confidence = dataNode.has("confidence") ? dataNode.get("confidence").asText() : null;
+    String reasoning = dataNode.has("reasoning") ? dataNode.get("reasoning").asText() : null;
+
+    return new ClassificationResult(extractedValue, confidence, reasoning, metadata);
+  }
+}

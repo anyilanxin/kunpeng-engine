@@ -1,0 +1,774 @@
+name: Release a new version
+run-name: Release a new version ${{ inputs.version }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 8.7.0, 8.7.1). Make sure to select the correct branch.'
+        required: true
+        type: string
+      skip-maven-release:
+        description: 'Skip Maven release'
+        required: false
+        type: boolean
+        default: false
+      skip-docker-release:
+        description: 'Skip Docker release'
+        required: false
+        type: boolean
+        default: false
+      skip-e2e-tests:
+        description: 'Skip E2E tests'
+        required: false
+        type: boolean
+        default: false
+      latest:
+        description: 'Mark this release as latest (push latest docker tags & mark GitHub release latest)'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ inputs.version }}
+          name: ${{ inputs.version }}
+          draft: false
+          prerelease: false
+          make_latest: ${{ inputs.latest && 'true' || 'false' }}
+          generate_release_notes: false
+          target_commitish: ${{ github.ref }}
+          body: |
+            ## 🚧 Release in Progress
+            
+            This release is currently being built and deployed.
+            
+            **Workflow Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            
+            This message will be replaced with the full changelog once the release process completes.
+
+  setup:
+    needs: create-release
+    name: Prepare the repository
+    runs-on: gcp-core-2-release
+    permissions:
+      contents: write
+      checks: write
+    outputs:
+      tagType: ${{ steps.prev_version.outputs.release_type }}
+      releaseBranch: ${{ steps.determine_release_branch.outputs.releaseBranch }}
+      previousTag: ${{ steps.prev_version.outputs.previous_version }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0
+          persist-credentials: false # we will use a GitHub App token for pushing commits and tags, so we need to disable the default token
+      - name: Install bc calculator
+        run: sudo apt-get update && sudo apt-get install -y bc
+      - name: Identify previous release version
+        id: prev_version
+        uses: camunda/infra-global-github-actions/previous-version@main
+        with:
+          version: "${{ inputs.version }}"
+          verbose: 'false'
+      # We will update this branch by setting the new version and pushing it
+      - name: Determine release branch name
+        id: determine_release_branch
+        run: |
+          releaseBranch=$( git branch --contains ${RELEASE_VERSION} --format='%(refname:short)' )
+          git checkout "$releaseBranch"
+          echo "releaseBranch=$releaseBranch" >> $GITHUB_OUTPUT
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+
+      - name: Prepare Java and Maven settings
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21.0.9'
+
+      - name: Restore cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Install Node.js
+        uses: actions/setup-node@v7.0.0
+        with:
+          node-version: '24'
+
+      - name: Install element templates CLI
+        run: npm install --global element-templates-cli@$(jq -r '.devDependencies["element-templates-cli"]' .github/workflows/package.json)
+
+      # Credentials and ~/.m2/settings.xml must be in place before the first Maven
+      # invocation below, otherwise Maven resolves the POM anonymously and 401s on
+      # any artifact that is not publicly available on Maven Central.
+      - name: Import Secrets
+        id: vault-secrets
+        uses: hashicorp/vault-action@892a26828f195e65540a40b4768ae4571f51ebfc # v4.0.0
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          exportEnv: false
+          secrets: |
+            secret/data/products/connectors/ci/common GITHUB_APP_ID;
+            secret/data/products/connectors/ci/common GITHUB_APP_PRIVATE_KEY;
+            secret/data/products/connectors/ci/nexus USER | CI_NEXUS_USR;
+            secret/data/products/connectors/ci/nexus PASSWORD | CI_NEXUS_PSW;
+            secret/data/products/connectors/ci/artifactory USER | ARTIFACTORY_USR;
+            secret/data/products/connectors/ci/artifactory TOKEN | ARTIFACTORY_PSW;
+
+      - name: 'Create settings.xml'
+        uses: s4u/maven-settings-action@v4.0.0
+        with:
+          githubServer: false
+          # Two mirrors, because the HeroDevs NES repo is not served by the CI Nexus cache:
+          # - camunda-nexus: mirrors herodevs-nes to the internal Artifactory virtual repo.
+          #   Required on stable/8.7 and stable/8.8, whose parent/pom.xml pins an NES-only
+          #   Spring Boot patch. Inert on main (no herodevs-nes repository declared).
+          #   Mirror credentials are keyed on the *mirror* id, so camunda-nexus carries the
+          #   Artifactory creds. See the HeroDevs NES PSA in #prj-spring-boot-35-end-of-oss-support.
+          # - nexus-mirror: CI Nexus creds for the pull-through cache at repository.nexus.camunda.cloud
+          #   for everything else. herodevs-nes is excluded so the wildcard cannot swallow it —
+          #   Maven picks the first matching mirror by declaration order, not by specificity.
+          servers: |
+            [{
+              "id": "nexus-mirror",
+              "username": "${{ steps.vault-secrets.outputs.CI_NEXUS_USR }}",
+              "password": "${{ steps.vault-secrets.outputs.CI_NEXUS_PSW }}"
+             },
+             {
+               "id": "camunda-nexus",
+               "username": "${{ steps.vault-secrets.outputs.ARTIFACTORY_USR }}",
+               "password": "${{ steps.vault-secrets.outputs.ARTIFACTORY_PSW }}"
+             }]
+          mirrors: '[{"url": "https://artifacts.camunda.com/artifactory/internal", "id": "camunda-nexus", "mirrorOf": "herodevs-nes", "name": "camunda Nexus"}, {"url": "https://repository.nexus.camunda.cloud/content/groups/internal/", "id": "nexus-mirror", "mirrorOf": "*,!confluent,!shibboleth,!herodevs-nes", "name": "camunda Nexus"}]'
+
+        # Maven build & version bump
+      - name: Set Connectors release version
+        run: ./mvnw -B versions:set -DnewVersion=${RELEASE_VERSION} -DgenerateBackupPoms=false -f parent
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+
+      - name: Compile and Test
+        run: ./mvnw -B -U package generate-sources source:jar javadoc:jar -Pe2eExcluded
+
+      - name: Publish Test Report
+        if: always()
+        uses: scacap/action-surefire-report@v1
+
+      - name: Upload detailed surefire reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: surefire-reports
+          path: '**/target/surefire-reports/*.xml'
+
+      - name: Generate sbom reports
+        run: |
+          ./mvnw cyclonedx:makeAggregateBom -pl apps/bundle/default-bundle
+
+      - name: Generate a GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ steps.vault-secrets.outputs.GITHUB_APP_ID }}
+          private-key: ${{ steps.vault-secrets.outputs.GITHUB_APP_PRIVATE_KEY }}
+
+      - name: Configure git user
+        run: |
+          # https://github.com/actions/checkout/issues/13#issuecomment-724415212
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit and tag
+        run: |
+          # IMPORTANT: Use the GitHub App token (not GITHUB_TOKEN) for pushing commits and tags.
+          # GitHub Actions does not trigger downstream workflows (e.g. CHECK_LICENSES / FOSSA scan)
+          # when pushes are made with GITHUB_TOKEN. An App token (or PAT) is required so that the
+          # tag push triggers the license-check workflow for the release.
+          # See: https://docs.github.com/actions/using-workflows/triggering-a-workflow
+          git remote set-url origin "https://x-access-token:${APP_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          # check if worktree is empty
+          if [ -z "$(git status --porcelain)" ]; then
+              echo "No changes to commit"
+              exit 0
+          fi
+          git commit -am "ci: release version ${RELEASE_VERSION}"
+          git push --force-with-lease origin ${RELEASE_BRANCH}
+          git tag -fa ${RELEASE_VERSION} -m "ci: release version ${RELEASE_VERSION}"
+          git push --force origin ${RELEASE_VERSION}
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+          RELEASE_BRANCH: ${{ needs.setup.outputs.releaseBranch }}
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
+
+      - name: Upload repository
+        uses: actions/upload-artifact@v7
+        with:
+          name: repository
+          path: .
+          include-hidden-files: 'true'
+
+
+  e2e-tests:
+    needs: setup
+    name: Run E2E tests
+    if: ${{ !inputs.skip-e2e-tests }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+    steps:
+      - name: Download repository
+        uses: actions/download-artifact@v8
+        with:
+          name: repository
+
+      - name: Ensure Maven wrapper is executable
+        run: chmod +x ./mvnw
+
+      - name: Prepare Java and Maven settings
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21.0.9'
+
+      - name: Restore cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Import Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v4.0.0
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          exportEnv: false
+          secrets: |
+            secret/data/products/connectors/ci/nexus USER | CI_NEXUS_USR;
+            secret/data/products/connectors/ci/nexus PASSWORD | CI_NEXUS_PSW;
+
+      - name: 'Create settings.xml'
+        uses: s4u/maven-settings-action@v4.0.0
+        with:
+          githubServer: false
+          # Mirror uses id=nexus-mirror (distinct from deploy id=camunda-nexus) so each gets the right credentials:
+          # - nexus-mirror: CI Nexus creds for the pull-through cache at repository.nexus.camunda.cloud
+          # - camunda-nexus: Nexus creds for resolving artifacts
+          servers: |
+            [{
+              "id": "nexus-mirror",
+              "username": "${{ steps.secrets.outputs.CI_NEXUS_USR }}",
+              "password": "${{ steps.secrets.outputs.CI_NEXUS_PSW }}"
+             },
+             {
+               "id": "camunda-nexus",
+               "username": "${{ steps.secrets.outputs.CI_NEXUS_USR }}",
+               "password": "${{ steps.secrets.outputs.CI_NEXUS_PSW }}"
+             }]
+          mirrors: '[{"url": "https://repository.nexus.camunda.cloud/content/groups/internal/", "id": "nexus-mirror", "mirrorOf": "*,!confluent,!shibboleth", "name": "camunda Nexus"}]'
+
+      - name: Install artifacts
+        run: ./mvnw -B install -DskipTests -DskipChecks -Pe2eExcluded
+
+      - name: Install Node.js
+        uses: actions/setup-node@v7.0.0
+        with:
+          node-version: '24'
+
+      - name: Install element templates CLI
+        run: npm install --global element-templates-cli@$(jq -r '.devDependencies["element-templates-cli"]' .github/workflows/package.json)
+
+      - name: Run E2E tests
+        run: ./mvnw -B verify -f connectors-e2e-test/pom.xml
+
+      - name: Publish Test Report
+        if: always()
+        uses: scacap/action-surefire-report@v1
+        with:
+          report_paths: 'connectors-e2e-test/**/target/surefire-reports/*.xml'
+
+      - name: Upload detailed surefire reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-surefire-reports
+          path: 'connectors-e2e-test/**/target/surefire-reports/*.xml'
+
+
+  version-bump-docs-links:
+    needs: [setup, e2e-tests]
+    name: Version bump documentation links, if this is the first minor release
+    if: |
+      always() &&
+      needs.setup.result == 'success' &&
+      (needs.e2e-tests.result == 'success' || needs.e2e-tests.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Fetch main branch
+        run: git fetch origin main
+
+      - name: Configure git user
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Determine if first minor release
+        id: version_check
+        env:
+          VERSION: ${{ inputs.version }}  # e.g. "8.8.0"
+        run: |
+          if [[ "$VERSION" =~ ^([0-9]+)\.([0-9]+)\.0$ ]]; then
+            major="${BASH_REMATCH[1]}"
+            minor="${BASH_REMATCH[2]}"
+            current_minor="${major}.${minor}"
+            previous_minor="${major}.$((minor - 1))"
+          
+            echo "Version $VERSION matches first minor release pattern (x.y.0)"
+            echo "is_first_minor=true" >> $GITHUB_OUTPUT
+            echo "current_minor=${current_minor}" >> $GITHUB_OUTPUT
+            echo "previous_minor=${previous_minor}" >> $GITHUB_OUTPUT
+          else
+            echo "Version $VERSION does NOT match first minor release pattern - skipping docs version bump"
+            echo "is_first_minor=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Collect connector template links
+        if: steps.version_check.outputs.is_first_minor == 'true'
+        run: |
+          chmod +x ./.github/workflows/scripts/version_bump_all_element_templates_docs_links_versions.sh
+          ./.github/workflows/scripts/version_bump_all_element_templates_docs_links_versions.sh ${{ steps.version_check.outputs.previous_minor }} ${{ steps.version_check.outputs.current_minor }}
+        shell: bash
+
+      - name: Create pull request to main branch
+        if: steps.version_check.outputs.is_first_minor == 'true'
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: chore/version-bump-docs-links
+          commit-message: "ci: bump docs version from ${{ steps.version_check.outputs.previous_minor }} to ${{ steps.version_check.outputs.current_minor }}"
+          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          base: main
+          title: "chore(docs-links): bump versions from ${{ steps.version_check.outputs.previous_minor }} to ${{ steps.version_check.outputs.current_minor }}"
+          body: |
+            This bumps docs version of latest's element templates of a connector to latest minor version.
+
+  maven-release:
+    needs: [setup, e2e-tests]
+    name: Create a maven release
+    runs-on: ubuntu-latest
+    if: |
+      always() &&
+      !inputs.skip-maven-release &&
+      needs.setup.result == 'success' &&
+      (needs.e2e-tests.result == 'success' || needs.e2e-tests.result == 'skipped')
+    permissions:
+      contents: read
+    steps:
+      - name: Log Maven release status
+        run: |
+          echo "Maven release is enabled (skip-maven-release: ${{ inputs.skip-maven-release }})"
+
+      - name: Download repository
+        uses: actions/download-artifact@v8
+        with:
+          name: repository
+
+      - name: Ensure Maven wrapper is executable
+        run: chmod +x ./mvnw
+
+      - name: Prepare Java and Maven settings
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21.0.9'
+
+      - name: Import Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v4.0.0
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          exportEnv: false # we rely on step outputs, no need for environment variables
+          secrets: |
+            secret/data/products/connectors/ci/artifactory USER | ARTIFACTORY_USR;
+            secret/data/products/connectors/ci/artifactory TOKEN | ARTIFACTORY_PSW;
+            secret/data/products/connectors/ci/nexus USER | CI_NEXUS_USR;
+            secret/data/products/connectors/ci/nexus PASSWORD | CI_NEXUS_PSW;
+            secret/data/github.com/organizations/camunda MAVEN_CENTRAL_DEPLOYMENT_USR;
+            secret/data/github.com/organizations/camunda MAVEN_CENTRAL_DEPLOYMENT_PSW;
+            secret/data/github.com/organizations/camunda MAVEN_CENTRAL_GPG_SIGNING_KEY_PASSPHRASE;
+            secret/data/github.com/organizations/camunda MAVEN_CENTRAL_GPG_SIGNING_KEY_SEC;
+
+      - name: Import GPG key
+        id: import_gpg
+        uses: crazy-max/ghaction-import-gpg@v7
+        with:
+          gpg_private_key: ${{ steps.secrets.outputs.MAVEN_CENTRAL_GPG_SIGNING_KEY_SEC }}
+          passphrase: ${{ steps.secrets.outputs.MAVEN_CENTRAL_GPG_SIGNING_KEY_PASSPHRASE }}
+
+      - name: 'Create settings.xml'
+        uses: s4u/maven-settings-action@v4.0.0
+        with:
+          githubServer: false
+          # Mirror uses id=nexus-mirror (distinct from deploy id=camunda-nexus) so each gets the right credentials:
+          # - nexus-mirror: CI Nexus creds for the pull-through cache at repository.nexus.camunda.cloud
+          # - camunda-nexus: Artifactory creds for deploying releases to artifacts.camunda.com
+          servers: |
+            [{
+              "id": "nexus-mirror",
+              "username": "${{ steps.secrets.outputs.CI_NEXUS_USR }}",
+              "password": "${{ steps.secrets.outputs.CI_NEXUS_PSW }}"
+             },
+            {
+               "id": "camunda-nexus",
+               "username": "${{ steps.secrets.outputs.ARTIFACTORY_USR }}",
+               "password": "${{ steps.secrets.outputs.ARTIFACTORY_PSW }}"
+             },
+            {
+               "id": "central",
+               "username": "${{ steps.secrets.outputs.MAVEN_CENTRAL_DEPLOYMENT_USR }}",
+               "password": "${{ steps.secrets.outputs.MAVEN_CENTRAL_DEPLOYMENT_PSW }}"
+             }
+            ]
+          mirrors: '[{"url": "https://repository.nexus.camunda.cloud/content/groups/internal/", "id": "nexus-mirror", "mirrorOf": "*,!confluent,!shibboleth", "name": "camunda Nexus"}]'
+
+      - name: Restore cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Log Maven deployment target
+        run: |
+          if [[ "${{ inputs.version }}" == *"rc"* ]]; then
+            echo "Version contains 'rc' - deploying to Artifactory only"
+          else
+            echo "Version does not contain 'rc' - deploying to Artifactory and Maven Central (Staging)"
+          fi
+
+      - name: Deploy artifacts to Artifactory and Maven Central (Staging)
+        if: "! contains(inputs.version, 'rc')"
+        run: ./mvnw -U deploy -DskipTests -PcheckFormat -Pcentral-sonatype-publish -Pe2eExcluded -DdeploymentName=connectors-${{ inputs.version }}-${{ github.run_id }}-${{ github.run_attempt }}
+        env:
+          NEXUS_USR: ${{ steps.secrets.outputs.ARTIFACTORY_USR }}
+          NEXUS_PSW: ${{ steps.secrets.outputs.ARTIFACTORY_PSW }}
+          MAVEN_USR: ${{ steps.secrets.outputs.MAVEN_CENTRAL_DEPLOYMENT_USR }}
+          MAVEN_PSW: ${{ steps.secrets.outputs.MAVEN_CENTRAL_DEPLOYMENT_PSW }}
+          MAVEN_GPG_PASSPHRASE: ${{ steps.secrets.outputs.MAVEN_CENTRAL_GPG_SIGNING_KEY_PASSPHRASE }}
+
+      - name: Deploy artifacts to Artifactory
+        if: "contains(inputs.version, 'rc')"
+        run: ./mvnw -U deploy -DskipTests -PcheckFormat -Pcentral-sonatype-publish -Dskip.central.release=true -Pe2eExcluded
+        env:
+          NEXUS_USR: ${{ steps.secrets.outputs.ARTIFACTORY_USR }}
+          NEXUS_PSW: ${{ steps.secrets.outputs.ARTIFACTORY_PSW }}
+          MAVEN_USR: ${{ steps.secrets.outputs.MAVEN_CENTRAL_DEPLOYMENT_USR }}
+          MAVEN_PSW: ${{ steps.secrets.outputs.MAVEN_CENTRAL_DEPLOYMENT_PSW }}
+          MAVEN_GPG_PASSPHRASE: ${{ steps.secrets.outputs.MAVEN_CENTRAL_GPG_SIGNING_KEY_PASSPHRASE }}
+
+  docker-release:
+    needs: [setup, e2e-tests]
+    runs-on: ubuntu-latest
+    name: Docker release - ${{ matrix.name }}
+    if: |
+      always() &&
+      !inputs.skip-docker-release &&
+      needs.setup.result == 'success' &&
+      (needs.e2e-tests.result == 'success' || needs.e2e-tests.result == 'skipped')
+    strategy:
+      matrix:
+        include:
+          - name: connector-runtime
+            context: apps/connector-runtime-application/
+            image: camunda/connectors
+            readme: ''
+            short_description: ''
+          - name: bundle-default
+            context: apps/bundle/default-bundle/
+            image: camunda/connectors-bundle
+            readme: apps/bundle/README.md
+            short_description: 'Camunda out-of-the-box Connectors Bundle'
+          - name: bundle-saas
+            context: apps/bundle/camunda-saas-bundle/
+            image: camunda/connectors-bundle-saas
+            readme: apps/bundle/README.md
+            short_description: 'Camunda out-of-the-box Connectors Bundle for SaaS'
+    permissions:
+      contents: read
+    steps:
+      - name: Log Docker release status
+        run: |
+          echo "Docker release is enabled (skip-docker-release: ${{ inputs.skip-docker-release }})"
+
+      - name: Download repository
+        uses: actions/download-artifact@v8
+        with:
+          name: repository
+
+      - name: Import Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v4.0.0
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          exportEnv: false # we rely on step outputs, no need for environment variables
+          secrets: |
+            secret/data/products/connectors/ci/common DOCKERHUB_USER;
+            secret/data/products/connectors/ci/common DOCKERHUB_PASSWORD;
+            secret/data/products/connectors/ci/common REGISTRY_MINIMUS_PSW;
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+        with:
+          platforms: 'arm64,arm'
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ steps.secrets.outputs.DOCKERHUB_USER }}
+          password: ${{ steps.secrets.outputs.DOCKERHUB_PASSWORD }}
+
+      - name: Login to Minimus
+        uses: docker/login-action@v4
+        with:
+          registry: reg.mini.dev
+          username: minimus
+          password: ${{ steps.secrets.outputs.REGISTRY_MINIMUS_PSW }}
+
+      - name: Build and Push Docker Image tag ${{ inputs.version }} - ${{ matrix.name }}
+        uses: docker/build-push-action@v7
+        with:
+          context: ${{ matrix.context }}
+          push: true
+          tags: ${{ matrix.image }}:${{ inputs.version }}
+          platforms: linux/amd64,linux/arm64
+          provenance: false
+
+      - name: Log latest tag push decision
+        run: |
+          echo "Tag type: ${{ needs.setup.outputs.tagType }}"
+          echo "Latest input: ${{ inputs.latest }}"
+          if [[ "${{ inputs.latest }}" == "true" && "${{ needs.setup.outputs.tagType }}" == "NORMAL" ]]; then
+            echo "Will push 'latest' tag for ${{ matrix.name }}"
+          else
+            echo "Will NOT push 'latest' tag (either latest not requested or not a NORMAL release)"
+          fi
+
+      - name: Build and Push Docker Image tag latest - ${{ matrix.name }}
+        if: ${{ inputs.latest && needs.setup.outputs.tagType == 'NORMAL' }}
+        uses: docker/build-push-action@v7
+        with:
+          context: ${{ matrix.context }}
+          push: true
+          tags: ${{ matrix.image }}:latest
+          platforms: linux/amd64,linux/arm64
+          provenance: false
+
+      - name: Push README to Dockerhub - ${{ matrix.name }}
+        if: ${{ inputs.latest && needs.setup.outputs.tagType == 'NORMAL' && matrix.readme != '' }}
+        uses: christian-korneck/update-container-description-action@v1
+        env:
+          DOCKER_USER: ${{ steps.secrets.outputs.DOCKERHUB_USER }}
+          DOCKER_PASS: ${{ steps.secrets.outputs.DOCKERHUB_PASSWORD }}
+        with:
+          destination_container_repo: ${{ matrix.image }}
+          provider: dockerhub
+          readme_file: ${{ matrix.readme }}
+          short_description: ${{ matrix.short_description }}
+
+  bundle-and-build-changelog:
+    needs: [setup, e2e-tests]
+    name: Bundle and generate changelogs
+    if: |
+      always() &&
+      needs.setup.result == 'success' &&
+      (needs.e2e-tests.result == 'success' || needs.e2e-tests.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download repository
+        uses: actions/download-artifact@v8
+        with:
+          name: repository
+
+      # Update GitHub release
+      - name: Bundle element templates
+        run: bash apps/bundle/bundle-templates.sh ${RELEASE_VERSION}
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+
+      - name: Build Changelog
+        id: changelog
+        uses: Requarks/changelog-action@v1
+        with:
+          token: ${{ github.token }}
+          fromTag: ${{ inputs.version }}
+          toTag: ${{ needs.setup.outputs.previousTag }}
+          writeToFile: false
+          excludeTypes: build,docs,other,style,ci
+          excludeScopes: deps
+
+      - name: Update GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          prerelease: ${{ needs.setup.outputs.tagType != 'NORMAL' }}
+          make_latest: ${{ (inputs.latest && needs.setup.outputs.tagType == 'NORMAL') && 'true' || 'false' }}
+          body: ${{ steps.changelog.outputs.changes }}
+          tag_name: ${{ inputs.version }}
+          files: |
+            apps/bundle/default-bundle/target/connectors-bundle-sbom.json
+            apps/bundle/default-bundle/target/connectors-bundle-sbom.xml
+            connectors-bundle-templates-${{ inputs.version }}.tar.gz
+            connectors-bundle-templates-${{ inputs.version }}.zip
+
+  helm-deploy:
+    needs: [ setup, e2e-tests, docker-release ]
+    if: |
+      always() &&
+      !inputs.skip-docker-release &&
+      needs.setup.result == 'success' &&
+      (needs.e2e-tests.result == 'success' || needs.e2e-tests.result == 'skipped') &&
+      needs.docker-release.result == 'success'
+    name: Run Helm Integration Tests
+    uses: ./.github/workflows/INTEGRATION_TEST.yml
+    secrets: inherit
+    with:
+      image-source: dockerhub
+      connectors-version: ${{ inputs.version }}
+      release-branch: ${{ needs.setup.outputs.releaseBranch }}
+
+  # This job waits for the FOSSA scan (triggered by CHECK_LICENSES.yml) to complete,
+  # then creates releases in FOSSA and generates attribution/SBOM reports.
+  # Runs on all releases (including RC and alpha) after successful completion of all release jobs.
+  # Intentionally does NOT depend on helm-deploy: FOSSA scanning/reporting has no hard dependency
+  # on the helm integration tests, so attestation reports must still be generated even when the
+  # helm tests fail or are skipped (see camunda/connectors#6023).
+  fossa_release:
+    name: Create FOSSA releases and generate attribution/SBOM reports
+    needs:
+      - setup
+      - e2e-tests
+      - maven-release
+      - docker-release
+      - bundle-and-build-changelog
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    if: |
+      always() &&
+      needs.setup.result == 'success' &&
+      (needs.e2e-tests.result == 'success' || needs.e2e-tests.result == 'skipped') &&
+      (needs.maven-release.result == 'success' || needs.maven-release.result == 'skipped') &&
+      (needs.docker-release.result == 'success' || needs.docker-release.result == 'skipped') &&
+      needs.bundle-and-build-changelog.result == 'success'
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.version }}
+      - name: Import Secrets
+        id: secrets
+        uses: hashicorp/vault-action@v4.0.0
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          exportEnv: false
+          secrets: |
+            secret/data/products/connectors/ci/common FOSSA_API_KEY;
+      - name: Get FOSSA context
+        id: fossa-context
+        uses: camunda/infra-global-github-actions/fossa/info@b20a0e8f64ea6554900bab2d3fb3906be613aa19
+      - name: Wait for FOSSA scan completion
+        uses: camunda/infra-global-github-actions/fossa/wait-for-scan@b20a0e8f64ea6554900bab2d3fb3906be613aa19
+        with:
+          api-key: ${{ steps.secrets.outputs.FOSSA_API_KEY }}
+          branch: ${{ steps.fossa-context.outputs.head-ref }}
+          project-id: "custom+50756/camunda/connectors"
+          revision-id: ${{ steps.fossa-context.outputs.head-revision }}
+      - name: Create FOSSA releases and generate reports
+        uses: camunda/infra-global-github-actions/fossa/release@b20a0e8f64ea6554900bab2d3fb3906be613aa19
+        with:
+          api-key: ${{ steps.secrets.outputs.FOSSA_API_KEY }}
+          branch: ${{ steps.fossa-context.outputs.head-ref }}
+          project-id: "custom+50756/camunda/connectors"
+          attribution-release-group-id: "4945" # https://app.fossa.com/projects/group/4945
+          sbom-release-group-id: "4946"        # https://app.fossa.com/projects/group/4946 
+          release-number: ${{ inputs.version }}
+          revision-id: ${{ steps.fossa-context.outputs.head-revision }}
+          attribution-format: "TXT"
+          sbom-format: "CYCLONEDX_JSON"
+
+  notify-prs-released:
+    name: Notify PRs that they have been released
+    needs:
+      - setup
+      - e2e-tests
+      - maven-release
+      - docker-release
+      - bundle-and-build-changelog
+    uses: ./.github/workflows/NOTIFY_PRS_RELEASED.yml
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+
+    # Automatically notify PRs for non-RC releases (case-insensitive check)
+    if: |
+      always() &&
+      !contains(inputs.version, 'rc') &&
+      needs.setup.result == 'success' &&
+      (needs.e2e-tests.result == 'success' || needs.e2e-tests.result == 'skipped') &&
+      needs.maven-release.result == 'success' &&
+      needs.docker-release.result == 'success' &&
+      needs.bundle-and-build-changelog.result == 'success'
+    with:
+      version: ${{ inputs.version }}

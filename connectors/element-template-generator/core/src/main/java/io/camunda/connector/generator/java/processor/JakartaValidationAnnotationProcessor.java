@@ -1,0 +1,100 @@
+/*
+ * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+ * under one or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information regarding copyright
+ * ownership. Camunda licenses this file to you under the Apache License,
+ * Version 2.0; you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.camunda.connector.generator.java.processor;
+
+import io.camunda.connector.generator.dsl.PropertyBuilder;
+import io.camunda.connector.generator.dsl.PropertyConstraints;
+import io.camunda.connector.generator.dsl.PropertyConstraints.PropertyConstraintsBuilder;
+import io.camunda.connector.generator.java.util.TemplateGenerationContext;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+import java.lang.reflect.AnnotatedElement;
+import org.apache.commons.lang3.tuple.Pair;
+
+/** Jakarta Bean Validation API annotations processor */
+public class JakartaValidationAnnotationProcessor implements AnnotationProcessor {
+
+  @Override
+  public void process(
+      AnnotatedElement field,
+      Class<?> type,
+      PropertyBuilder propertyBuilder,
+      final TemplateGenerationContext context) {
+    PropertyConstraintsBuilder constraintsBuilder =
+        PropertyConstraints.builder(propertyBuilder.build().getConstraints());
+
+    if (hasNotEmptyConstraint(field)) {
+      constraintsBuilder.notEmpty(true);
+    }
+
+    var minSize = hasMinSizeAnnotation(field);
+    if (minSize != null) {
+      constraintsBuilder.minLength(minSize);
+    }
+    var maxSize = hasMaxSizeAnnotation(field);
+    if (maxSize != null) {
+      constraintsBuilder.maxLength(maxSize);
+    }
+
+    var pattern = hasPatternAnnotation(field);
+    if (pattern != null) {
+      constraintsBuilder.pattern(
+          new PropertyConstraints.Pattern(pattern.getLeft(), pattern.getRight()));
+    }
+    if (pattern != null && !hasNotEmptyConstraint(field) && AnnotationProcessor.isOptional(field)) {
+      constraintsBuilder.notEmpty(false);
+    }
+    var constraints = constraintsBuilder.build();
+    propertyBuilder.constraints(constraints);
+  }
+
+  private boolean hasNotEmptyConstraint(AnnotatedElement field) {
+    return field.isAnnotationPresent(NotBlank.class)
+        || field.isAnnotationPresent(NotEmpty.class)
+        || field.isAnnotationPresent(NotNull.class);
+  }
+
+  private Integer hasMinSizeAnnotation(AnnotatedElement field) {
+    var sizeAnnotation = field.getAnnotation(Size.class);
+    if (sizeAnnotation != null && sizeAnnotation.min() != Integer.MIN_VALUE) {
+      return sizeAnnotation.min();
+    }
+    return null;
+  }
+
+  private Integer hasMaxSizeAnnotation(AnnotatedElement field) {
+    var sizeAnnotation = field.getAnnotation(Size.class);
+    if (sizeAnnotation != null && sizeAnnotation.max() != Integer.MAX_VALUE) {
+      return sizeAnnotation.max();
+    }
+    return null;
+  }
+
+  private Pair<String, String> hasPatternAnnotation(AnnotatedElement field) {
+    var patternAnnotation = field.getAnnotation(Pattern.class);
+    if (patternAnnotation != null) {
+      if (patternAnnotation.message().equals("{jakarta.validation.constraints.Pattern.message}")) {
+        return Pair.of(patternAnnotation.regexp(), null);
+      }
+      return Pair.of(patternAnnotation.regexp(), patternAnnotation.message());
+    }
+    return null;
+  }
+}

@@ -1,0 +1,195 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "github>camunda/infra-renovate-config:herodevs.json5"
+  ],
+  "commitMessagePrefix": "deps:",
+  "dependencyDashboard": true,
+  "prConcurrentLimit": 50,
+  "prHourlyLimit": 10,
+  "updateNotScheduled": false,
+  "schedule": [
+    "* 20-23,0-8 * * 1-5",
+    "* * * * 0,6"
+  ],
+  "labels": [
+    "dependencies"
+  ],
+  "timezone": "Europe/Berlin",
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^docker-images\\.properties$/"
+      ],
+      "matchStrings": [
+        "^.*=(?<currentValue>.*)$"
+      ],
+      "depNameTemplate": "{{{matchString}}}",
+      "datasourceTemplate": "docker"
+    }
+  ],
+  "hostRules": [
+    {
+      "hostType": "docker",
+      "matchHost": "https://reg.mini.dev",
+      "username": "minimus",
+      "password": "{{ secrets.INFRA_MINIMUS_REGISTRY_TOKEN }}"
+    },
+    {
+      "hostType": "maven",
+      "matchHost": "https://artifacts.camunda.com",
+      "username": "{{ secrets.ARTIFACTORY_USERNAME }}",
+      "password": "{{ secrets.ARTIFACTORY_PASSWORD }}"
+    }
+  ],
+  "packageRules": [
+    {
+      "groupName": "all non-major dependencies",
+      "groupSlug": "all-minor-patch",
+      "matchPackageNames": [
+        "*"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "automerge": true
+    },
+    {
+      "matchManagers": [
+        "maven",
+        "dockerfile"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "pin",
+        "digest"
+      ],
+      "automerge": true
+    },
+    {
+      "matchManagers": [
+        "github-actions"
+      ],
+      "automerge": true
+    },
+    {
+      "matchBaseBranches": [
+        "stable/*"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "enabled": false
+    },
+    {
+      "matchBaseBranches": [
+        "stable/*"
+      ],
+      "matchPackageNames": [
+        "io.camunda*"
+      ],
+      "matchUpdateTypes": [
+        "major",
+        "minor",
+        "replacement"
+      ],
+      "enabled": false
+    },
+    {
+      "matchPackageNames": [
+        "io.camunda.connector{/,}**"
+      ],
+      "enabled": false
+    },
+    {
+      "matchBaseBranches": [
+        "stable/8.6",
+        "stable/8.7"
+      ],
+      "enabled": false,
+      "matchPackageNames": [
+        "com.google.http-client:google-http-client{/,}**"
+      ]
+    },
+    {
+      "matchPackageNames": [
+        "camunda/infra-global-github-actions"
+      ],
+      "matchUpdateTypes": [
+        "digest"
+      ],
+      "changelogUrl": "https://github.com/camunda/infra-global-github-actions/compare/{{currentDigest}}..{{newDigest}}",
+      "schedule": ["on sunday"]
+    },
+    {
+      "description": "Disable major version updates to prevent breaking transitive dependency compatibility with langchain4j.",
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "matchPackageNames": [
+        "org.opensearch.client:opensearch-java",
+        "co.elastic.clients:elasticsearch-java",
+        "org.elasticsearch.client:elasticsearch-rest-client"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "Pin Box SDK to v5 line; v10 drops the legacy com.box.sdk package and the auto-paginating iterators.",
+      "matchUpdateTypes": ["major"],
+      "matchPackageNames": ["com.box:box-java-sdk"],
+      "enabled": false
+    },
+    {
+      "description": "Disable major version updates for json-schema-validator — v3 is a complete API rewrite requiring a dedicated migration.",
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "matchPackageNames": [
+        "com.networknt:json-schema-validator"
+      ],
+      "enabled": false
+    },
+    {
+        "description": "kafka-clients: stay on the Apache versioning track. The Confluent Platform builds (-ce/-ccs/-cp suffixes, e.g. 8.2.1-ce) are republished under the same org.apache.kafka coordinates via artifacts.camunda.com and must not be treated as upgrades to the Apache releases (x.y.z).",
+        "matchPackageNames": [
+          "org.apache.kafka:kafka-clients"
+        ],
+        "allowedVersions": "!/-(ce|ccs|cp\\d*)$/"
+      },
+    {
+      "description": "Disable minor/major updates for google-auth-library-oauth2-http — 1.50.0+ removes the setSecurityProvider method used by connector-google-gemini's vertexai client, breaking its tests. Requires code migration. google-auth-library-credentials is included because parent/pom.xml pins both to the same version.google-auth-library-oauth2-http property, so leaving it unblocked would let Renovate bump the shared property through that dependency instead.",
+      "matchUpdateTypes": [
+        "major",
+        "minor"
+      ],
+      "matchPackageNames": [
+        "com.google.auth:google-auth-library-oauth2-http",
+        "com.google.auth:google-auth-library-credentials"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "Disable minor/major updates for the Google Cloud libraries-bom used by connector-google-gemini specifically — 26.86.0+ pulls in google-auth-library-oauth2-http 1.50.0+ which breaks the connector's vertexai tests. Scoped to the files that feed that module; the independently-versioned libraries-bom in secret-providers/pom.xml is unaffected and can keep updating.",
+      "matchUpdateTypes": [
+        "major",
+        "minor"
+      ],
+      "matchPackageNames": [
+        "com.google.cloud:libraries-bom"
+      ],
+      "matchFileNames": [
+        "parent/pom.xml",
+        "connectors/google/pom.xml"
+      ],
+      "enabled": false
+    }
+  ],
+  "baseBranchPatterns": [
+    "main",
+    "/^stable\\/.*/"
+  ]
+}

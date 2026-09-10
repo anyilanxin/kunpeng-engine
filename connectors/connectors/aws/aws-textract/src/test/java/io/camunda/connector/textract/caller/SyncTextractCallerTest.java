@@ -1,0 +1,114 @@
+/*
+ * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+ * under one or more contributor license agreements. Licensed under a proprietary license.
+ * See the License.txt file for more information. You may not use this file
+ * except in compliance with the proprietary license.
+ */
+package io.camunda.connector.textract.caller;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+import io.camunda.connector.api.document.Document;
+import io.camunda.connector.textract.model.DocumentLocationType;
+import io.camunda.connector.textract.model.TextractExecutionType;
+import io.camunda.connector.textract.model.TextractRequestData;
+import java.util.HexFormat;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import software.amazon.awssdk.core.SdkBytes;
+import software.amazon.awssdk.services.textract.TextractClient;
+import software.amazon.awssdk.services.textract.model.AnalyzeDocumentRequest;
+import software.amazon.awssdk.services.textract.model.AnalyzeDocumentResponse;
+import software.amazon.awssdk.services.textract.model.FeatureType;
+
+class SyncTextractCallerTest {
+  @Test
+  void callWithS3DocumentLocation() {
+    TextractRequestData requestData =
+        new TextractRequestData(
+            DocumentLocationType.S3,
+            "test-bucket",
+            "test-object",
+            "1",
+            null,
+            TextractExecutionType.SYNC,
+            null, // uploadedExecutionType: template-only, never bound at runtime
+            true,
+            true,
+            true,
+            true,
+            false,
+            "",
+            "token",
+            "client-request-token",
+            "job-tag",
+            "notification-channel",
+            "role-arn",
+            "outputBucket",
+            "prefix");
+
+    TextractClient textractClient = mock(TextractClient.class);
+
+    when(textractClient.analyzeDocument(any(AnalyzeDocumentRequest.class)))
+        .thenReturn(AnalyzeDocumentResponse.builder().build());
+
+    new SyncTextractCaller().call(requestData, textractClient);
+
+    verify(textractClient).analyzeDocument(any(AnalyzeDocumentRequest.class));
+  }
+
+  @Test
+  void callWithUploadDocumentLocation() {
+    final Document document = mock(Document.class);
+    byte[] bytes = HexFormat.of().parseHex("e04fd020ea3a6910a2d808002b30309d");
+
+    when(document.asByteArray()).thenReturn(bytes);
+
+    TextractRequestData requestData =
+        new TextractRequestData(
+            DocumentLocationType.UPLOADED,
+            null,
+            null,
+            null,
+            document,
+            TextractExecutionType.SYNC,
+            null, // uploadedExecutionType: template-only, never bound at runtime
+            true,
+            false,
+            false,
+            false,
+            false,
+            null,
+            "token",
+            "client-request-token",
+            "job-tag",
+            "notification-channel",
+            "role-arn",
+            "outputBucket",
+            "prefix");
+
+    TextractClient textractClient = mock(TextractClient.class);
+
+    when(textractClient.analyzeDocument(any(AnalyzeDocumentRequest.class)))
+        .thenReturn(AnalyzeDocumentResponse.builder().build());
+
+    new SyncTextractCaller().call(requestData, textractClient);
+
+    ArgumentCaptor<AnalyzeDocumentRequest> argumentCaptor =
+        ArgumentCaptor.forClass(AnalyzeDocumentRequest.class);
+
+    verify(textractClient).analyzeDocument(argumentCaptor.capture());
+    AnalyzeDocumentRequest analyzeDocumentRequest = argumentCaptor.getValue();
+    assertThat(analyzeDocumentRequest)
+        .isEqualTo(
+            AnalyzeDocumentRequest.builder()
+                .featureTypesWithStrings(FeatureType.TABLES.name())
+                .document(
+                    software.amazon.awssdk.services.textract.model.Document.builder()
+                        .bytes(SdkBytes.fromByteArray(bytes))
+                        .build())
+                .build());
+  }
+}

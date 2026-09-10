@@ -1,0 +1,271 @@
+/*
+ * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+ * under one or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information regarding copyright
+ * ownership. Camunda licenses this file to you under the Apache License,
+ * Version 2.0; you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.camunda.connector.generator.openapi;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import io.camunda.connector.generator.dsl.http.HttpOperationProperty.Target;
+import io.camunda.connector.generator.openapi.util.ParameterUtil;
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.parameters.Parameter;
+import java.util.List;
+import java.util.Map;
+import org.json.JSONException;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
+
+public class ParameterUtilTest {
+
+  @Nested
+  class ParameterEscaping {
+
+    @Test
+    void pathParameter_containsDash_replacedWithUnderscore() {
+      // given
+      var schema = new Schema<>();
+      schema.setType("string");
+
+      var parameter = new Parameter();
+      parameter.setName("my-path-parameter");
+      parameter.setIn("path");
+      parameter.setSchema(schema);
+
+      // when
+      var property = ParameterUtil.transformToProperty(parameter, null);
+
+      // then
+      assertThat(property.id()).isEqualTo("my_path_parameter");
+    }
+
+    @Test
+    void queryParameter_containsDash_notReplacedWithUnderscore() {
+      // given
+      var schema = new Schema<>();
+      schema.setType("string");
+
+      var parameter = new Parameter();
+      parameter.setName("my-query-parameter");
+      parameter.setIn("query");
+      parameter.setSchema(schema);
+
+      // when
+      var property = ParameterUtil.transformToProperty(parameter, null);
+
+      // then
+      assertThat(property.id()).isEqualTo("my-query-parameter");
+    }
+
+    @Test
+    void headerParameter_containsDash_notReplacedWithUnderscore() {
+      // given
+      var schema = new Schema<>();
+      schema.setType("string");
+
+      var parameter = new Parameter();
+      parameter.setName("my-query-parameter");
+      parameter.setIn("header");
+      parameter.setSchema(schema);
+
+      // when
+      var property = ParameterUtil.transformToProperty(parameter, null);
+
+      // then
+      assertThat(property.id()).isEqualTo("my-query-parameter");
+    }
+  }
+
+  @Nested
+  class PropertyExamples {
+
+    @Test
+    void enumArrayExample_shouldContainAllValues() throws JSONException {
+      // given
+      var itemsSchema = new Schema<>();
+      itemsSchema.setType("string");
+      itemsSchema.setEnum(List.of("foo", "bar"));
+      var schema = new Schema<>();
+      schema.setType("array");
+      schema.setItems(itemsSchema);
+
+      var parameter = new Parameter();
+      parameter.setSchema(schema);
+      parameter.setName("myParameter");
+      parameter.setIn("query");
+
+      // when
+      var property = ParameterUtil.transformToProperty(parameter, null);
+
+      // then
+      JSONAssert.assertEquals("[\"foo\", \"bar\"]", property.example(), true);
+    }
+
+    @Test
+    void stringExample_shouldNotBeQuoted() {
+      // given
+      var schema = new Schema<>();
+      schema.setType("string");
+      schema.setExample("foo");
+
+      var parameter = new Parameter();
+      parameter.setSchema(schema);
+      parameter.setName("myParameter");
+      parameter.setIn("query");
+
+      // when
+      var property = ParameterUtil.transformToProperty(parameter, null);
+
+      // then
+      assertThat(property.example()).isEqualTo("foo");
+    }
+  }
+
+  @Nested
+  class ExternalRefs {
+
+    @Test
+    void getSchemaOrFromComponents_externalRef_throwsIllegalArgumentException() {
+      // given – a schema whose $ref points to an external file (not yet resolved)
+      var schema = new Schema<>();
+      schema.set$ref("./specification/paths/foo.json#/components/schemas/User");
+
+      var components = new Components();
+
+      // when / then
+      assertThatThrownBy(() -> ParameterUtil.getSchemaOrFromComponents(schema, components))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("./specification/paths/foo.json#/components/schemas/User")
+          .hasMessageContaining("External $ref");
+    }
+
+    @Test
+    void getSchemaOrFromComponents_internalRef_resolvesFromComponents() {
+      // given – an internal $ref that lives in #/components/schemas
+      var userSchema = new Schema<>().type("object");
+
+      var schema = new Schema<>();
+      schema.set$ref("#/components/schemas/User");
+
+      var components = new Components();
+      components.setSchemas(Map.of("User", userSchema));
+
+      // when
+      var resolved = ParameterUtil.getSchemaOrFromComponents(schema, components);
+
+      // then
+      assertThat(resolved).isSameAs(userSchema);
+    }
+
+    @Test
+    void getSchemaOrFromComponents_noRef_returnsSchemaAsIs() {
+      // given – schema with no $ref at all
+      var schema = new Schema<>().type("string");
+      var components = new Components();
+
+      // when
+      var resolved = ParameterUtil.getSchemaOrFromComponents(schema, components);
+
+      // then
+      assertThat(resolved).isSameAs(schema);
+    }
+
+    @Test
+    void transformToProperty_internalParameterRef_resolvesAndTransforms() {
+      // given – parameter with only $ref set, pointing to components
+      var schema = new Schema<>().type("string");
+      var referencedParam = new Parameter();
+      referencedParam.setName("myParam");
+      referencedParam.setIn("query");
+      referencedParam.setSchema(schema);
+
+      var stub = new Parameter();
+      stub.set$ref("#/components/parameters/myParam");
+
+      var components = new Components();
+      components.setParameters(Map.of("myParam", referencedParam));
+
+      // when
+      var property = ParameterUtil.transformToProperty(stub, components);
+
+      // then
+      assertThat(property.id()).isEqualTo("myParam");
+      assertThat(property.target()).isEqualTo(Target.QUERY);
+    }
+
+    @Test
+    void transformToProperty_internalParameterRef_missingKey_throwsDistinctMessage() {
+      // given – $ref points to a key that does not exist in components
+      var stub = new Parameter();
+      stub.set$ref("#/components/parameters/missingParam");
+
+      var components = new Components();
+      components.setParameters(Map.of("otherParam", new Parameter()));
+
+      // when / then
+      assertThatThrownBy(() -> ParameterUtil.transformToProperty(stub, components))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("missingParam")
+          .hasMessageContaining("is not defined in components.parameters");
+    }
+
+    @Test
+    void transformToProperty_internalParameterRef_noParametersSection_throwsDistinctMessage() {
+      // given – components exists but has no parameters map
+      var stub = new Parameter();
+      stub.set$ref("#/components/parameters/myParam");
+
+      var components = new Components();
+
+      // when / then
+      assertThatThrownBy(() -> ParameterUtil.transformToProperty(stub, components))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("no components.parameters section");
+    }
+
+    @Test
+    void transformToProperty_internalRefOutsideParameters_throwsWithMessage() {
+      // given – internal ref that points to a schema, not a parameter
+      var stub = new Parameter();
+      stub.set$ref("#/components/schemas/MySchema");
+
+      var components = new Components();
+
+      // when / then
+      assertThatThrownBy(() -> ParameterUtil.transformToProperty(stub, components))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("#/components/schemas/MySchema")
+          .hasMessageContaining("only '#/components/parameters/...' references are supported");
+    }
+
+    @Test
+    void transformToProperty_externalParameterRef_throwsWithMessage() {
+      // given – parameter with an unresolved external $ref
+      var stub = new Parameter();
+      stub.set$ref("./external.yaml#/components/parameters/myParam");
+
+      var components = new Components();
+
+      // when / then
+      assertThatThrownBy(() -> ParameterUtil.transformToProperty(stub, components))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessageContaining("./external.yaml#/components/parameters/myParam")
+          .hasMessageContaining("External $ref");
+    }
+  }
+}

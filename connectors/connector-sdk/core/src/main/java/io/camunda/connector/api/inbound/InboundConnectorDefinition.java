@@ -1,0 +1,40 @@
+/*
+ * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+ * under one or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information regarding copyright
+ * ownership. Camunda licenses this file to you under the Apache License,
+ * Version 2.0; you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.camunda.connector.api.inbound;
+
+import java.util.List;
+
+public record InboundConnectorDefinition(
+    String type,
+    String tenantId,
+    String deduplicationId,
+    List<? extends ProcessElement> elements,
+    String physicalTenantId) {
+
+  /**
+   * Legacy constructor retained for source/binary compatibility with existing connector code built
+   * against the pre-multi-tenant four-argument constructor. Defaults {@code physicalTenantId} to
+   * {@code "default"}.
+   */
+  public InboundConnectorDefinition(
+      String type,
+      String tenantId,
+      String deduplicationId,
+      List<? extends ProcessElement> elements) {
+    this(type, tenantId, deduplicationId, elements, "default");
+  }
+}

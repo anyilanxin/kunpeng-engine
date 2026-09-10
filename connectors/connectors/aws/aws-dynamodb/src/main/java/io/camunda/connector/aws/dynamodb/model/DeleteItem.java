@@ -1,0 +1,30 @@
+/*
+ * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+ * under one or more contributor license agreements. Licensed under a proprietary license.
+ * See the License.txt file for more information. You may not use this file
+ * except in compliance with the proprietary license.
+ */
+package io.camunda.connector.aws.dynamodb.model;
+
+import io.camunda.connector.generator.java.annotation.FeelMode;
+import io.camunda.connector.generator.java.annotation.TemplateProperty;
+import io.camunda.connector.generator.java.annotation.TemplateSubType;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
+@TemplateSubType(
+    id = OperationTypes.DELETE_ITEM,
+    description = "Delete a single item from a DynamoDB table by primary key",
+    keywords = {"delete item", "remove item", "drop item"})
+public record DeleteItem(
+    @TemplateProperty(label = "Table name", id = "deleteItem.tableName", group = "input") @NotBlank
+        String tableName,
+    @TemplateProperty(
+            label = "Primary key components",
+            id = "deleteItem.primaryKeyComponents",
+            group = "input",
+            feel = FeelMode.required,
+            tooltip = "Simple or composite primary key")
+        @NotNull
+        Object primaryKeyComponents)
+    implements ItemInput {}

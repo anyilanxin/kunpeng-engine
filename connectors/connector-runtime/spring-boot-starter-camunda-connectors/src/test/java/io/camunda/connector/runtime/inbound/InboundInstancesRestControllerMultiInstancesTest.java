@@ -1,0 +1,440 @@
+/*
+ * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+ * under one or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information regarding copyright
+ * ownership. Camunda licenses this file to you under the Apache License,
+ * Version 2.0; you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.camunda.connector.runtime.inbound;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import io.camunda.connector.api.inbound.*;
+import io.camunda.connector.jackson.ConnectorsObjectMapperSupplier;
+import io.camunda.connector.runtime.core.inbound.ExecutableId;
+import io.camunda.connector.runtime.inbound.controller.ActiveInboundConnectorResponse;
+import io.camunda.connector.runtime.inbound.executable.ConnectorInstances;
+import io.camunda.connector.runtime.instances.InstanceAwareModel;
+import io.camunda.connector.runtime.metrics.InboundConnectorMetrics;
+import java.time.ZoneOffset;
+import java.util.*;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+
+@ExtendWith(MockitoExtension.class)
+class InboundInstancesRestControllerMultiInstancesTest extends BaseMultiInstancesTest {
+
+  @Test
+  public void shouldReturnConnectorInstances() {
+    ResponseEntity<List<ConnectorInstances>> response =
+        restTemplate.exchange(
+            "http://localhost:" + port1 + "/inbound-instances",
+            HttpMethod.GET,
+            null,
+            new ParameterizedTypeReference<>() {});
+
+    List<ConnectorInstances> instance = response.getBody();
+    assertEquals(2, instance.size());
+    var instance1 = instance.get(0);
+    assertEquals(TYPE_1, instance1.connectorId());
+    assertEquals("Webhook", instance1.connectorName());
+    assertEquals(3, instance1.instances().size());
+    var executableIds =
+        instance1.instances().stream().map(ActiveInboundConnectorResponse::executableId).toList();
+    assertThat(
+        executableIds, containsInAnyOrder(RANDOM_ID_1, ONLY_IN_RUNTIME_1_ID, ONLY_IN_RUNTIME_2_ID));
+    ActiveInboundConnectorResponse activeInboundConnectorResponse =
+        instance1.instances().stream()
+            .filter(r -> r.executableId().equals(RANDOM_ID_1))
+            .findFirst()
+            .get();
+    assertEquals(
+        Health.down(new IllegalArgumentException("Test error message")),
+        activeInboundConnectorResponse.health());
+    assertEquals("ProcessA", activeInboundConnectorResponse.elements().getFirst().bpmnProcessId());
+
+    var instance2 = instance.get(1);
+    assertEquals(TYPE_2, instance2.connectorId());
+    assertEquals("AnotherType", instance2.connectorName());
+    assertEquals(2, instance2.instances().size());
+    assertEquals(RANDOM_ID_2, instance2.instances().get(0).executableId());
+    assertEquals(
+        Health.unknown("Test unknown key", "Test unknown value"),
+        instance2.instances().get(0).health());
+    assertEquals("ProcessB", instance2.instances().get(0).elements().getFirst().bpmnProcessId());
+    assertEquals(RANDOM_ID_3, instance2.instances().get(1).executableId());
+    assertEquals(
+        Health.unknown("Test unknown key", "Test unknown value"),
+        instance2.instances().get(1).health());
+    assertEquals("ProcessC", instance2.instances().get(1).elements().getFirst().bpmnProcessId());
+  }
+
+  @Test
+  public void shouldReturn404_whenUnknownConnectorType() {
+    var response =
+        restTemplate.getForEntity(
+            "http://localhost:" + port1 + "/inbound-instances/UNKNOWN-ID", String.class);
+    assertThat(
+        response.getBody(),
+        containsString("Data of type 'ConnectorInstances' with id 'UNKNOWN-ID' not found"));
+    assertThat(404, equalTo(response.getStatusCode().value()));
+  }
+
+  @Test
+  public void shouldReturnSingleConnectorInstance() {
+    ResponseEntity<ConnectorInstances> response =
+        restTemplate.exchange(
+            "http://localhost:" + port1 + "/inbound-instances/" + TYPE_1,
+            HttpMethod.GET,
+            null,
+            new ParameterizedTypeReference<>() {});
+
+    var instance = response.getBody();
+    assertEquals(TYPE_1, instance.connectorId());
+    assertEquals("Webhook", instance.connectorName());
+    assertEquals(3, instance.instances().size());
+    var executableIds =
+        instance.instances().stream().map(ActiveInboundConnectorResponse::executableId).toList();
+    assertThat(
+        executableIds, containsInAnyOrder(RANDOM_ID_1, ONLY_IN_RUNTIME_1_ID, ONLY_IN_RUNTIME_2_ID));
+    ActiveInboundConnectorResponse activeInboundConnectorResponse =
+        instance.instances().stream()
+            .filter(r -> r.executableId().equals(RANDOM_ID_1))
+            .findFirst()
+            .get();
+    assertEquals(
+        Health.down(new IllegalArgumentException("Test error message")),
+        activeInboundConnectorResponse.health());
+    assertEquals("ProcessA", activeInboundConnectorResponse.elements().getFirst().bpmnProcessId());
+  }
+
+  @Test
+  public void shouldReturn404_whenUnknownExecutableId() {
+    var response =
+        restTemplate.getForEntity(
+            "http://localhost:"
+                + port1
+                + "/inbound-instances/"
+                + TYPE_1
+                + "/executables/UNKNOWN-ID",
+            String.class);
+    assertThat(
+        response.getBody(),
+        containsString(
+            "Data of type 'ActiveInboundConnectorResponse' with id 'UNKNOWN-ID' not found"));
+    assertThat(404, equalTo(response.getStatusCode().value()));
+  }
+
+  private static Stream<Arguments> provideExecutableIds() {
+    return Stream.of(
+        Arguments.of(RANDOM_ID_1),
+        Arguments.of(ONLY_IN_RUNTIME_1_ID),
+        Arguments.of(ONLY_IN_RUNTIME_2_ID));
+  }
+
+  @ParameterizedTest
+  @MethodSource("provideExecutableIds")
+  public void shouldReturnSingleExecutable(ExecutableId executableId) {
+    var response =
+        restTemplate.getForEntity(
+            "http://localhost:"
+                + port1
+                + "/inbound-instances/"
+                + TYPE_1
+                + "/executables/"
+                + executableId.getId(),
+            ActiveInboundConnectorResponse.class);
+    var executable = response.getBody();
+    assertEquals(executableId, executable.executableId());
+    assertEquals("ProcessA", executable.elements().getFirst().bpmnProcessId());
+  }
+
+  @Test
+  public void shouldReturnEmptyActivityLogs_whenNoLogs() {
+    ResponseEntity<List<InstanceAwareModel.InstanceAwareActivity>> response =
+        restTemplate.exchange(
+            "http://localhost:"
+                + port1
+                + "/inbound-instances/"
+                + TYPE_1
+                + "/executables/"
+                + RANDOM_ID_1.getId()
+                + "/logs",
+            HttpMethod.GET,
+            null,
+            new ParameterizedTypeReference<>() {});
+    var logs = response.getBody();
+    assertTrue(logs.isEmpty());
+  }
+
+  @Test
+  public void shouldReturnActivityLogs_whenTypeProvided() {
+    ResponseEntity<List<InstanceAwareModel.InstanceAwareActivity>> response =
+        restTemplate.exchange(
+            "http://localhost:"
+                + port1
+                + "/inbound-instances/"
+                + TYPE_2
+                + "/executables/"
+                + RANDOM_ID_3.getId()
+                + "/logs",
+            HttpMethod.GET,
+            null,
+            new ParameterizedTypeReference<>() {});
+    var logs = response.getBody();
+    assertEquals(4, logs.size());
+    assertThat(
+        logs,
+        containsInAnyOrder(
+            new InstanceAwareModel.InstanceAwareActivity(
+                RUNTIME1_ACTIVITY1.severity(),
+                RUNTIME1_ACTIVITY1.tag(),
+                RUNTIME1_ACTIVITY1.timestamp().withOffsetSameInstant(ZoneOffset.UTC),
+                RUNTIME1_ACTIVITY1.message(),
+                "instance1"),
+            new InstanceAwareModel.InstanceAwareActivity(
+                RUNTIME1_ACTIVITY2.severity(),
+                RUNTIME1_ACTIVITY2.tag(),
+                RUNTIME1_ACTIVITY2.timestamp().withOffsetSameInstant(ZoneOffset.UTC),
+                RUNTIME1_ACTIVITY2.message(),
+                "instance1"),
+            new InstanceAwareModel.InstanceAwareActivity(
+                RUNTIME2_ACTIVITY1.severity(),
+                RUNTIME2_ACTIVITY1.tag(),
+                RUNTIME2_ACTIVITY1.timestamp().withOffsetSameInstant(ZoneOffset.UTC),
+                RUNTIME2_ACTIVITY1.message(),
+                "instance2"),
+            new InstanceAwareModel.InstanceAwareActivity(
+                RUNTIME2_ACTIVITY2.severity(),
+                RUNTIME2_ACTIVITY2.tag(),
+                RUNTIME2_ACTIVITY2.timestamp().withOffsetSameInstant(ZoneOffset.UTC),
+                RUNTIME2_ACTIVITY2.message(),
+                "instance2")));
+  }
+
+  @Test
+  public void shouldReturnHealth_whenBothInstancesHaveExecutable() {
+    ResponseEntity<List<InstanceAwareModel.InstanceAwareHealth>> response =
+        restTemplate.exchange(
+            "http://localhost:"
+                + port1
+                + "/inbound-instances/"
+                + TYPE_2
+                + "/executables/"
+                + RANDOM_ID_3.getId()
+                + "/health",
+            HttpMethod.GET,
+            null,
+            new ParameterizedTypeReference<>() {});
+    var logs = response.getBody();
+    assertEquals(2, logs.size());
+    var instance1Health =
+        logs.stream().filter(h -> "instance1".equals(h.runtimeId())).findFirst().orElseThrow();
+    assertEquals(Health.Status.UNKNOWN, instance1Health.status());
+    assertNull(instance1Health.error());
+    assertEquals(Map.of("Test unknown key", "Test unknown value"), instance1Health.details());
+    assertNotNull(instance1Health.lastUpdatedAt());
+    var instance2Health =
+        logs.stream().filter(h -> "instance2".equals(h.runtimeId())).findFirst().orElseThrow();
+    assertEquals(Health.Status.UP, instance2Health.status());
+    assertNull(instance2Health.error());
+    assertNull(instance2Health.details());
+    assertNotNull(instance2Health.lastUpdatedAt());
+  }
+
+  @Test
+  public void shouldReturnHealth_whenOnly1InstanceHasExecutable() {
+    ResponseEntity<List<InstanceAwareModel.InstanceAwareHealth>> response =
+        restTemplate.exchange(
+            "http://localhost:"
+                + port1
+                + "/inbound-instances/"
+                + TYPE_1
+                + "/executables/"
+                + ONLY_IN_RUNTIME_1_ID.getId()
+                + "/health",
+            HttpMethod.GET,
+            null,
+            new ParameterizedTypeReference<>() {});
+    var logs = response.getBody();
+    assertEquals(1, logs.size());
+    var healthEntry = logs.getFirst();
+    assertEquals(Health.Status.UP, healthEntry.status());
+    assertNull(healthEntry.error());
+    assertNull(healthEntry.details());
+    assertNotNull(healthEntry.lastUpdatedAt());
+    assertEquals("instance1", healthEntry.runtimeId());
+  }
+
+  @Test
+  public void shouldReturnEmptyList_whenNoConnectors() {
+    reset(executableRegistry1, executableRegistry2);
+    when(executableRegistry1.query(any())).thenReturn(Collections.emptyList());
+    when(executableRegistry2.query(any())).thenReturn(Collections.emptyList());
+
+    ResponseEntity<List<ConnectorInstances>> response =
+        restTemplate.exchange(
+            "http://localhost:" + port1 + "/inbound-instances",
+            HttpMethod.GET,
+            null,
+            new ParameterizedTypeReference<>() {});
+
+    List<ConnectorInstances> instance = response.getBody();
+    assertEquals(0, instance.size());
+  }
+
+  @Test
+  public void shouldResetExecutable_whenExistsOnlyOnInstance1() {
+    ResponseEntity<ActiveInboundConnectorResponse> response =
+        restTemplate.exchange(
+            "http://localhost:"
+                + port1
+                + "/inbound-instances/executables/"
+                + ONLY_IN_RUNTIME_1_ID.getId()
+                + "/reset",
+            HttpMethod.POST,
+            null,
+            new ParameterizedTypeReference<>() {});
+
+    assertEquals(200, response.getStatusCode().value());
+    var body = response.getBody();
+    assertNotNull(body);
+    assertEquals(ONLY_IN_RUNTIME_1_ID, body.executableId());
+    // reset() called on the instance that owns the executable, never on the other
+    verify(executableRegistry1).reset(ONLY_IN_RUNTIME_1_ID);
+    verify(executableRegistry2, never()).reset(any());
+  }
+
+  @Test
+  public void shouldResetExecutable_whenExistsOnBothInstances() {
+    ResponseEntity<ActiveInboundConnectorResponse> response =
+        restTemplate.exchange(
+            "http://localhost:"
+                + port1
+                + "/inbound-instances/executables/"
+                + RANDOM_ID_1.getId()
+                + "/reset",
+            HttpMethod.POST,
+            null,
+            new ParameterizedTypeReference<>() {});
+
+    assertEquals(200, response.getStatusCode().value());
+    var body = response.getBody();
+    assertNotNull(body);
+    assertEquals(RANDOM_ID_1, body.executableId());
+    // reset() called on both instances since both own the executable
+    verify(executableRegistry1).reset(RANDOM_ID_1);
+    verify(executableRegistry2).reset(RANDOM_ID_1);
+  }
+
+  @Test
+  public void shouldReturn404_whenResettingUnknownExecutable() {
+    var response =
+        restTemplate.exchange(
+            "http://localhost:"
+                + port1
+                + "/inbound-instances/executables/"
+                + UNKNOWN_ID.getId()
+                + "/reset",
+            HttpMethod.POST,
+            null,
+            String.class);
+
+    assertThat(404, equalTo(response.getStatusCode().value()));
+  }
+
+  @Test
+  public void shouldReturnMetricsFromBothInstances_withCorrectRuntimeId() throws Exception {
+    ResponseEntity<String> response =
+        restTemplate.exchange(
+            "http://localhost:" + port1 + "/inbound-instances/metrics",
+            HttpMethod.GET,
+            null,
+            String.class);
+
+    List<InboundConnectorMetrics> metrics =
+        ConnectorsObjectMapperSupplier.getCopy()
+            .readValue(response.getBody(), new TypeReference<>() {});
+    assertEquals(2, metrics.size());
+    assertTrue(metrics.stream().anyMatch(m -> "instance1".equals(m.runtimeId())));
+    assertTrue(metrics.stream().anyMatch(m -> "instance2".equals(m.runtimeId())));
+  }
+
+  @Test
+  public void shouldReturnMetricsByType_fromBothInstances() throws Exception {
+    // TYPE_1 is present on both instances
+    ResponseEntity<String> response =
+        restTemplate.exchange(
+            "http://localhost:" + port1 + "/inbound-instances/metrics/" + TYPE_1,
+            HttpMethod.GET,
+            null,
+            String.class);
+
+    List<InboundConnectorMetrics> metrics =
+        ConnectorsObjectMapperSupplier.getCopy()
+            .readValue(response.getBody(), new TypeReference<>() {});
+    assertEquals(2, metrics.size());
+    assertTrue(metrics.stream().anyMatch(m -> "instance1".equals(m.runtimeId())));
+    assertTrue(metrics.stream().anyMatch(m -> "instance2".equals(m.runtimeId())));
+  }
+
+  @Test
+  public void shouldAcceptPhysicalTenantIdsFilter_onAggregateMetricsEndpoint() throws Exception {
+    ResponseEntity<String> response =
+        restTemplate.exchange(
+            "http://localhost:" + port1 + "/inbound-instances/metrics?physicalTenantIds=default",
+            HttpMethod.GET,
+            null,
+            String.class);
+
+    assertEquals(200, response.getStatusCode().value());
+    List<InboundConnectorMetrics> metrics =
+        ConnectorsObjectMapperSupplier.getCopy()
+            .readValue(response.getBody(), new TypeReference<>() {});
+    // still one entry per pod — the filter narrows each pod's own sums, not the pod fan-out itself
+    assertEquals(2, metrics.size());
+  }
+
+  @Test
+  public void shouldAcceptPhysicalTenantIdsFilter_onMetricsByTypeEndpoint() throws Exception {
+    ResponseEntity<String> response =
+        restTemplate.exchange(
+            "http://localhost:"
+                + port1
+                + "/inbound-instances/metrics/"
+                + TYPE_1
+                + "?physicalTenantIds=nonexistent-tenant",
+            HttpMethod.GET,
+            null,
+            String.class);
+
+    assertEquals(200, response.getStatusCode().value());
+    List<InboundConnectorMetrics> metrics =
+        ConnectorsObjectMapperSupplier.getCopy()
+            .readValue(response.getBody(), new TypeReference<>() {});
+    assertEquals(2, metrics.size());
+    assertTrue(metrics.stream().allMatch(m -> m.activation().activated() == 0));
+  }
+}

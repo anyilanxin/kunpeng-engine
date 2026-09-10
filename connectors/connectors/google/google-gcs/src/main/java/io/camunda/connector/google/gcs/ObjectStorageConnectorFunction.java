@@ -1,0 +1,68 @@
+/*
+ * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+ * under one or more contributor license agreements. Licensed under a proprietary license.
+ * See the License.txt file for more information. You may not use this file
+ * except in compliance with the proprietary license.
+ */
+package io.camunda.connector.google.gcs;
+
+import io.camunda.connector.api.annotation.OutboundConnector;
+import io.camunda.connector.api.document.Document;
+import io.camunda.connector.api.document.DocumentCreationRequest;
+import io.camunda.connector.api.outbound.OutboundConnectorContext;
+import io.camunda.connector.api.outbound.OutboundConnectorFunction;
+import io.camunda.connector.generator.java.annotation.ElementTemplate;
+import io.camunda.connector.google.gcs.model.core.ObjectStorageExecutor;
+import io.camunda.connector.google.gcs.model.request.ObjectStorageRequest;
+import java.util.function.Function;
+
+@OutboundConnector(
+    name = "Google Cloud Storage",
+    inputVariables = {
+      "authentication",
+      "operationDiscriminator",
+      "operation",
+      "additionalProperties",
+      "documentReturnFormat"
+    },
+    type = "io.camunda:google-gcs:1")
+@ElementTemplate(
+    engineVersion = "^8.10",
+    id = "io.camunda.connectors.google.gcp.v1",
+    name = "Google Cloud Storage Outbound Connector",
+    description = "Upload and download files from Google Cloud Storage.",
+    inputDataClass = ObjectStorageRequest.class,
+    version = 5,
+    propertyGroups = {
+      @ElementTemplate.PropertyGroup(id = "operation", label = "Operation"),
+      @ElementTemplate.PropertyGroup(id = "authentication", label = "Authentication"),
+      @ElementTemplate.PropertyGroup(id = "additionalProperties", label = "Additional properties")
+    },
+    keywords = {
+      "download file from google cloud storage",
+      "upload file to google cloud storage",
+      "download file from gcs",
+      "upload file to gcs",
+      "gcs",
+      "download file",
+      "upload file",
+      "download object",
+      "upload object",
+      "cloud storage",
+      "object storage",
+      "file storage"
+    },
+    documentationRef =
+        "https://docs.camunda.io/docs/8.9/components/connectors/out-of-the-box-connectors/google-cloud-storage",
+    icon = "icon.svg")
+public class ObjectStorageConnectorFunction implements OutboundConnectorFunction {
+
+  @Override
+  public Object execute(OutboundConnectorContext context) {
+    Function<DocumentCreationRequest, Document> createDocument = context::create;
+    ObjectStorageRequest objectStorageRequest = context.bindVariables(ObjectStorageRequest.class);
+    boolean useDocumentReturnFlow = context.readDocumentReturnFormat().isPresent();
+    return ObjectStorageExecutor.create(objectStorageRequest, createDocument)
+        .execute(objectStorageRequest.getOperation(), useDocumentReturnFlow);
+  }
+}

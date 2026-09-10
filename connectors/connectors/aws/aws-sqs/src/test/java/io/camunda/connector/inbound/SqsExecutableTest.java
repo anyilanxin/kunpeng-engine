@@ -1,0 +1,206 @@
+/*
+ * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+ * under one or more contributor license agreements. Licensed under a proprietary license.
+ * See the License.txt file for more information. You may not use this file
+ * except in compliance with the proprietary license.
+ */
+package io.camunda.connector.inbound;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.nio.file.Files.readString;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.camunda.connector.api.inbound.*;
+import io.camunda.connector.aws.ObjectMapperSupplier;
+import io.camunda.connector.aws.model.impl.AwsBaseRequest;
+import io.camunda.connector.common.suppliers.AmazonSQSClientSupplier;
+import io.camunda.connector.inbound.model.SqsInboundProperties;
+import io.camunda.connector.runtime.core.inbound.ProcessElementWithRuntimeData;
+import io.camunda.connector.runtime.test.inbound.InboundConnectorContextBuilder;
+import io.camunda.connector.runtime.test.inbound.InboundConnectorContextBuilder.TestInboundConnectorContext;
+import io.camunda.connector.runtime.test.inbound.InboundConnectorDefinitionBuilder;
+import io.camunda.connector.validation.impl.DefaultValidationProvider;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.model.GetQueueAttributesRequest;
+import software.amazon.awssdk.services.sqs.model.Message;
+import software.amazon.awssdk.services.sqs.model.QueueDoesNotExistException;
+import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
+import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
+
+@ExtendWith(MockitoExtension.class)
+class SqsExecutableTest {
+  private static final String ACTUAL_QUEUE_URL = "https://sqs.region.amazonaws.com/camunda-test";
+  private static final String ACTUAL_QUEUE_REGION = "us-east-1";
+  private static final String AWS_ACCESS_KEY = "AWS_ACCESS_KEY";
+  private static final String AWS_SECRET_KEY = "AWS_SECRET_KEY";
+  private static final String SQS_QUEUE_URL = "SQS_QUEUE_URL";
+  private static final String ACTUAL_ACCESS_KEY = "4W553CR3TK3Y";
+  private static final String ACTUAL_SECRET_KEY = "AAAABBBBCCCDDD";
+  private static final String ATTRIBUTE_NAME = "ATTRIBUTE_NAME_KEY";
+  private static final String ACTUAL_ATTRIBUTE_NAME = "attribute";
+  private static final String MESSAGE_ATTRIBUTE_NAME = "MESSAGE_ATTRIBUTE_NAME_KEY";
+  private static final String ACTUAL_MESSAGE_ATTRIBUTE_NAME = "message attribute";
+
+  private static final ObjectMapper objectMapper = ObjectMapperSupplier.getMapperInstance();
+  private static final String SUCCESS_CASES_RESOURCE_PATH =
+      "src/test/resources/requests/inbound/success-test-cases.json";
+
+  @Mock private SqsClient sqsClient;
+  @Mock private AmazonSQSClientSupplier supplier;
+  private ExecutorService executorService;
+  private SqsQueueConsumer consumer;
+
+  private static Stream<Map<String, Object>> successRequestCases() throws IOException {
+    final String cases =
+        readString(new File(SqsExecutableTest.SUCCESS_CASES_RESOURCE_PATH).toPath(), UTF_8);
+    return objectMapper
+        .readValue(cases, new TypeReference<List<Map<String, Object>>>() {})
+        .stream();
+  }
+
+  @BeforeEach
+  public void setUp() {
+    executorService = Executors.newSingleThreadExecutor();
+  }
+
+  @ParameterizedTest
+  @MethodSource("successRequestCases")
+  public void activateTest(Map<String, Object> properties) throws InterruptedException {
+    // given
+    var definition = createDefinition();
+    InboundConnectorContext context = createConnectorContext(properties, definition);
+    InboundConnectorContext spyContext = spy(context);
+    Message message =
+        Message.builder()
+            .messageId("1")
+            .body("{\"a\":\"c\"}")
+            .receiptHandle("receiptHandle")
+            .build();
+    Message message1 = spy(message);
+    when(supplier.sqsClient(any(AwsBaseRequest.class), eq(ACTUAL_QUEUE_REGION)))
+        .thenReturn(sqsClient);
+    when(sqsClient.receiveMessage(any(ReceiveMessageRequest.class)))
+        .thenReturn(ReceiveMessageResponse.builder().messages(message1).build());
+    consumer =
+        new SqsQueueConsumer(
+            sqsClient,
+            objectMapper.convertValue(properties, SqsInboundProperties.class),
+            spyContext);
+    // when
+    SqsExecutable sqsExecutable = new SqsExecutable(supplier, executorService, consumer);
+    sqsExecutable.activate(spyContext);
+    // then
+    assertThat(consumer.isQueueConsumerActive()).isTrue();
+    consumer.setQueueConsumerActive(false);
+    executorService.shutdown();
+    executorService.awaitTermination(1, TimeUnit.SECONDS);
+    verify(spyContext, atLeast(1))
+        .correlate(
+            CorrelationRequest.builder()
+                .variables(MessageMapper.toSqsInboundMessage(message))
+                .messageId(message.messageId())
+                .build());
+  }
+
+  @Test
+  public void deactivateTest() {
+    // Given
+    when(sqsClient.getQueueAttributes(any(GetQueueAttributesRequest.class))).thenReturn(null);
+    when(supplier.sqsClient(any(AwsBaseRequest.class), eq(ACTUAL_QUEUE_REGION)))
+        .thenReturn(sqsClient);
+    Map<String, Object> properties =
+        Map.of(
+            "authentication",
+            Map.of(
+                "secretKey", ACTUAL_SECRET_KEY,
+                "accessKey", ACTUAL_ACCESS_KEY),
+            "configuration",
+            Map.of("region", "us-east-1"),
+            "queue",
+            Map.of("url", ACTUAL_QUEUE_URL, "pollingWaitTime", "1"));
+    var context = createConnectorContext(properties, createDefinition());
+    consumer = new SqsQueueConsumer(sqsClient, new SqsInboundProperties(), context);
+    consumer.setQueueConsumerActive(true);
+    SqsExecutable sqsExecutable = new SqsExecutable(supplier, executorService, consumer);
+    // When
+    sqsExecutable.activate(context);
+    sqsExecutable.deactivate();
+    // Then
+    assertThat(consumer.isQueueConsumerActive()).isFalse();
+    assertThat(context.getHealth()).isEqualTo(Health.down());
+    assertThat(executorService.isShutdown()).isTrue();
+  }
+
+  @Test
+  public void nonExistingQueueTest() {
+    // Given
+    when(sqsClient.getQueueAttributes(any(GetQueueAttributesRequest.class)))
+        .thenThrow(QueueDoesNotExistException.builder().message("").build());
+    when(supplier.sqsClient(any(AwsBaseRequest.class), eq(ACTUAL_QUEUE_REGION)))
+        .thenReturn(sqsClient);
+    Map<String, Object> properties =
+        Map.of(
+            "authentication",
+            Map.of(
+                "secretKey", ACTUAL_SECRET_KEY,
+                "accessKey", ACTUAL_ACCESS_KEY),
+            "configuration",
+            Map.of("region", "us-east-1"),
+            "queue",
+            Map.of("url", ACTUAL_QUEUE_URL, "pollingWaitTime", "1"));
+    var context = createConnectorContext(properties, createDefinition());
+    consumer = new SqsQueueConsumer(sqsClient, new SqsInboundProperties(), context);
+    consumer.setQueueConsumerActive(true);
+    SqsExecutable sqsExecutable = new SqsExecutable(supplier, executorService, consumer);
+    // When & then
+    assertThrows(RuntimeException.class, () -> sqsExecutable.activate(context));
+  }
+
+  private InboundConnectorDefinition createDefinition() {
+    var element = new ProcessElementWithRuntimeData("proc-id", 1, 2, "element-id", "<default>");
+    return InboundConnectorDefinitionBuilder.create().elements(element).type("type").build();
+  }
+
+  private TestInboundConnectorContext createConnectorContext(
+      Map<String, Object> properties, InboundConnectorDefinition definition) {
+    return InboundConnectorContextBuilder.create()
+        .secret(AWS_SECRET_KEY, ACTUAL_SECRET_KEY)
+        .secret(AWS_ACCESS_KEY, ACTUAL_ACCESS_KEY)
+        .secret(SQS_QUEUE_URL, ACTUAL_QUEUE_URL)
+        .secret(ATTRIBUTE_NAME, ACTUAL_ATTRIBUTE_NAME)
+        .secret(MESSAGE_ATTRIBUTE_NAME, ACTUAL_MESSAGE_ATTRIBUTE_NAME)
+        .properties(properties)
+        .objectMapper(objectMapper)
+        .definition(definition)
+        .validation(new DefaultValidationProvider())
+        .build();
+  }
+
+  private Message createMessage() {
+    return Message.builder().messageId("1").body("{\"a\":\"c\"}").build();
+  }
+}

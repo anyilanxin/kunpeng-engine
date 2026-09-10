@@ -1,0 +1,108 @@
+/*
+ * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+ * under one or more contributor license agreements. See the NOTICE file
+ * distributed with this work for additional information regarding copyright
+ * ownership. Camunda licenses this file to you under the Apache License,
+ * Version 2.0; you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.camunda.connector.http.rest;
+
+import io.camunda.connector.api.annotation.OutboundConnector;
+import io.camunda.connector.api.outbound.OutboundConnectorContext;
+import io.camunda.connector.api.outbound.OutboundConnectorFunction;
+import io.camunda.connector.generator.java.annotation.ElementTemplate;
+import io.camunda.connector.generator.java.annotation.ElementTemplate.PropertyGroup;
+import io.camunda.connector.http.base.HttpService;
+import io.camunda.connector.http.base.model.HttpCommonResult;
+import io.camunda.connector.http.base.model.auth.RestAuthenticationConfiguration;
+import io.camunda.connector.http.rest.model.HttpJsonRequest;
+
+@OutboundConnector(
+    name = "HTTP REST",
+    inputVariables = {
+      "url",
+      "method",
+      "authentication",
+      "clientTls",
+      "headers",
+      "queryParameters",
+      "skipEncoding",
+      "connectionTimeoutInSeconds",
+      "readTimeoutInSeconds",
+      "body",
+      "storeResponse",
+      "documentReturnFormat",
+      "groupSetCookieHeaders",
+      "ignoreNullValues",
+      "followRedirects",
+      "authenticationConfiguration"
+    },
+    type = HttpJsonFunction.TYPE)
+@ElementTemplate(
+    engineVersion = "^8.10",
+    id = "io.camunda.connectors.HttpJson.v2",
+    name = "Send REST Request",
+    description = "Invoke REST API",
+    keywords = {
+      "HTTP",
+      "REST",
+      "API call",
+      "web request",
+      "GET",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "fetch data",
+      "send request",
+      "invoke API"
+    },
+    inputDataClass = HttpJsonRequest.class,
+    configurations = {RestAuthenticationConfiguration.class},
+    outputDataClass = HttpCommonResult.class,
+    version = 17,
+    defaultResultExpression =
+        "{\n"
+            + "  myResponseBody: response.body\n"
+            + "  // Use FEEL to extract values, e.g.,:\n"
+            + "  // myUserId: response.body.post.userId\n"
+            + "}",
+    propertyGroups = {
+      @PropertyGroup(id = "authentication", label = "Authentication"),
+      @PropertyGroup(id = "tls", label = "Client certificate (mTLS)"),
+      @PropertyGroup(id = "endpoint", label = "HTTP endpoint"),
+      @PropertyGroup(id = "timeout", label = "Connection timeout"),
+      @PropertyGroup(id = "payload", label = "Payload")
+    },
+    documentationRef = "https://docs.camunda.io/docs/components/connectors/protocol/rest/",
+    icon = "icon.svg")
+public class HttpJsonFunction implements OutboundConnectorFunction {
+
+  public static final String TYPE = "io.camunda:http-json:1";
+
+  private final HttpService httpService;
+
+  public HttpJsonFunction() {
+    this(new HttpService());
+  }
+
+  HttpJsonFunction(HttpService httpService) {
+    this.httpService = httpService;
+  }
+
+  @Override
+  public Object execute(final OutboundConnectorContext context) {
+    final var request = context.bindVariables(HttpJsonRequest.class);
+    var responseChoice = context.readDocumentReturnFormat().map(f -> f.choice()).orElse(null);
+    return httpService.executeConnectorRequest(request, context, responseChoice);
+  }
+}

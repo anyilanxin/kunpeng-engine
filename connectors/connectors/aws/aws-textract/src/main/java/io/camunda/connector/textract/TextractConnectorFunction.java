@@ -1,0 +1,131 @@
+/*
+ * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+ * under one or more contributor license agreements. Licensed under a proprietary license.
+ * See the License.txt file for more information. You may not use this file
+ * except in compliance with the proprietary license.
+ */
+package io.camunda.connector.textract;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import io.camunda.connector.api.annotation.OutboundConnector;
+import io.camunda.connector.api.document.DocumentReturn;
+import io.camunda.connector.api.document.DocumentReturnChoice;
+import io.camunda.connector.api.document.DocumentReturnFormat;
+import io.camunda.connector.api.outbound.OutboundConnectorContext;
+import io.camunda.connector.api.outbound.OutboundConnectorFunction;
+import io.camunda.connector.aws.ObjectMapperSupplier;
+import io.camunda.connector.aws.model.impl.AwsCredentialConfiguration;
+import io.camunda.connector.generator.java.annotation.ElementTemplate;
+import io.camunda.connector.textract.caller.AsyncTextractCaller;
+import io.camunda.connector.textract.caller.PollingTextractCaller;
+import io.camunda.connector.textract.caller.SyncTextractCaller;
+import io.camunda.connector.textract.model.TextractRequest;
+import io.camunda.connector.textract.suppliers.AmazonTextractClientSupplier;
+import software.amazon.awssdk.services.textract.TextractAsyncClient;
+import software.amazon.awssdk.services.textract.TextractClient;
+
+@OutboundConnector(
+    name = "AWS Textract",
+    inputVariables = {
+      "authentication",
+      "configuration",
+      "document",
+      "input",
+      "advanced",
+      "documentReturnFormat",
+      "awsCredential"
+    },
+    type = "io.camunda:aws-textract:1")
+@ElementTemplate(
+    engineVersion = "^8.10",
+    id = "io.camunda.connectors.AWSTEXTRACT.v1",
+    name = "Extract Text from Document with AWS Textract",
+    description = "Extract text and data using AWS Textract.",
+    keywords = {
+      "extract text",
+      "extract data",
+      "extract text from image",
+      "extract data from image",
+      "ocr",
+      "OCR",
+      "document processing",
+      "text extraction",
+      "analyze document",
+      "asynchronous",
+      "real-time"
+    },
+    inputDataClass = TextractRequest.class,
+    configurations = {AwsCredentialConfiguration.class},
+    version = 7,
+    propertyGroups = {
+      @ElementTemplate.PropertyGroup(id = "authentication", label = "Authentication"),
+      @ElementTemplate.PropertyGroup(id = "configuration", label = "Configuration"),
+      @ElementTemplate.PropertyGroup(id = "document", label = "Input document"),
+      @ElementTemplate.PropertyGroup(id = "input", label = "Operation configuration"),
+      @ElementTemplate.PropertyGroup(id = "advanced", label = "Advanced configuration")
+    },
+    documentationRef =
+        "https://docs.camunda.io/docs/8.6/components/connectors/out-of-the-box-connectors/amazon-textract/",
+    icon = "icon.svg")
+public class TextractConnectorFunction implements OutboundConnectorFunction {
+
+  private final AmazonTextractClientSupplier clientSupplier;
+
+  private final SyncTextractCaller syncTextractCaller;
+
+  private final PollingTextractCaller pollingTextractCaller;
+
+  private final AsyncTextractCaller asyncTextractCaller;
+
+  public TextractConnectorFunction() {
+    this.clientSupplier = new AmazonTextractClientSupplier();
+    this.syncTextractCaller = new SyncTextractCaller();
+    this.pollingTextractCaller = new PollingTextractCaller();
+    this.asyncTextractCaller = new AsyncTextractCaller();
+  }
+
+  public TextractConnectorFunction(
+      AmazonTextractClientSupplier clientSupplier,
+      SyncTextractCaller syncTextractCaller,
+      PollingTextractCaller pollingTextractCaller,
+      AsyncTextractCaller asyncTextractCaller) {
+    this.clientSupplier = clientSupplier;
+    this.syncTextractCaller = syncTextractCaller;
+    this.pollingTextractCaller = pollingTextractCaller;
+    this.asyncTextractCaller = asyncTextractCaller;
+  }
+
+  @Override
+  public Object execute(OutboundConnectorContext context) throws Exception {
+    TextractRequest request = context.bindVariables(TextractRequest.class);
+    Object result =
+        switch (request.getInput().executionType()) {
+          case SYNC -> {
+            try (TextractClient client = clientSupplier.getSyncTextractClient(request)) {
+              yield syncTextractCaller.call(request.getInput(), client);
+            }
+          }
+          case POLLING -> {
+            try (TextractAsyncClient client = clientSupplier.getAsyncTextractClient(request)) {
+              yield pollingTextractCaller.call(request.getInput(), client);
+            }
+          }
+          case ASYNC -> {
+            try (TextractAsyncClient client = clientSupplier.getAsyncTextractClient(request)) {
+              yield asyncTextractCaller.call(request.getInput(), client);
+            }
+          }
+        };
+    return applyReturnFormat(context, result);
+  }
+
+  private Object applyReturnFormat(OutboundConnectorContext context, Object result)
+      throws JsonProcessingException {
+    var choice = context.readDocumentReturnFormat().map(DocumentReturnFormat::choice).orElse(null);
+    if (choice != DocumentReturnChoice.DOCUMENT) {
+      return result;
+    }
+    byte[] analysis = ObjectMapperSupplier.getMapperInstance().writeValueAsBytes(result);
+    return DocumentReturn.of(analysis, "application/json", null, (converted, ignored) -> converted);
+  }
+}

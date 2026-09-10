@@ -1,0 +1,150 @@
+/*
+ * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+ * under one or more contributor license agreements. Licensed under a proprietary license.
+ * See the License.txt file for more information. You may not use this file
+ * except in compliance with the proprietary license.
+ */
+package io.camunda.connector.inbound;
+
+import io.camunda.connector.api.inbound.*;
+import io.camunda.connector.api.inbound.CorrelationFailureHandlingStrategy.ForwardErrorToUpstream;
+import io.camunda.connector.api.inbound.CorrelationFailureHandlingStrategy.Ignore;
+import io.camunda.connector.api.inbound.CorrelationResult.Failure;
+import io.camunda.connector.api.inbound.CorrelationResult.Success;
+import io.camunda.connector.inbound.model.SqsInboundProperties;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.model.DeleteMessageRequest;
+import software.amazon.awssdk.services.sqs.model.Message;
+import software.amazon.awssdk.services.sqs.model.MessageSystemAttributeName;
+import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
+import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
+
+public class SqsQueueConsumer implements Runnable {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(SqsQueueConsumer.class);
+
+  private static final List<MessageSystemAttributeName> ALL_SYSTEM_ATTRIBUTES =
+      List.of(MessageSystemAttributeName.ALL);
+  private static final List<String> ALL_ATTRIBUTES_KEY = List.of("All");
+
+  private final SqsClient sqsClient;
+  private final SqsInboundProperties properties;
+  private final InboundConnectorContext context;
+  private final AtomicBoolean queueConsumerActive;
+
+  public SqsQueueConsumer(
+      SqsClient sqsClient, SqsInboundProperties properties, InboundConnectorContext context) {
+    this.sqsClient = sqsClient;
+    this.properties = properties;
+    this.context = context;
+    this.queueConsumerActive = new AtomicBoolean(true);
+  }
+
+  @Override
+  public void run() {
+    LOGGER.info("Started SQS consumer for queue {}", properties.getQueue().url());
+
+    final ReceiveMessageRequest receiveMessageRequest = createReceiveMessageRequest();
+    ReceiveMessageResponse receiveMessageResponse;
+    do {
+      try {
+        receiveMessageResponse = sqsClient.receiveMessage(receiveMessageRequest);
+      } catch (Exception e) {
+        LOGGER.error("Failed to receive messages from SQS queue", e);
+        continue;
+      }
+      try {
+        List<Message> messages = receiveMessageResponse.messages();
+        for (Message message : messages) {
+          context.log(
+              activity ->
+                  activity
+                      .withSeverity(Severity.INFO)
+                      .withTag(ActivityLogTag.MESSAGE)
+                      .withMessage("Received SQS Message with ID " + message.messageId()));
+          var result =
+              context.correlate(
+                  CorrelationRequest.builder()
+                      .variables(MessageMapper.toSqsInboundMessage(message))
+                      .messageId(message.messageId())
+                      .build());
+          handleCorrelationResult(message, result);
+        }
+      } catch (Exception e) {
+        LOGGER.debug("NACK - unhandled exception", e);
+        context.log(
+            activity ->
+                activity
+                    .withSeverity(Severity.WARNING)
+                    .withTag(ActivityLogTag.MESSAGE)
+                    .withMessage("NACK - failed to correlate event", e));
+      }
+    } while (queueConsumerActive.get());
+    LOGGER.info("Stopping SQS consumer for queue {}", properties.getQueue().url());
+    context.reportHealth(Health.down());
+  }
+
+  private void handleCorrelationResult(Message message, CorrelationResult result) {
+    switch (result) {
+      case Success ignored -> {
+        LOGGER.debug("ACK - message correlated successfully");
+        sqsClient.deleteMessage(
+            DeleteMessageRequest.builder()
+                .queueUrl(properties.getQueue().url())
+                .receiptHandle(message.receiptHandle())
+                .build());
+      }
+
+      case Failure failure -> {
+        context.log(
+            activity ->
+                activity
+                    .withSeverity(Severity.WARNING)
+                    .withTag(ActivityLogTag.MESSAGE)
+                    .withMessage(failure.message()));
+        switch (failure.handlingStrategy()) {
+          case ForwardErrorToUpstream ignored1 -> {
+            LOGGER.debug("NACK (requeue) - message not correlated");
+          }
+          case Ignore ignored -> {
+            LOGGER.debug("ACK - message ignored");
+            sqsClient.deleteMessage(
+                DeleteMessageRequest.builder()
+                    .queueUrl(properties.getQueue().url())
+                    .receiptHandle(message.receiptHandle())
+                    .build());
+          }
+        }
+      }
+    }
+  }
+
+  private ReceiveMessageRequest createReceiveMessageRequest() {
+    return ReceiveMessageRequest.builder()
+        .waitTimeSeconds(Math.max(Integer.parseInt(properties.getQueue().pollingWaitTime()), 1))
+        .queueUrl(properties.getQueue().url())
+        .messageAttributeNames(
+            Optional.ofNullable(properties.getQueue().messageAttributeNames())
+                .filter(list -> !list.isEmpty())
+                .orElse(ALL_ATTRIBUTES_KEY))
+        .messageSystemAttributeNames(
+            Optional.ofNullable(properties.getQueue().attributeNames())
+                .filter(list -> !list.isEmpty())
+                .map(names -> names.stream().map(MessageSystemAttributeName::fromValue).toList())
+                .orElse(ALL_SYSTEM_ATTRIBUTES))
+        .build();
+  }
+
+  public boolean isQueueConsumerActive() {
+    return queueConsumerActive.get();
+  }
+
+  public void setQueueConsumerActive(final boolean isQueueConsumerActive) {
+    this.queueConsumerActive.set(isQueueConsumerActive);
+  }
+}

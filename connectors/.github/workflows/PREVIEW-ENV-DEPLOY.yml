@@ -1,0 +1,109 @@
+
+---
+name: preview-env-deploy
+on:
+  pull_request:
+    types: [ labeled,synchronize ]
+
+jobs:
+  deploy-preview:
+    # permission needed for the camunda/infra-global-github-actions/preview-env/create
+    # action to have access to Kubernetes events
+    permissions:
+      contents: read
+      deployments: write
+      id-token: write
+    # checks that the PR isn't closed AND check whether the labeled event contains deploy-preview as substring || check whether on new commit of PR the label deploy-preview is part of label array
+    if: github.event.pull_request.state != 'closed' && (contains( github.event.label.name, 'deploy-preview') || contains( github.event.pull_request.labels.*.name, 'deploy-preview'))
+    runs-on: ubuntu-24.04
+    name: deploy-preview-env-${{ matrix.product_context }}
+    env:
+      BRANCH_NAME: ${{ github.head_ref }} # head_ref = branch on PR
+    concurrency:
+      group: pr-update-${{ github.head_ref }}-${{ matrix.product_context }} # env is not yet available here
+      cancel-in-progress: true
+    strategy: 
+      fail-fast: false # Don't disrupt other deployments because of failure
+      matrix:
+        product_context: [c8sm]
+
+    steps:
+    #########################################################################
+    # Sanitize the branch name to remove dependabot/,renovate/ and transform the name
+    - id: sanitize
+      uses: camunda/infra-global-github-actions/sanitize-branch-name@main
+      with:
+        branch: ${{ env.BRANCH_NAME }}
+        max_length: '15'
+    #########################################################################
+    # Setup: import secrets from vault
+    - name: Import secrets
+      id: secrets
+      uses: hashicorp/vault-action@892a26828f195e65540a40b4768ae4571f51ebfc # v4.0.0
+      with:
+        url: ${{ secrets.VAULT_ADDR }}
+        method: approle
+        roleId: ${{ secrets.VAULT_ROLE_ID }}
+        secretId: ${{ secrets.VAULT_SECRET_ID }}
+        secrets: |
+          secret/data/products/connectors/ci/common ARGOCD_TOKEN;
+    #########################################################################
+    # Setup: checkout code. This is required because we are using
+    # composite actions and deployment manifests.
+    - name: Checkout
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+    #########################################################################
+    # Determine the argocd arguments that need to be passed to the create app command
+    - name: Determine Argocd Arguments for ${{ matrix.product_context }}
+      if: matrix.product_context == 'c8sm'
+      shell: bash
+      run: |
+        echo "argocd_arguments=--dest-namespace ${app_name} \
+          --file .ci/preview-environments/argo/${argocd_app_file_name}.yml \
+          --helm-set camunda-platform.connectors.image.tag=${docker_tag} \
+          --helm-set global.preview.git.branch=${revision} \
+          --helm-set global.labels.app=${app_name} \
+          --helm-set global.preview.ingress.domain=connectors.camunda.cloud \
+          --name ${app_name} \
+          --revision ${revision} \
+          --upsert" >> $GITHUB_ENV
+      env:
+        docker_tag: pr-${{ github.event.pull_request.head.sha }} # SHA of latest commit
+        revision: ${{ env.BRANCH_NAME }}
+        app_name: connectors-${{ steps.sanitize.outputs.branch_name }}-${{ matrix.product_context }}
+        argocd_app_file_name: ${{ matrix.product_context }}
+    #########################################################################
+    # Create a preview environment
+    - name: Deploy Preview Environment for ${{ matrix.product_context }}
+      uses: camunda/infra-global-github-actions/preview-env/create@main
+      with:
+        revision: ${{ env.BRANCH_NAME }}
+        argocd_token: ${{ steps.secrets.outputs.ARGOCD_TOKEN }}
+        app_name: connectors-${{ steps.sanitize.outputs.branch_name }}-${{ matrix.product_context }}
+        app_url: https://${{ steps.sanitize.outputs.branch_name }}-${{ matrix.product_context }}.connectors.camunda.cloud
+        argocd_arguments: ${{ env.argocd_arguments }}
+        argocd_server: argocd.int.camunda.com
+        argocd_wait_for_sync_timeout: "7200" # waits up to 120 minutes
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+  conflicts:
+    if: always() && github.event_name == 'pull_request' && (contains( github.event.label.name, 'deploy-preview') || contains( github.event.pull_request.labels.*.name, 'deploy-preview'))
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Check PR for merge conflicts
+      uses: camunda/infra-global-github-actions/preview-env/conflicts@main
+      with:
+        pull-request-id: ${{ github.event.pull_request.number }}
+  clean:
+    if: always() && github.event_name == 'pull_request' && needs.deploy-preview.result != 'skipped'
+    uses: camunda/connectors/.github/workflows/PREVIEW-ENV-CLEAN.yml@main
+    needs: [deploy-preview]
+    secrets: inherit
+    with:
+      pull-request: ${{ github.event.pull_request.number }}
+  comment:
+    if: always() && github.event_name == 'pull_request' && needs.deploy-preview.result != 'skipped'
+    name: create-deployment-result-summary
+    runs-on: ubuntu-24.04
+    needs: [deploy-preview]
+    steps:
+    - uses: camunda/infra-global-github-actions/preview-env/comment@main

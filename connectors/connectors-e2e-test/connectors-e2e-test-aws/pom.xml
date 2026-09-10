@@ -1,0 +1,59 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>io.camunda.connector</groupId>
+    <artifactId>connectors-e2e-test-parent</artifactId>
+    <relativePath>../pom.xml</relativePath>
+    <version>8.10.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>connectors-e2e-test-aws-parent</artifactId>
+  <packaging>pom</packaging>
+  <name>connectors-e2e-test-aws-parent</name>
+  <version>8.10.0-SNAPSHOT</version>
+
+  <modules>
+    <module>connectors-e2e-test-aws-base</module>
+    <module>connectors-e2e-test-aws-dynamodb</module>
+    <module>connectors-e2e-test-aws-event-bridge</module>
+    <module>connectors-e2e-test-aws-lambda</module>
+    <module>connectors-e2e-test-aws-sns</module>
+    <module>connectors-e2e-test-aws-sqs</module>
+  </modules>
+
+  <dependencies>
+    <dependency>
+      <groupId>io.camunda.connector</groupId>
+      <artifactId>connectors-e2e-test-base</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.camunda</groupId>
+      <artifactId>camunda-process-test-spring</artifactId>
+      <version>${version.camunda}</version>
+    </dependency>
+
+</dependencies>
+
+  <build>
+    <plugins>
+      <!-- Maven JAR Plugin for generating a test JAR -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>${plugin.version.maven-jar-plugin}</version>
+        <executions>
+          <execution>
+            <phase>test-compile</phase>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+    </plugins>
+  </build>
+</project>

@@ -1,0 +1,101 @@
+/*
+ * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+ * under one or more contributor license agreements. Licensed under a proprietary license.
+ * See the License.txt file for more information. You may not use this file
+ * except in compliance with the proprietary license.
+ */
+package io.camunda.connector.awslambda;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.camunda.connector.api.annotation.OutboundConnector;
+import io.camunda.connector.api.outbound.OutboundConnectorContext;
+import io.camunda.connector.api.outbound.OutboundConnectorFunction;
+import io.camunda.connector.aws.AwsUtils;
+import io.camunda.connector.aws.ObjectMapperSupplier;
+import io.camunda.connector.aws.model.impl.AwsCredentialConfiguration;
+import io.camunda.connector.awslambda.model.AwsLambdaRequest;
+import io.camunda.connector.awslambda.model.AwsLambdaResult;
+import io.camunda.connector.generator.java.annotation.ElementTemplate;
+import software.amazon.awssdk.core.SdkBytes;
+import software.amazon.awssdk.services.lambda.LambdaClient;
+import software.amazon.awssdk.services.lambda.model.InvokeRequest;
+import software.amazon.awssdk.services.lambda.model.InvokeResponse;
+
+@OutboundConnector(
+    name = "AWS Lambda",
+    inputVariables = {"authentication", "configuration", "awsFunction", "awsCredential"},
+    type = "io.camunda:aws-lambda:1")
+@ElementTemplate(
+    engineVersion = "^8.10",
+    id = "io.camunda.connectors.AWSLAMBDA.v2",
+    name = "Invoke AWS Lambda Function",
+    description = "Invoke AWS Lambda functions.",
+    keywords = {
+      "invoke function",
+      "run function",
+      "execute function",
+      "serverless",
+      "function as a service"
+    },
+    inputDataClass = AwsLambdaRequest.class,
+    configurations = {AwsCredentialConfiguration.class},
+    version = 8,
+    propertyGroups = {
+      @ElementTemplate.PropertyGroup(id = "authentication", label = "Authentication"),
+      @ElementTemplate.PropertyGroup(id = "configuration", label = "Configuration"),
+      @ElementTemplate.PropertyGroup(id = "operation", label = "Select operation"),
+      @ElementTemplate.PropertyGroup(id = "operationDetails", label = "Operation details")
+    },
+    documentationRef =
+        "https://docs.camunda.io/docs/components/connectors/out-of-the-box-connectors/aws-lambda/",
+    icon = "icon.svg")
+public class LambdaConnectorFunction implements OutboundConnectorFunction {
+
+  private final AwsLambdaSupplier awsLambdaSupplier;
+  private final ObjectMapper objectMapper;
+
+  public LambdaConnectorFunction() {
+    this(new AwsLambdaSupplier(), ObjectMapperSupplier.getMapperInstance());
+  }
+
+  public LambdaConnectorFunction(
+      final AwsLambdaSupplier awsLambdaSupplier, final ObjectMapper objectMapper) {
+    this.awsLambdaSupplier = awsLambdaSupplier;
+    this.objectMapper = objectMapper;
+  }
+
+  @Override
+  public Object execute(OutboundConnectorContext context) {
+    var request = context.bindVariables(AwsLambdaRequest.class);
+    return new AwsLambdaResult(invokeLambdaFunction(request), objectMapper);
+  }
+
+  private InvokeResponse invokeLambdaFunction(AwsLambdaRequest request) {
+    var region = resolveRegion(request);
+    LambdaClient lambdaClient = awsLambdaSupplier.awsLambdaService(request, region);
+    try {
+      final InvokeRequest invokeRequest =
+          InvokeRequest.builder()
+              .functionName(request.getAwsFunction().getFunctionName())
+              .payload(
+                  SdkBytes.fromUtf8String(
+                      objectMapper.writeValueAsString(request.getAwsFunction().getPayload())))
+              .build();
+      return lambdaClient.invoke(invokeRequest);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException("Error mapping payload to json.");
+    } finally {
+      if (lambdaClient != null) {
+        lambdaClient.close();
+      }
+    }
+  }
+
+  // Deprecation bridge: honors the legacy per-function region for existing process definitions.
+  @SuppressWarnings("deprecation")
+  static String resolveRegion(AwsLambdaRequest request) {
+    return AwsUtils.extractRegionOrDefault(
+        request.getConfiguration(), request.getAwsFunction().getRegion());
+  }
+}

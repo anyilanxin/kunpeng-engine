@@ -1,0 +1,39 @@
+name: Run uniquet and push
+on:
+  workflow_dispatch:
+
+jobs:
+  run-uniquet-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21.0.9'
+          distribution: 'temurin'
+
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.branch_name }}
+
+      - name: install-uniquet
+        run: |
+          ./mvnw -U install -DskipTests -pl element-template-generator/uniquet -am
+
+      - name: run-uniquet
+        run: |
+          ./element-template-generator/uniquet/target/appassembler/bin/uniquet --output-file ./connector-templates.json  --ignore-file ./ignore-templates.json
+
+      - name: Create pull request to main branch
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: single-file-element-template
+          commit-message: "other(element-template): single element template file"
+          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          base: main
+          title: "other(element-template): single element template file generation"
+          body: |
+            This PR sets the new single element template file containing all necessary references.

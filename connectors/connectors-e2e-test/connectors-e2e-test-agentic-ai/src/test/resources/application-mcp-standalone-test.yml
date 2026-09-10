@@ -1,0 +1,12 @@
+camunda:
+  connector:
+    agenticai:
+      mcp:
+        client:
+          clients:
+            a-mcp-client:
+              enabled: true
+              type: HTTP
+              tool-execution-timeout: PT5S
+              http:
+                url: http://localhost:19080/mcp

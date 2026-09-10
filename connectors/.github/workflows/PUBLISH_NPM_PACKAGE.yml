@@ -1,0 +1,94 @@
+# Do not rename this file, as the file name is part of the npm auth configuration. Learn more here: https://docs.npmjs.com/trusted-publishers
+name: Deploying npm package
+run-name: Deploying npm package version ${{ inputs.npm-package-version }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      npm-package-version:
+        description: 'New version number of the npm package to publish'
+        type: string
+        required: true
+
+permissions:
+  id-token: write  # Required for OIDC
+  contents: write
+  pull-requests: write
+
+jobs:
+  build-test-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Fetch main branch
+        run: git fetch origin main
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7.0.0
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org/'
+
+      - name: Configure git user
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump version in package.json
+        working-directory: element-template-generator/npm
+        run: |
+          npm version ${{ inputs.npm-package-version }} --no-git-tag-version
+
+      - name: Install dependencies
+        working-directory: element-template-generator/npm
+        run: npm install
+
+      - name: Run pre-build scripts
+        working-directory: element-template-generator/npm
+        run: npm run pre-build
+
+      - name: Run tests
+        working-directory: element-template-generator/npm
+        run: npm test
+
+      - name: Publish to npm
+        if: success()
+        working-directory: element-template-generator/npm
+        run: npm publish --access public
+
+      - name: Import Secrets
+        id: vault-secrets
+        uses: hashicorp/vault-action@v4.0.0
+        with:
+          url: ${{ secrets.VAULT_ADDR }}
+          method: approle
+          roleId: ${{ secrets.VAULT_ROLE_ID }}
+          secretId: ${{ secrets.VAULT_SECRET_ID }}
+          secrets: |
+            secret/data/products/connectors/ci/common GITHUB_APP_ID;
+            secret/data/products/connectors/ci/common GITHUB_APP_PRIVATE_KEY;
+
+      - name: Generate a GitHub token for connectors
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ steps.vault-secrets.outputs.GITHUB_APP_ID }}
+          private-key: ${{ steps.vault-secrets.outputs.GITHUB_APP_PRIVATE_KEY }}
+
+      - name: Create pull request to main branch
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          branch: chore/bump-npm-package-version
+          commit-message: "ci: bump npm package version to ${{ inputs.npm-package-version }}"
+          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+          base: main
+          title: "chore(npm-package): bump npm package version"
+          body: |
+            This PR bumps the npm package version after successful release to npm. Feel free to verifiy it is available: https://www.npmjs.com/package/@camunda/connectors-element-templates?activeTab=versions
+            
