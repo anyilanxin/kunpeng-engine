@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ay_git_commit_scope_storage">
+    <option name="scopeAlias">
+      <list>
+        <ScopeAlias>
+          <option name="title" value="engine" />
+          <option name="description" value="\u5F15\u64CE" />
+        </ScopeAlias>
+        <ScopeAlias>
+          <option name="title" value="inner" />
+          <option name="description" value="\u5185\u90E8\u64CD\u4F5C" />
+        </ScopeAlias>
+      </list>
+    </option>
+  </component>
+</project>

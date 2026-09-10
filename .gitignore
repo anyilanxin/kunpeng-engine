@@ -1,0 +1,33 @@
+
+### IntelliJ IDEA ###
+*/.idea
+.idea/*
+!.idea/icon.png
+!.idea/codeStyles
+!.idea/copyright
+!.idea/scopes
+!.idea/externalDependencies.xml
+!.idea/google-java-format.xml
+!.idea/saveactions_settings.xml
+!.idea/ay_git_commit_message_storage.xml
+!.idea/ay_git_commit_scope_storage.xml
+*.iws
+*.ipr
+*.iml
+
+
+### Mac ###
+.DS_Store
+
+### Gradle ###
+.gradle/
+
+### Project ###
+/data
+/logs
+**/build/
+*.iml
+*.ipr
+*.iws
+/kunpeng/cluster/.jqwik-database
+/kunpeng/cluster/data/
