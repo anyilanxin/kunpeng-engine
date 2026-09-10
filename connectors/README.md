@@ -41,11 +41,6 @@ This is a multi-module project with different licenses applied to different modu
 * [Http Json Outbound Connector](connectors/http/rest)
 * [Element Template Generator](element-template-generator) and its submodules
 
-### Modules available under [Camunda Self-Managed Free Edition license](https://camunda.com/legal/terms/cloud-terms-and-conditions/camunda-cloud-self-managed-free-edition-terms/)
-
-* All [Out-of-the-Box Connectors](connectors) except for REST Connector (see above)
-* [Docker images](apps/bundle) of the out-of-the-box Connectors for Camunda, bundled with a runtime
-
 When in doubt, refer to the `LICENSE` file in the respective module.
 
 ## Setup

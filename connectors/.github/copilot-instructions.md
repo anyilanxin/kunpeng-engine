@@ -24,9 +24,7 @@ for impossible scenarios, no unrequested flexibility. Touch only what the task r
 | `connectors-e2e-test/`         | End-to-end test modules                                              |
 | `docs/adr/`                    | Architecture decision records                                       |
 
-**License split:** Apache 2.0 (SDK, Runtime, HTTP REST connector, Element Template Generator) vs.
-Camunda Self-Managed Free Edition (most out-of-the-box connectors) — check a module's `pom.xml`/`LICENSE`
-before copying code across the boundary.
+**License:** Apache 2.0.
 
 **Ask first:** adding dependencies to `pom.xml`, changing SDK public API (`connector-sdk/core`),
 modifying shared runtime behavior (`connector-runtime-core/`).

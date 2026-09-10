@@ -1,3 +1,0 @@
-name: AWSSNS
-type: io.camunda:aws-sns:1
-variables: [ authentication, configuration, topic ]

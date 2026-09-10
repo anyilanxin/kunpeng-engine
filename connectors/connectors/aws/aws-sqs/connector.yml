@@ -1,3 +1,0 @@
-name: AWSSQS
-type: io.camunda:aws-sqs:1
-variables: [ authentication, configuration, queue ]

@@ -1,4 +1,0 @@
-io.camunda.connector.idp.extraction.ExtractionConnectorFunction
-io.camunda.connector.idp.extraction.ClassificationConnectorFunction
-io.camunda.connector.idp.extraction.UnstructuredExtractionConnectorFunction
-io.camunda.connector.idp.extraction.StructuredExtractionConnectorFunction
