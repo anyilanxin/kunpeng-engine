@@ -29,7 +29,7 @@ for impossible scenarios, no unrequested flexibility. Touch only what the task r
 **Ask first:** adding dependencies to `pom.xml`, changing SDK public API (`connector-sdk/core`),
 modifying shared runtime behavior (`connector-runtime-core/`).
 
-**Never:** decompile `camunda-client-java` / `camunda-spring-boot-starter` — if `camunda/camunda` is
+**Never:** decompile `camunda-client-java` / `engine-client-spring-boot-starter` — if `camunda/camunda` is
 checked out locally (often a sibling directory, e.g. `../camunda`), read the source there instead.
 
 ## Build & test
