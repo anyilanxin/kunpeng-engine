@@ -1,0 +1,45 @@
+/*
+ * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.anyilanxin.kunpeng.bpm.model.xml.type.attribute;
+
+import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
+import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.AttributeReferenceBuilder;
+import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.AttributeReferenceCollection;
+import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.AttributeReferenceCollectionBuilder;
+
+/**
+ * @author Sebastian Menski
+ *
+ */
+public interface StringAttributeBuilder extends AttributeBuilder<String> {
+
+  StringAttributeBuilder namespace(String namespaceUri);
+
+  StringAttributeBuilder defaultValue(String defaultValue);
+
+  StringAttributeBuilder required();
+
+  StringAttributeBuilder idAttribute();
+
+  <V extends ModelElementInstance> AttributeReferenceBuilder<V> qNameAttributeReference(Class<V> referenceTargetElement);
+
+  <V extends ModelElementInstance> AttributeReferenceBuilder<V> idAttributeReference(Class<V>  referenceTargetElement);
+
+  @SuppressWarnings("rawtypes")
+  <V extends ModelElementInstance> AttributeReferenceCollectionBuilder<V> idAttributeReferenceCollection(Class<V> referenceTargetElement, Class<? extends AttributeReferenceCollection> attributeReferenceCollection);
+
+}
