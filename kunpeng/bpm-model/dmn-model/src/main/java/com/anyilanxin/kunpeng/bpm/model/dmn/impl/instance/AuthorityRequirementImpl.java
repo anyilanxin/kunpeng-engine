@@ -1,0 +1,96 @@
+/*
+ * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
+
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_AUTHORITY_REQUIREMENT;
+
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.AuthorityRequirement;
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Decision;
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.InputData;
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.KnowledgeSource;
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.RequiredAuthorityReference;
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.RequiredDecisionReference;
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.RequiredInputReference;
+import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
+import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
+import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
+import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTypeInstanceProvider;
+import com.anyilanxin.kunpeng.bpm.model.xml.type.child.SequenceBuilder;
+import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.ElementReference;
+
+public class AuthorityRequirementImpl extends DmnModelElementInstanceImpl implements AuthorityRequirement {
+
+  protected static ElementReference<Decision, RequiredDecisionReference> requiredDecisionRef;
+  protected static ElementReference<InputData, RequiredInputReference> requiredInputRef;
+  protected static ElementReference<KnowledgeSource, RequiredAuthorityReference> requiredAuthorityRef;
+
+  public AuthorityRequirementImpl(ModelTypeInstanceContext instanceContext) {
+    super(instanceContext);
+  }
+
+  public Decision getRequiredDecision() {
+    return requiredDecisionRef.getReferenceTargetElement(this);
+  }
+
+  public void setRequiredDecision(Decision requiredDecision) {
+    requiredDecisionRef.setReferenceTargetElement(this, requiredDecision);
+  }
+
+  public InputData getRequiredInput() {
+    return requiredInputRef.getReferenceTargetElement(this);
+  }
+
+  public void setRequiredInput(InputData requiredInput) {
+    requiredInputRef.setReferenceTargetElement(this, requiredInput);
+  }
+
+  public KnowledgeSource getRequiredAuthority() {
+    return requiredAuthorityRef.getReferenceTargetElement(this);
+  }
+
+  public void setRequiredAuthority(KnowledgeSource requiredAuthority) {
+    requiredAuthorityRef.setReferenceTargetElement(this, requiredAuthority);
+  }
+
+  public static void registerType(ModelBuilder modelBuilder) {
+    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(AuthorityRequirement.class, DMN_ELEMENT_AUTHORITY_REQUIREMENT)
+      .namespaceUri(LATEST_DMN_NS)
+      .instanceProvider(new ModelTypeInstanceProvider<AuthorityRequirement>() {
+        public AuthorityRequirement newInstance(ModelTypeInstanceContext instanceContext) {
+          return new AuthorityRequirementImpl(instanceContext);
+        }
+      });
+
+    SequenceBuilder sequenceBuilder = typeBuilder.sequence();
+
+    requiredDecisionRef = sequenceBuilder.element(RequiredDecisionReference.class)
+      .uriElementReference(Decision.class)
+      .build();
+
+    requiredInputRef = sequenceBuilder.element(RequiredInputReference.class)
+      .uriElementReference(InputData.class)
+      .build();
+
+    requiredAuthorityRef = sequenceBuilder.element(RequiredAuthorityReference.class)
+      .uriElementReference(KnowledgeSource.class)
+      .build();
+
+    typeBuilder.build();
+  }
+
+}
