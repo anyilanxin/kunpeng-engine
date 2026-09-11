@@ -17,7 +17,8 @@
  */
 
 /**
- * Provides {@link com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.RaftLogEntry} implementations used internally to
- * replicate state changes, sessions, and configuration changes in the cluster.
+ * Provides {@link com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.RaftLogEntry}
+ * implementations used internally to replicate state changes, sessions, and configuration changes
+ * in the cluster.
  */
 package com.anyilanxin.kunpeng.cluster.raft.storage.log.entry;

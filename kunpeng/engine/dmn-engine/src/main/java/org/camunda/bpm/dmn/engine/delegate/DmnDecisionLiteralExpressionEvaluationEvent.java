@@ -18,10 +18,9 @@ package org.camunda.bpm.dmn.engine.delegate;
 
 import org.camunda.bpm.engine.variable.value.TypedValue;
 
-/**
- * Event which represents the evaluation of a decision with a literal expression.
- */
-public interface DmnDecisionLiteralExpressionEvaluationEvent extends DmnDecisionLogicEvaluationEvent {
+/** Event which represents the evaluation of a decision with a literal expression. */
+public interface DmnDecisionLiteralExpressionEvaluationEvent
+    extends DmnDecisionLogicEvaluationEvent {
 
   /**
    * @return the output name of the evaluated expression
@@ -32,5 +31,4 @@ public interface DmnDecisionLiteralExpressionEvaluationEvent extends DmnDecision
    * @return the value of the evaluated expression
    */
   TypedValue getOutputValue();
-
 }

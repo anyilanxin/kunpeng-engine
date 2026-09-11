@@ -16,8 +16,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_INPUT_EXPRESSION;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.InputExpression;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.LiteralExpression;
@@ -33,16 +33,18 @@ public class InputExpressionImpl extends LiteralExpressionImpl implements InputE
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(InputExpression.class, DMN_ELEMENT_INPUT_EXPRESSION)
-      .namespaceUri(LATEST_DMN_NS)
-      .extendsType(LiteralExpression.class)
-      .instanceProvider(new ModelTypeInstanceProvider<InputExpression>() {
-        public InputExpression newInstance(ModelTypeInstanceContext instanceContext) {
-          return new InputExpressionImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(InputExpression.class, DMN_ELEMENT_INPUT_EXPRESSION)
+            .namespaceUri(LATEST_DMN_NS)
+            .extendsType(LiteralExpression.class)
+            .instanceProvider(
+                new ModelTypeInstanceProvider<InputExpression>() {
+                  public InputExpression newInstance(ModelTypeInstanceContext instanceContext) {
+                    return new InputExpressionImpl(instanceContext);
+                  }
+                });
 
     typeBuilder.build();
   }
-
 }

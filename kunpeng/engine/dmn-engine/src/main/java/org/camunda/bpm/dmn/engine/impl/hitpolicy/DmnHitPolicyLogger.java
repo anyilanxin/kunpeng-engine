@@ -18,7 +18,6 @@ package org.camunda.bpm.dmn.engine.impl.hitpolicy;
 
 import java.util.List;
 import java.util.Map;
-
 import org.camunda.bpm.dmn.engine.delegate.DmnEvaluatedDecisionRule;
 import org.camunda.bpm.dmn.engine.delegate.DmnEvaluatedOutput;
 import org.camunda.bpm.dmn.engine.impl.DmnLogger;
@@ -28,32 +27,43 @@ import org.camunda.bpm.model.dmn.HitPolicy;
 
 public class DmnHitPolicyLogger extends DmnLogger {
 
-  public DmnHitPolicyException uniqueHitPolicyOnlyAllowsSingleMatchingRule(List<DmnEvaluatedDecisionRule> matchingRules) {
-    return new DmnHitPolicyException(exceptionMessage(
-      "001",
-      "Hit policy '{}' only allows a single rule to match. Actually match rules: '{}'.", HitPolicy.UNIQUE, matchingRules)
-    );
+  public DmnHitPolicyException uniqueHitPolicyOnlyAllowsSingleMatchingRule(
+      List<DmnEvaluatedDecisionRule> matchingRules) {
+    return new DmnHitPolicyException(
+        exceptionMessage(
+            "001",
+            "Hit policy '{}' only allows a single rule to match. Actually match rules: '{}'.",
+            HitPolicy.UNIQUE,
+            matchingRules));
   }
 
-  public DmnHitPolicyException anyHitPolicyRequiresThatAllOutputsAreEqual(List<DmnEvaluatedDecisionRule> matchingRules) {
-    return new DmnHitPolicyException(exceptionMessage(
-      "002",
-      "Hit policy '{}' only allows multiple matching rules with equal output. Matching rules: '{}'.", HitPolicy.ANY, matchingRules)
-    );
+  public DmnHitPolicyException anyHitPolicyRequiresThatAllOutputsAreEqual(
+      List<DmnEvaluatedDecisionRule> matchingRules) {
+    return new DmnHitPolicyException(
+        exceptionMessage(
+            "002",
+            "Hit policy '{}' only allows multiple matching rules with equal output. Matching rules: '{}'.",
+            HitPolicy.ANY,
+            matchingRules));
   }
 
-  public DmnHitPolicyException aggregationNotApplicableOnCompoundOutput(BuiltinAggregator aggregator, Map<String, DmnEvaluatedOutput> outputEntries) {
-    return new DmnHitPolicyException(exceptionMessage(
-      "003",
-      "Unable to execute aggregation '{}' on compound decision output '{}'. Only one output entry allowed.", aggregator, outputEntries)
-    );
+  public DmnHitPolicyException aggregationNotApplicableOnCompoundOutput(
+      BuiltinAggregator aggregator, Map<String, DmnEvaluatedOutput> outputEntries) {
+    return new DmnHitPolicyException(
+        exceptionMessage(
+            "003",
+            "Unable to execute aggregation '{}' on compound decision output '{}'. Only one output entry allowed.",
+            aggregator,
+            outputEntries));
   }
 
-  public DmnHitPolicyException unableToConvertValuesToAggregatableTypes(List<TypedValue> values, Class<?>... targetClasses) {
-    return new DmnHitPolicyException(exceptionMessage(
-      "004",
-      "Unable to convert value '{}' to a support aggregatable type '{}'.", values, targetClasses)
-    );
+  public DmnHitPolicyException unableToConvertValuesToAggregatableTypes(
+      List<TypedValue> values, Class<?>... targetClasses) {
+    return new DmnHitPolicyException(
+        exceptionMessage(
+            "004",
+            "Unable to convert value '{}' to a support aggregatable type '{}'.",
+            values,
+            targetClasses));
   }
-
 }

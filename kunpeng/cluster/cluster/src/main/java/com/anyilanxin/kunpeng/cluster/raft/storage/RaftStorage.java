@@ -21,12 +21,12 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.anyilanxin.kunpeng.cluster.raft.journal.file.SegmentAllocator;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLog;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLogFlusher;
 import com.anyilanxin.kunpeng.cluster.raft.storage.system.MetaStore;
 import com.anyilanxin.kunpeng.cluster.utils.concurrent.ThreadContext;
 import com.anyilanxin.kunpeng.cluster.utils.concurrent.ThreadContextFactory;
-import com.anyilanxin.kunpeng.cluster.raft.journal.file.SegmentAllocator;
 import io.camunda.zeebe.snapshots.PersistedSnapshotStore;
 import io.camunda.zeebe.snapshots.ReceivableSnapshotStore;
 import io.camunda.zeebe.util.FileUtil;
@@ -244,7 +244,8 @@ public final class RaftStorage {
    *
    * }</pre>
    */
-  public static final class Builder implements com.anyilanxin.kunpeng.cluster.utils.Builder<RaftStorage> {
+  public static final class Builder
+      implements com.anyilanxin.kunpeng.cluster.utils.Builder<RaftStorage> {
 
     private static final String DEFAULT_PREFIX = "atomix";
     private static final String DEFAULT_DIRECTORY =

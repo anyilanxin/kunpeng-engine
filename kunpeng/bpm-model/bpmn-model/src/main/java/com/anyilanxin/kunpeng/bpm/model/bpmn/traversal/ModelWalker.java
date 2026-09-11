@@ -21,12 +21,12 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelInstanceImpl;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BpmnModelElementInstance;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Definitions;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Process;
-import java.util.Collection;
-import java.util.Deque;
-import java.util.LinkedList;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.util.ModelUtil;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementType;
+import java.util.Collection;
+import java.util.Deque;
+import java.util.LinkedList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

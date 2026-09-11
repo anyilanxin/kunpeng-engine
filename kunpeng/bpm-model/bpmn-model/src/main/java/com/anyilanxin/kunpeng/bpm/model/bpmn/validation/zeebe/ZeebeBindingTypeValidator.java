@@ -18,12 +18,12 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.validation.zeebe;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.ZeebeConstants;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeBindingType;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 import com.anyilanxin.kunpeng.bpm.model.xml.validation.ModelElementValidator;
 import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResultCollector;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class ZeebeBindingTypeValidator<T extends ModelElementInstance>
     implements ModelElementValidator<T> {

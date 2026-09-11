@@ -16,10 +16,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_RELATION;
-
-import java.util.Collection;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Column;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Expression;
@@ -31,6 +29,7 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTypeInstanceProvider;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.ChildElementCollection;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.SequenceBuilder;
+import java.util.Collection;
 
 public class RelationImpl extends ExpressionImpl implements Relation {
 
@@ -50,24 +49,24 @@ public class RelationImpl extends ExpressionImpl implements Relation {
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(Relation.class, DMN_ELEMENT_RELATION)
-      .namespaceUri(LATEST_DMN_NS)
-      .extendsType(Expression.class)
-      .instanceProvider(new ModelTypeInstanceProvider<Relation>() {
-        public Relation newInstance(ModelTypeInstanceContext instanceContext) {
-          return new RelationImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(Relation.class, DMN_ELEMENT_RELATION)
+            .namespaceUri(LATEST_DMN_NS)
+            .extendsType(Expression.class)
+            .instanceProvider(
+                new ModelTypeInstanceProvider<Relation>() {
+                  public Relation newInstance(ModelTypeInstanceContext instanceContext) {
+                    return new RelationImpl(instanceContext);
+                  }
+                });
 
     SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
-    columnCollection = sequenceBuilder.elementCollection(Column.class)
-      .build();
+    columnCollection = sequenceBuilder.elementCollection(Column.class).build();
 
-    rowCollection = sequenceBuilder.elementCollection(Row.class)
-      .build();
+    rowCollection = sequenceBuilder.elementCollection(Row.class).build();
 
     typeBuilder.build();
   }
-
 }

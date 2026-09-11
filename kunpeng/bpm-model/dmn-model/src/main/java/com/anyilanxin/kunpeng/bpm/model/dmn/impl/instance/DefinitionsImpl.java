@@ -16,15 +16,13 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_EXPORTER;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_EXPORTER_VERSION;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_EXPRESSION_LANGUAGE;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_NAMESPACE;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_TYPE_LANGUAGE;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_DEFINITIONS;
-
-import java.util.Collection;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Artifact;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.BusinessContextElement;
@@ -40,6 +38,7 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.attribute.Attribute;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.ChildElementCollection;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.SequenceBuilder;
+import java.util.Collection;
 
 public class DefinitionsImpl extends NamedElementImpl implements Definitions {
 
@@ -125,54 +124,52 @@ public class DefinitionsImpl extends NamedElementImpl implements Definitions {
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(Definitions.class, DMN_ELEMENT_DEFINITIONS)
-      .namespaceUri(LATEST_DMN_NS)
-      .extendsType(NamedElement.class)
-      .instanceProvider(new ModelElementTypeBuilder.ModelTypeInstanceProvider<Definitions>() {
-        public Definitions newInstance(ModelTypeInstanceContext instanceContext) {
-          return new DefinitionsImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(Definitions.class, DMN_ELEMENT_DEFINITIONS)
+            .namespaceUri(LATEST_DMN_NS)
+            .extendsType(NamedElement.class)
+            .instanceProvider(
+                new ModelElementTypeBuilder.ModelTypeInstanceProvider<Definitions>() {
+                  public Definitions newInstance(ModelTypeInstanceContext instanceContext) {
+                    return new DefinitionsImpl(instanceContext);
+                  }
+                });
 
-    expressionLanguageAttribute = typeBuilder.stringAttribute(DMN_ATTRIBUTE_EXPRESSION_LANGUAGE)
-      .defaultValue("http://www.omg.org/spec/FEEL/20140401")
-      .build();
+    expressionLanguageAttribute =
+        typeBuilder
+            .stringAttribute(DMN_ATTRIBUTE_EXPRESSION_LANGUAGE)
+            .defaultValue("http://www.omg.org/spec/FEEL/20140401")
+            .build();
 
-    typeLanguageAttribute = typeBuilder.stringAttribute(DMN_ATTRIBUTE_TYPE_LANGUAGE)
-      .defaultValue("http://www.omg.org/spec/FEEL/20140401")
-      .build();
+    typeLanguageAttribute =
+        typeBuilder
+            .stringAttribute(DMN_ATTRIBUTE_TYPE_LANGUAGE)
+            .defaultValue("http://www.omg.org/spec/FEEL/20140401")
+            .build();
 
-    namespaceAttribute = typeBuilder.stringAttribute(DMN_ATTRIBUTE_NAMESPACE)
-      .required()
-      .build();
+    namespaceAttribute = typeBuilder.stringAttribute(DMN_ATTRIBUTE_NAMESPACE).required().build();
 
-    exporterAttribute = typeBuilder.stringAttribute(DMN_ATTRIBUTE_EXPORTER)
-      .build();
+    exporterAttribute = typeBuilder.stringAttribute(DMN_ATTRIBUTE_EXPORTER).build();
 
-    exporterVersionAttribute = typeBuilder.stringAttribute(DMN_ATTRIBUTE_EXPORTER_VERSION)
-      .build();
+    exporterVersionAttribute = typeBuilder.stringAttribute(DMN_ATTRIBUTE_EXPORTER_VERSION).build();
 
     SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
-    importCollection = sequenceBuilder.elementCollection(Import.class)
-      .build();
+    importCollection = sequenceBuilder.elementCollection(Import.class).build();
 
-    itemDefinitionCollection = sequenceBuilder.elementCollection(ItemDefinition.class)
-      .build();
+    itemDefinitionCollection = sequenceBuilder.elementCollection(ItemDefinition.class).build();
 
-    drgElementCollection = sequenceBuilder.elementCollection(DrgElement.class)
-      .build();
+    drgElementCollection = sequenceBuilder.elementCollection(DrgElement.class).build();
 
-    artifactCollection = sequenceBuilder.elementCollection(Artifact.class)
-      .build();
+    artifactCollection = sequenceBuilder.elementCollection(Artifact.class).build();
 
-    elementCollectionCollection = sequenceBuilder.elementCollection(ElementCollection.class)
-      .build();
+    elementCollectionCollection =
+        sequenceBuilder.elementCollection(ElementCollection.class).build();
 
-    businessContextElementCollection = sequenceBuilder.elementCollection(BusinessContextElement.class)
-      .build();
+    businessContextElementCollection =
+        sequenceBuilder.elementCollection(BusinessContextElement.class).build();
 
     typeBuilder.build();
   }
-
 }

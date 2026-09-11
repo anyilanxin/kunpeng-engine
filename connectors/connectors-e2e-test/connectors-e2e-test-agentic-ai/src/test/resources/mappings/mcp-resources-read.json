@@ -1,124 +1,92 @@
-{
-  "mappings": [
+{"mappings": [
     {
-      "request": {
-        "method": "POST",
-        "url": "/mcp",
-        "bodyPatterns": [
-          {
-            "matchesJsonPath": {
-              "expression": "$.method",
-              "equalTo": "resources/read"
-            }
-          },
-          {
-            "matchesJsonPath": {
-              "expression": "$.params.uri",
-              "equalTo": "resourceA"
-            }
-          }
-        ]
-      },
-      "response": {
-        "status": 200,
-        "headers": {
-          "Content-Type": "application/json"
+        "request": {
+            "method": "POST",
+            "bodyPatterns": [
+                {"matchesJsonPath": {
+                    "expression": "$.method",
+                    "equalTo": "resources/read"
+                }},
+                {"matchesJsonPath": {
+                    "expression": "$.params.uri",
+                    "equalTo": "resourceA"
+                }}
+            ],
+            "url": "/mcp"
         },
-        "transformers": ["response-template"],
-        "jsonBody": {
-          "id": "{{jsonPath request.body '$.id'}}",
-          "jsonrpc": "2.0",
-          "result": {
-            "contents": [
-              {
-                "uri": "resourceA",
-                "mimeType": "text/plain",
-                "text": "This is the content of Resource A."
-              }
-            ]
-          }
+        "response": {
+            "headers": {"Content-Type": "application/json"},
+            "transformers": ["response-template"],
+            "jsonBody": {
+                "result": {"contents": [{
+                    "mimeType": "text/plain",
+                    "text": "This is the content of Resource A.",
+                    "uri": "resourceA"
+                }]},
+                "id": "{{jsonPath request.body '$.id'}}",
+                "jsonrpc": "2.0"
+            },
+            "status": 200
         }
-      }
     },
     {
-      "request": {
-        "method": "POST",
-        "url": "/mcp",
-        "bodyPatterns": [
-          {
-            "matchesJsonPath": {
-              "expression": "$.method",
-              "equalTo": "resources/read"
-            }
-          },
-          {
-            "matchesJsonPath": {
-              "expression": "$.params.uri",
-              "equalTo": "resourceC"
-            }
-          }
-        ]
-      },
-      "response": {
-        "status": 200,
-        "headers": {
-          "Content-Type": "application/json"
+        "request": {
+            "method": "POST",
+            "bodyPatterns": [
+                {"matchesJsonPath": {
+                    "expression": "$.method",
+                    "equalTo": "resources/read"
+                }},
+                {"matchesJsonPath": {
+                    "expression": "$.params.uri",
+                    "equalTo": "resourceC"
+                }}
+            ],
+            "url": "/mcp"
         },
-        "transformers": ["response-template"],
-        "jsonBody": {
-          "id": "{{jsonPath request.body '$.id'}}",
-          "jsonrpc": "2.0",
-          "result": {
-            "contents": [
-              {
-                "uri": "resourceC",
-                "mimeType": "text/markdown",
-                "text": "# This is the content of Resource C."
-              }
-            ]
-          }
+        "response": {
+            "headers": {"Content-Type": "application/json"},
+            "transformers": ["response-template"],
+            "jsonBody": {
+                "result": {"contents": [{
+                    "mimeType": "text/markdown",
+                    "text": "# This is the content of Resource C.",
+                    "uri": "resourceC"
+                }]},
+                "id": "{{jsonPath request.body '$.id'}}",
+                "jsonrpc": "2.0"
+            },
+            "status": 200
         }
-      }
     },
     {
-      "request": {
-        "method": "POST",
-        "url": "/mcp",
-        "bodyPatterns": [
-          {
-            "matchesJsonPath": {
-              "expression": "$.method",
-              "equalTo": "resources/read"
-            }
-          },
-          {
-            "matchesJsonPath": {
-              "expression": "$.params.uri",
-              "equalTo": "resource-a-1"
-            }
-          }
-        ]
-      },
-      "response": {
-        "status": 200,
-        "headers": {
-          "Content-Type": "application/json"
+        "request": {
+            "method": "POST",
+            "bodyPatterns": [
+                {"matchesJsonPath": {
+                    "expression": "$.method",
+                    "equalTo": "resources/read"
+                }},
+                {"matchesJsonPath": {
+                    "expression": "$.params.uri",
+                    "equalTo": "resource-a-1"
+                }}
+            ],
+            "url": "/mcp"
         },
-        "transformers": ["response-template"],
-        "jsonBody": {
-          "id": "{{jsonPath request.body '$.id'}}",
-          "jsonrpc": "2.0",
-          "result": {
-            "contents": [
-              {
-                "uri": "resource-a-1",
-                "mimeType": "text/plain",
-                "text": "This is the content of Resource A number 1."
-              }
-            ]
-          }
+        "response": {
+            "headers": {"Content-Type": "application/json"},
+            "transformers": ["response-template"],
+            "jsonBody": {
+                "result": {"contents": [{
+                    "mimeType": "text/plain",
+                    "text": "This is the content of Resource A number 1.",
+                    "uri": "resource-a-1"
+                }]},
+                "id": "{{jsonPath request.body '$.id'}}",
+                "jsonrpc": "2.0"
+            },
+            "status": 200
         }
-      }
     }
-  ]
-}
+]}

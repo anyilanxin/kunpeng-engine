@@ -37,7 +37,6 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.LoopCardinality;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.LoopCharacteristics;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.MultiInstanceLoopCharacteristics;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.OutputDataItem;
-import java.util.Collection;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
@@ -48,6 +47,7 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.child.ChildElementCollection;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.SequenceBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.AttributeReference;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.ElementReference;
+import java.util.Collection;
 
 /**
  * The BPMN 2.0 multiInstanceLoopCharacteristics element

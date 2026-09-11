@@ -16,5 +16,4 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.instance;
 
-public interface UsingProcessReference extends DmnElementReference {
-}
+public interface UsingProcessReference extends DmnElementReference {}

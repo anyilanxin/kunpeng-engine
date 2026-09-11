@@ -20,7 +20,6 @@ package com.anyilanxin.kunpeng.cluster.raft.cluster.impl;
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.collect.Comparators;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftCluster;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember;
@@ -33,6 +32,7 @@ import com.anyilanxin.kunpeng.cluster.raft.storage.system.Configuration;
 import com.anyilanxin.kunpeng.cluster.raft.utils.JointConsensusVoteQuorum;
 import com.anyilanxin.kunpeng.cluster.raft.utils.SimpleVoteQuorum;
 import com.anyilanxin.kunpeng.cluster.raft.utils.VoteQuorum;
+import com.google.common.collect.Comparators;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;

@@ -17,8 +17,8 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.anyilanxin.kunpeng.cluster.raft.RaftException.ConfigurationException;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
@@ -55,8 +55,9 @@ import java.util.function.Supplier;
  *
  * <p>To create a new server, use the server {@link RaftServer.Builder}. Servers require cluster
  * membership information in order to perform communication. Each server must be provided a local
- * {@link MemberId} to which to bind the internal {@link com.anyilanxin.kunpeng.cluster.raft.protocol.RaftServerProtocol}
- * and a set of addresses for other members in the cluster.
+ * {@link MemberId} to which to bind the internal {@link
+ * com.anyilanxin.kunpeng.cluster.raft.protocol.RaftServerProtocol} and a set of addresses for other
+ * members in the cluster.
  *
  * <h2>State machines</h2>
  *
@@ -163,8 +164,9 @@ public interface RaftServer {
    *
    * <p>The server name is provided to the server via the {@link Builder#withName(String) builder
    * configuration}. The name is used internally to manage the server's on-disk state. {@link
-   * RaftLog Log}, {@code snapshot}, and {@link com.anyilanxin.kunpeng.cluster.raft.storage.system.MetaStore
-   * configuration} files stored on disk use the server name as the prefix.
+   * RaftLog Log}, {@code snapshot}, and {@link
+   * com.anyilanxin.kunpeng.cluster.raft.storage.system.MetaStore configuration} files stored on
+   * disk use the server name as the prefix.
    *
    * @return The server name.
    */
@@ -295,7 +297,8 @@ public interface RaftServer {
 
   /**
    * Starts this raft server by joining an existing replication group. A {@link
-   * com.anyilanxin.kunpeng.cluster.raft.protocol.JoinRequest} is sent to an arbitrary member of the cluster.
+   * com.anyilanxin.kunpeng.cluster.raft.protocol.JoinRequest} is sent to an arbitrary member of the
+   * cluster.
    *
    * @param cluster a list of member ids that are part of the cluster and assist in joining.
    * @return A completable future to be completed once the server has joined the cluster.
@@ -304,7 +307,8 @@ public interface RaftServer {
 
   /**
    * Starts this raft server by joining an existing replication group. A {@link
-   * com.anyilanxin.kunpeng.cluster.raft.protocol.JoinRequest} is sent to an arbitrary member of the cluster.
+   * com.anyilanxin.kunpeng.cluster.raft.protocol.JoinRequest} is sent to an arbitrary member of the
+   * cluster.
    *
    * @param cluster a list of member ids that are part of the cluster and assist in joining.
    * @return A completable future to be completed once the server has joined the cluster.
@@ -315,8 +319,8 @@ public interface RaftServer {
 
   /**
    * Requests to leave the replication group by sending a {@link
-   * com.anyilanxin.kunpeng.cluster.raft.protocol.LeaveRequest} to an arbitrary member of the cluster, as provided by the
-   * {@link ClusterMembershipService}.
+   * com.anyilanxin.kunpeng.cluster.raft.protocol.LeaveRequest} to an arbitrary member of the
+   * cluster, as provided by the {@link ClusterMembershipService}.
    *
    * @return A future to be completed successfully once the server has left the cluster.
    */

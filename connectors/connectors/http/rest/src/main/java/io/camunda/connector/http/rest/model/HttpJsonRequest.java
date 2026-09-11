@@ -35,8 +35,7 @@ public class HttpJsonRequest extends HttpCommonRequest {
       description =
           "Choose a reusable REST authentication credential. When set, it is bound as a whole to"
               + " the connector's 'authenticationConfiguration' input.")
-  @Valid
-  private RestAuthenticationConfiguration authenticationConfiguration;
+  @Valid private RestAuthenticationConfiguration authenticationConfiguration;
 
   public RestAuthenticationConfiguration getAuthenticationConfiguration() {
     return authenticationConfiguration;

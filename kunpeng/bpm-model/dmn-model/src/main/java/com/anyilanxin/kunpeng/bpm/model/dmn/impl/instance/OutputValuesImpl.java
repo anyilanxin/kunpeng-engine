@@ -16,8 +16,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_OUTPUT_VALUES;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.OutputValues;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.UnaryTests;
@@ -33,16 +33,18 @@ public class OutputValuesImpl extends UnaryTestsImpl implements OutputValues {
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(OutputValues.class, DMN_ELEMENT_OUTPUT_VALUES)
-      .namespaceUri(LATEST_DMN_NS)
-      .extendsType(UnaryTests.class)
-      .instanceProvider(new ModelTypeInstanceProvider<OutputValues>() {
-        public OutputValues newInstance(ModelTypeInstanceContext instanceContext) {
-          return new OutputValuesImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(OutputValues.class, DMN_ELEMENT_OUTPUT_VALUES)
+            .namespaceUri(LATEST_DMN_NS)
+            .extendsType(UnaryTests.class)
+            .instanceProvider(
+                new ModelTypeInstanceProvider<OutputValues>() {
+                  public OutputValues newInstance(ModelTypeInstanceContext instanceContext) {
+                    return new OutputValuesImpl(instanceContext);
+                  }
+                });
 
     typeBuilder.build();
   }
-
 }

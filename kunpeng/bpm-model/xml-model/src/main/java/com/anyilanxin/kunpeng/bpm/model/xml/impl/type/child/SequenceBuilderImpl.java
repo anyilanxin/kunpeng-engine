@@ -23,32 +23,35 @@ import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.ChildElementBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.ChildElementCollectionBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.SequenceBuilder;
-
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author Daniel Meyer
- *
  */
 public class SequenceBuilderImpl implements SequenceBuilder, ModelBuildOperation {
 
   private final ModelElementTypeImpl elementType;
 
-  private final List<ModelBuildOperation> modelBuildOperations = new ArrayList<ModelBuildOperation>();
+  private final List<ModelBuildOperation> modelBuildOperations =
+      new ArrayList<ModelBuildOperation>();
 
   public SequenceBuilderImpl(ModelElementTypeImpl modelType) {
     this.elementType = modelType;
   }
 
-  public <T extends ModelElementInstance> ChildElementBuilder<T> element(Class<T> childElementType) {
-    ChildElementBuilderImpl<T> builder = new ChildElementBuilderImpl<T>(childElementType, elementType);
+  public <T extends ModelElementInstance> ChildElementBuilder<T> element(
+      Class<T> childElementType) {
+    ChildElementBuilderImpl<T> builder =
+        new ChildElementBuilderImpl<T>(childElementType, elementType);
     modelBuildOperations.add(builder);
     return builder;
   }
 
-  public <T extends ModelElementInstance> ChildElementCollectionBuilder<T> elementCollection(Class<T> childElementType) {
-    ChildElementCollectionBuilderImpl<T> builder = new ChildElementCollectionBuilderImpl<T>(childElementType, elementType);
+  public <T extends ModelElementInstance> ChildElementCollectionBuilder<T> elementCollection(
+      Class<T> childElementType) {
+    ChildElementCollectionBuilderImpl<T> builder =
+        new ChildElementCollectionBuilderImpl<T>(childElementType, elementType);
     modelBuildOperations.add(builder);
     return builder;
   }
@@ -58,5 +61,4 @@ public class SequenceBuilderImpl implements SequenceBuilder, ModelBuildOperation
       operation.performModelBuild(model);
     }
   }
-
 }

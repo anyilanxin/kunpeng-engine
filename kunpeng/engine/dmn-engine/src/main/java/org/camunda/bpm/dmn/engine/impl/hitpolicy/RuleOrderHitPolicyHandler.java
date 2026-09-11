@@ -29,7 +29,8 @@ public class RuleOrderHitPolicyHandler implements DmnHitPolicyHandler {
     return HIT_POLICY;
   }
 
-  public DmnDecisionTableEvaluationEvent apply(DmnDecisionTableEvaluationEvent decisionTableEvaluationEvent) {
+  public DmnDecisionTableEvaluationEvent apply(
+      DmnDecisionTableEvaluationEvent decisionTableEvaluationEvent) {
     return decisionTableEvaluationEvent;
   }
 
@@ -37,5 +38,4 @@ public class RuleOrderHitPolicyHandler implements DmnHitPolicyHandler {
   public String toString() {
     return "RuleOrderHitPolicyHandler{}";
   }
-
 }

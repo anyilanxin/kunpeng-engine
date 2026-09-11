@@ -16,8 +16,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_TYPE_REF;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.TypeRef;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
@@ -32,15 +32,17 @@ public class TypeRefImpl extends DmnModelElementInstanceImpl implements TypeRef 
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(TypeRef.class, DMN_ELEMENT_TYPE_REF)
-      .namespaceUri(LATEST_DMN_NS)
-      .instanceProvider(new ModelTypeInstanceProvider<TypeRef>() {
-        public TypeRef newInstance(ModelTypeInstanceContext instanceContext) {
-          return new TypeRefImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(TypeRef.class, DMN_ELEMENT_TYPE_REF)
+            .namespaceUri(LATEST_DMN_NS)
+            .instanceProvider(
+                new ModelTypeInstanceProvider<TypeRef>() {
+                  public TypeRef newInstance(ModelTypeInstanceContext instanceContext) {
+                    return new TypeRefImpl(instanceContext);
+                  }
+                });
 
     typeBuilder.build();
   }
-
 }

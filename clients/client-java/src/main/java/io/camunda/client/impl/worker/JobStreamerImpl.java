@@ -67,23 +67,17 @@ final class JobStreamerImpl implements JobStreamer {
   // gRPC callback hot path down to a single volatile write per job.
   private volatile long lastActivityNanos;
 
-  @GuardedBy("streamLock")
-  private CamundaFuture<StreamJobsResponse> streamControl;
+  @GuardedBy("streamLock") private CamundaFuture<StreamJobsResponse> streamControl;
 
-  @GuardedBy("streamLock")
-  private FinalCommandStep<StreamJobsResponse> command;
+  @GuardedBy("streamLock") private FinalCommandStep<StreamJobsResponse> command;
 
-  @GuardedBy("streamLock")
-  private boolean isClosed;
+  @GuardedBy("streamLock") private boolean isClosed;
 
-  @GuardedBy("streamLock")
-  private long retryDelay;
+  @GuardedBy("streamLock") private long retryDelay;
 
-  @GuardedBy("streamLock")
-  private ScheduledFuture<?> scheduledRecreationTriggerTask;
+  @GuardedBy("streamLock") private ScheduledFuture<?> scheduledRecreationTriggerTask;
 
-  @GuardedBy("streamLock")
-  private ScheduledFuture<?> scheduledInactivityTask;
+  @GuardedBy("streamLock") private ScheduledFuture<?> scheduledInactivityTask;
 
   public JobStreamerImpl(
       final JobClient jobClient,
@@ -204,8 +198,7 @@ final class JobStreamerImpl implements JobStreamer {
     return command;
   }
 
-  @GuardedBy("streamLock")
-  private void lockedClose() {
+  @GuardedBy("streamLock") private void lockedClose() {
     LOGGER.debug("Closing job stream for type '{}' and worker '{}'", jobType, workerName);
     isClosed = true;
     if (scheduledRecreationTriggerTask != null) {
@@ -220,8 +213,7 @@ final class JobStreamerImpl implements JobStreamer {
     LOGGER.debug("Closed job stream for type '{}' and worker '{}'", jobType, workerName);
   }
 
-  @GuardedBy("streamLock")
-  private void lockedOpen() {
+  @GuardedBy("streamLock") private void lockedOpen() {
     if (streamControl != null) {
       streamControl.cancel(true);
       streamControl = null;
@@ -276,8 +268,7 @@ final class JobStreamerImpl implements JobStreamer {
     }
   }
 
-  @GuardedBy("streamLock")
-  private void lockedTriggerRecreation(final CamundaFuture<StreamJobsResponse> streamControl) {
+  @GuardedBy("streamLock") private void lockedTriggerRecreation(final CamundaFuture<StreamJobsResponse> streamControl) {
     if (isClosed) {
       return;
     }
@@ -313,8 +304,7 @@ final class JobStreamerImpl implements JobStreamer {
     }
   }
 
-  @GuardedBy("streamLock")
-  private void lockedTriggerInactivityRecreation(
+  @GuardedBy("streamLock") private void lockedTriggerInactivityRecreation(
       final CamundaFuture<StreamJobsResponse> streamControl) {
     if (isClosed || this.streamControl != streamControl) {
       return;
@@ -347,8 +337,7 @@ final class JobStreamerImpl implements JobStreamer {
     }
   }
 
-  @GuardedBy("streamLock")
-  private void lockedHandleStreamComplete(final Throwable error) {
+  @GuardedBy("streamLock") private void lockedHandleStreamComplete(final Throwable error) {
     if (isClosed) {
       LOGGER.trace("Skip re-opening job stream of type '{}' for worker '{}'", jobType, workerName);
       return;

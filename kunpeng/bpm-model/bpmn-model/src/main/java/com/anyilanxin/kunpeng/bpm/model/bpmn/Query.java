@@ -17,11 +17,11 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn;
 
+import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
+import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementType;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
-import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
-import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementType;
 
 /**
  * @author Sebastian Menski

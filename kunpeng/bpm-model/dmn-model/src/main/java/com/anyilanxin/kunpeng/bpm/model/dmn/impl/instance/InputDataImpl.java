@@ -16,8 +16,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_INPUT_DATA;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DrgElement;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.InformationItem;
@@ -46,21 +46,22 @@ public class InputDataImpl extends DrgElementImpl implements InputData {
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(InputData.class, DMN_ELEMENT_INPUT_DATA)
-      .namespaceUri(LATEST_DMN_NS)
-      .extendsType(DrgElement.class)
-      .instanceProvider(new ModelTypeInstanceProvider<InputData>() {
-        public InputData newInstance(ModelTypeInstanceContext instanceContext) {
-          return new InputDataImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(InputData.class, DMN_ELEMENT_INPUT_DATA)
+            .namespaceUri(LATEST_DMN_NS)
+            .extendsType(DrgElement.class)
+            .instanceProvider(
+                new ModelTypeInstanceProvider<InputData>() {
+                  public InputData newInstance(ModelTypeInstanceContext instanceContext) {
+                    return new InputDataImpl(instanceContext);
+                  }
+                });
 
     SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
-    informationItemChild = sequenceBuilder.element(InformationItem.class)
-      .build();
+    informationItemChild = sequenceBuilder.element(InformationItem.class).build();
 
     typeBuilder.build();
   }
-
 }

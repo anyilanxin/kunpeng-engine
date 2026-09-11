@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
 import org.camunda.bpm.dmn.engine.DmnDecision;
 import org.camunda.bpm.dmn.engine.DmnDecisionResult;
 import org.camunda.bpm.dmn.engine.DmnDecisionResultEntries;
@@ -74,8 +73,10 @@ public class DecisionTableEvaluationHandler implements DmnDecisionLogicEvaluatio
   }
 
   @Override
-  public DmnDecisionLogicEvaluationEvent evaluate(DmnDecision decision, VariableContext variableContext) {
-    DmnDecisionTableEvaluationEventImpl evaluationResult = new DmnDecisionTableEvaluationEventImpl();
+  public DmnDecisionLogicEvaluationEvent evaluate(
+      DmnDecision decision, VariableContext variableContext) {
+    DmnDecisionTableEvaluationEventImpl evaluationResult =
+        new DmnDecisionTableEvaluationEventImpl();
     evaluationResult.setDecisionTable(decision);
 
     DmnDecisionTableImpl decisionTable = (DmnDecisionTableImpl) decision.getDecisionLogic();
@@ -95,29 +96,38 @@ public class DecisionTableEvaluationHandler implements DmnDecisionLogicEvaluatio
   }
 
   protected long calculateExecutedDecisionElements(DmnDecisionTableImpl decisionTable) {
-    return (decisionTable.getInputs().size() + decisionTable.getOutputs().size()) * decisionTable.getRules().size();
+    return (decisionTable.getInputs().size() + decisionTable.getOutputs().size())
+        * decisionTable.getRules().size();
   }
 
-  protected void evaluateDecisionTable(DmnDecisionTableImpl decisionTable, VariableContext variableContext, DmnDecisionTableEvaluationEventImpl evaluationResult) {
+  protected void evaluateDecisionTable(
+      DmnDecisionTableImpl decisionTable,
+      VariableContext variableContext,
+      DmnDecisionTableEvaluationEventImpl evaluationResult) {
     int inputSize = decisionTable.getInputs().size();
-    List<DmnDecisionTableRuleImpl> matchingRules = new ArrayList<DmnDecisionTableRuleImpl>(decisionTable.getRules());
+    List<DmnDecisionTableRuleImpl> matchingRules =
+        new ArrayList<DmnDecisionTableRuleImpl>(decisionTable.getRules());
     for (int inputIdx = 0; inputIdx < inputSize; inputIdx++) {
       // evaluate input
       DmnDecisionTableInputImpl input = decisionTable.getInputs().get(inputIdx);
       DmnEvaluatedInput evaluatedInput = evaluateInput(input, variableContext);
       evaluationResult.getInputs().add(evaluatedInput);
 
-      // compose local variable context out of global variable context enhanced with the value of the current input.
-      VariableContext localVariableContext = getLocalVariableContext(input, evaluatedInput, variableContext);
+      // compose local variable context out of global variable context enhanced with the value of
+      // the current input.
+      VariableContext localVariableContext =
+          getLocalVariableContext(input, evaluatedInput, variableContext);
 
       // filter rules applicable with this input
-      matchingRules = evaluateInputForAvailableRules(inputIdx, input, matchingRules, localVariableContext);
+      matchingRules =
+          evaluateInputForAvailableRules(inputIdx, input, matchingRules, localVariableContext);
     }
 
     setEvaluationOutput(decisionTable, matchingRules, variableContext, evaluationResult);
   }
 
-  protected DmnEvaluatedInput evaluateInput(DmnDecisionTableInputImpl input, VariableContext variableContext) {
+  protected DmnEvaluatedInput evaluateInput(
+      DmnDecisionTableInputImpl input, VariableContext variableContext) {
     DmnEvaluatedInputImpl evaluatedInput = new DmnEvaluatedInputImpl(input);
 
     DmnExpressionImpl expression = input.getExpression();
@@ -125,15 +135,18 @@ public class DecisionTableEvaluationHandler implements DmnDecisionLogicEvaluatio
       Object value = evaluateInputExpression(expression, variableContext);
       TypedValue typedValue = expression.getTypeDefinition().transform(value);
       evaluatedInput.setValue(typedValue);
-    }
-    else {
+    } else {
       evaluatedInput.setValue(Variables.untypedNullValue());
     }
 
     return evaluatedInput;
   }
 
-  protected List<DmnDecisionTableRuleImpl> evaluateInputForAvailableRules(int conditionIdx, DmnDecisionTableInputImpl input, List<DmnDecisionTableRuleImpl> availableRules, VariableContext variableContext) {
+  protected List<DmnDecisionTableRuleImpl> evaluateInputForAvailableRules(
+      int conditionIdx,
+      DmnDecisionTableInputImpl input,
+      List<DmnDecisionTableRuleImpl> availableRules,
+      VariableContext variableContext) {
     List<DmnDecisionTableRuleImpl> matchingRules = new ArrayList<DmnDecisionTableRuleImpl>();
     for (DmnDecisionTableRuleImpl availableRule : availableRules) {
       DmnExpressionImpl condition = availableRule.getConditions().get(conditionIdx);
@@ -144,59 +157,82 @@ public class DecisionTableEvaluationHandler implements DmnDecisionLogicEvaluatio
     return matchingRules;
   }
 
-  protected boolean isConditionApplicable(DmnDecisionTableInputImpl input, DmnExpressionImpl condition, VariableContext variableContext) {
+  protected boolean isConditionApplicable(
+      DmnDecisionTableInputImpl input,
+      DmnExpressionImpl condition,
+      VariableContext variableContext) {
     Object result = evaluateInputEntry(input, condition, variableContext);
     return result != null && result.equals(true);
   }
 
-  protected void setEvaluationOutput(DmnDecisionTableImpl decisionTable, List<DmnDecisionTableRuleImpl> matchingRules, VariableContext variableContext, DmnDecisionTableEvaluationEventImpl evaluationResult) {
+  protected void setEvaluationOutput(
+      DmnDecisionTableImpl decisionTable,
+      List<DmnDecisionTableRuleImpl> matchingRules,
+      VariableContext variableContext,
+      DmnDecisionTableEvaluationEventImpl evaluationResult) {
     List<DmnDecisionTableOutputImpl> decisionTableOutputs = decisionTable.getOutputs();
 
-    List<DmnEvaluatedDecisionRule> evaluatedDecisionRules = new ArrayList<DmnEvaluatedDecisionRule>();
+    List<DmnEvaluatedDecisionRule> evaluatedDecisionRules =
+        new ArrayList<DmnEvaluatedDecisionRule>();
     for (DmnDecisionTableRuleImpl matchingRule : matchingRules) {
-      DmnEvaluatedDecisionRule evaluatedRule = evaluateMatchingRule(decisionTableOutputs, matchingRule, variableContext);
+      DmnEvaluatedDecisionRule evaluatedRule =
+          evaluateMatchingRule(decisionTableOutputs, matchingRule, variableContext);
       evaluatedDecisionRules.add(evaluatedRule);
     }
     evaluationResult.setMatchingRules(evaluatedDecisionRules);
   }
 
-  protected DmnEvaluatedDecisionRule evaluateMatchingRule(List<DmnDecisionTableOutputImpl> decisionTableOutputs, DmnDecisionTableRuleImpl matchingRule, VariableContext variableContext) {
-    DmnEvaluatedDecisionRuleImpl evaluatedDecisionRule = new DmnEvaluatedDecisionRuleImpl(matchingRule);
-    Map<String, DmnEvaluatedOutput> outputEntries = evaluateOutputEntries(decisionTableOutputs, matchingRule, variableContext);
+  protected DmnEvaluatedDecisionRule evaluateMatchingRule(
+      List<DmnDecisionTableOutputImpl> decisionTableOutputs,
+      DmnDecisionTableRuleImpl matchingRule,
+      VariableContext variableContext) {
+    DmnEvaluatedDecisionRuleImpl evaluatedDecisionRule =
+        new DmnEvaluatedDecisionRuleImpl(matchingRule);
+    Map<String, DmnEvaluatedOutput> outputEntries =
+        evaluateOutputEntries(decisionTableOutputs, matchingRule, variableContext);
     evaluatedDecisionRule.setOutputEntries(outputEntries);
 
     return evaluatedDecisionRule;
   }
 
-  protected VariableContext getLocalVariableContext(DmnDecisionTableInputImpl input, DmnEvaluatedInput evaluatedInput, VariableContext variableContext) {
+  protected VariableContext getLocalVariableContext(
+      DmnDecisionTableInputImpl input,
+      DmnEvaluatedInput evaluatedInput,
+      VariableContext variableContext) {
     if (isNonEmptyExpression(input.getExpression())) {
       String inputVariableName = evaluatedInput.getInputVariable();
 
       return CompositeVariableContext.compose(
-        Variables.createVariables()
-            .putValue("inputVariableName", inputVariableName)
-            .putValueTyped(inputVariableName, evaluatedInput.getValue())
-            .asVariableContext(),
-        variableContext
-      );
+          Variables.createVariables()
+              .putValue("inputVariableName", inputVariableName)
+              .putValueTyped(inputVariableName, evaluatedInput.getValue())
+              .asVariableContext(),
+          variableContext);
     } else {
       return variableContext;
     }
   }
 
   protected boolean isNonEmptyExpression(DmnExpressionImpl expression) {
-    return expression != null && expression.getExpression() != null && !expression.getExpression().trim().isEmpty();
+    return expression != null
+        && expression.getExpression() != null
+        && !expression.getExpression().trim().isEmpty();
   }
 
-  protected Object evaluateInputExpression(DmnExpressionImpl expression, VariableContext variableContext) {
+  protected Object evaluateInputExpression(
+      DmnExpressionImpl expression, VariableContext variableContext) {
     String expressionLanguage = expression.getExpressionLanguage();
     if (expressionLanguage == null) {
       expressionLanguage = inputExpressionExpressionLanguage;
     }
-    return expressionEvaluationHandler.evaluateExpression(expressionLanguage, expression, variableContext);
+    return expressionEvaluationHandler.evaluateExpression(
+        expressionLanguage, expression, variableContext);
   }
 
-  protected Object evaluateInputEntry(DmnDecisionTableInputImpl input, DmnExpressionImpl condition, VariableContext variableContext) {
+  protected Object evaluateInputEntry(
+      DmnDecisionTableInputImpl input,
+      DmnExpressionImpl condition,
+      VariableContext variableContext) {
     if (isNonEmptyExpression(condition)) {
       String expressionLanguage = condition.getExpressionLanguage();
       if (expressionLanguage == null) {
@@ -205,15 +241,18 @@ public class DecisionTableEvaluationHandler implements DmnDecisionLogicEvaluatio
       if (expressionEvaluationHandler.isFeelExpressionLanguage(expressionLanguage)) {
         return evaluateFeelSimpleUnaryTests(input, condition, variableContext);
       } else {
-        return expressionEvaluationHandler.evaluateExpression(expressionLanguage, condition, variableContext);
+        return expressionEvaluationHandler.evaluateExpression(
+            expressionLanguage, condition, variableContext);
       }
-    }
-    else {
+    } else {
       return true; // input entries without expressions are true
     }
   }
 
-  protected Map<String, DmnEvaluatedOutput> evaluateOutputEntries(List<DmnDecisionTableOutputImpl> decisionTableOutputs, DmnDecisionTableRuleImpl matchingRule, VariableContext variableContext) {
+  protected Map<String, DmnEvaluatedOutput> evaluateOutputEntries(
+      List<DmnDecisionTableOutputImpl> decisionTableOutputs,
+      DmnDecisionTableRuleImpl matchingRule,
+      VariableContext variableContext) {
     Map<String, DmnEvaluatedOutput> outputEntries = new LinkedHashMap<>();
 
     for (int outputIdx = 0; outputIdx < decisionTableOutputs.size(); outputIdx++) {
@@ -222,12 +261,14 @@ public class DecisionTableEvaluationHandler implements DmnDecisionLogicEvaluatio
       boolean isNonEmptyExpression = isNonEmptyExpression(conclusion);
       if (returnBlankTableOutputAsNull || isNonEmptyExpression) {
         DmnDecisionTableOutputImpl decisionTableOutput = decisionTableOutputs.get(outputIdx);
-        Object value = isNonEmptyExpression ? evaluateOutputEntry(conclusion, variableContext) : null;
+        Object value =
+            isNonEmptyExpression ? evaluateOutputEntry(conclusion, variableContext) : null;
         // transform to output type
         TypedValue typedValue = decisionTableOutput.getTypeDefinition().transform(value);
 
         // set on result
-        DmnEvaluatedOutputImpl evaluatedOutput = new DmnEvaluatedOutputImpl(decisionTableOutput, typedValue);
+        DmnEvaluatedOutputImpl evaluatedOutput =
+            new DmnEvaluatedOutputImpl(decisionTableOutput, typedValue);
         outputEntries.put(decisionTableOutput.getOutputName(), evaluatedOutput);
       }
     }
@@ -235,20 +276,25 @@ public class DecisionTableEvaluationHandler implements DmnDecisionLogicEvaluatio
     return outputEntries;
   }
 
-  protected Object evaluateOutputEntry(DmnExpressionImpl conclusion, VariableContext variableContext) {
+  protected Object evaluateOutputEntry(
+      DmnExpressionImpl conclusion, VariableContext variableContext) {
     String expressionLanguage = conclusion.getExpressionLanguage();
     if (expressionLanguage == null) {
       expressionLanguage = outputEntryExpressionLanguage;
     }
-    return expressionEvaluationHandler.evaluateExpression(expressionLanguage, conclusion, variableContext);
+    return expressionEvaluationHandler.evaluateExpression(
+        expressionLanguage, conclusion, variableContext);
   }
 
-  protected Object evaluateFeelSimpleUnaryTests(DmnDecisionTableInputImpl input, DmnExpressionImpl condition, VariableContext variableContext) {
+  protected Object evaluateFeelSimpleUnaryTests(
+      DmnDecisionTableInputImpl input,
+      DmnExpressionImpl condition,
+      VariableContext variableContext) {
     String expressionText = condition.getExpression();
     if (expressionText != null) {
-      return feelEngine.evaluateSimpleUnaryTests(expressionText, input.getInputVariable(), variableContext);
-    }
-    else {
+      return feelEngine.evaluateSimpleUnaryTests(
+          expressionText, input.getInputVariable(), variableContext);
+    } else {
       return null;
     }
   }
@@ -259,12 +305,13 @@ public class DecisionTableEvaluationHandler implements DmnDecisionLogicEvaluatio
 
     List<DmnDecisionResultEntries> ruleResults = new ArrayList<DmnDecisionResultEntries>();
 
-    if (evaluationResult.getCollectResultName() != null || evaluationResult.getCollectResultValue() != null) {
+    if (evaluationResult.getCollectResultName() != null
+        || evaluationResult.getCollectResultValue() != null) {
       DmnDecisionResultEntriesImpl ruleResult = new DmnDecisionResultEntriesImpl();
-      ruleResult.putValue(evaluationResult.getCollectResultName(), evaluationResult.getCollectResultValue());
+      ruleResult.putValue(
+          evaluationResult.getCollectResultName(), evaluationResult.getCollectResultValue());
       ruleResults.add(ruleResult);
-    }
-    else {
+    } else {
       for (DmnEvaluatedDecisionRule evaluatedRule : evaluationResult.getMatchingRules()) {
         DmnDecisionResultEntriesImpl ruleResult = new DmnDecisionResultEntriesImpl();
         for (DmnEvaluatedOutput evaluatedOutput : evaluatedRule.getOutputEntries().values()) {
@@ -276,5 +323,4 @@ public class DecisionTableEvaluationHandler implements DmnDecisionLogicEvaluatio
 
     return new DmnDecisionResultImpl(ruleResults);
   }
-
 }

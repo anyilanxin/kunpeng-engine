@@ -1,41 +1,39 @@
 [
-  {
-    "descriptionOfTest": "0 value",
-    "method": "get",
-    "url": "http://localhost:8086/http-endpoint",
-    "connectionTimeoutInSeconds": "0",
-    "authentication": {
-      "type": "noAuth"
+    {
+        "method": "get",
+        "connectionTimeoutInSeconds": "0",
+        "descriptionOfTest": "0 value",
+        "url": "http://localhost:8086/http-endpoint",
+        "authentication": {"type": "noAuth"}
+    },
+    {
+        "method": "get",
+        "connectionTimeoutInSeconds": "0",
+        "descriptionOfTest": "0 value with bearer auth",
+        "url": "http://localhost:8086/http-endpoint",
+        "authentication": {
+            "type": "bearer",
+            "token": "{{secrets.TOKEN_KEY}}"
+        }
+    },
+    {
+        "method": "get",
+        "connectionTimeoutInSeconds": "99",
+        "descriptionOfTest": "positive value",
+        "url": "http://localhost:8086/http-endpoint",
+        "authentication": {
+            "type": "bearer",
+            "token": "{{secrets.TOKEN_KEY}}"
+        }
+    },
+    {
+        "method": "get",
+        "connectionTimeoutInSeconds": "{{secrets.CONNECT_TIMEOUT_KEY}}",
+        "descriptionOfTest": "secrets value",
+        "url": "http://localhost:8086/http-endpoint",
+        "authentication": {
+            "type": "bearer",
+            "token": "{{secrets.TOKEN_KEY}}"
+        }
     }
-  },
-  {
-    "descriptionOfTest": "0 value with bearer auth",
-    "method": "get",
-    "url": "http://localhost:8086/http-endpoint",
-    "connectionTimeoutInSeconds": "0",
-    "authentication": {
-      "type": "bearer",
-      "token": "{{secrets.TOKEN_KEY}}"
-    }
-  },
-  {
-    "descriptionOfTest": "positive value",
-    "method": "get",
-    "url": "http://localhost:8086/http-endpoint",
-    "connectionTimeoutInSeconds": "99",
-    "authentication": {
-      "type": "bearer",
-      "token": "{{secrets.TOKEN_KEY}}"
-    }
-  },
-  {
-    "descriptionOfTest": "secrets value",
-    "method": "get",
-    "url": "http://localhost:8086/http-endpoint",
-    "connectionTimeoutInSeconds": "{{secrets.CONNECT_TIMEOUT_KEY}}",
-    "authentication": {
-      "type": "bearer",
-      "token": "{{secrets.TOKEN_KEY}}"
-    }
-  }
 ]

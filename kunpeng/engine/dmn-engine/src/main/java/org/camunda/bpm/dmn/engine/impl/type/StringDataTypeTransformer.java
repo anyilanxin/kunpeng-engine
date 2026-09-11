@@ -33,5 +33,4 @@ public class StringDataTypeTransformer implements DmnDataTypeTransformer {
     String stringValue = String.valueOf(value);
     return Variables.stringValue(stringValue);
   }
-
 }

@@ -16,26 +16,25 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.xml.impl.validation;
 
+import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
+import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResult;
+import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResultCollector;
+import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResultType;
+import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResults;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
-import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResult;
-import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResultType;
-import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResults;
-import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResultCollector;
-
 /**
  * @author Daniel Meyer
- *
  */
 public class ValidationResultsCollectorImpl implements ValidationResultCollector {
 
   protected ModelElementInstance currentElement;
 
-  protected Map<ModelElementInstance, List<ValidationResult>> collectedResults = new HashMap<ModelElementInstance, List<ValidationResult>>();
+  protected Map<ModelElementInstance, List<ValidationResult>> collectedResults =
+      new HashMap<ModelElementInstance, List<ValidationResult>>();
 
   protected int errorCount = 0;
   protected int warningCount = 0;
@@ -43,7 +42,9 @@ public class ValidationResultsCollectorImpl implements ValidationResultCollector
   @Override
   public void addError(int code, String message) {
     resultsForCurrentElement()
-      .add(new ModelValidationResultImpl(currentElement, ValidationResultType.ERROR, code, message));
+        .add(
+            new ModelValidationResultImpl(
+                currentElement, ValidationResultType.ERROR, code, message));
 
     ++errorCount;
   }
@@ -51,7 +52,9 @@ public class ValidationResultsCollectorImpl implements ValidationResultCollector
   @Override
   public void addWarning(int code, String message) {
     resultsForCurrentElement()
-      .add(new ModelValidationResultImpl(currentElement, ValidationResultType.WARNING, code, message));
+        .add(
+            new ModelValidationResultImpl(
+                currentElement, ValidationResultType.WARNING, code, message));
 
     ++warningCount;
   }
@@ -67,11 +70,10 @@ public class ValidationResultsCollectorImpl implements ValidationResultCollector
   protected List<ValidationResult> resultsForCurrentElement() {
     List<ValidationResult> resultsByElement = collectedResults.get(currentElement);
 
-    if(resultsByElement == null) {
+    if (resultsByElement == null) {
       resultsByElement = new ArrayList<ValidationResult>();
       collectedResults.put(currentElement, resultsByElement);
     }
     return resultsByElement;
   }
-
 }

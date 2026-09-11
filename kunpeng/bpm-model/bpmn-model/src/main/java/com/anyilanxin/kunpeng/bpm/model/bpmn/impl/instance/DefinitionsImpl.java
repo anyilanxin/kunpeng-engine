@@ -35,13 +35,13 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Import;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Relationship;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.RootElement;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.bpmndi.BpmnDiagram;
-import java.util.Collection;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.attribute.Attribute;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.ChildElementCollection;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.SequenceBuilder;
+import java.util.Collection;
 
 /**
  * The BPMN definitions element

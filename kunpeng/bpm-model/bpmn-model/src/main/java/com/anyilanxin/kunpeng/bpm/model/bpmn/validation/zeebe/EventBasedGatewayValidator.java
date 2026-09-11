@@ -26,13 +26,13 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.SequenceFlow;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.SignalEventDefinition;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.TimerEventDefinition;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.util.ModelUtil;
+import com.anyilanxin.kunpeng.bpm.model.xml.validation.ModelElementValidator;
+import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResultCollector;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import com.anyilanxin.kunpeng.bpm.model.xml.validation.ModelElementValidator;
-import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResultCollector;
 
 public class EventBasedGatewayValidator implements ModelElementValidator<EventBasedGateway> {
 

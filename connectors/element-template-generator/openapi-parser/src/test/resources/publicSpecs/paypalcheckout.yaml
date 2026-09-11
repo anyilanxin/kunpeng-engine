@@ -4,7 +4,7 @@ info:
   description: >-
     An order represents a payment between two or more parties. Use the Orders
     API to create, update, retrieve, authorize, and capture orders.
-  version: '2.13'
+  version: "2.13"
   contact: {}
   x-konfig-ignore:
     object-with-no-properties: true
@@ -46,15 +46,15 @@ paths:
         href="/api/rest/reference/orders/v2/errors/#create-order">Orders v2
         errors</a>.</blockquote>
       parameters:
-        - $ref: '#/components/parameters/paypal_request_id'
-        - $ref: '#/components/parameters/paypal_partner_attribution_id'
-        - $ref: '#/components/parameters/paypal_client_metadata_id'
-        - $ref: '#/components/parameters/prefer'
+        - $ref: "#/components/parameters/paypal_request_id"
+        - $ref: "#/components/parameters/paypal_partner_attribution_id"
+        - $ref: "#/components/parameters/paypal_client_metadata_id"
+        - $ref: "#/components/parameters/prefer"
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/order_request'
+              $ref: "#/components/schemas/order_request"
             examples:
               order_request:
                 value:
@@ -63,7 +63,7 @@ paths:
                     - reference_id: d9f80740-38f0-11e8-b467-0ed5f89f718b
                       amount:
                         currency_code: USD
-                        value: '100.00'
+                        value: "100.00"
                   payment_source:
                     paypal:
                       experience_context:
@@ -77,15 +77,15 @@ paths:
                         cancel_url: https://example.com/cancelUrl
         required: true
       responses:
-        '200':
+        "200":
           description: >-
             A successful response to an idempotent request returns the HTTP `200
             OK` status code with a JSON response body that shows order details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/order'
-        '201':
+                $ref: "#/components/schemas/order"
+        "201":
           description: >-
             A successful request returns the HTTP `201 Created` status code and
             a JSON response body that includes by default a minimal response
@@ -97,7 +97,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/order'
+                $ref: "#/components/schemas/order"
               examples:
                 orders_request_create:
                   value:
@@ -106,33 +106,33 @@ paths:
                       - reference_id: d9f80740-38f0-11e8-b467-0ed5f89f718b
                         amount:
                           currency_code: USD
-                          value: '100.00'
-        '400':
+                          value: "100.00"
+        "400":
           description: >-
             Request is not well-formed, syntactically incorrect, or violates
             schema.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrdersCreateOrderResponse'
-        '401':
+                $ref: "#/components/schemas/OrdersCreateOrderResponse"
+        "401":
           description: >-
             Authentication failed due to missing authorization header, or
             invalid authentication credentials.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrdersCreateOrder401Response'
-        '422':
+                $ref: "#/components/schemas/OrdersCreateOrder401Response"
+        "422":
           description: >-
             The requested action could not be performed, semantically incorrect,
             or failed business validation.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrdersCreateOrder422Response'
+                $ref: "#/components/schemas/OrdersCreateOrder422Response"
         default:
-          $ref: '#/components/responses/default'
+          $ref: "#/components/responses/default"
   /v2/checkout/orders/{id}:
     get:
       tags:
@@ -150,33 +150,33 @@ paths:
         href="/api/rest/reference/orders/v2/errors/#get-order">Orders v2
         errors</a>.</blockquote>
       parameters:
-        - $ref: '#/components/parameters/id'
-        - $ref: '#/components/parameters/fields'
+        - $ref: "#/components/parameters/id"
+        - $ref: "#/components/parameters/fields"
       responses:
-        '200':
+        "200":
           description: >-
             A successful request returns the HTTP `200 OK` status code and a
             JSON response body that shows order details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/order'
-        '401':
+                $ref: "#/components/schemas/order"
+        "401":
           description: >-
             Authentication failed due to missing authorization header, or
             invalid authentication credentials.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrdersShowDetailsResponse'
-        '404':
+                $ref: "#/components/schemas/OrdersShowDetailsResponse"
+        "404":
           description: The specified resource does not exist.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrdersShowDetails404Response'
+                $ref: "#/components/schemas/OrdersShowDetails404Response"
         default:
-          $ref: '#/components/responses/default'
+          $ref: "#/components/responses/default"
     patch:
       tags:
         - orders
@@ -231,46 +231,46 @@ paths:
         remove</td><td></td></tr><tr><td><code>application_context.client_configuration</code></td><td>replace,
         add</td><td></td></tr></tbody></table>
       parameters:
-        - $ref: '#/components/parameters/id'
+        - $ref: "#/components/parameters/id"
       requestBody:
-        $ref: '#/components/requestBodies/patch_request'
+        $ref: "#/components/requestBodies/patch_request"
       responses:
-        '204':
+        "204":
           description: >-
             A successful request returns the HTTP `204 No Content` status code
             with an empty object in the JSON response body.
-        '400':
+        "400":
           description: >-
             Request is not well-formed, syntactically incorrect, or violates
             schema.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrdersUpdateOrderStatusResponse'
-        '401':
+                $ref: "#/components/schemas/OrdersUpdateOrderStatusResponse"
+        "401":
           description: >-
             Authentication failed due to missing authorization header, or
             invalid authentication credentials.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrdersUpdateOrderStatus401Response'
-        '404':
+                $ref: "#/components/schemas/OrdersUpdateOrderStatus401Response"
+        "404":
           description: The specified resource does not exist.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrdersUpdateOrderStatus404Response'
-        '422':
+                $ref: "#/components/schemas/OrdersUpdateOrderStatus404Response"
+        "422":
           description: >-
             The requested action could not be performed, semantically incorrect,
             or failed business validation.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrdersUpdateOrderStatus422Response'
+                $ref: "#/components/schemas/OrdersUpdateOrderStatus422Response"
         default:
-          $ref: '#/components/responses/default'
+          $ref: "#/components/responses/default"
   /v2/checkout/orders/{id}/confirm-payment-source:
     post:
       tags:
@@ -285,14 +285,14 @@ paths:
         Payer confirms their intent to pay for the the Order with the given
         payment source.
       parameters:
-        - $ref: '#/components/parameters/paypal_client_metadata_id'
-        - $ref: '#/components/parameters/id'
-        - $ref: '#/components/parameters/prefer'
+        - $ref: "#/components/parameters/paypal_client_metadata_id"
+        - $ref: "#/components/parameters/id"
+        - $ref: "#/components/parameters/prefer"
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/confirm_order_request'
+              $ref: "#/components/schemas/confirm_order_request"
             examples:
               confirm_order_request:
                 value:
@@ -313,7 +313,7 @@ paths:
                         return_url: https://example.com/returnUrl
                         cancel_url: https://example.com/cancelUrl
       responses:
-        '200':
+        "200":
           description: >-
             A successful request indicates that the payment source was added to
             the Order. A successful request returns the HTTP `200 OK` status
@@ -321,37 +321,37 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/order'
-        '400':
+                $ref: "#/components/schemas/order"
+        "400":
           description: >-
             Request is not well-formed, syntactically incorrect, or violates
             schema.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrdersConfirmPaymentSourceResponse'
-        '403':
+                $ref: "#/components/schemas/OrdersConfirmPaymentSourceResponse"
+        "403":
           description: Authorization failed due to insufficient permissions.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrdersConfirmPaymentSource403Response'
-        '422':
+                $ref: "#/components/schemas/OrdersConfirmPaymentSource403Response"
+        "422":
           description: >-
             The requested action could not be performed, semantically incorrect,
             or failed business validation.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrdersConfirmPaymentSource422Response'
-        '500':
+                $ref: "#/components/schemas/OrdersConfirmPaymentSource422Response"
+        "500":
           description: An internal server error has occurred.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/error_500'
+                $ref: "#/components/schemas/error_500"
         default:
-          $ref: '#/components/responses/default'
+          $ref: "#/components/responses/default"
   /v2/checkout/orders/{id}/authorize:
     post:
       tags:
@@ -374,18 +374,18 @@ paths:
         href="/api/rest/reference/orders/v2/errors/#authorize-order">Orders v2
         errors</a>.</blockquote>
       parameters:
-        - $ref: '#/components/parameters/paypal_request_id'
-        - $ref: '#/components/parameters/prefer'
-        - $ref: '#/components/parameters/paypal_client_metadata_id'
-        - $ref: '#/components/parameters/id'
-        - $ref: '#/components/parameters/paypal_auth_assertion'
+        - $ref: "#/components/parameters/paypal_request_id"
+        - $ref: "#/components/parameters/prefer"
+        - $ref: "#/components/parameters/paypal_client_metadata_id"
+        - $ref: "#/components/parameters/id"
+        - $ref: "#/components/parameters/paypal_auth_assertion"
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/order_authorize_request'
+              $ref: "#/components/schemas/order_authorize_request"
       responses:
-        '200':
+        "200":
           description: >-
             A successful response to an idempotent request returns the HTTP `200
             OK` status code with a JSON response body that shows authorized
@@ -393,8 +393,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/order_authorize_response'
-        '201':
+                $ref: "#/components/schemas/order_authorize_response"
+        "201":
           description: >-
             A successful response to a non-idempotent request returns the HTTP
             `201 Created` status code with a JSON response body that shows
@@ -407,51 +407,51 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/order_authorize_response'
-        '400':
+                $ref: "#/components/schemas/order_authorize_response"
+        "400":
           description: >-
             Request is not well-formed, syntactically incorrect, or violates
             schema.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrdersAuthorizePaymentOrderResponse'
-        '401':
+                $ref: "#/components/schemas/OrdersAuthorizePaymentOrderResponse"
+        "401":
           description: >-
             Authentication failed due to missing authorization header, or
             invalid authentication credentials.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrdersAuthorizePaymentOrder401Response'
-        '403':
+                $ref: "#/components/schemas/OrdersAuthorizePaymentOrder401Response"
+        "403":
           description: The authorized payment failed due to insufficient permissions.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrdersAuthorizePaymentOrder403Response'
-        '404':
+                $ref: "#/components/schemas/OrdersAuthorizePaymentOrder403Response"
+        "404":
           description: The specified resource does not exist.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrdersAuthorizePaymentOrder404Response'
-        '422':
+                $ref: "#/components/schemas/OrdersAuthorizePaymentOrder404Response"
+        "422":
           description: >-
             The requested action could not be performed, semantically incorrect,
             or failed business validation.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrdersAuthorizePaymentOrder422Response'
-        '500':
+                $ref: "#/components/schemas/OrdersAuthorizePaymentOrder422Response"
+        "500":
           description: An internal server error has occurred.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/error_500'
+                $ref: "#/components/schemas/error_500"
         default:
-          $ref: '#/components/responses/default'
+          $ref: "#/components/responses/default"
   /v2/checkout/orders/{id}/capture:
     post:
       tags:
@@ -473,18 +473,18 @@ paths:
         href="/api/rest/reference/orders/v2/errors/#capture-order">Orders v2
         errors</a>.</blockquote>
       parameters:
-        - $ref: '#/components/parameters/paypal_request_id'
-        - $ref: '#/components/parameters/prefer'
-        - $ref: '#/components/parameters/paypal_client_metadata_id'
-        - $ref: '#/components/parameters/id'
-        - $ref: '#/components/parameters/paypal_auth_assertion'
+        - $ref: "#/components/parameters/paypal_request_id"
+        - $ref: "#/components/parameters/prefer"
+        - $ref: "#/components/parameters/paypal_client_metadata_id"
+        - $ref: "#/components/parameters/id"
+        - $ref: "#/components/parameters/paypal_auth_assertion"
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/order_capture_request'
+              $ref: "#/components/schemas/order_capture_request"
       responses:
-        '200':
+        "200":
           description: >-
             A successful response to an idempotent request returns the HTTP `200
             OK` status code with a JSON response body that shows captured
@@ -492,8 +492,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/order'
-        '201':
+                $ref: "#/components/schemas/order"
+        "201":
           description: >-
             A successful response to a non-idempotent request returns the HTTP
             `201 Created` status code with a JSON response body that shows
@@ -506,51 +506,51 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/order'
-        '400':
+                $ref: "#/components/schemas/order"
+        "400":
           description: >-
             Request is not well-formed, syntactically incorrect, or violates
             schema.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrdersCapturePaymentResponse'
-        '401':
+                $ref: "#/components/schemas/OrdersCapturePaymentResponse"
+        "401":
           description: >-
             Authentication failed due to missing authorization header, or
             invalid authentication credentials.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrdersCapturePayment401Response'
-        '403':
+                $ref: "#/components/schemas/OrdersCapturePayment401Response"
+        "403":
           description: The authorized payment failed due to insufficient permissions.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrdersCapturePayment403Response'
-        '404':
+                $ref: "#/components/schemas/OrdersCapturePayment403Response"
+        "404":
           description: The specified resource does not exist.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrdersCapturePayment404Response'
-        '422':
+                $ref: "#/components/schemas/OrdersCapturePayment404Response"
+        "422":
           description: >-
             The requested action could not be performed, semantically incorrect,
             or failed business validation.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrdersCapturePayment422Response'
-        '500':
+                $ref: "#/components/schemas/OrdersCapturePayment422Response"
+        "500":
           description: An internal server error has occurred.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/error_500'
+                $ref: "#/components/schemas/error_500"
         default:
-          $ref: '#/components/responses/default'
+          $ref: "#/components/responses/default"
   /v2/checkout/orders/{id}/track:
     post:
       tags:
@@ -562,16 +562,16 @@ paths:
             - https://uri.paypal.com/services/payments/payment
       description: Adds tracking information for an Order.
       parameters:
-        - $ref: '#/components/parameters/id'
-        - $ref: '#/components/parameters/paypal_auth_assertion'
+        - $ref: "#/components/parameters/id"
+        - $ref: "#/components/parameters/paypal_auth_assertion"
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/order_tracker_request'
+              $ref: "#/components/schemas/order_tracker_request"
         required: true
       responses:
-        '200':
+        "200":
           description: >-
             A successful response to an idempotent request returns the HTTP `200
             OK` status code with a JSON response body that shows tracker
@@ -579,8 +579,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/order'
-        '201':
+                $ref: "#/components/schemas/order"
+        "201":
           description: >-
             A successful response to a non-idempotent request returns the HTTP
             `201 Created` status code with a JSON response body that shows
@@ -589,43 +589,43 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/order'
-        '400':
+                $ref: "#/components/schemas/order"
+        "400":
           description: >-
             Request is not well-formed, syntactically incorrect, or violates
             schema.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrdersAddTrackingInformationResponse'
-        '403':
+                $ref: "#/components/schemas/OrdersAddTrackingInformationResponse"
+        "403":
           description: Authorization failed due to insufficient permissions.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrdersAddTrackingInformation403Response'
-        '404':
+                $ref: "#/components/schemas/OrdersAddTrackingInformation403Response"
+        "404":
           description: The specified resource does not exist.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrdersAddTrackingInformation404Response'
-        '422':
+                $ref: "#/components/schemas/OrdersAddTrackingInformation404Response"
+        "422":
           description: >-
             The requested action could not be performed, semantically incorrect,
             or failed business validation.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrdersAddTrackingInformation422Response'
-        '500':
+                $ref: "#/components/schemas/OrdersAddTrackingInformation422Response"
+        "500":
           description: An internal server error has occurred.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/error_500'
+                $ref: "#/components/schemas/error_500"
         default:
-          $ref: '#/components/responses/default'
+          $ref: "#/components/responses/default"
   /v2/checkout/orders/{id}/trackers/{tracker_id}:
     patch:
       tags:
@@ -646,13 +646,13 @@ paths:
         patching status to CANCELLED is currently
         supported.</td></tr></tbody></table>
       parameters:
-        - $ref: '#/components/parameters/id'
-        - $ref: '#/components/parameters/tracker_id'
+        - $ref: "#/components/parameters/id"
+        - $ref: "#/components/parameters/tracker_id"
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/patch_request'
+              $ref: "#/components/schemas/patch_request"
             examples:
               orders_patch_request:
                 value:
@@ -663,49 +663,49 @@ paths:
                       address_line_2: Building 17
                       admin_area_2: San Jose
                       admin_area_1: CA
-                      postal_code: '95131'
+                      postal_code: "95131"
                       country_code: US
       responses:
-        '204':
+        "204":
           description: >-
             A successful request returns the HTTP `204 No Content` status code
             with an empty object in the JSON response body.
-        '400':
+        "400":
           description: >-
             Request is not well-formed, syntactically incorrect, or violates
             schema.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TrackersUpdateTrackingInfoResponse'
-        '403':
+                $ref: "#/components/schemas/TrackersUpdateTrackingInfoResponse"
+        "403":
           description: Authorization failed due to insufficient permissions.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TrackersUpdateTrackingInfo403Response'
-        '404':
+                $ref: "#/components/schemas/TrackersUpdateTrackingInfo403Response"
+        "404":
           description: The specified resource does not exist.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TrackersUpdateTrackingInfo404Response'
-        '422':
+                $ref: "#/components/schemas/TrackersUpdateTrackingInfo404Response"
+        "422":
           description: >-
             The requested action could not be performed, semantically incorrect,
             or failed business validation.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TrackersUpdateTrackingInfo422Response'
-        '500':
+                $ref: "#/components/schemas/TrackersUpdateTrackingInfo422Response"
+        "500":
           description: An internal server error has occurred.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/error_500'
+                $ref: "#/components/schemas/error_500"
         default:
-          $ref: '#/components/responses/default'
+          $ref: "#/components/responses/default"
 components:
   parameters:
     paypal_request_id:
@@ -800,13 +800,13 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/error_default'
+            $ref: "#/components/schemas/error_default"
   requestBodies:
     patch_request:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/patch_request'
+            $ref: "#/components/schemas/patch_request"
   securitySchemes:
     Oauth2:
       description: Oauth 2.0 authentication
@@ -818,11 +818,12 @@ components:
             https://uri.paypal.com/services/payments/payment: Manage payments and checkout workflow.
             https://uri.paypal.com/services/payments/payment/reference-transaction: Permission to initiate reference transaction
             https://uri.paypal.com/services/payments/initiatepayment: Initiates payments and checkout workflows.
-            https://uri.paypal.com/services/payments/orders/client-side-integration: >-
+            https://uri.paypal.com/services/payments/orders/client-side-integration:
+              >-
               Allows client-side integration on Create, Get, Patch, Authorize &
               Capture Order endpoints.
   schemas:
-    '400':
+    "400":
       properties:
         details:
           type: array
@@ -937,7 +938,7 @@ components:
                     type: string
                     enum:
                       - MALFORMED_REQUEST_JSON
-    '401':
+    "401":
       properties:
         details:
           type: array
@@ -953,7 +954,7 @@ components:
                     type: string
                     enum:
                       - INVALID_ACCOUNT_STATUS
-    '403':
+    "403":
       properties:
         details:
           type: array
@@ -998,7 +999,7 @@ components:
                     type: string
                     enum:
                       - PAYEE_ACCOUNT_NOT_VERIFIED
-    '404':
+    "404":
       properties:
         details:
           type: array
@@ -1016,7 +1017,7 @@ components:
                     type: string
                     enum:
                       - INVALID_RESOURCE_ID
-    '422':
+    "422":
       properties:
         details:
           type: array
@@ -2299,7 +2300,7 @@ components:
           description: The value of the field that caused the error.
           type: string
         location:
-          $ref: '#/components/schemas/error_location'
+          $ref: "#/components/schemas/error_location"
         issue:
           description: The unique, fine-grained application-level error code.
           type: string
@@ -2318,15 +2319,15 @@ components:
     error_default:
       description: The default error response.
       oneOf:
-        - $ref: '#/components/schemas/error_400'
-        - $ref: '#/components/schemas/error_401'
-        - $ref: '#/components/schemas/error_403'
-        - $ref: '#/components/schemas/error_404'
-        - $ref: '#/components/schemas/error_409'
-        - $ref: '#/components/schemas/error_415'
-        - $ref: '#/components/schemas/error_422'
-        - $ref: '#/components/schemas/error_500'
-        - $ref: '#/components/schemas/error_503'
+        - $ref: "#/components/schemas/error_400"
+        - $ref: "#/components/schemas/error_401"
+        - $ref: "#/components/schemas/error_403"
+        - $ref: "#/components/schemas/error_404"
+        - $ref: "#/components/schemas/error_409"
+        - $ref: "#/components/schemas/error_415"
+        - $ref: "#/components/schemas/error_422"
+        - $ref: "#/components/schemas/error_500"
+        - $ref: "#/components/schemas/error_503"
     error_link_description:
       title: Link Description
       description: >-
@@ -2390,7 +2391,7 @@ components:
         details:
           type: array
           items:
-            $ref: '#/components/schemas/error_details'
+            $ref: "#/components/schemas/error_details"
         debug_id:
           description: The PayPal internal ID. Used for correlation purposes.
           type: string
@@ -2402,7 +2403,7 @@ components:
           minItems: 0
           maxItems: 10000
           items:
-            $ref: '#/components/schemas/error_link_description'
+            $ref: "#/components/schemas/error_link_description"
     error_401:
       title: Unauthorized Error
       description: >-
@@ -2423,7 +2424,7 @@ components:
         details:
           type: array
           items:
-            $ref: '#/components/schemas/error_details'
+            $ref: "#/components/schemas/error_details"
         debug_id:
           description: The PayPal internal ID. Used for correlation purposes.
           type: string
@@ -2435,12 +2436,12 @@ components:
           minItems: 0
           maxItems: 10000
           items:
-            $ref: '#/components/schemas/error_link_description'
+            $ref: "#/components/schemas/error_link_description"
     error_403:
       title: Not Authorized Error
       description: >-
         The client is not authorized to access this resource, although it may
-        have valid credentials. 
+        have valid credentials.
       type: object
       properties:
         name:
@@ -2454,7 +2455,7 @@ components:
         details:
           type: array
           items:
-            $ref: '#/components/schemas/error_details'
+            $ref: "#/components/schemas/error_details"
         debug_id:
           description: The PayPal internal ID. Used for correlation purposes.
           type: string
@@ -2466,7 +2467,7 @@ components:
           minItems: 0
           maxItems: 10000
           items:
-            $ref: '#/components/schemas/error_link_description'
+            $ref: "#/components/schemas/error_link_description"
     error_404:
       title: Not found Error
       description: >-
@@ -2485,7 +2486,7 @@ components:
         details:
           type: array
           items:
-            $ref: '#/components/schemas/error_details'
+            $ref: "#/components/schemas/error_details"
         debug_id:
           description: The PayPal internal ID. Used for correlation purposes.
           type: string
@@ -2497,7 +2498,7 @@ components:
           minItems: 0
           maxItems: 10000
           items:
-            $ref: '#/components/schemas/error_link_description'
+            $ref: "#/components/schemas/error_link_description"
     error_409:
       title: Resource Conflict Error
       description: The server has detected a conflict while processing this request.
@@ -2514,7 +2515,7 @@ components:
         details:
           type: array
           items:
-            $ref: '#/components/schemas/error_details'
+            $ref: "#/components/schemas/error_details"
         debug_id:
           description: The PayPal internal ID. Used for correlation purposes.
           type: string
@@ -2526,7 +2527,7 @@ components:
           minItems: 0
           maxItems: 10000
           items:
-            $ref: '#/components/schemas/error_link_description'
+            $ref: "#/components/schemas/error_link_description"
     error_415:
       title: Unsupported Media Type Error
       description: The server does not support the request payload's media type.
@@ -2543,7 +2544,7 @@ components:
         details:
           type: array
           items:
-            $ref: '#/components/schemas/error_details'
+            $ref: "#/components/schemas/error_details"
         debug_id:
           description: The PayPal internal ID. Used for correlation purposes.
           type: string
@@ -2555,7 +2556,7 @@ components:
           minItems: 0
           maxItems: 10000
           items:
-            $ref: '#/components/schemas/error_link_description'
+            $ref: "#/components/schemas/error_link_description"
     error_422:
       title: Unprocessable Entity Error
       description: >-
@@ -2578,7 +2579,7 @@ components:
         details:
           type: array
           items:
-            $ref: '#/components/schemas/error_details'
+            $ref: "#/components/schemas/error_details"
         debug_id:
           description: The PayPal internal ID. Used for correlation purposes.
           type: string
@@ -2590,7 +2591,7 @@ components:
           minItems: 0
           maxItems: 10000
           items:
-            $ref: '#/components/schemas/error_link_description'
+            $ref: "#/components/schemas/error_link_description"
     error_500:
       title: Internal Server Error
       description: >-
@@ -2618,7 +2619,7 @@ components:
           minItems: 0
           maxItems: 10000
           items:
-            $ref: '#/components/schemas/error_link_description'
+            $ref: "#/components/schemas/error_link_description"
       example:
         name: INTERNAL_SERVER_ERROR
         message: An internal server error occurred.
@@ -2653,7 +2654,7 @@ components:
           minItems: 0
           maxItems: 10000
           items:
-            $ref: '#/components/schemas/error_link_description'
+            $ref: "#/components/schemas/error_link_description"
       example:
         name: SERVICE_UNAVAILABLE
         message: Service Unavailable.
@@ -2699,11 +2700,11 @@ components:
       properties:
         email_address:
           description: The email address of the payer.
-          $ref: '#/components/schemas/email'
+          $ref: "#/components/schemas/email"
         payer_id:
           description: The PayPal-assigned ID for the payer.
           readOnly: true
-          $ref: '#/components/schemas/account_id'
+          $ref: "#/components/schemas/account_id"
     name:
       title: Name
       description: The name of the party.
@@ -2801,13 +2802,13 @@ components:
       type: object
       properties:
         phone_type:
-          $ref: '#/components/schemas/phone_type'
+          $ref: "#/components/schemas/phone_type"
         phone_number:
           description: >-
             The phone number, in its canonical international [E.164 numbering
             plan format](https://www.itu.int/rec/T-REC-E.164/en). Supports only
             the `national_number` property.
-          $ref: '#/components/schemas/phone'
+          $ref: "#/components/schemas/phone"
       required:
         - phone_number
     date_no_time:
@@ -2932,7 +2933,7 @@ components:
           type: string
           maxLength: 60
         country_code:
-          $ref: '#/components/schemas/country_code'
+          $ref: "#/components/schemas/country_code"
         address_details:
           title: Address Details
           description: >-
@@ -2989,13 +2990,13 @@ components:
       type: object
       format: payer_v1
       allOf:
-        - $ref: '#/components/schemas/payer_base'
+        - $ref: "#/components/schemas/payer_base"
         - properties:
             name:
               description: >-
                 The name of the payer. Supports only the `given_name` and
                 `surname` properties.
-              $ref: '#/components/schemas/name'
+              $ref: "#/components/schemas/name"
             phone:
               description: >-
                 The phone number of the customer. Available only when you enable
@@ -3003,22 +3004,22 @@ components:
                 href="https://www.paypal.com/cgi-bin/customerprofileweb?cmd=_profile-website-payments">**Profile
                 & Settings**</a> for the merchant's PayPal account. The
                 `phone.phone_number` supports only `national_number`.
-              $ref: '#/components/schemas/phone_with_type'
+              $ref: "#/components/schemas/phone_with_type"
             birth_date:
               description: The birth date of the payer in `YYYY-MM-DD` format.
-              $ref: '#/components/schemas/date_no_time'
+              $ref: "#/components/schemas/date_no_time"
             tax_info:
               description: >-
                 The tax information of the payer. Required only for Brazilian
                 payer's. Both `tax_id` and `tax_id_type` are required.
-              $ref: '#/components/schemas/tax_info'
+              $ref: "#/components/schemas/tax_info"
             address:
               description: >-
                 The address of the payer. Supports only the `address_line_1`,
                 `address_line_2`, `admin_area_1`, `admin_area_2`, `postal_code`,
                 and `country_code` properties. Also referred to as the billing
                 address of the customer.
-              $ref: '#/components/schemas/address_portable'
+              $ref: "#/components/schemas/address_portable"
     currency_code:
       description: >-
         The [three-character ISO-4217 currency
@@ -3035,7 +3036,7 @@ components:
       type: object
       properties:
         currency_code:
-          $ref: '#/components/schemas/currency_code'
+          $ref: "#/components/schemas/currency_code"
         value:
           description: >-
             The value, which might be:<ul><li>An integer for currencies like
@@ -3064,39 +3065,39 @@ components:
             `purchase_units[].items[].unit_amount`. Must equal the sum of
             `(items[].unit_amount * items[].quantity)` for all items.
             <code>item_total.value</code> can not be a negative number.
-          $ref: '#/components/schemas/money'
+          $ref: "#/components/schemas/money"
         shipping:
           description: >-
             The shipping fee for all items within a given `purchase_unit`.
             <code>shipping.value</code> can not be a negative number.
-          $ref: '#/components/schemas/money'
+          $ref: "#/components/schemas/money"
         handling:
           description: >-
             The handling fee for all items within a given `purchase_unit`.
             <code>handling.value</code> can not be a negative number.
-          $ref: '#/components/schemas/money'
+          $ref: "#/components/schemas/money"
         tax_total:
           description: >-
             The total tax for all items. Required if the request includes
             `purchase_units.items.tax`. Must equal the sum of `(items[].tax *
             items[].quantity)` for all items. <code>tax_total.value</code> can
             not be a negative number.
-          $ref: '#/components/schemas/money'
+          $ref: "#/components/schemas/money"
         insurance:
           description: >-
             The insurance fee for all items within a given `purchase_unit`.
             <code>insurance.value</code> can not be a negative number.
-          $ref: '#/components/schemas/money'
+          $ref: "#/components/schemas/money"
         shipping_discount:
           description: >-
             The shipping discount for all items within a given `purchase_unit`.
             <code>shipping_discount.value</code> can not be a negative number.
-          $ref: '#/components/schemas/money'
+          $ref: "#/components/schemas/money"
         discount:
           description: >-
             The discount for all items within a given `purchase_unit`.
             <code>discount.value</code> can not be a negative number.
-          $ref: '#/components/schemas/money'
+          $ref: "#/components/schemas/money"
     amount_with_breakdown:
       title: Amount with Breakdown
       description: >-
@@ -3110,10 +3111,10 @@ components:
         href="/docs/integration/direct/rest/currency-codes/">Currency Codes</a>.
       type: object
       allOf:
-        - $ref: '#/components/schemas/money'
+        - $ref: "#/components/schemas/money"
         - properties:
             breakdown:
-              $ref: '#/components/schemas/amount_breakdown'
+              $ref: "#/components/schemas/amount_breakdown"
     payee_base:
       title: Merchant Base
       description: >-
@@ -3123,10 +3124,10 @@ components:
       properties:
         email_address:
           description: The email address of merchant.
-          $ref: '#/components/schemas/email'
+          $ref: "#/components/schemas/email"
         merchant_id:
           description: The encrypted PayPal account ID of the merchant.
-          $ref: '#/components/schemas/account_id'
+          $ref: "#/components/schemas/account_id"
     payee:
       title: Payee
       description: >-
@@ -3134,7 +3135,7 @@ components:
         is also known as the payee.
       type: object
       allOf:
-        - $ref: '#/components/schemas/payee_base'
+        - $ref: "#/components/schemas/payee_base"
         - properties: {}
     platform_fee:
       title: Platform Fee
@@ -3148,12 +3149,12 @@ components:
       properties:
         amount:
           description: The fee for this transaction.
-          $ref: '#/components/schemas/money'
+          $ref: "#/components/schemas/money"
         payee:
           description: >-
             The recipient of the fee for this transaction. If you omit this
             value, the default is the API caller.
-          $ref: '#/components/schemas/payee_base'
+          $ref: "#/components/schemas/payee_base"
       required:
         - amount
     disbursement_mode:
@@ -3184,13 +3185,13 @@ components:
           minItems: 0
           maxItems: 1
           items:
-            $ref: '#/components/schemas/platform_fee'
+            $ref: "#/components/schemas/platform_fee"
         disbursement_mode:
           description: >-
             The funds that are held payee by the marketplace/platform. This
             field is only applicable to merchants that been enabled for PayPal
             Commerce Platform for Marketplaces and Platforms capability.
-          $ref: '#/components/schemas/disbursement_mode'
+          $ref: "#/components/schemas/disbursement_mode"
         payee_pricing_tier_id:
           description: >-
             This field is only enabled for selected merchants/partners to use
@@ -3233,14 +3234,14 @@ components:
             <code>purchase_units[].amount.breakdown.item_total</code> is
             required. Must equal <code>unit_amount * quantity</code> for all
             items. <code>unit_amount.value</code> can not be a negative number.
-          $ref: '#/components/schemas/money'
+          $ref: "#/components/schemas/money"
         tax:
           description: >-
             The item tax for each unit. If <code>tax</code> is specified,
             <code>purchase_units[].amount.breakdown.tax_total</code> is
             required. Must equal <code>tax * quantity</code> for all items.
             <code>tax.value</code> can not be a negative number.
-          $ref: '#/components/schemas/money'
+          $ref: "#/components/schemas/money"
         quantity:
           description: The item quantity. Must be a whole number.
           type: string
@@ -3293,10 +3294,10 @@ components:
           maxLength: 127
         type:
           description: A classification for the method of purchase fulfillment.
-          $ref: '#/components/schemas/shipping_type'
+          $ref: "#/components/schemas/shipping_type"
         amount:
           description: The shipping cost for the selected option.
-          $ref: '#/components/schemas/money'
+          $ref: "#/components/schemas/money"
         selected:
           description: >-
             If the API request sets `selected = true`, it represents the
@@ -3321,7 +3322,7 @@ components:
           description: >-
             The name of the person to whom to ship the items. Supports only the
             `full_name` property.
-          $ref: '#/components/schemas/name'
+          $ref: "#/components/schemas/name"
         type:
           description: >-
             A classification for the method of purchase fulfillment (e.g
@@ -3347,13 +3348,13 @@ components:
             description: >-
               The option that the payee or merchant offers to the payer to ship
               or pick up their items.
-            $ref: '#/components/schemas/shipping_option'
+            $ref: "#/components/schemas/shipping_option"
         address:
           description: >-
             The address of the person to whom to ship the items. Supports only
             the `address_line_1`, `address_line_2`, `admin_area_1`,
             `admin_area_2`, `postal_code`, and `country_code` properties.
-          $ref: '#/components/schemas/address_portable'
+          $ref: "#/components/schemas/address_portable"
     level_2_card_processing_data:
       title: Level 2 Card Processing Data
       description: >-
@@ -3386,7 +3387,7 @@ components:
                 Canada. A province.
                 Japan. A prefecture.
                 Switzerland. A kanton.
-          $ref: '#/components/schemas/money'
+          $ref: "#/components/schemas/money"
     line_item:
       title: Lineitem
       description: >-
@@ -3395,7 +3396,7 @@ components:
         processor on your behalf.
       type: object
       allOf:
-        - $ref: '#/components/schemas/item'
+        - $ref: "#/components/schemas/item"
         - properties:
             commodity_code:
               description: >-
@@ -3413,13 +3414,13 @@ components:
                 Use this field to break down the discount amount included in the
                 total purchase amount. The value provided here will not add to
                 the total purchase amount. The value cannot be negative.
-              $ref: '#/components/schemas/money'
+              $ref: "#/components/schemas/money"
             total_amount:
               description: >-
                 The subtotal for all items. Must equal the sum of
                 (items[].unit_amount * items[].quantity) for all items.
                 item_total.value can not be a negative number.
-              $ref: '#/components/schemas/money'
+              $ref: "#/components/schemas/money"
             unit_of_measure:
               description: >-
                 Unit of measure is a standard used to express the magnitude of a
@@ -3447,25 +3448,25 @@ components:
             Use this field to break down the shipping cost included in the total
             purchase amount. The value provided here will not add to the total
             purchase amount. The value cannot be negative.
-          $ref: '#/components/schemas/money'
+          $ref: "#/components/schemas/money"
         duty_amount:
           description: >-
             Use this field to break down the duty amount included in the total
             purchase amount. The value provided here will not add to the total
             purchase amount. The value cannot be negative.
-          $ref: '#/components/schemas/money'
+          $ref: "#/components/schemas/money"
         discount_amount:
           description: >-
             Use this field to break down the discount amount included in the
             total purchase amount. The value provided here will not add to the
             total purchase amount. The value cannot be negative.
-          $ref: '#/components/schemas/money'
+          $ref: "#/components/schemas/money"
         shipping_address:
           description: >-
             The address of the person to whom to ship the items. Supports only
             the `address_line_1`, `address_line_2`, `admin_area_1`,
             `admin_area_2`, `postal_code`, and `country_code` properties.
-          $ref: '#/components/schemas/address_portable'
+          $ref: "#/components/schemas/address_portable"
         ships_from_postal_code:
           description: Use this field to specify the postal code of the shipping location.
           type: string
@@ -3481,7 +3482,7 @@ components:
           minItems: 1
           maxItems: 100
           items:
-            $ref: '#/components/schemas/line_item'
+            $ref: "#/components/schemas/line_item"
     card_supplementary_data:
       title: Card Supplementary Data
       description: >-
@@ -3495,9 +3496,9 @@ components:
       type: object
       properties:
         level_2:
-          $ref: '#/components/schemas/level_2_card_processing_data'
+          $ref: "#/components/schemas/level_2_card_processing_data"
         level_3:
-          $ref: '#/components/schemas/level_3_card_processing_data'
+          $ref: "#/components/schemas/level_3_card_processing_data"
     supplementary_data:
       title: Supplementary Data
       description: >-
@@ -3515,7 +3516,7 @@ components:
             or <a
             href="https://developer.paypal.com/docs/multiparty/checkout/advanced/processing/">multiparty
             checkout</a>.
-          $ref: '#/components/schemas/card_supplementary_data'
+          $ref: "#/components/schemas/card_supplementary_data"
     purchase_unit_request:
       title: Purchase Unit Request
       description: >-
@@ -3556,12 +3557,12 @@ components:
             precision, and maximum charge amount, see the PayPal REST APIs <a
             href="https://developer.paypal.com/api/rest/reference/currency-codes/">Currency
             Codes</a>.
-          $ref: '#/components/schemas/amount_with_breakdown'
+          $ref: "#/components/schemas/amount_with_breakdown"
         payee:
           description: The merchant who receives payment for this transaction.
-          $ref: '#/components/schemas/payee'
+          $ref: "#/components/schemas/payee"
         payment_instruction:
-          $ref: '#/components/schemas/payment_instruction'
+          $ref: "#/components/schemas/payment_instruction"
         custom_id:
           description: >-
             The API caller-provided external ID. Used to reconcile client
@@ -3606,13 +3607,13 @@ components:
           type: array
           items:
             description: The item.
-            $ref: '#/components/schemas/item'
+            $ref: "#/components/schemas/item"
         shipping:
           description: The name and address of the person to whom to ship the items.
-          $ref: '#/components/schemas/shipping_detail'
+          $ref: "#/components/schemas/shipping_detail"
         supplementary_data:
           description: Contains Supplementary Data.
-          $ref: '#/components/schemas/supplementary_data'
+          $ref: "#/components/schemas/supplementary_data"
       required:
         - amount
     instrument_id:
@@ -3680,7 +3681,7 @@ components:
       type: object
       properties:
         id:
-          $ref: '#/components/schemas/merchant_partner_customer_id'
+          $ref: "#/components/schemas/merchant_partner_customer_id"
         email_address:
           description: >-
             Email address of the buyer as provided to the merchant or on file
@@ -3688,13 +3689,13 @@ components:
             the transaction using PayPal Guest Processing which is offered to
             select partners and merchants. For all other use cases we do not
             expect partners/merchant to send email_address of their customer.
-          $ref: '#/components/schemas/email'
+          $ref: "#/components/schemas/email"
         phone:
           description: >-
             The phone number of the buyer as provided to the merchant or on file
             with the merchant. The `phone.phone_number` supports only
             `national_number`.
-          $ref: '#/components/schemas/phone_with_type'
+          $ref: "#/components/schemas/phone_with_type"
     store_in_vault_instruction:
       description: Defines how and when the payment source gets vaulted.
       type: string
@@ -3711,17 +3712,17 @@ components:
       type: object
       properties:
         store_in_vault:
-          $ref: '#/components/schemas/store_in_vault_instruction'
+          $ref: "#/components/schemas/store_in_vault_instruction"
     card_attributes:
       title: Card Attributes
       description: Additional attributes associated with the use of this card.
       type: object
       properties:
         customer:
-          $ref: '#/components/schemas/customer'
+          $ref: "#/components/schemas/customer"
         vault:
           description: Instruction to vault the card based on the specified strategy.
-          $ref: '#/components/schemas/vault_instruction_base'
+          $ref: "#/components/schemas/vault_instruction_base"
     card:
       title: Card
       description: >-
@@ -3732,7 +3733,7 @@ components:
         id:
           description: The PayPal-generated ID for the card.
           readOnly: true
-          $ref: '#/components/schemas/instrument_id'
+          $ref: "#/components/schemas/instrument_id"
         name:
           description: The card holder's name as it appears on the card.
           type: string
@@ -3749,7 +3750,7 @@ components:
           description: >-
             The card expiration year and month, in [Internet date
             format](https://tools.ietf.org/html/rfc3339#section-5.6).
-          $ref: '#/components/schemas/date_year_month'
+          $ref: "#/components/schemas/date_year_month"
         security_code:
           description: >-
             The three- or four-digit security code of the card. Also known as
@@ -3769,23 +3770,23 @@ components:
         card_type:
           description: The card brand or network. Typically used in the response.
           readOnly: true
-          $ref: '#/components/schemas/card_brand'
+          $ref: "#/components/schemas/card_brand"
           deprecated: true
         type:
           description: The payment card type.
-          $ref: '#/components/schemas/card_type'
+          $ref: "#/components/schemas/card_type"
         brand:
           description: The card brand or network. Typically used in the response.
-          $ref: '#/components/schemas/card_brand'
+          $ref: "#/components/schemas/card_brand"
         billing_address:
           description: >-
             The billing address for this card. Supports only the
             `address_line_1`, `address_line_2`, `admin_area_1`, `admin_area_2`,
             `postal_code`, and `country_code` properties.
-          $ref: '#/components/schemas/address_portable'
+          $ref: "#/components/schemas/address_portable"
         attributes:
           description: Additional attributes associated with the use of this card.
-          $ref: '#/components/schemas/card_attributes'
+          $ref: "#/components/schemas/card_attributes"
     vault_id:
       description: >-
         The PayPal-generated ID for the vaulted payment source. This ID should
@@ -3855,7 +3856,7 @@ components:
           pattern: ^[0-9]+$
         network:
           description: Name of the card network through which the transaction was routed.
-          $ref: '#/components/schemas/card_brand'
+          $ref: "#/components/schemas/card_brand"
         acquirer_reference_number:
           description: >-
             Reference ID issued for the card transaction. This ID can be used to
@@ -3885,13 +3886,13 @@ components:
       type: object
       properties:
         payment_initiator:
-          $ref: '#/components/schemas/payment_initiator'
+          $ref: "#/components/schemas/payment_initiator"
         payment_type:
-          $ref: '#/components/schemas/stored_payment_source_payment_type'
+          $ref: "#/components/schemas/stored_payment_source_payment_type"
         usage:
-          $ref: '#/components/schemas/stored_payment_source_usage_type'
+          $ref: "#/components/schemas/stored_payment_source_usage_type"
         previous_network_transaction_reference:
-          $ref: '#/components/schemas/network_transaction_reference'
+          $ref: "#/components/schemas/network_transaction_reference"
       required:
         - payment_initiator
         - payment_type
@@ -3927,7 +3928,7 @@ components:
           description: >-
             The card expiration year and month, in [Internet date
             format](https://tools.ietf.org/html/rfc3339#section-5.6).
-          $ref: '#/components/schemas/date_year_month'
+          $ref: "#/components/schemas/date_year_month"
         cryptogram:
           description: >-
             An Encrypted one-time use value that's sent along with Network
@@ -3938,7 +3939,7 @@ components:
           minLength: 28
           maxLength: 32
         eci_flag:
-          $ref: '#/components/schemas/eci_flag'
+          $ref: "#/components/schemas/eci_flag"
         token_requestor_id:
           description: >-
             A TRID, or a Token Requestor ID, is an identifier used by merchants
@@ -3970,7 +3971,7 @@ components:
           minLength: 10
           maxLength: 4000
           format: uri
-          $ref: '#/components/schemas/url'
+          $ref: "#/components/schemas/url"
         cancel_url:
           description: >-
             The URL where the customer will be redirected upon cancelling the
@@ -3979,7 +3980,7 @@ components:
           minLength: 10
           maxLength: 4000
           format: uri
-          $ref: '#/components/schemas/url'
+          $ref: "#/components/schemas/url"
     card_request:
       title: Card Request
       description: >-
@@ -3994,23 +3995,23 @@ components:
         Integration Guide</a>*.</blockquote>
       type: object
       allOf:
-        - $ref: '#/components/schemas/card'
+        - $ref: "#/components/schemas/card"
         - properties:
             vault_id:
               description: >-
                 The PayPal-generated ID for the saved card payment source.
                 Typically stored on the merchant's server.
-              $ref: '#/components/schemas/vault_id'
+              $ref: "#/components/schemas/vault_id"
             stored_credential:
-              $ref: '#/components/schemas/card_stored_credential'
+              $ref: "#/components/schemas/card_stored_credential"
             network_token:
               description: >-
                 A 3rd party network token refers to a network token that the
                 merchant provisions from and vaults with an external TSP (Token
                 Service Provider) other than PayPal.
-              $ref: '#/components/schemas/network_token_request'
+              $ref: "#/components/schemas/network_token_request"
             experience_context:
-              $ref: '#/components/schemas/card_experience_context'
+              $ref: "#/components/schemas/card_experience_context"
     token:
       title: Token
       description: The tokenized payment source to fund a payment.
@@ -4152,7 +4153,7 @@ components:
           type: string
           maxLength: 60
         country_code:
-          $ref: '#/components/schemas/country_code-2'
+          $ref: "#/components/schemas/country_code-2"
         address_details:
           title: Address Details
           description: >-
@@ -4207,7 +4208,7 @@ components:
       description: The details about a customer in PayPal's system of record.
       type: object
       allOf:
-        - $ref: '#/components/schemas/customer'
+        - $ref: "#/components/schemas/customer"
         - properties: {}
     vault_owner_id: {}
     vault_paypal_wallet_base:
@@ -4217,7 +4218,7 @@ components:
         vaulting PayPal Wallet.
       type: object
       allOf:
-        - $ref: '#/components/schemas/vault_instruction_base'
+        - $ref: "#/components/schemas/vault_instruction_base"
         - properties:
             description:
               description: >-
@@ -4241,7 +4242,7 @@ components:
                 - THRESHOLD_POSTPAID
             shipping:
               description: The shipping address for the Payer.
-              $ref: '#/components/schemas/shipping_detail'
+              $ref: "#/components/schemas/shipping_detail"
             usage_type:
               description: The usage type associated with the PayPal payment token.
               type: string
@@ -4252,7 +4253,7 @@ components:
                 - MERCHANT
                 - PLATFORM
             owner_id:
-              $ref: '#/components/schemas/vault_owner_id'
+              $ref: "#/components/schemas/vault_owner_id"
             customer_type:
               description: >-
                 The customer type associated with the PayPal payment token. This
@@ -4287,12 +4288,12 @@ components:
       type: object
       properties:
         customer:
-          $ref: '#/components/schemas/paypal_wallet_customer'
+          $ref: "#/components/schemas/paypal_wallet_customer"
         vault:
           description: >-
             Attributes used to provide the instructions during vaulting of the
             PayPal Wallet.
-          $ref: '#/components/schemas/vault_paypal_wallet_base'
+          $ref: "#/components/schemas/vault_paypal_wallet_base"
     language:
       description: >-
         The [language tag](https://tools.ietf.org/html/bcp47#section-2) for the
@@ -4334,7 +4335,7 @@ components:
             experience shows. PayPal supports a five-character code. For
             example, `da-DK`, `he-IL`, `id-ID`, `ja-JP`, `no-NO`, `pt-BR`,
             `ru-RU`, `sv-SE`, `th-TH`, `zh-CN`, `zh-HK`, or `zh-TW`.
-          $ref: '#/components/schemas/language'
+          $ref: "#/components/schemas/language"
         shipping_preference:
           description: The location from which the shipping address is derived.
           type: string
@@ -4351,13 +4352,13 @@ components:
             The URL where the customer will be redirected upon approving a
             payment.
           format: uri
-          $ref: '#/components/schemas/url'
+          $ref: "#/components/schemas/url"
         cancel_url:
           description: >-
             The URL where the customer will be redirected upon cancelling the
             payment approval.
           format: uri
-          $ref: '#/components/schemas/url'
+          $ref: "#/components/schemas/url"
         landing_page:
           description: >-
             The type of landing page to show on the PayPal site for customer
@@ -4410,15 +4411,15 @@ components:
           description: >-
             The PayPal-generated ID for the payment_source stored within the
             Vault.
-          $ref: '#/components/schemas/vault_id'
+          $ref: "#/components/schemas/vault_id"
         email_address:
           description: The email address of the PayPal account holder.
-          $ref: '#/components/schemas/email'
+          $ref: "#/components/schemas/email"
         name:
           description: >-
             The name of the PayPal account holder. Supports only the
             `given_name` and `surname` properties.
-          $ref: '#/components/schemas/name-2'
+          $ref: "#/components/schemas/name-2"
         phone:
           description: >-
             The phone number of the customer. Available only when you enable the
@@ -4426,30 +4427,30 @@ components:
             href="https://www.paypal.com/cgi-bin/customerprofileweb?cmd=_profile-website-payments">**Profile
             & Settings**</a> for the merchant's PayPal account. The
             `phone.phone_number` supports only `national_number`.
-          $ref: '#/components/schemas/phone_with_type'
+          $ref: "#/components/schemas/phone_with_type"
         birth_date:
           description: The birth date of the PayPal account holder in `YYYY-MM-DD` format.
-          $ref: '#/components/schemas/date_no_time'
+          $ref: "#/components/schemas/date_no_time"
         tax_info:
           description: >-
             The tax information of the PayPal account holder. Required only for
             Brazilian PayPal account holder's. Both `tax_id` and `tax_id_type`
             are required.
-          $ref: '#/components/schemas/tax_info'
+          $ref: "#/components/schemas/tax_info"
         address:
           description: >-
             The address of the PayPal account holder. Supports only the
             `address_line_1`, `address_line_2`, `admin_area_1`, `admin_area_2`,
             `postal_code`, and `country_code` properties. Also referred to as
             the billing address of the customer.
-          $ref: '#/components/schemas/address_portable-2'
+          $ref: "#/components/schemas/address_portable-2"
         attributes:
           description: Additional attributes associated with the use of this wallet.
-          $ref: '#/components/schemas/paypal_wallet_attributes'
+          $ref: "#/components/schemas/paypal_wallet_attributes"
         experience_context:
-          $ref: '#/components/schemas/paypal_wallet_experience_context'
+          $ref: "#/components/schemas/paypal_wallet_experience_context"
         billing_agreement_id:
-          $ref: '#/components/schemas/billing_agreement_id'
+          $ref: "#/components/schemas/billing_agreement_id"
     full_name:
       description: The full name representation like Mr J Smith.
       type: string
@@ -4477,7 +4478,7 @@ components:
             experience shows. PayPal supports a five-character code. For
             example, `da-DK`, `he-IL`, `id-ID`, `ja-JP`, `no-NO`, `pt-BR`,
             `ru-RU`, `sv-SE`, `th-TH`, `zh-CN`, `zh-HK`, or `zh-TW`.
-          $ref: '#/components/schemas/language'
+          $ref: "#/components/schemas/language"
         shipping_preference:
           description: The location from which the shipping address is derived.
           type: string
@@ -4494,13 +4495,13 @@ components:
             The URL where the customer is redirected after the customer approves
             the payment.
           format: uri
-          $ref: '#/components/schemas/url'
+          $ref: "#/components/schemas/url"
         cancel_url:
           description: >-
             The URL where the customer is redirected after the customer cancels
             the payment.
           format: uri
-          $ref: '#/components/schemas/url'
+          $ref: "#/components/schemas/url"
     altpay_recurring_attributes_request: {}
     bancontact_request:
       title: Bancontact payment object
@@ -4509,18 +4510,18 @@ components:
       properties:
         name:
           description: The name of the account holder associated with this payment method.
-          $ref: '#/components/schemas/full_name'
+          $ref: "#/components/schemas/full_name"
         country_code:
           description: The two-character ISO 3166-1 country code.
-          $ref: '#/components/schemas/country_code'
+          $ref: "#/components/schemas/country_code"
         experience_context:
           description: >-
             Customizes the payer experience during the approval process for the
             payment.
-          $ref: '#/components/schemas/experience_context_base'
+          $ref: "#/components/schemas/experience_context_base"
         attributes:
           description: Attributes for altpay recurring.
-          $ref: '#/components/schemas/altpay_recurring_attributes_request'
+          $ref: "#/components/schemas/altpay_recurring_attributes_request"
       required:
         - name
         - country_code
@@ -4556,11 +4557,11 @@ components:
         payment.
       type: object
       allOf:
-        - $ref: '#/components/schemas/experience_context_base'
+        - $ref: "#/components/schemas/experience_context_base"
         - properties:
             consumer_ip:
               description: The IP address of the consumer. It could be either IPv4 or IPv6.
-              $ref: '#/components/schemas/ip_address'
+              $ref: "#/components/schemas/ip_address"
             consumer_user_agent:
               description: >-
                 The payer's User Agent. For example, Mozilla/5.0 (Macintosh;
@@ -4627,26 +4628,26 @@ components:
       properties:
         name:
           description: The name of the account holder associated with this payment method.
-          $ref: '#/components/schemas/full_name'
+          $ref: "#/components/schemas/full_name"
         country_code:
           description: The two-character ISO 3166-1 country code.
-          $ref: '#/components/schemas/country_code'
+          $ref: "#/components/schemas/country_code"
         email:
           description: >-
             The email address of the account holder associated with this payment
             method.
-          $ref: '#/components/schemas/email_address'
+          $ref: "#/components/schemas/email_address"
         experience_context:
           description: >-
             Customizes the payer experience during the approval process for the
             payment.
-          $ref: '#/components/schemas/blik_experience_context'
+          $ref: "#/components/schemas/blik_experience_context"
         level_0:
           description: The level_0 integration flow object.
-          $ref: '#/components/schemas/blik_seamless'
+          $ref: "#/components/schemas/blik_seamless"
         one_click:
           description: The one-click integration flow object.
-          $ref: '#/components/schemas/blik_one_click'
+          $ref: "#/components/schemas/blik_one_click"
       required:
         - name
         - country_code
@@ -4657,15 +4658,15 @@ components:
       properties:
         name:
           description: The name of the account holder associated with this payment method.
-          $ref: '#/components/schemas/full_name'
+          $ref: "#/components/schemas/full_name"
         country_code:
           description: The two-character ISO 3166-1 country code.
-          $ref: '#/components/schemas/country_code'
+          $ref: "#/components/schemas/country_code"
         experience_context:
           description: >-
             Customizes the payer experience during the approval process for the
             payment.
-          $ref: '#/components/schemas/experience_context_base'
+          $ref: "#/components/schemas/experience_context_base"
       required:
         - name
         - country_code
@@ -4676,15 +4677,15 @@ components:
       properties:
         name:
           description: The name of the account holder associated with this payment method.
-          $ref: '#/components/schemas/full_name'
+          $ref: "#/components/schemas/full_name"
         country_code:
           description: The two-character ISO 3166-1 country code.
-          $ref: '#/components/schemas/country_code'
+          $ref: "#/components/schemas/country_code"
         experience_context:
           description: >-
             Customizes the payer experience during the approval process for the
             payment.
-          $ref: '#/components/schemas/experience_context_base'
+          $ref: "#/components/schemas/experience_context_base"
       required:
         - name
         - country_code
@@ -4704,21 +4705,21 @@ components:
       properties:
         name:
           description: The name of the account holder associated with this payment method.
-          $ref: '#/components/schemas/full_name'
+          $ref: "#/components/schemas/full_name"
         country_code:
           description: The two-character ISO 3166-1 country code.
-          $ref: '#/components/schemas/country_code'
+          $ref: "#/components/schemas/country_code"
         bic:
           description: The bank identification code (BIC).
-          $ref: '#/components/schemas/bic'
+          $ref: "#/components/schemas/bic"
         experience_context:
           description: >-
             Customizes the payer experience during the approval process for the
             payment.
-          $ref: '#/components/schemas/experience_context_base'
+          $ref: "#/components/schemas/experience_context_base"
         attributes:
           description: Attributes for altpay recurring.
-          $ref: '#/components/schemas/altpay_recurring_attributes_request'
+          $ref: "#/components/schemas/altpay_recurring_attributes_request"
       required:
         - name
         - country_code
@@ -4729,15 +4730,15 @@ components:
       properties:
         name:
           description: The name of the account holder associated with this payment method.
-          $ref: '#/components/schemas/full_name'
+          $ref: "#/components/schemas/full_name"
         country_code:
           description: The two-character ISO 3166-1 country code.
-          $ref: '#/components/schemas/country_code'
+          $ref: "#/components/schemas/country_code"
         experience_context:
           description: >-
             Customizes the payer experience during the approval process for the
             payment.
-          $ref: '#/components/schemas/experience_context_base'
+          $ref: "#/components/schemas/experience_context_base"
       required:
         - name
         - country_code
@@ -4748,20 +4749,20 @@ components:
       properties:
         name:
           description: The name of the account holder associated with this payment method.
-          $ref: '#/components/schemas/full_name'
+          $ref: "#/components/schemas/full_name"
         email:
           description: >-
             The email address of the account holder associated with this payment
             method.
-          $ref: '#/components/schemas/email_address'
+          $ref: "#/components/schemas/email_address"
         country_code:
           description: The two-character ISO 3166-1 country code.
-          $ref: '#/components/schemas/country_code'
+          $ref: "#/components/schemas/country_code"
         experience_context:
           description: >-
             Customizes the payer experience during the approval process for the
             payment.
-          $ref: '#/components/schemas/experience_context_base'
+          $ref: "#/components/schemas/experience_context_base"
       required:
         - name
         - email
@@ -4773,15 +4774,15 @@ components:
       properties:
         name:
           description: The name of the account holder associated with this payment method.
-          $ref: '#/components/schemas/full_name'
+          $ref: "#/components/schemas/full_name"
         country_code:
           description: The two-character ISO 3166-1 country code.
-          $ref: '#/components/schemas/country_code'
+          $ref: "#/components/schemas/country_code"
         experience_context:
           description: >-
             Customizes the payer experience during the approval process for the
             payment.
-          $ref: '#/components/schemas/experience_context_base'
+          $ref: "#/components/schemas/experience_context_base"
       required:
         - name
         - country_code
@@ -4792,15 +4793,15 @@ components:
       properties:
         name:
           description: The name of the account holder associated with this payment method.
-          $ref: '#/components/schemas/full_name'
+          $ref: "#/components/schemas/full_name"
         country_code:
           description: The two-character ISO 3166-1 country code.
-          $ref: '#/components/schemas/country_code'
+          $ref: "#/components/schemas/country_code"
         experience_context:
           description: >-
             Customizes the payer experience during the approval process for the
             payment.
-          $ref: '#/components/schemas/experience_context_base'
+          $ref: "#/components/schemas/experience_context_base"
       required:
         - name
         - country_code
@@ -4820,7 +4821,7 @@ components:
       type: object
       properties:
         currency_code:
-          $ref: '#/components/schemas/currency_code-2'
+          $ref: "#/components/schemas/currency_code-2"
         value:
           description: >-
             The value, which might be:<ul><li>An integer for currencies like
@@ -4885,10 +4886,10 @@ components:
           description: >-
             The transaction amount for the payment that the payer has approved
             on apple platform.
-          $ref: '#/components/schemas/money-2'
+          $ref: "#/components/schemas/money-2"
         tokenized_card:
           description: Apple Pay tokenized credit card used to pay.
-          $ref: '#/components/schemas/card'
+          $ref: "#/components/schemas/card"
         device_manufacturer_id:
           description: >-
             Apple Pay Hex-encoded device manufacturer identifier. The pattern is
@@ -4912,7 +4913,7 @@ components:
           description: >-
             Apple Pay payment data object which contains the cryptogram,
             eci_indicator and other data.
-          $ref: '#/components/schemas/apple_pay_payment_data'
+          $ref: "#/components/schemas/apple_pay_payment_data"
       required:
         - tokenized_card
     apple_pay_attributes: {}
@@ -4932,29 +4933,29 @@ components:
           pattern: ^.*$
         name:
           description: Name on the account holder associated with apple pay.
-          $ref: '#/components/schemas/full_name'
+          $ref: "#/components/schemas/full_name"
         email_address:
           description: The email address of the account holder associated with apple pay.
-          $ref: '#/components/schemas/email_address'
+          $ref: "#/components/schemas/email_address"
         phone_number:
           description: >-
             The phone number, in its canonical international [E.164 numbering
             plan format](https://www.itu.int/rec/T-REC-E.164/en). Supports only
             the `national_number` property.
-          $ref: '#/components/schemas/phone'
+          $ref: "#/components/schemas/phone"
         decrypted_token:
           description: The decrypted payload details for the apple pay token.
-          $ref: '#/components/schemas/apple_pay_decrypted_token_data'
+          $ref: "#/components/schemas/apple_pay_decrypted_token_data"
         stored_credential:
-          $ref: '#/components/schemas/card_stored_credential'
+          $ref: "#/components/schemas/card_stored_credential"
         vault_id:
           description: >-
             The PayPal-generated ID for the saved apple pay payment_source. This
             ID should be stored on the merchant's server so the saved payment
             source can be used for future transactions.
-          $ref: '#/components/schemas/vault_id'
+          $ref: "#/components/schemas/vault_id"
         attributes:
-          $ref: '#/components/schemas/apple_pay_attributes'
+          $ref: "#/components/schemas/apple_pay_attributes"
     google_pay_request: {}
     venmo_wallet_experience_context:
       title: Venmo Wallet Experience Context
@@ -4992,7 +4993,7 @@ components:
       type: object
       properties:
         store_in_vault:
-          $ref: '#/components/schemas/store_in_vault_instruction'
+          $ref: "#/components/schemas/store_in_vault_instruction"
       required:
         - store_in_vault
     vault_venmo_wallet_base:
@@ -5002,7 +5003,7 @@ components:
         vaulting Venmo Wallet.
       type: object
       allOf:
-        - $ref: '#/components/schemas/v3_vault_instruction_base'
+        - $ref: "#/components/schemas/v3_vault_instruction_base"
         - properties:
             description:
               description: >-
@@ -5068,12 +5069,12 @@ components:
       type: object
       properties:
         customer:
-          $ref: '#/components/schemas/customer'
+          $ref: "#/components/schemas/customer"
         vault:
           description: >-
             Attributes used to provide the instructions during vaulting of the
             Venmo Wallet.
-          $ref: '#/components/schemas/vault_venmo_wallet_base'
+          $ref: "#/components/schemas/vault_venmo_wallet_base"
     venmo_wallet_request:
       title: Venmo payment request object
       description: Information needed to pay using Venmo.
@@ -5084,95 +5085,95 @@ components:
             The PayPal-generated ID for the saved Venmo wallet payment_source.
             This ID should be stored on the merchant's server so the saved
             payment source can be used for future transactions.
-          $ref: '#/components/schemas/vault_id'
+          $ref: "#/components/schemas/vault_id"
         email_address:
           description: The email address of the payer.
-          $ref: '#/components/schemas/email'
+          $ref: "#/components/schemas/email"
         experience_context:
-          $ref: '#/components/schemas/venmo_wallet_experience_context'
+          $ref: "#/components/schemas/venmo_wallet_experience_context"
         attributes:
           description: Additional attributes associated with the use of this wallet.
-          $ref: '#/components/schemas/venmo_wallet_attributes'
+          $ref: "#/components/schemas/venmo_wallet_attributes"
     payment_source:
       title: Payment Source
       description: The payment source definition.
       type: object
       properties:
         card:
-          $ref: '#/components/schemas/card_request'
+          $ref: "#/components/schemas/card_request"
         token:
-          $ref: '#/components/schemas/token'
+          $ref: "#/components/schemas/token"
         paypal:
           description: >-
             Indicates that PayPal Wallet is the payment source. Main use of this
             selection is to provide additional instructions associated with this
             choice like vaulting.
-          $ref: '#/components/schemas/paypal_wallet'
+          $ref: "#/components/schemas/paypal_wallet"
         bancontact:
           description: >-
             Bancontact is the most popular online payment in Belgium. [More
             Details](https://www.bancontact.com/).
-          $ref: '#/components/schemas/bancontact_request'
+          $ref: "#/components/schemas/bancontact_request"
         blik:
           description: >-
             BLIK is a mobile payment system, created by Polish Payment Standard
             in order to allow millions of users to pay in shops, payout cash in
             ATMs and make online purchases and payments. [More
             Details](https://blikmobile.pl/).
-          $ref: '#/components/schemas/blik_request'
+          $ref: "#/components/schemas/blik_request"
         eps:
           description: >-
             The eps transfer is an online payment method developed by many
             Austrian banks. [More Details](https://www.eps-ueberweisung.at/).
-          $ref: '#/components/schemas/eps_request'
+          $ref: "#/components/schemas/eps_request"
         giropay:
           description: >-
             Giropay is an Internet payment System in Germany, based on online
             banking. [More Details](https://giropay.de/).
-          $ref: '#/components/schemas/giropay_request'
+          $ref: "#/components/schemas/giropay_request"
         ideal:
           description: >-
             The Dutch payment method iDEAL is an online payment method that
             enables consumers to pay online through their own bank. [More
             Details](https://www.ideal.nl/).
-          $ref: '#/components/schemas/ideal_request'
+          $ref: "#/components/schemas/ideal_request"
         mybank:
           description: >-
             MyBank is an e-authorisation solution which enables safe digital
             payments and identity authentication through a consumer’s own online
             banking portal or mobile application. [More
             Details](https://www.mybank.eu/).
-          $ref: '#/components/schemas/mybank_request'
+          $ref: "#/components/schemas/mybank_request"
         p24:
           description: >-
             P24 (Przelewy24) is a secure and fast online bank transfer service
             linked to all the major banks in Poland. [More
             Details](https://www.przelewy24.pl/).
-          $ref: '#/components/schemas/p24_request'
+          $ref: "#/components/schemas/p24_request"
         sofort:
           description: >-
             SOFORT Banking is a real-time bank transfer payment method that
             buyers use to transfer funds directly to merchants from their bank
             accounts. [More Details](https://www.klarna.com/sofort/).
-          $ref: '#/components/schemas/sofort_request'
+          $ref: "#/components/schemas/sofort_request"
         trustly:
           description: >-
             Trustly is a payment method that allows customers to shop and pay
             from their bank account. [More Details](https://www.trustly.net/).
-          $ref: '#/components/schemas/trustly_request'
+          $ref: "#/components/schemas/trustly_request"
         apple_pay:
           description: >-
             ApplePay payment source, allows buyer to pay using ApplePay, both on
             Web as well as on Native.
-          $ref: '#/components/schemas/apple_pay_request'
+          $ref: "#/components/schemas/apple_pay_request"
         google_pay:
           description: Google Pay payment source, allows buyer to pay using Google Pay.
-          $ref: '#/components/schemas/google_pay_request'
+          $ref: "#/components/schemas/google_pay_request"
         venmo:
           description: >-
             Information needed to indicate that Venmo is being used to fund the
             payment.
-          $ref: '#/components/schemas/venmo_wallet_request'
+          $ref: "#/components/schemas/venmo_wallet_request"
     payee_payment_method_preference:
       description: The merchant-preferred payment methods.
       type: string
@@ -5189,7 +5190,7 @@ components:
       type: object
       properties:
         payee_preferred:
-          $ref: '#/components/schemas/payee_payment_method_preference'
+          $ref: "#/components/schemas/payee_payment_method_preference"
         standard_entry_class_code:
           description: >-
             NACHA (the regulatory body governing the ACH network) requires that
@@ -5228,13 +5229,13 @@ components:
       type: object
       properties:
         payment_initiator:
-          $ref: '#/components/schemas/payment_initiator'
+          $ref: "#/components/schemas/payment_initiator"
         payment_type:
-          $ref: '#/components/schemas/stored_payment_source_payment_type'
+          $ref: "#/components/schemas/stored_payment_source_payment_type"
         usage:
-          $ref: '#/components/schemas/stored_payment_source_usage_type'
+          $ref: "#/components/schemas/stored_payment_source_usage_type"
         previous_network_transaction_reference:
-          $ref: '#/components/schemas/network_transaction_reference'
+          $ref: "#/components/schemas/network_transaction_reference"
       required:
         - payment_initiator
         - payment_type
@@ -5272,7 +5273,7 @@ components:
             `payment_source.paypal.experience_context.locale`). Please specify
             this field in the `experience_context` object instead of the
             `application_context` object.
-          $ref: '#/components/schemas/language'
+          $ref: "#/components/schemas/language"
         landing_page:
           description: >-
             DEPRECATED. DEPRECATED. The type of landing page to show on the
@@ -5340,7 +5341,7 @@ components:
             `payment_source.paypal.experience_context.payment_method_selected`).
             Please specify this field in the `experience_context` object instead
             of the `application_context` object..
-          $ref: '#/components/schemas/payment_method'
+          $ref: "#/components/schemas/payment_method"
         return_url:
           description: >-
             DEPRECATED. The URL where the customer is redirected after the
@@ -5383,7 +5384,7 @@ components:
             `payment_source.card.stored_credential.payment_initiator`). Please
             specify this field in the `payment_source` object instead of the
             `application_context` object.
-          $ref: '#/components/schemas/stored_payment_source'
+          $ref: "#/components/schemas/stored_payment_source"
           deprecated: true
     order_request:
       title: Order Request
@@ -5391,7 +5392,7 @@ components:
       type: object
       properties:
         intent:
-          $ref: '#/components/schemas/checkout_payment_intent'
+          $ref: "#/components/schemas/checkout_payment_intent"
         payer:
           description: >-
             DEPRECATED. The customer is also known as the payer. The Payer
@@ -5399,7 +5400,7 @@ components:
             object. In order to make this design more clear, the details in the
             `payer` object are now available under `payment_source.paypal`.
             Please use `payment_source.paypal`.
-          $ref: '#/components/schemas/payer'
+          $ref: "#/components/schemas/payer"
           deprecated: true
         purchase_units:
           description: >-
@@ -5414,14 +5415,14 @@ components:
             description: >-
               The purchase unit. Establishes a contract between a payer and the
               payee.
-            $ref: '#/components/schemas/purchase_unit_request'
+            $ref: "#/components/schemas/purchase_unit_request"
         payment_source:
-          $ref: '#/components/schemas/payment_source'
+          $ref: "#/components/schemas/payment_source"
         application_context:
           description: >-
             Customize the payer experience during the approval process for the
             payment with PayPal.
-          $ref: '#/components/schemas/order_application_context'
+          $ref: "#/components/schemas/order_application_context"
       required:
         - intent
         - purchase_units
@@ -5450,14 +5451,14 @@ components:
             The date and time when the transaction occurred, in [Internet date
             and time format](https://tools.ietf.org/html/rfc3339#section-5.6).
           readOnly: true
-          $ref: '#/components/schemas/date_time'
+          $ref: "#/components/schemas/date_time"
         update_time:
           description: >-
             The date and time when the transaction was last updated, in
             [Internet date and time
             format](https://tools.ietf.org/html/rfc3339#section-5.6).
           readOnly: true
-          $ref: '#/components/schemas/date_time'
+          $ref: "#/components/schemas/date_time"
     liability_shift:
       description: Liability shift indicator. The outcome of the issuer's authentication.
       type: string
@@ -5465,7 +5466,7 @@ components:
       maxLength: 255
       pattern: ^[0-9A-Z_]+$
       enum:
-        - 'NO'
+        - "NO"
         - POSSIBLE
         - UNKNOWN
     pares_status:
@@ -5477,8 +5478,8 @@ components:
       maxLength: 255
       pattern: ^[0-9A-Z_]+$
       enum:
-        - 'Y'
-        - 'N'
+        - "Y"
+        - "N"
         - U
         - A
         - C
@@ -5492,8 +5493,8 @@ components:
       maxLength: 255
       pattern: ^[0-9A-Z_]+$
       enum:
-        - 'Y'
-        - 'N'
+        - "Y"
+        - "N"
         - U
         - B
     three_d_secure_authentication_response:
@@ -5503,10 +5504,10 @@ components:
       properties:
         authentication_status:
           description: The outcome of the issuer's authentication.
-          $ref: '#/components/schemas/pares_status'
+          $ref: "#/components/schemas/pares_status"
         enrollment_status:
           description: Status of authentication eligibility.
-          $ref: '#/components/schemas/enrolled'
+          $ref: "#/components/schemas/enrolled"
     authentication_flow: {}
     exemption_details: {}
     authentication_response:
@@ -5515,14 +5516,14 @@ components:
       type: object
       properties:
         liability_shift:
-          $ref: '#/components/schemas/liability_shift'
+          $ref: "#/components/schemas/liability_shift"
         three_d_secure:
-          $ref: '#/components/schemas/three_d_secure_authentication_response'
+          $ref: "#/components/schemas/three_d_secure_authentication_response"
         authentication_flow:
-          $ref: '#/components/schemas/authentication_flow'
+          $ref: "#/components/schemas/authentication_flow"
         exemption_details:
           description: Exemption details of 3D Secure Authentication.
-          $ref: '#/components/schemas/exemption_details'
+          $ref: "#/components/schemas/exemption_details"
     link_description:
       title: Link Description
       description: >-
@@ -5584,7 +5585,7 @@ components:
             - CREATED
             - APPROVED
         customer:
-          $ref: '#/components/schemas/customer'
+          $ref: "#/components/schemas/customer"
         links:
           description: An array of request-related HATEOAS links.
           type: array
@@ -5595,14 +5596,14 @@ components:
             description: >-
               A request-related [HATEOAS
               link](/docs/api/reference/api-responses/#hateoas-links).
-            $ref: '#/components/schemas/link_description'
+            $ref: "#/components/schemas/link_description"
     card_attributes_response:
       title: Card Attributes Response
       description: Additional attributes associated with the use of this card.
       type: object
       properties:
         vault:
-          $ref: '#/components/schemas/vault_response'
+          $ref: "#/components/schemas/vault_response"
     card_from_request:
       title: Response of Card from Request
       description: Representation of card details as received in the request.
@@ -5612,11 +5613,11 @@ components:
           description: >-
             The card expiration year and month, in [Internet date
             format](https://tools.ietf.org/html/rfc3339#section-5.6).
-          $ref: '#/components/schemas/date_year_month'
+          $ref: "#/components/schemas/date_year_month"
         last_digits:
           description: The last digits of the payment card.
           type: string
-          pattern: '[0-9]{2,}'
+          pattern: "[0-9]{2,}"
           minLength: 2
           maxLength: 4
           readOnly: true
@@ -5643,7 +5644,7 @@ components:
           description: >-
             The [two-character ISO-3166-1 country
             code](https://raw.githubusercontent.com) of the bank.
-          $ref: '#/components/schemas/country_code'
+          $ref: "#/components/schemas/country_code"
         products:
           description: >-
             The type of card product assigned to the BIN by the issuer. These
@@ -5672,12 +5673,12 @@ components:
         last_digits:
           description: The last digits of the payment card.
           type: string
-          pattern: '[0-9]{2,}'
+          pattern: "[0-9]{2,}"
           readOnly: true
         brand:
           description: The card brand or network. Typically used in the response.
           readOnly: true
-          $ref: '#/components/schemas/card_brand'
+          $ref: "#/components/schemas/card_brand"
         available_networks:
           description: Array of brands or networks associated with the card.
           type: array
@@ -5685,7 +5686,7 @@ components:
           minItems: 1
           maxItems: 256
           items:
-            $ref: '#/components/schemas/card_brand'
+            $ref: "#/components/schemas/card_brand"
         type:
           description: The payment card type.
           type: string
@@ -5696,19 +5697,19 @@ components:
             - PREPAID
             - UNKNOWN
         authentication_result:
-          $ref: '#/components/schemas/authentication_response'
+          $ref: "#/components/schemas/authentication_response"
         attributes:
-          $ref: '#/components/schemas/card_attributes_response'
+          $ref: "#/components/schemas/card_attributes_response"
         from_request:
-          $ref: '#/components/schemas/card_from_request'
+          $ref: "#/components/schemas/card_from_request"
         expiry:
           description: >-
             The card expiration year and month, in [Internet date
             format](https://tools.ietf.org/html/rfc3339#section-5.6).
-          $ref: '#/components/schemas/date_year_month'
+          $ref: "#/components/schemas/date_year_month"
         bin_details:
           description: Bank Identification Number (BIN) details used to fund a payment.
-          $ref: '#/components/schemas/bin_details'
+          $ref: "#/components/schemas/bin_details"
     account_id-2:
       description: >-
         The PayPal payer ID, which is a masked version of the PayPal account
@@ -5756,12 +5757,12 @@ components:
       description: The details about a saved PayPal Wallet payment source.
       type: object
       allOf:
-        - $ref: '#/components/schemas/vault_response'
+        - $ref: "#/components/schemas/vault_response"
         - properties:
             customer:
-              $ref: '#/components/schemas/paypal_wallet_customer'
+              $ref: "#/components/schemas/paypal_wallet_customer"
             owner_id:
-              $ref: '#/components/schemas/vault_owner_id'
+              $ref: "#/components/schemas/vault_owner_id"
     cobranded_card:
       title: cobranded card object
       description: Details about the merchant cobranded card used for order purchase.
@@ -5779,17 +5780,17 @@ components:
             maxLength: 256
         payee:
           description: Merchant associated with the purchase.
-          $ref: '#/components/schemas/payee_base'
+          $ref: "#/components/schemas/payee_base"
         amount:
           description: Amount that was charged to the cobranded card.
-          $ref: '#/components/schemas/money'
+          $ref: "#/components/schemas/money"
     paypal_wallet_attributes_response:
       title: PayPal Wallet Attributes Response
       description: Additional attributes associated with the use of a PayPal Wallet.
       type: object
       properties:
         vault:
-          $ref: '#/components/schemas/paypal_wallet_vault_response'
+          $ref: "#/components/schemas/paypal_wallet_vault_response"
         cobranded_cards:
           description: >-
             An array of merchant cobranded cards used by buyer to complete an
@@ -5799,7 +5800,7 @@ components:
           minItems: 0
           maxItems: 25
           items:
-            $ref: '#/components/schemas/cobranded_card'
+            $ref: "#/components/schemas/cobranded_card"
     paypal_wallet_response:
       title: PayPal Wallet Response
       description: The PayPal Wallet response.
@@ -5807,11 +5808,11 @@ components:
       properties:
         email_address:
           description: The email address of the PayPal account holder.
-          $ref: '#/components/schemas/email'
+          $ref: "#/components/schemas/email"
         account_id:
           description: The PayPal-assigned ID for the PayPal account holder.
           readOnly: true
-          $ref: '#/components/schemas/account_id-2'
+          $ref: "#/components/schemas/account_id-2"
         account_status:
           description: >-
             The account status indicates whether the buyer has verified the
@@ -5828,9 +5829,9 @@ components:
           description: >-
             The name of the PayPal account holder. Supports only the
             `given_name` and `surname` properties.
-          $ref: '#/components/schemas/name-2'
+          $ref: "#/components/schemas/name-2"
         phone_type:
-          $ref: '#/components/schemas/phone_type-2'
+          $ref: "#/components/schemas/phone_type-2"
         phone_number:
           description: >-
             The phone number, in its canonical international [E.164 numbering
@@ -5839,31 +5840,31 @@ components:
             href="https://www.paypal.com/cgi-bin/customerprofileweb?cmd=_profile-website-payments">**Profile
             & Settings**</a> for the merchant's PayPal account. Supports only
             the `national_number` property.
-          $ref: '#/components/schemas/phone-2'
+          $ref: "#/components/schemas/phone-2"
         birth_date:
           description: The birth date of the PayPal account holder in `YYYY-MM-DD` format.
-          $ref: '#/components/schemas/date_no_time'
+          $ref: "#/components/schemas/date_no_time"
         tax_info:
           description: >-
             The tax information of the PayPal account holder. Required only for
             Brazilian PayPal account holder's. Both `tax_id` and `tax_id_type`
             are required.
-          $ref: '#/components/schemas/tax_info'
+          $ref: "#/components/schemas/tax_info"
         address:
           description: >-
             The address of the PayPal account holder. Supports only the
             `address_line_1`, `address_line_2`, `admin_area_1`, `admin_area_2`,
             `postal_code`, and `country_code` properties. Also referred to as
             the billing address of the customer.
-          $ref: '#/components/schemas/address_portable-2'
+          $ref: "#/components/schemas/address_portable-2"
         attributes:
-          $ref: '#/components/schemas/paypal_wallet_attributes_response'
+          $ref: "#/components/schemas/paypal_wallet_attributes_response"
     iban_last_chars:
       description: The last characters of the IBAN used to pay.
       type: string
       minLength: 4
       maxLength: 34
-      pattern: '[a-zA-Z0-9]{4}'
+      pattern: "[a-zA-Z0-9]{4}"
     altpay_recurring_attributes: {}
     bancontact:
       title: Bancontact payment object
@@ -5872,24 +5873,24 @@ components:
       properties:
         name:
           description: The name of the account holder associated with this payment method.
-          $ref: '#/components/schemas/full_name'
+          $ref: "#/components/schemas/full_name"
         country_code:
           description: The two-character ISO 3166-1 country code.
-          $ref: '#/components/schemas/country_code'
+          $ref: "#/components/schemas/country_code"
         bic:
           description: The bank identification code (BIC).
-          $ref: '#/components/schemas/bic'
+          $ref: "#/components/schemas/bic"
         iban_last_chars:
-          $ref: '#/components/schemas/iban_last_chars'
+          $ref: "#/components/schemas/iban_last_chars"
         card_last_digits:
           description: The last digits of the card used to fund the Bancontact payment.
           type: string
           minLength: 4
           maxLength: 4
-          pattern: '[0-9]{4}'
+          pattern: "[0-9]{4}"
         attributes:
           description: Attributes for SEPA direct debit object.
-          $ref: '#/components/schemas/altpay_recurring_attributes'
+          $ref: "#/components/schemas/altpay_recurring_attributes"
     blik_one_click_response:
       title: BLIK one-click payment object
       description: Information used to pay using BLIK one-click flow.
@@ -5910,18 +5911,18 @@ components:
       properties:
         name:
           description: The name of the account holder associated with this payment method.
-          $ref: '#/components/schemas/full_name'
+          $ref: "#/components/schemas/full_name"
         country_code:
           description: The two-character ISO 3166-1 country code.
-          $ref: '#/components/schemas/country_code'
+          $ref: "#/components/schemas/country_code"
         email:
           description: >-
             The email address of the account holder associated with this payment
             method.
-          $ref: '#/components/schemas/email_address'
+          $ref: "#/components/schemas/email_address"
         one_click:
           description: The one-click integration flow object.
-          $ref: '#/components/schemas/blik_one_click_response'
+          $ref: "#/components/schemas/blik_one_click_response"
     eps:
       title: An eps payment object
       description: Information used to pay using eps.
@@ -5929,13 +5930,13 @@ components:
       properties:
         name:
           description: The name of the account holder associated with this payment method.
-          $ref: '#/components/schemas/full_name'
+          $ref: "#/components/schemas/full_name"
         country_code:
           description: The two-character ISO 3166-1 country code.
-          $ref: '#/components/schemas/country_code'
+          $ref: "#/components/schemas/country_code"
         bic:
           description: The bank identification code (BIC).
-          $ref: '#/components/schemas/bic'
+          $ref: "#/components/schemas/bic"
     giropay:
       title: A giropay payment object
       description: Information needed to pay using giropay.
@@ -5943,13 +5944,13 @@ components:
       properties:
         name:
           description: The name of the account holder associated with this payment method.
-          $ref: '#/components/schemas/full_name'
+          $ref: "#/components/schemas/full_name"
         country_code:
           description: The two-character ISO 3166-1 country code.
-          $ref: '#/components/schemas/country_code'
+          $ref: "#/components/schemas/country_code"
         bic:
           description: The bank identification code (BIC).
-          $ref: '#/components/schemas/bic'
+          $ref: "#/components/schemas/bic"
     ideal:
       title: The iDEAL payment object
       description: Information used to pay using iDEAL.
@@ -5957,18 +5958,18 @@ components:
       properties:
         name:
           description: The name of the account holder associated with this payment method.
-          $ref: '#/components/schemas/full_name'
+          $ref: "#/components/schemas/full_name"
         country_code:
           description: The two-character ISO 3166-1 country code.
-          $ref: '#/components/schemas/country_code'
+          $ref: "#/components/schemas/country_code"
         bic:
           description: The bank identification code (BIC).
-          $ref: '#/components/schemas/bic'
+          $ref: "#/components/schemas/bic"
         iban_last_chars:
-          $ref: '#/components/schemas/iban_last_chars'
+          $ref: "#/components/schemas/iban_last_chars"
         attributes:
           description: Attributes for SEPA direct debit object.
-          $ref: '#/components/schemas/altpay_recurring_attributes'
+          $ref: "#/components/schemas/altpay_recurring_attributes"
     mybank:
       title: MyBank payment object
       description: Information used to pay using MyBank.
@@ -5976,15 +5977,15 @@ components:
       properties:
         name:
           description: The name of the account holder associated with this payment method.
-          $ref: '#/components/schemas/full_name'
+          $ref: "#/components/schemas/full_name"
         country_code:
           description: The two-character ISO 3166-1 country code.
-          $ref: '#/components/schemas/country_code'
+          $ref: "#/components/schemas/country_code"
         bic:
           description: The bank identification code (BIC).
-          $ref: '#/components/schemas/bic'
+          $ref: "#/components/schemas/bic"
         iban_last_chars:
-          $ref: '#/components/schemas/iban_last_chars'
+          $ref: "#/components/schemas/iban_last_chars"
     p24:
       title: P24 payment object
       description: Information used to pay using P24(Przelewy24).
@@ -5992,15 +5993,15 @@ components:
       properties:
         name:
           description: The name of the account holder associated with this payment method.
-          $ref: '#/components/schemas/full_name'
+          $ref: "#/components/schemas/full_name"
         email:
           description: >-
             The email address of the account holder associated with this payment
             method.
-          $ref: '#/components/schemas/email_address'
+          $ref: "#/components/schemas/email_address"
         country_code:
           description: The two-character ISO 3166-1 country code.
-          $ref: '#/components/schemas/country_code'
+          $ref: "#/components/schemas/country_code"
         payment_descriptor:
           description: P24 generated payment description.
           type: string
@@ -6025,15 +6026,15 @@ components:
       properties:
         name:
           description: The name of the account holder associated with this payment method.
-          $ref: '#/components/schemas/full_name'
+          $ref: "#/components/schemas/full_name"
         country_code:
           description: The two-character ISO 3166-1 country code.
-          $ref: '#/components/schemas/country_code'
+          $ref: "#/components/schemas/country_code"
         bic:
           description: The bank identification code (BIC).
-          $ref: '#/components/schemas/bic'
+          $ref: "#/components/schemas/bic"
         iban_last_chars:
-          $ref: '#/components/schemas/iban_last_chars'
+          $ref: "#/components/schemas/iban_last_chars"
     trustly:
       title: Trustly payment object
       description: Information needed to pay using Trustly.
@@ -6041,22 +6042,22 @@ components:
       properties:
         name:
           description: The name of the account holder associated with this payment method.
-          $ref: '#/components/schemas/full_name'
+          $ref: "#/components/schemas/full_name"
         country_code:
           description: The two-character ISO 3166-1 country code.
-          $ref: '#/components/schemas/country_code'
+          $ref: "#/components/schemas/country_code"
         bic:
           description: The bank identification code (BIC).
-          $ref: '#/components/schemas/bic'
+          $ref: "#/components/schemas/bic"
         iban_last_chars:
-          $ref: '#/components/schemas/iban_last_chars'
+          $ref: "#/components/schemas/iban_last_chars"
     venmo_wallet_attributes_response:
       title: Venmo Wallet Attributes Response
       description: Additional attributes associated with the use of a Venmo Wallet.
       type: object
       properties:
         vault:
-          $ref: '#/components/schemas/vault_response'
+          $ref: "#/components/schemas/vault_response"
     venmo_wallet_response:
       title: Venmo Wallet Response Object
       description: Venmo wallet response.
@@ -6064,11 +6065,11 @@ components:
       properties:
         email_address:
           description: The email address of the payer.
-          $ref: '#/components/schemas/email'
+          $ref: "#/components/schemas/email"
         account_id:
           description: This is an immutable system-generated id for a user's Venmo account.
           readOnly: true
-          $ref: '#/components/schemas/account_id-2'
+          $ref: "#/components/schemas/account_id-2"
         user_name:
           description: The Venmo user name chosen by the user, also know as a Venmo handle.
           type: string
@@ -6079,52 +6080,52 @@ components:
           description: >-
             The name associated with the Venmo account. Supports only the
             `given_name` and `surname` properties.
-          $ref: '#/components/schemas/name-2'
+          $ref: "#/components/schemas/name-2"
         phone_number:
           description: >-
             The phone number associated with the Venmo account, in its canonical
             international [E.164 numbering plan
             format](https://www.itu.int/rec/T-REC-E.164/en). Supports only the
             `national_number` property.
-          $ref: '#/components/schemas/phone-2'
+          $ref: "#/components/schemas/phone-2"
         address:
           description: >-
             The address of the payer. Supports only the `address_line_1`,
             `address_line_2`, `admin_area_1`, `admin_area_2`, `postal_code`, and
             `country_code` properties. Also referred to as the billing address
             of the customer.
-          $ref: '#/components/schemas/address_portable-2'
+          $ref: "#/components/schemas/address_portable-2"
         attributes:
-          $ref: '#/components/schemas/venmo_wallet_attributes_response'
+          $ref: "#/components/schemas/venmo_wallet_attributes_response"
     payment_source_response:
       title: Payment Source
       description: The payment source used to fund the payment.
       type: object
       properties:
         card:
-          $ref: '#/components/schemas/card_response'
+          $ref: "#/components/schemas/card_response"
         paypal:
-          $ref: '#/components/schemas/paypal_wallet_response'
+          $ref: "#/components/schemas/paypal_wallet_response"
         bancontact:
-          $ref: '#/components/schemas/bancontact'
+          $ref: "#/components/schemas/bancontact"
         blik:
-          $ref: '#/components/schemas/blik'
+          $ref: "#/components/schemas/blik"
         eps:
-          $ref: '#/components/schemas/eps'
+          $ref: "#/components/schemas/eps"
         giropay:
-          $ref: '#/components/schemas/giropay'
+          $ref: "#/components/schemas/giropay"
         ideal:
-          $ref: '#/components/schemas/ideal'
+          $ref: "#/components/schemas/ideal"
         mybank:
-          $ref: '#/components/schemas/mybank'
+          $ref: "#/components/schemas/mybank"
         p24:
-          $ref: '#/components/schemas/p24'
+          $ref: "#/components/schemas/p24"
         sofort:
-          $ref: '#/components/schemas/sofort'
+          $ref: "#/components/schemas/sofort"
         trustly:
-          $ref: '#/components/schemas/trustly'
+          $ref: "#/components/schemas/trustly"
         venmo:
-          $ref: '#/components/schemas/venmo_wallet_response'
+          $ref: "#/components/schemas/venmo_wallet_response"
     processing_instruction:
       title: Processing Instruction
       description: The instruction to process an order.
@@ -6180,7 +6181,7 @@ components:
           pattern: ^(https:)([/|.|\w|\s|-])*\.(?:jpg|gif|png|jpeg|JPG|GIF|PNG|JPEG)
         upc:
           description: The Universal Product Code of the item.
-          $ref: '#/components/schemas/universal_product_code'
+          $ref: "#/components/schemas/universal_product_code"
     tracker:
       title: Order Tracker Response.
       description: The tracking response on creation of tracker.
@@ -6192,13 +6193,13 @@ components:
               type: string
               readOnly: true
             status:
-              $ref: '#/components/schemas/tracker_status'
+              $ref: "#/components/schemas/tracker_status"
             items:
               description: An array of details of items in the shipment.
               type: array
               items:
                 description: Items in a shipment.
-                $ref: '#/components/schemas/tracker_item'
+                $ref: "#/components/schemas/tracker_item"
             links:
               description: An array of request-related HATEOAS links.
               type: array
@@ -6207,20 +6208,20 @@ components:
                 description: >-
                   A request-related [HATEOAS
                   link](/api/rest/responses/#hateoas-links).
-                $ref: '#/components/schemas/link_description'
-        - $ref: '#/components/schemas/activity_timestamps'
+                $ref: "#/components/schemas/link_description"
+        - $ref: "#/components/schemas/activity_timestamps"
     shipping_with_tracking_details:
       title: Order Shipping Details
       description: The order shipping details.
       type: object
       allOf:
-        - $ref: '#/components/schemas/shipping_detail'
+        - $ref: "#/components/schemas/shipping_detail"
         - properties:
             trackers:
               description: An array of trackers for a transaction.
               type: array
               items:
-                $ref: '#/components/schemas/tracker'
+                $ref: "#/components/schemas/tracker"
     authorization_status_details:
       title: Auhorization Status Details
       description: The details of the authorized payment status.
@@ -6253,7 +6254,7 @@ components:
         status_details:
           description: The details of the authorized order pending status.
           readOnly: true
-          $ref: '#/components/schemas/authorization_status_details'
+          $ref: "#/components/schemas/authorization_status_details"
     seller_protection:
       title: Seller Protection
       description: >-
@@ -6288,7 +6289,7 @@ components:
       description: The authorized payment transaction.
       type: object
       allOf:
-        - $ref: '#/components/schemas/authorization_status'
+        - $ref: "#/components/schemas/authorization_status"
         - properties:
             id:
               description: The PayPal-generated ID for the authorized payment.
@@ -6296,7 +6297,7 @@ components:
               readOnly: true
             amount:
               description: The amount for this authorized payment.
-              $ref: '#/components/schemas/money'
+              $ref: "#/components/schemas/money"
               readOnly: true
             invoice_id:
               description: >-
@@ -6313,16 +6314,16 @@ components:
               type: string
               maxLength: 127
             network_transaction_reference:
-              $ref: '#/components/schemas/network_transaction_reference'
+              $ref: "#/components/schemas/network_transaction_reference"
             seller_protection:
-              $ref: '#/components/schemas/seller_protection'
+              $ref: "#/components/schemas/seller_protection"
               readOnly: true
             expiration_time:
               description: >-
                 The date and time when the authorized payment expires, in
                 [Internet date and time
                 format](https://tools.ietf.org/html/rfc3339#section-5.6).
-              $ref: '#/components/schemas/date_time'
+              $ref: "#/components/schemas/date_time"
               readOnly: true
             links:
               description: >-
@@ -6331,8 +6332,8 @@ components:
               type: array
               readOnly: true
               items:
-                $ref: '#/components/schemas/link_description'
-        - $ref: '#/components/schemas/activity_timestamps'
+                $ref: "#/components/schemas/link_description"
+        - $ref: "#/components/schemas/activity_timestamps"
     processor_response:
       title: Processor Response
       description: >-
@@ -6356,21 +6357,21 @@ components:
             - G
             - I
             - M
-            - 'N'
+            - "N"
             - P
             - R
             - S
             - U
             - W
             - X
-            - 'Y'
+            - "Y"
             - Z
-            - 'Null'
-            - '0'
-            - '1'
-            - '2'
-            - '3'
-            - '4'
+            - "Null"
+            - "0"
+            - "1"
+            - "2"
+            - "3"
+            - "4"
         cvv_code:
           description: >-
             The card verification value code for for Visa, Discover, Mastercard,
@@ -6381,96 +6382,96 @@ components:
             - E
             - I
             - M
-            - 'N'
+            - "N"
             - P
             - S
             - U
             - X
             - All others
-            - '0'
-            - '1'
-            - '2'
-            - '3'
-            - '4'
+            - "0"
+            - "1"
+            - "2"
+            - "3"
+            - "4"
         response_code:
           description: Processor response code for the non-PayPal payment processor errors.
           type: string
           readOnly: true
           enum:
-            - '0000'
+            - "0000"
             - 00N7
-            - '0100'
-            - '0390'
-            - '0500'
-            - '0580'
-            - '0800'
-            - '0880'
-            - '0890'
-            - '0960'
+            - "0100"
+            - "0390"
+            - "0500"
+            - "0580"
+            - "0800"
+            - "0880"
+            - "0890"
+            - "0960"
             - 0R00
-            - '1000'
+            - "1000"
             - 10BR
-            - '1300'
-            - '1310'
-            - '1312'
-            - '1317'
-            - '1320'
-            - '1330'
-            - '1335'
-            - '1340'
-            - '1350'
-            - '1352'
-            - '1360'
-            - '1370'
-            - '1380'
-            - '1382'
-            - '1384'
-            - '1390'
-            - '1393'
-            - '5100'
-            - '5110'
-            - '5120'
-            - '5130'
-            - '5135'
-            - '5140'
-            - '5150'
-            - '5160'
-            - '5170'
-            - '5180'
-            - '5190'
-            - '5200'
-            - '5210'
-            - '5400'
-            - '5500'
-            - '5650'
-            - '5700'
-            - '5710'
-            - '5800'
-            - '5900'
-            - '5910'
-            - '5920'
-            - '5930'
-            - '5950'
-            - '6300'
-            - '7600'
-            - '7700'
-            - '7710'
-            - '7800'
-            - '7900'
-            - '8000'
-            - '8010'
-            - '8020'
-            - '8030'
-            - '8100'
-            - '8110'
-            - '8220'
-            - '9100'
-            - '9500'
-            - '9510'
-            - '9520'
-            - '9530'
-            - '9540'
-            - '9600'
+            - "1300"
+            - "1310"
+            - "1312"
+            - "1317"
+            - "1320"
+            - "1330"
+            - "1335"
+            - "1340"
+            - "1350"
+            - "1352"
+            - "1360"
+            - "1370"
+            - "1380"
+            - "1382"
+            - "1384"
+            - "1390"
+            - "1393"
+            - "5100"
+            - "5110"
+            - "5120"
+            - "5130"
+            - "5135"
+            - "5140"
+            - "5150"
+            - "5160"
+            - "5170"
+            - "5180"
+            - "5190"
+            - "5200"
+            - "5210"
+            - "5400"
+            - "5500"
+            - "5650"
+            - "5700"
+            - "5710"
+            - "5800"
+            - "5900"
+            - "5910"
+            - "5920"
+            - "5930"
+            - "5950"
+            - "6300"
+            - "7600"
+            - "7700"
+            - "7710"
+            - "7800"
+            - "7900"
+            - "8000"
+            - "8010"
+            - "8020"
+            - "8030"
+            - "8100"
+            - "8110"
+            - "8220"
+            - "9100"
+            - "9500"
+            - "9510"
+            - "9520"
+            - "9530"
+            - "9540"
+            - "9600"
             - PCNR
             - PCVV
             - PP06
@@ -6559,10 +6560,10 @@ components:
           type: string
           readOnly: true
           enum:
-            - '01'
-            - '02'
-            - '03'
-            - '21'
+            - "01"
+            - "02"
+            - "03"
+            - "21"
     authorization_with_additional_data:
       title: Authorization with Additional Data
       description: >-
@@ -6571,11 +6572,11 @@ components:
         certain payment methods.
       type: object
       allOf:
-        - $ref: '#/components/schemas/authorization'
+        - $ref: "#/components/schemas/authorization"
         - properties:
             processor_response:
               description: The processor response for card transactions.
-              $ref: '#/components/schemas/processor_response'
+              $ref: "#/components/schemas/processor_response"
               readOnly: true
     capture_status_details:
       title: Capture Status Details
@@ -6619,7 +6620,7 @@ components:
         status_details:
           description: The details of the captured payment status.
           readOnly: true
-          $ref: '#/components/schemas/capture_status_details'
+          $ref: "#/components/schemas/capture_status_details"
     exchange_rate:
       title: Exchange Rate
       description: >-
@@ -6629,10 +6630,10 @@ components:
       properties:
         source_currency:
           description: The source currency from which to convert an amount.
-          $ref: '#/components/schemas/currency_code'
+          $ref: "#/components/schemas/currency_code"
         target_currency:
           description: The target currency to which to convert an amount.
-          $ref: '#/components/schemas/currency_code'
+          $ref: "#/components/schemas/currency_code"
         value:
           description: >-
             The target currency amount. Equivalent to one unit of the source
@@ -6651,25 +6652,25 @@ components:
           description: >-
             The amount for this captured payment in the currency of the
             transaction.
-          $ref: '#/components/schemas/money'
+          $ref: "#/components/schemas/money"
         paypal_fee:
           description: >-
             The applicable fee for this captured payment in the currency of the
             transaction.
-          $ref: '#/components/schemas/money'
+          $ref: "#/components/schemas/money"
         paypal_fee_in_receivable_currency:
           description: >-
             The applicable fee for this captured payment in the receivable
             currency. Returned only in cases the fee is charged in the
             receivable currency. Example 'CNY'.
-          $ref: '#/components/schemas/money'
+          $ref: "#/components/schemas/money"
         net_amount:
           description: >-
             The net amount that the payee receives for this captured payment in
             their PayPal account. The net amount is computed as
             <code>gross_amount</code> minus the <code>paypal_fee</code> minus
             the <code>platform_fees</code>.
-          $ref: '#/components/schemas/money'
+          $ref: "#/components/schemas/money"
         receivable_amount:
           description: >-
             The net amount that is credited to the payee's PayPal account.
@@ -6677,14 +6678,14 @@ components:
             from the currency of the PayPal account where the payee wants to
             credit the funds. The amount is computed as <code>net_amount</code>
             times <code>exchange_rate</code>.
-          $ref: '#/components/schemas/money'
+          $ref: "#/components/schemas/money"
         exchange_rate:
           description: >-
             The exchange rate that determines the amount that is credited to the
             payee's PayPal account. Returned when the currency of the captured
             payment is different from the currency of the PayPal account where
             the payee wants to credit the funds.
-          $ref: '#/components/schemas/exchange_rate'
+          $ref: "#/components/schemas/exchange_rate"
         platform_fees:
           description: >-
             An array of platform or partner fees, commissions, or brokerage fees
@@ -6693,7 +6694,7 @@ components:
           minItems: 0
           maxItems: 1
           items:
-            $ref: '#/components/schemas/platform_fee'
+            $ref: "#/components/schemas/platform_fee"
       required:
         - gross_amount
     capture:
@@ -6701,7 +6702,7 @@ components:
       description: A captured payment.
       type: object
       allOf:
-        - $ref: '#/components/schemas/capture_status'
+        - $ref: "#/components/schemas/capture_status"
         - properties:
             id:
               description: The PayPal-generated ID for the captured payment.
@@ -6709,7 +6710,7 @@ components:
               readOnly: true
             amount:
               description: The amount for this captured payment.
-              $ref: '#/components/schemas/money'
+              $ref: "#/components/schemas/money"
               readOnly: true
             invoice_id:
               description: >-
@@ -6726,9 +6727,9 @@ components:
               type: string
               maxLength: 127
             network_transaction_reference:
-              $ref: '#/components/schemas/network_transaction_reference'
+              $ref: "#/components/schemas/network_transaction_reference"
             seller_protection:
-              $ref: '#/components/schemas/seller_protection'
+              $ref: "#/components/schemas/seller_protection"
               readOnly: true
             final_capture:
               description: >-
@@ -6741,10 +6742,10 @@ components:
               default: false
               readOnly: true
             seller_receivable_breakdown:
-              $ref: '#/components/schemas/seller_receivable_breakdown'
+              $ref: "#/components/schemas/seller_receivable_breakdown"
               readOnly: true
             disbursement_mode:
-              $ref: '#/components/schemas/disbursement_mode'
+              $ref: "#/components/schemas/disbursement_mode"
             links:
               description: >-
                 An array of related [HATEOAS
@@ -6752,13 +6753,13 @@ components:
               type: array
               readOnly: true
               items:
-                $ref: '#/components/schemas/link_description'
+                $ref: "#/components/schemas/link_description"
             processor_response:
               description: >-
                 An object that provides additional processor information for a
                 direct credit card transaction.
-              $ref: '#/components/schemas/processor_response'
-        - $ref: '#/components/schemas/activity_timestamps'
+              $ref: "#/components/schemas/processor_response"
+        - $ref: "#/components/schemas/activity_timestamps"
     refund_status_details:
       title: Refund Status Details
       description: The details of the refund status.
@@ -6786,7 +6787,7 @@ components:
         status_details:
           description: The details of the refund status.
           readOnly: true
-          $ref: '#/components/schemas/refund_status_details'
+          $ref: "#/components/schemas/refund_status_details"
     net_amount_breakdown_item:
       title: Net Amount Breakdown Item
       description: >-
@@ -6798,23 +6799,23 @@ components:
         payable_amount:
           description: The net amount debited from the merchant's PayPal account.
           readOnly: true
-          $ref: '#/components/schemas/money'
+          $ref: "#/components/schemas/money"
         converted_amount:
           description: The converted payable amount.
           readOnly: true
-          $ref: '#/components/schemas/money'
+          $ref: "#/components/schemas/money"
         exchange_rate:
           description: >-
             The exchange rate that determines the amount that was debited from
             the merchant's PayPal account.
           readOnly: true
-          $ref: '#/components/schemas/exchange_rate'
+          $ref: "#/components/schemas/exchange_rate"
     refund:
       title: Refund
       description: The refund information.
       type: object
       allOf:
-        - $ref: '#/components/schemas/refund_status'
+        - $ref: "#/components/schemas/refund_status"
         - properties:
             id:
               description: The PayPal-generated ID for the refund.
@@ -6822,7 +6823,7 @@ components:
               readOnly: true
             amount:
               description: The amount that the payee refunded to the payer.
-              $ref: '#/components/schemas/money'
+              $ref: "#/components/schemas/money"
               readOnly: true
             invoice_id:
               description: >-
@@ -6862,7 +6863,7 @@ components:
               properties:
                 gross_amount:
                   description: The amount that the payee refunded to the payer.
-                  $ref: '#/components/schemas/money'
+                  $ref: "#/components/schemas/money"
                   readOnly: true
                 paypal_fee:
                   description: >-
@@ -6870,7 +6871,7 @@ components:
                     currency of the transaction. This fee might not match the
                     PayPal fee that the payee paid when the payment was
                     captured.
-                  $ref: '#/components/schemas/money'
+                  $ref: "#/components/schemas/money"
                   readOnly: true
                 paypal_fee_in_receivable_currency:
                   description: >-
@@ -6878,7 +6879,7 @@ components:
                     receivable currency. Returned only in cases when the
                     receivable currency is different from transaction currency.
                     Example 'CNY'.
-                  $ref: '#/components/schemas/money'
+                  $ref: "#/components/schemas/money"
                   readOnly: true
                 net_amount:
                   description: >-
@@ -6886,7 +6887,7 @@ components:
                     transaction currency. The net amount is calculated as
                     <code>gross_amount</code> minus <code>paypal_fee</code>
                     minus <code>platform_fees</code>.
-                  $ref: '#/components/schemas/money'
+                  $ref: "#/components/schemas/money"
                   readOnly: true
                 net_amount_in_receivable_currency:
                   description: >-
@@ -6894,7 +6895,7 @@ components:
                     receivable currency. Returned only in cases when the
                     receivable currency is different from transaction currency.
                     Example 'CNY'.
-                  $ref: '#/components/schemas/money'
+                  $ref: "#/components/schemas/money"
                   readOnly: true
                 platform_fees:
                   description: >-
@@ -6904,7 +6905,7 @@ components:
                   minItems: 0
                   maxItems: 1
                   items:
-                    $ref: '#/components/schemas/platform_fee'
+                    $ref: "#/components/schemas/platform_fee"
                 net_amount_breakdown:
                   description: >-
                     An array of breakdown values for the net amount. Returned
@@ -6913,7 +6914,7 @@ components:
                     funds.
                   type: array
                   items:
-                    $ref: '#/components/schemas/net_amount_breakdown_item'
+                    $ref: "#/components/schemas/net_amount_breakdown_item"
                   readOnly: true
                 total_refunded_amount:
                   description: >-
@@ -6922,11 +6923,11 @@ components:
                     refunded $20 a week ago and was refunded $30 in this refund,
                     the `gross_amount` is $30 for this refund and the
                     `total_refunded_amount` is $50.
-                  $ref: '#/components/schemas/money'
+                  $ref: "#/components/schemas/money"
               readOnly: true
             payer:
               description: The details associated with the merchant for this transaction.
-              $ref: '#/components/schemas/payee_base'
+              $ref: "#/components/schemas/payee_base"
               readOnly: true
             links:
               description: >-
@@ -6935,8 +6936,8 @@ components:
               type: array
               readOnly: true
               items:
-                $ref: '#/components/schemas/link_description'
-        - $ref: '#/components/schemas/activity_timestamps'
+                $ref: "#/components/schemas/link_description"
+        - $ref: "#/components/schemas/activity_timestamps"
     payment_collection:
       title: Payment Collection
       description: >-
@@ -6951,7 +6952,7 @@ components:
           type: array
           items:
             description: The authorized payment for a purchase unit.
-            $ref: '#/components/schemas/authorization_with_additional_data'
+            $ref: "#/components/schemas/authorization_with_additional_data"
         captures:
           description: >-
             An array of captured payments for a purchase unit. A purchase unit
@@ -6959,7 +6960,7 @@ components:
           type: array
           items:
             description: The captured payment for a purchase unit.
-            $ref: '#/components/schemas/capture'
+            $ref: "#/components/schemas/capture"
         refunds:
           description: >-
             An array of refunds for a purchase unit. A purchase unit can have
@@ -6967,7 +6968,7 @@ components:
           type: array
           items:
             description: A refund for a purchase unit.
-            $ref: '#/components/schemas/refund'
+            $ref: "#/components/schemas/refund"
     purchase_unit:
       title: Purchase Unit
       description: >-
@@ -6993,12 +6994,12 @@ components:
           minLength: 1
           maxLength: 256
         amount:
-          $ref: '#/components/schemas/amount_with_breakdown'
+          $ref: "#/components/schemas/amount_with_breakdown"
         payee:
           description: The merchant who receives payment for this transaction.
-          $ref: '#/components/schemas/payee'
+          $ref: "#/components/schemas/payee"
         payment_instruction:
-          $ref: '#/components/schemas/payment_instruction'
+          $ref: "#/components/schemas/payment_instruction"
         custom_id:
           description: >-
             The API caller-provided external ID. Used to reconcile API
@@ -7050,10 +7051,10 @@ components:
           type: array
           items:
             description: An item.
-            $ref: '#/components/schemas/item'
+            $ref: "#/components/schemas/item"
         shipping:
           description: The shipping address and method.
-          $ref: '#/components/schemas/shipping_with_tracking_details'
+          $ref: "#/components/schemas/shipping_with_tracking_details"
         supplementary_data:
           description: >-
             Supplementary data about this payment. Merchants and partners can
@@ -7064,11 +7065,11 @@ components:
             or <a
             href="https://developer.paypal.com/docs/multiparty/checkout/advanced/processing/">multiparty
             checkout</a>.
-          $ref: '#/components/schemas/supplementary_data'
+          $ref: "#/components/schemas/supplementary_data"
         payments:
           description: The comprehensive history of payments for the purchase unit.
           readOnly: true
-          $ref: '#/components/schemas/payment_collection'
+          $ref: "#/components/schemas/payment_collection"
     order_status:
       title: Order Status
       description: The order status.
@@ -7088,18 +7089,18 @@ components:
       description: The order details.
       type: object
       allOf:
-        - $ref: '#/components/schemas/activity_timestamps'
+        - $ref: "#/components/schemas/activity_timestamps"
         - properties:
             id:
               description: The ID of the order.
               type: string
               readOnly: true
             payment_source:
-              $ref: '#/components/schemas/payment_source_response'
+              $ref: "#/components/schemas/payment_source_response"
             intent:
-              $ref: '#/components/schemas/checkout_payment_intent'
+              $ref: "#/components/schemas/checkout_payment_intent"
             processing_instruction:
-              $ref: '#/components/schemas/processing_instruction'
+              $ref: "#/components/schemas/processing_instruction"
             payer:
               description: >-
                 DEPRECATED. The customer is also known as the payer. The Payer
@@ -7108,7 +7109,7 @@ components:
                 more clear, the details in the `payer` object are now available
                 under `payment_source.paypal`. Please use
                 `payment_source.paypal`.
-              $ref: '#/components/schemas/payer'
+              $ref: "#/components/schemas/payer"
               deprecated: true
             purchase_units:
               description: >-
@@ -7123,9 +7124,9 @@ components:
                 description: >-
                   A purchase unit. Establishes a contract between a customer and
                   merchant.
-                $ref: '#/components/schemas/purchase_unit'
+                $ref: "#/components/schemas/purchase_unit"
             status:
-              $ref: '#/components/schemas/order_status'
+              $ref: "#/components/schemas/order_status"
               readOnly: true
             links:
               description: >-
@@ -7148,7 +7149,7 @@ components:
                   A request-related [HATEOAS
                   link](/api/rest/responses/#hateoas-links). To complete payer
                   approval, use the `approve` link with the `GET` method.
-                $ref: '#/components/schemas/link_description'
+                $ref: "#/components/schemas/link_description"
     patch:
       title: Patch
       description: The JSON patch object to apply partial updates to resources.
@@ -7190,7 +7191,7 @@ components:
       description: An array of JSON patch objects to apply partial updates to resources.
       type: array
       items:
-        $ref: '#/components/schemas/patch'
+        $ref: "#/components/schemas/patch"
     orders.patch-400:
       properties:
         details:
@@ -7786,7 +7787,7 @@ components:
             experience shows. PayPal supports a five-character code. For
             example, `da-DK`, `he-IL`, `id-ID`, `ja-JP`, `no-NO`, `pt-BR`,
             `ru-RU`, `sv-SE`, `th-TH`, `zh-CN`, `zh-HK`, or `zh-TW`.
-          $ref: '#/components/schemas/language'
+          $ref: "#/components/schemas/language"
         return_url:
           description: >-
             The URL where the customer is redirected after the customer approves
@@ -7804,7 +7805,7 @@ components:
           minLength: 10
           maxLength: 4000
         stored_payment_source:
-          $ref: '#/components/schemas/stored_payment_source'
+          $ref: "#/components/schemas/stored_payment_source"
     confirm_order_request:
       title: Confirm Order Request
       description: >-
@@ -7812,11 +7813,11 @@ components:
         payment source.
       properties:
         payment_source:
-          $ref: '#/components/schemas/payment_source'
+          $ref: "#/components/schemas/payment_source"
         processing_instruction:
-          $ref: '#/components/schemas/processing_instruction'
+          $ref: "#/components/schemas/processing_instruction"
         application_context:
-          $ref: '#/components/schemas/order_confirm_application_context'
+          $ref: "#/components/schemas/order_confirm_application_context"
       required:
         - payment_source
     orders.confirm-400:
@@ -7962,7 +7963,7 @@ components:
                   description:
                     type: string
                     enum:
-                      - ' For the payment_source specified, the currency of the Order is restricted by the country in which the payee account is based. Please refer https://developer.paypal.com/api/rest/reference/currency-codes/ for list of supported currency codes.'
+                      - " For the payment_source specified, the currency of the Order is restricted by the country in which the payee account is based. Please refer https://developer.paypal.com/api/rest/reference/currency-codes/ for list of supported currency codes."
                   issue:
                     type: string
                     enum:
@@ -8637,26 +8638,26 @@ components:
             Use this object only if you have not redirected the user after order
             creation to approve the payment. In such cases, the user-selected
             payment method in the PayPal flow is implicitly used.
-          $ref: '#/components/schemas/payment_source'
+          $ref: "#/components/schemas/payment_source"
     order_authorize_response:
       title: Order
       description: The order authorize response.
       type: object
       allOf:
-        - $ref: '#/components/schemas/activity_timestamps'
+        - $ref: "#/components/schemas/activity_timestamps"
         - properties:
             id:
               description: The ID of the order.
               type: string
               readOnly: true
             payment_source:
-              $ref: '#/components/schemas/payment_source_response'
+              $ref: "#/components/schemas/payment_source_response"
             intent:
-              $ref: '#/components/schemas/checkout_payment_intent'
+              $ref: "#/components/schemas/checkout_payment_intent"
             processing_instruction:
-              $ref: '#/components/schemas/processing_instruction'
+              $ref: "#/components/schemas/processing_instruction"
             payer:
-              $ref: '#/components/schemas/payer'
+              $ref: "#/components/schemas/payer"
             purchase_units:
               description: >-
                 An array of purchase units. Each purchase unit establishes a
@@ -8670,9 +8671,9 @@ components:
                 description: >-
                   A purchase unit. Establishes a contract between a customer and
                   merchant.
-                $ref: '#/components/schemas/purchase_unit'
+                $ref: "#/components/schemas/purchase_unit"
             status:
-              $ref: '#/components/schemas/order_status'
+              $ref: "#/components/schemas/order_status"
               readOnly: true
             links:
               description: >-
@@ -8695,7 +8696,7 @@ components:
                   A request-related [HATEOAS
                   link](/api/rest/responses/#hateoas-links). To complete payer
                   approval, use the `approve` link with the `GET` method.
-                $ref: '#/components/schemas/link_description'
+                $ref: "#/components/schemas/link_description"
     orders.authorize-400:
       properties:
         details:
@@ -9627,7 +9628,7 @@ components:
       type: object
       properties:
         payment_source:
-          $ref: '#/components/schemas/payment_source'
+          $ref: "#/components/schemas/payment_source"
     orders.capture-400:
       properties:
         details:
@@ -11961,16 +11962,16 @@ components:
           maxLength: 64
         tracking_number_type:
           description: The type of tracking number.
-          $ref: '#/components/schemas/shipment_tracking_number_type'
+          $ref: "#/components/schemas/shipment_tracking_number_type"
         status:
-          $ref: '#/components/schemas/shipment_tracking_status'
+          $ref: "#/components/schemas/shipment_tracking_status"
         shipment_date:
           description: >-
             The date when the shipment occurred, in [Internet date and time
             format](https://tools.ietf.org/html/rfc3339#section-5.6).
-          $ref: '#/components/schemas/date_no_time'
+          $ref: "#/components/schemas/date_no_time"
         carrier:
-          $ref: '#/components/schemas/shipment_carrier'
+          $ref: "#/components/schemas/shipment_carrier"
         carrier_name_other:
           description: >-
             The name of the carrier for the shipment. Provide this value only if
@@ -12006,7 +12007,7 @@ components:
             The date and time when the tracking information was last updated, in
             [Internet date and time
             format](https://tools.ietf.org/html/rfc3339#section-5.6).
-          $ref: '#/components/schemas/date_time'
+          $ref: "#/components/schemas/date_time"
         shipment_direction:
           description: >-
             To denote whether the shipment is sent forward to the receiver or
@@ -12037,7 +12038,7 @@ components:
       description: The tracking details of an order.
       type: object
       allOf:
-        - $ref: '#/components/schemas/shipment_tracker'
+        - $ref: "#/components/schemas/shipment_tracker"
         - properties:
             capture_id:
               description: The PayPal capture ID.
@@ -12057,7 +12058,7 @@ components:
               type: array
               items:
                 description: Items in a shipment.
-                $ref: '#/components/schemas/tracker_item'
+                $ref: "#/components/schemas/tracker_item"
           required:
             - capture_id
     orders.track.create-400:
@@ -12352,123 +12353,123 @@ components:
                       - ITEM_SKU_MISMATCH
     OrdersCreateOrderResponse:
       allOf:
-        - $ref: '#/components/schemas/error_400'
-        - $ref: '#/components/schemas/400'
+        - $ref: "#/components/schemas/error_400"
+        - $ref: "#/components/schemas/400"
     OrdersCreateOrder401Response:
       allOf:
-        - $ref: '#/components/schemas/error_401'
-        - $ref: '#/components/schemas/401'
+        - $ref: "#/components/schemas/error_401"
+        - $ref: "#/components/schemas/401"
     OrdersCreateOrder422Response:
       allOf:
-        - $ref: '#/components/schemas/error_422'
-        - $ref: '#/components/schemas/422'
+        - $ref: "#/components/schemas/error_422"
+        - $ref: "#/components/schemas/422"
     OrdersShowDetailsResponse:
       allOf:
-        - $ref: '#/components/schemas/error_401'
-        - $ref: '#/components/schemas/401'
+        - $ref: "#/components/schemas/error_401"
+        - $ref: "#/components/schemas/401"
     OrdersShowDetails404Response:
       allOf:
-        - $ref: '#/components/schemas/error_404'
-        - $ref: '#/components/schemas/404'
+        - $ref: "#/components/schemas/error_404"
+        - $ref: "#/components/schemas/404"
     OrdersUpdateOrderStatusResponse:
       allOf:
-        - $ref: '#/components/schemas/error_400'
-        - $ref: '#/components/schemas/orders.patch-400'
+        - $ref: "#/components/schemas/error_400"
+        - $ref: "#/components/schemas/orders.patch-400"
     OrdersUpdateOrderStatus401Response:
       allOf:
-        - $ref: '#/components/schemas/error_401'
-        - $ref: '#/components/schemas/401'
+        - $ref: "#/components/schemas/error_401"
+        - $ref: "#/components/schemas/401"
     OrdersUpdateOrderStatus404Response:
       allOf:
-        - $ref: '#/components/schemas/error_404'
-        - $ref: '#/components/schemas/404'
+        - $ref: "#/components/schemas/error_404"
+        - $ref: "#/components/schemas/404"
     OrdersUpdateOrderStatus422Response:
       allOf:
-        - $ref: '#/components/schemas/error_422'
-        - $ref: '#/components/schemas/orders.patch-422'
+        - $ref: "#/components/schemas/error_422"
+        - $ref: "#/components/schemas/orders.patch-422"
     OrdersConfirmPaymentSourceResponse:
       allOf:
-        - $ref: '#/components/schemas/error_400'
-        - $ref: '#/components/schemas/orders.confirm-400'
+        - $ref: "#/components/schemas/error_400"
+        - $ref: "#/components/schemas/orders.confirm-400"
     OrdersConfirmPaymentSource403Response:
       allOf:
-        - $ref: '#/components/schemas/error_403'
-        - $ref: '#/components/schemas/403'
+        - $ref: "#/components/schemas/error_403"
+        - $ref: "#/components/schemas/403"
     OrdersConfirmPaymentSource422Response:
       allOf:
-        - $ref: '#/components/schemas/error_422'
-        - $ref: '#/components/schemas/orders.confirm-422'
+        - $ref: "#/components/schemas/error_422"
+        - $ref: "#/components/schemas/orders.confirm-422"
     OrdersAuthorizePaymentOrderResponse:
       allOf:
-        - $ref: '#/components/schemas/error_400'
-        - $ref: '#/components/schemas/orders.authorize-400'
+        - $ref: "#/components/schemas/error_400"
+        - $ref: "#/components/schemas/orders.authorize-400"
     OrdersAuthorizePaymentOrder401Response:
       allOf:
-        - $ref: '#/components/schemas/error_401'
-        - $ref: '#/components/schemas/401'
+        - $ref: "#/components/schemas/error_401"
+        - $ref: "#/components/schemas/401"
     OrdersAuthorizePaymentOrder403Response:
       allOf:
-        - $ref: '#/components/schemas/error_403'
-        - $ref: '#/components/schemas/orders.authorize-403'
+        - $ref: "#/components/schemas/error_403"
+        - $ref: "#/components/schemas/orders.authorize-403"
     OrdersAuthorizePaymentOrder404Response:
       allOf:
-        - $ref: '#/components/schemas/error_404'
-        - $ref: '#/components/schemas/404'
+        - $ref: "#/components/schemas/error_404"
+        - $ref: "#/components/schemas/404"
     OrdersAuthorizePaymentOrder422Response:
       allOf:
-        - $ref: '#/components/schemas/error_422'
-        - $ref: '#/components/schemas/orders.authorize-422'
+        - $ref: "#/components/schemas/error_422"
+        - $ref: "#/components/schemas/orders.authorize-422"
     OrdersCapturePaymentResponse:
       allOf:
-        - $ref: '#/components/schemas/error_400'
-        - $ref: '#/components/schemas/orders.capture-400'
+        - $ref: "#/components/schemas/error_400"
+        - $ref: "#/components/schemas/orders.capture-400"
     OrdersCapturePayment401Response:
       allOf:
-        - $ref: '#/components/schemas/error_401'
-        - $ref: '#/components/schemas/401'
+        - $ref: "#/components/schemas/error_401"
+        - $ref: "#/components/schemas/401"
     OrdersCapturePayment403Response:
       allOf:
-        - $ref: '#/components/schemas/error_403'
-        - $ref: '#/components/schemas/orders.capture-403'
+        - $ref: "#/components/schemas/error_403"
+        - $ref: "#/components/schemas/orders.capture-403"
     OrdersCapturePayment404Response:
       allOf:
-        - $ref: '#/components/schemas/error_404'
-        - $ref: '#/components/schemas/404'
+        - $ref: "#/components/schemas/error_404"
+        - $ref: "#/components/schemas/404"
     OrdersCapturePayment422Response:
       allOf:
-        - $ref: '#/components/schemas/error_422'
-        - $ref: '#/components/schemas/orders.capture-422'
+        - $ref: "#/components/schemas/error_422"
+        - $ref: "#/components/schemas/orders.capture-422"
     OrdersAddTrackingInformationResponse:
       allOf:
-        - $ref: '#/components/schemas/error_400'
-        - $ref: '#/components/schemas/orders.track.create-400'
+        - $ref: "#/components/schemas/error_400"
+        - $ref: "#/components/schemas/orders.track.create-400"
     OrdersAddTrackingInformation403Response:
       allOf:
-        - $ref: '#/components/schemas/error_403'
-        - $ref: '#/components/schemas/orders.track.create-403'
+        - $ref: "#/components/schemas/error_403"
+        - $ref: "#/components/schemas/orders.track.create-403"
     OrdersAddTrackingInformation404Response:
       allOf:
-        - $ref: '#/components/schemas/error_404'
-        - $ref: '#/components/schemas/404'
+        - $ref: "#/components/schemas/error_404"
+        - $ref: "#/components/schemas/404"
     OrdersAddTrackingInformation422Response:
       allOf:
-        - $ref: '#/components/schemas/error_422'
-        - $ref: '#/components/schemas/orders.track.create-422'
+        - $ref: "#/components/schemas/error_422"
+        - $ref: "#/components/schemas/orders.track.create-422"
     TrackersUpdateTrackingInfoResponse:
       allOf:
-        - $ref: '#/components/schemas/error_400'
-        - $ref: '#/components/schemas/orders.trackers.patch-400'
+        - $ref: "#/components/schemas/error_400"
+        - $ref: "#/components/schemas/orders.trackers.patch-400"
     TrackersUpdateTrackingInfo403Response:
       allOf:
-        - $ref: '#/components/schemas/error_403'
-        - $ref: '#/components/schemas/orders.trackers.patch-403'
+        - $ref: "#/components/schemas/error_403"
+        - $ref: "#/components/schemas/orders.trackers.patch-403"
     TrackersUpdateTrackingInfo404Response:
       allOf:
-        - $ref: '#/components/schemas/error_404'
-        - $ref: '#/components/schemas/orders.trackers.patch-404'
+        - $ref: "#/components/schemas/error_404"
+        - $ref: "#/components/schemas/orders.trackers.patch-404"
     TrackersUpdateTrackingInfo422Response:
       allOf:
-        - $ref: '#/components/schemas/error_422'
-        - $ref: '#/components/schemas/orders.trackers.patch-422'
+        - $ref: "#/components/schemas/error_422"
+        - $ref: "#/components/schemas/orders.trackers.patch-422"
 externalDocs:
   url: https://developer.paypal.com/docs/api/orders/v2/

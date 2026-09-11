@@ -16,8 +16,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_DESCRIPTION;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Description;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
@@ -32,15 +32,17 @@ public class DescriptionImpl extends DmnModelElementInstanceImpl implements Desc
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(Description.class, DMN_ELEMENT_DESCRIPTION)
-      .namespaceUri(LATEST_DMN_NS)
-      .instanceProvider(new ModelTypeInstanceProvider<Description>() {
-        public Description newInstance(ModelTypeInstanceContext instanceContext) {
-          return new DescriptionImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(Description.class, DMN_ELEMENT_DESCRIPTION)
+            .namespaceUri(LATEST_DMN_NS)
+            .instanceProvider(
+                new ModelTypeInstanceProvider<Description>() {
+                  public Description newInstance(ModelTypeInstanceContext instanceContext) {
+                    return new DescriptionImpl(instanceContext);
+                  }
+                });
 
     typeBuilder.build();
   }
-
 }

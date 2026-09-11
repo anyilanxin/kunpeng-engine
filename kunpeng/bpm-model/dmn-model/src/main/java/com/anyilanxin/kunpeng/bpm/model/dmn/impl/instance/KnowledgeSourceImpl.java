@@ -16,11 +16,9 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_LOCATION_URI;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_KNOWLEDGE_SOURCE;
-
-import java.util.Collection;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.AuthorityRequirement;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DrgElement;
@@ -37,6 +35,7 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.child.ChildElement;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.ChildElementCollection;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.SequenceBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.ElementReference;
+import java.util.Collection;
 
 public class KnowledgeSourceImpl extends DrgElementImpl implements KnowledgeSource {
 
@@ -79,31 +78,33 @@ public class KnowledgeSourceImpl extends DrgElementImpl implements KnowledgeSour
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(KnowledgeSource.class, DMN_ELEMENT_KNOWLEDGE_SOURCE)
-      .namespaceUri(LATEST_DMN_NS)
-      .extendsType(DrgElement.class)
-      .instanceProvider(new ModelTypeInstanceProvider<KnowledgeSource>() {
-        public KnowledgeSource newInstance(ModelTypeInstanceContext instanceContext) {
-          return new KnowledgeSourceImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(KnowledgeSource.class, DMN_ELEMENT_KNOWLEDGE_SOURCE)
+            .namespaceUri(LATEST_DMN_NS)
+            .extendsType(DrgElement.class)
+            .instanceProvider(
+                new ModelTypeInstanceProvider<KnowledgeSource>() {
+                  public KnowledgeSource newInstance(ModelTypeInstanceContext instanceContext) {
+                    return new KnowledgeSourceImpl(instanceContext);
+                  }
+                });
 
-    locationUriAttribute = typeBuilder.stringAttribute(DMN_ATTRIBUTE_LOCATION_URI)
-      .build();
+    locationUriAttribute = typeBuilder.stringAttribute(DMN_ATTRIBUTE_LOCATION_URI).build();
 
     SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
-    authorityRequirementCollection = sequenceBuilder.elementCollection(AuthorityRequirement.class)
-      .build();
+    authorityRequirementCollection =
+        sequenceBuilder.elementCollection(AuthorityRequirement.class).build();
 
-    typeChild = sequenceBuilder.element(Type.class)
-      .build();
+    typeChild = sequenceBuilder.element(Type.class).build();
 
-    ownerRef = sequenceBuilder.element(OwnerReference.class)
-      .uriElementReference(OrganizationUnit.class)
-      .build();
+    ownerRef =
+        sequenceBuilder
+            .element(OwnerReference.class)
+            .uriElementReference(OrganizationUnit.class)
+            .build();
 
     typeBuilder.build();
   }
-
 }

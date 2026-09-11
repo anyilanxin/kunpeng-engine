@@ -22,9 +22,9 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ScriptTask;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeJobPriorityDefinition;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeScript;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeTaskDefinition;
-import java.util.Collection;
 import com.anyilanxin.kunpeng.bpm.model.xml.validation.ModelElementValidator;
 import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResultCollector;
+import java.util.Collection;
 
 public final class ScriptTaskValidator implements ModelElementValidator<ScriptTask> {
 

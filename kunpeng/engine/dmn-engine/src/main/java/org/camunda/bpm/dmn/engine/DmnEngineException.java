@@ -16,9 +16,7 @@
  */
 package org.camunda.bpm.dmn.engine;
 
-/**
- * The base exception of the DMN Engine.
- */
+/** The base exception of the DMN Engine. */
 public class DmnEngineException extends RuntimeException {
 
   public DmnEngineException(String message) {
@@ -28,5 +26,4 @@ public class DmnEngineException extends RuntimeException {
   public DmnEngineException(String message, Throwable cause) {
     super(message, cause);
   }
-
 }

@@ -19,13 +19,11 @@ package org.camunda.bpm.dmn.engine;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
-
 import org.camunda.bpm.engine.variable.value.TypedValue;
 
 /**
- * The result of one decision table. Which is the list of its decision rule results (see
- * {@link DmnDecisionRuleResult}). This represents the output entries of all matching
- * decision rules.
+ * The result of one decision table. Which is the list of its decision rule results (see {@link
+ * DmnDecisionRuleResult}). This represents the output entries of all matching decision rules.
  */
 public interface DmnDecisionTableResult extends List<DmnDecisionRuleResult>, Serializable {
 
@@ -37,70 +35,55 @@ public interface DmnDecisionTableResult extends List<DmnDecisionRuleResult>, Ser
   DmnDecisionRuleResult getFirstResult();
 
   /**
-   * Returns the single {@link DmnDecisionRuleResult} of the result. Which asserts
-   * that only one decision rule result exist.
+   * Returns the single {@link DmnDecisionRuleResult} of the result. Which asserts that only one
+   * decision rule result exist.
    *
    * @return the single decision rule result or null if none exists
-   *
-   * @throws DmnEngineException
-   *           if more than one decision rule result exists
+   * @throws DmnEngineException if more than one decision rule result exists
    */
   DmnDecisionRuleResult getSingleResult();
 
   /**
-   * Collects the entries for a output name. The list will contain entries for
-   * the output name of every {@link DmnDecisionRuleResult}. Note that the list
-   * may contains less entries than decision rule results if an output does not
-   * contain a value for the output name.
+   * Collects the entries for a output name. The list will contain entries for the output name of
+   * every {@link DmnDecisionRuleResult}. Note that the list may contains less entries than decision
+   * rule results if an output does not contain a value for the output name.
    *
-   * @param outputName
-   *          the name of the output to collect
-   * @param <T>
-   *          the type of the rule result entry
+   * @param outputName the name of the output to collect
+   * @param <T> the type of the rule result entry
    * @return the list of collected output values
    */
   <T> List<T> collectEntries(String outputName);
 
   /**
-   * Returns the entries of all decision rule results. For every decision rule
-   * result a map of the output names and corresponding entries is returned.
+   * Returns the entries of all decision rule results. For every decision rule result a map of the
+   * output names and corresponding entries is returned.
    *
    * @return the list of all entry maps
-   *
    * @see DmnDecisionRuleResult#getEntryMap()
    */
   List<Map<String, Object>> getResultList();
 
   /**
-   * Returns the value of the single entry of the decision rule result. Asserts that
-   * only one decision rule result with a single entry exist.
+   * Returns the value of the single entry of the decision rule result. Asserts that only one
+   * decision rule result with a single entry exist.
    *
-   * @param <T>
-   *          the type of the result entry
+   * @param <T> the type of the result entry
    * @return the value of the single result entry or null if none exists
-   *
-   * @throws DmnEngineException
-   *           if more than one decision rule result or more than one result entry
-   *           exists
-   *
+   * @throws DmnEngineException if more than one decision rule result or more than one result entry
+   *     exists
    * @see #getSingleEntryTyped()
    */
   <T> T getSingleEntry();
 
   /**
-   * Returns the typed value of the single entry of the decision rule result. Asserts
-   * that only one decision rule result with a single entry exist.
+   * Returns the typed value of the single entry of the decision rule result. Asserts that only one
+   * decision rule result with a single entry exist.
    *
-   * @param <T>
-   *          the type of the result entry
+   * @param <T> the type of the result entry
    * @return the typed value of the single result entry or null if none exists
-   *
-   * @throws DmnEngineException
-   *           if more than one decision rule result or more than one result entry
-   *           exists
-   *
+   * @throws DmnEngineException if more than one decision rule result or more than one result entry
+   *     exists
    * @see #getSingleEntry()
    */
   <T extends TypedValue> T getSingleEntryTyped();
-
 }

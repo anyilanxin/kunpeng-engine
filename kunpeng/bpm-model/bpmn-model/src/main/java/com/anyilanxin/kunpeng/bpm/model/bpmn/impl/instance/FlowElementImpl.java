@@ -26,7 +26,6 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BaseElement;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.CategoryValue;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.FlowElement;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Monitoring;
-import java.util.Collection;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
@@ -34,6 +33,7 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.attribute.Attribute;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.ChildElement;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.SequenceBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.ElementReferenceCollection;
+import java.util.Collection;
 
 /**
  * The BPMN flowElement element

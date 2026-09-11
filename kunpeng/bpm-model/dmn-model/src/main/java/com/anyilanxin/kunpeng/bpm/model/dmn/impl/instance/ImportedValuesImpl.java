@@ -16,9 +16,9 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_EXPRESSION_LANGUAGE;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_IMPORTED_VALUES;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Import;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.ImportedElement;
@@ -58,25 +58,25 @@ public class ImportedValuesImpl extends ImportImpl implements ImportedValues {
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(ImportedValues.class, DMN_ELEMENT_IMPORTED_VALUES)
-      .namespaceUri(LATEST_DMN_NS)
-      .extendsType(Import.class)
-      .instanceProvider(new ModelTypeInstanceProvider<ImportedValues>() {
-        public ImportedValues newInstance(ModelTypeInstanceContext instanceContext) {
-          return new ImportedValuesImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(ImportedValues.class, DMN_ELEMENT_IMPORTED_VALUES)
+            .namespaceUri(LATEST_DMN_NS)
+            .extendsType(Import.class)
+            .instanceProvider(
+                new ModelTypeInstanceProvider<ImportedValues>() {
+                  public ImportedValues newInstance(ModelTypeInstanceContext instanceContext) {
+                    return new ImportedValuesImpl(instanceContext);
+                  }
+                });
 
-    expressionLanguageAttribute = typeBuilder.stringAttribute(DMN_ATTRIBUTE_EXPRESSION_LANGUAGE)
-      .build();
+    expressionLanguageAttribute =
+        typeBuilder.stringAttribute(DMN_ATTRIBUTE_EXPRESSION_LANGUAGE).build();
 
     SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
-    importedElementChild = sequenceBuilder.element(ImportedElement.class)
-      .required()
-      .build();
+    importedElementChild = sequenceBuilder.element(ImportedElement.class).required().build();
 
     typeBuilder.build();
   }
-
 }

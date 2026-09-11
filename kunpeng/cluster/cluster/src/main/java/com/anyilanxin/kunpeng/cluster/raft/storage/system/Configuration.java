@@ -20,10 +20,10 @@ package com.anyilanxin.kunpeng.cluster.raft.storage.system;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.collect.ImmutableList;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.impl.DefaultRaftMember;
+import com.google.common.collect.ImmutableList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -38,8 +38,8 @@ import java.util.stream.Stream;
  * Represents a persisted server configuration.
  *
  * @param index The index is the index of the {@link
- *     com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ConfigurationEntry ConfigurationEntry} which resulted in
- *     this configuration.
+ *     com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ConfigurationEntry ConfigurationEntry}
+ *     which resulted in this configuration.
  * @param term The term is the term of the leader at the time the configuration change was
  *     committed.
  * @param time The time at which the configuration was committed.

@@ -108,8 +108,10 @@ public interface ClusterCommunicationService {
    * as:
    *
    * <ul>
-   *   <li>{@link com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.NoSuchMemberException} - indicates
-   *       that the local membership protocol cannot resolve the given member ID to a node address
+   *   <li>{@link
+   *       com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.NoSuchMemberException}
+   *       - indicates that the local membership protocol cannot resolve the given member ID to a
+   *       node address
    * </ul>
    *
    * @param subject message subject
@@ -179,8 +181,8 @@ public interface ClusterCommunicationService {
   /**
    * Adds a new subscriber for the specified message subject which must return a reply. If the
    * sender is not a known member, the handler is not called, and a {@link
-   * com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.NoSuchMemberException} is returned to the
-   * sender.
+   * com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.NoSuchMemberException} is
+   * returned to the sender.
    *
    * @param subject message subject
    * @param decoder decoder to deserializing incoming message
@@ -200,8 +202,8 @@ public interface ClusterCommunicationService {
   /**
    * Adds a new subscriber for the specified message subject which must return a reply. If the
    * sender is not a known member, the handler is not called, and a {@link
-   * com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.NoSuchMemberException} is returned to the
-   * sender.
+   * com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.NoSuchMemberException} is
+   * returned to the sender.
    *
    * @param subject message subject
    * @param decoder decoder to deserializing incoming message

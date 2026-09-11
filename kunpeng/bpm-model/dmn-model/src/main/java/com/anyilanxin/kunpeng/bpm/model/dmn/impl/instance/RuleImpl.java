@@ -16,8 +16,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_RULE;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DecisionRule;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Rule;
@@ -33,16 +33,18 @@ public class RuleImpl extends DecisionRuleImpl implements Rule {
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(Rule.class, DMN_ELEMENT_RULE)
-      .namespaceUri(LATEST_DMN_NS)
-      .extendsType(DecisionRule.class)
-      .instanceProvider(new ModelTypeInstanceProvider<Rule>() {
-        public Rule newInstance(ModelTypeInstanceContext instanceContext) {
-          return new RuleImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(Rule.class, DMN_ELEMENT_RULE)
+            .namespaceUri(LATEST_DMN_NS)
+            .extendsType(DecisionRule.class)
+            .instanceProvider(
+                new ModelTypeInstanceProvider<Rule>() {
+                  public Rule newInstance(ModelTypeInstanceContext instanceContext) {
+                    return new RuleImpl(instanceContext);
+                  }
+                });
 
     typeBuilder.build();
   }
-
 }

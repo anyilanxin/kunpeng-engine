@@ -17,12 +17,9 @@
  */
 package com.anyilanxin.kunpeng.cluster.cluster.protocol;
 
-import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.anyilanxin.kunpeng.cluster.utils.concurrent.Threads.namedThreads;
+import static com.google.common.base.MoreObjects.toStringHelper;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.anyilanxin.kunpeng.cluster.cluster.BootstrapService;
 import com.anyilanxin.kunpeng.cluster.cluster.Member;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
@@ -37,6 +34,9 @@ import com.anyilanxin.kunpeng.cluster.utils.net.Address;
 import com.anyilanxin.kunpeng.cluster.utils.serializer.Namespace;
 import com.anyilanxin.kunpeng.cluster.utils.serializer.Namespaces;
 import com.anyilanxin.kunpeng.cluster.utils.serializer.Serializer;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -71,7 +71,8 @@ public class SwimMembershipProtocol
     implements GroupMembershipProtocol {
 
   public static final Type TYPE = new Type();
-  private static final Logger LOGGER = LoggerFactory.getLogger("com.anyilanxin.kunpeng.cluster.cluster.protocol.swim");
+  private static final Logger LOGGER =
+      LoggerFactory.getLogger("com.anyilanxin.kunpeng.cluster.cluster.protocol.swim");
   private static final Logger GOSSIP_LOGGER =
       LoggerFactory.getLogger("com.anyilanxin.kunpeng.cluster.cluster.protocol.swim.gossip");
   private static final Logger PROBE_LOGGER =

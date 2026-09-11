@@ -16,8 +16,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_AUTHORITY_REQUIREMENT;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.AuthorityRequirement;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Decision;
@@ -33,11 +33,13 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.SequenceBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.ElementReference;
 
-public class AuthorityRequirementImpl extends DmnModelElementInstanceImpl implements AuthorityRequirement {
+public class AuthorityRequirementImpl extends DmnModelElementInstanceImpl
+    implements AuthorityRequirement {
 
   protected static ElementReference<Decision, RequiredDecisionReference> requiredDecisionRef;
   protected static ElementReference<InputData, RequiredInputReference> requiredInputRef;
-  protected static ElementReference<KnowledgeSource, RequiredAuthorityReference> requiredAuthorityRef;
+  protected static ElementReference<KnowledgeSource, RequiredAuthorityReference>
+      requiredAuthorityRef;
 
   public AuthorityRequirementImpl(ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
@@ -68,29 +70,38 @@ public class AuthorityRequirementImpl extends DmnModelElementInstanceImpl implem
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(AuthorityRequirement.class, DMN_ELEMENT_AUTHORITY_REQUIREMENT)
-      .namespaceUri(LATEST_DMN_NS)
-      .instanceProvider(new ModelTypeInstanceProvider<AuthorityRequirement>() {
-        public AuthorityRequirement newInstance(ModelTypeInstanceContext instanceContext) {
-          return new AuthorityRequirementImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(AuthorityRequirement.class, DMN_ELEMENT_AUTHORITY_REQUIREMENT)
+            .namespaceUri(LATEST_DMN_NS)
+            .instanceProvider(
+                new ModelTypeInstanceProvider<AuthorityRequirement>() {
+                  public AuthorityRequirement newInstance(
+                      ModelTypeInstanceContext instanceContext) {
+                    return new AuthorityRequirementImpl(instanceContext);
+                  }
+                });
 
     SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
-    requiredDecisionRef = sequenceBuilder.element(RequiredDecisionReference.class)
-      .uriElementReference(Decision.class)
-      .build();
+    requiredDecisionRef =
+        sequenceBuilder
+            .element(RequiredDecisionReference.class)
+            .uriElementReference(Decision.class)
+            .build();
 
-    requiredInputRef = sequenceBuilder.element(RequiredInputReference.class)
-      .uriElementReference(InputData.class)
-      .build();
+    requiredInputRef =
+        sequenceBuilder
+            .element(RequiredInputReference.class)
+            .uriElementReference(InputData.class)
+            .build();
 
-    requiredAuthorityRef = sequenceBuilder.element(RequiredAuthorityReference.class)
-      .uriElementReference(KnowledgeSource.class)
-      .build();
+    requiredAuthorityRef =
+        sequenceBuilder
+            .element(RequiredAuthorityReference.class)
+            .uriElementReference(KnowledgeSource.class)
+            .build();
 
     typeBuilder.build();
   }
-
 }

@@ -21,13 +21,13 @@ import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN
 import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_20_SCHEMA_LOCATION;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.Bpmn;
-import java.io.InputStream;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.validation.SchemaFactory;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.ModelImpl;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.parser.AbstractModelParser;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.util.ReflectUtil;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.DomDocument;
+import java.io.InputStream;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.validation.SchemaFactory;
 
 /**
  * The parser used when parsing BPMN Files

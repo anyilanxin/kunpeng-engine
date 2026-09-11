@@ -16,8 +16,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_ALLOWED_VALUE;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.AllowedValues;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.LiteralExpression;
@@ -33,14 +33,17 @@ public class AllowedValuesImpl extends UnaryTestsImpl implements AllowedValues {
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(AllowedValues.class, DMN_ELEMENT_ALLOWED_VALUE)
-      .namespaceUri(LATEST_DMN_NS)
-      .extendsType(LiteralExpression.class)
-      .instanceProvider(new ModelTypeInstanceProvider<AllowedValues>() {
-        public AllowedValues newInstance(ModelTypeInstanceContext instanceContext) {
-          return new AllowedValuesImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(AllowedValues.class, DMN_ELEMENT_ALLOWED_VALUE)
+            .namespaceUri(LATEST_DMN_NS)
+            .extendsType(LiteralExpression.class)
+            .instanceProvider(
+                new ModelTypeInstanceProvider<AllowedValues>() {
+                  public AllowedValues newInstance(ModelTypeInstanceContext instanceContext) {
+                    return new AllowedValuesImpl(instanceContext);
+                  }
+                });
 
     typeBuilder.build();
   }

@@ -16,8 +16,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_IMPACTING_DECISION;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DmnElementReference;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.ImpactingDecisionReference;
@@ -26,23 +26,27 @@ import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceConte
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTypeInstanceProvider;
 
-public class ImpactingDecisionReferenceImpl extends DmnElementReferenceImpl implements ImpactingDecisionReference {
+public class ImpactingDecisionReferenceImpl extends DmnElementReferenceImpl
+    implements ImpactingDecisionReference {
 
   public ImpactingDecisionReferenceImpl(ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(ImpactingDecisionReference.class, DMN_ELEMENT_IMPACTING_DECISION)
-      .namespaceUri(LATEST_DMN_NS)
-      .extendsType(DmnElementReference.class)
-      .instanceProvider(new ModelTypeInstanceProvider<ImpactingDecisionReference>() {
-        public ImpactingDecisionReference newInstance(ModelTypeInstanceContext instanceContext) {
-          return new ImpactingDecisionReferenceImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(ImpactingDecisionReference.class, DMN_ELEMENT_IMPACTING_DECISION)
+            .namespaceUri(LATEST_DMN_NS)
+            .extendsType(DmnElementReference.class)
+            .instanceProvider(
+                new ModelTypeInstanceProvider<ImpactingDecisionReference>() {
+                  public ImpactingDecisionReference newInstance(
+                      ModelTypeInstanceContext instanceContext) {
+                    return new ImpactingDecisionReferenceImpl(instanceContext);
+                  }
+                });
 
     typeBuilder.build();
   }
-
 }

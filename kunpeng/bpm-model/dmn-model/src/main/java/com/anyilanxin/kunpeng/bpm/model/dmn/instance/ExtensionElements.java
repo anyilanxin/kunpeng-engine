@@ -16,14 +16,11 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.instance;
 
-import java.util.Collection;
-
 import com.anyilanxin.kunpeng.bpm.model.dmn.Query;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
+import java.util.Collection;
 
-/**
- * The DMN extensionElements element
- */
+/** The DMN extensionElements element */
 public interface ExtensionElements extends DmnModelElementInstance {
 
   Collection<ModelElementInstance> getElements();
@@ -33,5 +30,4 @@ public interface ExtensionElements extends DmnModelElementInstance {
   ModelElementInstance addExtensionElement(String namespaceUri, String localName);
 
   <T extends ModelElementInstance> T addExtensionElement(Class<T> extensionElementClass);
-
 }

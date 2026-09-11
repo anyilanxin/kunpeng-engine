@@ -18,15 +18,13 @@ package org.camunda.bpm.dmn.engine.test;
 
 import org.camunda.bpm.dmn.engine.DmnEngine;
 import org.camunda.bpm.dmn.engine.DmnEngineConfiguration;
-import org.camunda.bpm.dmn.engine.impl.DefaultDmnEngineConfiguration;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 
 /**
  * JUnit rule for {@link DmnEngine} initialization.
- * <p>
- * Usage:
- * </p>
+ *
+ * <p>Usage:
  *
  * <pre>
  * public class YourDmnTest {
@@ -38,34 +36,26 @@ import org.junit.runner.Description;
  * }
  * </pre>
  *
- * <p>
- * The DMN engine will be made available to the test class
- * through the getters of the {@code dmnEngineRule} (see {@link #getDmnEngine()}).
- * The DMN engine will be initialized with the default DMN engine configuration.
- * To specify a different configuration, pass the configuration to the
+ * <p>The DMN engine will be made available to the test class through the getters of the {@code
+ * dmnEngineRule} (see {@link #getDmnEngine()}). The DMN engine will be initialized with the default
+ * DMN engine configuration. To specify a different configuration, pass the configuration to the
  * {@link #DmnEngineRule(DmnEngineConfiguration)} constructor.
- * </p>
  */
 public class DmnEngineRule extends TestWatcher {
 
   protected DmnEngine dmnEngine;
   protected DmnEngineConfiguration dmnEngineConfiguration;
 
-  /**
-   * Creates a {@link DmnEngine} with the default {@link DmnEngineConfiguration}
-   */
+  /** Creates a {@link DmnEngine} with the default {@link DmnEngineConfiguration} */
   public DmnEngineRule() {
     this(null);
   }
 
-  /**
-   * Creates a {@link DmnEngine} with the given {@link DmnEngineConfiguration}
-   */
+  /** Creates a {@link DmnEngine} with the given {@link DmnEngineConfiguration} */
   public DmnEngineRule(DmnEngineConfiguration dmnEngineConfiguration) {
     if (dmnEngineConfiguration != null) {
       this.dmnEngineConfiguration = dmnEngineConfiguration;
-    }
-    else {
+    } else {
       this.dmnEngineConfiguration = DmnEngineConfiguration.createDefaultDmnEngineConfiguration();
     }
   }
@@ -83,5 +73,4 @@ public class DmnEngineRule extends TestWatcher {
       dmnEngine = dmnEngineConfiguration.buildEngine();
     }
   }
-
 }

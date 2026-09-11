@@ -36,8 +36,6 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.LoopCharacteristics;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Property;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ResourceRole;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.SequenceFlow;
-import java.util.Collection;
-import java.util.stream.Collectors;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
@@ -46,6 +44,8 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.child.ChildElement;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.ChildElementCollection;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.SequenceBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.AttributeReference;
+import java.util.Collection;
+import java.util.stream.Collectors;
 
 /**
  * The BPMN activity element

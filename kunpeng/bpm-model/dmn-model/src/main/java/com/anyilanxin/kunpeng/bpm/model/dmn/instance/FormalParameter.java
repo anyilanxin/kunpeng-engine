@@ -16,6 +16,4 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.instance;
 
-public interface FormalParameter extends InformationItem {
-
-}
+public interface FormalParameter extends InformationItem {}

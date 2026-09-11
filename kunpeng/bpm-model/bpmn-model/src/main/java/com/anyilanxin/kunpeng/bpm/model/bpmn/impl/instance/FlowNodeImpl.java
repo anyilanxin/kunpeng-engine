@@ -29,8 +29,6 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.QueryImpl;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.FlowElement;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.FlowNode;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.SequenceFlow;
-import java.util.Collection;
-import java.util.HashSet;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
@@ -39,6 +37,8 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.child.SequenceBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.AttributeReference;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.ElementReferenceCollection;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.Reference;
+import java.util.Collection;
+import java.util.HashSet;
 
 /**
  * The BPMN flowNode element

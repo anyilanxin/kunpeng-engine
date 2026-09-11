@@ -1,52 +1,42 @@
 {
-  "request": {
-    "method": "POST",
-    "url": "/mcp",
-    "bodyPatterns": [
-      {
-        "matchesJsonPath": {
-          "expression": "$.method",
-          "equalTo": "resources/list"
-        }
-      }
-    ]
-  },
-  "response": {
-    "status": 200,
-    "headers": {
-      "Content-Type": "application/json"
+    "request": {
+        "method": "POST",
+        "bodyPatterns": [{"matchesJsonPath": {
+            "expression": "$.method",
+            "equalTo": "resources/list"
+        }}],
+        "url": "/mcp"
     },
-    "transformers": [
-      "response-template"
-    ],
-    "jsonBody": {
-      "id": "{{jsonPath request.body '$.id'}}",
-      "jsonrpc": "2.0",
-      "result": {
-        "resources": [
-          {
-            "uri": "resourceA",
-            "name": "Resource A",
-            "title": "A resource",
-            "description": "The first resource",
-            "mimeType": "text/plain"
-          },
-          {
-            "uri": "resourceB",
-            "name": "Resource B",
-            "title": "B resource",
-            "description": "The second resource",
-            "mimeType": "text/plain"
-          },
-          {
-            "uri": "resourceC",
-            "name": "Resource C",
-            "title": "C resource",
-            "description": "The third resource",
-            "mimeType": "text/markdown"
-          }
-        ]
-      }
+    "response": {
+        "headers": {"Content-Type": "application/json"},
+        "transformers": ["response-template"],
+        "jsonBody": {
+            "result": {"resources": [
+                {
+                    "name": "Resource A",
+                    "description": "The first resource",
+                    "mimeType": "text/plain",
+                    "title": "A resource",
+                    "uri": "resourceA"
+                },
+                {
+                    "name": "Resource B",
+                    "description": "The second resource",
+                    "mimeType": "text/plain",
+                    "title": "B resource",
+                    "uri": "resourceB"
+                },
+                {
+                    "name": "Resource C",
+                    "description": "The third resource",
+                    "mimeType": "text/markdown",
+                    "title": "C resource",
+                    "uri": "resourceC"
+                }
+            ]},
+            "id": "{{jsonPath request.body '$.id'}}",
+            "jsonrpc": "2.0"
+        },
+        "status": 200
     }
-  }
 }

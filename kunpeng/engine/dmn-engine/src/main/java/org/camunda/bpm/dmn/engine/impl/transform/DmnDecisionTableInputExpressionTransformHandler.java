@@ -25,13 +25,16 @@ import org.camunda.bpm.dmn.engine.impl.spi.transform.DmnElementTransformContext;
 import org.camunda.bpm.dmn.engine.impl.spi.transform.DmnElementTransformHandler;
 import org.camunda.bpm.model.dmn.instance.InputExpression;
 
-public class DmnDecisionTableInputExpressionTransformHandler implements DmnElementTransformHandler<InputExpression, DmnExpressionImpl> {
+public class DmnDecisionTableInputExpressionTransformHandler
+    implements DmnElementTransformHandler<InputExpression, DmnExpressionImpl> {
 
-  public DmnExpressionImpl handleElement(DmnElementTransformContext context, InputExpression inputExpression) {
+  public DmnExpressionImpl handleElement(
+      DmnElementTransformContext context, InputExpression inputExpression) {
     return createFromInputExpression(context, inputExpression);
   }
 
-  protected DmnExpressionImpl createFromInputExpression(DmnElementTransformContext context, InputExpression inputExpression) {
+  protected DmnExpressionImpl createFromInputExpression(
+      DmnElementTransformContext context, InputExpression inputExpression) {
     DmnExpressionImpl dmnExpression = createDmnElement(context, inputExpression);
 
     dmnExpression.setId(inputExpression.getId());
@@ -43,8 +46,8 @@ public class DmnDecisionTableInputExpressionTransformHandler implements DmnEleme
     return dmnExpression;
   }
 
-  protected DmnExpressionImpl createDmnElement(DmnElementTransformContext context, InputExpression inputExpression) {
+  protected DmnExpressionImpl createDmnElement(
+      DmnElementTransformContext context, InputExpression inputExpression) {
     return new DmnExpressionImpl();
   }
-
 }

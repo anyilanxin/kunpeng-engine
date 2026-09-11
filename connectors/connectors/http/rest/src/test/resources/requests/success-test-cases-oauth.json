@@ -1,53 +1,49 @@
 [
-  {
-    "descriptionOfTest": "Normal request with oauth",
-    "method": "post",
-    "url": "http://localhost:8086/http-endpoint",
-    "connectionTimeoutInSeconds": "30",
-    "headers": {
-      "X-Camunda-Cluster-ID": "abcdef",
-      "User-Agent": "http-connector-demo"
+    {
+        "headers": {
+            "User-Agent": "http-connector-demo",
+            "X-Camunda-Cluster-ID": "abcdef"
+        },
+        "method": "post",
+        "connectionTimeoutInSeconds": "30",
+        "descriptionOfTest": "Normal request with oauth",
+        "body": {"customer": {
+            "name": "Jane Doe",
+            "id": 1231231,
+            "email": "jane.doe@exampe.com"
+        }},
+        "url": "http://localhost:8086/http-endpoint",
+        "authentication": {
+            "audience": "https://dev-test.eu.auth0.com/api/v2/",
+            "clientId": "{{secrets.CLIENT_ID_KEY}}",
+            "oauthTokenEndpoint": "%s",
+            "clientSecret": "{{secrets.CLIENT_SECRET_KEY}}",
+            "clientAuthentication": "basicAuthHeader",
+            "scopes": "read:clients",
+            "type": "oauth-client-credentials-flow"
+        }
     },
-    "authentication": {
-      "oauthTokenEndpoint": "%s",
-      "scopes": "read:clients",
-      "audience": "https://dev-test.eu.auth0.com/api/v2/",
-      "clientId": "{{secrets.CLIENT_ID_KEY}}",
-      "clientSecret": "{{secrets.CLIENT_SECRET_KEY}}",
-      "type": "oauth-client-credentials-flow",
-      "clientAuthentication": "basicAuthHeader"
-    },
-    "body": {
-      "customer": {
-        "id": 1231231,
-        "name": "Jane Doe",
-        "email": "jane.doe@exampe.com"
-      }
+    {
+        "headers": {
+            "User-Agent": "http-connector-demo",
+            "X-Camunda-Cluster-ID": "abcdef"
+        },
+        "method": "post",
+        "connectionTimeoutInSeconds": "30",
+        "descriptionOfTest": "Normal request with oauth without scopes",
+        "body": {"customer": {
+            "name": "Jane Doe",
+            "id": 1231231,
+            "email": "jane.doe@exampe.com"
+        }},
+        "url": "http://localhost:8086/http-endpoint",
+        "authentication": {
+            "audience": "https://dev-test.eu.auth0.com/api/v2/",
+            "clientId": "{{secrets.CLIENT_ID_KEY}}",
+            "oauthTokenEndpoint": "%s",
+            "clientSecret": "{{secrets.CLIENT_SECRET_KEY}}",
+            "clientAuthentication": "basicAuthHeader",
+            "type": "oauth-client-credentials-flow"
+        }
     }
-  },
-  {
-    "descriptionOfTest": "Normal request with oauth without scopes",
-    "method": "post",
-    "url": "http://localhost:8086/http-endpoint",
-    "connectionTimeoutInSeconds": "30",
-    "headers": {
-      "X-Camunda-Cluster-ID": "abcdef",
-      "User-Agent": "http-connector-demo"
-    },
-    "authentication": {
-      "oauthTokenEndpoint": "%s",
-      "audience": "https://dev-test.eu.auth0.com/api/v2/",
-      "clientId": "{{secrets.CLIENT_ID_KEY}}",
-      "clientSecret": "{{secrets.CLIENT_SECRET_KEY}}",
-      "type": "oauth-client-credentials-flow",
-      "clientAuthentication": "basicAuthHeader"
-    },
-    "body": {
-      "customer": {
-        "id": 1231231,
-        "name": "Jane Doe",
-        "email": "jane.doe@exampe.com"
-      }
-    }
-  }
 ]

@@ -17,11 +17,11 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.storage.log;
 
+import com.anyilanxin.kunpeng.cluster.raft.journal.JournalRecord;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.PersistedRaftRecord;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.ReplicatableJournalRecord;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ApplicationEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.RaftEntry;
-import com.anyilanxin.kunpeng.cluster.raft.journal.JournalRecord;
 
 /** Indexed journal entry. */
 record IndexedRaftLogEntryImpl(long index, long term, RaftEntry entry, JournalRecord record)

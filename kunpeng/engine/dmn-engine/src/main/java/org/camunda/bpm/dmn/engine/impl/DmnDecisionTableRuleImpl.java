@@ -61,12 +61,17 @@ public class DmnDecisionTableRuleImpl {
 
   @Override
   public String toString() {
-    return "DmnDecisionTableRuleImpl{" +
-      "id='" + id + '\'' +
-      ", name='" + name + '\'' +
-      ", conditions=" + conditions +
-      ", conclusions=" + conclusions +
-      '}';
+    return "DmnDecisionTableRuleImpl{"
+        + "id='"
+        + id
+        + '\''
+        + ", name='"
+        + name
+        + '\''
+        + ", conditions="
+        + conditions
+        + ", conclusions="
+        + conclusions
+        + '}';
   }
-
 }

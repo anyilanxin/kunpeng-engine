@@ -16,10 +16,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_PERFORMANCE_INDICATOR;
-
-import java.util.Collection;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.BusinessContextElement;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Decision;
@@ -31,10 +29,13 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTypeInstanceProvider;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.SequenceBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.ElementReferenceCollection;
+import java.util.Collection;
 
-public class PerformanceIndicatorImpl extends BusinessContextElementImpl implements PerformanceIndicator {
+public class PerformanceIndicatorImpl extends BusinessContextElementImpl
+    implements PerformanceIndicator {
 
-  protected static ElementReferenceCollection<Decision, ImpactingDecisionReference> impactingDecisionRefCollection;
+  protected static ElementReferenceCollection<Decision, ImpactingDecisionReference>
+      impactingDecisionRefCollection;
 
   public PerformanceIndicatorImpl(ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
@@ -45,22 +46,27 @@ public class PerformanceIndicatorImpl extends BusinessContextElementImpl impleme
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(PerformanceIndicator.class, DMN_ELEMENT_PERFORMANCE_INDICATOR)
-      .namespaceUri(LATEST_DMN_NS)
-      .extendsType(BusinessContextElement.class)
-      .instanceProvider(new ModelTypeInstanceProvider<PerformanceIndicator>() {
-        public PerformanceIndicator newInstance(ModelTypeInstanceContext instanceContext) {
-          return new PerformanceIndicatorImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(PerformanceIndicator.class, DMN_ELEMENT_PERFORMANCE_INDICATOR)
+            .namespaceUri(LATEST_DMN_NS)
+            .extendsType(BusinessContextElement.class)
+            .instanceProvider(
+                new ModelTypeInstanceProvider<PerformanceIndicator>() {
+                  public PerformanceIndicator newInstance(
+                      ModelTypeInstanceContext instanceContext) {
+                    return new PerformanceIndicatorImpl(instanceContext);
+                  }
+                });
 
     SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
-    impactingDecisionRefCollection = sequenceBuilder.elementCollection(ImpactingDecisionReference.class)
-      .uriElementReferenceCollection(Decision.class)
-      .build();
+    impactingDecisionRefCollection =
+        sequenceBuilder
+            .elementCollection(ImpactingDecisionReference.class)
+            .uriElementReferenceCollection(Decision.class)
+            .build();
 
     typeBuilder.build();
   }
-
 }

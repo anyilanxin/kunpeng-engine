@@ -16,8 +16,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_BINDING;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.*;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
@@ -53,24 +53,23 @@ public class BindingImpl extends DmnModelElementInstanceImpl implements Binding 
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(Binding.class, DMN_ELEMENT_BINDING)
-      .namespaceUri(LATEST_DMN_NS)
-      .instanceProvider(new ModelTypeInstanceProvider<Binding>() {
-        public Binding newInstance(ModelTypeInstanceContext instanceContext) {
-          return new BindingImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(Binding.class, DMN_ELEMENT_BINDING)
+            .namespaceUri(LATEST_DMN_NS)
+            .instanceProvider(
+                new ModelTypeInstanceProvider<Binding>() {
+                  public Binding newInstance(ModelTypeInstanceContext instanceContext) {
+                    return new BindingImpl(instanceContext);
+                  }
+                });
 
     SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
-    parameterChild = sequenceBuilder.element(Parameter.class)
-      .required()
-      .build();
+    parameterChild = sequenceBuilder.element(Parameter.class).required().build();
 
-    expressionChild = sequenceBuilder.element(Expression.class)
-      .build();
+    expressionChild = sequenceBuilder.element(Expression.class).build();
 
     typeBuilder.build();
   }
-
 }

@@ -18,5 +18,4 @@ package com.anyilanxin.kunpeng.bpm.model.dmn.instance;
 
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 
-public interface DmnModelElementInstance extends ModelElementInstance {
-}
+public interface DmnModelElementInstance extends ModelElementInstance {}

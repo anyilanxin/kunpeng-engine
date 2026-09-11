@@ -20,12 +20,10 @@ import javax.script.CompiledScript;
 
 /**
  * @author Daniel Meyer
- *
  */
 public interface CachedCompiledScriptSupport {
 
   void cacheCompiledScript(CompiledScript compiledScript);
 
   CompiledScript getCachedCompiledScript();
-
 }

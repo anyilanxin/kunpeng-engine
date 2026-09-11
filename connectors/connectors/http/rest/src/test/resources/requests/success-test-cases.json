@@ -1,190 +1,173 @@
 [
-  {
-    "descriptionOfTest": "Normal request with no auth",
-    "method": "get",
-    "url": "http://localhost:8086/http-endpoint",
-    "authentication": {
-      "type": "noAuth"
+    {
+        "headers": {"User-Agent": "http-connector-demo"},
+        "method": "get",
+        "queryParameters": {
+            "q": "test",
+            "priority": 12
+        },
+        "connectionTimeoutInSeconds": 20,
+        "descriptionOfTest": "Normal request with no auth",
+        "readTimeoutInSeconds": 30,
+        "body": {"customer": {
+            "name": "Jane Doe",
+            "id": 1231231,
+            "email": "jane.doe@exampe.com"
+        }},
+        "url": "http://localhost:8086/http-endpoint",
+        "authentication": {"type": "noAuth"}
     },
-    "connectionTimeoutInSeconds": 20,
-    "readTimeoutInSeconds": 30,
-    "queryParameters": {
-      "q": "test",
-      "priority": 12
+    {
+        "headers": {
+            "User-Agent": "http-connector-demo",
+            "X-Camunda-Cluster-ID": "abcdef"
+        },
+        "method": "get",
+        "queryParameters": {
+            "q": "test",
+            "priority": 12
+        },
+        "connectionTimeoutInSeconds": 0,
+        "descriptionOfTest": "Normal request with basic auth",
+        "readTimeoutInSeconds": 0,
+        "body": {"customer": {
+            "name": "Jane Doe",
+            "id": 1231231,
+            "email": "jane.doe@exampe.com"
+        }},
+        "url": "http://localhost:8086/http-endpoint",
+        "authentication": {
+            "password": "{{secrets.MY_PASSWORD}}",
+            "type": "basic",
+            "username": "{{secrets.MY_USERNAME}}"
+        }
     },
-    "headers": {
-      "User-Agent": "http-connector-demo"
+    {
+        "headers": {
+            "User-Agent": "http-connector-demo",
+            "X-Camunda-Cluster-ID": "abcdef"
+        },
+        "method": "get",
+        "queryParameters": {
+            "q": "test",
+            "priority": 12
+        },
+        "connectionTimeoutInSeconds": 60,
+        "descriptionOfTest": "Normal request with bearer auth",
+        "readTimeoutInSeconds": 70,
+        "body": {"customer": {
+            "name": "Jane Doe",
+            "id": 1231231,
+            "email": "jane.doe@exampe.com"
+        }},
+        "url": "http://localhost:8086/http-endpoint",
+        "authentication": {
+            "type": "bearer",
+            "token": "{{secrets.MY_TOKEN}}"
+        }
     },
-    "body": {
-      "customer": {
-        "id": 1231231,
-        "name": "Jane Doe",
-        "email": "jane.doe@exampe.com"
-      }
+    {
+        "headers": {
+            "User-Agent": "http-connector-demo",
+            "X-Camunda-Cluster-ID": "abcdef"
+        },
+        "method": "get",
+        "connectionTimeoutInSeconds": 202,
+        "descriptionOfTest": "Normal request with no query params",
+        "readTimeoutInSeconds": 301,
+        "body": {"customer": {
+            "name": "Jane Doe",
+            "id": 1231231,
+            "email": "jane.doe@exampe.com"
+        }},
+        "url": "http://localhost:8086/http-endpoint",
+        "authentication": {
+            "type": "bearer",
+            "token": "{{secrets.MY_TOKEN}}"
+        }
+    },
+    {
+        "method": "get",
+        "queryParameters": {
+            "q": "test",
+            "priority": 12
+        },
+        "connectionTimeoutInSeconds": 5,
+        "descriptionOfTest": "Normal request with no headers",
+        "readTimeoutInSeconds": 67,
+        "body": {"customer": {
+            "name": "Jane Doe",
+            "id": 1231231,
+            "email": "jane.doe@exampe.com"
+        }},
+        "url": "http://localhost:8086/http-endpoint",
+        "authentication": {
+            "type": "bearer",
+            "X-Camunda-Cluster-ID": "abcdef",
+            "token": "{{secrets.MY_TOKEN}}"
+        }
+    },
+    {
+        "headers": {
+            "User-Agent": "http-connector-demo",
+            "X-Camunda-Cluster-ID": "abcdef"
+        },
+        "method": "get",
+        "queryParameters": {
+            "q": "test",
+            "priority": 12
+        },
+        "connectionTimeoutInSeconds": 20,
+        "descriptionOfTest": "Normal request with no body",
+        "readTimeoutInSeconds": 30,
+        "url": "http://localhost:8086/http-endpoint",
+        "authentication": {
+            "type": "bearer",
+            "token": "{{secrets.MY_TOKEN}}"
+        }
+    },
+    {
+        "headers": {
+            "User-Agent": "http-connector-demo",
+            "X-Camunda-Cluster-ID": "abcdef"
+        },
+        "method": "get",
+        "queryParameters": {
+            "q": "test",
+            "priority": 12
+        },
+        "connectionTimeoutInSeconds": 20,
+        "descriptionOfTest": "Normal request with empty body",
+        "readTimeoutInSeconds": 0,
+        "body": {},
+        "url": "http://localhost:8086/http-endpoint",
+        "authentication": {
+            "type": "bearer",
+            "token": "{{secrets.MY_TOKEN}}"
+        }
+    },
+    {
+        "headers": {
+            "User-Agent": "http-connector-demo",
+            "X-Camunda-Cluster-ID": "abcdef"
+        },
+        "method": "get",
+        "queryParameters": {
+            "q": "test",
+            "priority": 12
+        },
+        "connectionTimeoutInSeconds": 50,
+        "descriptionOfTest": "Normal request with connectionTimeoutInSeconds",
+        "readTimeoutInSeconds": 30,
+        "body": {"customer": {
+            "name": "Jane Doe",
+            "id": 1231231,
+            "email": "jane.doe@exampe.com"
+        }},
+        "url": "http://localhost:8086/http-endpoint",
+        "authentication": {
+            "type": "bearer",
+            "token": "{{secrets.MY_TOKEN}}"
+        }
     }
-  },
-  {
-    "descriptionOfTest": "Normal request with basic auth",
-    "method": "get",
-    "url": "http://localhost:8086/http-endpoint",
-    "connectionTimeoutInSeconds": 0,
-    "readTimeoutInSeconds": 0,
-    "queryParameters": {
-      "q": "test",
-      "priority": 12
-    },
-    "headers": {
-      "X-Camunda-Cluster-ID": "abcdef",
-      "User-Agent": "http-connector-demo"
-    },
-    "authentication": {
-      "type": "basic",
-      "username": "{{secrets.MY_USERNAME}}",
-      "password": "{{secrets.MY_PASSWORD}}"
-    },
-    "body": {
-      "customer": {
-        "id": 1231231,
-        "name": "Jane Doe",
-        "email": "jane.doe@exampe.com"
-      }
-    }
-  },
-  {
-    "descriptionOfTest": "Normal request with bearer auth",
-    "method": "get",
-    "url": "http://localhost:8086/http-endpoint",
-    "connectionTimeoutInSeconds": 60,
-    "readTimeoutInSeconds": 70,
-    "queryParameters": {
-      "q": "test",
-      "priority": 12
-    },
-    "headers": {
-      "X-Camunda-Cluster-ID": "abcdef",
-      "User-Agent": "http-connector-demo"
-    },
-    "authentication": {
-      "type": "bearer",
-      "token": "{{secrets.MY_TOKEN}}"
-    },
-    "body": {
-      "customer": {
-        "id": 1231231,
-        "name": "Jane Doe",
-        "email": "jane.doe@exampe.com"
-      }
-    }
-  },
-  {
-    "descriptionOfTest": "Normal request with no query params",
-    "method": "get",
-    "url": "http://localhost:8086/http-endpoint",
-    "connectionTimeoutInSeconds": 202,
-    "readTimeoutInSeconds": 301,
-    "headers": {
-      "X-Camunda-Cluster-ID": "abcdef",
-      "User-Agent": "http-connector-demo"
-    },
-    "authentication": {
-      "type": "bearer",
-      "token": "{{secrets.MY_TOKEN}}"
-    },
-    "body": {
-      "customer": {
-        "id": 1231231,
-        "name": "Jane Doe",
-        "email": "jane.doe@exampe.com"
-      }
-    }
-  },
-  {
-    "descriptionOfTest": "Normal request with no headers",
-    "method": "get",
-    "url": "http://localhost:8086/http-endpoint",
-    "connectionTimeoutInSeconds": 5,
-    "readTimeoutInSeconds": 67,
-    "queryParameters": {
-      "q": "test",
-      "priority": 12
-    },
-    "authentication": {
-      "X-Camunda-Cluster-ID": "abcdef",
-      "type": "bearer",
-      "token": "{{secrets.MY_TOKEN}}"
-    },
-    "body": {
-      "customer": {
-        "id": 1231231,
-        "name": "Jane Doe",
-        "email": "jane.doe@exampe.com"
-      }
-    }
-  },
-  {
-    "descriptionOfTest": "Normal request with no body",
-    "method": "get",
-    "connectionTimeoutInSeconds": 20,
-    "readTimeoutInSeconds": 30,
-    "url": "http://localhost:8086/http-endpoint",
-    "queryParameters": {
-      "q": "test",
-      "priority": 12
-    },
-    "headers": {
-      "X-Camunda-Cluster-ID": "abcdef",
-      "User-Agent": "http-connector-demo"
-    },
-    "authentication": {
-      "type": "bearer",
-      "token": "{{secrets.MY_TOKEN}}"
-    }
-  },
-  {
-    "descriptionOfTest": "Normal request with empty body",
-    "method": "get",
-    "url": "http://localhost:8086/http-endpoint",
-    "connectionTimeoutInSeconds": 20,
-    "readTimeoutInSeconds": 0,
-    "queryParameters": {
-      "q": "test",
-      "priority": 12
-    },
-    "headers": {
-      "X-Camunda-Cluster-ID": "abcdef",
-      "User-Agent": "http-connector-demo"
-    },
-    "authentication": {
-      "type": "bearer",
-      "token": "{{secrets.MY_TOKEN}}"
-    },
-    "body": {
-    }
-  },
-  {
-    "descriptionOfTest": "Normal request with connectionTimeoutInSeconds",
-    "method": "get",
-    "url": "http://localhost:8086/http-endpoint",
-    "queryParameters": {
-      "q": "test",
-      "priority": 12
-    },
-    "headers": {
-      "X-Camunda-Cluster-ID": "abcdef",
-      "User-Agent": "http-connector-demo"
-    },
-    "authentication": {
-      "type": "bearer",
-      "token": "{{secrets.MY_TOKEN}}"
-    },
-    "connectionTimeoutInSeconds": 50,
-    "readTimeoutInSeconds": 30,
-    "body": {
-      "customer": {
-        "id": 1231231,
-        "name": "Jane Doe",
-        "email": "jane.doe@exampe.com"
-      }
-    }
-  }
 ]

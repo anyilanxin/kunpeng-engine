@@ -72,9 +72,6 @@ public class DmnTypeDefinitionImpl implements DmnTypeDefinition {
 
   @Override
   public String toString() {
-    return "DmnTypeDefinitionImpl{" +
-      "typeName='" + typeName + '\'' +
-      '}';
+    return "DmnTypeDefinitionImpl{" + "typeName='" + typeName + '\'' + '}';
   }
-
 }

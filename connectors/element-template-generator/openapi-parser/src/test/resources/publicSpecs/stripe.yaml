@@ -5,7 +5,7 @@ info:
     All requests are required to be sent to your subdomain. To learn how to
     enable API in your Sage HR account, please visit
     https://support.sage.hr/en/articles/3246469-how-does-cakehr-api-work
-  version: '1.0'
+  version: "1.0"
   x-konfig-ignore:
     potential-incorrect-type: true
 servers:
@@ -57,7 +57,7 @@ paths:
           schema:
             type: boolean
       responses:
-        '200':
+        "200":
           description: >-
             Successful Response,
             team_history/employment_status_history/position_history collections
@@ -74,8 +74,8 @@ paths:
                         first_name: John
                         last_name: Doe
                         picture_url: https://example.com/john.png
-                        employment_start_date: '2014-08-25'
-                        date_of_birth: '1991-02-13'
+                        employment_start_date: "2014-08-25"
+                        date_of_birth: "1991-02-13"
                         team: Sage HR
                         team_id: 1
                         position: Api developer
@@ -94,20 +94,20 @@ paths:
                         employment_status: Full-time
                         team_history:
                           - team_id: 1
-                            start_date: '2018-01-01'
+                            start_date: "2018-01-01"
                             end_date: 201-01-01
                             team_name: Some Team
                         employment_status_history:
                           - employment_status_id: 1
-                            start_date: '2018-01-01'
+                            start_date: "2018-01-01"
                             end_date: 201-01-01
                             employment_statu_name: Full time
                         position_history:
                           - position_id: 1
-                            start_date: '2018-01-01'
+                            start_date: "2018-01-01"
                             end_date: 201-01-01
                             position_name: Developer
-                            position_code: '1234'
+                            position_code: "1234"
                     meta:
                       current_page: 1
                       next_page: 2
@@ -116,7 +116,7 @@ paths:
                       per_page: 50
                       total_entries: 75
               schema:
-                $ref: '#/components/schemas/EmployeeListActiveEmployeesResponse'
+                $ref: "#/components/schemas/EmployeeListActiveEmployeesResponse"
     post:
       tags:
         - Employee
@@ -126,10 +126,10 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/EmployeeCreateNewEmployeeRequest'
+              $ref: "#/components/schemas/EmployeeCreateNewEmployeeRequest"
         required: true
       responses:
-        '201':
+        "201":
           description: Successful Response
           content:
             application/json:
@@ -139,7 +139,7 @@ paths:
                     data:
                       id: 1
               schema:
-                $ref: '#/components/schemas/EmployeeCreateNewEmployeeResponse'
+                $ref: "#/components/schemas/EmployeeCreateNewEmployeeResponse"
   /employees/{id}:
     summary: Employee
     put:
@@ -158,9 +158,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EmployeeUpdateByIdRequest'
+              $ref: "#/components/schemas/EmployeeUpdateByIdRequest"
       responses:
-        '202':
+        "202":
           description: Accepted
           content:
             application/json:
@@ -170,8 +170,8 @@ paths:
                     data:
                       id: 1711
               schema:
-                $ref: '#/components/schemas/EmployeeUpdateByIdResponse'
-        '404':
+                $ref: "#/components/schemas/EmployeeUpdateByIdResponse"
+        "404":
           description: Not Found
           content:
             application/json:
@@ -181,7 +181,7 @@ paths:
                     error_code: not_found
                     errors: []
               schema:
-                $ref: '#/components/schemas/EmployeeUpdateById404Response'
+                $ref: "#/components/schemas/EmployeeUpdateById404Response"
     get:
       tags:
         - Employee
@@ -212,7 +212,7 @@ paths:
           schema:
             type: boolean
       responses:
-        '200':
+        "200":
           description: >-
             Successful Response,
             team_history/employment_status_history/position_history collections
@@ -229,8 +229,8 @@ paths:
                       first_name: John
                       last_name: Doe
                       picture_url: https://example.com/john.png
-                      employment_start_date: '2014-08-25'
-                      date_of_birth: '1991-02-13'
+                      employment_start_date: "2014-08-25"
+                      date_of_birth: "1991-02-13"
                       team: Sage HR
                       team_id: 6742
                       position: Api developer
@@ -249,22 +249,22 @@ paths:
                       employment_status: Full-time
                       team_history:
                         - team_id: 1
-                          start_date: '2018-01-01'
+                          start_date: "2018-01-01"
                           end_date: 201-01-01
                           team_name: Some Team
                       employment_status_history:
                         - employment_status_id: 1
-                          start_date: '2018-01-01'
+                          start_date: "2018-01-01"
                           end_date: 201-01-01
                           employment_statu_name: Full time
                       position_history:
                         - position_id: 1
-                          start_date: '2018-01-01'
+                          start_date: "2018-01-01"
                           end_date: 201-01-01
                           position_name: Developer
-                          position_code: '1234'
+                          position_code: "1234"
               schema:
-                $ref: '#/components/schemas/EmployeeGetByIdResponse'
+                $ref: "#/components/schemas/EmployeeGetByIdResponse"
   /employees/{id}/custom-fields:
     summary: Custom fields
     get:
@@ -282,7 +282,7 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -307,7 +307,7 @@ paths:
                           - Latvian
                           - Estonian
               schema:
-                $ref: '#/components/schemas/EmployeeGetCustomFieldsResponse'
+                $ref: "#/components/schemas/EmployeeGetCustomFieldsResponse"
   /employees/{id}/custom-fields/{custom_field_id}:
     summary: Custom field
     put:
@@ -333,10 +333,10 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/EmployeeUpdateCustomFieldRequest'
+              $ref: "#/components/schemas/EmployeeUpdateCustomFieldRequest"
         required: true
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -345,8 +345,8 @@ paths:
                   value:
                     data: null
               schema:
-                $ref: '#/components/schemas/EmployeeUpdateCustomFieldResponse'
-        '422':
+                $ref: "#/components/schemas/EmployeeUpdateCustomFieldResponse"
+        "422":
           description: Unprocessable entity
           content:
             application/json:
@@ -357,7 +357,7 @@ paths:
                     errors:
                       - Custom field text too long (max 250 characters)
               schema:
-                $ref: '#/components/schemas/EmployeeUpdateCustomField422Response'
+                $ref: "#/components/schemas/EmployeeUpdateCustomField422Response"
   /employees/{id}/terminations:
     summary: Terminate employee
     post:
@@ -378,10 +378,10 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/EmployeeTerminateEmployeeRequest'
+              $ref: "#/components/schemas/EmployeeTerminateEmployeeRequest"
         required: true
       responses:
-        '201':
+        "201":
           description: Successful Response
           content:
             application/json:
@@ -390,7 +390,7 @@ paths:
                   value:
                     data: {}
               schema:
-                $ref: '#/components/schemas/EmployeeTerminateEmployeeResponse'
+                $ref: "#/components/schemas/EmployeeTerminateEmployeeResponse"
   /terminated-employees:
     summary: Terminated employees
     get:
@@ -407,7 +407,7 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -416,14 +416,14 @@ paths:
                   value:
                     data:
                       - id: 19
-                        termination_date: '2015-05-28'
-                        employee_number: '123'
+                        termination_date: "2015-05-28"
+                        employee_number: "123"
                         email: john@example.com
                         first_name: John
                         last_name: Doe
                         picture_url: https://example.com/john.png
-                        employment_start_date: '2014-08-25'
-                        date_of_birth: '1991-02-13'
+                        employment_start_date: "2014-08-25"
+                        date_of_birth: "1991-02-13"
                         position: Api developer
                     meta:
                       current_page: 1
@@ -433,7 +433,7 @@ paths:
                       per_page: 50
                       total_entries: 75
               schema:
-                $ref: '#/components/schemas/EmployeeListTerminatedEmployeesResponse'
+                $ref: "#/components/schemas/EmployeeListTerminatedEmployeesResponse"
   /terminated-employees/{id}:
     summary: Terminated employee
     get:
@@ -451,7 +451,7 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -460,19 +460,19 @@ paths:
                   value:
                     data:
                       id: 19
-                      termination_date: '2015-05-28'
+                      termination_date: "2015-05-28"
                       email: john@example.com
                       first_name: John
                       last_name: Doe
                       picture_url: https://example.com/john.png
-                      employment_start_date: '2014-08-25'
-                      date_of_birth: '1991-02-13'
+                      employment_start_date: "2014-08-25"
+                      date_of_birth: "1991-02-13"
                       position: Api developer
                       termination:
                         reason: Moving location
                         comments: Moving to
               schema:
-                $ref: '#/components/schemas/EmployeeGetTerminatedEmployeeResponse'
+                $ref: "#/components/schemas/EmployeeGetTerminatedEmployeeResponse"
   /leave-management/policies:
     summary: Time off policies
     get:
@@ -484,7 +484,7 @@ paths:
         - api_key: []
       parameters: []
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -494,19 +494,19 @@ paths:
                     data:
                       - id: 1
                         name: Vacation
-                        color: '#49B284'
+                        color: "#49B284"
                         do_not_accrue: false
                         unit: days
-                        default_allowance: '26'
-                        max_carryover: '100.0'
+                        default_allowance: "26"
+                        max_carryover: "100.0"
                         accrue_type: yearly
                       - id: 2
                         name: Sickday
-                        color: '#DB263F'
+                        color: "#DB263F"
                         do_not_accrue: true
                         unit: days
-                        default_allowance: '0.0'
-                        max_carryover: '0.0'
+                        default_allowance: "0.0"
+                        max_carryover: "0.0"
                         accrue_type: no_tracking
               schema:
                 $ref: >-
@@ -528,7 +528,7 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -538,11 +538,11 @@ paths:
                     data:
                       - id: 1
                         name: Vacation
-                        color: '#3a7dd8'
+                        color: "#3a7dd8"
                         do_not_accrue: false
                         unit: days
-                        default_allowance: '25.0'
-                        max_carryover: '100.0'
+                        default_allowance: "25.0"
+                        max_carryover: "100.0"
                         accrue_type: yearly
                         enable_employee_access: true
                         only_full_days: false
@@ -601,9 +601,9 @@ paths:
                 #/components/schemas/LeaveManagementUpdateKitDaysConfigurationRequest
         required: true
       responses:
-        '200':
+        "200":
           description: Successful Response
-        '422':
+        "422":
           description: Unprocessable entity
           content:
             application/json:
@@ -643,7 +643,7 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -653,14 +653,14 @@ paths:
                     data:
                       - id: 1
                         status: declined
-                        start_date: '2021-03-09'
-                        end_date: '2021-03-10'
+                        start_date: "2021-03-09"
+                        end_date: "2021-03-10"
                       - id: 2
                         status: approved
-                        start_date: '2021-03-09'
-                        end_date: '2021-03-10'
+                        start_date: "2021-03-09"
+                        end_date: "2021-03-10"
               schema:
-                $ref: '#/components/schemas/LeaveManagementGetKitDaysResponse'
+                $ref: "#/components/schemas/LeaveManagementGetKitDaysResponse"
     post:
       tags:
         - Leave management
@@ -675,10 +675,10 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/LeaveManagementCreateKitDayRequest'
+              $ref: "#/components/schemas/LeaveManagementCreateKitDayRequest"
         required: true
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -688,8 +688,8 @@ paths:
                     data:
                       - id: 1
               schema:
-                $ref: '#/components/schemas/LeaveManagementCreateKitDayResponse'
-        '422':
+                $ref: "#/components/schemas/LeaveManagementCreateKitDayResponse"
+        "422":
           description: Unprocessable entity
           content:
             application/json:
@@ -701,7 +701,7 @@ paths:
                       - First error
                       - Second error
               schema:
-                $ref: '#/components/schemas/LeaveManagementCreateKitDay422Response'
+                $ref: "#/components/schemas/LeaveManagementCreateKitDay422Response"
   /leave-management/kit-days/{id}:
     summary: KIT days
     patch:
@@ -724,10 +724,10 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/LeaveManagementProcessKitDayRequest'
+              $ref: "#/components/schemas/LeaveManagementProcessKitDayRequest"
         required: true
       responses:
-        '200':
+        "200":
           description: Successful Response
   /leave-management/reports/individual-allowances:
     summary: Individual Allowances
@@ -786,7 +786,7 @@ paths:
             items:
               type: integer
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -800,30 +800,30 @@ paths:
                           - policy:
                               name: Sickday
                               id: 2
-                            quantity: '0.0'
+                            quantity: "0.0"
                             unit: days
-                            carryover: '0.0'
+                            carryover: "0.0"
                           - policy:
                               name: Vacation
                               id: 1
-                            quantity: '25.0'
+                            quantity: "25.0"
                             unit: days
-                            carryover: '100.0'
+                            carryover: "100.0"
                       - full_name: Jane Doe
                         id: 13
                         eligibilities:
                           - policy:
                               name: Custom Policy
                               id: 4
-                            quantity: '0.0'
+                            quantity: "0.0"
                             unit: days
-                            carryover: '0.0'
+                            carryover: "0.0"
                           - policy:
                               name: Vacation
                               id: 1
-                            quantity: '25.0'
+                            quantity: "25.0"
                             unit: days
-                            carryover: '100.0'
+                            carryover: "100.0"
                     meta:
                       current_page: 1
                       next_page: null
@@ -852,7 +852,7 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -867,7 +867,7 @@ paths:
                         used: 75
                         available: null
               schema:
-                $ref: '#/components/schemas/LeaveManagementGetTimeOffBalancesResponse'
+                $ref: "#/components/schemas/LeaveManagementGetTimeOffBalancesResponse"
   /leave-management/requests:
     summary: Time off requests
     get:
@@ -886,7 +886,7 @@ paths:
         - description: If not specified defaults to beginning of current month
           name: from
           in: query
-          example: '2018-05-20'
+          example: "2018-05-20"
           schema:
             type: string
         - description: >-
@@ -895,11 +895,11 @@ paths:
             period of time make multiple requests;
           name: to
           in: query
-          example: '2018-06-20'
+          example: "2018-06-20"
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -918,14 +918,14 @@ paths:
                         is_part_of_day: true
                         first_part_of_day: false
                         second_part_of_day: true
-                        start_date: '2018-05-24'
-                        end_date: '2018-05-24'
-                        request_date: '2018-05-22'
+                        start_date: "2018-05-24"
+                        end_date: "2018-05-24"
+                        request_date: "2018-05-22"
                         approval_date: null
                         hours: 3.5
                         fields:
                           - title: Approved by manager?
-                            answer: 'yes'
+                            answer: "yes"
                     meta:
                       current_page: 1
                       next_page: 2
@@ -945,10 +945,10 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/LeaveManagementNewTimeOffRequestRequest'
+              $ref: "#/components/schemas/LeaveManagementNewTimeOffRequestRequest"
         required: true
       responses:
-        '201':
+        "201":
           description: Successful Response
           content:
             application/json:
@@ -958,8 +958,8 @@ paths:
                     data:
                       id: 1
               schema:
-                $ref: '#/components/schemas/LeaveManagementNewTimeOffRequestResponse'
-        '422':
+                $ref: "#/components/schemas/LeaveManagementNewTimeOffRequestResponse"
+        "422":
           description: Validation Failed Response
           content:
             application/json:
@@ -985,11 +985,11 @@ paths:
         - description: Optional date, defauls to today
           name: date
           in: query
-          example: '2018-11-23'
+          example: "2018-11-23"
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1011,8 +1011,8 @@ paths:
                         is_part_of_day: true
                         first_part_of_day: false
                         second_part_of_day: true
-                        start_date: '2018-05-24'
-                        end_date: '2018-05-24'
+                        start_date: "2018-05-24"
+                        end_date: "2018-05-24"
                         hours: 3.5
               schema:
                 $ref: >-
@@ -1025,7 +1025,7 @@ paths:
       summary: List document categories
       operationId: Documents_listCategories
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1040,7 +1040,7 @@ paths:
                         name: Job contracts
                         documents_count: 1
               schema:
-                $ref: '#/components/schemas/DocumentsListCategoriesResponse'
+                $ref: "#/components/schemas/DocumentsListCategoriesResponse"
   /documents:
     summary: Document
     post:
@@ -1053,10 +1053,10 @@ paths:
         content:
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/DocumentsCreateNewDocumentRequest'
+              $ref: "#/components/schemas/DocumentsCreateNewDocumentRequest"
         required: true
       responses:
-        '201':
+        "201":
           description: Successful Response
           content:
             application/json:
@@ -1066,7 +1066,7 @@ paths:
                     data:
                       id: 1
               schema:
-                $ref: '#/components/schemas/DocumentsCreateNewDocumentResponse'
+                $ref: "#/components/schemas/DocumentsCreateNewDocumentResponse"
   /positions:
     summary: Positions
     get:
@@ -1083,7 +1083,7 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1107,7 +1107,7 @@ paths:
                       per_page: 50
                       total_entries: 75
               schema:
-                $ref: '#/components/schemas/PositionsListCompanyPositionsResponse'
+                $ref: "#/components/schemas/PositionsListCompanyPositionsResponse"
   /teams:
     summary: Teams
     get:
@@ -1124,7 +1124,7 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1149,7 +1149,7 @@ paths:
                       per_page: 50
                       total_entries: 75
               schema:
-                $ref: '#/components/schemas/TeamsListInCompanyResponse'
+                $ref: "#/components/schemas/TeamsListInCompanyResponse"
   /performance/goals/quarterly-progress/overall:
     summary: Overview of quarterly goal progress
     get:
@@ -1161,7 +1161,7 @@ paths:
         - api_key: []
       parameters: []
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1192,7 +1192,7 @@ paths:
         - api_key: []
       parameters: []
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1218,7 +1218,7 @@ paths:
         - api_key: []
       parameters: []
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1236,7 +1236,7 @@ paths:
                               actual: 10
                               to_date: 34
               schema:
-                $ref: '#/components/schemas/PerformanceGetQuarterlyTeamGoalsResponse'
+                $ref: "#/components/schemas/PerformanceGetQuarterlyTeamGoalsResponse"
   /performance/goals/quarterly-progress/individual-goals:
     summary: Quarterly individual goals
     get:
@@ -1248,7 +1248,7 @@ paths:
         - api_key: []
       parameters: []
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1285,7 +1285,7 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1293,8 +1293,8 @@ paths:
                 response:
                   value:
                     data:
-                      - start_date: '2017-01-01'
-                        end_date: '2019-01-01'
+                      - start_date: "2017-01-01"
+                        end_date: "2019-01-01"
                         currency: EUR
                         amount: 1234
                         period: monthly
@@ -1308,7 +1308,7 @@ paths:
                       per_page: 50
                       total_entries: 75
               schema:
-                $ref: '#/components/schemas/EmployeeGetCompensationsResponse'
+                $ref: "#/components/schemas/EmployeeGetCompensationsResponse"
   /recruitment/positions:
     summary: Positions
     get:
@@ -1336,8 +1336,8 @@ paths:
           name: hiring_manager_ids
           in: query
           example:
-            - '251'
-            - '121'
+            - "251"
+            - "121"
           style: form
           explode: false
           schema:
@@ -1350,8 +1350,8 @@ paths:
           name: group_ids
           in: query
           example:
-            - '27'
-            - '761'
+            - "27"
+            - "761"
           style: form
           explode: false
           schema:
@@ -1364,15 +1364,15 @@ paths:
           name: location_ids
           in: query
           example:
-            - '1'
-            - '12'
+            - "1"
+            - "12"
           style: form
           explode: false
           schema:
             type: array
             items:
               type: string
-        - description: 'Pagination: fetch page at given offset'
+        - description: "Pagination: fetch page at given offset"
           name: page
           in: query
           example: 2
@@ -1387,7 +1387,7 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1399,8 +1399,8 @@ paths:
                         id: 2902504
                         status: published
                         visibility: Published
-                        created_at: '2019-09-01'
-                        internal_date: '2019-10-01'
+                        created_at: "2019-09-01"
+                        internal_date: "2019-10-01"
                         completed_at: null
                         link: https://talent.sage.hr/jobs/xxx
                         team: Management
@@ -1419,11 +1419,11 @@ paths:
                         id: 212
                         status: completed
                         visibility: Completed
-                        created_at: '2019-09-01'
-                        internal_date: '2019-10-21'
-                        completed_at: '2019-10-12'
+                        created_at: "2019-09-01"
+                        internal_date: "2019-10-21"
+                        completed_at: "2019-10-12"
                         link: null
-                        team: ''
+                        team: ""
                         applicants_required: 2
                         applicants_count: 4
                         employment_type: null
@@ -1447,7 +1447,7 @@ paths:
                       per_page: 20
                       total_entries: 34
               schema:
-                $ref: '#/components/schemas/RecruitmentListPositionsResponse'
+                $ref: "#/components/schemas/RecruitmentListPositionsResponse"
   /recruitment/positions/{id}:
     summary: Position details
     get:
@@ -1465,7 +1465,7 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1477,11 +1477,11 @@ paths:
                       id: 1
                       status: completed
                       visibility: Completed
-                      created_at: '2020-10-15'
-                      internal_date: '2020-10-31'
-                      completed_at: '2020-10-28'
+                      created_at: "2020-10-15"
+                      internal_date: "2020-10-31"
+                      completed_at: "2020-10-28"
                       link: null
-                      team: ''
+                      team: ""
                       applicants_required: 1
                       applicants_count: 2
                       employment_type: Full-time
@@ -1514,7 +1514,7 @@ paths:
                           full_name: Pau Capdevilla
                           role: interviewer
               schema:
-                $ref: '#/components/schemas/RecruitmentGetPositionDetailsResponse'
+                $ref: "#/components/schemas/RecruitmentGetPositionDetailsResponse"
   /recruitment/positions/{id}/applicants:
     summary: Applicants
     get:
@@ -1537,7 +1537,7 @@ paths:
           example: 25
           schema:
             type: integer
-        - description: 'Pagination: fetch page at given offset, default 1'
+        - description: "Pagination: fetch page at given offset, default 1"
           name: page
           in: query
           example: 2
@@ -1552,7 +1552,7 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1569,13 +1569,13 @@ paths:
                         address: null
                         phone_number: null
                         source: recruiters
-                        created_at: '2020-10-15T10:58:57Z'
+                        created_at: "2020-10-15T10:58:57Z"
                         disqualified_date: null
                         hired_date: null
                         stage:
                           title: Reference check
                           id: 6
-                          created_at: '2020-10-15T10:57:34Z'
+                          created_at: "2020-10-15T10:57:34Z"
                       - summary: null
                         id: 2
                         full_name: Samantha Cross
@@ -1585,13 +1585,13 @@ paths:
                         address: null
                         phone_number: null
                         source: recruiters
-                        created_at: '2020-10-15T11:02:34Z'
+                        created_at: "2020-10-15T11:02:34Z"
                         disqualified_date: null
-                        hired_date: '2020-10-28'
+                        hired_date: "2020-10-28"
                         stage:
                           title: Hired
                           id: 10
-                          created_at: '2020-10-15T10:57:34Z'
+                          created_at: "2020-10-15T10:57:34Z"
                     meta:
                       current_page: 1
                       next_page: null
@@ -1600,7 +1600,7 @@ paths:
                       per_page: 30
                       total_entries: 3
               schema:
-                $ref: '#/components/schemas/RecruitmentListApplicantsResponse'
+                $ref: "#/components/schemas/RecruitmentListApplicantsResponse"
     post:
       tags:
         - Recruitment
@@ -1638,7 +1638,7 @@ paths:
               $ref: >-
                 #/components/schemas/RecruitmentCreateApplicantWithReferralRequest
       responses:
-        '201':
+        "201":
           description: Successful Response
           content:
             application/json:
@@ -1650,7 +1650,7 @@ paths:
               schema:
                 $ref: >-
                   #/components/schemas/RecruitmentCreateApplicantWithReferralResponse
-        '422':
+        "422":
           description: Validation
           content:
             application/json:
@@ -1680,7 +1680,7 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1697,13 +1697,13 @@ paths:
                       address: null
                       phone_number: null
                       source: referral
-                      created_at: '2020-10-21T12:58:43Z'
-                      disqualified_date: '2020-10-28'
+                      created_at: "2020-10-21T12:58:43Z"
+                      disqualified_date: "2020-10-28"
                       hired_date: null
                       stage:
                         title: Interview
                         id: 4
-                        created_at: '2020-10-15T10:57:34Z'
+                        created_at: "2020-10-15T10:57:34Z"
                       position_id: 1
                       added_by:
                         id: 1
@@ -1715,7 +1715,7 @@ paths:
                         email: josh@example.com
                         phone_number: 67876162
               schema:
-                $ref: '#/components/schemas/RecruitmentGetApplicantDetailsResponse'
+                $ref: "#/components/schemas/RecruitmentGetApplicantDetailsResponse"
   /recruitment/applicants/{id}/actions:
     summary: Applicant actions
     get:
@@ -1735,7 +1735,7 @@ paths:
           required: true
           schema:
             type: integer
-        - description: 'Pagination: fetch page at given offset'
+        - description: "Pagination: fetch page at given offset"
           name: page
           in: query
           example: 2
@@ -1750,7 +1750,7 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1760,19 +1760,19 @@ paths:
                     data:
                       - action: moved_between_stages
                         message: Applicant moved from "Interview" to "Reference check"
-                        created_at: '2020-10-28T09:05:45Z'
+                        created_at: "2020-10-28T09:05:45Z"
                       - action: moved_between_stages
                         message: Applicant moved from "CV review" to "Interview"
-                        created_at: '2020-10-27T10:59:23Z'
+                        created_at: "2020-10-27T10:59:23Z"
                       - action: moved_between_stages
                         message: Applicant moved from "New" to "CV review"
-                        created_at: '2020-10-15T11:01:39Z'
+                        created_at: "2020-10-15T11:01:39Z"
                       - action: document_created
                         message: Uploaded "empty-document.pdf"
-                        created_at: '2020-10-15T10:59:15Z'
+                        created_at: "2020-10-15T10:59:15Z"
                       - action: applicant_created
                         message: Applicant created
-                        created_at: '2020-10-15T10:58:57Z'
+                        created_at: "2020-10-15T10:58:57Z"
                     meta:
                       current_page: 1
                       next_page: null
@@ -1781,7 +1781,7 @@ paths:
                       per_page: 30
                       total_entries: 5
               schema:
-                $ref: '#/components/schemas/RecruitmentListApplicantActionsResponse'
+                $ref: "#/components/schemas/RecruitmentListApplicantActionsResponse"
   /timesheets/clock-in:
     summary: Time clocking
     post:
@@ -1800,10 +1800,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TimesheetsClockInOutRequest'
+              $ref: "#/components/schemas/TimesheetsClockInOutRequest"
         required: true
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1814,7 +1814,7 @@ paths:
                       - error 1
                       - error 2
               schema:
-                $ref: '#/components/schemas/TimesheetsClockInOutResponse'
+                $ref: "#/components/schemas/TimesheetsClockInOutResponse"
   /termination-reasons:
     summary: Termination reasons
     get:
@@ -1831,7 +1831,7 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1855,7 +1855,7 @@ paths:
                       per_page: 50
                       total_entries: 75
               schema:
-                $ref: '#/components/schemas/TerminationsReasonsListInCompanyResponse'
+                $ref: "#/components/schemas/TerminationsReasonsListInCompanyResponse"
   /onboarding/categories:
     summary: Onboarding task categories
     get:
@@ -1864,7 +1864,7 @@ paths:
       summary: List onboarding task categories
       operationId: Onboarding_listTaskCategories
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1877,7 +1877,7 @@ paths:
                       - title: Platform
                         id: 2
               schema:
-                $ref: '#/components/schemas/OnboardingListTaskCategoriesResponse'
+                $ref: "#/components/schemas/OnboardingListTaskCategoriesResponse"
   /onboarding/tasks:
     summary: Onboarding task
     post:
@@ -1889,10 +1889,10 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/OnboardingCreateNewTaskRequest'
+              $ref: "#/components/schemas/OnboardingCreateNewTaskRequest"
         required: true
       responses:
-        '201':
+        "201":
           description: Successful Response
           content:
             application/json:
@@ -1902,7 +1902,7 @@ paths:
                     data:
                       id: 1
               schema:
-                $ref: '#/components/schemas/OnboardingCreateNewTaskResponse'
+                $ref: "#/components/schemas/OnboardingCreateNewTaskResponse"
   /offboarding/categories:
     summary: Offboarding task categories
     get:
@@ -1911,7 +1911,7 @@ paths:
       summary: List offboarding task categories
       operationId: Offboarding_listCategories
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1924,7 +1924,7 @@ paths:
                       - title: Platform
                         id: 2
               schema:
-                $ref: '#/components/schemas/OffboardingListCategoriesResponse'
+                $ref: "#/components/schemas/OffboardingListCategoriesResponse"
   /offboarding/tasks:
     summary: Offboarding task
     post:
@@ -1936,10 +1936,10 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/OffboardingCreateTaskRequest'
+              $ref: "#/components/schemas/OffboardingCreateTaskRequest"
         required: true
       responses:
-        '201':
+        "201":
           description: Successful Response
           content:
             application/json:
@@ -1949,7 +1949,7 @@ paths:
                     data:
                       id: 1
               schema:
-                $ref: '#/components/schemas/OffboardingCreateTaskResponse'
+                $ref: "#/components/schemas/OffboardingCreateTaskResponse"
   /vikarina/job-positions:
     summary: Vikarina job positions
     post:
@@ -1958,7 +1958,7 @@ paths:
       summary: Job position transfer from Sage HR to Vikarina
       operationId: Integrations_transferJobPositionFromSageToVikarina
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -1980,7 +1980,7 @@ paths:
       summary: Organizational structure transfer from Sage HR to Vikarina
       operationId: Integrations_transferOrganizationalStructureFromSageToVikarina
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -2013,16 +2013,16 @@ paths:
       parameters:
         - name: start_date
           in: query
-          example: '2020-01-01'
+          example: "2020-01-01"
           schema:
             type: string
         - name: end_date
           in: query
-          example: '2020-02-01'
+          example: "2020-02-01"
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -2032,7 +2032,7 @@ paths:
                     data:
                       employee_id: 1
                       employee_number: 123
-                      work_start_date: '2020-10-10T00:00:00.000Z'
+                      work_start_date: "2020-10-10T00:00:00.000Z"
                       first_name: John
                       last_name: Doe
                       gender: male
@@ -2045,7 +2045,7 @@ paths:
                       email: test@test.com
                       status: 1
               schema:
-                $ref: '#/components/schemas/IntegrationsImportNewStartersListResponse'
+                $ref: "#/components/schemas/IntegrationsImportNewStartersListResponse"
   /vikarina/contract-information:
     summary: Vikarina employee contracts
     post:
@@ -2054,7 +2054,7 @@ paths:
       summary: Contract (custom field) information transfer from Sage HR to Vikarina
       operationId: Integrations_transferContractInformationToVikarina
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -2064,9 +2064,9 @@ paths:
                     data:
                       employee_id: 1
                       employee_number: 123
-                      work_start_date: '2020-10-10T00:00:00.000Z'
+                      work_start_date: "2020-10-10T00:00:00.000Z"
                       contract_number: contract number (custom_field)
-                      termination_date: '2020-10-11T00:00:00.000Z'
+                      termination_date: "2020-10-11T00:00:00.000Z"
                       employment_status: Full-time
                       contract_type: contract type (custom_field)
                       status: 1
@@ -2085,16 +2085,16 @@ paths:
       parameters:
         - name: start_date
           in: query
-          example: '2020-01-01'
+          example: "2020-01-01"
           schema:
             type: string
         - name: end_date
           in: query
-          example: '2020-02-01'
+          example: "2020-02-01"
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -2104,9 +2104,9 @@ paths:
                     data:
                       employee_id: 1
                       employee_number: 123
-                      work_start_date: '2020-01-10'
-                      position_start_date: '2020-10-10'
-                      last_position_end_date: '2020-09-10'
+                      work_start_date: "2020-01-10"
+                      position_start_date: "2020-10-10"
+                      last_position_end_date: "2020-09-10"
                       cost_center_code: cost center code (custom_field)
                       position_id: 1
                       schedule_id: scheduled id (custom_field)
@@ -2126,16 +2126,16 @@ paths:
       parameters:
         - name: start_date
           in: query
-          example: '2020-01-01'
+          example: "2020-01-01"
           schema:
             type: string
         - name: end_date
           in: query
-          example: '2020-02-01'
+          example: "2020-02-01"
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -2147,8 +2147,8 @@ paths:
                       employee_number: 123
                       contract_number: contract number (custom_field)
                       type: Salary
-                      start_date: '2020-09-10'
-                      end_date: '2020-10-10'
+                      start_date: "2020-09-10"
+                      end_date: "2020-10-10"
                       amount: 1000
                       status: 1
               schema:
@@ -2164,7 +2164,7 @@ paths:
         Vikarina
       operationId: Integrations_transferBankAccountInfo
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -2176,7 +2176,7 @@ paths:
                       employee_number: 123
                       bank_code: bank code (custom_field)
                       bank_account: bank account (custom_field)
-                      last_change: '2020-09-10'
+                      last_change: "2020-09-10"
                       status: 1
               schema:
                 $ref: >-
@@ -2191,16 +2191,16 @@ paths:
       parameters:
         - name: start_date
           in: query
-          example: '2020-01-01'
+          example: "2020-01-01"
           schema:
             type: string
         - name: end_date
           in: query
-          example: '2020-02-01'
+          example: "2020-02-01"
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -2211,7 +2211,7 @@ paths:
                       employee_id: 1
                       employee_number: 123
                       contract_number: contract number (custom_field)
-                      termination_date: '2020-09-10'
+                      termination_date: "2020-09-10"
                       termination_reason: New job
                       unused_days: 5
                       termination_comment: Was good employee
@@ -2228,7 +2228,7 @@ paths:
       summary: Unused vacation days transfer from Sage HR to Vikarina
       operationId: Integrations_transferUnusedVacationDaysToVikarina
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -2239,7 +2239,7 @@ paths:
                       employee_id: 1
                       employee_number: 123
                       unused_days: 5
-                      date: '2020-10-10'
+                      date: "2020-10-10"
                       status: 1
               schema:
                 $ref: >-
@@ -2254,16 +2254,16 @@ paths:
       parameters:
         - name: start_date
           in: query
-          example: '2020-01-01'
+          example: "2020-01-01"
           schema:
             type: string
         - name: end_date
           in: query
-          example: '2020-02-01'
+          example: "2020-02-01"
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -2275,8 +2275,8 @@ paths:
                       employee_number: 123
                       leave_type: Vacation
                       days: 2
-                      start_date: '2020-10-10'
-                      end_date: '2020-10-10'
+                      start_date: "2020-10-10"
+                      end_date: "2020-10-10"
                       status: 1
               schema:
                 $ref: >-
@@ -2291,16 +2291,16 @@ paths:
       parameters:
         - name: start_date
           in: query
-          example: '2020-01-01'
+          example: "2020-01-01"
           schema:
             type: string
         - name: end_date
           in: query
-          example: '2020-02-01'
+          example: "2020-02-01"
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -2310,7 +2310,7 @@ paths:
                     data:
                       employee_id: 1
                       employee_number: 123
-                      date: '2020-10-10'
+                      date: "2020-10-10"
                       stand_by: 8
                       hours: 8.5
                       nightours: 0.5
@@ -2330,16 +2330,16 @@ paths:
       parameters:
         - name: start_date
           in: query
-          example: '2020-01-01'
+          example: "2020-01-01"
           schema:
             type: string
         - name: end_date
           in: query
-          example: '2020-02-01'
+          example: "2020-02-01"
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Successful Response
           content:
             application/json:
@@ -2351,12 +2351,12 @@ paths:
                       employee_number: 123
                       contract_number: contract number (custom_field)
                       type: Bonus
-                      start_date: '2020-09-10'
-                      end_date: '2020-10-10'
+                      start_date: "2020-09-10"
+                      end_date: "2020-10-10"
                       amount: 1000
                       status: 1
               schema:
-                $ref: '#/components/schemas/IntegrationsSendBonusesToVikarinaResponse'
+                $ref: "#/components/schemas/IntegrationsSendBonusesToVikarinaResponse"
 components:
   securitySchemes:
     api_key:
@@ -2383,7 +2383,7 @@ components:
             todays date
           type: string
         send_email:
-          description: '''true'' to send welcome email to employee'
+          description: "'true' to send welcome email to employee"
           type: string
       required:
         - email
@@ -2400,7 +2400,7 @@ components:
           example: Doe
         work_start_date:
           type: string
-          example: '2020-01-28'
+          example: "2020-01-28"
         location_id:
           type: integer
           example: 1
@@ -2415,7 +2415,7 @@ components:
           example: 101
         employee_number:
           type: string
-          example: '0123456'
+          example: "0123456"
         approver_ids:
           type: array
           items:
@@ -2438,7 +2438,7 @@ components:
       type: object
       properties:
         date:
-          description: 'Last working day; format: YYYY-MM-DD'
+          description: "Last working day; format: YYYY-MM-DD"
           type: string
         termination_reason_id:
           description: Termination reason ID
@@ -2477,15 +2477,15 @@ components:
           type: integer
         date:
           description: Date of single-day KIT day
-          example: '2020-01-01'
+          example: "2020-01-01"
           type: string
         date_from:
           description: Start date of a multi-day KIT day
-          example: '2020-01-01'
+          example: "2020-01-01"
           type: string
         date_to:
           description: End date of a multi-day KIT day
-          example: '2020-01-01'
+          example: "2020-01-01"
           type: string
       required:
         - policy_id
@@ -2515,13 +2515,13 @@ components:
         employee_id:
           type: integer
         date:
-          description: 'format: YYYY-MM-DD; required if type is single'
+          description: "format: YYYY-MM-DD; required if type is single"
           type: string
         date_from:
-          description: 'format: YYYY-MM-DD; required if type is multi'
+          description: "format: YYYY-MM-DD; required if type is multi"
           type: string
         date_to:
-          description: 'format: YYYY-MM-DD; required if type is multi'
+          description: "format: YYYY-MM-DD; required if type is multi"
           type: string
         part_of_day:
           description: required if type is single
@@ -2537,12 +2537,12 @@ components:
             second_part_of_day
           type: number
         time_from:
-          description: 'format: H:M; required if part_of_day is specific_timespan'
-          example: '07:30'
+          description: "format: H:M; required if part_of_day is specific_timespan"
+          example: "07:30"
           type: string
         time_to:
-          description: 'format: H:M; required if part_of_day is specific_timespan'
-          example: '15:00'
+          description: "format: H:M; required if part_of_day is specific_timespan"
+          example: "15:00"
           type: string
         details:
           description: required based on policy settings
@@ -2569,7 +2569,7 @@ components:
           description: Category identifier, leave empty for default category
           type: integer
         notify:
-          description: '''true'' to notify employee by email'
+          description: "'true' to notify employee by email"
           type: string
       required:
         - file
@@ -2578,7 +2578,7 @@ components:
       type: object
       properties:
         send_thank_you_email:
-          description: '''true'' to send thank you email to applicant'
+          description: "'true' to send thank you email to applicant"
           type: string
         applicant[first_name]:
           type: string
@@ -2606,7 +2606,7 @@ components:
       type: object
       properties:
         override:
-          description: '''true'' if override provided days clocked entries'
+          description: "'true' if override provided days clocked entries"
           type: string
         clocked_time:
           type: object
@@ -2651,7 +2651,7 @@ components:
           description: Specific assignee if default_assignee_type is 'employee'
           type: number
         require_attachment:
-          description: '''true'' to enabled required attachment'
+          description: "'true' to enabled required attachment"
           type: string
         add_after:
           description: Task start date in days after employee start date
@@ -2686,7 +2686,7 @@ components:
           description: Specific assignee if default_assignee_type is 'employee'
           type: number
         require_attachment:
-          description: '''true'' to enabled required attachment'
+          description: "'true' to enabled required attachment"
           type: string
       required:
         - title
@@ -2717,10 +2717,10 @@ components:
                 example: https://example.com/john.png
               employment_start_date:
                 type: string
-                example: '2014-08-25'
+                example: "2014-08-25"
               date_of_birth:
                 type: string
-                example: '1991-02-13'
+                example: "1991-02-13"
               team:
                 type: string
                 example: Sage HR
@@ -2779,7 +2779,7 @@ components:
                       example: 1
                     start_date:
                       type: string
-                      example: '2018-01-01'
+                      example: "2018-01-01"
                     end_date:
                       type: string
                       example: 201-01-01
@@ -2796,7 +2796,7 @@ components:
                       example: 1
                     start_date:
                       type: string
-                      example: '2018-01-01'
+                      example: "2018-01-01"
                     end_date:
                       type: string
                       example: 201-01-01
@@ -2813,7 +2813,7 @@ components:
                       example: 1
                     start_date:
                       type: string
-                      example: '2018-01-01'
+                      example: "2018-01-01"
                     end_date:
                       type: string
                       example: 201-01-01
@@ -2822,7 +2822,7 @@ components:
                       example: Developer
                     position_code:
                       type: string
-                      example: '1234'
+                      example: "1234"
         meta:
           type: object
           properties:
@@ -2852,8 +2852,8 @@ components:
             first_name: John
             last_name: Doe
             picture_url: https://example.com/john.png
-            employment_start_date: '2014-08-25'
-            date_of_birth: '1991-02-13'
+            employment_start_date: "2014-08-25"
+            date_of_birth: "1991-02-13"
             team: Sage HR
             team_id: 1
             position: Api developer
@@ -2872,20 +2872,20 @@ components:
             employment_status: Full-time
             team_history:
               - team_id: 1
-                start_date: '2018-01-01'
+                start_date: "2018-01-01"
                 end_date: 201-01-01
                 team_name: Some Team
             employment_status_history:
               - employment_status_id: 1
-                start_date: '2018-01-01'
+                start_date: "2018-01-01"
                 end_date: 201-01-01
                 employment_statu_name: Full time
             position_history:
               - position_id: 1
-                start_date: '2018-01-01'
+                start_date: "2018-01-01"
                 end_date: 201-01-01
                 position_name: Developer
-                position_code: '1234'
+                position_code: "1234"
         meta:
           current_page: 1
           next_page: 2
@@ -2928,10 +2928,10 @@ components:
               example: https://example.com/john.png
             employment_start_date:
               type: string
-              example: '2014-08-25'
+              example: "2014-08-25"
             date_of_birth:
               type: string
-              example: '1991-02-13'
+              example: "1991-02-13"
             team:
               type: string
               example: Sage HR
@@ -2990,7 +2990,7 @@ components:
                     example: 1
                   start_date:
                     type: string
-                    example: '2018-01-01'
+                    example: "2018-01-01"
                   end_date:
                     type: string
                     example: 201-01-01
@@ -3007,7 +3007,7 @@ components:
                     example: 1
                   start_date:
                     type: string
-                    example: '2018-01-01'
+                    example: "2018-01-01"
                   end_date:
                     type: string
                     example: 201-01-01
@@ -3024,7 +3024,7 @@ components:
                     example: 1
                   start_date:
                     type: string
-                    example: '2018-01-01'
+                    example: "2018-01-01"
                   end_date:
                     type: string
                     example: 201-01-01
@@ -3033,7 +3033,7 @@ components:
                     example: Developer
                   position_code:
                     type: string
-                    example: '1234'
+                    example: "1234"
       example:
         data:
           id: 19
@@ -3041,8 +3041,8 @@ components:
           first_name: John
           last_name: Doe
           picture_url: https://example.com/john.png
-          employment_start_date: '2014-08-25'
-          date_of_birth: '1991-02-13'
+          employment_start_date: "2014-08-25"
+          date_of_birth: "1991-02-13"
           team: Sage HR
           team_id: 6742
           position: Api developer
@@ -3061,20 +3061,20 @@ components:
           employment_status: Full-time
           team_history:
             - team_id: 1
-              start_date: '2018-01-01'
+              start_date: "2018-01-01"
               end_date: 201-01-01
               team_name: Some Team
           employment_status_history:
             - employment_status_id: 1
-              start_date: '2018-01-01'
+              start_date: "2018-01-01"
               end_date: 201-01-01
               employment_statu_name: Full time
           position_history:
             - position_id: 1
-              start_date: '2018-01-01'
+              start_date: "2018-01-01"
               end_date: 201-01-01
               position_name: Developer
-              position_code: '1234'
+              position_code: "1234"
     EmployeeUpdateByIdResponse:
       type: object
       properties:
@@ -3194,10 +3194,10 @@ components:
                 example: 19
               termination_date:
                 type: string
-                example: '2015-05-28'
+                example: "2015-05-28"
               employee_number:
                 type: string
-                example: '123'
+                example: "123"
               email:
                 type: string
                 example: john@example.com
@@ -3212,10 +3212,10 @@ components:
                 example: https://example.com/john.png
               employment_start_date:
                 type: string
-                example: '2014-08-25'
+                example: "2014-08-25"
               date_of_birth:
                 type: string
-                example: '1991-02-13'
+                example: "1991-02-13"
               position:
                 type: string
                 example: Api developer
@@ -3244,14 +3244,14 @@ components:
       example:
         data:
           - id: 19
-            termination_date: '2015-05-28'
-            employee_number: '123'
+            termination_date: "2015-05-28"
+            employee_number: "123"
             email: john@example.com
             first_name: John
             last_name: Doe
             picture_url: https://example.com/john.png
-            employment_start_date: '2014-08-25'
-            date_of_birth: '1991-02-13'
+            employment_start_date: "2014-08-25"
+            date_of_birth: "1991-02-13"
             position: Api developer
         meta:
           current_page: 1
@@ -3271,7 +3271,7 @@ components:
               example: 19
             termination_date:
               type: string
-              example: '2015-05-28'
+              example: "2015-05-28"
             email:
               type: string
               example: john@example.com
@@ -3286,10 +3286,10 @@ components:
               example: https://example.com/john.png
             employment_start_date:
               type: string
-              example: '2014-08-25'
+              example: "2014-08-25"
             date_of_birth:
               type: string
-              example: '1991-02-13'
+              example: "1991-02-13"
             position:
               type: string
               example: Api developer
@@ -3305,13 +3305,13 @@ components:
       example:
         data:
           id: 19
-          termination_date: '2015-05-28'
+          termination_date: "2015-05-28"
           email: john@example.com
           first_name: John
           last_name: Doe
           picture_url: https://example.com/john.png
-          employment_start_date: '2014-08-25'
-          date_of_birth: '1991-02-13'
+          employment_start_date: "2014-08-25"
+          date_of_birth: "1991-02-13"
           position: Api developer
           termination:
             reason: Moving location
@@ -3332,7 +3332,7 @@ components:
                 example: Vacation
               color:
                 type: string
-                example: '#49B284'
+                example: "#49B284"
               do_not_accrue:
                 type: boolean
                 example: false
@@ -3341,10 +3341,10 @@ components:
                 example: days
               default_allowance:
                 type: string
-                example: '26'
+                example: "26"
               max_carryover:
                 type: string
-                example: '100.0'
+                example: "100.0"
               accrue_type:
                 type: string
                 example: yearly
@@ -3352,19 +3352,19 @@ components:
         data:
           - id: 1
             name: Vacation
-            color: '#49B284'
+            color: "#49B284"
             do_not_accrue: false
             unit: days
-            default_allowance: '26'
-            max_carryover: '100.0'
+            default_allowance: "26"
+            max_carryover: "100.0"
             accrue_type: yearly
           - id: 2
             name: Sickday
-            color: '#DB263F'
+            color: "#DB263F"
             do_not_accrue: true
             unit: days
-            default_allowance: '0.0'
-            max_carryover: '0.0'
+            default_allowance: "0.0"
+            max_carryover: "0.0"
             accrue_type: no_tracking
     LeaveManagementGetTimeOffPolicyByIdResponse:
       type: object
@@ -3382,7 +3382,7 @@ components:
                 example: Vacation
               color:
                 type: string
-                example: '#3a7dd8'
+                example: "#3a7dd8"
               do_not_accrue:
                 type: boolean
                 example: false
@@ -3391,10 +3391,10 @@ components:
                 example: days
               default_allowance:
                 type: string
-                example: '25.0'
+                example: "25.0"
               max_carryover:
                 type: string
-                example: '100.0'
+                example: "100.0"
               accrue_type:
                 type: string
                 example: yearly
@@ -3495,11 +3495,11 @@ components:
         data:
           - id: 1
             name: Vacation
-            color: '#3a7dd8'
+            color: "#3a7dd8"
             do_not_accrue: false
             unit: days
-            default_allowance: '25.0'
-            max_carryover: '100.0'
+            default_allowance: "25.0"
+            max_carryover: "100.0"
             accrue_type: yearly
             enable_employee_access: true
             only_full_days: false
@@ -3563,20 +3563,20 @@ components:
                 example: declined
               start_date:
                 type: string
-                example: '2021-03-09'
+                example: "2021-03-09"
               end_date:
                 type: string
-                example: '2021-03-10'
+                example: "2021-03-10"
       example:
         data:
           - id: 1
             status: declined
-            start_date: '2021-03-09'
-            end_date: '2021-03-10'
+            start_date: "2021-03-09"
+            end_date: "2021-03-10"
           - id: 2
             status: approved
-            start_date: '2021-03-09'
-            end_date: '2021-03-10'
+            start_date: "2021-03-09"
+            end_date: "2021-03-10"
     LeaveManagementCreateKitDayResponse:
       type: object
       properties:
@@ -3637,13 +3637,13 @@ components:
                           example: 2
                     quantity:
                       type: string
-                      example: '0.0'
+                      example: "0.0"
                     unit:
                       type: string
                       example: days
                     carryover:
                       type: string
-                      example: '0.0'
+                      example: "0.0"
         meta:
           type: object
           properties:
@@ -3675,30 +3675,30 @@ components:
               - policy:
                   name: Sickday
                   id: 2
-                quantity: '0.0'
+                quantity: "0.0"
                 unit: days
-                carryover: '0.0'
+                carryover: "0.0"
               - policy:
                   name: Vacation
                   id: 1
-                quantity: '25.0'
+                quantity: "25.0"
                 unit: days
-                carryover: '100.0'
+                carryover: "100.0"
           - full_name: Jane Doe
             id: 13
             eligibilities:
               - policy:
                   name: Custom Policy
                   id: 4
-                quantity: '0.0'
+                quantity: "0.0"
                 unit: days
-                carryover: '0.0'
+                carryover: "0.0"
               - policy:
                   name: Vacation
                   id: 1
-                quantity: '25.0'
+                quantity: "25.0"
                 unit: days
-                carryover: '100.0'
+                carryover: "100.0"
         meta:
           current_page: 1
           next_page: null
@@ -3775,13 +3775,13 @@ components:
                 example: true
               start_date:
                 type: string
-                example: '2018-05-24'
+                example: "2018-05-24"
               end_date:
                 type: string
-                example: '2018-05-24'
+                example: "2018-05-24"
               request_date:
                 type: string
-                example: '2018-05-22'
+                example: "2018-05-22"
               approval_date:
                 type: string
                 nullable: true
@@ -3799,7 +3799,7 @@ components:
                       example: Approved by manager?
                     answer:
                       type: string
-                      example: 'yes'
+                      example: "yes"
         meta:
           type: object
           properties:
@@ -3835,14 +3835,14 @@ components:
             is_part_of_day: true
             first_part_of_day: false
             second_part_of_day: true
-            start_date: '2018-05-24'
-            end_date: '2018-05-24'
-            request_date: '2018-05-22'
+            start_date: "2018-05-24"
+            end_date: "2018-05-24"
+            request_date: "2018-05-22"
             approval_date: null
             hours: 3.5
             fields:
               - title: Approved by manager?
-                answer: 'yes'
+                answer: "yes"
         meta:
           current_page: 1
           next_page: 2
@@ -3929,10 +3929,10 @@ components:
                 example: true
               start_date:
                 type: string
-                example: '2018-05-24'
+                example: "2018-05-24"
               end_date:
                 type: string
-                example: '2018-05-24'
+                example: "2018-05-24"
               hours:
                 type: number
                 example: 3.5
@@ -3952,8 +3952,8 @@ components:
             is_part_of_day: true
             first_part_of_day: false
             second_part_of_day: true
-            start_date: '2018-05-24'
-            end_date: '2018-05-24'
+            start_date: "2018-05-24"
+            end_date: "2018-05-24"
             hours: 3.5
     DocumentsListCategoriesResponse:
       type: object
@@ -4293,10 +4293,10 @@ components:
             properties:
               start_date:
                 type: string
-                example: '2017-01-01'
+                example: "2017-01-01"
               end_date:
                 type: string
-                example: '2019-01-01'
+                example: "2019-01-01"
               currency:
                 type: string
                 example: EUR
@@ -4336,8 +4336,8 @@ components:
               example: 75
       example:
         data:
-          - start_date: '2017-01-01'
-            end_date: '2019-01-01'
+          - start_date: "2017-01-01"
+            end_date: "2019-01-01"
             currency: EUR
             amount: 1234
             period: monthly
@@ -4372,13 +4372,13 @@ components:
                 example: Published
               created_at:
                 type: string
-                example: '2019-09-01'
+                example: "2019-09-01"
               internal_date:
                 type: string
-                example: '2019-10-01'
+                example: "2019-10-01"
               completed_at:
                 type: string
-                example: '2019-10-12'
+                example: "2019-10-12"
                 nullable: true
               link:
                 type: string
@@ -4453,8 +4453,8 @@ components:
             id: 2902504
             status: published
             visibility: Published
-            created_at: '2019-09-01'
-            internal_date: '2019-10-01'
+            created_at: "2019-09-01"
+            internal_date: "2019-10-01"
             completed_at: null
             link: https://talent.sage.hr/jobs/xxx
             team: Management
@@ -4473,11 +4473,11 @@ components:
             id: 212
             status: completed
             visibility: Completed
-            created_at: '2019-09-01'
-            internal_date: '2019-10-21'
-            completed_at: '2019-10-12'
+            created_at: "2019-09-01"
+            internal_date: "2019-10-21"
+            completed_at: "2019-10-12"
             link: null
-            team: ''
+            team: ""
             applicants_required: 2
             applicants_count: 4
             employment_type: null
@@ -4520,20 +4520,20 @@ components:
               example: Completed
             created_at:
               type: string
-              example: '2020-10-15'
+              example: "2020-10-15"
             internal_date:
               type: string
-              example: '2020-10-31'
+              example: "2020-10-31"
             completed_at:
               type: string
-              example: '2020-10-28'
+              example: "2020-10-28"
             link:
               type: string
               nullable: true
               x-konfig-null-placeholder: true
             team:
               type: string
-              example: ''
+              example: ""
             applicants_required:
               type: number
               example: 1
@@ -4603,11 +4603,11 @@ components:
           id: 1
           status: completed
           visibility: Completed
-          created_at: '2020-10-15'
-          internal_date: '2020-10-31'
-          completed_at: '2020-10-28'
+          created_at: "2020-10-15"
+          internal_date: "2020-10-31"
+          completed_at: "2020-10-28"
           link: null
-          team: ''
+          team: ""
           applicants_required: 1
           applicants_count: 2
           employment_type: Full-time
@@ -4679,14 +4679,14 @@ components:
                 example: recruiters
               created_at:
                 type: string
-                example: '2020-10-15T10:58:57Z'
+                example: "2020-10-15T10:58:57Z"
               disqualified_date:
                 type: string
                 nullable: true
                 x-konfig-null-placeholder: true
               hired_date:
                 type: string
-                example: '2020-10-28'
+                example: "2020-10-28"
                 nullable: true
               stage:
                 type: object
@@ -4699,7 +4699,7 @@ components:
                     example: 6
                   created_at:
                     type: string
-                    example: '2020-10-15T10:57:34Z'
+                    example: "2020-10-15T10:57:34Z"
         meta:
           type: object
           properties:
@@ -4734,13 +4734,13 @@ components:
             address: null
             phone_number: null
             source: recruiters
-            created_at: '2020-10-15T10:58:57Z'
+            created_at: "2020-10-15T10:58:57Z"
             disqualified_date: null
             hired_date: null
             stage:
               title: Reference check
               id: 6
-              created_at: '2020-10-15T10:57:34Z'
+              created_at: "2020-10-15T10:57:34Z"
           - summary: null
             id: 2
             full_name: Samantha Cross
@@ -4750,13 +4750,13 @@ components:
             address: null
             phone_number: null
             source: recruiters
-            created_at: '2020-10-15T11:02:34Z'
+            created_at: "2020-10-15T11:02:34Z"
             disqualified_date: null
-            hired_date: '2020-10-28'
+            hired_date: "2020-10-28"
             stage:
               title: Hired
               id: 10
-              created_at: '2020-10-15T10:57:34Z'
+              created_at: "2020-10-15T10:57:34Z"
         meta:
           current_page: 1
           next_page: null
@@ -4829,10 +4829,10 @@ components:
               example: referral
             created_at:
               type: string
-              example: '2020-10-21T12:58:43Z'
+              example: "2020-10-21T12:58:43Z"
             disqualified_date:
               type: string
-              example: '2020-10-28'
+              example: "2020-10-28"
             hired_date:
               type: string
               nullable: true
@@ -4848,7 +4848,7 @@ components:
                   example: 4
                 created_at:
                   type: string
-                  example: '2020-10-15T10:57:34Z'
+                  example: "2020-10-15T10:57:34Z"
             position_id:
               type: number
               example: 1
@@ -4890,13 +4890,13 @@ components:
           address: null
           phone_number: null
           source: referral
-          created_at: '2020-10-21T12:58:43Z'
-          disqualified_date: '2020-10-28'
+          created_at: "2020-10-21T12:58:43Z"
+          disqualified_date: "2020-10-28"
           hired_date: null
           stage:
             title: Interview
             id: 4
-            created_at: '2020-10-15T10:57:34Z'
+            created_at: "2020-10-15T10:57:34Z"
           position_id: 1
           added_by:
             id: 1
@@ -4923,7 +4923,7 @@ components:
                 example: Applicant moved from "Interview" to "Reference check"
               created_at:
                 type: string
-                example: '2020-10-28T09:05:45Z'
+                example: "2020-10-28T09:05:45Z"
         meta:
           type: object
           properties:
@@ -4951,19 +4951,19 @@ components:
         data:
           - action: moved_between_stages
             message: Applicant moved from "Interview" to "Reference check"
-            created_at: '2020-10-28T09:05:45Z'
+            created_at: "2020-10-28T09:05:45Z"
           - action: moved_between_stages
             message: Applicant moved from "CV review" to "Interview"
-            created_at: '2020-10-27T10:59:23Z'
+            created_at: "2020-10-27T10:59:23Z"
           - action: moved_between_stages
             message: Applicant moved from "New" to "CV review"
-            created_at: '2020-10-15T11:01:39Z'
+            created_at: "2020-10-15T11:01:39Z"
           - action: document_created
             message: Uploaded "empty-document.pdf"
-            created_at: '2020-10-15T10:59:15Z'
+            created_at: "2020-10-15T10:59:15Z"
           - action: applicant_created
             message: Applicant created
-            created_at: '2020-10-15T10:58:57Z'
+            created_at: "2020-10-15T10:58:57Z"
         meta:
           current_page: 1
           next_page: null
@@ -5197,7 +5197,7 @@ components:
               example: 123
             work_start_date:
               type: string
-              example: '2020-10-10T00:00:00.000Z'
+              example: "2020-10-10T00:00:00.000Z"
             first_name:
               type: string
               example: John
@@ -5235,7 +5235,7 @@ components:
         data:
           employee_id: 1
           employee_number: 123
-          work_start_date: '2020-10-10T00:00:00.000Z'
+          work_start_date: "2020-10-10T00:00:00.000Z"
           first_name: John
           last_name: Doe
           gender: male
@@ -5261,13 +5261,13 @@ components:
               example: 123
             work_start_date:
               type: string
-              example: '2020-10-10T00:00:00.000Z'
+              example: "2020-10-10T00:00:00.000Z"
             contract_number:
               type: string
               example: contract number (custom_field)
             termination_date:
               type: string
-              example: '2020-10-11T00:00:00.000Z'
+              example: "2020-10-11T00:00:00.000Z"
             employment_status:
               type: string
               example: Full-time
@@ -5281,9 +5281,9 @@ components:
         data:
           employee_id: 1
           employee_number: 123
-          work_start_date: '2020-10-10T00:00:00.000Z'
+          work_start_date: "2020-10-10T00:00:00.000Z"
           contract_number: contract number (custom_field)
-          termination_date: '2020-10-11T00:00:00.000Z'
+          termination_date: "2020-10-11T00:00:00.000Z"
           employment_status: Full-time
           contract_type: contract type (custom_field)
           status: 1
@@ -5301,13 +5301,13 @@ components:
               example: 123
             work_start_date:
               type: string
-              example: '2020-01-10'
+              example: "2020-01-10"
             position_start_date:
               type: string
-              example: '2020-10-10'
+              example: "2020-10-10"
             last_position_end_date:
               type: string
-              example: '2020-09-10'
+              example: "2020-09-10"
             cost_center_code:
               type: string
               example: cost center code (custom_field)
@@ -5330,9 +5330,9 @@ components:
         data:
           employee_id: 1
           employee_number: 123
-          work_start_date: '2020-01-10'
-          position_start_date: '2020-10-10'
-          last_position_end_date: '2020-09-10'
+          work_start_date: "2020-01-10"
+          position_start_date: "2020-10-10"
+          last_position_end_date: "2020-09-10"
           cost_center_code: cost center code (custom_field)
           position_id: 1
           schedule_id: scheduled id (custom_field)
@@ -5359,10 +5359,10 @@ components:
               example: Salary
             start_date:
               type: string
-              example: '2020-09-10'
+              example: "2020-09-10"
             end_date:
               type: string
-              example: '2020-10-10'
+              example: "2020-10-10"
             amount:
               type: number
               example: 1000
@@ -5375,8 +5375,8 @@ components:
           employee_number: 123
           contract_number: contract number (custom_field)
           type: Salary
-          start_date: '2020-09-10'
-          end_date: '2020-10-10'
+          start_date: "2020-09-10"
+          end_date: "2020-10-10"
           amount: 1000
           status: 1
     IntegrationsTransferBankAccountInfoResponse:
@@ -5399,7 +5399,7 @@ components:
               example: bank account (custom_field)
             last_change:
               type: string
-              example: '2020-09-10'
+              example: "2020-09-10"
             status:
               type: number
               example: 1
@@ -5409,7 +5409,7 @@ components:
           employee_number: 123
           bank_code: bank code (custom_field)
           bank_account: bank account (custom_field)
-          last_change: '2020-09-10'
+          last_change: "2020-09-10"
           status: 1
     IntegrationsTransferTerminationInfoToVikarinaResponse:
       type: object
@@ -5428,7 +5428,7 @@ components:
               example: contract number (custom_field)
             termination_date:
               type: string
-              example: '2020-09-10'
+              example: "2020-09-10"
             termination_reason:
               type: string
               example: New job
@@ -5449,7 +5449,7 @@ components:
           employee_id: 1
           employee_number: 123
           contract_number: contract number (custom_field)
-          termination_date: '2020-09-10'
+          termination_date: "2020-09-10"
           termination_reason: New job
           unused_days: 5
           termination_comment: Was good employee
@@ -5472,7 +5472,7 @@ components:
               example: 5
             date:
               type: string
-              example: '2020-10-10'
+              example: "2020-10-10"
             status:
               type: number
               example: 1
@@ -5481,7 +5481,7 @@ components:
           employee_id: 1
           employee_number: 123
           unused_days: 5
-          date: '2020-10-10'
+          date: "2020-10-10"
           status: 1
     IntegrationsTransferLeaveInformationToVikarinaResponse:
       type: object
@@ -5503,10 +5503,10 @@ components:
               example: 2
             start_date:
               type: string
-              example: '2020-10-10'
+              example: "2020-10-10"
             end_date:
               type: string
-              example: '2020-10-10'
+              example: "2020-10-10"
             status:
               type: number
               example: 1
@@ -5516,8 +5516,8 @@ components:
           employee_number: 123
           leave_type: Vacation
           days: 2
-          start_date: '2020-10-10'
-          end_date: '2020-10-10'
+          start_date: "2020-10-10"
+          end_date: "2020-10-10"
           status: 1
     IntegrationsTransferTimeScheduleInformationResponse:
       type: object
@@ -5533,7 +5533,7 @@ components:
               example: 123
             date:
               type: string
-              example: '2020-10-10'
+              example: "2020-10-10"
             stand_by:
               type: number
               example: 8
@@ -5556,7 +5556,7 @@ components:
         data:
           employee_id: 1
           employee_number: 123
-          date: '2020-10-10'
+          date: "2020-10-10"
           stand_by: 8
           hours: 8.5
           nightours: 0.5
@@ -5583,10 +5583,10 @@ components:
               example: Bonus
             start_date:
               type: string
-              example: '2020-09-10'
+              example: "2020-09-10"
             end_date:
               type: string
-              example: '2020-10-10'
+              example: "2020-10-10"
             amount:
               type: number
               example: 1000
@@ -5599,7 +5599,7 @@ components:
           employee_number: 123
           contract_number: contract number (custom_field)
           type: Bonus
-          start_date: '2020-09-10'
-          end_date: '2020-10-10'
+          start_date: "2020-09-10"
+          end_date: "2020-10-10"
           amount: 1000
           status: 1

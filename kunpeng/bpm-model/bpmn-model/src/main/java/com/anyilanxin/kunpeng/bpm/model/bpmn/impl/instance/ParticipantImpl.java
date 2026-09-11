@@ -28,7 +28,6 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Interface;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Participant;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ParticipantMultiplicity;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Process;
-import java.util.Collection;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
@@ -38,6 +37,7 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.child.ChildElement;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.SequenceBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.AttributeReference;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.ElementReferenceCollection;
+import java.util.Collection;
 
 /**
  * The BPMN participant element

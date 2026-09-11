@@ -16,12 +16,12 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.xml.test.assertions;
 
-import org.assertj.core.api.Assertions;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementType;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.attribute.Attribute;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.ChildElementCollection;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.AttributeReference;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.ElementReferenceCollection;
+import org.assertj.core.api.Assertions;
 
 /**
  * @author Sebastian Menski
@@ -44,8 +44,8 @@ public class ModelAssertions extends Assertions {
     return new AttributeReferenceAssert(actual);
   }
 
-  public static ElementReferenceCollectionAssert assertThat(ElementReferenceCollection<?,?> actual) {
+  public static ElementReferenceCollectionAssert assertThat(
+      ElementReferenceCollection<?, ?> actual) {
     return new ElementReferenceCollectionAssert(actual);
   }
-
 }

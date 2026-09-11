@@ -17,14 +17,10 @@
 package org.camunda.bpm.dmn.engine.impl.spi.transform;
 
 import java.util.List;
-
 import org.camunda.bpm.dmn.engine.impl.spi.hitpolicy.DmnHitPolicyHandlerRegistry;
 import org.camunda.bpm.dmn.engine.impl.spi.type.DmnDataTypeTransformerRegistry;
 
-/**
- * DMN Transformer which creates a {@link DmnTransform} to transform a
- * DMN model instance
- */
+/** DMN Transformer which creates a {@link DmnTransform} to transform a DMN model instance */
 public interface DmnTransformer {
 
   /**
@@ -62,7 +58,8 @@ public interface DmnTransformer {
    *
    * @param elementTransformHandlerRegistry the registry to use
    */
-  void setElementTransformHandlerRegistry(DmnElementTransformHandlerRegistry elementTransformHandlerRegistry);
+  void setElementTransformHandlerRegistry(
+      DmnElementTransformHandlerRegistry elementTransformHandlerRegistry);
 
   /**
    * Set the {@link DmnElementTransformHandlerRegistry}
@@ -70,7 +67,8 @@ public interface DmnTransformer {
    * @param elementTransformHandlerRegistry the registry to use
    * @return this DmnTransformer
    */
-  DmnTransformer elementTransformHandlerRegistry(DmnElementTransformHandlerRegistry elementTransformHandlerRegistry);
+  DmnTransformer elementTransformHandlerRegistry(
+      DmnElementTransformHandlerRegistry elementTransformHandlerRegistry);
 
   /**
    * @return the {@link DmnDataTypeTransformerRegistry}
@@ -90,7 +88,8 @@ public interface DmnTransformer {
    * @param dataTypeTransformerRegistry the {@link DmnDataTypeTransformerRegistry} to use
    * @return this DmnTransformer
    */
-  DmnTransformer dataTypeTransformerRegistry(DmnDataTypeTransformerRegistry dataTypeTransformerRegistry);
+  DmnTransformer dataTypeTransformerRegistry(
+      DmnDataTypeTransformerRegistry dataTypeTransformerRegistry);
 
   /**
    * @return the {@link DmnHitPolicyHandlerRegistry}
@@ -118,5 +117,4 @@ public interface DmnTransformer {
    * @return the {@link DmnTransform}
    */
   DmnTransform createTransform();
-
 }

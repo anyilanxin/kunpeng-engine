@@ -16,10 +16,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_CONTEXT;
-
-import java.util.Collection;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Context;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.ContextEntry;
@@ -30,6 +28,7 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTypeInstanceProvider;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.ChildElementCollection;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.SequenceBuilder;
+import java.util.Collection;
 
 public class ContextImpl extends ExpressionImpl implements Context {
 
@@ -44,21 +43,22 @@ public class ContextImpl extends ExpressionImpl implements Context {
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(Context.class, DMN_ELEMENT_CONTEXT)
-      .namespaceUri(LATEST_DMN_NS)
-      .extendsType(Expression.class)
-      .instanceProvider(new ModelTypeInstanceProvider<Context>() {
-        public Context newInstance(ModelTypeInstanceContext instanceContext) {
-          return new ContextImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(Context.class, DMN_ELEMENT_CONTEXT)
+            .namespaceUri(LATEST_DMN_NS)
+            .extendsType(Expression.class)
+            .instanceProvider(
+                new ModelTypeInstanceProvider<Context>() {
+                  public Context newInstance(ModelTypeInstanceContext instanceContext) {
+                    return new ContextImpl(instanceContext);
+                  }
+                });
 
     SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
-    contextEntryCollection = sequenceBuilder.elementCollection(ContextEntry.class)
-      .build();
+    contextEntryCollection = sequenceBuilder.elementCollection(ContextEntry.class).build();
 
     typeBuilder.build();
   }
-
 }

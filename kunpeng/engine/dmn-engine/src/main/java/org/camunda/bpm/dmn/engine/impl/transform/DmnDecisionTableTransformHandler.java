@@ -25,40 +25,47 @@ import org.camunda.bpm.model.dmn.BuiltinAggregator;
 import org.camunda.bpm.model.dmn.HitPolicy;
 import org.camunda.bpm.model.dmn.instance.DecisionTable;
 
-public class DmnDecisionTableTransformHandler implements DmnElementTransformHandler<DecisionTable, DmnDecisionTableImpl> {
+public class DmnDecisionTableTransformHandler
+    implements DmnElementTransformHandler<DecisionTable, DmnDecisionTableImpl> {
 
   protected static final DmnTransformLogger LOG = DmnLogger.TRANSFORM_LOGGER;
 
-  public DmnDecisionTableImpl handleElement(DmnElementTransformContext context, DecisionTable decisionTable) {
+  public DmnDecisionTableImpl handleElement(
+      DmnElementTransformContext context, DecisionTable decisionTable) {
     return createFromDecisionTable(context, decisionTable);
   }
 
-  protected DmnDecisionTableImpl createFromDecisionTable(DmnElementTransformContext context, DecisionTable decisionTable) {
+  protected DmnDecisionTableImpl createFromDecisionTable(
+      DmnElementTransformContext context, DecisionTable decisionTable) {
     DmnDecisionTableImpl dmnDecisionTable = createDmnElement(context, decisionTable);
 
-    dmnDecisionTable.setHitPolicyHandler(getHitPolicyHandler(context, decisionTable, dmnDecisionTable));
+    dmnDecisionTable.setHitPolicyHandler(
+        getHitPolicyHandler(context, decisionTable, dmnDecisionTable));
 
     return dmnDecisionTable;
   }
 
-  protected DmnDecisionTableImpl createDmnElement(DmnElementTransformContext context, DecisionTable decisionTable) {
+  protected DmnDecisionTableImpl createDmnElement(
+      DmnElementTransformContext context, DecisionTable decisionTable) {
     return new DmnDecisionTableImpl();
   }
 
-  protected DmnHitPolicyHandler getHitPolicyHandler(DmnElementTransformContext context, DecisionTable decisionTable, DmnDecisionTableImpl dmnDecisionTable) {
+  protected DmnHitPolicyHandler getHitPolicyHandler(
+      DmnElementTransformContext context,
+      DecisionTable decisionTable,
+      DmnDecisionTableImpl dmnDecisionTable) {
     HitPolicy hitPolicy = decisionTable.getHitPolicy();
     if (hitPolicy == null) {
       // use default hit policy
       hitPolicy = HitPolicy.UNIQUE;
     }
     BuiltinAggregator aggregation = decisionTable.getAggregation();
-    DmnHitPolicyHandler hitPolicyHandler = context.getHitPolicyHandlerRegistry().getHandler(hitPolicy, aggregation);
+    DmnHitPolicyHandler hitPolicyHandler =
+        context.getHitPolicyHandlerRegistry().getHandler(hitPolicy, aggregation);
     if (hitPolicyHandler != null) {
       return hitPolicyHandler;
-    }
-    else {
+    } else {
       throw LOG.hitPolicyNotSupported(dmnDecisionTable, hitPolicy, aggregation);
     }
   }
-
 }

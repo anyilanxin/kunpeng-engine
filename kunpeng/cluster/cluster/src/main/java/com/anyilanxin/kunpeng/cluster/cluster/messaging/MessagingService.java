@@ -89,12 +89,16 @@ public interface MessagingService {
    *   <li>{@link java.net.ConnectException} - indicates the recipient is unreachable
    *   <li>{@link java.util.concurrent.TimeoutException} - indicates no response came back after the
    *       default timeout
-   *   <li>{@link com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.ProtocolException} - indicates the
-   *       recipient failed to parse the incoming message
-   *   <li>{@link com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.NoRemoteHandler} - indicates the
-   *       recipient received the message, but was no expecting to
-   *   <li>{@link com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.RemoteHandlerFailure} - indicates
-   *       the recipient parsed and expected the message, but it failed unexpectedly to process it
+   *   <li>{@link
+   *       com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.ProtocolException} -
+   *       indicates the recipient failed to parse the incoming message
+   *   <li>{@link
+   *       com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.NoRemoteHandler} -
+   *       indicates the recipient received the message, but was no expecting to
+   *   <li>{@link
+   *       com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.RemoteHandlerFailure}
+   *       - indicates the recipient parsed and expected the message, but it failed unexpectedly to
+   *       process it
    * </ul>
    *
    * @param address address to send the message to.
@@ -122,12 +126,16 @@ public interface MessagingService {
    *   <li>{@link java.net.ConnectException} - indicates the recipient is unreachable
    *   <li>{@link java.util.concurrent.TimeoutException} - indicates no response came back after the
    *       default timeout
-   *   <li>{@link com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.ProtocolException} - indicates the
-   *       recipient failed to parse the incoming message
-   *   <li>{@link com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.NoRemoteHandler} - indicates the
-   *       recipient received the message, but was no expecting to
-   *   <li>{@link com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.RemoteHandlerFailure} - indicates
-   *       the recipient parsed and expected the message, but it failed unexpectedly to process it
+   *   <li>{@link
+   *       com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.ProtocolException} -
+   *       indicates the recipient failed to parse the incoming message
+   *   <li>{@link
+   *       com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.NoRemoteHandler} -
+   *       indicates the recipient received the message, but was no expecting to
+   *   <li>{@link
+   *       com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.RemoteHandlerFailure}
+   *       - indicates the recipient parsed and expected the message, but it failed unexpectedly to
+   *       process it
    * </ul>
    *
    * @param address address to send the message to.
@@ -150,12 +158,16 @@ public interface MessagingService {
    *   <li>{@link java.net.ConnectException} - indicates the recipient is unreachable
    *   <li>{@link java.util.concurrent.TimeoutException} - indicates no response came back after the
    *       default timeout
-   *   <li>{@link com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.ProtocolException} - indicates the
-   *       recipient failed to parse the incoming message
-   *   <li>{@link com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.NoRemoteHandler} - indicates the
-   *       recipient received the message, but was no expecting to
-   *   <li>{@link com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.RemoteHandlerFailure} - indicates
-   *       the recipient parsed and expected the message, but it failed unexpectedly to process it
+   *   <li>{@link
+   *       com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.ProtocolException} -
+   *       indicates the recipient failed to parse the incoming message
+   *   <li>{@link
+   *       com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.NoRemoteHandler} -
+   *       indicates the recipient received the message, but was no expecting to
+   *   <li>{@link
+   *       com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.RemoteHandlerFailure}
+   *       - indicates the recipient parsed and expected the message, but it failed unexpectedly to
+   *       process it
    * </ul>
    *
    * @param address address to send the message to.
@@ -184,12 +196,16 @@ public interface MessagingService {
    *   <li>{@link java.net.ConnectException} - indicates the recipient is unreachable
    *   <li>{@link java.util.concurrent.TimeoutException} - indicates no response came back after the
    *       default timeout
-   *   <li>{@link com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.ProtocolException} - indicates the
-   *       recipient failed to parse the incoming message
-   *   <li>{@link com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.NoRemoteHandler} - indicates the
-   *       recipient received the message, but was no expecting to
-   *   <li>{@link com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.RemoteHandlerFailure} - indicates
-   *       the recipient parsed and expected the message, but it failed unexpectedly to process it
+   *   <li>{@link
+   *       com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.ProtocolException} -
+   *       indicates the recipient failed to parse the incoming message
+   *   <li>{@link
+   *       com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.NoRemoteHandler} -
+   *       indicates the recipient received the message, but was no expecting to
+   *   <li>{@link
+   *       com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.RemoteHandlerFailure}
+   *       - indicates the recipient parsed and expected the message, but it failed unexpectedly to
+   *       process it
    * </ul>
    *
    * @param address address to send the message to.
@@ -213,12 +229,16 @@ public interface MessagingService {
    *   <li>{@link java.net.ConnectException} - indicates the recipient is unreachable
    *   <li>{@link java.util.concurrent.TimeoutException} - indicates no response came back within
    *       the given timeout
-   *   <li>{@link com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.ProtocolException} - indicates the
-   *       recipient failed to parse the incoming message
-   *   <li>{@link com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.NoRemoteHandler} - indicates the
-   *       recipient received the message, but was no expecting to
-   *   <li>{@link com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.RemoteHandlerFailure} - indicates
-   *       the recipient parsed and expected the message, but it failed unexpectedly to process it
+   *   <li>{@link
+   *       com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.ProtocolException} -
+   *       indicates the recipient failed to parse the incoming message
+   *   <li>{@link
+   *       com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.NoRemoteHandler} -
+   *       indicates the recipient received the message, but was no expecting to
+   *   <li>{@link
+   *       com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.RemoteHandlerFailure}
+   *       - indicates the recipient parsed and expected the message, but it failed unexpectedly to
+   *       process it
    * </ul>
    *
    * @param address address to send the message to.
@@ -247,12 +267,16 @@ public interface MessagingService {
    *   <li>{@link java.net.ConnectException} - indicates the recipient is unreachable
    *   <li>{@link java.util.concurrent.TimeoutException} - indicates no response came back within
    *       the given timeout
-   *   <li>{@link com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.ProtocolException} - indicates the
-   *       recipient failed to parse the incoming message
-   *   <li>{@link com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.NoRemoteHandler} - indicates the
-   *       recipient received the message, but was no expecting to
-   *   <li>{@link com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.RemoteHandlerFailure} - indicates
-   *       the recipient parsed and expected the message, but it failed unexpectedly to process it
+   *   <li>{@link
+   *       com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.ProtocolException} -
+   *       indicates the recipient failed to parse the incoming message
+   *   <li>{@link
+   *       com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.NoRemoteHandler} -
+   *       indicates the recipient received the message, but was no expecting to
+   *   <li>{@link
+   *       com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.RemoteHandlerFailure}
+   *       - indicates the recipient parsed and expected the message, but it failed unexpectedly to
+   *       process it
    * </ul>
    *
    * @param address address to send the message to.
@@ -280,12 +304,16 @@ public interface MessagingService {
    *   <li>{@link java.net.ConnectException} - indicates the recipient is unreachable
    *   <li>{@link java.util.concurrent.TimeoutException} - indicates no response came back within
    *       the given timeout
-   *   <li>{@link com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.ProtocolException} - indicates the
-   *       recipient failed to parse the incoming message
-   *   <li>{@link com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.NoRemoteHandler} - indicates the
-   *       recipient received the message, but was no expecting to
-   *   <li>{@link com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.RemoteHandlerFailure} - indicates
-   *       the recipient parsed and expected the message, but it failed unexpectedly to process it
+   *   <li>{@link
+   *       com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.ProtocolException} -
+   *       indicates the recipient failed to parse the incoming message
+   *   <li>{@link
+   *       com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.NoRemoteHandler} -
+   *       indicates the recipient received the message, but was no expecting to
+   *   <li>{@link
+   *       com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.RemoteHandlerFailure}
+   *       - indicates the recipient parsed and expected the message, but it failed unexpectedly to
+   *       process it
    * </ul>
    *
    * @param address address to send the message to.

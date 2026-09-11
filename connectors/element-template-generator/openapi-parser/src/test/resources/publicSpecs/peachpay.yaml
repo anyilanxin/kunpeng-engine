@@ -60,21 +60,21 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Checkout'
+              $ref: "#/components/schemas/Checkout"
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/Checkout'
+              $ref: "#/components/schemas/Checkout"
       responses:
-        '201':
+        "201":
           description: Request processed successfully.
           content:
             application/json:
               schema:
                 $ref: >-
                   #/components/schemas/CheckoutGenerationInitiateRedirectCheckoutResponse
-        '400':
+        "400":
           description: Invalid authentication information.
-        '500':
+        "500":
           description: Internal server error.
   /checkout:
     post:
@@ -106,25 +106,25 @@ paths:
         content:
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/Checkout'
+              $ref: "#/components/schemas/Checkout"
       responses:
-        '200':
+        "200":
           description: Checkout successfully created.
           content:
             text/html:
               schema:
-                $ref: '#/components/schemas/CheckoutPage'
-        '400':
+                $ref: "#/components/schemas/CheckoutPage"
+        "400":
           description: A validation error has occurred with Checkout.
           content:
             text/html:
               schema:
-                $ref: '#/components/schemas/CheckoutErrorPage'
-        '500':
+                $ref: "#/components/schemas/CheckoutErrorPage"
+        "500":
           description: Internal server error.
       callbacks:
         Checkout created:
-          '{$request.body#/notificationUrl}':
+          "{$request.body#/notificationUrl}":
             post:
               description: Checkout created for request.
               requestBody:
@@ -132,12 +132,12 @@ paths:
                 content:
                   application/x-www-form-urlencoded:
                     schema:
-                      $ref: '#/components/schemas/CheckoutCreatedWebhook'
+                      $ref: "#/components/schemas/CheckoutCreatedWebhook"
               responses:
-                '200':
+                "200":
                   description: Return this code if your service accepts the webhook.
         Checkout cancelled:
-          '{$request.body#/notificationUrl}':
+          "{$request.body#/notificationUrl}":
             post:
               description: Checkout cancelled.
               requestBody:
@@ -145,12 +145,12 @@ paths:
                 content:
                   application/x-www-form-urlencoded:
                     schema:
-                      $ref: '#/components/schemas/CheckoutCancelledWebhook'
+                      $ref: "#/components/schemas/CheckoutCancelledWebhook"
               responses:
-                '200':
+                "200":
                   description: Return this code if your service accepts the webhook.
         Checkout uncertain:
-          '{$request.body#/notificationUrl}':
+          "{$request.body#/notificationUrl}":
             post:
               description: Checkout potentially cancelled.
               requestBody:
@@ -158,12 +158,12 @@ paths:
                 content:
                   application/x-www-form-urlencoded:
                     schema:
-                      $ref: '#/components/schemas/CheckoutUncertainWebhook'
+                      $ref: "#/components/schemas/CheckoutUncertainWebhook"
               responses:
-                '200':
+                "200":
                   description: Return this code if your service accepts the webhook.
         Checkout pending:
-          '{$request.body#/notificationUrl}':
+          "{$request.body#/notificationUrl}":
             post:
               description: Transaction created on the checkout instance.
               requestBody:
@@ -171,12 +171,12 @@ paths:
                 content:
                   application/x-www-form-urlencoded:
                     schema:
-                      $ref: '#/components/schemas/CheckoutPendingWebhook'
+                      $ref: "#/components/schemas/CheckoutPendingWebhook"
               responses:
-                '200':
+                "200":
                   description: Return this code if your service accepts the webhook.
         Checkout successful:
-          '{$request.body#/notificationUrl}':
+          "{$request.body#/notificationUrl}":
             post:
               description: Checkout completed successfully.
               requestBody:
@@ -184,9 +184,9 @@ paths:
                 content:
                   application/x-www-form-urlencoded:
                     schema:
-                      $ref: '#/components/schemas/CheckoutSuccessfulWebhook'
+                      $ref: "#/components/schemas/CheckoutSuccessfulWebhook"
               responses:
-                '200':
+                "200":
                   description: Return this code if your service accepts the webhook.
   /checkout/validate:
     post:
@@ -208,25 +208,25 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Checkout'
+              $ref: "#/components/schemas/Checkout"
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/Checkout'
+              $ref: "#/components/schemas/Checkout"
       responses:
-        '200':
+        "200":
           description: Valid request.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessageResponse'
+                $ref: "#/components/schemas/MessageResponse"
               example:
                 message: Valid request.
-        '400':
+        "400":
           description: Invalid request.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CheckoutGenerationValidateRequestResponse'
+                $ref: "#/components/schemas/CheckoutGenerationValidateRequestResponse"
               examples:
                 Invalid body:
                   description: Body format not supported.
@@ -261,7 +261,7 @@ paths:
                   value:
                     validation_errors:
                       amount: amount is required
-        '500':
+        "500":
           description: Internal server error.
   /status:
     get:
@@ -307,19 +307,19 @@ paths:
             maxLength: 64
           required: true
       responses:
-        '200':
+        "200":
           description: OK.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CheckoutStatus'
-        '400':
+                $ref: "#/components/schemas/CheckoutStatus"
+        "400":
           description: Invalid state, check the body for more details.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CheckoutError'
-        '500':
+                $ref: "#/components/schemas/CheckoutError"
+        "500":
           description: Internal server error.
   /merchant_specs:
     post:
@@ -333,19 +333,19 @@ paths:
 
 
         For more information, see the
-        [documentation](https://developer.peachpayments.com/docs/checkout-merchant-specs). 
+        [documentation](https://developer.peachpayments.com/docs/checkout-merchant-specs).
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/HelpersGetPaymentMethodsRequest'
+              $ref: "#/components/schemas/HelpersGetPaymentMethodsRequest"
       responses:
-        '200':
+        "200":
           description: Request processed successfully.
-        '400':
+        "400":
           description: Invalid authentication information.
-        '500':
+        "500":
           description: Internal server error.
   /v2/checkout:
     post:
@@ -358,7 +358,7 @@ paths:
 
 
         For more information, see the
-        [documentation](https://developer.peachpayments.com/docs/checkout-embedded-tutorial#tutorial). 
+        [documentation](https://developer.peachpayments.com/docs/checkout-embedded-tutorial#tutorial).
       parameters:
         - description: An allowlisted domain for the merchant.
           in: header
@@ -372,44 +372,44 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CheckoutV2'
+              $ref: "#/components/schemas/CheckoutV2"
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/CheckoutV2'
+              $ref: "#/components/schemas/CheckoutV2"
       responses:
-        '200':
+        "200":
           description: Checkout successfully created.
           content:
             application/json:
               schema:
                 $ref: >-
                   #/components/schemas/CheckoutV2GenerationInitiateCheckoutInstanceResponse
-        '400':
+        "400":
           description: A validation error has occurred with Checkout.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessageResponse'
-        '401':
+                $ref: "#/components/schemas/MessageResponse"
+        "401":
           description: >-
             Request lacks valid authentication, message in response contains
             specifics.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessageResponse'
-        '404':
+                $ref: "#/components/schemas/MessageResponse"
+        "404":
           description: Invalid entity ID passed.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessageResponse'
-        '500':
+                $ref: "#/components/schemas/MessageResponse"
+        "500":
           description: Internal server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessageResponse'
+                $ref: "#/components/schemas/MessageResponse"
   /api/channels/{entityId}/payments:
     post:
       tags:
@@ -438,31 +438,31 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/GenerateLinkPayment'
+              $ref: "#/components/schemas/GenerateLinkPayment"
       responses:
-        '200':
+        "200":
           description: OK.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GenerateLinkResponse'
-        '400':
+                $ref: "#/components/schemas/GenerateLinkResponse"
+        "400":
           description: Bad request.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GenerateLinkErrorResponse'
-        '401':
+                $ref: "#/components/schemas/GenerateLinkErrorResponse"
+        "401":
           description: Request lacks valid authentication.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessageResponse'
+                $ref: "#/components/schemas/MessageResponse"
               example:
                 message: Request lacks valid authentication.
       callbacks:
         Payment link created:
-          '{$request.body#/options/notificationUrl}':
+          "{$request.body#/options/notificationUrl}":
             post:
               summary: Payment link created for request.
               description: Event raised when a payment link is created.
@@ -471,12 +471,12 @@ paths:
                 content:
                   application/json:
                     schema:
-                      $ref: '#/components/schemas/PaymentLinkCreatedWebhook'
+                      $ref: "#/components/schemas/PaymentLinkCreatedWebhook"
               responses:
-                '200':
+                "200":
                   description: Return this code if your service accepts the webhook.
         Payment link opened:
-          '{$request.body#/options/notificationUrl}':
+          "{$request.body#/options/notificationUrl}":
             post:
               summary: Payment link opened by a user.
               description: Event raised when a user opens a payment link.
@@ -485,12 +485,12 @@ paths:
                 content:
                   application/json:
                     schema:
-                      $ref: '#/components/schemas/PaymentLinkOpenedWebhook'
+                      $ref: "#/components/schemas/PaymentLinkOpenedWebhook"
               responses:
-                '200':
+                "200":
                   description: Return this code if your service accepts the webhook.
         Payment link processing:
-          '{$request.body#/options/notificationUrl}':
+          "{$request.body#/options/notificationUrl}":
             post:
               summary: Payment link is processing.
               description: Event raised when a user is directed to Checkout to pay.
@@ -499,12 +499,12 @@ paths:
                 content:
                   application/json:
                     schema:
-                      $ref: '#/components/schemas/PaymentLinkProcessingWebhook'
+                      $ref: "#/components/schemas/PaymentLinkProcessingWebhook"
               responses:
-                '200':
+                "200":
                   description: Return this code if your service accepts the webhook.
         Payment link expired:
-          '{$request.body#/options/notificationUrl}':
+          "{$request.body#/options/notificationUrl}":
             post:
               summary: Payment link expired.
               description: Event raised when a payment link expires.
@@ -513,12 +513,12 @@ paths:
                 content:
                   application/json:
                     schema:
-                      $ref: '#/components/schemas/PaymentLinkExpiredWebhook'
+                      $ref: "#/components/schemas/PaymentLinkExpiredWebhook"
               responses:
-                '200':
+                "200":
                   description: Return this code if your service accepts the webhook.
         Payment link completed:
-          '{$request.body#/options/notificationUrl}':
+          "{$request.body#/options/notificationUrl}":
             post:
               summary: Payment link completed.
               description: Event raised when a payment link is completed.
@@ -527,9 +527,9 @@ paths:
                 content:
                   application/json:
                     schema:
-                      $ref: '#/components/schemas/PaymentLinkCompletedWebhook'
+                      $ref: "#/components/schemas/PaymentLinkCompletedWebhook"
               responses:
-                '200':
+                "200":
                   description: Return this code if your service accepts the webhook.
   /api/payments:
     get:
@@ -575,7 +575,7 @@ paths:
           schema:
             type: string
             format: date-time
-            example: '2018-03-20T09:12:28Z'
+            example: "2018-03-20T09:12:28Z"
         - description: Retrieve all payment links until the end date.
           name: filters[endDate]
           in: query
@@ -583,7 +583,7 @@ paths:
           schema:
             type: string
             format: date-time
-            example: '2018-03-20T09:12:28Z'
+            example: "2018-03-20T09:12:28Z"
         - description: The payment link status to filter on.
           name: filters[status]
           in: query
@@ -631,21 +631,21 @@ paths:
               - emailBcc
             example: sendEmail
       responses:
-        '200':
+        "200":
           description: OK.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaymentGetAllPaymentLinksResponse'
+                $ref: "#/components/schemas/PaymentGetAllPaymentLinksResponse"
             text/csv:
               schema:
-                $ref: '#/components/schemas/PaymentGetAllPaymentLinks200Response'
-        '401':
+                $ref: "#/components/schemas/PaymentGetAllPaymentLinks200Response"
+        "401":
           description: Request lacks valid authentication.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessageResponse'
+                $ref: "#/components/schemas/MessageResponse"
               example:
                 message: Request lacks valid authentication.
   /api/payments/{paymentId}:
@@ -671,30 +671,30 @@ paths:
           style: simple
           example: b95d6888-591b-4538-b508-6102cf1259c9
       responses:
-        '200':
+        "200":
           description: OK.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessageResponse'
+                $ref: "#/components/schemas/MessageResponse"
               example:
                 message: >-
                   Payment 12cc649f-70e9-4c50-8682-28eb94634ea6 has been
                   successfully cancelled.
-        '401':
+        "401":
           description: Request lacks valid authentication.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessageResponse'
+                $ref: "#/components/schemas/MessageResponse"
               example:
                 message: Request lacks valid authentication.
-        '404':
+        "404":
           description: The specified resource was not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessageResponse'
+                $ref: "#/components/schemas/MessageResponse"
               example:
                 message: The specified resource was not found.
     get:
@@ -718,26 +718,26 @@ paths:
           style: simple
           example: b95d6888-591b-4538-b508-6102cf1259c9
       responses:
-        '200':
+        "200":
           description: OK.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StatusQueryPaymentStatusResponse'
-        '401':
+                $ref: "#/components/schemas/StatusQueryPaymentStatusResponse"
+        "401":
           description: Request lacks valid authentication.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessageResponse'
+                $ref: "#/components/schemas/MessageResponse"
               example:
                 message: Request lacks valid authentication.
-        '404':
+        "404":
           description: The specified resource was not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessageResponse'
+                $ref: "#/components/schemas/MessageResponse"
               example:
                 message: The specified resource was not found.
   /api/payments/{paymentId}/files/{fileId}:
@@ -765,28 +765,28 @@ paths:
           style: simple
           example: ca6cd55b-4be6-451d-bd72-fe5b7ec1f75z
       responses:
-        '200':
+        "200":
           description: OK.
-        '400':
+        "400":
           description: Bad request.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessageResponse'
-        '401':
+                $ref: "#/components/schemas/MessageResponse"
+        "401":
           description: Request lacks valid authentication.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessageResponse'
+                $ref: "#/components/schemas/MessageResponse"
               example:
                 message: Request lacks valid authentication.
-        '404':
+        "404":
           description: The specified resource was not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessageResponse'
+                $ref: "#/components/schemas/MessageResponse"
               example:
                 message: The specified resource was not found.
   /api/attachments:
@@ -803,37 +803,37 @@ paths:
         content:
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/FilesUploadFileRequest'
+              $ref: "#/components/schemas/FilesUploadFileRequest"
             encoding:
               file:
                 contentType: application/pdf
       responses:
-        '200':
+        "200":
           description: OK.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FilesUploadFileResponse'
-        '400':
+                $ref: "#/components/schemas/FilesUploadFileResponse"
+        "400":
           description: Bad request.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessageResponse'
-        '401':
+                $ref: "#/components/schemas/MessageResponse"
+        "401":
           description: Request lacks valid authentication.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessageResponse'
+                $ref: "#/components/schemas/MessageResponse"
               example:
                 message: Request lacks valid authentication.
-        '404':
+        "404":
           description: The specified resource was not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessageResponse'
+                $ref: "#/components/schemas/MessageResponse"
               example:
                 message: The specified resource was not found.
   /api/channels/{entityId}/payments/batches:
@@ -862,34 +862,34 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/BatchGenerateLinkRequest'
+              $ref: "#/components/schemas/BatchGenerateLinkRequest"
       responses:
-        '200':
+        "200":
           description: Batch ID and URL.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BatchGenerateLinkResponse'
-        '400':
+                $ref: "#/components/schemas/BatchGenerateLinkResponse"
+        "400":
           description: Bad request.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessageResponse'
-        '401':
+                $ref: "#/components/schemas/MessageResponse"
+        "401":
           description: Request lacks valid authentication.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessageResponse'
+                $ref: "#/components/schemas/MessageResponse"
               example:
                 message: Request lacks valid authentication.
-        '404':
+        "404":
           description: The specified resource was not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessageResponse'
+                $ref: "#/components/schemas/MessageResponse"
               example:
                 message: Channel not found.
     get:
@@ -928,7 +928,7 @@ paths:
           schema:
             type: string
             format: date-time
-            example: '2018-03-20T09:12:28Z'
+            example: "2018-03-20T09:12:28Z"
         - description: Retrieve all batches until the end date.
           name: filters[endDate]
           in: query
@@ -936,7 +936,7 @@ paths:
           schema:
             type: string
             format: date-time
-            example: '2018-03-20T09:12:28Z'
+            example: "2018-03-20T09:12:28Z"
         - description: The payment link status to filter on.
           name: filters[status]
           in: query
@@ -951,26 +951,26 @@ paths:
               - completed
             example: initiated
       responses:
-        '200':
+        "200":
           description: URL.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BatchGetBatchStatusesResponse'
-        '401':
+                $ref: "#/components/schemas/BatchGetBatchStatusesResponse"
+        "401":
           description: Request lacks valid authentication.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessageResponse'
+                $ref: "#/components/schemas/MessageResponse"
               example:
                 message: Request lacks valid authentication.
-        '404':
+        "404":
           description: The specified resource was not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessageResponse'
+                $ref: "#/components/schemas/MessageResponse"
               example:
                 message: Channel not found.
   /api/batches/{batchId}:
@@ -990,18 +990,18 @@ paths:
             example: 421e1e63-ddd5-46ec-8812-74eda861259b
           style: simple
       responses:
-        '200':
+        "200":
           description: Status received.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BatchResponse'
-        '404':
+                $ref: "#/components/schemas/BatchResponse"
+        "404":
           description: The specified resource was not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessageResponse'
+                $ref: "#/components/schemas/MessageResponse"
               example:
                 message: Batch ID not found.
   /api/batches/{batchId}/files:
@@ -1023,18 +1023,18 @@ paths:
             example: 421e1e63-ddd5-46ec-8812-74eda861259b
           style: simple
       responses:
-        '200':
+        "200":
           description: Error files.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/BatchGetErrorFilesResponse'
-        '404':
+                $ref: "#/components/schemas/BatchGetErrorFilesResponse"
+        "404":
           description: The specified resource was not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessageResponse'
+                $ref: "#/components/schemas/MessageResponse"
               example:
                 message: Batch ID not found.
   /:
@@ -1067,12 +1067,12 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/JSONMerchantWebhook'
+              $ref: "#/components/schemas/JSONMerchantWebhook"
           text/plain:
             schema:
-              $ref: '#/components/schemas/PlainTextMerchantWebhook'
+              $ref: "#/components/schemas/PlainTextMerchantWebhook"
       responses:
-        '200':
+        "200":
           description: OK.
   /payments:
     post:
@@ -1123,25 +1123,25 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PaymentRequest'
+              $ref: "#/components/schemas/PaymentRequest"
       responses:
-        '200':
+        "200":
           description: OK.
           content:
             application/json:
               schema:
                 $ref: >-
                   #/components/schemas/PaymentsApiInboundInitiateDebitTransactionResponse
-        '400':
+        "400":
           description: Bad request.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error400Response'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                $ref: "#/components/schemas/Error400Response"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     get:
       tags:
         - Payments API inbound
@@ -1159,41 +1159,41 @@ paths:
           name: authentication.userId
           required: true
           schema:
-            $ref: '#/components/schemas/UserId'
+            $ref: "#/components/schemas/UserId"
         - in: query
           name: authentication.password
           required: true
           schema:
-            $ref: '#/components/schemas/Password'
+            $ref: "#/components/schemas/Password"
         - in: query
           name: authentication.entityId
           required: true
           schema:
-            $ref: '#/components/schemas/EntityId'
+            $ref: "#/components/schemas/EntityId"
         - in: query
           name: merchantTransactionId
           required: true
           schema:
-            $ref: '#/components/schemas/MerchantTransactionId'
+            $ref: "#/components/schemas/MerchantTransactionId"
       responses:
-        '200':
+        "200":
           description: OK.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MerchantTransactionIdStatusResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
+                $ref: "#/components/schemas/MerchantTransactionIdStatusResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
           description: Internal server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
   /payments/{uniqueId}:
     get:
       tags:
@@ -1212,42 +1212,42 @@ paths:
           in: path
           required: true
           schema:
-            $ref: '#/components/schemas/UniqueId'
+            $ref: "#/components/schemas/UniqueId"
         - description: Authentication entityId.
           name: authentication.entityId
           in: query
           required: true
           schema:
-            $ref: '#/components/schemas/EntityId'
+            $ref: "#/components/schemas/EntityId"
         - description: Authentication userId.
           name: authentication.userId
           in: query
           required: true
           schema:
-            $ref: '#/components/schemas/UserId'
+            $ref: "#/components/schemas/UserId"
         - description: Authentication password.
           name: authentication.password
           in: query
           required: true
           schema:
-            $ref: '#/components/schemas/Password'
+            $ref: "#/components/schemas/Password"
       responses:
-        '200':
+        "200":
           description: OK.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TransactionIdStatusResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                $ref: "#/components/schemas/TransactionIdStatusResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
     post:
       tags:
         - Payments API inbound
@@ -1267,34 +1267,34 @@ paths:
           in: path
           required: true
           schema:
-            $ref: '#/components/schemas/UniqueId'
+            $ref: "#/components/schemas/UniqueId"
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RefundRequest'
+              $ref: "#/components/schemas/RefundRequest"
       responses:
-        '200':
+        "200":
           description: OK.
           content:
             application/json:
               schema:
                 $ref: >-
                   #/components/schemas/PaymentsApiInboundRefundTransactionResponse
-        '400':
+        "400":
           description: Bad request.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error400Response'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-        '502':
-          $ref: '#/components/responses/RefundErrorResponse'
+                $ref: "#/components/schemas/Error400Response"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+        "502":
+          $ref: "#/components/responses/RefundErrorResponse"
   /api/merchants/{merchantId}/transactions-recon:
     get:
       tags:
@@ -1303,9 +1303,9 @@ paths:
       operationId: TransactionsRecon_list
       description: List transactions for a merchant's reconciliation processes.
       parameters:
-        - $ref: '#/components/parameters/merchantIdPathParam'
-        - $ref: '#/components/parameters/startDateQueryParam'
-        - $ref: '#/components/parameters/endDateQueryParam'
+        - $ref: "#/components/parameters/merchantIdPathParam"
+        - $ref: "#/components/parameters/startDateQueryParam"
+        - $ref: "#/components/parameters/endDateQueryParam"
         - description: >
             Whether the transaction was successful or not. If not provided, all
             transactions are returned.
@@ -1326,61 +1326,61 @@ paths:
             type: string
             example: card
       responses:
-        '200':
+        "200":
           description: A list of transactions.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TransactionsReconListResponse'
-        '400':
+                $ref: "#/components/schemas/TransactionsReconListResponse"
+        "400":
           description: An object containing the error message string.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
               examples:
                 merchantId required:
-                  $ref: '#/components/examples/merchantIdRequired'
+                  $ref: "#/components/examples/merchantIdRequired"
                 merchantId empty:
-                  $ref: '#/components/examples/merchantIdEmpty'
+                  $ref: "#/components/examples/merchantIdEmpty"
                 merchantId invalid type:
-                  $ref: '#/components/examples/merchantIdInvalidType'
+                  $ref: "#/components/examples/merchantIdInvalidType"
                 startDate required:
-                  $ref: '#/components/examples/startDateRequired'
+                  $ref: "#/components/examples/startDateRequired"
                 startDate empty:
-                  $ref: '#/components/examples/startDateEmpty'
+                  $ref: "#/components/examples/startDateEmpty"
                 startDate invalid type:
-                  $ref: '#/components/examples/startDateInvalidType'
+                  $ref: "#/components/examples/startDateInvalidType"
                 startDate malformed:
-                  $ref: '#/components/examples/startDateMalformed'
+                  $ref: "#/components/examples/startDateMalformed"
                 startDate before January 2023:
-                  $ref: '#/components/examples/startDateBeforeThreshold'
+                  $ref: "#/components/examples/startDateBeforeThreshold"
                 endDate required:
-                  $ref: '#/components/examples/endDateRequired'
+                  $ref: "#/components/examples/endDateRequired"
                 endDate empty:
-                  $ref: '#/components/examples/endDateEmpty'
+                  $ref: "#/components/examples/endDateEmpty"
                 endDate invalid type:
-                  $ref: '#/components/examples/endDateInvalidType'
+                  $ref: "#/components/examples/endDateInvalidType"
                 endDate malformed:
-                  $ref: '#/components/examples/endDateMalformed'
+                  $ref: "#/components/examples/endDateMalformed"
                 startDate after endDate:
-                  $ref: '#/components/examples/startDateAfterEnd'
+                  $ref: "#/components/examples/startDateAfterEnd"
                 endDate too long after startDate:
-                  $ref: '#/components/examples/requestedTimePeriodTooLong'
+                  $ref: "#/components/examples/requestedTimePeriodTooLong"
                 isSuccessful invalid type:
-                  $ref: '#/components/examples/isSuccessfulInvalidType'
+                  $ref: "#/components/examples/isSuccessfulInvalidType"
                 paymentMethod invalid type:
-                  $ref: '#/components/examples/paymentMethodInvalidType'
+                  $ref: "#/components/examples/paymentMethodInvalidType"
                 paymentMethod empty:
-                  $ref: '#/components/examples/paymentMethodEmpty'
+                  $ref: "#/components/examples/paymentMethodEmpty"
                 paymentMethod invalid value:
-                  $ref: '#/components/examples/paymentMethodInvalidValue'
-        '401':
-          $ref: '#/components/responses/UnauthorizedResponse'
-        '403':
-          $ref: '#/components/responses/ForbiddenResponse'
-        '500':
-          $ref: '#/components/responses/InternalServerErrorResponse'
+                  $ref: "#/components/examples/paymentMethodInvalidValue"
+        "401":
+          $ref: "#/components/responses/UnauthorizedResponse"
+        "403":
+          $ref: "#/components/responses/ForbiddenResponse"
+        "500":
+          $ref: "#/components/responses/InternalServerErrorResponse"
 components:
   parameters:
     merchantIdPathParam:
@@ -1389,7 +1389,7 @@ components:
       in: path
       required: true
       schema:
-        $ref: '#/components/schemas/merchantId'
+        $ref: "#/components/schemas/merchantId"
     startDateQueryParam:
       description: >-
         Beginning of the query range (inclusive).
@@ -1401,7 +1401,7 @@ components:
       in: query
       required: true
       schema:
-        $ref: '#/components/schemas/startDate'
+        $ref: "#/components/schemas/startDate"
     endDateQueryParam:
       description: >-
         End of the query range (exclusive).
@@ -1413,38 +1413,38 @@ components:
       in: query
       required: true
       schema:
-        $ref: '#/components/schemas/endDate'
+        $ref: "#/components/schemas/endDate"
   responses:
     BadRequest:
       description: Bad request.
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error400Response'
+            $ref: "#/components/schemas/Error400Response"
     Unauthorized:
       description: Unauthorised.
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            $ref: "#/components/schemas/ErrorResponse"
     NotFound:
       description: Not found.
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            $ref: "#/components/schemas/ErrorResponse"
     InternalServerError:
       description: Internal server error.
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            $ref: "#/components/schemas/ErrorResponse"
     Forbidden:
       description: Forbidden.
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            $ref: "#/components/schemas/ErrorResponse"
     RefundErrorResponse:
       description: Bad gateway.
       content:
@@ -1457,7 +1457,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            $ref: "#/components/schemas/ErrorResponse"
           examples:
             default:
               value:
@@ -1467,17 +1467,17 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            $ref: "#/components/schemas/ErrorResponse"
           examples:
             default:
               value:
-                message: 'Unauthorised: Please contact your business administrator'
+                message: "Unauthorised: Please contact your business administrator"
     InternalServerErrorResponse:
       description: An object containing the error message string.
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ErrorResponse'
+            $ref: "#/components/schemas/ErrorResponse"
           examples:
             default:
               value:
@@ -1589,10 +1589,10 @@ components:
           description: Force the default payment method to be the only payment method.
           type: string
           enum:
-            - 'true'
-            - 'false'
-          example: 'false'
-          default: 'false'
+            - "true"
+            - "false"
+          example: "false"
+          default: "false"
         merchantInvoiceId:
           description: >-
             Merchant-provided invoice number unique for your transactions. This
@@ -1620,7 +1620,7 @@ components:
           description: A name value pair used for sending custom information.
           type: string
           format: 'name: [a-zA-Z0-9\._]{3,64} value: [\s\S]{0,2048}'
-          example: 'name: Name1 value: Value1'
+          example: "name: Name1 value: Value1"
         customer.merchantCustomerId:
           description: >-
             An identifier for this customer. Typically this is the ID that
@@ -1693,7 +1693,7 @@ components:
           description: The customer's birth date in the yyyy-MM-dd format.
           type: string
           format: yyyy-MM-dd
-          example: '1970-02-17'
+          example: "1970-02-17"
         customer.ip:
           description: The customer's IP address.
           type: string
@@ -1827,17 +1827,17 @@ components:
             cart.
           type: string
           format: ^[0-9]{1,8}(\\.[0-9]{2})?$
-          example: '15.00'
+          example: "15.00"
         cart.shippingAmount:
           description: The total amount of the cart item including quantity.
           type: string
           format: ^[0-9]{1,8}(\\.[0-9]{2})?$
-          example: '12.25'
+          example: "12.25"
         cart.discount:
           description: Discount amount applied on order amount.
           type: string
           format: ^[0-9]{1,8}(\\.[0-9]{2})?$
-          example: '02.25'
+          example: "02.25"
         createRegistration:
           description: >
             Used to enable [card
@@ -1848,9 +1848,9 @@ components:
             Cannot be `true` if `allowStoringDetails` is true.
           type: string
           enum:
-            - 'true'
-            - 'false'
-          example: 'false'
+            - "true"
+            - "false"
+          example: "false"
         cardTokens:
           description: >-
             List of comma-separated card tokens. The card tokens must be linked
@@ -1880,9 +1880,9 @@ components:
             for more information.
           type: string
           enum:
-            - 'true'
-            - 'false'
-          example: 'true'
+            - "true"
+            - "false"
+          example: "true"
         originator:
           description: >-
             Used to provide a name for the application that is creating the
@@ -1920,14 +1920,14 @@ components:
           description: Redirect URL for Checkout.
           type: string
         redirect_post_data:
-          $ref: '#/components/schemas/RedirectPostData'
+          $ref: "#/components/schemas/RedirectPostData"
     RedirectPostData:
       type: object
       properties:
         amount:
           description: The checkout amount.
           type: string
-          example: '14.99'
+          example: "14.99"
         checkoutId:
           type: string
           example: 948cc8dec52a11eb85290242ac130003
@@ -1962,7 +1962,7 @@ components:
         timestamp:
           description: Date and time when the checkout was created.
           type: string
-          example: '2021-06-17T14:22:22Z'
+          example: "2021-06-17T14:22:22Z"
     CheckoutError:
       type: object
       properties:
@@ -2046,11 +2046,11 @@ components:
         timestamp:
           description: Date and time when the webhook was sent.
           type: string
-          example: '2023-07-04T08:10:05Z'
+          example: "2023-07-04T08:10:05Z"
     CheckoutCreatedWebhook:
       description: Webhook sent when a checkout instance is created.
       allOf:
-        - $ref: '#/components/schemas/CheckoutBaseWebhook'
+        - $ref: "#/components/schemas/CheckoutBaseWebhook"
         - type: object
           properties:
             result.code:
@@ -2062,7 +2062,7 @@ components:
     CheckoutCancelledWebhook:
       description: Webhook sent when a checkout instance is cancelled.
       allOf:
-        - $ref: '#/components/schemas/CheckoutBaseWebhook'
+        - $ref: "#/components/schemas/CheckoutBaseWebhook"
         - type: object
           properties:
             result.code:
@@ -2076,7 +2076,7 @@ components:
         Webhook sent when a checkout instance is potentially cancelled by a
         user.
       allOf:
-        - $ref: '#/components/schemas/CheckoutBaseWebhook'
+        - $ref: "#/components/schemas/CheckoutBaseWebhook"
         - type: object
           properties:
             result.code:
@@ -2088,7 +2088,7 @@ components:
     CheckoutPendingWebhook:
       description: Webhook sent when a transaction is created on a checkout instance.
       allOf:
-        - $ref: '#/components/schemas/CheckoutBaseWebhook'
+        - $ref: "#/components/schemas/CheckoutBaseWebhook"
         - type: object
           properties:
             id:
@@ -2124,7 +2124,7 @@ components:
     CheckoutSuccessfulWebhook:
       description: Webhook sent when a checkout instance is successfully completed.
       allOf:
-        - $ref: '#/components/schemas/CheckoutPendingWebhook'
+        - $ref: "#/components/schemas/CheckoutPendingWebhook"
         - type: object
           properties:
             merchant.name:
@@ -2267,7 +2267,7 @@ components:
           description: Force the default payment method to be the only payment method.
           type: boolean
           example: true
-          default: 'false'
+          default: "false"
         merchantInvoiceId:
           description: >-
             Merchant-provided invoice number unique for your transactions. This
@@ -2587,12 +2587,12 @@ components:
           description: Primary house number of the billing or shipping address.
           type: string
           pattern: ^[\s\S]{1,100}$
-          example: '25567'
+          example: "25567"
         postcode:
           description: The postal code or zip code of the billing or shipping address.
           type: string
           pattern: ^[\s\S]{1,16}$
-          example: '8001'
+          example: "8001"
         street2:
           description: >-
             Secondary house number of the billing or shipping address. Used when
@@ -2602,7 +2602,7 @@ components:
           pattern: ^[\s\S]{1,100}$
           example: Loe Street
         customer:
-          $ref: '#/components/schemas/Customer'
+          $ref: "#/components/schemas/Customer"
     Customer:
       description: Optional object sent if customer data is required.
       properties:
@@ -2637,7 +2637,7 @@ components:
         mobile:
           description: The customer's mobile phone number.
           type: string
-          example: '27610107822'
+          example: "27610107822"
           maxLength: 25
           minLength: 5
           pattern: ^[+0-9][0-9 \.()/-]{5,25}$
@@ -2649,19 +2649,19 @@ components:
           type: string
           maxLength: 25
           minLength: 5
-          example: '+27123456789'
+          example: "+27123456789"
         billing:
-          $ref: '#/components/schemas/Address'
+          $ref: "#/components/schemas/Address"
         fax:
           description: The customer's fax number, if provided.
           type: string
           pattern: ^[+0-9][0-9 \.()/-]{7,25}$
-          example: '2919392022'
+          example: "2919392022"
         phone:
           description: The customer's phone number.
           type: string
           pattern: ^[+0-9][0-9 \.()/-]{7,25}$
-          example: '27210030000'
+          example: "27210030000"
         ip:
           description: The customer's IP address.
           type: string
@@ -2686,7 +2686,7 @@ components:
           description: The customer's tax ID, if required.
           type: string
           pattern: ^[\s\S]{1,128}$
-          example: '4550045030303'
+          example: "4550045030303"
         taxType:
           description: The customer's tax type, if required.
           type: string
@@ -2696,7 +2696,7 @@ components:
           description: The customer's birth date.
           type: string
           pattern: ^(19|20)([0-9]{2})-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])$
-          example: '1996-08-07'
+          example: "1996-08-07"
         browser:
           description: The customer's browser details.
           type: object
@@ -2717,19 +2717,19 @@ components:
               description: The total height of the customer's screen in pixels.
               type: string
               pattern: ^[\s\S]{1,6}$
-              example: '1080'
+              example: "1080"
             screenWidth:
               description: The total width of the customer's screen in pixels.
               type: string
               pattern: ^[\s\S]{1,6}$
-              example: '1920'
+              example: "1920"
             timezone:
               description: >-
                 The time-zone offset in minutes between UTC and the local time
                 of the customer's browser.
               type: string
               pattern: ^[\s\S]{1,5}$
-              example: '30'
+              example: "30"
             userAgent:
               description: The exact content of the HTTP user-agent header.
               type: string
@@ -2743,28 +2743,28 @@ components:
                 browser to execute Java.
               type: string
               pattern: ^(true|false)$
-              example: 'false'
+              example: "false"
             javascriptEnabled:
               description: >-
                 The boolean that represents the ability of the customer's
                 browser to execute JavaScript.
               type: string
               pattern: ^(true|false)$
-              example: 'true'
+              example: "true"
             screenColorDepth:
               description: >-
                 The value representing the bit depth of the colour palette for
                 displaying images in bits per pixel.
               type: string
               pattern: ^[0-9]{1,2}$
-              example: '24'
+              example: "24"
             challengeWindow:
               description: >-
                 The dimensions of the challenge window that has been displayed
                 to the customer.
               type: string
               pattern: ^[0-9]{1,2}$
-              example: '01'
+              example: "01"
       required:
         - givenName
       type: object
@@ -2883,7 +2883,7 @@ components:
           default: false
     CheckoutState:
       allOf:
-        - $ref: '#/components/schemas/CheckoutOptions'
+        - $ref: "#/components/schemas/CheckoutOptions"
         - type: object
           properties:
             registrationId:
@@ -2955,11 +2955,11 @@ components:
             - amount
             - currency
         customer:
-          $ref: '#/components/schemas/Customer'
+          $ref: "#/components/schemas/Customer"
         options:
-          $ref: '#/components/schemas/PaymentOptions'
+          $ref: "#/components/schemas/PaymentOptions"
         checkout:
-          $ref: '#/components/schemas/CheckoutOptions'
+          $ref: "#/components/schemas/CheckoutOptions"
       required:
         - payment
         - customer
@@ -3046,7 +3046,7 @@ components:
             expiryTime:
               description: Timestamp when the payment link expires.
               type: string
-              example: '2021-10-27T12:45:27Z'
+              example: "2021-10-27T12:45:27Z"
             batchId:
               description: Batch ID for the payment link.
               type: string
@@ -3062,17 +3062,17 @@ components:
         createdAt:
           description: Timestamp when the payment link was created.
           type: string
-          example: '2021-10-27T12:35:27Z'
+          example: "2021-10-27T12:35:27Z"
         updatedAt:
           description: Timestamp when the payment link was last modified.
           type: string
-          example: '2021-10-27T12:45:43Z'
+          example: "2021-10-27T12:45:43Z"
         customer:
-          $ref: '#/components/schemas/Customer'
+          $ref: "#/components/schemas/Customer"
         options:
-          $ref: '#/components/schemas/PaymentResponseOptions'
+          $ref: "#/components/schemas/PaymentResponseOptions"
         checkout:
-          $ref: '#/components/schemas/CheckoutState'
+          $ref: "#/components/schemas/CheckoutState"
         termsOfService:
           type: object
           properties:
@@ -3093,11 +3093,11 @@ components:
         createdAt:
           description: Timestamp when the batch link was created.
           type: string
-          example: '2022-10-25T09:03:22.832Z'
+          example: "2022-10-25T09:03:22.832Z"
         updatedAt:
           description: Timestamp when the batch link was updated.
           type: string
-          example: '2022-10-25T09:03:22.832Z'
+          example: "2022-10-25T09:03:22.832Z"
         entityId:
           description: The entity for the request.
           type: string
@@ -3160,7 +3160,7 @@ components:
     PaymentLinkCreatedWebhook:
       description: Payment link created.
       allOf:
-        - $ref: '#/components/schemas/PaymentLinkBaseWebhook'
+        - $ref: "#/components/schemas/PaymentLinkBaseWebhook"
         - type: object
           properties:
             status:
@@ -3176,7 +3176,7 @@ components:
     PaymentLinkOpenedWebhook:
       description: Payment link opened.
       allOf:
-        - $ref: '#/components/schemas/PaymentLinkBaseWebhook'
+        - $ref: "#/components/schemas/PaymentLinkBaseWebhook"
         - type: object
           properties:
             status:
@@ -3187,7 +3187,7 @@ components:
     PaymentLinkProcessingWebhook:
       description: Payment link is being processed.
       allOf:
-        - $ref: '#/components/schemas/PaymentLinkBaseWebhook'
+        - $ref: "#/components/schemas/PaymentLinkBaseWebhook"
         - type: object
           properties:
             status:
@@ -3198,7 +3198,7 @@ components:
     PaymentLinkExpiredWebhook:
       description: Payment link expired.
       allOf:
-        - $ref: '#/components/schemas/PaymentLinkBaseWebhook'
+        - $ref: "#/components/schemas/PaymentLinkBaseWebhook"
         - type: object
           properties:
             status:
@@ -3207,7 +3207,7 @@ components:
     PaymentLinkCompletedWebhook:
       description: Payment link completed.
       allOf:
-        - $ref: '#/components/schemas/PaymentLinkBaseWebhook'
+        - $ref: "#/components/schemas/PaymentLinkBaseWebhook"
         - type: object
           properties:
             status:
@@ -3278,7 +3278,7 @@ components:
       description: The payment request amount.
       type: string
       pattern: (?!0+$)(?!0+\.00)^\d{1,8}(\.\d{2})?$
-      example: '22.50'
+      example: "22.50"
     MerchantInvoiceId:
       description: The merchant's invoice ID.
       type: string
@@ -3311,7 +3311,7 @@ components:
           type: string
           example: Request successfully processed.
         code:
-          $ref: '#/components/schemas/Code'
+          $ref: "#/components/schemas/Code"
     ResultDetails:
       description: >-
         Additional details that can provide information about the status or
@@ -3347,12 +3347,12 @@ components:
           description: The first six digits of the card number.
           type: string
           pattern: ^[\d]{6}$
-          example: '455112'
+          example: "455112"
         last4Digits:
           description: The last four digits of the card number.
           type: string
           pattern: ^[\d]{4}$
-          example: '2315'
+          example: "2315"
         holder:
           description: The card account holder.
           type: string
@@ -3362,12 +3362,12 @@ components:
           description: The expiry month of the card.
           type: string
           pattern: ^(0[1-9]|1[0-2])$
-          example: '01'
+          example: "01"
         expiryYear:
           description: The expiry year of the card.
           type: string
           pattern: ^(20)([0-9]{2})$
-          example: '2030'
+          example: "2030"
         type:
           description: The type of card.
           type: string
@@ -3377,7 +3377,7 @@ components:
       description: The timestamp of the transaction.
       type: string
       format: date-time
-      example: '2021-04-23T07:41:25.519947Z'
+      example: "2021-04-23T07:41:25.519947Z"
     Recon:
       description: Transaction reconciliation data.
       type: object
@@ -3385,24 +3385,24 @@ components:
         ciMerchantNumber:
           description: The payment service provider merchant number.
           type: string
-          example: '123456789012345'
+          example: "123456789012345"
         rrn:
           description: >-
             The reconciliation reference number from the payment service
             provider.
           type: string
-          example: '123456789012'
+          example: "123456789012"
         authCode:
           description: The authorisation code from the payment service provider.
           type: string
-          example: '123456'
+          example: "123456"
         resultCode:
           description: The result code from the payment service provider.
           type: string
         stan:
           description: The STAN reference number from the payment service provider.
           type: string
-          example: '123456'
+          example: "123456"
     CustomParameters:
       description: >-
         A JSON object depicting custom information sent by the merchant. Echoed
@@ -3431,7 +3431,7 @@ components:
           description: Shopify test mode.
           type: string
           pattern: ^[\s\S]{1,64}$
-          example: 'false'
+          example: "false"
     MerchantWebhookData:
       description: Webhook data format after decryption.
       type: object
@@ -3471,46 +3471,46 @@ components:
             - bankAccount
           properties:
             id:
-              $ref: '#/components/schemas/UniqueId'
+              $ref: "#/components/schemas/UniqueId"
             paymentType:
-              $ref: '#/components/schemas/PaymentType'
+              $ref: "#/components/schemas/PaymentType"
             amount:
-              $ref: '#/components/schemas/Amount'
+              $ref: "#/components/schemas/Amount"
             merchantInvoiceId:
-              $ref: '#/components/schemas/MerchantInvoiceId'
+              $ref: "#/components/schemas/MerchantInvoiceId"
             merchantAccountId:
-              $ref: '#/components/schemas/MerchantAccountId'
+              $ref: "#/components/schemas/MerchantAccountId"
             descriptor:
               type: string
             currency:
-              $ref: '#/components/schemas/Currency'
+              $ref: "#/components/schemas/Currency"
             presentationAmount:
-              $ref: '#/components/schemas/Amount'
+              $ref: "#/components/schemas/Amount"
             result:
-              $ref: '#/components/schemas/Result'
+              $ref: "#/components/schemas/Result"
             resultDetails:
-              $ref: '#/components/schemas/ResultDetails'
+              $ref: "#/components/schemas/ResultDetails"
             connectorTxID1:
-              $ref: '#/components/schemas/ConnectorTxID1'
+              $ref: "#/components/schemas/ConnectorTxID1"
             authentication:
               type: object
               required:
                 - entityId
               properties:
                 entityId:
-                  $ref: '#/components/schemas/EntityId'
+                  $ref: "#/components/schemas/EntityId"
             card:
-              $ref: '#/components/schemas/Card'
+              $ref: "#/components/schemas/Card"
             timestamp:
-              $ref: '#/components/schemas/Timestamp'
+              $ref: "#/components/schemas/Timestamp"
             customer:
-              $ref: '#/components/schemas/Customer'
+              $ref: "#/components/schemas/Customer"
             shipping:
-              $ref: '#/components/schemas/Address'
+              $ref: "#/components/schemas/Address"
             billing:
-              $ref: '#/components/schemas/Address'
+              $ref: "#/components/schemas/Address"
             recon:
-              $ref: '#/components/schemas/Recon'
+              $ref: "#/components/schemas/Recon"
             bankAccount:
               description: Bank account data.
               required:
@@ -3534,11 +3534,11 @@ components:
                   pattern: ^[\s\S]{1,255}$
                   example: Bank A
             customParameters:
-              $ref: '#/components/schemas/CustomParameters'
+              $ref: "#/components/schemas/CustomParameters"
             referenceId:
-              $ref: '#/components/schemas/UniqueId'
+              $ref: "#/components/schemas/UniqueId"
             shopify:
-              $ref: '#/components/schemas/Shopify'
+              $ref: "#/components/schemas/Shopify"
     UserId:
       description: Authentication userId.
       type: string
@@ -3578,12 +3578,12 @@ components:
           description: The first six digits of the card number.
           type: string
           pattern: ^[\d]{6}$
-          example: '455112'
+          example: "455112"
         last4Digits:
           description: The last four digits of the card number.
           type: string
           pattern: ^[\d]{4}$
-          example: '2315'
+          example: "2315"
         holder:
           description: The card account holder.
           type: string
@@ -3593,12 +3593,12 @@ components:
           description: The expiry month of the card.
           type: string
           pattern: ^(0[1-9]|1[0-2])$
-          example: '01'
+          example: "01"
         expiryYear:
           description: The expiry year of the card.
           type: string
           pattern: ^(20)([0-9]{2})$
-          example: '2030'
+          example: "2030"
     MerchantTransactionIdStatusResponse:
       description: >-
         The response for the status request using merchantTransactionId as the
@@ -3610,9 +3610,9 @@ components:
         - payments
       properties:
         result:
-          $ref: '#/components/schemas/Result'
+          $ref: "#/components/schemas/Result"
         timestamp:
-          $ref: '#/components/schemas/Timestamp'
+          $ref: "#/components/schemas/Timestamp"
         payments:
           type: array
           items:
@@ -3631,33 +3631,33 @@ components:
               - customParameters
             properties:
               id:
-                $ref: '#/components/schemas/UniqueId'
+                $ref: "#/components/schemas/UniqueId"
               paymentType:
-                $ref: '#/components/schemas/PaymentType'
+                $ref: "#/components/schemas/PaymentType"
               paymentBrand:
-                $ref: '#/components/schemas/PaymentBrand'
+                $ref: "#/components/schemas/PaymentBrand"
               amount:
-                $ref: '#/components/schemas/Amount'
+                $ref: "#/components/schemas/Amount"
               currency:
-                $ref: '#/components/schemas/Currency'
+                $ref: "#/components/schemas/Currency"
               merchantTransactionId:
-                $ref: '#/components/schemas/MerchantTransactionId'
+                $ref: "#/components/schemas/MerchantTransactionId"
               result:
-                $ref: '#/components/schemas/Result'
+                $ref: "#/components/schemas/Result"
               resultDetails:
-                $ref: '#/components/schemas/ResultDetails'
+                $ref: "#/components/schemas/ResultDetails"
               connectorTxID1:
-                $ref: '#/components/schemas/ConnectorTxID1'
+                $ref: "#/components/schemas/ConnectorTxID1"
               timestamp:
-                $ref: '#/components/schemas/Timestamp'
+                $ref: "#/components/schemas/Timestamp"
               customParameters:
-                $ref: '#/components/schemas/CustomParameters'
+                $ref: "#/components/schemas/CustomParameters"
               card:
-                $ref: '#/components/schemas/ResponseCard'
+                $ref: "#/components/schemas/ResponseCard"
               merchantInvoiceId:
-                $ref: '#/components/schemas/MerchantInvoiceId'
+                $ref: "#/components/schemas/MerchantInvoiceId"
               recon:
-                $ref: '#/components/schemas/Recon'
+                $ref: "#/components/schemas/Recon"
     ParameterErrors:
       description: Error details of the request parameters which failed validation.
       type: array
@@ -3680,7 +3680,7 @@ components:
             description: A message describing the error.
             type: string
       example:
-        - value: 'null'
+        - value: "null"
           name: authenticationValue
           message: Payments API requires authenticationValue.
     Error400Result:
@@ -3695,9 +3695,9 @@ components:
           type: string
           example: Errors in the processed request.
         code:
-          $ref: '#/components/schemas/Code'
+          $ref: "#/components/schemas/Code"
         parameterErrors:
-          $ref: '#/components/schemas/ParameterErrors'
+          $ref: "#/components/schemas/ParameterErrors"
     Error400Response:
       description: Error object describing the 400 status code error.
       type: object
@@ -3706,11 +3706,11 @@ components:
         - timestamp
       properties:
         result:
-          $ref: '#/components/schemas/Error400Result'
+          $ref: "#/components/schemas/Error400Result"
         resultDetails:
-          $ref: '#/components/schemas/ResultDetails'
+          $ref: "#/components/schemas/ResultDetails"
         timestamp:
-          $ref: '#/components/schemas/Timestamp'
+          $ref: "#/components/schemas/Timestamp"
     ErrorResponse:
       description: Error object describing the error.
       type: object
@@ -3718,23 +3718,23 @@ components:
         - message
       properties:
         result:
-          $ref: '#/components/schemas/Result'
+          $ref: "#/components/schemas/Result"
         resultDetails:
-          $ref: '#/components/schemas/ResultDetails'
+          $ref: "#/components/schemas/ResultDetails"
         timestamp:
-          $ref: '#/components/schemas/Timestamp'
+          $ref: "#/components/schemas/Timestamp"
         id:
-          $ref: '#/components/schemas/UniqueId'
+          $ref: "#/components/schemas/UniqueId"
         paymentType:
-          $ref: '#/components/schemas/PaymentType'
+          $ref: "#/components/schemas/PaymentType"
         paymentBrand:
-          $ref: '#/components/schemas/PaymentBrand'
+          $ref: "#/components/schemas/PaymentBrand"
         customParameters:
-          $ref: '#/components/schemas/CustomParameters'
+          $ref: "#/components/schemas/CustomParameters"
         amount:
-          $ref: '#/components/schemas/Amount'
+          $ref: "#/components/schemas/Amount"
         currency:
-          $ref: '#/components/schemas/Currency'
+          $ref: "#/components/schemas/Currency"
         message:
           description: A message describing the error.
           type: string
@@ -3755,11 +3755,11 @@ components:
         - entityId
       properties:
         userId:
-          $ref: '#/components/schemas/UserId'
+          $ref: "#/components/schemas/UserId"
         password:
-          $ref: '#/components/schemas/Password'
+          $ref: "#/components/schemas/Password"
         entityId:
-          $ref: '#/components/schemas/EntityId'
+          $ref: "#/components/schemas/EntityId"
     VirtualAccount:
       description: The virtual account object.
       type: object
@@ -3819,7 +3819,7 @@ components:
                 description: The price of the item in the shopping cart.
                 type: string
                 pattern: ^[0-9]{1,10}\.[0-9]{2}$
-                example: '05.25'
+                example: "05.25"
               weightInKg:
                 description: The weight (in kg) of the item in the shopping cart.
                 type: number
@@ -3837,17 +3837,17 @@ components:
             the shopping cart.
           type: string
           pattern: ^[0-9]{1,8}(\.[0-9]{2})?$
-          example: '15.00'
+          example: "15.00"
         shippingAmount:
           description: The shipping amount applied to the items in the shopping cart.
-          $ref: '#/components/schemas/Amount'
+          $ref: "#/components/schemas/Amount"
         discount:
           description: >-
             The discount percentage applied to the price of the items in the
             shopping cart.
           type: string
           pattern: ^0(\.00?)?$|^100$|^100.00$|^100.0$|^\d{1,2}(\.\d{1,2})?$
-          example: '02.25'
+          example: "02.25"
     ShopperResultUrl:
       description: >-
         The Payments API redirects the user to this URL after processing the
@@ -3867,33 +3867,33 @@ components:
         - paymentType
       properties:
         authentication:
-          $ref: '#/components/schemas/Authentication'
+          $ref: "#/components/schemas/Authentication"
         merchantTransactionId:
-          $ref: '#/components/schemas/MerchantTransactionId'
+          $ref: "#/components/schemas/MerchantTransactionId"
         amount:
-          $ref: '#/components/schemas/Amount'
+          $ref: "#/components/schemas/Amount"
         currency:
-          $ref: '#/components/schemas/Currency'
+          $ref: "#/components/schemas/Currency"
         paymentBrand:
-          $ref: '#/components/schemas/PaymentBrand'
+          $ref: "#/components/schemas/PaymentBrand"
         paymentType:
-          $ref: '#/components/schemas/PaymentType'
+          $ref: "#/components/schemas/PaymentType"
         virtualAccount:
-          $ref: '#/components/schemas/VirtualAccount'
+          $ref: "#/components/schemas/VirtualAccount"
         shipping:
-          $ref: '#/components/schemas/Address'
+          $ref: "#/components/schemas/Address"
         billing:
-          $ref: '#/components/schemas/Address'
+          $ref: "#/components/schemas/Address"
         shopify:
-          $ref: '#/components/schemas/Shopify'
+          $ref: "#/components/schemas/Shopify"
         customer:
-          $ref: '#/components/schemas/Customer'
+          $ref: "#/components/schemas/Customer"
         cart:
-          $ref: '#/components/schemas/Cart'
+          $ref: "#/components/schemas/Cart"
         merchantInvoiceId:
-          $ref: '#/components/schemas/MerchantInvoiceId'
+          $ref: "#/components/schemas/MerchantInvoiceId"
         shopperResultUrl:
-          $ref: '#/components/schemas/ShopperResultUrl'
+          $ref: "#/components/schemas/ShopperResultUrl"
     Redirect:
       description: >-
         The URL that the merchant must redirect the user to after the
@@ -3945,7 +3945,7 @@ components:
       description: The expiry timestamp of the transaction.
       type: string
       format: date-time
-      example: '2021-04-23T07:41:25.519947Z'
+      example: "2021-04-23T07:41:25.519947Z"
     PaymentResponse:
       type: object
       required:
@@ -3959,39 +3959,39 @@ components:
         - timestamp
       properties:
         amount:
-          $ref: '#/components/schemas/Amount'
+          $ref: "#/components/schemas/Amount"
         currency:
-          $ref: '#/components/schemas/Currency'
+          $ref: "#/components/schemas/Currency"
         paymentBrand:
-          $ref: '#/components/schemas/PaymentBrand'
+          $ref: "#/components/schemas/PaymentBrand"
         paymentType:
-          $ref: '#/components/schemas/PaymentType'
+          $ref: "#/components/schemas/PaymentType"
         result:
-          $ref: '#/components/schemas/Result'
+          $ref: "#/components/schemas/Result"
         resultDetails:
-          $ref: '#/components/schemas/ResultDetails'
+          $ref: "#/components/schemas/ResultDetails"
         redirect:
-          $ref: '#/components/schemas/Redirect'
+          $ref: "#/components/schemas/Redirect"
         connectorTxID1:
-          $ref: '#/components/schemas/ConnectorTxID1'
+          $ref: "#/components/schemas/ConnectorTxID1"
         connectorTxID2:
-          $ref: '#/components/schemas/ConnectorTxID2'
+          $ref: "#/components/schemas/ConnectorTxID2"
         customParameters:
-          $ref: '#/components/schemas/CustomParameters'
+          $ref: "#/components/schemas/CustomParameters"
         timestamp:
-          $ref: '#/components/schemas/Timestamp'
+          $ref: "#/components/schemas/Timestamp"
         id:
-          $ref: '#/components/schemas/UniqueId'
+          $ref: "#/components/schemas/UniqueId"
         merchantTransactionId:
-          $ref: '#/components/schemas/MerchantTransactionId'
+          $ref: "#/components/schemas/MerchantTransactionId"
         merchantInvoiceId:
-          $ref: '#/components/schemas/MerchantInvoiceId'
+          $ref: "#/components/schemas/MerchantInvoiceId"
         shopperResultUrl:
-          $ref: '#/components/schemas/ShopperResultUrl'
+          $ref: "#/components/schemas/ShopperResultUrl"
         virtualAccount:
-          $ref: '#/components/schemas/VirtualAccount'
+          $ref: "#/components/schemas/VirtualAccount"
         transactionExpiryTimestamp:
-          $ref: '#/components/schemas/TransactionExpiryTimestamp'
+          $ref: "#/components/schemas/TransactionExpiryTimestamp"
     Mandate:
       description: Customer mandate to bank.
       type: object
@@ -4000,7 +4000,7 @@ components:
           description: The date the direct debit mandate was signed.
           type: string
           pattern: ^(19|20)([0-9]{2})-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])$
-          example: '2016-08-07'
+          example: "2016-08-07"
         id:
           description: The ID of the direct debit mandate.
           type: string
@@ -4055,12 +4055,12 @@ components:
           pattern: ^[a-zA-Z]{2}$
           example: ZA
         mandate:
-          $ref: '#/components/schemas/Mandate'
+          $ref: "#/components/schemas/Mandate"
         transactionDueDate:
           description: The due date of the transaction of the direct debit.
           type: string
           pattern: ^(19|20)([0-9]{2})-(0[1-9]|1[0-2])-(0[1-9]|1[0-9]|2[0-9]|3[0-1])$
-          example: '2022-11-11'
+          example: "2022-11-11"
     TransactionIdStatusResponse:
       description: >-
         The response for the status request using transactionId as the query
@@ -4079,35 +4079,35 @@ components:
         - customParameters
       properties:
         id:
-          $ref: '#/components/schemas/UniqueId'
+          $ref: "#/components/schemas/UniqueId"
         merchantTransactionId:
-          $ref: '#/components/schemas/MerchantTransactionId'
+          $ref: "#/components/schemas/MerchantTransactionId"
         amount:
-          $ref: '#/components/schemas/Amount'
+          $ref: "#/components/schemas/Amount"
         currency:
-          $ref: '#/components/schemas/Currency'
+          $ref: "#/components/schemas/Currency"
         paymentBrand:
-          $ref: '#/components/schemas/PaymentBrand'
+          $ref: "#/components/schemas/PaymentBrand"
         paymentType:
-          $ref: '#/components/schemas/PaymentType'
+          $ref: "#/components/schemas/PaymentType"
         result:
-          $ref: '#/components/schemas/Result'
+          $ref: "#/components/schemas/Result"
         resultDetails:
-          $ref: '#/components/schemas/ResultDetails'
+          $ref: "#/components/schemas/ResultDetails"
         connectorTxID1:
-          $ref: '#/components/schemas/ConnectorTxID1'
+          $ref: "#/components/schemas/ConnectorTxID1"
         timestamp:
-          $ref: '#/components/schemas/Timestamp'
+          $ref: "#/components/schemas/Timestamp"
         customParameters:
-          $ref: '#/components/schemas/CustomParameters'
+          $ref: "#/components/schemas/CustomParameters"
         merchantInvoiceId:
-          $ref: '#/components/schemas/MerchantInvoiceId'
+          $ref: "#/components/schemas/MerchantInvoiceId"
         bank:
-          $ref: '#/components/schemas/Bank'
+          $ref: "#/components/schemas/Bank"
         card:
-          $ref: '#/components/schemas/ResponseCard'
+          $ref: "#/components/schemas/ResponseCard"
         recon:
-          $ref: '#/components/schemas/Recon'
+          $ref: "#/components/schemas/Recon"
     RefundPaymentType:
       description: Refund type of the transaction.
       type: string
@@ -4124,13 +4124,13 @@ components:
         - paymentType
       properties:
         authentication:
-          $ref: '#/components/schemas/Authentication'
+          $ref: "#/components/schemas/Authentication"
         amount:
-          $ref: '#/components/schemas/Amount'
+          $ref: "#/components/schemas/Amount"
         currency:
-          $ref: '#/components/schemas/Currency'
+          $ref: "#/components/schemas/Currency"
         paymentType:
-          $ref: '#/components/schemas/RefundPaymentType'
+          $ref: "#/components/schemas/RefundPaymentType"
     RefundResponse:
       type: object
       required:
@@ -4142,25 +4142,25 @@ components:
         - timestamp
       properties:
         id:
-          $ref: '#/components/schemas/UniqueId'
+          $ref: "#/components/schemas/UniqueId"
         amount:
-          $ref: '#/components/schemas/Amount'
+          $ref: "#/components/schemas/Amount"
         currency:
-          $ref: '#/components/schemas/Currency'
+          $ref: "#/components/schemas/Currency"
         paymentBrand:
-          $ref: '#/components/schemas/PaymentBrand'
+          $ref: "#/components/schemas/PaymentBrand"
         paymentType:
-          $ref: '#/components/schemas/RefundPaymentType'
+          $ref: "#/components/schemas/RefundPaymentType"
         result:
-          $ref: '#/components/schemas/Result'
+          $ref: "#/components/schemas/Result"
         resultDetails:
-          $ref: '#/components/schemas/ResultDetails'
+          $ref: "#/components/schemas/ResultDetails"
         connectorTxID1:
-          $ref: '#/components/schemas/ConnectorTxID1'
+          $ref: "#/components/schemas/ConnectorTxID1"
         timestamp:
-          $ref: '#/components/schemas/Timestamp'
+          $ref: "#/components/schemas/Timestamp"
         customParameters:
-          $ref: '#/components/schemas/CustomParameters'
+          $ref: "#/components/schemas/CustomParameters"
     Refund200ErrorResponse:
       description: Error 200 response.
       type: object
@@ -4173,17 +4173,17 @@ components:
         - timestamp
       properties:
         id:
-          $ref: '#/components/schemas/UniqueId'
+          $ref: "#/components/schemas/UniqueId"
         amount:
-          $ref: '#/components/schemas/Amount'
+          $ref: "#/components/schemas/Amount"
         currency:
-          $ref: '#/components/schemas/Currency'
+          $ref: "#/components/schemas/Currency"
         paymentType:
-          $ref: '#/components/schemas/RefundPaymentType'
+          $ref: "#/components/schemas/RefundPaymentType"
         result:
-          $ref: '#/components/schemas/Result'
+          $ref: "#/components/schemas/Result"
         timestamp:
-          $ref: '#/components/schemas/Timestamp'
+          $ref: "#/components/schemas/Timestamp"
     merchantId:
       type: string
       pattern: ^[0-9a-f]{32}$
@@ -4197,7 +4197,7 @@ components:
         will be changed to `startDate=2024-03-13T22:00:00.000Z`
       type: string
       format: date-time
-      example: '2024-03-14T22:00:00.000Z'
+      example: "2024-03-14T22:00:00.000Z"
     endDate:
       description: >-
         ISO-8601 timestamp for the end of the date range in the request. If no
@@ -4207,14 +4207,14 @@ components:
         changed to `endDate=2024-03-15T22:00:00.000Z`
       type: string
       format: date-time
-      example: '2024-03-15T22:00:00.000Z'
+      example: "2024-03-15T22:00:00.000Z"
     channelId:
       type: string
       pattern: ^[0-9a-f]{32}$
       example: d0bf5a6a909111f0aabf02d14af18cff
     batchNumber:
       type: string
-      example: '305'
+      example: "305"
     uniqueId:
       type: string
       pattern: ^[0-9a-f]{32}$
@@ -4293,7 +4293,7 @@ components:
           format: url
     CheckoutGenerationValidateRequestResponse:
       oneOf:
-        - $ref: '#/components/schemas/MessageResponse'
+        - $ref: "#/components/schemas/MessageResponse"
         - type: object
           properties:
             validation_errors:
@@ -4316,7 +4316,7 @@ components:
         payments:
           type: array
           items:
-            $ref: '#/components/schemas/QueryStatusResponse'
+            $ref: "#/components/schemas/QueryStatusResponse"
         meta:
           type: object
           properties:
@@ -4350,7 +4350,7 @@ components:
       type: object
       properties:
         payment:
-          $ref: '#/components/schemas/QueryStatusResponse'
+          $ref: "#/components/schemas/QueryStatusResponse"
         audit:
           type: array
           items:
@@ -4381,7 +4381,7 @@ components:
                 description: The UTC time that the status changed.
                 type: string
                 format: yyyy-MM-ddTHH:mm:ssZ
-                example: '2021-10-27T12:45:43Z'
+                example: "2021-10-27T12:45:43Z"
     FilesUploadFileResponse:
       type: object
       properties:
@@ -4398,7 +4398,7 @@ components:
           type: array
           items:
             type: object
-            $ref: '#/components/schemas/BatchResponse'
+            $ref: "#/components/schemas/BatchResponse"
         meta:
           type: object
           properties:
@@ -4438,12 +4438,12 @@ components:
           format: url
     PaymentsApiInboundInitiateDebitTransactionResponse:
       anyOf:
-        - $ref: '#/components/schemas/ErrorResponse'
-        - $ref: '#/components/schemas/PaymentResponse'
+        - $ref: "#/components/schemas/ErrorResponse"
+        - $ref: "#/components/schemas/PaymentResponse"
     PaymentsApiInboundRefundTransactionResponse:
       anyOf:
-        - $ref: '#/components/schemas/RefundResponse'
-        - $ref: '#/components/schemas/Refund200ErrorResponse'
+        - $ref: "#/components/schemas/RefundResponse"
+        - $ref: "#/components/schemas/Refund200ErrorResponse"
     PaymentsApiInboundRefundTransaction502Response:
       type: object
       required:
@@ -4455,17 +4455,17 @@ components:
         - timestamp
       properties:
         id:
-          $ref: '#/components/schemas/UniqueId'
+          $ref: "#/components/schemas/UniqueId"
         amount:
-          $ref: '#/components/schemas/Amount'
+          $ref: "#/components/schemas/Amount"
         currency:
-          $ref: '#/components/schemas/Currency'
+          $ref: "#/components/schemas/Currency"
         paymentType:
-          $ref: '#/components/schemas/RefundPaymentType'
+          $ref: "#/components/schemas/RefundPaymentType"
         result:
-          $ref: '#/components/schemas/Result'
+          $ref: "#/components/schemas/Result"
         timestamp:
-          $ref: '#/components/schemas/Timestamp'
+          $ref: "#/components/schemas/Timestamp"
     TransactionsReconListResponse:
       type: array
       items:
@@ -4473,7 +4473,7 @@ components:
         properties:
           merchantId:
             description: The merchant's identifier.
-            $ref: '#/components/schemas/merchantId'
+            $ref: "#/components/schemas/merchantId"
           merchantName:
             description: The merchant's name.
             type: string
@@ -4484,20 +4484,20 @@ components:
             example: JB01 Nedbank 3DS
           channelId:
             description: The channel's identifier.
-            $ref: '#/components/schemas/channelId'
+            $ref: "#/components/schemas/channelId"
           merchantUsn:
             description: The merchant's unique serial number.
             type: string
-            example: '2909330'
+            example: "2909330"
           batchNumber:
             description: The batch number.
-            $ref: '#/components/schemas/batchNumber'
+            $ref: "#/components/schemas/batchNumber"
           uniqueId:
             description: The unique identifier.
-            $ref: '#/components/schemas/uniqueId'
+            $ref: "#/components/schemas/uniqueId"
           transactionId:
             description: The transaction identifier.
-            $ref: '#/components/schemas/transactionId'
+            $ref: "#/components/schemas/transactionId"
           customerName:
             description: The customer's name.
             type: string
@@ -4509,25 +4509,25 @@ components:
           last4:
             description: Last 4 digits of the card number.
             type: string
-            example: '4685'
+            example: "4685"
           bin:
             description: >-
               Bank identification number. First 6 numbers on the card.
               Identifies the institution that issued the card.
             type: string
-            pattern: '[0-9]{6}'
-            example: '484795'
+            pattern: "[0-9]{6}"
+            example: "484795"
           expiryMonth:
             description: Calendar month when the card is expiring.
             type: string
-            example: '06'
+            example: "06"
           expiryYear:
             description: Calendar year when the card is expiring.
             type: string
-            example: '2026'
+            example: "2026"
           paymentType:
             description: The payment type.
-            $ref: '#/components/schemas/paymentType'
+            $ref: "#/components/schemas/paymentType"
           paymentMethod:
             description: The payment method.
             type: string
@@ -4543,18 +4543,18 @@ components:
           currency:
             description: The transaction's currency.
             type: string
-            pattern: '[A-Z]{3}'
+            pattern: "[A-Z]{3}"
             example: ZAR
           createdAt:
             description: The time the transaction was created.
             type: string
             format: date-time
-            example: '2024-03-14T01:41:59.265Z'
+            example: "2024-03-14T01:41:59.265Z"
           updatedAt:
             description: The time the transaction was updated.
             type: string
             format: date-time
-            example: '2024-03-15T04:34:59.265Z'
+            example: "2024-03-15T04:34:59.265Z"
           issuer:
             description: The issuer.
             type: string
@@ -4590,7 +4590,7 @@ components:
           rrn:
             description: The retrieval reference number.
             type: string
-            example: '106540760250'
+            example: "106540760250"
         required:
           - merchantId
           - merchantName

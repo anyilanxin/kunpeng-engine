@@ -20,10 +20,10 @@ import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DmnModelElementInstance;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelElementInstanceImpl;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 
-public abstract class DmnModelElementInstanceImpl extends ModelElementInstanceImpl implements DmnModelElementInstance {
+public abstract class DmnModelElementInstanceImpl extends ModelElementInstanceImpl
+    implements DmnModelElementInstance {
 
   public DmnModelElementInstanceImpl(ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
-
 }

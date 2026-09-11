@@ -1,30 +1,28 @@
 {
-  "name": "Travel agent",
-  "description": "Helps with travel bookings",
-  "url": "%s/travel-agent",
-  "version": "1.0.0",
-  "documentationUrl": "http://example.com/docs",
-  "capabilities": {
-    "streaming": true,
-    "pushNotifications": true,
-    "stateTransitionHistory": true
-  },
-  "defaultInputModes": ["text"],
-  "defaultOutputModes": ["text"],
-  "skills": [
-    {
-      "id": "hotel-booking",
-      "name": "Hotel Booking",
-      "description": "Book a hotel room",
-      "tags": [
-        "booking",
-        "hotel"
-      ],
-      "examples": [
-        "Book a single room",
-        "Book a double room"
-      ]
-    }
-  ],
-  "protocolVersion": "0.3.0"
+    "skills": [{
+        "examples": [
+            "Book a single room",
+            "Book a double room"
+        ],
+        "name": "Hotel Booking",
+        "description": "Book a hotel room",
+        "id": "hotel-booking",
+        "tags": [
+            "booking",
+            "hotel"
+        ]
+    }],
+    "documentationUrl": "http://example.com/docs",
+    "capabilities": {
+        "streaming": true,
+        "pushNotifications": true,
+        "stateTransitionHistory": true
+    },
+    "defaultOutputModes": ["text"],
+    "name": "Travel agent",
+    "description": "Helps with travel bookings",
+    "protocolVersion": "0.3.0",
+    "version": "1.0.0",
+    "defaultInputModes": ["text"],
+    "url": "%s/travel-agent"
 }

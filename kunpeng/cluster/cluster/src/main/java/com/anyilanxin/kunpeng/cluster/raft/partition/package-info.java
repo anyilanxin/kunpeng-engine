@@ -18,6 +18,7 @@
 
 /**
  * Provides {@link com.anyilanxin.kunpeng.cluster.primitive.partition.PartitionGroup} and {@link
- * com.anyilanxin.kunpeng.cluster.primitive.partition.Partition} implementations for the Raft consensus protocol.
+ * com.anyilanxin.kunpeng.cluster.primitive.partition.Partition} implementations for the Raft
+ * consensus protocol.
  */
 package com.anyilanxin.kunpeng.cluster.raft.partition;

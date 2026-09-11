@@ -17,9 +17,7 @@
 package com.anyilanxin.kunpeng.bpm.model.dmn;
 
 public enum AssociationDirection {
-
   None,
   One,
   Both
-
 }

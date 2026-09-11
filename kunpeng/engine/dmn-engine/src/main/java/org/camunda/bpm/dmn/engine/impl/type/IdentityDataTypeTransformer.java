@@ -31,5 +31,4 @@ public class IdentityDataTypeTransformer implements DmnDataTypeTransformer {
   public TypedValue transform(Object value) throws IllegalArgumentException {
     return Variables.untypedValue(value);
   }
-
 }

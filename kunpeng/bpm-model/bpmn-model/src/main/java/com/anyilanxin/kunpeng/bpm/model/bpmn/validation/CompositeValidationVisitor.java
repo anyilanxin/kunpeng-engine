@@ -18,11 +18,11 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.validation;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BpmnModelElementInstance;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.traversal.TypeHierarchyVisitor;
+import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementType;
+import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResults;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementType;
-import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResults;
 
 /**
  * A composite implementation of {@link ValidationVisitor} that delegates visiting to multiple other

@@ -17,9 +17,9 @@
  */
 package com.anyilanxin.kunpeng.cluster.cluster.messaging.impl;
 
-import com.google.common.base.MoreObjects;
 import com.anyilanxin.kunpeng.cluster.utils.misc.ArraySizeHashPrinter;
 import com.anyilanxin.kunpeng.cluster.utils.net.Address;
+import com.google.common.base.MoreObjects;
 
 /** Internal request message. */
 public final class ProtocolRequest extends ProtocolMessage {

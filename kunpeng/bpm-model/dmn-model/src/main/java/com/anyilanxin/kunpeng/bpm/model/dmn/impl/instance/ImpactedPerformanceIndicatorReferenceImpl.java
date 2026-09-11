@@ -16,8 +16,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_IMPACTED_PERFORMANCE_INDICATOR;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DmnElementReference;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.ImpactedPerformanceIndicatorReference;
@@ -26,23 +26,29 @@ import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceConte
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTypeInstanceProvider;
 
-public class ImpactedPerformanceIndicatorReferenceImpl extends DmnElementReferenceImpl implements ImpactedPerformanceIndicatorReference {
+public class ImpactedPerformanceIndicatorReferenceImpl extends DmnElementReferenceImpl
+    implements ImpactedPerformanceIndicatorReference {
 
   public ImpactedPerformanceIndicatorReferenceImpl(ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(ImpactedPerformanceIndicatorReference.class, DMN_ELEMENT_IMPACTED_PERFORMANCE_INDICATOR)
-      .namespaceUri(LATEST_DMN_NS)
-      .extendsType(DmnElementReference.class)
-      .instanceProvider(new ModelTypeInstanceProvider<ImpactedPerformanceIndicatorReference>() {
-        public ImpactedPerformanceIndicatorReference newInstance(ModelTypeInstanceContext instanceContext) {
-          return new ImpactedPerformanceIndicatorReferenceImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(
+                ImpactedPerformanceIndicatorReference.class,
+                DMN_ELEMENT_IMPACTED_PERFORMANCE_INDICATOR)
+            .namespaceUri(LATEST_DMN_NS)
+            .extendsType(DmnElementReference.class)
+            .instanceProvider(
+                new ModelTypeInstanceProvider<ImpactedPerformanceIndicatorReference>() {
+                  public ImpactedPerformanceIndicatorReference newInstance(
+                      ModelTypeInstanceContext instanceContext) {
+                    return new ImpactedPerformanceIndicatorReferenceImpl(instanceContext);
+                  }
+                });
 
     typeBuilder.build();
   }
-
 }

@@ -20,13 +20,11 @@ import com.anyilanxin.kunpeng.bpm.model.xml.Model;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelInstance;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.attribute.Attribute;
-
 import java.util.Collection;
 import java.util.List;
 
 /**
  * @author Daniel Meyer
- *
  */
 public interface ModelElementType {
 
@@ -57,5 +55,4 @@ public interface ModelElementType {
   List<ModelElementType> getChildElementTypes();
 
   List<ModelElementType> getAllChildElementTypes();
-
 }

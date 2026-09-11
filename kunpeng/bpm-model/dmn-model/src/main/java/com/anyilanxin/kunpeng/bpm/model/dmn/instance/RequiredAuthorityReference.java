@@ -16,6 +16,4 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.instance;
 
-public interface RequiredAuthorityReference extends DmnElementReference {
-
-}
+public interface RequiredAuthorityReference extends DmnElementReference {}

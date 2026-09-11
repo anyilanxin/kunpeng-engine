@@ -23,7 +23,6 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.AttributeReferenceCol
 
 /**
  * @author Sebastian Menski
- *
  */
 public interface StringAttributeBuilder extends AttributeBuilder<String> {
 
@@ -35,11 +34,15 @@ public interface StringAttributeBuilder extends AttributeBuilder<String> {
 
   StringAttributeBuilder idAttribute();
 
-  <V extends ModelElementInstance> AttributeReferenceBuilder<V> qNameAttributeReference(Class<V> referenceTargetElement);
+  <V extends ModelElementInstance> AttributeReferenceBuilder<V> qNameAttributeReference(
+      Class<V> referenceTargetElement);
 
-  <V extends ModelElementInstance> AttributeReferenceBuilder<V> idAttributeReference(Class<V>  referenceTargetElement);
+  <V extends ModelElementInstance> AttributeReferenceBuilder<V> idAttributeReference(
+      Class<V> referenceTargetElement);
 
   @SuppressWarnings("rawtypes")
-  <V extends ModelElementInstance> AttributeReferenceCollectionBuilder<V> idAttributeReferenceCollection(Class<V> referenceTargetElement, Class<? extends AttributeReferenceCollection> attributeReferenceCollection);
-
+  <V extends ModelElementInstance>
+      AttributeReferenceCollectionBuilder<V> idAttributeReferenceCollection(
+          Class<V> referenceTargetElement,
+          Class<? extends AttributeReferenceCollection> attributeReferenceCollection);
 }

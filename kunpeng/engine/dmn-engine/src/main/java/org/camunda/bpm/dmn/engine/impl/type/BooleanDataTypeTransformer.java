@@ -51,5 +51,4 @@ public class BooleanDataTypeTransformer implements DmnDataTypeTransformer {
       throw new IllegalArgumentException();
     }
   }
-
 }

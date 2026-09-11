@@ -20,14 +20,12 @@ package com.anyilanxin.kunpeng.bpm.model.xml;
  * An Exception in the Core XML Model.
  *
  * @author Daniel Meyer
- *
  */
 public class ModelException extends RuntimeException {
 
   private static final long serialVersionUID = 1L;
 
-  public ModelException() {
-  }
+  public ModelException() {}
 
   public ModelException(final String message, final Throwable cause) {
     super(message, cause);
@@ -40,5 +38,4 @@ public class ModelException extends RuntimeException {
   public ModelException(final Throwable cause) {
     super(cause);
   }
-
 }

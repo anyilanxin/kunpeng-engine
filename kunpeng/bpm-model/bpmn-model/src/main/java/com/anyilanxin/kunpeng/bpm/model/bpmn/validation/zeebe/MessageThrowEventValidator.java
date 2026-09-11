@@ -24,10 +24,10 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.MessageEventDefinition;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ThrowEvent;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebePublishMessage;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeTaskDefinition;
-import java.util.Collection;
-import java.util.Collections;
 import com.anyilanxin.kunpeng.bpm.model.xml.validation.ModelElementValidator;
 import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResultCollector;
+import java.util.Collection;
+import java.util.Collections;
 
 public class MessageThrowEventValidator implements ModelElementValidator<ThrowEvent> {
 

@@ -16,8 +16,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_OWNER;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DmnElementReference;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.OwnerReference;
@@ -33,16 +33,18 @@ public class OwnerReferenceImpl extends DmnElementReferenceImpl implements Owner
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(OwnerReference.class, DMN_ELEMENT_OWNER)
-      .namespaceUri(LATEST_DMN_NS)
-      .extendsType(DmnElementReference.class)
-      .instanceProvider(new ModelTypeInstanceProvider<OwnerReference>() {
-        public OwnerReference newInstance(ModelTypeInstanceContext instanceContext) {
-          return new OwnerReferenceImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(OwnerReference.class, DMN_ELEMENT_OWNER)
+            .namespaceUri(LATEST_DMN_NS)
+            .extendsType(DmnElementReference.class)
+            .instanceProvider(
+                new ModelTypeInstanceProvider<OwnerReference>() {
+                  public OwnerReference newInstance(ModelTypeInstanceContext instanceContext) {
+                    return new OwnerReferenceImpl(instanceContext);
+                  }
+                });
 
     typeBuilder.build();
   }
-
 }

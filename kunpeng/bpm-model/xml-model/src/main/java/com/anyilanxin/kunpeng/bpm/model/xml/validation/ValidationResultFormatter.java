@@ -16,9 +16,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.xml.validation;
 
-import java.io.StringWriter;
-
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
+import java.io.StringWriter;
 
 /**
  * SPI which can be implemented to print out a summary of a validation result. See {@link

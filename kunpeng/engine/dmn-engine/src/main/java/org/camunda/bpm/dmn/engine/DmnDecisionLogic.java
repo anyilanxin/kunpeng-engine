@@ -16,9 +16,5 @@
  */
 package org.camunda.bpm.dmn.engine;
 
-/**
- * Represents the decision logic of a decision.
- */
-public interface DmnDecisionLogic {
-
-}
+/** Represents the decision logic of a decision. */
+public interface DmnDecisionLogic {}

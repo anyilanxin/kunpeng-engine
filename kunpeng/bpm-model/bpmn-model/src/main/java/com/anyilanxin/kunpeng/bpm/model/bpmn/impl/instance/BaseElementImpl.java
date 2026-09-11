@@ -27,8 +27,6 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BpmnModelElementInstance;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Documentation;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ExtensionElements;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.di.DiagramElement;
-import java.util.ArrayList;
-import java.util.Collection;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
@@ -39,6 +37,8 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.child.ChildElement;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.ChildElementCollection;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.SequenceBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.Reference;
+import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * The BPMN baseElement element

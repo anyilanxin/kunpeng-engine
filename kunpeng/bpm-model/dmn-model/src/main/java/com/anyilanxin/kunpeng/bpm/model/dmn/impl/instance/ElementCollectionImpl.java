@@ -16,10 +16,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_ELEMENT_COLLECTION;
-
-import java.util.Collection;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DrgElement;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DrgElementReference;
@@ -31,10 +29,12 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTypeInstanceProvider;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.SequenceBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.ElementReferenceCollection;
+import java.util.Collection;
 
 public class ElementCollectionImpl extends NamedElementImpl implements ElementCollection {
 
-  protected static ElementReferenceCollection<DrgElement, DrgElementReference> drgElementRefCollection;
+  protected static ElementReferenceCollection<DrgElement, DrgElementReference>
+      drgElementRefCollection;
 
   public ElementCollectionImpl(ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
@@ -45,22 +45,26 @@ public class ElementCollectionImpl extends NamedElementImpl implements ElementCo
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(ElementCollection.class, DMN_ELEMENT_ELEMENT_COLLECTION)
-      .namespaceUri(LATEST_DMN_NS)
-      .extendsType(NamedElement.class)
-      .instanceProvider(new ModelTypeInstanceProvider<ElementCollection>() {
-        public ElementCollection newInstance(ModelTypeInstanceContext instanceContext) {
-          return new ElementCollectionImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(ElementCollection.class, DMN_ELEMENT_ELEMENT_COLLECTION)
+            .namespaceUri(LATEST_DMN_NS)
+            .extendsType(NamedElement.class)
+            .instanceProvider(
+                new ModelTypeInstanceProvider<ElementCollection>() {
+                  public ElementCollection newInstance(ModelTypeInstanceContext instanceContext) {
+                    return new ElementCollectionImpl(instanceContext);
+                  }
+                });
 
     SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
-    drgElementRefCollection = sequenceBuilder.elementCollection(DrgElementReference.class)
-      .uriElementReferenceCollection(DrgElement.class)
-      .build();
+    drgElementRefCollection =
+        sequenceBuilder
+            .elementCollection(DrgElementReference.class)
+            .uriElementReferenceCollection(DrgElement.class)
+            .build();
 
     typeBuilder.build();
   }
-
 }

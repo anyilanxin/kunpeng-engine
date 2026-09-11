@@ -16,8 +16,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_IMPORTED_ELEMENT;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.ImportedElement;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
@@ -32,15 +32,17 @@ public class ImportedElementImpl extends DmnModelElementInstanceImpl implements 
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(ImportedElement.class, DMN_ELEMENT_IMPORTED_ELEMENT)
-      .namespaceUri(LATEST_DMN_NS)
-      .instanceProvider(new ModelTypeInstanceProvider<ImportedElement>() {
-        public ImportedElement newInstance(ModelTypeInstanceContext instanceContext) {
-          return new ImportedElementImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(ImportedElement.class, DMN_ELEMENT_IMPORTED_ELEMENT)
+            .namespaceUri(LATEST_DMN_NS)
+            .instanceProvider(
+                new ModelTypeInstanceProvider<ImportedElement>() {
+                  public ImportedElement newInstance(ModelTypeInstanceContext instanceContext) {
+                    return new ImportedElementImpl(instanceContext);
+                  }
+                });
 
     typeBuilder.build();
   }
-
 }

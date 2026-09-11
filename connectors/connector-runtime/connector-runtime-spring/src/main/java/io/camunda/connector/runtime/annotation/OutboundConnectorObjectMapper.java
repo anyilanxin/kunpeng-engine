@@ -29,5 +29,4 @@ import org.springframework.beans.factory.annotation.Qualifier;
  */
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
-@Qualifier
-public @interface OutboundConnectorObjectMapper {}
+@Qualifier public @interface OutboundConnectorObjectMapper {}

@@ -41,10 +41,10 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.StartEvent;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.SubProcess;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Task;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.UserTask;
-import java.util.HashSet;
-import java.util.Set;
 import com.anyilanxin.kunpeng.bpm.model.xml.validation.ModelElementValidator;
 import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResultCollector;
+import java.util.HashSet;
+import java.util.Set;
 
 public class FlowElementValidator implements ModelElementValidator<FlowElement> {
 

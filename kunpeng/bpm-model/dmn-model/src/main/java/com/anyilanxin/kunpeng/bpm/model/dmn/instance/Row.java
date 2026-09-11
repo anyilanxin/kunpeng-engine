@@ -16,6 +16,4 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.instance;
 
-public interface Row extends List {
-
-}
+public interface Row extends List {}

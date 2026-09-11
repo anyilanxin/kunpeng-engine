@@ -17,10 +17,10 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.impl;
 
+import static com.anyilanxin.kunpeng.cluster.utils.concurrent.Threads.namedThreads;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.anyilanxin.kunpeng.cluster.utils.concurrent.Threads.namedThreads;
 
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
@@ -39,6 +39,8 @@ import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember.Type;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.impl.DefaultRaftMember;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.impl.RaftClusterContext;
+import com.anyilanxin.kunpeng.cluster.raft.journal.CheckedJournalException.FlushException;
+import com.anyilanxin.kunpeng.cluster.raft.journal.SegmentInfo;
 import com.anyilanxin.kunpeng.cluster.raft.metrics.RaftReplicationMetrics;
 import com.anyilanxin.kunpeng.cluster.raft.metrics.RaftRoleMetrics;
 import com.anyilanxin.kunpeng.cluster.raft.metrics.RaftServiceMetrics;
@@ -79,8 +81,6 @@ import com.anyilanxin.kunpeng.cluster.raft.utils.StateUtil;
 import com.anyilanxin.kunpeng.cluster.raft.zeebe.EntryValidator;
 import com.anyilanxin.kunpeng.cluster.utils.concurrent.ThreadContext;
 import io.camunda.cluster.PartitionId;
-import com.anyilanxin.kunpeng.cluster.raft.journal.CheckedJournalException.FlushException;
-import com.anyilanxin.kunpeng.cluster.raft.journal.SegmentInfo;
 import io.camunda.zeebe.snapshots.PersistedSnapshot;
 import io.camunda.zeebe.snapshots.ReceivableSnapshotStore;
 import io.camunda.zeebe.util.CheckedRunnable;

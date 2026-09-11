@@ -20,14 +20,14 @@ import static java.util.stream.Collectors.groupingBy;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BpmnModelElementInstance;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.traversal.TypeHierarchyVisitor;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.validation.ValidationResultsCollectorImpl;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementType;
 import com.anyilanxin.kunpeng.bpm.model.xml.validation.ModelElementValidator;
 import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResults;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 public class ValidationVisitor extends TypeHierarchyVisitor {
 

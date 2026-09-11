@@ -22,8 +22,9 @@ import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 /**
  * @author Sebastian Menski
  */
-public interface ElementReferenceCollectionBuilder<Target extends ModelElementInstance, Source extends ModelElementInstance> extends ModelBuildOperation {
+public interface ElementReferenceCollectionBuilder<
+        Target extends ModelElementInstance, Source extends ModelElementInstance>
+    extends ModelBuildOperation {
 
   ElementReferenceCollection<Target, Source> build();
-
 }

@@ -20,12 +20,10 @@ import org.camunda.bpm.dmn.engine.impl.spi.el.ElExpression;
 
 /**
  * @author Daniel Meyer
- *
  */
 public interface CachedExpressionSupport {
 
   void setCachedExpression(ElExpression expression);
 
   ElExpression getCachedExpression();
-
 }

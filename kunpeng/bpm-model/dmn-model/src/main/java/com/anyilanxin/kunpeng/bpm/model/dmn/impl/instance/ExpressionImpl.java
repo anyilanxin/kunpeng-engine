@@ -16,9 +16,9 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_TYPE_REF;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_EXPRESSION;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DmnElement;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Expression;
@@ -44,15 +44,15 @@ public abstract class ExpressionImpl extends DmnElementImpl implements Expressio
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(Expression.class, DMN_ELEMENT_EXPRESSION)
-      .namespaceUri(LATEST_DMN_NS)
-      .extendsType(DmnElement.class)
-      .abstractType();
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(Expression.class, DMN_ELEMENT_EXPRESSION)
+            .namespaceUri(LATEST_DMN_NS)
+            .extendsType(DmnElement.class)
+            .abstractType();
 
-    typeRefAttribute = typeBuilder.stringAttribute(DMN_ATTRIBUTE_TYPE_REF)
-      .build();
+    typeRefAttribute = typeBuilder.stringAttribute(DMN_ATTRIBUTE_TYPE_REF).build();
 
     typeBuilder.build();
   }
-
 }

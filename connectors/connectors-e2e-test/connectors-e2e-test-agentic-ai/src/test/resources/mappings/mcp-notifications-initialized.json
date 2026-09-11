@@ -1,17 +1,11 @@
 {
-  "request": {
-    "method": "POST",
-    "url": "/mcp",
-    "bodyPatterns": [
-      {
-        "matchesJsonPath": {
-          "expression": "$.method",
-          "equalTo": "notifications/initialized"
-        }
-      }
-    ]
-  },
-  "response": {
-    "status": 200
-  }
+    "request": {
+        "method": "POST",
+        "bodyPatterns": [{"matchesJsonPath": {
+            "expression": "$.method",
+            "equalTo": "notifications/initialized"
+        }}],
+        "url": "/mcp"
+    },
+    "response": {"status": 200}
 }

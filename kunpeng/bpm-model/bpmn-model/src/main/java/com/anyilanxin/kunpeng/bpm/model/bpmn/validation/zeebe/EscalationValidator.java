@@ -20,15 +20,15 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Escalation;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.EscalationEventDefinition;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Process;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ThrowEvent;
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.ModelInstanceImpl;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.util.ModelUtil;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.DomElement;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 import com.anyilanxin.kunpeng.bpm.model.xml.validation.ModelElementValidator;
 import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResultCollector;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class EscalationValidator implements ModelElementValidator<Escalation> {
 

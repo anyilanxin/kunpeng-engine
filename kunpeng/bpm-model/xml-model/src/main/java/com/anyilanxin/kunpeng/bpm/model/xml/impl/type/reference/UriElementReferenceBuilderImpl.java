@@ -19,11 +19,15 @@ package com.anyilanxin.kunpeng.bpm.model.xml.impl.type.reference;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.type.child.ChildElementImpl;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 
-public class UriElementReferenceBuilderImpl<Target extends ModelElementInstance, Source extends ModelElementInstance> extends ElementReferenceBuilderImpl<Target, Source> {
+public class UriElementReferenceBuilderImpl<
+        Target extends ModelElementInstance, Source extends ModelElementInstance>
+    extends ElementReferenceBuilderImpl<Target, Source> {
 
-  public UriElementReferenceBuilderImpl(Class<Source> childElementType, Class<Target> referenceTargetClass, ChildElementImpl<Source> child) {
+  public UriElementReferenceBuilderImpl(
+      Class<Source> childElementType,
+      Class<Target> referenceTargetClass,
+      ChildElementImpl<Source> child) {
     super(childElementType, referenceTargetClass, child);
     this.elementReferenceCollectionImpl = new UriElementReferenceImpl<Target, Source>(child);
   }
-
 }

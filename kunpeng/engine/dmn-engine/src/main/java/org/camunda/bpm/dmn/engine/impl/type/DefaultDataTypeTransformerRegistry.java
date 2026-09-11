@@ -18,7 +18,6 @@ package org.camunda.bpm.dmn.engine.impl.type;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import org.camunda.bpm.dmn.engine.impl.DmnEngineLogger;
 import org.camunda.bpm.dmn.engine.impl.DmnLogger;
 import org.camunda.bpm.dmn.engine.impl.spi.type.DmnDataTypeTransformer;
@@ -33,10 +32,12 @@ public class DefaultDataTypeTransformerRegistry implements DmnDataTypeTransforme
 
   protected static final DmnEngineLogger LOG = DmnLogger.ENGINE_LOGGER;
 
-  protected static final Map<String, DmnDataTypeTransformer> transformers = getDefaultTransformers();
+  protected static final Map<String, DmnDataTypeTransformer> transformers =
+      getDefaultTransformers();
 
   protected static Map<String, DmnDataTypeTransformer> getDefaultTransformers() {
-    Map<String, DmnDataTypeTransformer> transformers = new HashMap<String, DmnDataTypeTransformer>();
+    Map<String, DmnDataTypeTransformer> transformers =
+        new HashMap<String, DmnDataTypeTransformer>();
 
     transformers.put("string", new StringDataTypeTransformer());
     transformers.put("boolean", new BooleanDataTypeTransformer());
@@ -53,12 +54,11 @@ public class DefaultDataTypeTransformerRegistry implements DmnDataTypeTransforme
   }
 
   public DmnDataTypeTransformer getTransformer(String typeName) {
-    if(typeName != null && transformers.containsKey(typeName.toLowerCase())) {
+    if (typeName != null && transformers.containsKey(typeName.toLowerCase())) {
       return transformers.get(typeName.toLowerCase());
     } else {
       LOG.unsupportedTypeDefinitionForClause(typeName);
     }
     return new IdentityDataTypeTransformer();
   }
-
 }

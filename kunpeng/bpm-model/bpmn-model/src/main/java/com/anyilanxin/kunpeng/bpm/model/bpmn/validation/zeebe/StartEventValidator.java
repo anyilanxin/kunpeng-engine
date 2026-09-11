@@ -24,10 +24,10 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeExecutionListen
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeExecutionListenerEventType;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeProperties;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeProperty;
-import java.util.Collection;
-import java.util.Objects;
 import com.anyilanxin.kunpeng.bpm.model.xml.validation.ModelElementValidator;
 import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResultCollector;
+import java.util.Collection;
+import java.util.Objects;
 
 public class StartEventValidator implements ModelElementValidator<StartEvent> {
 

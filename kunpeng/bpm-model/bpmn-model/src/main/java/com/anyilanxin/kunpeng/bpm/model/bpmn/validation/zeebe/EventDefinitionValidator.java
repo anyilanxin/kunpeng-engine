@@ -26,10 +26,10 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.MessageEventDefinition;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.SignalEventDefinition;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.TerminateEventDefinition;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.TimerEventDefinition;
-import java.util.Arrays;
-import java.util.List;
 import com.anyilanxin.kunpeng.bpm.model.xml.validation.ModelElementValidator;
 import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResultCollector;
+import java.util.Arrays;
+import java.util.List;
 
 public class EventDefinitionValidator implements ModelElementValidator<EventDefinition> {
 

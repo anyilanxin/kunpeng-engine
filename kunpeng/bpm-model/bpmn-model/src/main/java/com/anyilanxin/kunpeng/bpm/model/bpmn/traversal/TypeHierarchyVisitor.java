@@ -19,8 +19,8 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.traversal;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.Bpmn;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnImpl;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BpmnModelElementInstance;
-import java.util.List;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementType;
+import java.util.List;
 
 /**
  * Maintains a registry of visitors per element type (e.g. one for FlowNode, one for ServiceTask,

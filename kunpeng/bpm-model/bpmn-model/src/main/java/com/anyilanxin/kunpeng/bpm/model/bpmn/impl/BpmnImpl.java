@@ -18,8 +18,8 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.impl;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.Bpmn;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnTypeHierarchy;
-import java.util.List;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementType;
+import java.util.List;
 
 public class BpmnImpl extends Bpmn {
 

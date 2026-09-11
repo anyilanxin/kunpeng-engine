@@ -23,10 +23,10 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.SendTask;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeJobPriorityDefinition;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebePublishMessage;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeTaskDefinition;
-import java.util.Collection;
-import java.util.Collections;
 import com.anyilanxin.kunpeng.bpm.model.xml.validation.ModelElementValidator;
 import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResultCollector;
+import java.util.Collection;
+import java.util.Collections;
 
 public final class SendTaskValidator implements ModelElementValidator<SendTask> {
 

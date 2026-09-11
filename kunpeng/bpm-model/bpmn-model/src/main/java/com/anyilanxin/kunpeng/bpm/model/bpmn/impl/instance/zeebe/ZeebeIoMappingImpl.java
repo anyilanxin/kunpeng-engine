@@ -22,11 +22,11 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.BpmnModelElementInsta
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeInput;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeIoMapping;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeOutput;
-import java.util.Collection;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.ChildElementCollection;
+import java.util.Collection;
 
 public class ZeebeIoMappingImpl extends BpmnModelElementInstanceImpl implements ZeebeIoMapping {
 

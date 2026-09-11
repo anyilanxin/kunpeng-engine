@@ -16,6 +16,4 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.instance;
 
-public interface ImpactedPerformanceIndicatorReference extends DmnElementReference {
-
-}
+public interface ImpactedPerformanceIndicatorReference extends DmnElementReference {}

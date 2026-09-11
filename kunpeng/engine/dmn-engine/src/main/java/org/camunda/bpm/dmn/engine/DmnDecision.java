@@ -21,10 +21,8 @@ import java.util.Collection;
 /**
  * A decision of the DMN Engine.
  *
- * <p>
- * Decisions can be implement in different ways. To check if the decision is implemented
- * as a Decision Table see {@link #isDecisionTable()}.
- * </p>
+ * <p>Decisions can be implement in different ways. To check if the decision is implemented as a
+ * Decision Table see {@link #isDecisionTable()}.
  */
 public interface DmnDecision {
 
@@ -62,5 +60,4 @@ public interface DmnDecision {
    * @return the required decisions or an empty collection if not exists.
    */
   Collection<DmnDecision> getRequiredDecisions();
-
 }

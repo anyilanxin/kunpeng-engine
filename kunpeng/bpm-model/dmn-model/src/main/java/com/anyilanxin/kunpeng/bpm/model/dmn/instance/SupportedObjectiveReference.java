@@ -16,6 +16,4 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.instance;
 
-public interface SupportedObjectiveReference extends DmnElementReference {
-
-}
+public interface SupportedObjectiveReference extends DmnElementReference {}

@@ -19,7 +19,6 @@ package org.camunda.bpm.dmn.engine.impl.hitpolicy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
 import org.camunda.bpm.dmn.engine.delegate.DmnDecisionTableEvaluationEvent;
 import org.camunda.bpm.dmn.engine.delegate.DmnEvaluatedDecisionRule;
 import org.camunda.bpm.dmn.engine.delegate.DmnEvaluatedOutput;
@@ -37,11 +36,13 @@ public abstract class AbstractCollectNumberHitPolicyHandler implements DmnHitPol
 
   protected abstract BuiltinAggregator getAggregator();
 
-  public DmnDecisionTableEvaluationEvent apply(DmnDecisionTableEvaluationEvent decisionTableEvaluationEvent) {
+  public DmnDecisionTableEvaluationEvent apply(
+      DmnDecisionTableEvaluationEvent decisionTableEvaluationEvent) {
     String resultName = getResultName(decisionTableEvaluationEvent);
     TypedValue resultValue = getResultValue(decisionTableEvaluationEvent);
 
-    DmnDecisionTableEvaluationEventImpl evaluationEvent = (DmnDecisionTableEvaluationEventImpl) decisionTableEvaluationEvent;
+    DmnDecisionTableEvaluationEventImpl evaluationEvent =
+        (DmnDecisionTableEvaluationEventImpl) decisionTableEvaluationEvent;
     evaluationEvent.setCollectResultName(resultName);
     evaluationEvent.setCollectResultValue(resultValue);
 
@@ -58,19 +59,20 @@ public abstract class AbstractCollectNumberHitPolicyHandler implements DmnHitPol
     return null;
   }
 
-  protected TypedValue getResultValue(DmnDecisionTableEvaluationEvent decisionTableEvaluationEvent) {
+  protected TypedValue getResultValue(
+      DmnDecisionTableEvaluationEvent decisionTableEvaluationEvent) {
     List<TypedValue> values = collectSingleValues(decisionTableEvaluationEvent);
     return aggregateValues(values);
   }
 
-  protected List<TypedValue> collectSingleValues(DmnDecisionTableEvaluationEvent decisionTableEvaluationEvent) {
+  protected List<TypedValue> collectSingleValues(
+      DmnDecisionTableEvaluationEvent decisionTableEvaluationEvent) {
     List<TypedValue> values = new ArrayList<TypedValue>();
     for (DmnEvaluatedDecisionRule matchingRule : decisionTableEvaluationEvent.getMatchingRules()) {
       Map<String, DmnEvaluatedOutput> outputEntries = matchingRule.getOutputEntries();
       if (outputEntries.size() > 1) {
         throw LOG.aggregationNotApplicableOnCompoundOutput(getAggregator(), outputEntries);
-      }
-      else if (outputEntries.size() == 1) {
+      } else if (outputEntries.size() == 1) {
         TypedValue typedValue = outputEntries.values().iterator().next().getValue();
         values.add(typedValue);
       }
@@ -82,40 +84,36 @@ public abstract class AbstractCollectNumberHitPolicyHandler implements DmnHitPol
   protected TypedValue aggregateValues(List<TypedValue> values) {
     if (!values.isEmpty()) {
       return aggregateNumberValues(values);
-    }
-    else {
+    } else {
       // return null if no values to aggregate
       return null;
     }
-
   }
 
   protected TypedValue aggregateNumberValues(List<TypedValue> values) {
     try {
       List<Integer> intValues = convertValuesToInteger(values);
       return Variables.integerValue(aggregateIntegerValues(intValues));
-    }
-    catch (IllegalArgumentException e) {
+    } catch (IllegalArgumentException e) {
       // ignore
     }
 
     try {
       List<Long> longValues = convertValuesToLong(values);
       return Variables.longValue(aggregateLongValues(longValues));
-    }
-    catch (IllegalArgumentException e) {
+    } catch (IllegalArgumentException e) {
       // ignore
     }
 
     try {
       List<Double> doubleValues = convertValuesToDouble(values);
       return Variables.doubleValue(aggregateDoubleValues(doubleValues));
-    }
-    catch (IllegalArgumentException e) {
+    } catch (IllegalArgumentException e) {
       // ignore
     }
 
-    throw LOG.unableToConvertValuesToAggregatableTypes(values, Integer.class, Long.class, Double.class);
+    throw LOG.unableToConvertValuesToAggregatableTypes(
+        values, Integer.class, Long.class, Double.class);
   }
 
   protected abstract Integer aggregateIntegerValues(List<Integer> intValues);
@@ -124,7 +122,8 @@ public abstract class AbstractCollectNumberHitPolicyHandler implements DmnHitPol
 
   protected abstract Double aggregateDoubleValues(List<Double> doubleValues);
 
-  protected List<Integer> convertValuesToInteger(List<TypedValue> typedValues) throws IllegalArgumentException {
+  protected List<Integer> convertValuesToInteger(List<TypedValue> typedValues)
+      throws IllegalArgumentException {
     List<Integer> intValues = new ArrayList<Integer>();
     for (TypedValue typedValue : typedValues) {
 
@@ -146,12 +145,12 @@ public abstract class AbstractCollectNumberHitPolicyHandler implements DmnHitPol
         // reject other typed values
         throw new IllegalArgumentException();
       }
-
     }
     return intValues;
   }
 
-  protected List<Long> convertValuesToLong(List<TypedValue> typedValues) throws IllegalArgumentException {
+  protected List<Long> convertValuesToLong(List<TypedValue> typedValues)
+      throws IllegalArgumentException {
     List<Long> longValues = new ArrayList<Long>();
     for (TypedValue typedValue : typedValues) {
 
@@ -174,13 +173,12 @@ public abstract class AbstractCollectNumberHitPolicyHandler implements DmnHitPol
         // reject other typed values
         throw new IllegalArgumentException();
       }
-
     }
     return longValues;
   }
 
-
-  protected List<Double> convertValuesToDouble(List<TypedValue> typedValues) throws IllegalArgumentException {
+  protected List<Double> convertValuesToDouble(List<TypedValue> typedValues)
+      throws IllegalArgumentException {
     List<Double> doubleValues = new ArrayList<Double>();
     for (TypedValue typedValue : typedValues) {
 
@@ -203,9 +201,7 @@ public abstract class AbstractCollectNumberHitPolicyHandler implements DmnHitPol
         // reject other typed values
         throw new IllegalArgumentException();
       }
-
     }
     return doubleValues;
   }
-
 }

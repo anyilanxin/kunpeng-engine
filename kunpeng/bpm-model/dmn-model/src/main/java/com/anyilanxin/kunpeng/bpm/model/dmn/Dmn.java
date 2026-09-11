@@ -24,13 +24,6 @@ import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN13_
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN14_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN15_NS;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-
 import com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnParser;
 import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.AllowedAnswersImpl;
 import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.AllowedValuesImpl;
@@ -124,19 +117,27 @@ import com.anyilanxin.kunpeng.bpm.model.xml.ModelParseException;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelValidationException;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelElementInstanceImpl;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.util.IoUtil;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public class Dmn {
 
-  /** the singleton instance of {@link Dmn}. If you want to customize the behavior of Dmn,
-   * replace this instance with an instance of a custom subclass of {@link Dmn}. */
+  /**
+   * the singleton instance of {@link Dmn}. If you want to customize the behavior of Dmn, replace
+   * this instance with an instance of a custom subclass of {@link Dmn}.
+   */
   public static Dmn INSTANCE = new Dmn();
 
   /** the parser used by the Dmn implementation. */
   private final DmnParser dmnParser = new DmnParser();
+
   private final ModelBuilder dmnModelBuilder;
 
-  /** The {@link Model}
-   */
+  /** The {@link Model} */
   private Model dmnModel;
 
   /**
@@ -162,8 +163,7 @@ public class Dmn {
   }
 
   /**
-   * Allows writing a {@link DmnModelInstance} to a File. It will be
-   * validated before writing.
+   * Allows writing a {@link DmnModelInstance} to a File. It will be validated before writing.
    *
    * @param file the {@link File} to write the {@link DmnModelInstance} to
    * @param modelInstance the {@link DmnModelInstance} to write
@@ -175,23 +175,24 @@ public class Dmn {
   }
 
   /**
-   * Allows writing a {@link DmnModelInstance} to an {@link OutputStream}. It will be
-   * validated before writing.
+   * Allows writing a {@link DmnModelInstance} to an {@link OutputStream}. It will be validated
+   * before writing.
    *
    * @param stream the {@link OutputStream} to write the {@link DmnModelInstance} to
    * @param modelInstance the {@link DmnModelInstance} to write
    * @throws ModelException if the model cannot be written
    * @throws ModelValidationException if the model is not valid
    */
-  public static void writeModelToStream(final OutputStream stream, final DmnModelInstance modelInstance) {
+  public static void writeModelToStream(
+      final OutputStream stream, final DmnModelInstance modelInstance) {
     INSTANCE.doWriteModelToOutputStream(stream, modelInstance);
   }
 
   /**
-   * Allows the conversion of a {@link DmnModelInstance} to an {@link String}. It will
-   * be validated before conversion.
+   * Allows the conversion of a {@link DmnModelInstance} to an {@link String}. It will be validated
+   * before conversion.
    *
-   * @param modelInstance  the model instance to convert
+   * @param modelInstance the model instance to convert
    * @return the XML string representation of the model instance
    */
   public static String convertToString(final DmnModelInstance modelInstance) {
@@ -217,9 +218,7 @@ public class Dmn {
     return INSTANCE.doCreateEmptyModel();
   }
 
-  /**
-   * Register known types of the Dmn model
-   */
+  /** Register known types of the Dmn model */
   protected Dmn() {
     dmnModelBuilder = ModelBuilder.createInstance("DMN Model");
     dmnModelBuilder.alternativeNamespace(DMN15_NS, DMN13_NS);
@@ -239,11 +238,10 @@ public class Dmn {
       return doReadModelFromInputStream(is);
 
     } catch (final FileNotFoundException e) {
-      throw new DmnModelException("Cannot read model from file "+file+": file does not exist.");
+      throw new DmnModelException("Cannot read model from file " + file + ": file does not exist.");
 
     } finally {
       IoUtil.closeSilently(is);
-
     }
   }
 
@@ -256,15 +254,15 @@ public class Dmn {
     try {
       os = new FileOutputStream(file);
       doWriteModelToOutputStream(os, modelInstance);
-    }
-    catch (final FileNotFoundException e) {
-      throw new DmnModelException("Cannot write model to file "+file+": file does not exist.");
+    } catch (final FileNotFoundException e) {
+      throw new DmnModelException("Cannot write model to file " + file + ": file does not exist.");
     } finally {
       IoUtil.closeSilently(os);
     }
   }
 
-  protected void doWriteModelToOutputStream(final OutputStream os, final DmnModelInstance modelInstance) {
+  protected void doWriteModelToOutputStream(
+      final OutputStream os, final DmnModelInstance modelInstance) {
     // validate DOM document
     doValidateModel(modelInstance);
     // write XML
@@ -395,5 +393,4 @@ public class Dmn {
   public void setDmnModel(final Model dmnModel) {
     this.dmnModel = dmnModel;
   }
-
 }

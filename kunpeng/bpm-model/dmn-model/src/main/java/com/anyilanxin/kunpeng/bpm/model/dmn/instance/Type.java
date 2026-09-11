@@ -16,6 +16,4 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.instance;
 
-public interface Type extends DmnModelElementInstance {
-
-}
+public interface Type extends DmnModelElementInstance {}

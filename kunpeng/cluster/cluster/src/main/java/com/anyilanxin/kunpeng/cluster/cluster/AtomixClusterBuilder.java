@@ -19,13 +19,13 @@ package com.anyilanxin.kunpeng.cluster.cluster;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.collect.Lists;
 import com.anyilanxin.kunpeng.cluster.cluster.discovery.NodeDiscoveryProvider;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingConfig.CompressionAlgorithm;
 import com.anyilanxin.kunpeng.cluster.cluster.protocol.GroupMembershipProtocol;
 import com.anyilanxin.kunpeng.cluster.utils.Builder;
 import com.anyilanxin.kunpeng.cluster.utils.Version;
 import com.anyilanxin.kunpeng.cluster.utils.net.Address;
+import com.google.common.collect.Lists;
 import io.camunda.zeebe.util.VersionUtil;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.io.File;

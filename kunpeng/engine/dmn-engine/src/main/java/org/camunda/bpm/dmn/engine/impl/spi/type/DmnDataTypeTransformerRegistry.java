@@ -32,5 +32,4 @@ public interface DmnDataTypeTransformerRegistry {
   DmnDataTypeTransformer getTransformer(String typeName);
 
   void addTransformer(String typeName, DmnDataTypeTransformer transformer);
-
 }

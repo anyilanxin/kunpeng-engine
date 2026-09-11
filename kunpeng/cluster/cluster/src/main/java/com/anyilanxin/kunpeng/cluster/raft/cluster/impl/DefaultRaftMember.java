@@ -20,7 +20,6 @@ package com.anyilanxin.kunpeng.cluster.raft.cluster.impl;
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.hash.Hashing;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.raft.RaftError;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember;
@@ -28,6 +27,7 @@ import com.anyilanxin.kunpeng.cluster.raft.protocol.RaftResponse;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.ReconfigureRequest;
 import com.anyilanxin.kunpeng.cluster.raft.storage.system.Configuration;
 import com.anyilanxin.kunpeng.cluster.utils.concurrent.Scheduled;
+import com.google.common.hash.Hashing;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.Set;

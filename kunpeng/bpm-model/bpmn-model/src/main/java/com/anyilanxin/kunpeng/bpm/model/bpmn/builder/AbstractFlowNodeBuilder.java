@@ -50,8 +50,8 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Task;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Transaction;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.UserTask;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.bpmndi.BpmnShape;
-import java.util.function.Consumer;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
+import java.util.function.Consumer;
 
 /**
  * @author Sebastian Menski

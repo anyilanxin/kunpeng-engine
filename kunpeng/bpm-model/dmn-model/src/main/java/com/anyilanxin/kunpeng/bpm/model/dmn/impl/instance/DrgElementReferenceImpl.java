@@ -16,8 +16,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_DRG_ELEMENT_REFERENCE;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DmnElementReference;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DrgElementReference;
@@ -26,23 +26,26 @@ import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceConte
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTypeInstanceProvider;
 
-public class DrgElementReferenceImpl extends DmnElementReferenceImpl implements DrgElementReference {
+public class DrgElementReferenceImpl extends DmnElementReferenceImpl
+    implements DrgElementReference {
 
   public DrgElementReferenceImpl(ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(DrgElementReference.class, DMN_ELEMENT_DRG_ELEMENT_REFERENCE)
-      .namespaceUri(LATEST_DMN_NS)
-      .extendsType(DmnElementReference.class)
-      .instanceProvider(new ModelTypeInstanceProvider<DrgElementReference>() {
-        public DrgElementReference newInstance(ModelTypeInstanceContext instanceContext) {
-          return new DrgElementReferenceImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(DrgElementReference.class, DMN_ELEMENT_DRG_ELEMENT_REFERENCE)
+            .namespaceUri(LATEST_DMN_NS)
+            .extendsType(DmnElementReference.class)
+            .instanceProvider(
+                new ModelTypeInstanceProvider<DrgElementReference>() {
+                  public DrgElementReference newInstance(ModelTypeInstanceContext instanceContext) {
+                    return new DrgElementReferenceImpl(instanceContext);
+                  }
+                });
 
     typeBuilder.build();
   }
-
 }

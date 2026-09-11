@@ -25,7 +25,6 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.CallConversation;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ConversationNode;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.GlobalConversation;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ParticipantAssociation;
-import java.util.Collection;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
@@ -33,6 +32,7 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.ChildElementCollection;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.SequenceBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.AttributeReference;
+import java.util.Collection;
 
 /**
  * The BPMN callConversation element

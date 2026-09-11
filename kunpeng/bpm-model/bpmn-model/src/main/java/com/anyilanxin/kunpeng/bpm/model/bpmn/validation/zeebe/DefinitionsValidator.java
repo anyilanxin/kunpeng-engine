@@ -18,9 +18,9 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.validation.zeebe;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Definitions;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Process;
-import java.util.Collection;
 import com.anyilanxin.kunpeng.bpm.model.xml.validation.ModelElementValidator;
 import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResultCollector;
+import java.util.Collection;
 
 public class DefinitionsValidator implements ModelElementValidator<Definitions> {
 

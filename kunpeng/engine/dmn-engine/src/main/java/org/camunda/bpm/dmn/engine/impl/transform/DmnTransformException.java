@@ -18,9 +18,7 @@ package org.camunda.bpm.dmn.engine.impl.transform;
 
 import org.camunda.bpm.dmn.engine.DmnEngineException;
 
-/**
- * Exception throw for errors during the transformation of a decision.
- */
+/** Exception throw for errors during the transformation of a decision. */
 public class DmnTransformException extends DmnEngineException {
 
   public DmnTransformException(String message, Throwable cause) {
@@ -30,5 +28,4 @@ public class DmnTransformException extends DmnEngineException {
   public DmnTransformException(String message) {
     super(message);
   }
-
 }

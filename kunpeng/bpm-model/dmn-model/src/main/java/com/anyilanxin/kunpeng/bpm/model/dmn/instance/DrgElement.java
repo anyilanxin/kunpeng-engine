@@ -16,6 +16,4 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.instance;
 
-public interface DrgElement extends NamedElement {
-
-}
+public interface DrgElement extends NamedElement {}

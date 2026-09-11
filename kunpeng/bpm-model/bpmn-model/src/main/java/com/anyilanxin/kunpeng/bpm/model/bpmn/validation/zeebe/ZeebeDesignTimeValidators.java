@@ -35,11 +35,11 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeScript;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeSubscription;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeTaskDefinition;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeTaskListener;
+import com.anyilanxin.kunpeng.bpm.model.xml.validation.ModelElementValidator;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import com.anyilanxin.kunpeng.bpm.model.xml.validation.ModelElementValidator;
 
 public final class ZeebeDesignTimeValidators {
 

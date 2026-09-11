@@ -17,10 +17,10 @@
  */
 package com.anyilanxin.kunpeng.cluster.cluster.impl;
 
+import com.anyilanxin.kunpeng.cluster.utils.net.Address;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
-import com.anyilanxin.kunpeng.cluster.utils.net.Address;
 
 /** Address serializer. */
 public class AddressSerializer extends com.esotericsoftware.kryo.Serializer<Address> {

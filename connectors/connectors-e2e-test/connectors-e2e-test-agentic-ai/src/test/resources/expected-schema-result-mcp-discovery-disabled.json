@@ -1,102 +1,92 @@
-{
-  "toolDefinitions": [
+{"toolDefinitions": [
     {
-      "name": "GetDateAndTime",
-      "description": "Returns the current date and time including the timezone.",
-      "inputSchema": {
-        "properties": {},
-        "type": "object",
-        "required": []
-      }
-    },
-    {
-      "name": "SuperfluxProduct",
-      "description": "Calculates the superflux product (a very complicated method only this tool can do) given two input numbers",
-      "inputSchema": {
-        "properties": {
-          "a": {
-            "type": "number",
-            "description": "The first number to be superflux calculated."
-          },
-          "b": {
-            "type": "number",
-            "description": "The second number to be superflux calculated."
-          }
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": []
         },
-        "type": "object",
-        "required": [
-          "a",
-          "b"
-        ]
-      }
+        "name": "GetDateAndTime",
+        "description": "Returns the current date and time including the timezone."
     },
     {
-      "name": "Search_The_Web",
-      "description": "Do a web search to find the needed information.",
-      "inputSchema": {
-        "properties": {
-          "searchQuery": {
-            "type": "string",
-            "description": "The search query to use"
-          }
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "a": {
+                    "description": "The first number to be superflux calculated.",
+                    "type": "number"
+                },
+                "b": {
+                    "description": "The second number to be superflux calculated.",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "a",
+                "b"
+            ]
         },
-        "type": "object",
-        "required": [
-          "searchQuery"
-        ]
-      }
+        "name": "SuperfluxProduct",
+        "description": "Calculates the superflux product (a very complicated method only this tool can do) given two input numbers"
     },
     {
-      "name": "Download_A_File",
-      "description": "Download a file from the provided URL",
-      "inputSchema": {
-        "properties": {
-          "url": {
-            "type": "string",
-            "description": "The URL to download the file from"
-          }
+        "inputSchema": {
+            "type": "object",
+            "properties": {"searchQuery": {
+                "description": "The search query to use",
+                "type": "string"
+            }},
+            "required": ["searchQuery"]
         },
-        "type": "object",
-        "required": [
-          "url"
-        ]
-      }
+        "name": "Search_The_Web",
+        "description": "Do a web search to find the needed information."
     },
     {
-      "name": "A_MCP_Client",
-      "description": "A MCP Client",
-      "inputSchema": {
-        "properties": {},
-        "type": "object",
-        "required": []
-      }
+        "inputSchema": {
+            "type": "object",
+            "properties": {"url": {
+                "description": "The URL to download the file from",
+                "type": "string"
+            }},
+            "required": ["url"]
+        },
+        "name": "Download_A_File",
+        "description": "Download a file from the provided URL"
     },
     {
-      "name": "A_HTTP_Remote_MCP_Client",
-      "description": "A HTTP Remote MCP Client",
-      "inputSchema": {
-        "properties": {},
-        "type": "object",
-        "required": []
-      }
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": []
+        },
+        "name": "A_MCP_Client",
+        "description": "A MCP Client"
     },
     {
-      "name": "A_SSE_Remote_MCP_Client",
-      "description": "A SSE Remote MCP Client",
-      "inputSchema": {
-        "properties": {},
-        "type": "object",
-        "required": []
-      }
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": []
+        },
+        "name": "A_HTTP_Remote_MCP_Client",
+        "description": "A HTTP Remote MCP Client"
     },
     {
-      "name": "Filesystem_MCP_Flow",
-      "description": "Filesystem MCP Flow",
-      "inputSchema": {
-        "properties": {},
-        "type": "object",
-        "required": []
-      }
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": []
+        },
+        "name": "A_SSE_Remote_MCP_Client",
+        "description": "A SSE Remote MCP Client"
+    },
+    {
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": []
+        },
+        "name": "Filesystem_MCP_Flow",
+        "description": "Filesystem MCP Flow"
     }
-  ]
-}
+]}

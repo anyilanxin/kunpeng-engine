@@ -17,10 +17,10 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.partition;
 
+import com.anyilanxin.kunpeng.cluster.raft.journal.file.SegmentAllocator;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLog;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLogFlusher;
 import com.anyilanxin.kunpeng.cluster.utils.concurrent.ThreadContext;
-import com.anyilanxin.kunpeng.cluster.raft.journal.file.SegmentAllocator;
 
 /** Raft storage configuration. */
 public class RaftStorageConfig {
@@ -61,7 +61,8 @@ public class RaftStorageConfig {
 
   /**
    * Returns the {@link RaftLogFlusher.Factory} to create a new flushing strategy for the {@link
-   * RaftLog} when * {@link com.anyilanxin.kunpeng.cluster.raft.storage.RaftStorage#openLog(ThreadContext)} is called.
+   * RaftLog} when * {@link
+   * com.anyilanxin.kunpeng.cluster.raft.storage.RaftStorage#openLog(ThreadContext)} is called.
    *
    * @return the flusher factory for this storage
    */
@@ -71,7 +72,8 @@ public class RaftStorageConfig {
 
   /**
    * Sets the {@link RaftLogFlusher.Factory} to create a new flushing strategy for the {@link
-   * RaftLog} when {@link com.anyilanxin.kunpeng.cluster.raft.storage.RaftStorage#openLog(ThreadContext)} is called.
+   * RaftLog} when {@link
+   * com.anyilanxin.kunpeng.cluster.raft.storage.RaftStorage#openLog(ThreadContext)} is called.
    *
    * @param flusherFactory factory to create the flushing strategy for the {@link RaftLog}
    * @return the Raft partition group configuration

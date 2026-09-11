@@ -24,7 +24,6 @@ import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Documentation;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Extension;
-import java.util.Collection;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
@@ -32,6 +31,7 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 import com.anyilanxin.kunpeng.bpm.model.xml.type.attribute.Attribute;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.ChildElementCollection;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.SequenceBuilder;
+import java.util.Collection;
 
 /**
  * The BPMN extension element

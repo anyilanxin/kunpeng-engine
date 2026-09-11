@@ -21,13 +21,15 @@ import org.camunda.bpm.dmn.engine.impl.spi.transform.DmnElementTransformContext;
 import org.camunda.bpm.dmn.engine.impl.spi.transform.DmnElementTransformHandler;
 import org.camunda.bpm.model.dmn.instance.Input;
 
-public class DmnDecisionTableInputTransformHandler implements DmnElementTransformHandler<Input, DmnDecisionTableInputImpl> {
+public class DmnDecisionTableInputTransformHandler
+    implements DmnElementTransformHandler<Input, DmnDecisionTableInputImpl> {
 
   public DmnDecisionTableInputImpl handleElement(DmnElementTransformContext context, Input input) {
     return createFromInput(context, input);
   }
 
-  protected DmnDecisionTableInputImpl createFromInput(DmnElementTransformContext context, Input input) {
+  protected DmnDecisionTableInputImpl createFromInput(
+      DmnElementTransformContext context, Input input) {
     DmnDecisionTableInputImpl decisionTableInput = createDmnElement(context, input);
 
     decisionTableInput.setId(input.getId());
@@ -37,8 +39,8 @@ public class DmnDecisionTableInputTransformHandler implements DmnElementTransfor
     return decisionTableInput;
   }
 
-  protected DmnDecisionTableInputImpl createDmnElement(DmnElementTransformContext context, Input input) {
+  protected DmnDecisionTableInputImpl createDmnElement(
+      DmnElementTransformContext context, Input input) {
     return new DmnDecisionTableInputImpl();
   }
-
 }

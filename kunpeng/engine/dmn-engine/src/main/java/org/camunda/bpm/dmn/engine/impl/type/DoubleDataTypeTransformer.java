@@ -50,5 +50,4 @@ public class DoubleDataTypeTransformer implements DmnDataTypeTransformer {
   protected double transformString(String value) {
     return Double.parseDouble(value);
   }
-
 }

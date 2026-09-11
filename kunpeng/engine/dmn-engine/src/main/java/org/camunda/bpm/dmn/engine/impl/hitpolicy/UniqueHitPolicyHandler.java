@@ -17,7 +17,6 @@
 package org.camunda.bpm.dmn.engine.impl.hitpolicy;
 
 import java.util.List;
-
 import org.camunda.bpm.dmn.engine.delegate.DmnDecisionTableEvaluationEvent;
 import org.camunda.bpm.dmn.engine.delegate.DmnEvaluatedDecisionRule;
 import org.camunda.bpm.dmn.engine.impl.DmnLogger;
@@ -29,13 +28,13 @@ public class UniqueHitPolicyHandler implements DmnHitPolicyHandler {
   public static final DmnHitPolicyLogger LOG = DmnLogger.HIT_POLICY_LOGGER;
   protected static final HitPolicyEntry HIT_POLICY = new HitPolicyEntry(HitPolicy.UNIQUE, null);
 
-  public DmnDecisionTableEvaluationEvent apply(DmnDecisionTableEvaluationEvent decisionTableEvaluationEvent) {
+  public DmnDecisionTableEvaluationEvent apply(
+      DmnDecisionTableEvaluationEvent decisionTableEvaluationEvent) {
     List<DmnEvaluatedDecisionRule> matchingRules = decisionTableEvaluationEvent.getMatchingRules();
 
     if (matchingRules.size() < 2) {
       return decisionTableEvaluationEvent;
-    }
-    else {
+    } else {
       throw LOG.uniqueHitPolicyOnlyAllowsSingleMatchingRule(matchingRules);
     }
   }
@@ -49,5 +48,4 @@ public class UniqueHitPolicyHandler implements DmnHitPolicyHandler {
   public String toString() {
     return "UniqueHitPolicyHandler{}";
   }
-
 }

@@ -16,8 +16,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_ITEM_DEFINITION_REFERENCE;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DmnElementReference;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.ItemDefinitionReference;
@@ -26,23 +26,27 @@ import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceConte
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTypeInstanceProvider;
 
-public class ItemDefinitionReferenceImpl extends DmnElementReferenceImpl implements ItemDefinitionReference {
+public class ItemDefinitionReferenceImpl extends DmnElementReferenceImpl
+    implements ItemDefinitionReference {
 
   public ItemDefinitionReferenceImpl(ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(ItemDefinitionReference.class, DMN_ELEMENT_ITEM_DEFINITION_REFERENCE)
-      .namespaceUri(LATEST_DMN_NS)
-      .extendsType(DmnElementReference.class)
-      .instanceProvider(new ModelTypeInstanceProvider<ItemDefinitionReference>() {
-        public ItemDefinitionReference newInstance(ModelTypeInstanceContext instanceContext) {
-          return new ItemDefinitionReferenceImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(ItemDefinitionReference.class, DMN_ELEMENT_ITEM_DEFINITION_REFERENCE)
+            .namespaceUri(LATEST_DMN_NS)
+            .extendsType(DmnElementReference.class)
+            .instanceProvider(
+                new ModelTypeInstanceProvider<ItemDefinitionReference>() {
+                  public ItemDefinitionReference newInstance(
+                      ModelTypeInstanceContext instanceContext) {
+                    return new ItemDefinitionReferenceImpl(instanceContext);
+                  }
+                });
 
     typeBuilder.build();
   }
-
 }

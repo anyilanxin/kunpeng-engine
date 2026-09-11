@@ -59,12 +59,18 @@ public class DmnDecisionTableOutputImpl {
 
   @Override
   public String toString() {
-    return "DmnDecisionTableOutputImpl{" +
-      "id='" + id + '\'' +
-      ", name='" + name + '\'' +
-      ", outputName='" + outputName + '\'' +
-      ", typeDefinition=" + typeDefinition +
-      '}';
+    return "DmnDecisionTableOutputImpl{"
+        + "id='"
+        + id
+        + '\''
+        + ", name='"
+        + name
+        + '\''
+        + ", outputName='"
+        + outputName
+        + '\''
+        + ", typeDefinition="
+        + typeDefinition
+        + '}';
   }
-
 }

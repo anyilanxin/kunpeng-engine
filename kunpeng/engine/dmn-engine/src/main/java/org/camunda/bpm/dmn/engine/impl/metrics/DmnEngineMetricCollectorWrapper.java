@@ -22,7 +22,8 @@ import org.camunda.bpm.dmn.engine.delegate.DmnDecisionLogicEvaluationEvent;
 import org.camunda.bpm.dmn.engine.delegate.DmnDecisionTableEvaluationEvent;
 import org.camunda.bpm.dmn.engine.spi.DmnEngineMetricCollector;
 
-public class DmnEngineMetricCollectorWrapper implements DmnEngineMetricCollector, DmnDecisionEvaluationListener {
+public class DmnEngineMetricCollectorWrapper
+    implements DmnEngineMetricCollector, DmnDecisionEvaluationListener {
 
   protected final DmnEngineMetricCollector collector;
 
@@ -48,7 +49,8 @@ public class DmnEngineMetricCollectorWrapper implements DmnEngineMetricCollector
     if (evaluationEvent instanceof DmnDecisionTableEvaluationEvent) {
       collector.notify((DmnDecisionTableEvaluationEvent) evaluationEvent);
     }
-    // ignore other evaluation events since the collector is implemented as decision table evaluation listener
+    // ignore other evaluation events since the collector is implemented as decision table
+    // evaluation listener
   }
 
   @Override
@@ -70,5 +72,4 @@ public class DmnEngineMetricCollectorWrapper implements DmnEngineMetricCollector
   public long clearExecutedDecisionElements() {
     return collector.clearExecutedDecisionElements();
   }
-
 }

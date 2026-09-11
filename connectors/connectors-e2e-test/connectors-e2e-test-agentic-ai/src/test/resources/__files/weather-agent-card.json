@@ -1,30 +1,28 @@
 {
-  "name": "Weather agent",
-  "description": "Helps with weather information",
-  "url": "%s/weather-agent",
-  "version": "1.0.0",
-  "documentationUrl": "http://example.com/docs",
-  "capabilities": {
-    "streaming": false,
-    "pushNotifications": false,
-    "stateTransitionHistory": false
-  },
-  "defaultInputModes": ["text"],
-  "defaultOutputModes": ["text"],
-  "skills": [
-    {
-      "id": "weather-forecast",
-      "name": "Weather Forecast",
-      "description": "Get weather forecast information",
-      "tags": [
-        "forecast",
-        "weather"
-      ],
-      "examples": [
-        "What's the weather like today?",
-        "Will it rain tomorrow?"
-      ]
-    }
-  ],
-  "protocolVersion": "0.3.0"
+    "skills": [{
+        "examples": [
+            "What's the weather like today?",
+            "Will it rain tomorrow?"
+        ],
+        "name": "Weather Forecast",
+        "description": "Get weather forecast information",
+        "id": "weather-forecast",
+        "tags": [
+            "forecast",
+            "weather"
+        ]
+    }],
+    "documentationUrl": "http://example.com/docs",
+    "capabilities": {
+        "streaming": false,
+        "pushNotifications": false,
+        "stateTransitionHistory": false
+    },
+    "defaultOutputModes": ["text"],
+    "name": "Weather agent",
+    "description": "Helps with weather information",
+    "protocolVersion": "0.3.0",
+    "version": "1.0.0",
+    "defaultInputModes": ["text"],
+    "url": "%s/weather-agent"
 }

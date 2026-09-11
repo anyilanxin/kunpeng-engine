@@ -22,6 +22,7 @@ import static com.anyilanxin.kunpeng.cluster.raft.storage.serializer.SerializerU
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.impl.DefaultRaftMember;
+import com.anyilanxin.kunpeng.cluster.raft.journal.file.RecordDataEncoder;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ApplicationEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ConfigurationEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.InitialEntry;
@@ -29,7 +30,6 @@ import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.RaftLogEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.SerializedApplicationEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.serializer.ConfigurationEntryDecoder.NewMembersDecoder;
 import com.anyilanxin.kunpeng.cluster.raft.storage.serializer.ConfigurationEntryDecoder.OldMembersDecoder;
-import com.anyilanxin.kunpeng.cluster.raft.journal.file.RecordDataEncoder;
 import io.camunda.zeebe.util.SbeUtil;
 import java.nio.ByteOrder;
 import java.time.Instant;

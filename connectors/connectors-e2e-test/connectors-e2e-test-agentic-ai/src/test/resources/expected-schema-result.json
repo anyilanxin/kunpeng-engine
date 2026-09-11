@@ -1,161 +1,154 @@
-{
-  "toolDefinitions": [
+{"toolDefinitions": [
     {
-      "name": "GetDateAndTime",
-      "description": "Returns the current date and time including the timezone.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {},
-        "required": []
-      }
-    },
-    {
-      "name": "SuperfluxProduct",
-      "description": "Calculates the superflux product (a very complicated method only this tool can do) given two input numbers",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "a": {
-            "type": "number",
-            "description": "The first number to be superflux calculated."
-          },
-          "b": {
-            "type": "number",
-            "description": "The second number to be superflux calculated."
-          }
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": []
         },
-        "required": [
-          "a",
-          "b"
-        ]
-      }
+        "name": "GetDateAndTime",
+        "description": "Returns the current date and time including the timezone."
     },
     {
-      "name": "Search_The_Web",
-      "description": "Do a web search to find the needed information.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "searchQuery": {
-            "type": "string",
-            "description": "The search query to use"
-          }
-        },
-        "required": [
-          "searchQuery"
-        ]
-      }
-    },
-    {
-      "name": "External_File_Reference",
-      "description": "Returns a reference to an externally hosted file (URL + display name) without downloading it.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "url": {
-            "type": "string",
-            "description": "The URL of the externally hosted file"
-          },
-          "name": {
-            "type": "string",
-            "description": "A display name for the file"
-          }
-        },
-        "required": ["url", "name"]
-      }
-    },
-    {
-      "name": "Download_A_File",
-      "description": "Download a file from the provided URL",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "url": {
-            "type": "string",
-            "description": "The URL to download the file from"
-          }
-        },
-        "required": ["url"]
-      }
-    },
-    {
-      "name": "A_Complex_Tool",
-      "description": "A very complex tool",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "aSimpleValue": {
-            "type": "string",
-            "description": "A simple value"
-          },
-          "anEnumValue": {
-            "type": "string",
-            "description": "An enum value",
-            "enum": [
-              "A",
-              "B",
-              "C"
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "a": {
+                    "description": "The first number to be superflux calculated.",
+                    "type": "number"
+                },
+                "b": {
+                    "description": "The second number to be superflux calculated.",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "a",
+                "b"
             ]
-          },
-          "anArrayValue": {
-            "type": "array",
-            "description": "An array value",
-            "items": {
-              "type": "string",
-              "enum": [
-                "foo",
-                "bar",
-                "baz"
-              ]
-            }
-          },
-          "urlPath": {
-            "type": "string",
-            "description": "The URL path to use"
-          },
-          "firstValue": {
-            "type": "string"
-          },
-          "secondValue": {
-            "type": "integer",
-            "description": "The second value"
-          },
-          "thirdValue": {
-            "type": "string",
-            "description": "The third value to add"
-          },
-          "fourthValue": {
-            "type": "array",
-            "description": "The fourth value to add",
-            "items": {
-              "type": "string",
-              "enum": [
-                "foo",
-                "bar",
-                "baz"
-              ]
-            }
-          }
         },
-        "required": [
-          "aSimpleValue",
-          "anEnumValue",
-          "anArrayValue",
-          "urlPath",
-          "firstValue",
-          "secondValue",
-          "thirdValue"
-        ]
-      }
+        "name": "SuperfluxProduct",
+        "description": "Calculates the superflux product (a very complicated method only this tool can do) given two input numbers"
     },
     {
-      "name": "An_Event",
-      "description": "An event!",
-      "inputSchema": {
-        "type": "object",
-        "properties": {},
-        "required": []
-      }
+        "inputSchema": {
+            "type": "object",
+            "properties": {"searchQuery": {
+                "description": "The search query to use",
+                "type": "string"
+            }},
+            "required": ["searchQuery"]
+        },
+        "name": "Search_The_Web",
+        "description": "Do a web search to find the needed information."
+    },
+    {
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "description": "A display name for the file",
+                    "type": "string"
+                },
+                "url": {
+                    "description": "The URL of the externally hosted file",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "url",
+                "name"
+            ]
+        },
+        "name": "External_File_Reference",
+        "description": "Returns a reference to an externally hosted file (URL + display name) without downloading it."
+    },
+    {
+        "inputSchema": {
+            "type": "object",
+            "properties": {"url": {
+                "description": "The URL to download the file from",
+                "type": "string"
+            }},
+            "required": ["url"]
+        },
+        "name": "Download_A_File",
+        "description": "Download a file from the provided URL"
+    },
+    {
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "aSimpleValue": {
+                    "description": "A simple value",
+                    "type": "string"
+                },
+                "firstValue": {"type": "string"},
+                "secondValue": {
+                    "description": "The second value",
+                    "type": "integer"
+                },
+                "urlPath": {
+                    "description": "The URL path to use",
+                    "type": "string"
+                },
+                "thirdValue": {
+                    "description": "The third value to add",
+                    "type": "string"
+                },
+                "anEnumValue": {
+                    "description": "An enum value",
+                    "type": "string",
+                    "enum": [
+                        "A",
+                        "B",
+                        "C"
+                    ]
+                },
+                "anArrayValue": {
+                    "description": "An array value",
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "foo",
+                            "bar",
+                            "baz"
+                        ]
+                    }
+                },
+                "fourthValue": {
+                    "description": "The fourth value to add",
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "foo",
+                            "bar",
+                            "baz"
+                        ]
+                    }
+                }
+            },
+            "required": [
+                "aSimpleValue",
+                "anEnumValue",
+                "anArrayValue",
+                "urlPath",
+                "firstValue",
+                "secondValue",
+                "thirdValue"
+            ]
+        },
+        "name": "A_Complex_Tool",
+        "description": "A very complex tool"
+    },
+    {
+        "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "required": []
+        },
+        "name": "An_Event",
+        "description": "An event!"
     }
-  ]
-}
+]}

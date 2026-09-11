@@ -18,7 +18,7 @@
 
 /**
  * Provides {@link com.anyilanxin.kunpeng.cluster.raft.protocol.RaftRequest} and {@link
- * com.anyilanxin.kunpeng.cluster.raft.protocol.RaftResponse} implementations for all internal Raft protocol
- * communication.
+ * com.anyilanxin.kunpeng.cluster.raft.protocol.RaftResponse} implementations for all internal Raft
+ * protocol communication.
  */
 package com.anyilanxin.kunpeng.cluster.raft.protocol;

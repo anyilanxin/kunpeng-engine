@@ -2,8 +2,8 @@ openapi: 3.0.3
 info:
   summary: Pay.com API
   title: Pay.com API
-  description: ''
-  version: '1.0'
+  description: ""
+  version: "1.0"
   contact:
     name: Pay.com Team
     url: https://pay.com
@@ -42,10 +42,10 @@ paths:
         Charge (or a Hold when `capture=false`) will be created and executed
         with the payment method entered by the customer during the session.
       requestBody:
-        $ref: '#/components/requestBodies/Create-Payment-Session'
+        $ref: "#/components/requestBodies/Create-Payment-Session"
       responses:
-        '200':
-          $ref: '#/components/responses/Create-Payment-Session'
+        "200":
+          $ref: "#/components/responses/Create-Payment-Session"
   /v1/sessions/payment/{id}:
     parameters:
       - description: The id of the Payment Session to retrieve.
@@ -69,8 +69,8 @@ paths:
         was returned from a previous request will return the corresponding
         Payment Session information.
       responses:
-        '200':
-          $ref: '#/components/responses/Payment-Session'
+        "200":
+          $ref: "#/components/responses/Payment-Session"
   /v1/sessions/setup:
     parameters: []
     post:
@@ -86,10 +86,10 @@ paths:
         Payment Method will be created and can be used to create Charges or
         Holds from the API.
       requestBody:
-        $ref: '#/components/requestBodies/Create-Setup-Session'
+        $ref: "#/components/requestBodies/Create-Setup-Session"
       responses:
-        '200':
-          $ref: '#/components/responses/Create-Setup-Session'
+        "200":
+          $ref: "#/components/responses/Create-Setup-Session"
   /v1/sessions/setup/{id}:
     parameters:
       - description: The id of the Setup Session to retrieve.
@@ -113,8 +113,8 @@ paths:
         returned from a previous request will return the corresponding Setup
         Session information.
       responses:
-        '200':
-          $ref: '#/components/responses/Setup-Session'
+        "200":
+          $ref: "#/components/responses/Setup-Session"
   /v1/sessions/payment/{id}/attempts:
     parameters:
       - description: The id of the Payment Session to retrieve attempts for.
@@ -138,8 +138,8 @@ paths:
         was returned from a previous request will return the corresponding
         Payment Attempts.
       responses:
-        '200':
-          $ref: '#/components/responses/Payment-Attempts'
+        "200":
+          $ref: "#/components/responses/Payment-Attempts"
   /v1/sessions/setup/{id}/attempts:
     parameters:
       - description: The id of the Setup Session to retrieve attempts for.
@@ -163,8 +163,8 @@ paths:
         returned from a previous request will return the corresponding Setup
         Attempts.
       responses:
-        '200':
-          $ref: '#/components/responses/Setup-Attempts'
+        "200":
+          $ref: "#/components/responses/Setup-Attempts"
   /v1/sessions/authentication/linked:
     parameters: []
     post:
@@ -179,10 +179,10 @@ paths:
         A Linked Authentication Session can be used to authenticate a Charge or
         Hold with a `requires_authentication` status.
       requestBody:
-        $ref: '#/components/requestBodies/Create-a-Linked-Authentication-Session'
+        $ref: "#/components/requestBodies/Create-a-Linked-Authentication-Session"
       responses:
-        '200':
-          $ref: '#/components/responses/Authentication-Session'
+        "200":
+          $ref: "#/components/responses/Authentication-Session"
   /v1/sessions/authentication/independent:
     parameters: []
     post:
@@ -200,8 +200,8 @@ paths:
         $ref: >-
           #/components/requestBodies/Create-an-Independent-Authentication-Session
       responses:
-        '200':
-          $ref: '#/components/responses/Authentication-Session'
+        "200":
+          $ref: "#/components/responses/Authentication-Session"
   /v1/attempts/payment/{id}:
     parameters:
       - description: The id of the Payment Session to retrieve.
@@ -225,8 +225,8 @@ paths:
         was returned from a previous request will return the corresponding
         Payment Attempt information.
       responses:
-        '200':
-          $ref: '#/components/responses/Payment-Attempt'
+        "200":
+          $ref: "#/components/responses/Payment-Attempt"
   /v1/attempts/setup/{id}:
     parameters:
       - description: The id of the Setup Attempt to retrieve.
@@ -250,8 +250,8 @@ paths:
         returned from a previous request will return the corresponding Setup
         Attempt information.
       responses:
-        '200':
-          $ref: '#/components/responses/Setup-Attempt'
+        "200":
+          $ref: "#/components/responses/Setup-Attempt"
   /v1/charges:
     parameters: []
     post:
@@ -260,10 +260,10 @@ paths:
       summary: Create a Charge
       operationId: Charge_createCharge
       requestBody:
-        $ref: '#/components/requestBodies/Create-Charge'
+        $ref: "#/components/requestBodies/Create-Charge"
       responses:
-        '200':
-          $ref: '#/components/responses/Charge'
+        "200":
+          $ref: "#/components/responses/Charge"
   /v1/charges/{id}:
     parameters:
       - description: The id of the Charge to retrieve.
@@ -287,8 +287,8 @@ paths:
         returned from a previous request will return the corresponding Charge
         information.
       responses:
-        '200':
-          $ref: '#/components/responses/Charge'
+        "200":
+          $ref: "#/components/responses/Charge"
   /v1/charges/{id}/confirm:
     parameters:
       - description: The id of the Charge to confirm.
@@ -308,8 +308,8 @@ paths:
         Confirms a Charge with status of `requires_confirmation` after
         successful authentication.
       responses:
-        '200':
-          $ref: '#/components/responses/Charge'
+        "200":
+          $ref: "#/components/responses/Charge"
   /v1/refunds:
     parameters: []
     post:
@@ -332,10 +332,10 @@ paths:
 
         You can do so multiple times, until the entire charge has been refunded.
       requestBody:
-        $ref: '#/components/requestBodies/Create-Refund'
+        $ref: "#/components/requestBodies/Create-Refund"
       responses:
-        '200':
-          $ref: '#/components/responses/Refund'
+        "200":
+          $ref: "#/components/responses/Refund"
   /v1/refunds/{id}:
     parameters:
       - description: The id of the Refund to retrieve.
@@ -359,8 +359,8 @@ paths:
         returned from a previous request will return the corresponding Refund
         information.
       responses:
-        '200':
-          $ref: '#/components/responses/Refund'
+        "200":
+          $ref: "#/components/responses/Refund"
   /v1/holds:
     parameters: []
     post:
@@ -369,10 +369,10 @@ paths:
       summary: Create a Hold
       operationId: Hold_createHold
       requestBody:
-        $ref: '#/components/requestBodies/Create-Hold'
+        $ref: "#/components/requestBodies/Create-Hold"
       responses:
-        '200':
-          $ref: '#/components/responses/Hold'
+        "200":
+          $ref: "#/components/responses/Hold"
   /v1/holds/{id}:
     parameters:
       - description: The id of the Hold to retrieve.
@@ -395,8 +395,8 @@ paths:
         Querying the API with the unique identifier of a Hold that was returned
         from a previous request will return the corresponding Hold information.
       responses:
-        '200':
-          $ref: '#/components/responses/Hold'
+        "200":
+          $ref: "#/components/responses/Hold"
   /v1/holds/{id}/capture:
     parameters:
       - description: The identifier of the Hold to capture.
@@ -424,10 +424,10 @@ paths:
         The API will create a Charge from the referenced Hold and response with
         the created Charge information.
       requestBody:
-        $ref: '#/components/requestBodies/Capture-a-Hold'
+        $ref: "#/components/requestBodies/Capture-a-Hold"
       responses:
-        '200':
-          $ref: '#/components/responses/Charge'
+        "200":
+          $ref: "#/components/responses/Charge"
   /v1/holds/{id}/cancel:
     parameters:
       - description: The identifier of the Hold to cancel.
@@ -450,11 +450,11 @@ paths:
         A Hold object can be canceled when it is in the status of:
         `requires_capture`. Once canceled, the remaining `amount_capturable`
         will automatically be released and no additional charges can be created
-        from the Hold. 
+        from the Hold.
       parameters: []
       responses:
-        '200':
-          $ref: '#/components/responses/Canceled-Hold'
+        "200":
+          $ref: "#/components/responses/Canceled-Hold"
   /v1/holds/{id}/confirm:
     parameters:
       - description: The id of the Charge to confirm.
@@ -474,8 +474,8 @@ paths:
         Confirms a Hold with status of `requires_confirmation` after successful
         authentication.
       responses:
-        '200':
-          $ref: '#/components/responses/Hold'
+        "200":
+          $ref: "#/components/responses/Hold"
   /v1/payouts:
     parameters: []
     post:
@@ -484,10 +484,10 @@ paths:
       summary: Create a Payout
       operationId: Payout_createPayout
       requestBody:
-        $ref: '#/components/requestBodies/Create-Payout'
+        $ref: "#/components/requestBodies/Create-Payout"
       responses:
-        '200':
-          $ref: '#/components/responses/Payout'
+        "200":
+          $ref: "#/components/responses/Payout"
   /v1/payouts/{id}:
     parameters:
       - description: The id of the Payout to retrieve.
@@ -510,8 +510,8 @@ paths:
         returned from a previous request will return the corresponding Payout
         information.
       responses:
-        '200':
-          $ref: '#/components/responses/Payout'
+        "200":
+          $ref: "#/components/responses/Payout"
   /v1/payment_methods:
     post:
       tags:
@@ -519,10 +519,10 @@ paths:
       summary: Create a Payment Method
       operationId: PaymentMethod_createPaymentMethod
       requestBody:
-        $ref: '#/components/requestBodies/Create-Payment-Method'
+        $ref: "#/components/requestBodies/Create-Payment-Method"
       responses:
-        '200':
-          $ref: '#/components/responses/Payment-Method'
+        "200":
+          $ref: "#/components/responses/Payment-Method"
   /v1/payment_methods/{id}:
     parameters:
       - description: The id of the Payment Method.
@@ -545,8 +545,8 @@ paths:
         returned from a previous request will return the corresponding Payment
         Method information.
       responses:
-        '200':
-          $ref: '#/components/responses/Payment-Method'
+        "200":
+          $ref: "#/components/responses/Payment-Method"
     delete:
       tags:
         - PaymentMethod
@@ -554,7 +554,7 @@ paths:
       operationId: PaymentMethod_deleteMethod
       description: Delete a Payment Method.
       responses:
-        '200':
+        "200":
           description: OK
   /v1/customers/{reference_id}/payment_methods:
     parameters:
@@ -577,8 +577,8 @@ paths:
         Querying the API with the reference id of a customer will return the
         corresponding Payment Method information.
       responses:
-        '200':
-          $ref: '#/components/responses/Payment-Methods'
+        "200":
+          $ref: "#/components/responses/Payment-Methods"
   /v1/customers:
     post:
       tags:
@@ -586,10 +586,10 @@ paths:
       summary: Create a Customer
       operationId: Customer_createCustomer
       requestBody:
-        $ref: '#/components/requestBodies/Create-Customer'
+        $ref: "#/components/requestBodies/Create-Customer"
       responses:
-        '200':
-          $ref: '#/components/responses/Customer'
+        "200":
+          $ref: "#/components/responses/Customer"
   /v1/customers/{reference_id}:
     parameters:
       - description: The reference id of the Customer.
@@ -611,8 +611,8 @@ paths:
         Querying the API with the reference id of a customer will return the
         corresponding Customer information.
       responses:
-        '200':
-          $ref: '#/components/responses/Customer'
+        "200":
+          $ref: "#/components/responses/Customer"
     delete:
       tags:
         - Customer
@@ -620,7 +620,7 @@ paths:
       operationId: Customer_deleteCustomer
       description: Delete a Customer
       responses:
-        '200':
+        "200":
           description: OK
     put:
       tags:
@@ -632,10 +632,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CustomerUpdateDetailsRequest'
+              $ref: "#/components/schemas/CustomerUpdateDetailsRequest"
       responses:
-        '200':
-          $ref: '#/components/responses/Customer'
+        "200":
+          $ref: "#/components/responses/Customer"
 components:
   responses:
     Setup-Attempt:
@@ -643,13 +643,13 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Setup-Attempt'
+            $ref: "#/components/schemas/Setup-Attempt"
           examples:
             Example response:
               value:
                 id: ssatt_217940156986951680_0X
                 resource: setup_attempt
-                created: '2022-09-07T13:40:41.751Z'
+                created: "2022-09-07T13:40:41.751Z"
                 customer: cust_222712682678060032
                 customer_reference_id: 927071e4-464c-4f5d-a079-4aa097f922ca
                 failure_code: null
@@ -659,15 +659,15 @@ components:
                 payment_method_details:
                   type: card
                   card:
-                    bin: '424242'
+                    bin: "424242"
                     brand: visa
                     country: US
-                    exp_month: '11'
-                    exp_year: '25'
+                    exp_month: "11"
+                    exp_year: "25"
                     fingerprint: >-
                       c5338f1c33863cce001e80648ea80df1068ed5f94dbb4bfb561ed8da8988fe0a
                     funding: credit
-                    last4: '4242'
+                    last4: "4242"
                     network: visa
                     security_checks:
                       address_line1_check: unavailable
@@ -684,16 +684,16 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Payment-Attempt'
+            $ref: "#/components/schemas/Payment-Attempt"
           examples:
             Example response:
               value:
                 id: psatt_217940156986951680_0X
                 resource: payment_attempt
                 amount: 10000
-                amount_human_readable: '100.00'
+                amount_human_readable: "100.00"
                 currency: usd
-                created: '2022-09-07T13:40:41.751Z'
+                created: "2022-09-07T13:40:41.751Z"
                 customer: cust_222712682678060032
                 customer_reference_id: 927071e4-464c-4f5d-a079-4aa097f922ca
                 failure_code: null
@@ -703,15 +703,15 @@ components:
                 payment_method_details:
                   type: card
                   card:
-                    bin: '424242'
+                    bin: "424242"
                     brand: visa
                     country: US
-                    exp_month: '11'
-                    exp_year: '25'
+                    exp_month: "11"
+                    exp_year: "25"
                     fingerprint: >-
                       c5338f1c33863cce001e80648ea80df1068ed5f94dbb4bfb561ed8da8988fe0a
                     funding: credit
-                    last4: '4242'
+                    last4: "4242"
                     network: visa
                     security_checks:
                       address_line1_check: unavailable
@@ -728,7 +728,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Payment-Session'
+            $ref: "#/components/schemas/Payment-Session"
           examples:
             Example response:
               value:
@@ -736,11 +736,11 @@ components:
                 id: ps_217940156986951680X
                 resource: payment_session
                 amount: 10000
-                amount_human_readable: '''100.00'''
+                amount_human_readable: "'100.00'"
                 capture: true
                 charge: null
                 currency: usd
-                created: '2022-09-07T13:40:41.751Z'
+                created: "2022-09-07T13:40:41.751Z"
                 setup_future_usage: null
                 customer: cust_222712682678060032
                 customer_reference_id: 927071e4-464c-4f5d-a079-4aa097f922ca
@@ -782,14 +782,14 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Setup-Session'
+            $ref: "#/components/schemas/Setup-Session"
           examples:
             Example response:
               value:
                 id: ss_217940156986951680X
                 resource: setup_session
                 currency: usd
-                created: '2022-09-07T13:40:41.751Z'
+                created: "2022-09-07T13:40:41.751Z"
                 customer: cust_222712682678060032
                 customer_reference_id: 927071e4-464c-4f5d-a079-4aa097f922ca
                 client_secret: >-
@@ -826,7 +826,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Charge'
+            $ref: "#/components/schemas/Charge"
           examples:
             Example response:
               value:
@@ -834,11 +834,11 @@ components:
                 id: chrg_146231656762572800X
                 resource: charge
                 amount: 10000
-                amount_human_readable: '100.00'
+                amount_human_readable: "100.00"
                 amount_refunded: 0
                 billing_details: null
                 calculated_statement_descriptor: PAYCOM * TEST
-                created: '2022-09-07T13:40:41.751Z'
+                created: "2022-09-07T13:40:41.751Z"
                 currency: usd
                 customer: cust_199440887619523584
                 customer_reference_id: 2s68c46d-8d15-4c2a-ae4c-30ec77abed9f
@@ -853,15 +853,15 @@ components:
                 payment_method_details:
                   type: card
                   card:
-                    bin: '424242'
+                    bin: "424242"
                     brand: visa
                     country: US
-                    exp_month: '11'
-                    exp_year: '25'
+                    exp_month: "11"
+                    exp_year: "25"
                     fingerprint: >-
                       c5338f1c33863cce001e80648ea80df1068ed5f94dbb4bfb561ed8da8988fe0a
                     funding: credit
-                    last4: '4242'
+                    last4: "4242"
                     network: visa
                     security_checks:
                       address_line1_check: unavailable
@@ -905,7 +905,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Hold'
+            $ref: "#/components/schemas/Hold"
           examples:
             Example response:
               value:
@@ -913,10 +913,10 @@ components:
                 id: hld_158938670341035008X
                 resource: hold
                 amount: 10000
-                amount_human_readable: '100.00'
+                amount_human_readable: "100.00"
                 amount_capturable: 10000
                 billing_details: null
-                created: '2022-09-07T13:40:41.751Z'
+                created: "2022-09-07T13:40:41.751Z"
                 currency: usd
                 canceled: false
                 canceled_at: null
@@ -933,15 +933,15 @@ components:
                 payment_method_details:
                   type: card
                   card:
-                    bin: '424242'
+                    bin: "424242"
                     brand: visa
                     country: US
-                    exp_month: '11'
-                    exp_year: '25'
+                    exp_month: "11"
+                    exp_year: "25"
                     fingerprint: >-
                       c5338f1c33863cce001e80648ea80df1068ed5f94dbb4bfb561ed8da8988fe0a
                     funding: credit
-                    last4: '4242'
+                    last4: "4242"
                     network: visa
                     security_checks:
                       address_line1_check: unavailable
@@ -978,7 +978,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Hold'
+            $ref: "#/components/schemas/Hold"
           examples:
             Example response:
               value:
@@ -986,10 +986,10 @@ components:
                 id: hld_158938670341035008X
                 resource: hold
                 amount: 10000
-                amount_human_readable: '100.00'
+                amount_human_readable: "100.00"
                 amount_capturable: 0
                 billing_details: null
-                created: '2022-09-07T13:40:41.751Z'
+                created: "2022-09-07T13:40:41.751Z"
                 currency: usd
                 canceled: true
                 canceled_at: 1662573940676
@@ -1006,15 +1006,15 @@ components:
                 payment_method_details:
                   type: card
                   card:
-                    bin: '424242'
+                    bin: "424242"
                     brand: visa
                     country: US
-                    exp_month: '11'
-                    exp_year: '25'
+                    exp_month: "11"
+                    exp_year: "25"
                     fingerprint: >-
                       c5338f1c33863cce001e80648ea80df1068ed5f94dbb4bfb561ed8da8988fe0a
                     funding: credit
-                    last4: '4242'
+                    last4: "4242"
                     network: visa
                     security_checks:
                       address_line1_check: unavailable
@@ -1032,7 +1032,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Payout'
+            $ref: "#/components/schemas/Payout"
           examples:
             Example response:
               value:
@@ -1040,10 +1040,10 @@ components:
                 id: po_220442125165133824X
                 resource: payout
                 amount: 10000
-                amount_human_readable: '100.00'
+                amount_human_readable: "100.00"
                 billing_details: null
                 calculated_statement_descriptor: PAYCOM * TEST
-                created: '2022-09-07T13:40:41.751Z'
+                created: "2022-09-07T13:40:41.751Z"
                 currency: usd
                 customer: cust_199440887619523584
                 customer_reference_id: 2s68c46d-8d15-4c2a-ae4c-30ec77abed9f
@@ -1054,15 +1054,15 @@ components:
                 payment_method_details:
                   type: card
                   card:
-                    bin: '424242'
+                    bin: "424242"
                     brand: visa
                     country: US
-                    exp_month: '11'
-                    exp_year: '25'
+                    exp_month: "11"
+                    exp_year: "25"
                     fingerprint: >-
                       c5338f1c33863cce001e80648ea80df1068ed5f94dbb4bfb561ed8da8988fe0a
                     funding: credit
-                    last4: '4242'
+                    last4: "4242"
                     network: visa
                     security_checks:
                       address_line1_check: unavailable
@@ -1079,16 +1079,16 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Refund'
+            $ref: "#/components/schemas/Refund"
           examples:
             Example response:
               value:
                 id: rfnd_179937907841176576X
                 resource: refund
                 amount: 10000
-                amount_human_readable: '100.00'
+                amount_human_readable: "100.00"
                 charge: chrg_146231656762572800
-                created: '2022-09-07T13:40:41.751Z'
+                created: "2022-09-07T13:40:41.751Z"
                 currency: usd
                 customer: cust_199440887619523584
                 customer_reference_id: 69727f0f-8865-4d20-8f63-4ff4fafdacd8
@@ -1100,7 +1100,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Payment-Session'
+            $ref: "#/components/schemas/Payment-Session"
           examples:
             Example response:
               value:
@@ -1108,11 +1108,11 @@ components:
                 id: ps_217940156986951680X
                 resource: payment_session
                 amount: 10000
-                amount_human_readable: '100.00'
+                amount_human_readable: "100.00"
                 capture: true
                 charge: null
                 currency: usd
-                created: '2022-09-07T13:40:41.751Z'
+                created: "2022-09-07T13:40:41.751Z"
                 setup_future_usage: null
                 customer: cust_222712682678060032
                 customer_reference_id: 927071e4-464c-4f5d-a079-4aa097f922ca
@@ -1154,14 +1154,14 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Setup-Session'
+            $ref: "#/components/schemas/Setup-Session"
           examples:
             Example response:
               value:
                 id: ss_217940156986951680X
                 resource: setup_session
                 currency: usd
-                created: '2022-09-07T13:40:41.751Z'
+                created: "2022-09-07T13:40:41.751Z"
                 customer: cust_222712682678060032
                 customer_reference_id: 927071e4-464c-4f5d-a079-4aa097f922ca
                 client_secret: >-
@@ -1196,16 +1196,16 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/SessionGetAttemptsResponse'
+            $ref: "#/components/schemas/SessionGetAttemptsResponse"
           examples:
             Example response:
               value:
                 - id: psatt_217940156986951680_0X
                   resource: payment_attempt
                   amount: 10000
-                  amount_human_readable: '100.00'
+                  amount_human_readable: "100.00"
                   currency: usd
-                  created: '2022-09-07T13:40:41.751Z'
+                  created: "2022-09-07T13:40:41.751Z"
                   customer: cust_222712682678060032
                   customer_reference_id: 927071e4-464c-4f5d-a079-4aa097f922ca
                   failure_code: null
@@ -1215,15 +1215,15 @@ components:
                   payment_method_details:
                     type: card
                     card:
-                      bin: '424242'
+                      bin: "424242"
                       brand: visa
                       country: US
-                      exp_month: '11'
-                      exp_year: '25'
+                      exp_month: "11"
+                      exp_year: "25"
                       fingerprint: >-
                         c5338f1c33863cce001e80648ea80df1068ed5f94dbb4bfb561ed8da8988fe0a
                       funding: credit
-                      last4: '4242'
+                      last4: "4242"
                       network: visa
                       security_checks:
                         address_line1_check: unavailable
@@ -1240,13 +1240,13 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/SessionGetSessionAttemptsResponse'
+            $ref: "#/components/schemas/SessionGetSessionAttemptsResponse"
           examples:
             Example resonse:
               value:
                 - id: ssatt_217940156986951680_0X
                   resource: setup_attempt
-                  created: '2022-09-07T13:40:41.751Z'
+                  created: "2022-09-07T13:40:41.751Z"
                   customer: cust_222712682678060032
                   customer_reference_id: 927071e4-464c-4f5d-a079-4aa097f922ca
                   failure_code: null
@@ -1256,15 +1256,15 @@ components:
                   payment_method_details:
                     type: card
                     card:
-                      bin: '424242'
+                      bin: "424242"
                       brand: visa
                       country: US
-                      exp_month: '11'
-                      exp_year: '25'
+                      exp_month: "11"
+                      exp_year: "25"
                       fingerprint: >-
                         c5338f1c33863cce001e80648ea80df1068ed5f94dbb4bfb561ed8da8988fe0a
                       funding: credit
-                      last4: '4242'
+                      last4: "4242"
                       network: visa
                       security_checks:
                         address_line1_check: unavailable
@@ -1281,7 +1281,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Authentication-Session'
+            $ref: "#/components/schemas/Authentication-Session"
           examples:
             Example response:
               value:
@@ -1289,13 +1289,13 @@ components:
                 id: sca_217940156986951680X
                 resource: authentication_session
                 amount: 10000
-                amount_human_readable: '100.00'
+                amount_human_readable: "100.00"
                 billing_details: null
                 cavv: null
                 confirm: true
                 charge: null
                 currency: usd
-                created: '2022-09-07T13:40:41.751Z'
+                created: "2022-09-07T13:40:41.751Z"
                 customer: cust_222712682678060032
                 customer_reference_id: 927071e4-464c-4f5d-a079-4aa097f922ca
                 client_secret: >-
@@ -1316,20 +1316,20 @@ components:
                 xid: null
         application/xml:
           schema:
-            $ref: '#/components/schemas/SessionCreateLinkedResponse'
+            $ref: "#/components/schemas/SessionCreateLinkedResponse"
     Customer:
       description: Example response
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Customer'
+            $ref: "#/components/schemas/Customer"
           examples:
             Example response:
               value:
                 id: cust_202779025452569600X
                 resource: customer
                 address: null
-                created: '2022-09-07T13:40:41.751Z'
+                created: "2022-09-07T13:40:41.751Z"
                 default_source: pm_card_222712682678060032
                 email: null
                 name: John Doe
@@ -1342,7 +1342,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Payment-Method'
+            $ref: "#/components/schemas/Payment-Method"
           examples:
             Example response:
               value:
@@ -1350,19 +1350,19 @@ components:
                 resource: payment_method
                 billing_details: null
                 card:
-                  bin: '424242'
+                  bin: "424242"
                   brand: visa
                   country: US
-                  exp_month: '11'
-                  exp_year: '25'
+                  exp_month: "11"
+                  exp_year: "25"
                   fingerprint: >-
                     c5338f1c33863cce001e80648ea80df1068ed5f94dbb4bfb561ed8da8988fe0a
                   funding: credit
-                  last4: '4242'
+                  last4: "4242"
                   network: visa
                   token: tok_card_202779025452569600
                   wallet: null
-                created: '2022-09-07T13:40:41.751Z'
+                created: "2022-09-07T13:40:41.751Z"
                 customer: cust_222712682678060032
                 customer_reference_id: 927071e4-464c-4f5d-a079-4aa097f922ca
                 metadata: {}
@@ -1372,7 +1372,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/CustomerGetPaymentMethodsResponse'
+            $ref: "#/components/schemas/CustomerGetPaymentMethodsResponse"
           examples:
             Example response:
               value:
@@ -1380,19 +1380,19 @@ components:
                   resource: payment_method
                   billing_details: null
                   card:
-                    bin: '424242'
+                    bin: "424242"
                     brand: visa
                     country: US
-                    exp_month: '11'
-                    exp_year: '25'
+                    exp_month: "11"
+                    exp_year: "25"
                     fingerprint: >-
                       c5338f1c33863cce001e80648ea80df1068ed5f94dbb4bfb561ed8da8988fe0a
                     funding: credit
-                    last4: '4242'
+                    last4: "4242"
                     network: visa
                     token: tok_card_202779025452569600
                     wallet: null
-                  created: '2022-09-07T13:40:41.751Z'
+                  created: "2022-09-07T13:40:41.751Z"
                   customer: cust_222712682678060032
                   customer_reference_id: 927071e4-464c-4f5d-a079-4aa097f922ca
                   metadata: {}
@@ -1417,7 +1417,7 @@ components:
           description: >-
             Billing information associated with the customer at the time of the
             Setup Session.
-          $ref: '#/components/schemas/Billing-Details'
+          $ref: "#/components/schemas/Billing-Details"
         created:
           description: Time at which the resource was created. ISO String format.
           type: string
@@ -1450,10 +1450,10 @@ components:
           type: string
         payment_method_details:
           description: Details about the payment method.
-          $ref: '#/components/schemas/Payment-Method-Details'
+          $ref: "#/components/schemas/Payment-Method-Details"
         payment_method_options:
           description: Payment method specific configurations.
-          $ref: '#/components/schemas/Payment-Method-Options'
+          $ref: "#/components/schemas/Payment-Method-Options"
         payment_method_types:
           description: >-
             The list of payment method types that this Setup Session is allowed
@@ -1491,7 +1491,7 @@ components:
         id: ss_217940156986951680
         resource: setup_session
         currency: usd
-        created: '2022-09-07T13:40:41.751Z'
+        created: "2022-09-07T13:40:41.751Z"
         customer: cust_222712682678060032
         customer_reference_id: 927071e4-464c-4f5d-a079-4aa097f922ca
         client_secret: >-
@@ -1527,7 +1527,7 @@ components:
         - id: ss_217940156986951680
           resource: setup_session
           currency: usd
-          created: '2022-09-07T13:40:41.751Z'
+          created: "2022-09-07T13:40:41.751Z"
           customer: cust_222712682678060032
           customer_reference_id: 927071e4-464c-4f5d-a079-4aa097f922ca
           client_secret: >-
@@ -1581,7 +1581,7 @@ components:
           description: >-
             Billing information associated with the customer at the time of the
             Authentication Session.
-          $ref: '#/components/schemas/Billing-Details'
+          $ref: "#/components/schemas/Billing-Details"
         cavv:
           description: >-
             Card authentication verification value, provided by the 3D Secure
@@ -1644,13 +1644,13 @@ components:
           type: string
         payment_method_details:
           description: Details about the payment method.
-          $ref: '#/components/schemas/Payment-Method-Details'
+          $ref: "#/components/schemas/Payment-Method-Details"
         return_url:
           description: A URL to return to after performing the authentication.
           type: string
         shipping:
           description: Shipping information of the payment.
-          $ref: '#/components/schemas/Shipping-Details'
+          $ref: "#/components/schemas/Shipping-Details"
         reference:
           description: A unique string to reference the Authentication Session.
           type: string
@@ -1674,13 +1674,13 @@ components:
         id: sca_217940156986951680
         resource: authentication_session
         amount: 10000
-        amount_human_readable: '100.00'
+        amount_human_readable: "100.00"
         billing_details: null
         cavv: null
         confirm: true
         charge: null
         currency: usd
-        created: '2022-09-07T13:40:41.751Z'
+        created: "2022-09-07T13:40:41.751Z"
         customer: cust_222712682678060032
         customer_reference_id: 927071e4-464c-4f5d-a079-4aa097f922ca
         client_secret: >-
@@ -1704,13 +1704,13 @@ components:
           id: sca_217940156986951680
           resource: authentication_session
           amount: 10000
-          amount_human_readable: '100.00'
+          amount_human_readable: "100.00"
           billing_details: null
           cavv: null
           confirm: true
           charge: null
           currency: usd
-          created: '2022-09-07T13:40:41.751Z'
+          created: "2022-09-07T13:40:41.751Z"
           customer: cust_222712682678060032
           customer_reference_id: 927071e4-464c-4f5d-a079-4aa097f922ca
           client_secret: >-
@@ -1754,7 +1754,7 @@ components:
           description: >-
             Billing information associated with the customer at the time of the
             Payment Session.
-          $ref: '#/components/schemas/Billing-Details'
+          $ref: "#/components/schemas/Billing-Details"
         capture:
           description: >-
             Whether to immediately capture the payment and create a charge.
@@ -1826,10 +1826,10 @@ components:
           type: string
         payment_method_details:
           description: Details about the payment method.
-          $ref: '#/components/schemas/Payment-Method-Details'
+          $ref: "#/components/schemas/Payment-Method-Details"
         payment_method_options:
           description: Specific payment method configurations.
-          $ref: '#/components/schemas/Payment-Method-Options'
+          $ref: "#/components/schemas/Payment-Method-Options"
         payment_method_types:
           description: >-
             The list of payment method types that this Payment Session is
@@ -1856,7 +1856,7 @@ components:
           type: string
         shipping:
           description: Shipping information of the payment.
-          $ref: '#/components/schemas/Shipping-Details'
+          $ref: "#/components/schemas/Shipping-Details"
         statement_descriptor_suffix:
           description: >-
             Provides information about the payment that customers can see on
@@ -1877,11 +1877,11 @@ components:
         id: ps_217940156986951680
         resource: payment_session
         amount: 10000
-        amount_human_readable: '100.00'
+        amount_human_readable: "100.00"
         capture: true
         charge: null
         currency: usd
-        created: '2022-09-07T13:40:41.751Z'
+        created: "2022-09-07T13:40:41.751Z"
         setup_future_usage: null
         customer: cust_222712682678060032
         customer_reference_id: 927071e4-464c-4f5d-a079-4aa097f922ca
@@ -1927,11 +1927,11 @@ components:
           id: ps_217940156986951680
           resource: payment_session
           amount: 10000
-          amount_human_readable: '100.00'
+          amount_human_readable: "100.00"
           capture: true
           charge: null
           currency: usd
-          created: '2022-09-07T13:40:41.751Z'
+          created: "2022-09-07T13:40:41.751Z"
           setup_future_usage: null
           customer: cust_222712682678060032
           customer_reference_id: 927071e4-464c-4f5d-a079-4aa097f922ca
@@ -1973,7 +1973,7 @@ components:
           statement_descriptor_suffix: TEST
           status: open
     Address:
-      description: ''
+      description: ""
       type: object
       x-internal: false
       properties:
@@ -2009,7 +2009,7 @@ components:
       properties:
         address:
           description: Billing Address.
-          $ref: '#/components/schemas/Address'
+          $ref: "#/components/schemas/Address"
         name:
           description: Full name.
           type: string
@@ -2030,7 +2030,7 @@ components:
       properties:
         address:
           description: Shipping address.
-          $ref: '#/components/schemas/Address'
+          $ref: "#/components/schemas/Address"
         name:
           description: Full name.
           type: string
@@ -2044,7 +2044,7 @@ components:
         id: aqwewbm2iqxee
     Source-Data:
       title: Source-Data
-      description: ''
+      description: ""
       x-stoplight:
         id: okj9x63tjeyw9
       type: object
@@ -2060,7 +2060,7 @@ components:
             - google_pay
         card:
           description: Raw details of a card payment method
-          $ref: '#/components/schemas/Card-Source-Details'
+          $ref: "#/components/schemas/Card-Source-Details"
         google_pay:
           description: The payload that was retrieved from the Google Pay response
           type: string
@@ -2138,12 +2138,12 @@ components:
           description: >-
             Billing address associated with the customer at the time of the
             payment.
-          $ref: '#/components/schemas/Address'
+          $ref: "#/components/schemas/Address"
         three_ds:
           description: >-
             Required information to process a payment that has been 3DS
             authenticated using a Third Party provider.
-          $ref: '#/components/schemas/Three-Ds-Raw'
+          $ref: "#/components/schemas/Three-Ds-Raw"
       required:
         - number
         - expiry_month
@@ -2217,7 +2217,7 @@ components:
           description: >-
             Billing address associated with the customer at the time of the
             payment.
-          $ref: '#/components/schemas/Address'
+          $ref: "#/components/schemas/Address"
       required:
         - number
         - expiry_month
@@ -2225,7 +2225,7 @@ components:
         - cvc
     Destination-Data:
       title: Destination-Data
-      description: ''
+      description: ""
       x-stoplight:
         id: okj9x63tjeyw9
       type: object
@@ -2240,7 +2240,7 @@ components:
             - card
         card:
           description: Raw details of a card payment method
-          $ref: '#/components/schemas/Card-Destination-Details'
+          $ref: "#/components/schemas/Card-Destination-Details"
     Customer:
       type: object
       properties:
@@ -2252,7 +2252,7 @@ components:
           type: string
         address:
           description: Billing address associated with the Payment Method.
-          $ref: '#/components/schemas/Address'
+          $ref: "#/components/schemas/Address"
         created:
           description: Time at which the resource was created. ISO String format.
           type: string
@@ -2280,12 +2280,12 @@ components:
           type: object
         shipping:
           description: Shipping information of the customer.
-          $ref: '#/components/schemas/Shipping-Details'
+          $ref: "#/components/schemas/Shipping-Details"
       example:
         id: cust_202779025452569600
         resource: customer
         address: null
-        created: '2022-09-07T13:40:41.751Z'
+        created: "2022-09-07T13:40:41.751Z"
         default_source: pm_card_222712682678060032
         email: null
         name: John Doe
@@ -2297,7 +2297,7 @@ components:
         - id: cust_202779025452569600
           resource: customer
           address: null
-          created: '2022-09-07T13:40:41.751Z'
+          created: "2022-09-07T13:40:41.751Z"
           default_source: pm_card_222712682678060032
           email: null
           name: John Doe
@@ -2333,7 +2333,7 @@ components:
           description: >-
             Billing information associated with the customer at the time of the
             Charge.
-          $ref: '#/components/schemas/Billing-Details'
+          $ref: "#/components/schemas/Billing-Details"
         calculated_statement_descriptor:
           description: >-
             The full statement descriptor that is displayed on your customers’
@@ -2380,10 +2380,10 @@ components:
           type: string
         payment_method_details:
           description: Details about the payment method.
-          $ref: '#/components/schemas/Payment-Method-Details'
+          $ref: "#/components/schemas/Payment-Method-Details"
         payment_method_options:
           description: Payment method specific configurations.
-          $ref: '#/components/schemas/Payment-Method-Options'
+          $ref: "#/components/schemas/Payment-Method-Options"
         refunded:
           description: >-
             Indicates whether the Charge was refunded, will only be `true` if
@@ -2391,7 +2391,7 @@ components:
           type: boolean
         refunds:
           description: List of all the successful refunds created from the resource.
-          $ref: '#/components/schemas/Refunds'
+          $ref: "#/components/schemas/Refunds"
         reference:
           description: >-
             A unique string to reference the Charge that was entered while
@@ -2400,7 +2400,7 @@ components:
           type: string
         shipping:
           description: Shipping information of the payment.
-          $ref: '#/components/schemas/Shipping-Details'
+          $ref: "#/components/schemas/Shipping-Details"
         statement_descriptor_suffix:
           description: >-
             Provides information about the payment that customers can see on
@@ -2423,11 +2423,11 @@ components:
         id: chrg_146231656762572800
         resource: charge
         amount: 10000
-        amount_human_readable: '100.00'
+        amount_human_readable: "100.00"
         amount_refunded: 0
         billing_details: null
         calculated_statement_descriptor: PAYCOM * TEST
-        created: '2022-09-07T13:40:41.751Z'
+        created: "2022-09-07T13:40:41.751Z"
         currency: usd
         customer: cust_199440887619523584
         customer_reference_id: 2s68c46d-8d15-4c2a-ae4c-30ec77abed9f
@@ -2442,14 +2442,14 @@ components:
         payment_method_details:
           type: card
           card:
-            bin: '424242'
+            bin: "424242"
             brand: visa
             country: US
-            exp_month: '11'
-            exp_year: '25'
+            exp_month: "11"
+            exp_year: "25"
             fingerprint: c5338f1c33863cce001e80648ea80df1068ed5f94dbb4bfb561ed8da8988fe0a
             funding: credit
-            last4: '4242'
+            last4: "4242"
             network: visa
             security_checks:
               address_line1_check: unavailable
@@ -2490,11 +2490,11 @@ components:
           id: chrg_146231656762572800
           resource: charge
           amount: 10000
-          amount_human_readable: '100.00'
+          amount_human_readable: "100.00"
           amount_refunded: 0
           billing_details: null
           calculated_statement_descriptor: PAYCOM * TEST
-          created: '2022-09-07T13:40:41.751Z'
+          created: "2022-09-07T13:40:41.751Z"
           currency: usd
           customer: cust_199440887619523584
           customer_reference_id: 2s68c46d-8d15-4c2a-ae4c-30ec77abed9f
@@ -2509,14 +2509,14 @@ components:
           payment_method_details:
             type: card
             card:
-              bin: '424242'
+              bin: "424242"
               brand: visa
               country: US
-              exp_month: '11'
-              exp_year: '25'
+              exp_month: "11"
+              exp_year: "25"
               fingerprint: c5338f1c33863cce001e80648ea80df1068ed5f94dbb4bfb561ed8da8988fe0a
               funding: credit
-              last4: '4242'
+              last4: "4242"
               network: visa
               security_checks:
                 address_line1_check: unavailable
@@ -2553,8 +2553,8 @@ components:
           statement_descriptor_suffix: TEST
           status: succeeded
     Charges:
-      title: ''
-      description: ''
+      title: ""
+      description: ""
       type: object
       properties:
         data:
@@ -2572,8 +2572,8 @@ components:
         - data: []
           url: string
     Refunds:
-      title: ''
-      description: ''
+      title: ""
+      description: ""
       type: object
       properties:
         data:
@@ -2620,7 +2620,7 @@ components:
           description: >-
             Billing information associated with the customer at the time of the
             Hold.
-          $ref: '#/components/schemas/Billing-Details'
+          $ref: "#/components/schemas/Billing-Details"
         created:
           description: Time at which the resource was created. ISO String format.
           type: string
@@ -2645,7 +2645,7 @@ components:
             - requested_by_merchant
         charges:
           description: List of all the successful charges created from the resource.
-          $ref: '#/components/schemas/Charges'
+          $ref: "#/components/schemas/Charges"
         customer:
           description: ID of the customer this Hold is for if one exists.
           type: string
@@ -2669,10 +2669,10 @@ components:
           type: string
         payment_method_details:
           description: Details about the payment method.
-          $ref: '#/components/schemas/Payment-Method-Details'
+          $ref: "#/components/schemas/Payment-Method-Details"
         payment_method_options:
           description: Payment method specific configurations.
-          $ref: '#/components/schemas/Payment-Method-Options'
+          $ref: "#/components/schemas/Payment-Method-Options"
         reference:
           description: >-
             A unique string to reference the Hold that was entered while
@@ -2681,7 +2681,7 @@ components:
           type: string
         shipping:
           description: Shipping information of the payment.
-          $ref: '#/components/schemas/Shipping-Details'
+          $ref: "#/components/schemas/Shipping-Details"
         statement_descriptor_suffix:
           description: >-
             Provides information about the payment that customers can see on
@@ -2704,10 +2704,10 @@ components:
         id: hld_158938670341035008
         resource: hold
         amount: 10000
-        amount_human_readable: '100.00'
+        amount_human_readable: "100.00"
         amount_capturable: 10000
         billing_details: null
-        created: '2022-09-07T13:40:41.751Z'
+        created: "2022-09-07T13:40:41.751Z"
         currency: usd
         canceled: false
         canceled_at: null
@@ -2724,14 +2724,14 @@ components:
         payment_method_details:
           type: card
           card:
-            bin: '424242'
+            bin: "424242"
             brand: visa
             country: US
-            exp_month: '11'
-            exp_year: '25'
+            exp_month: "11"
+            exp_year: "25"
             fingerprint: c5338f1c33863cce001e80648ea80df1068ed5f94dbb4bfb561ed8da8988fe0a
             funding: credit
-            last4: '4242'
+            last4: "4242"
             network: visa
             security_checks:
               address_line1_check: unavailable
@@ -2768,10 +2768,10 @@ components:
           id: hld_158938670341035008
           resource: hold
           amount: 10000
-          amount_human_readable: '100.00'
+          amount_human_readable: "100.00"
           amount_capturable: 10000
           billing_details: null
-          created: '2022-09-07T13:40:41.751Z'
+          created: "2022-09-07T13:40:41.751Z"
           currency: usd
           canceled: false
           canceled_at: null
@@ -2788,14 +2788,14 @@ components:
           payment_method_details:
             type: card
             card:
-              bin: '424242'
+              bin: "424242"
               brand: visa
               country: US
-              exp_month: '11'
-              exp_year: '25'
+              exp_month: "11"
+              exp_year: "25"
               fingerprint: c5338f1c33863cce001e80648ea80df1068ed5f94dbb4bfb561ed8da8988fe0a
               funding: credit
-              last4: '4242'
+              last4: "4242"
               network: visa
               security_checks:
                 address_line1_check: unavailable
@@ -2887,9 +2887,9 @@ components:
         id: rfnd_179937907841176576
         resource: refund
         amount: 10000
-        amount_human_readable: '100.00'
+        amount_human_readable: "100.00"
         charge: chrg_146231656762572800
-        created: '2022-09-07T13:40:41.751Z'
+        created: "2022-09-07T13:40:41.751Z"
         currency: usd
         customer: cust_199440887619523584
         customer_reference_id: 69727f0f-8865-4d20-8f63-4ff4fafdacd8
@@ -2900,9 +2900,9 @@ components:
         - id: rfnd_179937907841176576
           resource: refund
           amount: 10000
-          amount_human_readable: '100.00'
+          amount_human_readable: "100.00"
           charge: chrg_146231656762572800
-          created: '2022-09-07T13:40:41.751Z'
+          created: "2022-09-07T13:40:41.751Z"
           currency: usd
           customer: cust_199440887619523584
           customer_reference_id: 69727f0f-8865-4d20-8f63-4ff4fafdacd8
@@ -3063,12 +3063,12 @@ components:
           type: string
         billing_details:
           description: Billing information associated with the Payment Method.
-          $ref: '#/components/schemas/Billing-Details'
+          $ref: "#/components/schemas/Billing-Details"
         card:
           description: >-
             If this payment method is a card, this object contains info about
             the card.
-          $ref: '#/components/schemas/Card-Details'
+          $ref: "#/components/schemas/Card-Details"
         created:
           description: Time at which the resource was created. ISO String format.
           type: string
@@ -3092,18 +3092,18 @@ components:
         resource: payment_method
         billing_details: null
         card:
-          bin: '424242'
+          bin: "424242"
           brand: visa
           country: US
-          exp_month: '11'
-          exp_year: '25'
+          exp_month: "11"
+          exp_year: "25"
           fingerprint: c5338f1c33863cce001e80648ea80df1068ed5f94dbb4bfb561ed8da8988fe0a
           funding: credit
-          last4: '4242'
+          last4: "4242"
           network: visa
           token: tok_card_202779025452569600
           wallet: null
-        created: '2022-09-07T13:40:41.751Z'
+        created: "2022-09-07T13:40:41.751Z"
         customer: cust_222712682678060032
         customer_reference_id: 927071e4-464c-4f5d-a079-4aa097f922ca
         metadata: {}
@@ -3113,18 +3113,18 @@ components:
           resource: payment_method
           billing_details: null
           card:
-            bin: '424242'
+            bin: "424242"
             brand: visa
             country: US
-            exp_month: '11'
-            exp_year: '25'
+            exp_month: "11"
+            exp_year: "25"
             fingerprint: c5338f1c33863cce001e80648ea80df1068ed5f94dbb4bfb561ed8da8988fe0a
             funding: credit
-            last4: '4242'
+            last4: "4242"
             network: visa
             token: tok_card_202779025452569600
             wallet: null
-          created: '2022-09-07T13:40:41.751Z'
+          created: "2022-09-07T13:40:41.751Z"
           customer: cust_222712682678060032
           customer_reference_id: 927071e4-464c-4f5d-a079-4aa097f922ca
           metadata: {}
@@ -3153,7 +3153,7 @@ components:
           description: >-
             Billing information associated with the customer at the time of the
             Payout.
-          $ref: '#/components/schemas/Billing-Details'
+          $ref: "#/components/schemas/Billing-Details"
         calculated_statement_descriptor:
           description: >-
             The full statement descriptor that is displayed on your customers’
@@ -3186,7 +3186,7 @@ components:
           type: string
         payment_method_details:
           description: Details about the payment method.
-          $ref: '#/components/schemas/Payment-Method-Details'
+          $ref: "#/components/schemas/Payment-Method-Details"
         reference:
           description: >-
             A unique string to reference the Payout that was entered while
@@ -3213,10 +3213,10 @@ components:
         id: po_220442125165133824
         resource: payout
         amount: 10000
-        amount_human_readable: '100.00'
+        amount_human_readable: "100.00"
         billing_details: null
         calculated_statement_descriptor: PAYCOM * TEST
-        created: '2022-09-07T13:40:41.751Z'
+        created: "2022-09-07T13:40:41.751Z"
         currency: usd
         customer: cust_199440887619523584
         customer_reference_id: 2s68c46d-8d15-4c2a-ae4c-30ec77abed9f
@@ -3227,14 +3227,14 @@ components:
         payment_method_details:
           type: card
           card:
-            bin: '424242'
+            bin: "424242"
             brand: visa
             country: US
-            exp_month: '11'
-            exp_year: '25'
+            exp_month: "11"
+            exp_year: "25"
             fingerprint: c5338f1c33863cce001e80648ea80df1068ed5f94dbb4bfb561ed8da8988fe0a
             funding: credit
-            last4: '4242'
+            last4: "4242"
             network: visa
             security_checks:
               address_line1_check: unavailable
@@ -3251,10 +3251,10 @@ components:
           id: po_220442125165133824
           resource: payout
           amount: 10000
-          amount_human_readable: '100.00'
+          amount_human_readable: "100.00"
           billing_details: null
           calculated_statement_descriptor: PAYCOM * TEST
-          created: '2022-09-07T13:40:41.751Z'
+          created: "2022-09-07T13:40:41.751Z"
           currency: usd
           customer: cust_199440887619523584
           customer_reference_id: 2s68c46d-8d15-4c2a-ae4c-30ec77abed9f
@@ -3265,14 +3265,14 @@ components:
           payment_method_details:
             type: card
             card:
-              bin: '424242'
+              bin: "424242"
               brand: visa
               country: US
-              exp_month: '11'
-              exp_year: '25'
+              exp_month: "11"
+              exp_year: "25"
               fingerprint: c5338f1c33863cce001e80648ea80df1068ed5f94dbb4bfb561ed8da8988fe0a
               funding: credit
-              last4: '4242'
+              last4: "4242"
               network: visa
               security_checks:
                 address_line1_check: unavailable
@@ -3292,10 +3292,10 @@ components:
       properties:
         card:
           description: Options for Card payments
-          $ref: '#/components/schemas/Payment-Method-Options-Card'
+          $ref: "#/components/schemas/Payment-Method-Options-Card"
         us_bank_account:
           description: Options for US bank account payments
-          $ref: '#/components/schemas/Payment-Method-Options-US-Bank-Account'
+          $ref: "#/components/schemas/Payment-Method-Options-US-Bank-Account"
       example:
         card:
           accepted_card_brands:
@@ -3364,7 +3364,7 @@ components:
               - credit
               - prepaid
         accepted_card_jurisdictions:
-          description: 'List of payment jurisdictions to accept for this payment '
+          description: "List of payment jurisdictions to accept for this payment "
           type: array
           items:
             type: string
@@ -3382,7 +3382,7 @@ components:
           type: boolean
         security_checks:
           description: Security checks
-          $ref: '#/components/schemas/Payment-Method-Options-Card-Security-Checks'
+          $ref: "#/components/schemas/Payment-Method-Options-Card-Security-Checks"
         request_threed_secure:
           description: Control the 3DS flow for the payment
           type: string
@@ -3424,7 +3424,7 @@ components:
             cvv_check: true
           request_threed_secure: none
     Setup-Attempt:
-      description: ''
+      description: ""
       type: object
       x-internal: false
       properties:
@@ -3461,7 +3461,7 @@ components:
           type: string
         payment_method_details:
           description: Details about the payment method.
-          $ref: '#/components/schemas/Payment-Method-Details'
+          $ref: "#/components/schemas/Payment-Method-Details"
         setup_session:
           description: ID of the Setup Session that created this attempt.
           type: string
@@ -3474,7 +3474,7 @@ components:
       example:
         id: ssatt_217940156986951680_0
         resource: setup_attempt
-        created: '2022-09-07T13:40:41.751Z'
+        created: "2022-09-07T13:40:41.751Z"
         customer: cust_222712682678060032
         customer_reference_id: 927071e4-464c-4f5d-a079-4aa097f922ca
         failure_code: null
@@ -3484,14 +3484,14 @@ components:
         payment_method_details:
           type: card
           card:
-            bin: '424242'
+            bin: "424242"
             brand: visa
             country: US
-            exp_month: '11'
-            exp_year: '25'
+            exp_month: "11"
+            exp_year: "25"
             fingerprint: c5338f1c33863cce001e80648ea80df1068ed5f94dbb4bfb561ed8da8988fe0a
             funding: credit
-            last4: '4242'
+            last4: "4242"
             network: visa
             security_checks:
               address_line1_check: unavailable
@@ -3506,7 +3506,7 @@ components:
       x-examples:
         - id: ssatt_217940156986951680_0
           resource: setup_attempt
-          created: '2022-09-07T13:40:41.751Z'
+          created: "2022-09-07T13:40:41.751Z"
           customer: cust_222712682678060032
           customer_reference_id: 927071e4-464c-4f5d-a079-4aa097f922ca
           failure_code: null
@@ -3516,14 +3516,14 @@ components:
           payment_method_details:
             type: card
             card:
-              bin: '424242'
+              bin: "424242"
               brand: visa
               country: US
-              exp_month: '11'
-              exp_year: '25'
+              exp_month: "11"
+              exp_year: "25"
               fingerprint: c5338f1c33863cce001e80648ea80df1068ed5f94dbb4bfb561ed8da8988fe0a
               funding: credit
-              last4: '4242'
+              last4: "4242"
               network: visa
               security_checks:
                 address_line1_check: unavailable
@@ -3536,7 +3536,7 @@ components:
           setup_session: ss_217940156986951680
           status: succeeded
     Payment-Attempt:
-      description: ''
+      description: ""
       type: object
       x-internal: false
       properties:
@@ -3582,7 +3582,7 @@ components:
           type: string
         payment_method_details:
           description: Details about the payment method.
-          $ref: '#/components/schemas/Payment-Method-Details'
+          $ref: "#/components/schemas/Payment-Method-Details"
         payment_session:
           description: ID of the Payment Session that created this attempt.
           type: string
@@ -3602,9 +3602,9 @@ components:
         id: psatt_217940156986951680_0
         resource: payment_attempt
         amount: 10000
-        amount_human_readable: '100.00'
+        amount_human_readable: "100.00"
         currency: usd
-        created: '2022-09-07T13:40:41.751Z'
+        created: "2022-09-07T13:40:41.751Z"
         customer: cust_222712682678060032
         customer_reference_id: 927071e4-464c-4f5d-a079-4aa097f922ca
         failure_code: null
@@ -3614,14 +3614,14 @@ components:
         payment_method_details:
           type: card
           card:
-            bin: '424242'
+            bin: "424242"
             brand: visa
             country: US
-            exp_month: '11'
-            exp_year: '25'
+            exp_month: "11"
+            exp_year: "25"
             fingerprint: c5338f1c33863cce001e80648ea80df1068ed5f94dbb4bfb561ed8da8988fe0a
             funding: credit
-            last4: '4242'
+            last4: "4242"
             network: visa
             security_checks:
               address_line1_check: unavailable
@@ -3637,9 +3637,9 @@ components:
         - id: psatt_217940156986951680_0
           resource: payment_attempt
           amount: 10000
-          amount_human_readable: '100.00'
+          amount_human_readable: "100.00"
           currency: usd
-          created: '2022-09-07T13:40:41.751Z'
+          created: "2022-09-07T13:40:41.751Z"
           customer: cust_222712682678060032
           customer_reference_id: 927071e4-464c-4f5d-a079-4aa097f922ca
           failure_code: null
@@ -3649,14 +3649,14 @@ components:
           payment_method_details:
             type: card
             card:
-              bin: '424242'
+              bin: "424242"
               brand: visa
               country: US
-              exp_month: '11'
-              exp_year: '25'
+              exp_month: "11"
+              exp_year: "25"
               fingerprint: c5338f1c33863cce001e80648ea80df1068ed5f94dbb4bfb561ed8da8988fe0a
               funding: credit
-              last4: '4242'
+              last4: "4242"
               network: visa
               security_checks:
                 address_line1_check: unavailable
@@ -3741,7 +3741,7 @@ components:
           description: >-
             Billing information associated with the customer at the time of the
             session.
-          $ref: '#/components/schemas/Billing-Details'
+          $ref: "#/components/schemas/Billing-Details"
         capture:
           description: >-
             Whether to immediately capture the payment and create a charge.
@@ -3751,7 +3751,7 @@ components:
           type: boolean
         payment_method_options:
           description: Payment method specific configurations.
-          $ref: '#/components/schemas/Payment-Method-Options'
+          $ref: "#/components/schemas/Payment-Method-Options"
         payment_method_types:
           description: >-
             The list of payment method types that this Payment Session is
@@ -3778,7 +3778,7 @@ components:
           type: string
         shipping:
           description: Shipping information for the payment.
-          $ref: '#/components/schemas/Shipping-Details'
+          $ref: "#/components/schemas/Shipping-Details"
         setup_future_usage:
           description: >-
             Indicates that you intend to make future payments with this payment
@@ -3814,7 +3814,7 @@ components:
             Set of key-value pairs that you can attach to the resource. This can
             be useful for storing additional information about the object in a
             structured format.
-          $ref: '#/components/schemas/Metadata'
+          $ref: "#/components/schemas/Metadata"
       required:
         - amount
         - currency
@@ -3837,10 +3837,10 @@ components:
           description: >-
             Billing information associated with the customer at the time of the
             session.
-          $ref: '#/components/schemas/Billing-Details'
+          $ref: "#/components/schemas/Billing-Details"
         payment_method_options:
           description: Payment method specific configurations.
-          $ref: '#/components/schemas/Payment-Method-Options'
+          $ref: "#/components/schemas/Payment-Method-Options"
         payment_method_types:
           description: >-
             The list of payment method types that this Payment Session is
@@ -3876,7 +3876,7 @@ components:
             Set of key-value pairs that you can attach to the resource. This can
             be useful for storing additional information about the object in a
             structured format.
-          $ref: '#/components/schemas/Metadata'
+          $ref: "#/components/schemas/Metadata"
       required:
         - customer_reference_id
     SessionCreateLinkedRequest:
@@ -3928,7 +3928,7 @@ components:
           description: >-
             Billing information associated with the customer at the time of the
             session.
-          $ref: '#/components/schemas/Billing-Details'
+          $ref: "#/components/schemas/Billing-Details"
         reference:
           description: >-
             A unique string to reference the Authentication Session. Can be used
@@ -3939,18 +3939,18 @@ components:
           type: string
         shipping:
           description: Shipping information for the payment.
-          $ref: '#/components/schemas/Shipping-Details'
+          $ref: "#/components/schemas/Shipping-Details"
         metadata:
           description: >-
             Set of key-value pairs that you can attach to the resource. This can
             be useful for storing additional information about the object in a
             structured format.
-          $ref: '#/components/schemas/Metadata'
+          $ref: "#/components/schemas/Metadata"
         card_data:
           description: >-
             Object providing the raw details of the payment method. will be
             ignored if `source` is provided.
-          $ref: '#/components/schemas/Card-Source-Authentication-Details'
+          $ref: "#/components/schemas/Card-Source-Authentication-Details"
       required:
         - amount
         - currency
@@ -3987,7 +3987,7 @@ components:
           type: string
         payment_method_options:
           description: Payment method specific configurations.
-          $ref: '#/components/schemas/Payment-Method-Options'
+          $ref: "#/components/schemas/Payment-Method-Options"
         receipt:
           description: >-
             Whether to send receipt for the customer after the payment has been
@@ -4005,7 +4005,7 @@ components:
           type: string
         shipping:
           description: Shipping information for the payment.
-          $ref: '#/components/schemas/Shipping-Details'
+          $ref: "#/components/schemas/Shipping-Details"
         statement_descriptor_suffix:
           description: >-
             Provides information about the payment that customers can see on
@@ -4019,12 +4019,12 @@ components:
             Set of key-value pairs that you can attach to the resource. This can
             be useful for storing additional information about the object in a
             structured format.
-          $ref: '#/components/schemas/Metadata'
+          $ref: "#/components/schemas/Metadata"
         source_data:
           description: >-
             Object providing the raw details of the payment method. will be
             ignored if `source` is provided.
-          $ref: '#/components/schemas/Source-Data'
+          $ref: "#/components/schemas/Source-Data"
       required:
         - amount
         - currency
@@ -4044,7 +4044,7 @@ components:
             The field is optional and if not provided will default to the entire
             Charge.
           type: string
-          example: '10000'
+          example: "10000"
         reference:
           description: >-
             A unique string to reference the Refund. Can be used to reconcile
@@ -4055,7 +4055,7 @@ components:
             Set of key-value pairs that you can attach to the resource. This can
             be useful for storing additional information about the object in a
             structured format.
-          $ref: '#/components/schemas/Metadata'
+          $ref: "#/components/schemas/Metadata"
       required:
         - charge
     HoldCreateHoldRequest:
@@ -4091,7 +4091,7 @@ components:
           type: string
         payment_method_options:
           description: Payment method specific configurations.
-          $ref: '#/components/schemas/Payment-Method-Options'
+          $ref: "#/components/schemas/Payment-Method-Options"
         reference:
           description: >-
             A unique string to reference the Hold. Can be used to reconcile the
@@ -4099,7 +4099,7 @@ components:
           type: string
         shipping:
           description: Shipping information for the payment.
-          $ref: '#/components/schemas/Shipping-Details'
+          $ref: "#/components/schemas/Shipping-Details"
         statement_descriptor_suffix:
           description: >-
             Provides information about the payment that customers can see on
@@ -4116,12 +4116,12 @@ components:
             Set of key-value pairs that you can attach to the resource. This can
             be useful for storing additional information about the object in a
             structured format.
-          $ref: '#/components/schemas/Metadata'
+          $ref: "#/components/schemas/Metadata"
         source_data:
           description: >-
             Object providing the raw details of the payment method. will be
             ignored if `source` is provided.
-          $ref: '#/components/schemas/Source-Data'
+          $ref: "#/components/schemas/Source-Data"
       required:
         - amount
         - currency
@@ -4140,7 +4140,7 @@ components:
             The field is optional and if not provided will default to the entire
             Hold.
           type: string
-          example: '10000'
+          example: "10000"
         reference:
           description: >-
             A unique string to reference the Charge created from the Hold. Can
@@ -4151,7 +4151,7 @@ components:
             Set of key-value pairs that you can attach to the created Charge
             object. This can be useful for storing additional information about
             the object in a structured format.
-          $ref: '#/components/schemas/Metadata'
+          $ref: "#/components/schemas/Metadata"
     PayoutCreatePayoutRequest:
       type: object
       properties:
@@ -4189,7 +4189,7 @@ components:
             Set of key-value pairs that you can attach to the resource. This can
             be useful for storing additional information about the object in a
             structured format.
-          $ref: '#/components/schemas/Metadata'
+          $ref: "#/components/schemas/Metadata"
       required:
         - amount
         - currency
@@ -4212,7 +4212,7 @@ components:
             - google_pay
         card:
           description: Raw details of a card payment method
-          $ref: '#/components/schemas/Card-Source-Details'
+          $ref: "#/components/schemas/Card-Source-Details"
         metadata:
           description: Set of key-value pairs that you can attach to the resource.
           type: object
@@ -4230,7 +4230,7 @@ components:
           type: string
         address:
           description: Customer's billing address.
-          $ref: '#/components/schemas/Address'
+          $ref: "#/components/schemas/Address"
         name:
           description: Full name.
           type: string
@@ -4243,7 +4243,7 @@ components:
           type: string
         shipping:
           description: Shipping information of the customer.
-          $ref: '#/components/schemas/Shipping-Details'
+          $ref: "#/components/schemas/Shipping-Details"
         metadata:
           description: Set of key-value pairs that you can attach to the resource.
           type: object
@@ -4260,24 +4260,24 @@ components:
     SessionGetAttemptsResponse:
       type: array
       items:
-        $ref: '#/components/schemas/Payment-Attempt'
+        $ref: "#/components/schemas/Payment-Attempt"
     SessionGetSessionAttemptsResponse:
       type: array
       items:
-        $ref: '#/components/schemas/Setup-Attempt'
+        $ref: "#/components/schemas/Setup-Attempt"
     SessionCreateLinkedResponse:
       type: object
       properties: {}
     CustomerGetPaymentMethodsResponse:
       type: array
       items:
-        $ref: '#/components/schemas/Payment-Method'
+        $ref: "#/components/schemas/Payment-Method"
   requestBodies:
     Create-Customer:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/CustomerCreateCustomerRequest'
+            $ref: "#/components/schemas/CustomerCreateCustomerRequest"
           examples:
             Base request:
               value:
@@ -4286,33 +4286,33 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/PaymentMethodCreatePaymentMethodRequest'
+            $ref: "#/components/schemas/PaymentMethodCreatePaymentMethodRequest"
           examples:
             Base request (100$):
               value:
                 customer_reference_id: 927071e4-464c-4f5d-a079-4aa097f922ca
                 type: card
                 card:
-                  number: '4242424242424242'
-                  expiry_month: '12'
-                  expiry_year: '2024'
-                  cvc: '123'
+                  number: "4242424242424242"
+                  expiry_month: "12"
+                  expiry_year: "2024"
+                  cvc: "123"
     Create-Setup-Session:
-      description: ''
+      description: ""
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/SessionCreateSetupRequest'
+            $ref: "#/components/schemas/SessionCreateSetupRequest"
           examples:
             Base request (100$):
               value:
                 customer_reference_id: 927071e4-464c-4f5d-a079-4aa097f922ca
     Create-Payment-Session:
-      description: ''
+      description: ""
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/SessionCreatePaymentRequest'
+            $ref: "#/components/schemas/SessionCreatePaymentRequest"
           examples:
             Base request (100$):
               value:
@@ -4323,7 +4323,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/ChargeCreateChargeRequest'
+            $ref: "#/components/schemas/ChargeCreateChargeRequest"
           examples:
             Base request:
               value:
@@ -4331,11 +4331,11 @@ components:
                 currency: usd
                 source: pm_card_202779025452569600
     Create-Hold:
-      description: ''
+      description: ""
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/HoldCreateHoldRequest'
+            $ref: "#/components/schemas/HoldCreateHoldRequest"
           examples:
             Base request (100$):
               value:
@@ -4343,21 +4343,21 @@ components:
                 currency: usd
                 source: pm_card_202779025452569600
     Create-Refund:
-      description: ''
+      description: ""
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/RefundPaymentMethodRequest'
+            $ref: "#/components/schemas/RefundPaymentMethodRequest"
           examples:
             Base request:
               value:
                 charge: chrg_146231656762572800
     Create-Payout:
-      description: ''
+      description: ""
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/PayoutCreatePayoutRequest'
+            $ref: "#/components/schemas/PayoutCreatePayoutRequest"
           examples:
             Base request (100$):
               value:
@@ -4369,13 +4369,13 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/HoldCaptureHoldRequest'
+            $ref: "#/components/schemas/HoldCaptureHoldRequest"
           examples: {}
     Create-a-Linked-Authentication-Session:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/SessionCreateLinkedRequest'
+            $ref: "#/components/schemas/SessionCreateLinkedRequest"
           examples:
             Base request:
               value:
@@ -4384,7 +4384,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/SessionCreateIndependentRequest'
+            $ref: "#/components/schemas/SessionCreateIndependentRequest"
           examples:
             Base request (100$):
               value:

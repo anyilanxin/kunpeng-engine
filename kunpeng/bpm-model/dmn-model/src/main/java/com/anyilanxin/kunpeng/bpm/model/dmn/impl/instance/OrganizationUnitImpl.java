@@ -16,10 +16,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_ORGANIZATION_UNIT;
-
-import java.util.Collection;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.BusinessContextElement;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Decision;
@@ -32,11 +30,14 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTypeInstanceProvider;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.SequenceBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.ElementReferenceCollection;
+import java.util.Collection;
 
 public class OrganizationUnitImpl extends BusinessContextElementImpl implements OrganizationUnit {
 
-  protected static ElementReferenceCollection<Decision, DecisionMadeReference> decisionDecisionMadeRefCollection;
-  protected static ElementReferenceCollection<Decision, DecisionOwnedReference> decisionDecisionOwnedRefCollection;
+  protected static ElementReferenceCollection<Decision, DecisionMadeReference>
+      decisionDecisionMadeRefCollection;
+  protected static ElementReferenceCollection<Decision, DecisionOwnedReference>
+      decisionDecisionOwnedRefCollection;
 
   public OrganizationUnitImpl(ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
@@ -51,26 +52,32 @@ public class OrganizationUnitImpl extends BusinessContextElementImpl implements 
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(OrganizationUnit.class, DMN_ELEMENT_ORGANIZATION_UNIT)
-      .namespaceUri(LATEST_DMN_NS)
-      .extendsType(BusinessContextElement.class)
-      .instanceProvider(new ModelTypeInstanceProvider<OrganizationUnit>() {
-        public OrganizationUnit newInstance(ModelTypeInstanceContext instanceContext) {
-          return new OrganizationUnitImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(OrganizationUnit.class, DMN_ELEMENT_ORGANIZATION_UNIT)
+            .namespaceUri(LATEST_DMN_NS)
+            .extendsType(BusinessContextElement.class)
+            .instanceProvider(
+                new ModelTypeInstanceProvider<OrganizationUnit>() {
+                  public OrganizationUnit newInstance(ModelTypeInstanceContext instanceContext) {
+                    return new OrganizationUnitImpl(instanceContext);
+                  }
+                });
 
     SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
-    decisionDecisionMadeRefCollection = sequenceBuilder.elementCollection(DecisionMadeReference.class)
-      .uriElementReferenceCollection(Decision.class)
-      .build();
+    decisionDecisionMadeRefCollection =
+        sequenceBuilder
+            .elementCollection(DecisionMadeReference.class)
+            .uriElementReferenceCollection(Decision.class)
+            .build();
 
-    decisionDecisionOwnedRefCollection = sequenceBuilder.elementCollection(DecisionOwnedReference.class)
-      .uriElementReferenceCollection(Decision.class)
-      .build();
+    decisionDecisionOwnedRefCollection =
+        sequenceBuilder
+            .elementCollection(DecisionOwnedReference.class)
+            .uriElementReferenceCollection(Decision.class)
+            .build();
 
     typeBuilder.build();
   }
-
 }

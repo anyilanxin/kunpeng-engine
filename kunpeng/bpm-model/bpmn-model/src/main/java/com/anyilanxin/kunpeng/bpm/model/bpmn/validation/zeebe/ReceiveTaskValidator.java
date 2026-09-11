@@ -21,11 +21,11 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Message;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.MessageEventDefinition;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ReceiveTask;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.util.ModelUtil;
+import com.anyilanxin.kunpeng.bpm.model.xml.validation.ModelElementValidator;
+import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResultCollector;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
-import com.anyilanxin.kunpeng.bpm.model.xml.validation.ModelElementValidator;
-import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResultCollector;
 
 public class ReceiveTaskValidator implements ModelElementValidator<ReceiveTask> {
 

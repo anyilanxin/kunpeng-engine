@@ -16,19 +16,16 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.xml;
 
-
 /**
  * Thrown when an error is encountered during the model validation.
  *
  * @author Sebastian Menski
- *
  */
 public class ModelValidationException extends ModelException {
 
   private static final long serialVersionUID = 1L;
 
-  public ModelValidationException() {
-  }
+  public ModelValidationException() {}
 
   public ModelValidationException(final String message, final Throwable cause) {
     super(message, cause);
@@ -41,5 +38,4 @@ public class ModelValidationException extends ModelException {
   public ModelValidationException(final Throwable cause) {
     super(cause);
   }
-
 }

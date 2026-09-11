@@ -19,8 +19,6 @@ package com.anyilanxin.kunpeng.cluster.cluster.messaging.impl;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Maps;
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
 import com.anyilanxin.kunpeng.cluster.cluster.Member;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
@@ -31,6 +29,8 @@ import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException.NoSuc
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.UnicastService;
 import com.anyilanxin.kunpeng.cluster.utils.net.Address;
+import com.google.common.base.Objects;
+import com.google.common.collect.Maps;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Set;

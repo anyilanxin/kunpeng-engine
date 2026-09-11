@@ -16,10 +16,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_LIST;
-
-import java.util.Collection;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Expression;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.List;
@@ -29,6 +27,7 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTypeInstanceProvider;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.ChildElementCollection;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.SequenceBuilder;
+import java.util.Collection;
 
 public class ListImpl extends ExpressionImpl implements List {
 
@@ -43,21 +42,22 @@ public class ListImpl extends ExpressionImpl implements List {
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(List.class, DMN_ELEMENT_LIST)
-      .namespaceUri(LATEST_DMN_NS)
-      .extendsType(Expression.class)
-      .instanceProvider(new ModelTypeInstanceProvider<List>() {
-        public List newInstance(ModelTypeInstanceContext instanceContext) {
-          return new ListImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(List.class, DMN_ELEMENT_LIST)
+            .namespaceUri(LATEST_DMN_NS)
+            .extendsType(Expression.class)
+            .instanceProvider(
+                new ModelTypeInstanceProvider<List>() {
+                  public List newInstance(ModelTypeInstanceContext instanceContext) {
+                    return new ListImpl(instanceContext);
+                  }
+                });
 
     SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
-    expressionCollection = sequenceBuilder.elementCollection(Expression.class)
-      .build();
+    expressionCollection = sequenceBuilder.elementCollection(Expression.class).build();
 
     typeBuilder.build();
   }
-
 }

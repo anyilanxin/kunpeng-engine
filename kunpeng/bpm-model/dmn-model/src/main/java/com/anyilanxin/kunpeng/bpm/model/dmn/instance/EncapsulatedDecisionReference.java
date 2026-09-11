@@ -16,6 +16,4 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.instance;
 
-public interface EncapsulatedDecisionReference extends DmnElementReference {
-
-}
+public interface EncapsulatedDecisionReference extends DmnElementReference {}

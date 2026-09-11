@@ -16,14 +16,13 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 import com.anyilanxin.kunpeng.bpm.model.dmn.DmnModelException;
 import com.anyilanxin.kunpeng.bpm.model.dmn.Query;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementType;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 public class QueryImpl<T extends ModelElementInstance> implements Query<T> {
 
@@ -61,9 +60,9 @@ public class QueryImpl<T extends ModelElementInstance> implements Query<T> {
   public T singleResult() {
     if (collection.size() == 1) {
       return collection.iterator().next();
-    }
-    else {
-      throw new DmnModelException("Collection expected to have <1> entry but has <" + collection.size() + ">");
+    } else {
+      throw new DmnModelException(
+          "Collection expected to have <1> entry but has <" + collection.size() + ">");
     }
   }
 }

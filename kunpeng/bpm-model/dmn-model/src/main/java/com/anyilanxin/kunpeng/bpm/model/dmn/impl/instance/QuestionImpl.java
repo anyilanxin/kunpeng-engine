@@ -16,8 +16,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_QUESTION;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Question;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
@@ -32,15 +32,17 @@ public class QuestionImpl extends DmnModelElementInstanceImpl implements Questio
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(Question.class, DMN_ELEMENT_QUESTION)
-      .namespaceUri(LATEST_DMN_NS)
-      .instanceProvider(new ModelTypeInstanceProvider<Question>() {
-        public Question newInstance(ModelTypeInstanceContext instanceContext) {
-          return new QuestionImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(Question.class, DMN_ELEMENT_QUESTION)
+            .namespaceUri(LATEST_DMN_NS)
+            .instanceProvider(
+                new ModelTypeInstanceProvider<Question>() {
+                  public Question newInstance(ModelTypeInstanceContext instanceContext) {
+                    return new QuestionImpl(instanceContext);
+                  }
+                });
 
     typeBuilder.build();
   }
-
 }

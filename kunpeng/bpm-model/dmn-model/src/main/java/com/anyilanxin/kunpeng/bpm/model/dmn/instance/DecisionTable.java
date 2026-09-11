@@ -16,11 +16,10 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.instance;
 
-import java.util.Collection;
-
 import com.anyilanxin.kunpeng.bpm.model.dmn.BuiltinAggregator;
 import com.anyilanxin.kunpeng.bpm.model.dmn.DecisionTableOrientation;
 import com.anyilanxin.kunpeng.bpm.model.dmn.HitPolicy;
+import java.util.Collection;
 
 public interface DecisionTable extends Expression {
 
@@ -45,5 +44,4 @@ public interface DecisionTable extends Expression {
   Collection<Output> getOutputs();
 
   Collection<Rule> getRules();
-
 }

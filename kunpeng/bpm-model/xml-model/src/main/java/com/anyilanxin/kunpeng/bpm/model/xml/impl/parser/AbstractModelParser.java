@@ -16,34 +16,34 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.xml.impl.parser;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.xml.XMLConstants;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
-import javax.xml.validation.Validator;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelInstance;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelValidationException;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.util.DomUtil;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.util.ReflectUtil;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.DomDocument;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.DomElement;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import javax.xml.validation.Validator;
 import org.xml.sax.SAXException;
 
 /**
  * @author Daniel Meyer
- *
  */
 public abstract class AbstractModelParser {
 
-  protected static final String JAXP_ACCESS_EXTERNAL_SCHEMA = "http://javax.xml.XMLConstants/property/accessExternalSchema";
-  protected static final String JAXP_ACCESS_EXTERNAL_SCHEMA_SYSTEM_PROPERTY = "javax.xml.accessExternalSchema";
+  protected static final String JAXP_ACCESS_EXTERNAL_SCHEMA =
+      "http://javax.xml.XMLConstants/property/accessExternalSchema";
+  protected static final String JAXP_ACCESS_EXTERNAL_SCHEMA_SYSTEM_PROPERTY =
+      "javax.xml.accessExternalSchema";
   protected static final String JAXP_ACCESS_EXTERNAL_SCHEMA_ALL = "all";
 
   private final DocumentBuilderFactory documentBuilderFactory;
@@ -58,6 +58,7 @@ public abstract class AbstractModelParser {
 
   /**
    * allows subclasses to configure the {@link DocumentBuilderFactory}.
+   *
    * @param dbf the factory to configure
    */
   protected void configureFactory(DocumentBuilderFactory dbf) {
@@ -70,12 +71,13 @@ public abstract class AbstractModelParser {
   }
 
   /**
-   * Configures the DocumentBuilderFactory in a way, that it is protected against XML External Entity Attacks.
-   * If the implementing parser does not support one or multiple features, the failed feature is ignored.
-   * The parser might not protected, if the feature assignment fails.
+   * Configures the DocumentBuilderFactory in a way, that it is protected against XML External
+   * Entity Attacks. If the implementing parser does not support one or multiple features, the
+   * failed feature is ignored. The parser might not protected, if the feature assignment fails.
    *
-   * @see <a href="https://www.owasp.org/index.php/XML_External_Entity_(XXE)_Prevention_Cheat_Sheet">OWASP Information of XXE attacks</a>
-   *
+   * @see <a
+   *     href="https://www.owasp.org/index.php/XML_External_Entity_(XXE)_Prevention_Cheat_Sheet">OWASP
+   *     Information of XXE attacks</a>
    * @param dbf The factory to configure.
    */
   private void protectAgainstXxeAttacks(final DocumentBuilderFactory dbf) {
@@ -127,19 +129,18 @@ public abstract class AbstractModelParser {
   public ModelInstance parseModelFromStream(InputStream inputStream) {
     DomDocument document = null;
 
-    synchronized(documentBuilderFactory) {
+    synchronized (documentBuilderFactory) {
       document = DomUtil.parseInputStream(documentBuilderFactory, inputStream);
     }
 
     validateModel(document);
     return createModelInstance(document);
-
   }
 
   public ModelInstance getEmptyModel() {
     DomDocument document = null;
 
-    synchronized(documentBuilderFactory) {
+    synchronized (documentBuilderFactory) {
       document = DomUtil.getEmptyDocument(documentBuilderFactory);
     }
 
@@ -161,7 +162,7 @@ public abstract class AbstractModelParser {
 
     Validator validator = schema.newValidator();
     try {
-      synchronized(document) {
+      synchronized (document) {
         validator.validate(document.getDomSource());
       }
     } catch (IOException e) {
@@ -191,5 +192,4 @@ public abstract class AbstractModelParser {
   }
 
   protected abstract ModelInstance createModelInstance(DomDocument document);
-
 }

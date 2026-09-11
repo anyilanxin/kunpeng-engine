@@ -34,6 +34,7 @@ import com.anyilanxin.kunpeng.cluster.raft.RaftServer.Role;
 import com.anyilanxin.kunpeng.cluster.raft.SnapshotReplicationListener;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember.Type;
+import com.anyilanxin.kunpeng.cluster.raft.journal.SegmentInfo;
 import com.anyilanxin.kunpeng.cluster.raft.metrics.RaftRequestMetrics;
 import com.anyilanxin.kunpeng.cluster.raft.metrics.RaftStartupMetrics;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftElectionConfig;
@@ -46,7 +47,6 @@ import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLogReader;
 import com.anyilanxin.kunpeng.cluster.raft.zeebe.ZeebeLogAppender;
 import com.anyilanxin.kunpeng.cluster.utils.serializer.Serializer;
 import io.camunda.cluster.PhysicalTenantIds;
-import com.anyilanxin.kunpeng.cluster.raft.journal.SegmentInfo;
 import io.camunda.zeebe.snapshots.PersistedSnapshotStore;
 import io.camunda.zeebe.snapshots.ReceivableSnapshotStore;
 import io.camunda.zeebe.util.FileUtil;
@@ -232,7 +232,8 @@ public class RaftPartitionServer implements HealthMonitorable {
   }
 
   /**
-   * @see com.anyilanxin.kunpeng.cluster.raft.impl.RaftContext#removeCommitListener(RaftCommitListener)
+   * @see
+   *     com.anyilanxin.kunpeng.cluster.raft.impl.RaftContext#removeCommitListener(RaftCommitListener)
    */
   public void removeCommitListener(final RaftCommitListener commitListener) {
     server.getContext().removeCommitListener(commitListener);

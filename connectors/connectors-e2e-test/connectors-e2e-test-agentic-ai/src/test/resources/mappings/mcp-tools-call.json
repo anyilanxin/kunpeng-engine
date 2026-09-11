@@ -1,88 +1,66 @@
-{
-  "mappings": [
+{"mappings": [
     {
-      "request": {
-        "method": "POST",
-        "url": "/mcp",
-        "bodyPatterns": [
-          {
-            "matchesJsonPath": {
-              "expression": "$.method",
-              "equalTo": "tools/call"
-            }
-          },
-          {
-            "matchesJsonPath": {
-              "expression": "$.params.name",
-              "equalTo": "toolA"
-            }
-          }
-        ]
-      },
-      "response": {
-        "status": 200,
-        "headers": {
-          "Content-Type": "application/json"
-        },
-        "transformers": [
-          "response-template"
-        ],
-        "jsonBody": {
-          "jsonrpc": "2.0",
-          "id": "{{jsonPath request.body '$.id'}}",
-          "result": {
-            "content": [
-              {
-                "type": "text",
-                "text": "A MCP Client result"
-              }
+        "request": {
+            "method": "POST",
+            "bodyPatterns": [
+                {"matchesJsonPath": {
+                    "expression": "$.method",
+                    "equalTo": "tools/call"
+                }},
+                {"matchesJsonPath": {
+                    "expression": "$.params.name",
+                    "equalTo": "toolA"
+                }}
             ],
-            "isError": false
-          }
+            "url": "/mcp"
+        },
+        "response": {
+            "headers": {"Content-Type": "application/json"},
+            "transformers": ["response-template"],
+            "jsonBody": {
+                "result": {
+                    "isError": false,
+                    "content": [{
+                        "text": "A MCP Client result",
+                        "type": "text"
+                    }]
+                },
+                "id": "{{jsonPath request.body '$.id'}}",
+                "jsonrpc": "2.0"
+            },
+            "status": 200
         }
-      }
     },
     {
-      "request": {
-        "method": "POST",
-        "url": "/mcp",
-        "bodyPatterns": [
-          {
-            "matchesJsonPath": {
-              "expression": "$.method",
-              "equalTo": "tools/call"
-            }
-          },
-          {
-            "matchesJsonPath": {
-              "expression": "$.params.name",
-              "equalTo": "toolC"
-            }
-          }
-        ]
-      },
-      "response": {
-        "status": 200,
-        "headers": {
-          "Content-Type": "application/json"
-        },
-        "transformers": [
-          "response-template"
-        ],
-        "jsonBody": {
-          "jsonrpc": "2.0",
-          "id": "{{jsonPath request.body '$.id'}}",
-          "result": {
-            "content": [
-              {
-                "type": "text",
-                "text": "A Remote MCP Client result"
-              }
+        "request": {
+            "method": "POST",
+            "bodyPatterns": [
+                {"matchesJsonPath": {
+                    "expression": "$.method",
+                    "equalTo": "tools/call"
+                }},
+                {"matchesJsonPath": {
+                    "expression": "$.params.name",
+                    "equalTo": "toolC"
+                }}
             ],
-            "isError": false
-          }
+            "url": "/mcp"
+        },
+        "response": {
+            "headers": {"Content-Type": "application/json"},
+            "transformers": ["response-template"],
+            "jsonBody": {
+                "result": {
+                    "isError": false,
+                    "content": [{
+                        "text": "A Remote MCP Client result",
+                        "type": "text"
+                    }]
+                },
+                "id": "{{jsonPath request.body '$.id'}}",
+                "jsonrpc": "2.0"
+            },
+            "status": 200
         }
-      }
     }
-  ]
-}
+]}

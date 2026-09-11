@@ -16,10 +16,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_DECISION_RULE;
-
-import java.util.Collection;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DecisionRule;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DmnElement;
@@ -31,6 +29,7 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTypeInstanceProvider;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.ChildElementCollection;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.SequenceBuilder;
+import java.util.Collection;
 
 public class DecisionRuleImpl extends DmnElementImpl implements DecisionRule {
 
@@ -50,25 +49,24 @@ public class DecisionRuleImpl extends DmnElementImpl implements DecisionRule {
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(DecisionRule.class, DMN_ELEMENT_DECISION_RULE)
-      .namespaceUri(LATEST_DMN_NS)
-      .extendsType(DmnElement.class)
-      .instanceProvider(new ModelTypeInstanceProvider<DecisionRule>() {
-        public DecisionRule newInstance(ModelTypeInstanceContext instanceContext) {
-          return new DecisionRuleImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(DecisionRule.class, DMN_ELEMENT_DECISION_RULE)
+            .namespaceUri(LATEST_DMN_NS)
+            .extendsType(DmnElement.class)
+            .instanceProvider(
+                new ModelTypeInstanceProvider<DecisionRule>() {
+                  public DecisionRule newInstance(ModelTypeInstanceContext instanceContext) {
+                    return new DecisionRuleImpl(instanceContext);
+                  }
+                });
 
     SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
-    inputEntryCollection = sequenceBuilder.elementCollection(InputEntry.class)
-      .build();
+    inputEntryCollection = sequenceBuilder.elementCollection(InputEntry.class).build();
 
-    outputEntryCollection = sequenceBuilder.elementCollection(OutputEntry.class)
-      .required()
-      .build();
+    outputEntryCollection = sequenceBuilder.elementCollection(OutputEntry.class).required().build();
 
     typeBuilder.build();
   }
-
 }

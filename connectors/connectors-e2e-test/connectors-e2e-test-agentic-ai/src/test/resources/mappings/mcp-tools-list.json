@@ -1,85 +1,73 @@
 {
-  "request": {
-    "method": "POST",
-    "url": "/mcp",
-    "bodyPatterns": [
-      {
-        "matchesJsonPath": {
-          "expression": "$.method",
-          "equalTo": "tools/list"
-        }
-      }
-    ]
-  },
-  "response": {
-    "status": 200,
-    "headers": {
-      "Content-Type": "application/json"
+    "request": {
+        "method": "POST",
+        "bodyPatterns": [{"matchesJsonPath": {
+            "expression": "$.method",
+            "equalTo": "tools/list"
+        }}],
+        "url": "/mcp"
     },
-    "transformers": [
-      "response-template"
-    ],
-    "jsonBody": {
-      "jsonrpc": "2.0",
-      "id": "{{jsonPath request.body '$.id'}}",
-      "result": {
-        "tools": [
-          {
-            "name": "toolA",
-            "description": "The first tool",
-            "title": "Tool A",
-            "inputSchema": {
-              "type": "object",
-              "properties": {
-                "paramA1": {
-                  "type": "string",
-                  "description": "The first parameter"
+    "response": {
+        "headers": {"Content-Type": "application/json"},
+        "transformers": ["response-template"],
+        "jsonBody": {
+            "result": {"tools": [
+                {
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "paramA1": {
+                                "description": "The first parameter",
+                                "type": "string"
+                            },
+                            "paramA2": {
+                                "description": "The second parameter",
+                                "type": "number"
+                            }
+                        }
+                    },
+                    "name": "toolA",
+                    "description": "The first tool",
+                    "title": "Tool A"
                 },
-                "paramA2": {
-                  "type": "number",
-                  "description": "The second parameter"
-                }
-              }
-            }
-          },
-          {
-            "name": "toolB",
-            "description": "The second tool",
-            "title": "Tool B",
-            "inputSchema": {
-              "type": "object",
-              "properties": {
-                "paramB1": {
-                  "type": "string",
-                  "description": "The first parameter"
+                {
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "paramB1": {
+                                "description": "The first parameter",
+                                "type": "string"
+                            },
+                            "paramB2": {
+                                "type": "string",
+                                "enum": [
+                                    "A",
+                                    "B",
+                                    "C"
+                                ]
+                            }
+                        }
+                    },
+                    "name": "toolB",
+                    "description": "The second tool",
+                    "title": "Tool B"
                 },
-                "paramB2": {
-                  "type": "string",
-                  "enum": [
-                    "A",
-                    "B",
-                    "C"
-                  ]
+                {
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {"paramC1": {
+                            "description": "The first parameter",
+                            "type": "string"
+                        }}
+                    },
+                    "name": "toolC",
+                    "description": "The third tool",
+                    "title": "Tool C"
                 }
-              }
-            }
-          },
-          {
-            "name": "toolC",
-            "description": "The third tool",
-            "title": "Tool C",
-            "inputSchema": {
-              "type": "object",
-              "properties": {
-                "paramC1": {
-                  "type": "string",
-                  "description": "The first parameter"
-                }
-              }
-            }
-          }
-        ]
-      }
+            ]},
+            "id": "{{jsonPath request.body '$.id'}}",
+            "jsonrpc": "2.0"
+        },
+        "status": 200
     }
-  }
 }

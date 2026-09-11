@@ -31,5 +31,4 @@ public interface BusinessKnowledgeModel extends DrgElement {
   Collection<KnowledgeRequirement> getKnowledgeRequirement();
 
   Collection<AuthorityRequirement> getAuthorityRequirement();
-
 }

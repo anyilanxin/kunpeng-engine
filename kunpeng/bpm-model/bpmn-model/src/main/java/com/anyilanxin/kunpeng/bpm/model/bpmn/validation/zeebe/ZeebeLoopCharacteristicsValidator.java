@@ -18,9 +18,9 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.validation.zeebe;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.ZeebeConstants;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeLoopCharacteristics;
-import java.util.Optional;
 import com.anyilanxin.kunpeng.bpm.model.xml.validation.ModelElementValidator;
 import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResultCollector;
+import java.util.Optional;
 
 public class ZeebeLoopCharacteristicsValidator
     implements ModelElementValidator<ZeebeLoopCharacteristics> {

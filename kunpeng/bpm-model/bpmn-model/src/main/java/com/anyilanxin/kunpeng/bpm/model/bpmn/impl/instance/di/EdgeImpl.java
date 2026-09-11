@@ -23,12 +23,12 @@ import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DI_N
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.di.DiagramElement;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.di.Edge;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.di.Waypoint;
-import java.util.Collection;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.ChildElementCollection;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.SequenceBuilder;
+import java.util.Collection;
 
 /**
  * @author Sebastian Menski

@@ -16,10 +16,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_FUNCTION_DEFINITION;
-
-import java.util.Collection;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Expression;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.FormalParameter;
@@ -31,6 +29,7 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.ChildElement;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.ChildElementCollection;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.SequenceBuilder;
+import java.util.Collection;
 
 public class FunctionDefinitionImpl extends ExpressionImpl implements FunctionDefinition {
 
@@ -54,24 +53,24 @@ public class FunctionDefinitionImpl extends ExpressionImpl implements FunctionDe
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(FunctionDefinition.class, DMN_ELEMENT_FUNCTION_DEFINITION)
-      .namespaceUri(LATEST_DMN_NS)
-      .extendsType(Expression.class)
-      .instanceProvider(new ModelTypeInstanceProvider<FunctionDefinition>() {
-        public FunctionDefinition newInstance(ModelTypeInstanceContext instanceContext) {
-          return new FunctionDefinitionImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(FunctionDefinition.class, DMN_ELEMENT_FUNCTION_DEFINITION)
+            .namespaceUri(LATEST_DMN_NS)
+            .extendsType(Expression.class)
+            .instanceProvider(
+                new ModelTypeInstanceProvider<FunctionDefinition>() {
+                  public FunctionDefinition newInstance(ModelTypeInstanceContext instanceContext) {
+                    return new FunctionDefinitionImpl(instanceContext);
+                  }
+                });
 
     SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
-    formalParameterCollection = sequenceBuilder.elementCollection(FormalParameter.class)
-      .build();
+    formalParameterCollection = sequenceBuilder.elementCollection(FormalParameter.class).build();
 
-    expressionChild = sequenceBuilder.element(Expression.class)
-      .build();
+    expressionChild = sequenceBuilder.element(Expression.class).build();
 
     typeBuilder.build();
   }
-
 }

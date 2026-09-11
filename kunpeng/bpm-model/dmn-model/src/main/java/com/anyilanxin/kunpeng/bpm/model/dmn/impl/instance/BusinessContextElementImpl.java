@@ -16,9 +16,9 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_URI;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_BUSINESS_CONTEXT_ELEMENT;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.BusinessContextElement;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.NamedElement;
@@ -27,7 +27,8 @@ import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceConte
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.attribute.Attribute;
 
-public abstract class BusinessContextElementImpl extends NamedElementImpl implements BusinessContextElement {
+public abstract class BusinessContextElementImpl extends NamedElementImpl
+    implements BusinessContextElement {
 
   protected static Attribute<String> uriAttribute;
 
@@ -44,15 +45,15 @@ public abstract class BusinessContextElementImpl extends NamedElementImpl implem
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(BusinessContextElement.class, DMN_ELEMENT_BUSINESS_CONTEXT_ELEMENT)
-      .namespaceUri(LATEST_DMN_NS)
-      .extendsType(NamedElement.class)
-      .abstractType();
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(BusinessContextElement.class, DMN_ELEMENT_BUSINESS_CONTEXT_ELEMENT)
+            .namespaceUri(LATEST_DMN_NS)
+            .extendsType(NamedElement.class)
+            .abstractType();
 
-    uriAttribute = typeBuilder.stringAttribute(DMN_ATTRIBUTE_URI)
-      .build();
+    uriAttribute = typeBuilder.stringAttribute(DMN_ATTRIBUTE_URI).build();
 
     typeBuilder.build();
   }
-
 }

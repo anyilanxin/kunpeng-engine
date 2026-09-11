@@ -19,11 +19,11 @@ package com.anyilanxin.kunpeng.cluster.cluster.discovery;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.collect.ImmutableSet;
 import com.anyilanxin.kunpeng.cluster.cluster.BootstrapService;
 import com.anyilanxin.kunpeng.cluster.cluster.Node;
 import com.anyilanxin.kunpeng.cluster.cluster.NodeConfig;
 import com.anyilanxin.kunpeng.cluster.utils.event.AbstractListenerManager;
+import com.google.common.collect.ImmutableSet;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Set;
@@ -37,14 +37,14 @@ import org.slf4j.LoggerFactory;
  *
  * <p>The bootstrap member provider takes a set of peer {@link
  * BootstrapDiscoveryConfig#setNodes(Collection) addresses} and uses them to join the cluster. Using
- * the {@link com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService}, each node sends a heartbeat to its
- * configured bootstrap peers. Peers respond to each heartbeat message with a list of all known
- * peers, thus propagating membership information using a gossip style protocol.
+ * the {@link com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService}, each node sends a
+ * heartbeat to its configured bootstrap peers. Peers respond to each heartbeat message with a list
+ * of all known peers, thus propagating membership information using a gossip style protocol.
  *
  * <p>A phi accrual failure detector is used to detect failures and remove peers from the
  * configuration. In order to avoid flapping of membership following a {@link
- * com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipEvent.Type#MEMBER_ADDED} event, the implementation attempts to
- * heartbeat all newly discovered peers before triggering a {@link
+ * com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipEvent.Type#MEMBER_ADDED} event, the
+ * implementation attempts to heartbeat all newly discovered peers before triggering a {@link
  * com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipEvent.Type#MEMBER_REMOVED} event.
  */
 public final class BootstrapDiscoveryProvider

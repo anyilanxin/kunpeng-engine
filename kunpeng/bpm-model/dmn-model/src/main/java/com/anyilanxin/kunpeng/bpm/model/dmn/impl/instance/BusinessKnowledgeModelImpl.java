@@ -16,10 +16,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_BUSINESS_KNOWLEDGE_MODEL;
-
-import java.util.Collection;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.AuthorityRequirement;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.BusinessKnowledgeModel;
@@ -34,6 +32,7 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.ChildElement;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.ChildElementCollection;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.SequenceBuilder;
+import java.util.Collection;
 
 public class BusinessKnowledgeModelImpl extends DrgElementImpl implements BusinessKnowledgeModel {
 
@@ -71,30 +70,31 @@ public class BusinessKnowledgeModelImpl extends DrgElementImpl implements Busine
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(BusinessKnowledgeModel.class, DMN_ELEMENT_BUSINESS_KNOWLEDGE_MODEL)
-      .namespaceUri(LATEST_DMN_NS)
-      .extendsType(DrgElement.class)
-      .instanceProvider(new ModelTypeInstanceProvider<BusinessKnowledgeModel>() {
-        public BusinessKnowledgeModel newInstance(ModelTypeInstanceContext instanceContext) {
-          return new BusinessKnowledgeModelImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(BusinessKnowledgeModel.class, DMN_ELEMENT_BUSINESS_KNOWLEDGE_MODEL)
+            .namespaceUri(LATEST_DMN_NS)
+            .extendsType(DrgElement.class)
+            .instanceProvider(
+                new ModelTypeInstanceProvider<BusinessKnowledgeModel>() {
+                  public BusinessKnowledgeModel newInstance(
+                      ModelTypeInstanceContext instanceContext) {
+                    return new BusinessKnowledgeModelImpl(instanceContext);
+                  }
+                });
 
     SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
-    encapsulatedLogicChild = sequenceBuilder.element(EncapsulatedLogic.class)
-      .build();
+    encapsulatedLogicChild = sequenceBuilder.element(EncapsulatedLogic.class).build();
 
-    variableChild = sequenceBuilder.element(Variable.class)
-      .build();
+    variableChild = sequenceBuilder.element(Variable.class).build();
 
-    knowledgeRequirementCollection = sequenceBuilder.elementCollection(KnowledgeRequirement.class)
-      .build();
+    knowledgeRequirementCollection =
+        sequenceBuilder.elementCollection(KnowledgeRequirement.class).build();
 
-    authorityRequirementCollection = sequenceBuilder.elementCollection(AuthorityRequirement.class)
-      .build();
+    authorityRequirementCollection =
+        sequenceBuilder.elementCollection(AuthorityRequirement.class).build();
 
     typeBuilder.build();
   }
-
 }

@@ -19,8 +19,8 @@ package org.camunda.bpm.dmn.engine.spi;
 import org.camunda.bpm.dmn.engine.delegate.DmnDecisionTableEvaluationListener;
 
 /**
- * DMN engine metric collector which records the executed decision elements
- * since since its creation.
+ * DMN engine metric collector which records the executed decision elements since since its
+ * creation.
  */
 public interface DmnEngineMetricCollector extends DmnDecisionTableEvaluationListener {
 
@@ -47,5 +47,4 @@ public interface DmnEngineMetricCollector extends DmnDecisionTableEvaluationList
    * @return the number of executed decision elements before resetting.
    */
   long clearExecutedDecisionInstances();
-
 }

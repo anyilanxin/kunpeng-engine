@@ -22,18 +22,16 @@ import com.anyilanxin.kunpeng.bpm.model.xml.impl.type.ModelElementTypeImpl;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.attribute.Attribute;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.attribute.AttributeBuilder;
 
-
 /**
- *
  * @author Daniel Meyer
- *
  */
 public abstract class AttributeBuilderImpl<T> implements AttributeBuilder<T>, ModelBuildOperation {
 
   private final AttributeImpl<T> attribute;
   private final ModelElementTypeImpl modelType;
 
-  AttributeBuilderImpl(String attributeName, ModelElementTypeImpl modelType, AttributeImpl<T> attribute) {
+  AttributeBuilderImpl(
+      String attributeName, ModelElementTypeImpl modelType, AttributeImpl<T> attribute) {
     this.modelType = modelType;
     this.attribute = attribute;
     attribute.setAttributeName(attributeName);
@@ -48,7 +46,6 @@ public abstract class AttributeBuilderImpl<T> implements AttributeBuilder<T>, Mo
     attribute.setId();
     return this;
   }
-
 
   public AttributeBuilder<T> defaultValue(T defaultValue) {
     attribute.setDefaultValue(defaultValue);
@@ -68,5 +65,4 @@ public abstract class AttributeBuilderImpl<T> implements AttributeBuilder<T>, Mo
   public void performModelBuild(Model model) {
     // do nothing
   }
-
 }

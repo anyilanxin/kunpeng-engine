@@ -16,8 +16,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_OUTPUT_DECISION_REFERENCE;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DmnElementReference;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.OutputDecisionReference;
@@ -26,23 +26,27 @@ import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceConte
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTypeInstanceProvider;
 
-public class OutputDecisionReferenceImpl extends DmnElementReferenceImpl implements OutputDecisionReference {
+public class OutputDecisionReferenceImpl extends DmnElementReferenceImpl
+    implements OutputDecisionReference {
 
   public OutputDecisionReferenceImpl(ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(OutputDecisionReference.class, DMN_ELEMENT_OUTPUT_DECISION_REFERENCE)
-      .namespaceUri(LATEST_DMN_NS)
-      .extendsType(DmnElementReference.class)
-      .instanceProvider(new ModelTypeInstanceProvider<OutputDecisionReference>() {
-        public OutputDecisionReference newInstance(ModelTypeInstanceContext instanceContext) {
-          return new OutputDecisionReferenceImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(OutputDecisionReference.class, DMN_ELEMENT_OUTPUT_DECISION_REFERENCE)
+            .namespaceUri(LATEST_DMN_NS)
+            .extendsType(DmnElementReference.class)
+            .instanceProvider(
+                new ModelTypeInstanceProvider<OutputDecisionReference>() {
+                  public OutputDecisionReference newInstance(
+                      ModelTypeInstanceContext instanceContext) {
+                    return new OutputDecisionReferenceImpl(instanceContext);
+                  }
+                });
 
     typeBuilder.build();
   }
-
 }

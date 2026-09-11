@@ -16,9 +16,7 @@
  */
 package org.camunda.bpm.dmn.engine.impl.spi.transform;
 
-/**
- * Factory to create a {@link DmnTransform} from a {@link DmnTransformer}
- */
+/** Factory to create a {@link DmnTransform} from a {@link DmnTransformer} */
 public interface DmnTransformFactory {
 
   /**
@@ -28,5 +26,4 @@ public interface DmnTransformFactory {
    * @return the {@link DmnTransform}
    */
   DmnTransform createTransform(DmnTransformer transformer);
-
 }

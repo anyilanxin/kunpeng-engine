@@ -19,12 +19,10 @@ package com.anyilanxin.kunpeng.bpm.model.xml.type.attribute;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementType;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.Reference;
-
 import java.util.List;
 
 /**
  * @author meyerd
- *
  * @param <T>
  */
 public interface Attribute<T> {
@@ -74,5 +72,4 @@ public interface Attribute<T> {
   List<Reference<?>> getIncomingReferences();
 
   List<Reference<?>> getOutgoingReferences();
-
 }

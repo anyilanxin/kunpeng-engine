@@ -28,11 +28,11 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.StartEvent;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.SubProcess;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.TimerEventDefinition;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.util.ModelUtil;
+import com.anyilanxin.kunpeng.bpm.model.xml.validation.ModelElementValidator;
+import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResultCollector;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import com.anyilanxin.kunpeng.bpm.model.xml.validation.ModelElementValidator;
-import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResultCollector;
 
 public class SubProcessValidator implements ModelElementValidator<SubProcess> {
 

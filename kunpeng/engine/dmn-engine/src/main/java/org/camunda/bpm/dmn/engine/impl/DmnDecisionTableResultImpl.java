@@ -23,7 +23,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
-
 import org.camunda.bpm.dmn.engine.DmnDecisionResult;
 import org.camunda.bpm.dmn.engine.DmnDecisionResultEntries;
 import org.camunda.bpm.dmn.engine.DmnDecisionRuleResult;
@@ -242,5 +241,4 @@ public class DmnDecisionTableResultImpl implements DmnDecisionTableResult {
 
     return new DmnDecisionTableResultImpl(ruleResults);
   }
-
 }

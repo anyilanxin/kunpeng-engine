@@ -16,13 +16,10 @@
  */
 package com.anyilanxin.kunpeng;
 
-
 /**
  * start
  *
  * @author zxuanhong
  * @since
  */
-public class Application {
-
-}
+public class Application {}

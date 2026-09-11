@@ -21,11 +21,11 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.ZeebeConstants;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.BpmnModelElementInstanceImpl;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeProperties;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeProperty;
-import java.util.Collection;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.ChildElementCollection;
+import java.util.Collection;
 
 public class ZeebePropertiesImpl extends BpmnModelElementInstanceImpl implements ZeebeProperties {
 

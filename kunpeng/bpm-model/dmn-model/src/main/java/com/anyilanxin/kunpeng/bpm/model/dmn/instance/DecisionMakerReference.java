@@ -16,6 +16,4 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.instance;
 
-public interface DecisionMakerReference extends DmnElementReference{
-
-}
+public interface DecisionMakerReference extends DmnElementReference {}

@@ -43,7 +43,6 @@ public class HitPolicyEntry {
 
     if (hitPolicy != that.hitPolicy) return false;
     return aggregator == that.aggregator;
-
   }
 
   @Override
@@ -60,5 +59,4 @@ public class HitPolicyEntry {
   public BuiltinAggregator getAggregator() {
     return aggregator;
   }
-
 }

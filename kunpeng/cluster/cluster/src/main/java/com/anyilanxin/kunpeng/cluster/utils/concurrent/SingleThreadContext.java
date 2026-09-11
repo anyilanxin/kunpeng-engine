@@ -17,8 +17,8 @@
  */
 package com.anyilanxin.kunpeng.cluster.utils.concurrent;
 
-import static com.google.common.base.Preconditions.checkState;
 import static com.anyilanxin.kunpeng.cluster.utils.concurrent.Threads.namedThreads;
+import static com.google.common.base.Preconditions.checkState;
 
 import io.camunda.zeebe.util.error.FatalErrorHandler;
 import java.time.Duration;

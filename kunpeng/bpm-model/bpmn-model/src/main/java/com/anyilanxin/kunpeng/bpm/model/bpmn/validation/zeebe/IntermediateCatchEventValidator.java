@@ -23,11 +23,11 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.LinkEventDefinition;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.MessageEventDefinition;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.SignalEventDefinition;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.TimerEventDefinition;
+import com.anyilanxin.kunpeng.bpm.model.xml.validation.ModelElementValidator;
+import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResultCollector;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import com.anyilanxin.kunpeng.bpm.model.xml.validation.ModelElementValidator;
-import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResultCollector;
 
 public class IntermediateCatchEventValidator
     implements ModelElementValidator<IntermediateCatchEvent> {

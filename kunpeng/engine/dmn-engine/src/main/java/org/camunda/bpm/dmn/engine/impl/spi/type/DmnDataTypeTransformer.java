@@ -30,10 +30,7 @@ public interface DmnDataTypeTransformer {
    *
    * @param value of any type
    * @return value of the specific type
-   *
-   * @throws IllegalArgumentException
-   *           if the value can not be transformed
+   * @throws IllegalArgumentException if the value can not be transformed
    */
   TypedValue transform(Object value) throws IllegalArgumentException;
-
 }

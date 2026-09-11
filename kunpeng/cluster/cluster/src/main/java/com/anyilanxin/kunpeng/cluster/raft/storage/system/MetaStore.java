@@ -19,14 +19,14 @@ package com.anyilanxin.kunpeng.cluster.raft.storage.system;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 
-import com.google.common.base.Preconditions;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.raft.journal.JournalMetaStore;
 import com.anyilanxin.kunpeng.cluster.raft.metrics.MetaStoreMetrics;
 import com.anyilanxin.kunpeng.cluster.raft.storage.RaftStorage;
 import com.anyilanxin.kunpeng.cluster.raft.storage.StorageException;
 import com.anyilanxin.kunpeng.cluster.raft.storage.serializer.MetaEncoder;
 import com.anyilanxin.kunpeng.cluster.raft.storage.serializer.MetaStoreSerializer;
-import com.anyilanxin.kunpeng.cluster.raft.journal.JournalMetaStore;
+import com.google.common.base.Preconditions;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.io.File;
 import java.io.IOException;

@@ -16,9 +16,9 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_HREF;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_REFERENCE;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DmnElementReference;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
@@ -27,7 +27,8 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTypeInstanceProvider;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.attribute.Attribute;
 
-public class DmnElementReferenceImpl extends DmnModelElementInstanceImpl implements DmnElementReference {
+public class DmnElementReferenceImpl extends DmnModelElementInstanceImpl
+    implements DmnElementReference {
 
   protected static Attribute<String> hrefAttribute;
 
@@ -44,19 +45,19 @@ public class DmnElementReferenceImpl extends DmnModelElementInstanceImpl impleme
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(DmnElementReference.class, DMN_ELEMENT_REFERENCE)
-      .namespaceUri(LATEST_DMN_NS)
-      .instanceProvider(new ModelTypeInstanceProvider<DmnElementReference>() {
-        public DmnElementReference newInstance(ModelTypeInstanceContext instanceContext) {
-          return new DmnElementReferenceImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(DmnElementReference.class, DMN_ELEMENT_REFERENCE)
+            .namespaceUri(LATEST_DMN_NS)
+            .instanceProvider(
+                new ModelTypeInstanceProvider<DmnElementReference>() {
+                  public DmnElementReference newInstance(ModelTypeInstanceContext instanceContext) {
+                    return new DmnElementReferenceImpl(instanceContext);
+                  }
+                });
 
-    hrefAttribute = typeBuilder.stringAttribute(DMN_ATTRIBUTE_HREF)
-      .required()
-      .build();
+    hrefAttribute = typeBuilder.stringAttribute(DMN_ATTRIBUTE_HREF).required().build();
 
     typeBuilder.build();
   }
-
 }

@@ -21,8 +21,8 @@ import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 /**
  * @author Sebastian Menski
  */
-public interface AttributeReferenceBuilder<T extends ModelElementInstance> extends ReferenceBuilder<T> {
+public interface AttributeReferenceBuilder<T extends ModelElementInstance>
+    extends ReferenceBuilder<T> {
 
   AttributeReference<T> build();
-
 }

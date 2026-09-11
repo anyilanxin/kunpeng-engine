@@ -16,9 +16,9 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_EXPRESSION_LANGUAGE;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_LITERAL_EXPRESSION;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Expression;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.ImportedValues;
@@ -68,27 +68,27 @@ public class LiteralExpressionImpl extends ExpressionImpl implements LiteralExpr
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(LiteralExpression.class, DMN_ELEMENT_LITERAL_EXPRESSION)
-      .namespaceUri(LATEST_DMN_NS)
-      .extendsType(Expression.class)
-      .instanceProvider(new ModelTypeInstanceProvider<LiteralExpression>() {
-        public LiteralExpression newInstance(ModelTypeInstanceContext instanceContext) {
-          return new LiteralExpressionImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(LiteralExpression.class, DMN_ELEMENT_LITERAL_EXPRESSION)
+            .namespaceUri(LATEST_DMN_NS)
+            .extendsType(Expression.class)
+            .instanceProvider(
+                new ModelTypeInstanceProvider<LiteralExpression>() {
+                  public LiteralExpression newInstance(ModelTypeInstanceContext instanceContext) {
+                    return new LiteralExpressionImpl(instanceContext);
+                  }
+                });
 
-    expressionLanguageAttribute = typeBuilder.stringAttribute(DMN_ATTRIBUTE_EXPRESSION_LANGUAGE)
-      .build();
+    expressionLanguageAttribute =
+        typeBuilder.stringAttribute(DMN_ATTRIBUTE_EXPRESSION_LANGUAGE).build();
 
     SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
-    textChild = sequenceBuilder.element(Text.class)
-      .build();
+    textChild = sequenceBuilder.element(Text.class).build();
 
-    importedValuesChild = sequenceBuilder.element(ImportedValues.class)
-      .build();
+    importedValuesChild = sequenceBuilder.element(ImportedValues.class).build();
 
     typeBuilder.build();
   }
-
 }

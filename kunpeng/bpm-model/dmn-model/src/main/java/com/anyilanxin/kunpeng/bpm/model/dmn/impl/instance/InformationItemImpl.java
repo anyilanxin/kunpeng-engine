@@ -16,9 +16,9 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_TYPE_REF;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_INFORMATION_ITEM;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.InformationItem;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.NamedElement;
@@ -45,19 +45,20 @@ public class InformationItemImpl extends NamedElementImpl implements Information
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(InformationItem.class, DMN_ELEMENT_INFORMATION_ITEM)
-      .namespaceUri(LATEST_DMN_NS)
-      .extendsType(NamedElement.class)
-      .instanceProvider(new ModelTypeInstanceProvider<InformationItem>() {
-        public InformationItem newInstance(ModelTypeInstanceContext instanceContext) {
-          return new InformationItemImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(InformationItem.class, DMN_ELEMENT_INFORMATION_ITEM)
+            .namespaceUri(LATEST_DMN_NS)
+            .extendsType(NamedElement.class)
+            .instanceProvider(
+                new ModelTypeInstanceProvider<InformationItem>() {
+                  public InformationItem newInstance(ModelTypeInstanceContext instanceContext) {
+                    return new InformationItemImpl(instanceContext);
+                  }
+                });
 
-    typeRefAttribute = typeBuilder.stringAttribute(DMN_ATTRIBUTE_TYPE_REF)
-      .build();
+    typeRefAttribute = typeBuilder.stringAttribute(DMN_ATTRIBUTE_TYPE_REF).build();
 
     typeBuilder.build();
   }
-
 }

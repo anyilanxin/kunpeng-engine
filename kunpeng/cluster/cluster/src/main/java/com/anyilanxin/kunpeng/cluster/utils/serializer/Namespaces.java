@@ -17,14 +17,6 @@
  */
 package com.anyilanxin.kunpeng.cluster.utils.serializer;
 
-import com.esotericsoftware.kryo.serializers.JavaSerializer;
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multisets;
-import com.google.common.collect.Sets;
 import com.anyilanxin.kunpeng.cluster.utils.Version;
 import com.anyilanxin.kunpeng.cluster.utils.serializer.serializers.ArraysAsListSerializer;
 import com.anyilanxin.kunpeng.cluster.utils.serializer.serializers.AtomicBooleanSerializer;
@@ -34,6 +26,14 @@ import com.anyilanxin.kunpeng.cluster.utils.serializer.serializers.ByteBufferSer
 import com.anyilanxin.kunpeng.cluster.utils.serializer.serializers.ImmutableListSerializer;
 import com.anyilanxin.kunpeng.cluster.utils.serializer.serializers.ImmutableMapSerializer;
 import com.anyilanxin.kunpeng.cluster.utils.serializer.serializers.ImmutableSetSerializer;
+import com.esotericsoftware.kryo.serializers.JavaSerializer;
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multisets;
+import com.google.common.collect.Sets;
 import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.util.ArrayDeque;

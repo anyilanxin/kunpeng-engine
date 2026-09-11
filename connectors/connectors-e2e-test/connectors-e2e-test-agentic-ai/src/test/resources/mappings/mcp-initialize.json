@@ -1,61 +1,41 @@
-{
-  "mappings": [
+{"mappings": [
     {
-      "request": {
-        "method": "POST",
-        "url": "/mcp",
-        "bodyPatterns": [
-          {
-            "matchesJsonPath": {
-              "expression": "$.method",
-              "equalTo": "initialize"
-            }
-          }
-        ]
-      },
-      "response": {
-        "status": 200,
-        "headers": {
-          "Content-Type": "application/json"
+        "request": {
+            "method": "POST",
+            "bodyPatterns": [{"matchesJsonPath": {
+                "expression": "$.method",
+                "equalTo": "initialize"
+            }}],
+            "url": "/mcp"
         },
-        "transformers": [
-          "response-template"
-        ],
-        "jsonBody": {
-          "jsonrpc": "2.0",
-          "id": "{{jsonPath request.body '$.id'}}",
-          "result": {
-            "protocolVersion": "2025-06-18",
-            "capabilities": {
-              "logging": {},
-              "prompts": {
-                "listChanged": false
-              },
-              "resources": {
-                "subscribe": false,
-                "listChanged": false
-              },
-              "tools": {
-                "listChanged": false
-              }
-            }
-          }
+        "response": {
+            "headers": {"Content-Type": "application/json"},
+            "transformers": ["response-template"],
+            "jsonBody": {
+                "result": {
+                    "capabilities": {
+                        "logging": {},
+                        "resources": {
+                            "listChanged": false,
+                            "subscribe": false
+                        },
+                        "tools": {"listChanged": false},
+                        "prompts": {"listChanged": false}
+                    },
+                    "protocolVersion": "2025-06-18"
+                },
+                "id": "{{jsonPath request.body '$.id'}}",
+                "jsonrpc": "2.0"
+            },
+            "status": 200
         }
-      }
     },
     {
-      "request": {
-        "method": "GET",
-        "url": "/mcp",
-        "headers": {
-          "Accept": {
-            "equalTo": "text/event-stream"
-          }
-        }
-      },
-      "response": {
-        "status": 200
-      }
+        "request": {
+            "headers": {"Accept": {"equalTo": "text/event-stream"}},
+            "method": "GET",
+            "url": "/mcp"
+        },
+        "response": {"status": 200}
     }
-  ]
-}
+]}

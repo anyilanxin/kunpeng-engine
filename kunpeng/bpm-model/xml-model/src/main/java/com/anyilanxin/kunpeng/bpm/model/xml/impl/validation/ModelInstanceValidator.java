@@ -16,28 +16,27 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.xml.impl.validation;
 
-import java.util.Collection;
-
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.ModelInstanceImpl;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 import com.anyilanxin.kunpeng.bpm.model.xml.validation.ModelElementValidator;
 import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResults;
+import java.util.Collection;
 
 /**
  * @author Daniel Meyer
- *
  */
 public class ModelInstanceValidator {
 
   protected ModelInstanceImpl modelInstanceImpl;
   protected Collection<ModelElementValidator<?>> validators;
 
-  public ModelInstanceValidator(ModelInstanceImpl modelInstanceImpl, Collection<ModelElementValidator<?>> validators) {
+  public ModelInstanceValidator(
+      ModelInstanceImpl modelInstanceImpl, Collection<ModelElementValidator<?>> validators) {
     this.modelInstanceImpl = modelInstanceImpl;
     this.validators = validators;
   }
 
-  @SuppressWarnings({ "unchecked", "rawtypes" })
+  @SuppressWarnings({"unchecked", "rawtypes"})
   public ValidationResults validate() {
 
     ValidationResultsCollectorImpl resultsCollector = new ValidationResultsCollectorImpl();
@@ -45,7 +44,8 @@ public class ModelInstanceValidator {
     for (ModelElementValidator validator : validators) {
 
       Class<? extends ModelElementInstance> elementType = validator.getElementType();
-      Collection<? extends ModelElementInstance> modelElementsByType = modelInstanceImpl.getModelElementsByType(elementType);
+      Collection<? extends ModelElementInstance> modelElementsByType =
+          modelInstanceImpl.getModelElementsByType(elementType);
 
       for (ModelElementInstance element : modelElementsByType) {
 
@@ -53,15 +53,13 @@ public class ModelInstanceValidator {
 
         try {
           validator.validate(element, resultsCollector);
-        }
-        catch(RuntimeException e) {
-          throw new RuntimeException("Validator " + validator + " threw an exception while validating "+element, e);
+        } catch (RuntimeException e) {
+          throw new RuntimeException(
+              "Validator " + validator + " threw an exception while validating " + element, e);
         }
       }
-
     }
 
     return resultsCollector.getResults();
   }
-
 }

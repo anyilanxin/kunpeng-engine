@@ -18,8 +18,8 @@
 package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.Query;
-import java.util.Collection;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
+import java.util.Collection;
 
 /**
  * The BPMN extensionElements element

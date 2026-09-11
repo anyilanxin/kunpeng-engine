@@ -26,7 +26,6 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Resource;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ResourceAssignmentExpression;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ResourceParameterBinding;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ResourceRole;
-import java.util.Collection;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
@@ -36,6 +35,7 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.child.ChildElement;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.ChildElementCollection;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.SequenceBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.ElementReference;
+import java.util.Collection;
 
 /**
  * The BPMN resourceRole element

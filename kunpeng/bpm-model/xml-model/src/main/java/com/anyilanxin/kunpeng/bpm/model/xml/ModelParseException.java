@@ -16,19 +16,16 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.xml;
 
-
 /**
  * Thrown when an error is encountered during XML parsing
  *
  * @author Daniel Meyer
- *
  */
 public class ModelParseException extends ModelException {
 
   private static final long serialVersionUID = 1L;
 
-  public ModelParseException() {
-  }
+  public ModelParseException() {}
 
   public ModelParseException(final String message, final Throwable cause) {
     super(message, cause);
@@ -41,5 +38,4 @@ public class ModelParseException extends ModelException {
   public ModelParseException(final Throwable cause) {
     super(cause);
   }
-
 }

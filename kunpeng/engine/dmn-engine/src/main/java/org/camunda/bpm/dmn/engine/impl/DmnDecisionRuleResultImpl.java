@@ -24,7 +24,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import org.camunda.bpm.dmn.engine.DmnDecisionRuleResult;
 import org.camunda.bpm.engine.variable.value.TypedValue;
 
@@ -184,7 +183,8 @@ public class DmnDecisionRuleResultImpl implements DmnDecisionRuleResult {
     Set<Entry<String, Object>> entrySet = new HashSet<Entry<String, Object>>();
 
     for (Entry<String, TypedValue> typedEntry : outputValues.entrySet()) {
-      DmnDecisionRuleOutputEntry entry = new DmnDecisionRuleOutputEntry(typedEntry.getKey(), typedEntry.getValue());
+      DmnDecisionRuleOutputEntry entry =
+          new DmnDecisionRuleOutputEntry(typedEntry.getKey(), typedEntry.getValue());
       entrySet.add(entry);
     }
 
@@ -219,7 +219,5 @@ public class DmnDecisionRuleResultImpl implements DmnDecisionRuleResult {
     public Object setValue(Object value) {
       throw new UnsupportedOperationException("decision output entry is immutable");
     }
-
   }
-
 }

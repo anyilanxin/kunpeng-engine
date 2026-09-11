@@ -17,8 +17,8 @@
  */
 package com.anyilanxin.kunpeng.cluster.cluster;
 
-import com.google.common.base.MoreObjects;
 import com.anyilanxin.kunpeng.cluster.utils.event.AbstractEvent;
+import com.google.common.base.MoreObjects;
 import java.util.Objects;
 
 /** Describes cluster-related event. */

@@ -19,13 +19,13 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.impl;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelException;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.Query;
+import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
+import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
-import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
-import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementType;
 
 /**
  * @author Sebastian Menski

@@ -26,19 +26,25 @@ public class DmnDecisionLiteralExpressionImpl implements DmnDecisionLogic {
   public DmnVariableImpl getVariable() {
     return variable;
   }
+
   public void setVariable(DmnVariableImpl variable) {
     this.variable = variable;
   }
+
   public DmnExpressionImpl getExpression() {
     return expression;
   }
+
   public void setExpression(DmnExpressionImpl expression) {
     this.expression = expression;
   }
 
   @Override
   public String toString() {
-    return "DmnDecisionLiteralExpressionImpl [variable=" + variable + ", expression=" + expression + "]";
+    return "DmnDecisionLiteralExpressionImpl [variable="
+        + variable
+        + ", expression="
+        + expression
+        + "]";
   }
-
 }

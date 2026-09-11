@@ -252,12 +252,6 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Definitions;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Process;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.bpmndi.BpmnDiagram;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.bpmndi.BpmnPlane;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
 import com.anyilanxin.kunpeng.bpm.model.xml.Model;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelException;
@@ -265,6 +259,12 @@ import com.anyilanxin.kunpeng.bpm.model.xml.ModelParseException;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelValidationException;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelElementInstanceImpl;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.util.IoUtil;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * Provides access to the camunda BPMN model api.
@@ -635,7 +635,8 @@ public class Bpmn {
     DiagramImpl.registerType(bpmnModelBuilder);
     DiagramElementImpl.registerType(bpmnModelBuilder);
     EdgeImpl.registerType(bpmnModelBuilder);
-    com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.di.ExtensionImpl.registerType(bpmnModelBuilder);
+    com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.di.ExtensionImpl.registerType(
+        bpmnModelBuilder);
     LabelImpl.registerType(bpmnModelBuilder);
     LabeledEdgeImpl.registerType(bpmnModelBuilder);
     LabeledShapeImpl.registerType(bpmnModelBuilder);

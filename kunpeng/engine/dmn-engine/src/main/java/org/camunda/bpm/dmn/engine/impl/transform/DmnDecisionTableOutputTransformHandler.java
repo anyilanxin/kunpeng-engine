@@ -25,13 +25,16 @@ import org.camunda.bpm.dmn.engine.impl.type.DefaultTypeDefinition;
 import org.camunda.bpm.dmn.engine.impl.type.DmnTypeDefinitionImpl;
 import org.camunda.bpm.model.dmn.instance.Output;
 
-public class DmnDecisionTableOutputTransformHandler implements DmnElementTransformHandler<Output, DmnDecisionTableOutputImpl> {
+public class DmnDecisionTableOutputTransformHandler
+    implements DmnElementTransformHandler<Output, DmnDecisionTableOutputImpl> {
 
-  public DmnDecisionTableOutputImpl handleElement(DmnElementTransformContext context, Output output) {
+  public DmnDecisionTableOutputImpl handleElement(
+      DmnElementTransformContext context, Output output) {
     return createFromOutput(context, output);
   }
 
-  protected DmnDecisionTableOutputImpl createFromOutput(DmnElementTransformContext context, Output output) {
+  protected DmnDecisionTableOutputImpl createFromOutput(
+      DmnElementTransformContext context, Output output) {
     DmnDecisionTableOutputImpl decisionTableOutput = createDmnElement(context, output);
 
     decisionTableOutput.setId(output.getId());
@@ -42,19 +45,19 @@ public class DmnDecisionTableOutputTransformHandler implements DmnElementTransfo
     return decisionTableOutput;
   }
 
-  protected DmnDecisionTableOutputImpl createDmnElement(DmnElementTransformContext context, Output output) {
+  protected DmnDecisionTableOutputImpl createDmnElement(
+      DmnElementTransformContext context, Output output) {
     return new DmnDecisionTableOutputImpl();
   }
 
   protected DmnTypeDefinition getTypeDefinition(DmnElementTransformContext context, Output output) {
     String typeRef = output.getTypeRef();
     if (typeRef != null) {
-      DmnDataTypeTransformer transformer = context.getDataTypeTransformerRegistry().getTransformer(typeRef);
+      DmnDataTypeTransformer transformer =
+          context.getDataTypeTransformerRegistry().getTransformer(typeRef);
       return new DmnTypeDefinitionImpl(typeRef, transformer);
-    }
-    else {
+    } else {
       return new DefaultTypeDefinition();
     }
   }
-
 }

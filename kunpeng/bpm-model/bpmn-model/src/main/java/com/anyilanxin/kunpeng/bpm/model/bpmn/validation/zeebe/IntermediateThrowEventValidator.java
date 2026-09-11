@@ -21,9 +21,9 @@ import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.QueryImpl;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.CompensateEventDefinition;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.IntermediateThrowEvent;
-import java.util.Optional;
 import com.anyilanxin.kunpeng.bpm.model.xml.validation.ModelElementValidator;
 import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResultCollector;
+import java.util.Optional;
 
 public class IntermediateThrowEventValidator
     implements ModelElementValidator<IntermediateThrowEvent> {

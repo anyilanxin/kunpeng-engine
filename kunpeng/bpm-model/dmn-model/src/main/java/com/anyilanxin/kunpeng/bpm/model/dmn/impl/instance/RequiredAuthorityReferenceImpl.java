@@ -16,8 +16,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_REQUIRED_AUTHORITY;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DmnElementReference;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.RequiredAuthorityReference;
@@ -26,23 +26,27 @@ import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceConte
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTypeInstanceProvider;
 
-public class RequiredAuthorityReferenceImpl extends DmnElementReferenceImpl implements RequiredAuthorityReference {
+public class RequiredAuthorityReferenceImpl extends DmnElementReferenceImpl
+    implements RequiredAuthorityReference {
 
   public RequiredAuthorityReferenceImpl(ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(RequiredAuthorityReference.class, DMN_ELEMENT_REQUIRED_AUTHORITY)
-      .namespaceUri(LATEST_DMN_NS)
-      .extendsType(DmnElementReference.class)
-      .instanceProvider(new ModelTypeInstanceProvider<RequiredAuthorityReference>() {
-        public RequiredAuthorityReference newInstance(ModelTypeInstanceContext instanceContext) {
-          return new RequiredAuthorityReferenceImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(RequiredAuthorityReference.class, DMN_ELEMENT_REQUIRED_AUTHORITY)
+            .namespaceUri(LATEST_DMN_NS)
+            .extendsType(DmnElementReference.class)
+            .instanceProvider(
+                new ModelTypeInstanceProvider<RequiredAuthorityReference>() {
+                  public RequiredAuthorityReference newInstance(
+                      ModelTypeInstanceContext instanceContext) {
+                    return new RequiredAuthorityReferenceImpl(instanceContext);
+                  }
+                });
 
     typeBuilder.build();
   }
-
 }

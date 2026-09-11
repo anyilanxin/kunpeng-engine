@@ -16,15 +16,13 @@
  */
 package org.camunda.bpm.dmn.engine.impl.el;
 
+import org.camunda.bpm.dmn.engine.impl.spi.el.ElExpression;
+import org.camunda.bpm.engine.variable.context.VariableContext;
 import org.camunda.bpm.impl.juel.jakarta.el.ELContext;
 import org.camunda.bpm.impl.juel.jakarta.el.ValueExpression;
 
-import org.camunda.bpm.dmn.engine.impl.spi.el.ElExpression;
-import org.camunda.bpm.engine.variable.context.VariableContext;
-
 /**
  * @author Daniel Meyer
- *
  */
 public class JuelExpression implements ElExpression {
 
@@ -43,10 +41,11 @@ public class JuelExpression implements ElExpression {
 
   @Override
   public String toString() {
-    return "JuelExpression{" +
-      "expression=" + expression +
-      ", elContextFactory=" + elContextFactory +
-      '}';
+    return "JuelExpression{"
+        + "expression="
+        + expression
+        + ", elContextFactory="
+        + elContextFactory
+        + '}';
   }
-
 }

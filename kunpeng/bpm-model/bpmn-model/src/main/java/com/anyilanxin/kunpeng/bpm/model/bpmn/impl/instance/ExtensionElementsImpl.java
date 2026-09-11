@@ -23,13 +23,13 @@ import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN
 import com.anyilanxin.kunpeng.bpm.model.bpmn.Query;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.QueryImpl;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ExtensionElements;
-import java.util.Collection;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.util.ModelUtil;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementType;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
+import java.util.Collection;
 
 /**
  * The BPMN extensionElements element

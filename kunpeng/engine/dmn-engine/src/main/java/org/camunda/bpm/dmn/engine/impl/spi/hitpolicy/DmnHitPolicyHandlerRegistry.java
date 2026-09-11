@@ -19,9 +19,7 @@ package org.camunda.bpm.dmn.engine.impl.spi.hitpolicy;
 import org.camunda.bpm.model.dmn.BuiltinAggregator;
 import org.camunda.bpm.model.dmn.HitPolicy;
 
-/**
- * Registry of hit policy handlers
- */
+/** Registry of hit policy handlers */
 public interface DmnHitPolicyHandlerRegistry {
 
   /**
@@ -34,12 +32,15 @@ public interface DmnHitPolicyHandlerRegistry {
   DmnHitPolicyHandler getHandler(HitPolicy hitPolicy, BuiltinAggregator builtinAggregator);
 
   /**
-   * Register a hit policy handler for a {@link HitPolicy} and {@link BuiltinAggregator} combination.
+   * Register a hit policy handler for a {@link HitPolicy} and {@link BuiltinAggregator}
+   * combination.
    *
    * @param hitPolicy the hit policy
    * @param builtinAggregator the aggregator or null if not required
    * @param hitPolicyHandler the hit policy handler to registry
    */
-  void addHandler(HitPolicy hitPolicy, BuiltinAggregator builtinAggregator, DmnHitPolicyHandler hitPolicyHandler);
-
+  void addHandler(
+      HitPolicy hitPolicy,
+      BuiltinAggregator builtinAggregator,
+      DmnHitPolicyHandler hitPolicyHandler);
 }

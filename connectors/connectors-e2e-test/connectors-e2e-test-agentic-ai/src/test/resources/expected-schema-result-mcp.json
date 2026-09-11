@@ -1,88 +1,80 @@
 {
-  "toolDefinitions": [
-    {
-      "name": "GetDateAndTime",
-      "description": "Returns the current date and time including the timezone.",
-      "inputSchema": {
-        "properties": {},
-        "type": "object",
-        "required": []
-      }
-    },
-    {
-      "name": "SuperfluxProduct",
-      "description": "Calculates the superflux product (a very complicated method only this tool can do) given two input numbers",
-      "inputSchema": {
-        "properties": {
-          "a": {
-            "type": "number",
-            "description": "The first number to be superflux calculated."
-          },
-          "b": {
-            "type": "number",
-            "description": "The second number to be superflux calculated."
-          }
+    "gatewayToolDefinitions": [
+        {
+            "name": "A_MCP_Client",
+            "description": "A MCP Client",
+            "type": "mcpClient"
         },
-        "type": "object",
-        "required": [
-          "a",
-          "b"
-        ]
-      }
-    },
-    {
-      "name": "Search_The_Web",
-      "description": "Do a web search to find the needed information.",
-      "inputSchema": {
-        "properties": {
-          "searchQuery": {
-            "type": "string",
-            "description": "The search query to use"
-          }
+        {
+            "name": "A_HTTP_Remote_MCP_Client",
+            "description": "A HTTP Remote MCP Client",
+            "type": "mcpClient"
         },
-        "type": "object",
-        "required": [
-          "searchQuery"
-        ]
-      }
-    },
-    {
-      "name": "Download_A_File",
-      "description": "Download a file from the provided URL",
-      "inputSchema": {
-        "properties": {
-          "url": {
-            "type": "string",
-            "description": "The URL to download the file from"
-          }
+        {
+            "name": "A_SSE_Remote_MCP_Client",
+            "description": "A SSE Remote MCP Client",
+            "type": "mcpClient"
         },
-        "type": "object",
-        "required": [
-          "url"
-        ]
-      }
-    }
-  ],
-  "gatewayToolDefinitions": [
-    {
-      "type": "mcpClient",
-      "name": "A_MCP_Client",
-      "description": "A MCP Client"
-    },
-    {
-      "type": "mcpClient",
-      "name": "A_HTTP_Remote_MCP_Client",
-      "description": "A HTTP Remote MCP Client"
-    },
-    {
-      "type": "mcpClient",
-      "name": "A_SSE_Remote_MCP_Client",
-      "description": "A SSE Remote MCP Client"
-    },
-    {
-      "type": "mcpClient",
-      "name": "Filesystem_MCP_Flow",
-      "description": "Filesystem MCP Flow"
-    }
-  ]
+        {
+            "name": "Filesystem_MCP_Flow",
+            "description": "Filesystem MCP Flow",
+            "type": "mcpClient"
+        }
+    ],
+    "toolDefinitions": [
+        {
+            "inputSchema": {
+                "type": "object",
+                "properties": {},
+                "required": []
+            },
+            "name": "GetDateAndTime",
+            "description": "Returns the current date and time including the timezone."
+        },
+        {
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "a": {
+                        "description": "The first number to be superflux calculated.",
+                        "type": "number"
+                    },
+                    "b": {
+                        "description": "The second number to be superflux calculated.",
+                        "type": "number"
+                    }
+                },
+                "required": [
+                    "a",
+                    "b"
+                ]
+            },
+            "name": "SuperfluxProduct",
+            "description": "Calculates the superflux product (a very complicated method only this tool can do) given two input numbers"
+        },
+        {
+            "inputSchema": {
+                "type": "object",
+                "properties": {"searchQuery": {
+                    "description": "The search query to use",
+                    "type": "string"
+                }},
+                "required": ["searchQuery"]
+            },
+            "name": "Search_The_Web",
+            "description": "Do a web search to find the needed information."
+        },
+        {
+            "inputSchema": {
+                "type": "object",
+                "properties": {"url": {
+                    "description": "The URL to download the file from",
+                    "type": "string"
+                }},
+                "required": ["url"]
+            },
+            "name": "Download_A_File",
+            "description": "Download a file from the provided URL"
+        }
+    ]
 }

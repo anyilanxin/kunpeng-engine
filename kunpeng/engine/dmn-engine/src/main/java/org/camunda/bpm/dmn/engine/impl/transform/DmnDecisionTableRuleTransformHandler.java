@@ -21,7 +21,8 @@ import org.camunda.bpm.dmn.engine.impl.spi.transform.DmnElementTransformContext;
 import org.camunda.bpm.dmn.engine.impl.spi.transform.DmnElementTransformHandler;
 import org.camunda.bpm.model.dmn.instance.Rule;
 
-public class DmnDecisionTableRuleTransformHandler implements DmnElementTransformHandler<Rule, DmnDecisionTableRuleImpl> {
+public class DmnDecisionTableRuleTransformHandler
+    implements DmnElementTransformHandler<Rule, DmnDecisionTableRuleImpl> {
 
   public DmnDecisionTableRuleImpl handleElement(DmnElementTransformContext context, Rule rule) {
     return createFromRule(context, rule);
@@ -36,8 +37,8 @@ public class DmnDecisionTableRuleTransformHandler implements DmnElementTransform
     return decisionTableRule;
   }
 
-  protected DmnDecisionTableRuleImpl createDmnElement(DmnElementTransformContext context, Rule rule) {
+  protected DmnDecisionTableRuleImpl createDmnElement(
+      DmnElementTransformContext context, Rule rule) {
     return new DmnDecisionTableRuleImpl();
   }
-
 }

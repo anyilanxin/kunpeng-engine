@@ -16,7 +16,6 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.rebalance;
 
-import com.google.common.base.Throwables;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.raft.LeadershipTransferResult;
 import com.anyilanxin.kunpeng.cluster.raft.RebalanceConfiguration;
@@ -24,6 +23,7 @@ import com.anyilanxin.kunpeng.cluster.raft.impl.RaftContext;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.LeadershipTransferInitiateRequest;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.LeadershipTransferResultRequest;
 import com.anyilanxin.kunpeng.cluster.raft.roles.LeaderRole;
+import com.google.common.base.Throwables;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import org.jspecify.annotations.NullMarked;

@@ -16,19 +16,16 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.xml;
 
-
 /**
  * Thrown when an error is encountered during reference resolving.
  *
  * @author Sebastian Menski
- *
  */
 public class ModelReferenceException extends ModelException {
 
   private static final long serialVersionUID = 1L;
 
-  public ModelReferenceException() {
-  }
+  public ModelReferenceException() {}
 
   public ModelReferenceException(final String message, final Throwable cause) {
     super(message, cause);
@@ -41,5 +38,4 @@ public class ModelReferenceException extends ModelException {
   public ModelReferenceException(final Throwable cause) {
     super(cause);
   }
-
 }

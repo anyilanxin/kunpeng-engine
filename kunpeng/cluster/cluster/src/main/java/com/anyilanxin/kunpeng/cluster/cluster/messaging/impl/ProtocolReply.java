@@ -17,8 +17,8 @@
  */
 package com.anyilanxin.kunpeng.cluster.cluster.messaging.impl;
 
-import com.google.common.base.MoreObjects;
 import com.anyilanxin.kunpeng.cluster.utils.misc.ArraySizeHashPrinter;
+import com.google.common.base.MoreObjects;
 
 /** Internal reply message. */
 public final class ProtocolReply extends ProtocolMessage {

@@ -22,9 +22,9 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ExtensionElements;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeCalledDecision;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeJobPriorityDefinition;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeTaskDefinition;
-import java.util.Collection;
 import com.anyilanxin.kunpeng.bpm.model.xml.validation.ModelElementValidator;
 import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResultCollector;
+import java.util.Collection;
 
 public final class BusinessRuleTaskValidator implements ModelElementValidator<BusinessRuleTask> {
 

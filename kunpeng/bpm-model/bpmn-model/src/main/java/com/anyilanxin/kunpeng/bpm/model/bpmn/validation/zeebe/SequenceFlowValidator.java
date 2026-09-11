@@ -19,9 +19,9 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.validation.zeebe;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ExclusiveGateway;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.InclusiveGateway;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.SequenceFlow;
-import java.util.Optional;
 import com.anyilanxin.kunpeng.bpm.model.xml.validation.ModelElementValidator;
 import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResultCollector;
+import java.util.Optional;
 
 public class SequenceFlowValidator implements ModelElementValidator<SequenceFlow> {
 

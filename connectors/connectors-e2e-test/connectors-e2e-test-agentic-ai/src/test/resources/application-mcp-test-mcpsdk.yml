@@ -6,4 +6,3 @@ camunda:
           framework: mcpsdk
         client:
           framework: mcpsdk
-

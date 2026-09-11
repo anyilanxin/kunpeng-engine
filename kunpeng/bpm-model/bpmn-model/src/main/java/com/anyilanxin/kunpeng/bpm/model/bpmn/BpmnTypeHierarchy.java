@@ -16,13 +16,13 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.bpmn;
 
+import com.anyilanxin.kunpeng.bpm.model.xml.impl.type.ModelElementTypeImpl;
+import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import com.anyilanxin.kunpeng.bpm.model.xml.impl.type.ModelElementTypeImpl;
-import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementType;
 
 public class BpmnTypeHierarchy {
 

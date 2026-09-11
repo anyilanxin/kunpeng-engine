@@ -16,8 +16,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_KNOWLEDGE_REQUIREMENT;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.BusinessKnowledgeModel;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.KnowledgeRequirement;
@@ -29,9 +29,11 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.SequenceBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.ElementReference;
 
-public class KnowledgeRequirementImpl extends DmnModelElementInstanceImpl implements KnowledgeRequirement {
+public class KnowledgeRequirementImpl extends DmnModelElementInstanceImpl
+    implements KnowledgeRequirement {
 
-  protected static ElementReference<BusinessKnowledgeModel, RequiredKnowledgeReference> requiredKnowledgeRef;
+  protected static ElementReference<BusinessKnowledgeModel, RequiredKnowledgeReference>
+      requiredKnowledgeRef;
 
   public KnowledgeRequirementImpl(ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
@@ -46,22 +48,27 @@ public class KnowledgeRequirementImpl extends DmnModelElementInstanceImpl implem
   }
 
   public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(KnowledgeRequirement.class, DMN_ELEMENT_KNOWLEDGE_REQUIREMENT)
-      .namespaceUri(LATEST_DMN_NS)
-      .instanceProvider(new ModelTypeInstanceProvider<KnowledgeRequirement>() {
-        public KnowledgeRequirement newInstance(ModelTypeInstanceContext instanceContext) {
-          return new KnowledgeRequirementImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(KnowledgeRequirement.class, DMN_ELEMENT_KNOWLEDGE_REQUIREMENT)
+            .namespaceUri(LATEST_DMN_NS)
+            .instanceProvider(
+                new ModelTypeInstanceProvider<KnowledgeRequirement>() {
+                  public KnowledgeRequirement newInstance(
+                      ModelTypeInstanceContext instanceContext) {
+                    return new KnowledgeRequirementImpl(instanceContext);
+                  }
+                });
 
     SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
-    requiredKnowledgeRef = sequenceBuilder.element(RequiredKnowledgeReference.class)
-      .required()
-      .uriElementReference(BusinessKnowledgeModel.class)
-      .build();
+    requiredKnowledgeRef =
+        sequenceBuilder
+            .element(RequiredKnowledgeReference.class)
+            .required()
+            .uriElementReference(BusinessKnowledgeModel.class)
+            .build();
 
     typeBuilder.build();
   }
-
 }

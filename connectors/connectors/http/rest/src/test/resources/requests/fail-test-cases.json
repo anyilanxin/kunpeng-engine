@@ -1,60 +1,54 @@
 [
-  {
-    "descriptionOfTest": "No method",
-    "url": "http://localhost:8086/http-endpoint",
-    "queryParameters": {
-      "q": "test",
-      "priority": 12
+    {
+        "headers": {
+            "User-Agent": "http-connector-demo",
+            "X-Camunda-Cluster-ID": "abcdef"
+        },
+        "queryParameters": {
+            "q": "test",
+            "priority": 12
+        },
+        "descriptionOfTest": "No method",
+        "body": {"customer": {
+            "name": "Jane Doe",
+            "id": 1231231,
+            "email": "jane.doe@exampe.com"
+        }},
+        "url": "http://localhost:8086/http-endpoint"
     },
-    "headers": {
-      "X-Camunda-Cluster-ID": "abcdef",
-      "User-Agent": "http-connector-demo"
+    {
+        "headers": {
+            "User-Agent": "http-connector-demo",
+            "X-Camunda-Cluster-ID": "abcdef"
+        },
+        "method": "get",
+        "queryParameters": {
+            "q": "test",
+            "priority": 12
+        },
+        "descriptionOfTest": "No URL",
+        "body": {"customer": {
+            "name": "Jane Doe",
+            "id": 1231231,
+            "email": "jane.doe@exampe.com"
+        }}
     },
-    "body": {
-      "customer": {
-        "id": 1231231,
-        "name": "Jane Doe",
-        "email": "jane.doe@exampe.com"
-      }
+    {
+        "headers": {
+            "User-Agent": "http-connector-demo",
+            "X-Camunda-Cluster-ID": "abcdef"
+        },
+        "method": "get",
+        "queryParameters": {
+            "q": "test",
+            "priority": 12
+        },
+        "descriptionOfTest": "Malformed URL",
+        "body": {"customer": {
+            "name": "Jane Doe",
+            "id": 1231231,
+            "email": "jane.doe@exampe.com"
+        }},
+        "url": "testmail@testmail.com"
     }
-  },
-  {
-    "descriptionOfTest": "No URL",
-    "method": "get",
-    "queryParameters": {
-      "q": "test",
-      "priority": 12
-    },
-    "headers": {
-      "X-Camunda-Cluster-ID": "abcdef",
-      "User-Agent": "http-connector-demo"
-    },
-    "body": {
-      "customer": {
-        "id": 1231231,
-        "name": "Jane Doe",
-        "email": "jane.doe@exampe.com"
-      }
-    }
-  },
-  {
-    "descriptionOfTest": "Malformed URL",
-    "method": "get",
-    "url": "testmail@testmail.com",
-    "queryParameters": {
-      "q": "test",
-      "priority": 12
-    },
-    "headers": {
-      "X-Camunda-Cluster-ID": "abcdef",
-      "User-Agent": "http-connector-demo"
-    },
-    "body": {
-      "customer": {
-        "id": 1231231,
-        "name": "Jane Doe",
-        "email": "jane.doe@exampe.com"
-      }
-    }
-  }
 ]

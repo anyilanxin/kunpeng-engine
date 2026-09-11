@@ -16,10 +16,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_EXTENSION_ELEMENTS;
-
-import java.util.Collection;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.Query;
 import com.anyilanxin.kunpeng.bpm.model.dmn.impl.QueryImpl;
@@ -30,21 +28,24 @@ import com.anyilanxin.kunpeng.bpm.model.xml.impl.util.ModelUtil;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementType;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
+import java.util.Collection;
 
-/**
- * The DMN extensionElements element
- */
-public class ExtensionElementsImpl extends DmnModelElementInstanceImpl implements ExtensionElements {
+/** The DMN extensionElements element */
+public class ExtensionElementsImpl extends DmnModelElementInstanceImpl
+    implements ExtensionElements {
 
   public static void registerType(ModelBuilder modelBuilder) {
 
-    ModelElementTypeBuilder typeBuilder = modelBuilder.defineType(ExtensionElements.class, DMN_ELEMENT_EXTENSION_ELEMENTS)
-      .namespaceUri(LATEST_DMN_NS)
-      .instanceProvider(new ModelElementTypeBuilder.ModelTypeInstanceProvider<ExtensionElements>() {
-        public ExtensionElements newInstance(ModelTypeInstanceContext instanceContext) {
-          return new ExtensionElementsImpl(instanceContext);
-        }
-      });
+    ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(ExtensionElements.class, DMN_ELEMENT_EXTENSION_ELEMENTS)
+            .namespaceUri(LATEST_DMN_NS)
+            .instanceProvider(
+                new ModelElementTypeBuilder.ModelTypeInstanceProvider<ExtensionElements>() {
+                  public ExtensionElements newInstance(ModelTypeInstanceContext instanceContext) {
+                    return new ExtensionElementsImpl(instanceContext);
+                  }
+                });
 
     typeBuilder.build();
   }
@@ -62,7 +63,8 @@ public class ExtensionElementsImpl extends DmnModelElementInstanceImpl implement
   }
 
   public ModelElementInstance addExtensionElement(String namespaceUri, String localName) {
-    ModelElementType extensionElementType = modelInstance.registerGenericType(namespaceUri, localName);
+    ModelElementType extensionElementType =
+        modelInstance.registerGenericType(namespaceUri, localName);
     ModelElementInstance extensionElement = extensionElementType.newInstance(modelInstance);
     addChildElement(extensionElement);
     return extensionElement;
@@ -78,5 +80,4 @@ public class ExtensionElementsImpl extends DmnModelElementInstanceImpl implement
   public void addChildElement(ModelElementInstance extensionElement) {
     getDomElement().appendChild(extensionElement.getDomElement());
   }
-
 }

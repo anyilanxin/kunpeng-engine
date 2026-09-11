@@ -17,7 +17,6 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.partition.impl;
 
-import com.google.common.base.Preconditions;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationService;
 import com.anyilanxin.kunpeng.cluster.raft.metrics.RaftRequestMetrics;
@@ -53,6 +52,7 @@ import com.anyilanxin.kunpeng.cluster.raft.protocol.VersionedAppendRequest;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.VoteRequest;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.VoteResponse;
 import com.anyilanxin.kunpeng.cluster.utils.serializer.Serializer;
+import com.google.common.base.Preconditions;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;

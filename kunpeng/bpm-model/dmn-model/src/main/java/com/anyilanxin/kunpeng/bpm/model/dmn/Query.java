@@ -16,10 +16,9 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn;
 
-import java.util.List;
-
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementType;
+import java.util.List;
 
 public interface Query<T extends ModelElementInstance> {
 
@@ -32,5 +31,4 @@ public interface Query<T extends ModelElementInstance> {
   <V extends ModelElementInstance> Query<V> filterByType(Class<V> elementClass);
 
   T singleResult();
-
 }

@@ -17,7 +17,6 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.roles;
 
-import com.google.common.base.Throwables;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.raft.RaftError;
 import com.anyilanxin.kunpeng.cluster.raft.RaftError.Type;
@@ -29,6 +28,7 @@ import com.anyilanxin.kunpeng.cluster.raft.RaftServer.Role;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.impl.RaftMemberContext;
 import com.anyilanxin.kunpeng.cluster.raft.impl.RaftContext;
+import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.AppendResponse;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.ConfigureRequest;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.ConfigureResponse;
@@ -64,7 +64,7 @@ import com.anyilanxin.kunpeng.cluster.raft.storage.system.Configuration;
 import com.anyilanxin.kunpeng.cluster.raft.zeebe.EntryValidator.ValidationResult;
 import com.anyilanxin.kunpeng.cluster.raft.zeebe.ZeebeLogAppender;
 import com.anyilanxin.kunpeng.cluster.utils.concurrent.Scheduled;
-import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException;
+import com.google.common.base.Throwables;
 import io.camunda.zeebe.util.buffer.BufferWriter;
 import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;

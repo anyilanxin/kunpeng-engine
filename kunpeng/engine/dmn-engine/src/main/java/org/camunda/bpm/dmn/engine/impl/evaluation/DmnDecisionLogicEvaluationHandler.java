@@ -21,19 +21,14 @@ import org.camunda.bpm.dmn.engine.DmnDecisionResult;
 import org.camunda.bpm.dmn.engine.delegate.DmnDecisionLogicEvaluationEvent;
 import org.camunda.bpm.engine.variable.context.VariableContext;
 
-/**
- * Evaluates decisions with a specific kind of decision logic and generates the
- * result.
- */
+/** Evaluates decisions with a specific kind of decision logic and generates the result. */
 public interface DmnDecisionLogicEvaluationHandler {
 
   /**
    * Evaluate a decision with the given {@link VariableContext}.
    *
-   * @param decision
-   *          the decision to evaluate
-   * @param variableContext
-   *          the available variable context
+   * @param decision the decision to evaluate
+   * @param variableContext the available variable context
    * @return the event which represents the evaluation
    */
   DmnDecisionLogicEvaluationEvent evaluate(DmnDecision decision, VariableContext variableContext);
@@ -41,10 +36,8 @@ public interface DmnDecisionLogicEvaluationHandler {
   /**
    * Generates the decision evaluation result of the given event.
    *
-   * @param event
-   *          which represents the evaluation
+   * @param event which represents the evaluation
    * @return the result of the decision evaluation
    */
   DmnDecisionResult generateDecisionResult(DmnDecisionLogicEvaluationEvent event);
-
 }

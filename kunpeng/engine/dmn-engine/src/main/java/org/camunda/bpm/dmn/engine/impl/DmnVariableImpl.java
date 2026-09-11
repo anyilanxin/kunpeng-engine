@@ -51,11 +51,15 @@ public class DmnVariableImpl {
 
   @Override
   public String toString() {
-    return "DmnVariableImpl{" +
-      "id='" + id + '\'' +
-      ", name='" + name + '\'' +
-      ", typeDefinition=" + typeDefinition +
-      '}';
+    return "DmnVariableImpl{"
+        + "id='"
+        + id
+        + '\''
+        + ", name='"
+        + name
+        + '\''
+        + ", typeDefinition="
+        + typeDefinition
+        + '}';
   }
-
 }

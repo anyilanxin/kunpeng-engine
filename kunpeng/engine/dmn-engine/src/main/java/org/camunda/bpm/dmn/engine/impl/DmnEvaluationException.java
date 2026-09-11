@@ -18,9 +18,7 @@ package org.camunda.bpm.dmn.engine.impl;
 
 import org.camunda.bpm.dmn.engine.DmnEngineException;
 
-/**
- * Exception throw for errors during the evaluation of a decision.
- */
+/** Exception throw for errors during the evaluation of a decision. */
 public class DmnEvaluationException extends DmnEngineException {
 
   public DmnEvaluationException(String message, Throwable cause) {
@@ -30,5 +28,4 @@ public class DmnEvaluationException extends DmnEngineException {
   public DmnEvaluationException(String message) {
     super(message);
   }
-
 }

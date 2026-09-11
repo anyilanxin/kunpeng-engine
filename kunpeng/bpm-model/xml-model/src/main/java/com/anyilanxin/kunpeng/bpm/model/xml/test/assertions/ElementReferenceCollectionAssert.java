@@ -21,11 +21,11 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.ElementReferenceColle
 /**
  * @author Sebastian Menski
  */
-public class ElementReferenceCollectionAssert extends AbstractReferenceAssert<ElementReferenceCollectionAssert, ElementReferenceCollection<?, ?>> {
+public class ElementReferenceCollectionAssert
+    extends AbstractReferenceAssert<
+        ElementReferenceCollectionAssert, ElementReferenceCollection<?, ?>> {
 
   protected ElementReferenceCollectionAssert(ElementReferenceCollection<?, ?> actual) {
     super(actual, ElementReferenceCollectionAssert.class);
   }
-
 }
-
