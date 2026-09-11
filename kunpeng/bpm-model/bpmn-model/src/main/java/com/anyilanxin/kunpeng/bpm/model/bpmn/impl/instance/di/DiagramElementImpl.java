@@ -1,0 +1,84 @@
+/*
+ * Copyright © 2017 camunda services GmbH (info@camunda.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.di;
+
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DI_ATTRIBUTE_ID;
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DI_ELEMENT_DIAGRAM_ELEMENT;
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DI_NS;
+
+import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.BpmnModelElementInstanceImpl;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.di.DiagramElement;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.di.Extension;
+import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
+import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
+import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
+import com.anyilanxin.kunpeng.bpm.model.xml.type.attribute.Attribute;
+import com.anyilanxin.kunpeng.bpm.model.xml.type.child.ChildElement;
+import com.anyilanxin.kunpeng.bpm.model.xml.type.child.SequenceBuilder;
+
+/**
+ * The DI DiagramElement element
+ *
+ * @author Sebastian Menski
+ */
+public abstract class DiagramElementImpl extends BpmnModelElementInstanceImpl
+    implements DiagramElement {
+
+  protected static Attribute<String> idAttribute;
+  protected static ChildElement<Extension> extensionChild;
+
+  public DiagramElementImpl(final ModelTypeInstanceContext instanceContext) {
+    super(instanceContext);
+  }
+
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(DiagramElement.class, DI_ELEMENT_DIAGRAM_ELEMENT)
+            .namespaceUri(DI_NS)
+            .abstractType();
+
+    idAttribute = typeBuilder.stringAttribute(DI_ATTRIBUTE_ID).idAttribute().build();
+
+    final SequenceBuilder sequenceBuilder = typeBuilder.sequence();
+
+    extensionChild = sequenceBuilder.element(Extension.class).build();
+
+    typeBuilder.build();
+  }
+
+  @Override
+  public String getId() {
+    return idAttribute.getValue(this);
+  }
+
+  @Override
+  public void setId(final String id) {
+    idAttribute.setValue(this, id);
+  }
+
+  @Override
+  public Extension getExtension() {
+    return extensionChild.getChild(this);
+  }
+
+  @Override
+  public void setExtension(final Extension extension) {
+    extensionChild.setChild(this, extension);
+  }
+}

@@ -1,0 +1,96 @@
+/*
+ * Copyright © 2017 camunda services GmbH (info@camunda.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance;
+
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN20_NS;
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ATTRIBUTE_MESSAGE_REF;
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ELEMENT_MESSAGE_EVENT_DEFINITION;
+
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.EventDefinition;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Message;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.MessageEventDefinition;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Operation;
+import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
+import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
+import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
+import com.anyilanxin.kunpeng.bpm.model.xml.type.child.SequenceBuilder;
+import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.AttributeReference;
+import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.ElementReference;
+
+/**
+ * @author Sebastian Menski
+ */
+public class MessageEventDefinitionImpl extends EventDefinitionImpl
+    implements MessageEventDefinition {
+
+  protected static AttributeReference<Message> messageRefAttribute;
+  protected static ElementReference<Operation, OperationRef> operationRefChild;
+
+  public MessageEventDefinitionImpl(final ModelTypeInstanceContext context) {
+    super(context);
+  }
+
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(MessageEventDefinition.class, BPMN_ELEMENT_MESSAGE_EVENT_DEFINITION)
+            .namespaceUri(BPMN20_NS)
+            .extendsType(EventDefinition.class)
+            .instanceProvider(
+                new ModelElementTypeBuilder.ModelTypeInstanceProvider<MessageEventDefinition>() {
+                  @Override
+                  public MessageEventDefinition newInstance(
+                      final ModelTypeInstanceContext instanceContext) {
+                    return new MessageEventDefinitionImpl(instanceContext);
+                  }
+                });
+
+    messageRefAttribute =
+        typeBuilder
+            .stringAttribute(BPMN_ATTRIBUTE_MESSAGE_REF)
+            .qNameAttributeReference(Message.class)
+            .build();
+
+    final SequenceBuilder sequenceBuilder = typeBuilder.sequence();
+
+    operationRefChild =
+        sequenceBuilder.element(OperationRef.class).qNameElementReference(Operation.class).build();
+
+    typeBuilder.build();
+  }
+
+  @Override
+  public Message getMessage() {
+    return messageRefAttribute.getReferenceTargetElement(this);
+  }
+
+  @Override
+  public void setMessage(final Message message) {
+    messageRefAttribute.setReferenceTargetElement(this, message);
+  }
+
+  @Override
+  public Operation getOperation() {
+    return operationRefChild.getReferenceTargetElement(this);
+  }
+
+  @Override
+  public void setOperation(final Operation operation) {
+    operationRefChild.setReferenceTargetElement(this, operation);
+  }
+}

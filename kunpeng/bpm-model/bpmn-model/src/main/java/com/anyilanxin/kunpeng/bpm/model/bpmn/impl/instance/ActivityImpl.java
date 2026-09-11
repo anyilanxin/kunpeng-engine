@@ -1,0 +1,206 @@
+/*
+ * Copyright © 2017 camunda services GmbH (info@camunda.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance;
+
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ATTRIBUTE_COMPLETION_QUANTITY;
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ATTRIBUTE_DEFAULT;
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ATTRIBUTE_IS_FOR_COMPENSATION;
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ATTRIBUTE_START_QUANTITY;
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ELEMENT_ACTIVITY;
+
+import com.anyilanxin.kunpeng.bpm.model.bpmn.Query;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.QueryImpl;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Activity;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BoundaryEvent;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.DataInputAssociation;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.DataOutputAssociation;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.FlowNode;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.IoSpecification;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.LoopCharacteristics;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Property;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ResourceRole;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.SequenceFlow;
+import java.util.Collection;
+import java.util.stream.Collectors;
+import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
+import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
+import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
+import com.anyilanxin.kunpeng.bpm.model.xml.type.attribute.Attribute;
+import com.anyilanxin.kunpeng.bpm.model.xml.type.child.ChildElement;
+import com.anyilanxin.kunpeng.bpm.model.xml.type.child.ChildElementCollection;
+import com.anyilanxin.kunpeng.bpm.model.xml.type.child.SequenceBuilder;
+import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.AttributeReference;
+
+/**
+ * The BPMN activity element
+ *
+ * @author Sebastian Menski
+ */
+public abstract class ActivityImpl extends FlowNodeImpl implements Activity {
+
+  protected static Attribute<Boolean> isForCompensationAttribute;
+  protected static Attribute<Integer> startQuantityAttribute;
+  protected static Attribute<Integer> completionQuantityAttribute;
+  protected static AttributeReference<SequenceFlow> defaultAttribute;
+  protected static ChildElement<IoSpecification> ioSpecificationChild;
+  protected static ChildElementCollection<Property> propertyCollection;
+  protected static ChildElementCollection<DataInputAssociation> dataInputAssociationCollection;
+  protected static ChildElementCollection<DataOutputAssociation> dataOutputAssociationCollection;
+  protected static ChildElementCollection<ResourceRole> resourceRoleCollection;
+  protected static ChildElement<LoopCharacteristics> loopCharacteristicsChild;
+
+  public ActivityImpl(final ModelTypeInstanceContext context) {
+    super(context);
+  }
+
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
+        modelBuilder
+            .defineType(Activity.class, BPMN_ELEMENT_ACTIVITY)
+            .namespaceUri(BpmnModelConstants.BPMN20_NS)
+            .extendsType(FlowNode.class)
+            .abstractType();
+
+    isForCompensationAttribute =
+        typeBuilder
+            .booleanAttribute(BPMN_ATTRIBUTE_IS_FOR_COMPENSATION)
+            .defaultValue(false)
+            .build();
+
+    startQuantityAttribute =
+        typeBuilder.integerAttribute(BPMN_ATTRIBUTE_START_QUANTITY).defaultValue(1).build();
+
+    completionQuantityAttribute =
+        typeBuilder.integerAttribute(BPMN_ATTRIBUTE_COMPLETION_QUANTITY).defaultValue(1).build();
+
+    defaultAttribute =
+        typeBuilder
+            .stringAttribute(BPMN_ATTRIBUTE_DEFAULT)
+            .idAttributeReference(SequenceFlow.class)
+            .build();
+
+    final SequenceBuilder sequenceBuilder = typeBuilder.sequence();
+
+    ioSpecificationChild = sequenceBuilder.element(IoSpecification.class).build();
+
+    propertyCollection = sequenceBuilder.elementCollection(Property.class).build();
+
+    dataInputAssociationCollection =
+        sequenceBuilder.elementCollection(DataInputAssociation.class).build();
+
+    dataOutputAssociationCollection =
+        sequenceBuilder.elementCollection(DataOutputAssociation.class).build();
+
+    resourceRoleCollection = sequenceBuilder.elementCollection(ResourceRole.class).build();
+
+    loopCharacteristicsChild = sequenceBuilder.element(LoopCharacteristics.class).build();
+
+    typeBuilder.build();
+  }
+
+  @Override
+  public boolean isForCompensation() {
+    return isForCompensationAttribute.getValue(this);
+  }
+
+  @Override
+  public void setForCompensation(final boolean isForCompensation) {
+    isForCompensationAttribute.setValue(this, isForCompensation);
+  }
+
+  @Override
+  public int getStartQuantity() {
+    return startQuantityAttribute.getValue(this);
+  }
+
+  @Override
+  public void setStartQuantity(final int startQuantity) {
+    startQuantityAttribute.setValue(this, startQuantity);
+  }
+
+  @Override
+  public int getCompletionQuantity() {
+    return completionQuantityAttribute.getValue(this);
+  }
+
+  @Override
+  public void setCompletionQuantity(final int completionQuantity) {
+    completionQuantityAttribute.setValue(this, completionQuantity);
+  }
+
+  @Override
+  public SequenceFlow getDefault() {
+    return defaultAttribute.getReferenceTargetElement(this);
+  }
+
+  @Override
+  public void setDefault(final SequenceFlow defaultFlow) {
+    defaultAttribute.setReferenceTargetElement(this, defaultFlow);
+  }
+
+  @Override
+  public IoSpecification getIoSpecification() {
+    return ioSpecificationChild.getChild(this);
+  }
+
+  @Override
+  public void setIoSpecification(final IoSpecification ioSpecification) {
+    ioSpecificationChild.setChild(this, ioSpecification);
+  }
+
+  @Override
+  public Collection<Property> getProperties() {
+    return propertyCollection.get(this);
+  }
+
+  @Override
+  public Collection<DataInputAssociation> getDataInputAssociations() {
+    return dataInputAssociationCollection.get(this);
+  }
+
+  @Override
+  public Collection<DataOutputAssociation> getDataOutputAssociations() {
+    return dataOutputAssociationCollection.get(this);
+  }
+
+  @Override
+  public Collection<ResourceRole> getResourceRoles() {
+    return resourceRoleCollection.get(this);
+  }
+
+  @Override
+  public LoopCharacteristics getLoopCharacteristics() {
+    return loopCharacteristicsChild.getChild(this);
+  }
+
+  @Override
+  public void setLoopCharacteristics(final LoopCharacteristics loopCharacteristics) {
+    loopCharacteristicsChild.setChild(this, loopCharacteristics);
+  }
+
+  @Override
+  public Query<BoundaryEvent> getBoundaryEvents() {
+    final Collection<BoundaryEvent> queryElements =
+        getParentElement().getChildElementsByType(BoundaryEvent.class).stream()
+            .filter(event -> event.getAttachedTo() != null && event.getAttachedTo().equals(this))
+            .collect(Collectors.toSet());
+
+    return new QueryImpl<>(queryElements);
+  }
+}

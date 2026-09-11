@@ -1,0 +1,86 @@
+/*
+ * Copyright © 2017 camunda services GmbH (info@camunda.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.anyilanxin.kunpeng.bpm.model.bpmn.validation.zeebe;
+
+import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.ZeebeConstants;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BusinessRuleTask;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ExtensionElements;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeCalledDecision;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeJobPriorityDefinition;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeTaskDefinition;
+import java.util.Collection;
+import com.anyilanxin.kunpeng.bpm.model.xml.validation.ModelElementValidator;
+import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResultCollector;
+
+public final class BusinessRuleTaskValidator implements ModelElementValidator<BusinessRuleTask> {
+
+  @Override
+  public Class<BusinessRuleTask> getElementType() {
+    return BusinessRuleTask.class;
+  }
+
+  @Override
+  public void validate(
+      final BusinessRuleTask element, final ValidationResultCollector validationResultCollector) {
+    IdentifiableBpmnElementValidator.validate(element, validationResultCollector);
+
+    if (!hasExactlyOneExtension(element)) {
+      validationResultCollector.addError(
+          0,
+          String.format(
+              "Must have either one 'zeebe:%s' or one 'zeebe:%s' extension element",
+              ZeebeConstants.ELEMENT_CALLED_DECISION, ZeebeConstants.ELEMENT_TASK_DEFINITION));
+    }
+
+    if (hasJobPriorityDefinitionWithoutTaskDefinition(element)) {
+      validationResultCollector.addError(
+          0,
+          String.format(
+              "'zeebe:%s' is only allowed in job-worker mode ('zeebe:%s')",
+              ZeebeConstants.ELEMENT_JOB_PRIORITY_DEFINITION,
+              ZeebeConstants.ELEMENT_TASK_DEFINITION));
+    }
+  }
+
+  private boolean hasExactlyOneExtension(final BusinessRuleTask element) {
+    final ExtensionElements extensionElements = element.getExtensionElements();
+
+    if (extensionElements == null) {
+      return false;
+    }
+
+    final Collection<ZeebeCalledDecision> calledDecisionExtensions =
+        extensionElements.getChildElementsByType(ZeebeCalledDecision.class);
+    final Collection<ZeebeTaskDefinition> taskDefinitionExtensions =
+        extensionElements.getChildElementsByType(ZeebeTaskDefinition.class);
+
+    return calledDecisionExtensions.size() == 1 && taskDefinitionExtensions.isEmpty()
+        || calledDecisionExtensions.isEmpty() && taskDefinitionExtensions.size() == 1;
+  }
+
+  private boolean hasJobPriorityDefinitionWithoutTaskDefinition(final BusinessRuleTask element) {
+    final ExtensionElements extensionElements = element.getExtensionElements();
+    if (extensionElements == null) {
+      return false;
+    }
+    final boolean hasJobPriorityDefinition =
+        !extensionElements.getChildElementsByType(ZeebeJobPriorityDefinition.class).isEmpty();
+    final boolean hasTaskDefinition =
+        !extensionElements.getChildElementsByType(ZeebeTaskDefinition.class).isEmpty();
+    return hasJobPriorityDefinition && !hasTaskDefinition;
+  }
+}
