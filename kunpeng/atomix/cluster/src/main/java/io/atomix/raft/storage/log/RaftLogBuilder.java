@@ -18,11 +18,11 @@ package io.atomix.raft.storage.log;
 
 import io.atomix.raft.storage.log.RaftLogFlusher.DirectFlusher;
 import io.atomix.raft.storage.log.RaftLogFlusher.Factory;
-import io.camunda.zeebe.journal.Journal;
-import io.camunda.zeebe.journal.JournalMetaStore;
-import io.camunda.zeebe.journal.file.SegmentAllocator;
-import io.camunda.zeebe.journal.file.SegmentedJournal;
-import io.camunda.zeebe.journal.file.SegmentedJournalBuilder;
+import io.atomix.raft.journal.Journal;
+import io.atomix.raft.journal.JournalMetaStore;
+import io.atomix.raft.journal.file.SegmentAllocator;
+import io.atomix.raft.journal.file.SegmentedJournal;
+import io.atomix.raft.journal.file.SegmentedJournalBuilder;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.io.File;
 

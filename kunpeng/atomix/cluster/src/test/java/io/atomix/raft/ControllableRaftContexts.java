@@ -41,7 +41,7 @@ import io.atomix.raft.zeebe.EntryValidator.NoopEntryValidator;
 import io.atomix.raft.zeebe.ZeebeLogAppender.AppendListener;
 import io.camunda.cluster.PartitionId;
 import io.camunda.cluster.PhysicalTenantIds;
-import io.camunda.zeebe.journal.JournalException;
+import io.atomix.raft.journal.JournalException;
 import io.camunda.zeebe.scheduler.testing.TestConcurrencyControl;
 import io.camunda.zeebe.snapshots.testing.TestFileBasedSnapshotStore;
 import io.camunda.zeebe.util.FileUtil;

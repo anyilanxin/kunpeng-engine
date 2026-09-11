@@ -29,7 +29,7 @@ import io.atomix.raft.storage.log.entry.RaftLogEntry;
 import io.atomix.raft.storage.log.entry.SerializedApplicationEntry;
 import io.atomix.raft.storage.serializer.ConfigurationEntryDecoder.NewMembersDecoder;
 import io.atomix.raft.storage.serializer.ConfigurationEntryDecoder.OldMembersDecoder;
-import io.camunda.zeebe.journal.file.RecordDataEncoder;
+import io.atomix.raft.journal.file.RecordDataEncoder;
 import io.camunda.zeebe.util.SbeUtil;
 import java.nio.ByteOrder;
 import java.time.Instant;

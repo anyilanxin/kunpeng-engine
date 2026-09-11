@@ -26,7 +26,7 @@ import io.atomix.raft.storage.RaftStorage;
 import io.atomix.raft.storage.StorageException;
 import io.atomix.raft.storage.serializer.MetaEncoder;
 import io.atomix.raft.storage.serializer.MetaStoreSerializer;
-import io.camunda.zeebe.journal.JournalMetaStore;
+import io.atomix.raft.journal.JournalMetaStore;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.io.File;
 import java.io.IOException;

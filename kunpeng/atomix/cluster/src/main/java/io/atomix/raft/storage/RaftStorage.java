@@ -26,7 +26,7 @@ import io.atomix.raft.storage.log.RaftLogFlusher;
 import io.atomix.raft.storage.system.MetaStore;
 import io.atomix.utils.concurrent.ThreadContext;
 import io.atomix.utils.concurrent.ThreadContextFactory;
-import io.camunda.zeebe.journal.file.SegmentAllocator;
+import io.atomix.raft.journal.file.SegmentAllocator;
 import io.camunda.zeebe.snapshots.PersistedSnapshotStore;
 import io.camunda.zeebe.snapshots.ReceivableSnapshotStore;
 import io.camunda.zeebe.util.FileUtil;

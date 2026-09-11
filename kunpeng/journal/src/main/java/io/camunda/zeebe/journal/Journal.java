@@ -14,11 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.camunda.zeebe.journal;
+package io.atomix.raft.journal;
 
-import io.camunda.zeebe.journal.CheckedJournalException.FlushException;
-import io.camunda.zeebe.journal.JournalException.InvalidChecksum;
-import io.camunda.zeebe.journal.JournalException.InvalidIndex;
+import io.atomix.raft.journal.CheckedJournalException.FlushException;
+import io.atomix.raft.journal.JournalException.InvalidChecksum;
+import io.atomix.raft.journal.JournalException.InvalidIndex;
 import io.camunda.zeebe.util.buffer.BufferWriter;
 
 public interface Journal extends AutoCloseable {

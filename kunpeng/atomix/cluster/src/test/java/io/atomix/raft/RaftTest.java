@@ -44,7 +44,7 @@ import io.atomix.raft.storage.log.entry.InitialEntry;
 import io.atomix.raft.zeebe.ZeebeLogAppender;
 import io.atomix.utils.concurrent.SingleThreadContext;
 import io.atomix.utils.concurrent.ThreadContext;
-import io.camunda.zeebe.journal.CorruptedJournalException;
+import io.atomix.raft.journal.CorruptedJournalException;
 import io.camunda.zeebe.util.health.FailureListener;
 import io.camunda.zeebe.util.health.HealthReport;
 import io.micrometer.core.instrument.MeterRegistry;

@@ -46,7 +46,7 @@ import io.atomix.raft.storage.log.RaftLogReader;
 import io.atomix.raft.zeebe.ZeebeLogAppender;
 import io.atomix.utils.serializer.Serializer;
 import io.camunda.cluster.PhysicalTenantIds;
-import io.camunda.zeebe.journal.SegmentInfo;
+import io.atomix.raft.journal.SegmentInfo;
 import io.camunda.zeebe.snapshots.PersistedSnapshotStore;
 import io.camunda.zeebe.snapshots.ReceivableSnapshotStore;
 import io.camunda.zeebe.util.FileUtil;

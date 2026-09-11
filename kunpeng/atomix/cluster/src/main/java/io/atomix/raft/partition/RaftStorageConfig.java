@@ -20,7 +20,7 @@ package io.atomix.raft.partition;
 import io.atomix.raft.storage.log.RaftLog;
 import io.atomix.raft.storage.log.RaftLogFlusher;
 import io.atomix.utils.concurrent.ThreadContext;
-import io.camunda.zeebe.journal.file.SegmentAllocator;
+import io.atomix.raft.journal.file.SegmentAllocator;
 
 /** Raft storage configuration. */
 public class RaftStorageConfig {

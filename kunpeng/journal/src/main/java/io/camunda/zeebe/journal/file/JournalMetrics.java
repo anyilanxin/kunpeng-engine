@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.camunda.zeebe.journal.file;
+package io.atomix.raft.journal.file;
 
-import static io.camunda.zeebe.journal.file.JournalMetricsDoc.*;
+import static io.atomix.raft.journal.file.JournalMetricsDoc.*;
 
 import io.camunda.zeebe.util.CloseableSilently;
 import io.camunda.zeebe.util.micrometer.MicrometerUtil;

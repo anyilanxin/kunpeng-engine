@@ -15,22 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.camunda.zeebe.journal.file;
+package io.atomix.raft.journal.file;
 
-import static io.camunda.zeebe.journal.file.SegmentedJournal.ASQN_IGNORE;
+import static io.atomix.raft.journal.file.SegmentedJournal.ASQN_IGNORE;
 
-import io.camunda.zeebe.journal.CorruptedJournalException;
-import io.camunda.zeebe.journal.JournalException.InvalidAsqn;
-import io.camunda.zeebe.journal.JournalException.InvalidChecksum;
-import io.camunda.zeebe.journal.JournalException.InvalidIndex;
-import io.camunda.zeebe.journal.JournalException.SegmentFull;
-import io.camunda.zeebe.journal.JournalRecord;
-import io.camunda.zeebe.journal.record.JournalRecordReaderUtil;
-import io.camunda.zeebe.journal.record.JournalRecordSerializer;
-import io.camunda.zeebe.journal.record.PersistedJournalRecord;
-import io.camunda.zeebe.journal.record.RecordMetadata;
-import io.camunda.zeebe.journal.record.SBESerializer;
-import io.camunda.zeebe.journal.util.ChecksumGenerator;
+import io.atomix.raft.journal.CorruptedJournalException;
+import io.atomix.raft.journal.JournalException.InvalidAsqn;
+import io.atomix.raft.journal.JournalException.InvalidChecksum;
+import io.atomix.raft.journal.JournalException.InvalidIndex;
+import io.atomix.raft.journal.JournalException.SegmentFull;
+import io.atomix.raft.journal.JournalRecord;
+import io.atomix.raft.journal.record.JournalRecordReaderUtil;
+import io.atomix.raft.journal.record.JournalRecordSerializer;
+import io.atomix.raft.journal.record.PersistedJournalRecord;
+import io.atomix.raft.journal.record.RecordMetadata;
+import io.atomix.raft.journal.record.SBESerializer;
+import io.atomix.raft.journal.util.ChecksumGenerator;
 import io.camunda.zeebe.util.Either;
 import io.camunda.zeebe.util.buffer.BufferWriter;
 import io.camunda.zeebe.util.buffer.DirectBufferWriter;

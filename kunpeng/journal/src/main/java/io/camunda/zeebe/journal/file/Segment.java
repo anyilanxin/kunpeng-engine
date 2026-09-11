@@ -15,14 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.camunda.zeebe.journal.file;
+package io.atomix.raft.journal.file;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.Sets;
-import io.camunda.zeebe.journal.CheckedJournalException.FlushException;
-import io.camunda.zeebe.journal.JournalException;
+import io.atomix.raft.journal.CheckedJournalException.FlushException;
+import io.atomix.raft.journal.JournalException;
 import io.camunda.zeebe.util.FileUtil;
 import java.io.IOException;
 import java.io.UncheckedIOException;
