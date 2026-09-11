@@ -1,0 +1,53 @@
+/*
+ * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+plugins {
+    id 'kunpeng.build-publish'
+}
+
+description = "Cluster"
+
+configure(jarInfo) {
+    archiveName = "kunpeng-cluster"
+}
+dependencies {
+    implementation 'org.agrona:agrona'
+    implementation 'io.netty:netty-transport'
+    implementation 'io.netty:netty-codec'
+    implementation 'io.netty:netty-common'
+    implementation 'io.netty:netty-transport-classes-epoll'
+    implementation('io.netty:netty-transport-native-epoll') {
+        artifact { classifier = "linux-x86_64" }
+    }
+    implementation 'io.netty:netty-handler'
+    implementation 'io.netty:netty-codec-dns'
+    implementation 'io.netty:netty-resolver-dns'
+    implementation 'io.netty:netty-resolver'
+    implementation 'io.netty:netty-buffer'
+    implementation 'io.micrometer:micrometer-core'
+    implementation 'io.micrometer:micrometer-commons'
+    implementation 'org.apache.commons:commons-lang3'
+    implementation 'org.apache.commons:commons-math3'
+    implementation 'tools.jackson.core:jackson-databind'
+
+    runtimeOnly ('io.netty:netty-tcnative-boringssl-static') {
+        artifact { classifier = "linux-x86_64" }
+        artifact { classifier = "linux-aarch_64" }
+        artifact { classifier = "osx-x86_64" }
+        artifact { classifier = "osx-aarch_64" }
+        artifact { classifier = "windows-x86_64" }
+    }
+}
