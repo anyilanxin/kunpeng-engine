@@ -30,25 +30,28 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.child.ChildElement;
 public class ChildElementImpl<T extends ModelElementInstance> extends ChildElementCollectionImpl<T>
     implements ChildElement<T> {
 
-  public ChildElementImpl(Class<T> childElementTypeChild, ModelElementTypeImpl parentElementType) {
+  public ChildElementImpl(
+      final Class<T> childElementTypeChild, final ModelElementTypeImpl parentElementType) {
     super(childElementTypeChild, parentElementType);
-    this.maxOccurs = 1;
+    maxOccurs = 1;
   }
 
   /** the add operation replaces the child */
-  private void performAddOperation(ModelElementInstanceImpl modelElement, T e) {
+  private void performAddOperation(final ModelElementInstanceImpl modelElement, final T e) {
     modelElement.setUniqueChildElementByNameNs(e);
   }
 
-  public void setChild(ModelElementInstance element, T newChildElement) {
+  @Override
+  public void setChild(final ModelElementInstance element, final T newChildElement) {
     performAddOperation((ModelElementInstanceImpl) element, newChildElement);
   }
 
+  @Override
   @SuppressWarnings("unchecked")
-  public T getChild(ModelElementInstance element) {
-    ModelElementInstanceImpl elementInstanceImpl = (ModelElementInstanceImpl) element;
+  public T getChild(final ModelElementInstance element) {
+    final ModelElementInstanceImpl elementInstanceImpl = (ModelElementInstanceImpl) element;
 
-    ModelElementInstance childElement =
+    final ModelElementInstance childElement =
         elementInstanceImpl.getUniqueChildElementByType(childElementTypeClass);
     if (childElement != null) {
       ModelUtil.ensureInstanceOf(childElement, childElementTypeClass);
@@ -58,9 +61,10 @@ public class ChildElementImpl<T extends ModelElementInstance> extends ChildEleme
     }
   }
 
-  public boolean removeChild(ModelElementInstance element) {
-    ModelElementInstanceImpl childElement = (ModelElementInstanceImpl) getChild(element);
-    ModelElementInstanceImpl elementInstanceImpl = (ModelElementInstanceImpl) element;
+  @Override
+  public boolean removeChild(final ModelElementInstance element) {
+    final ModelElementInstanceImpl childElement = (ModelElementInstanceImpl) getChild(element);
+    final ModelElementInstanceImpl elementInstanceImpl = (ModelElementInstanceImpl) element;
     return elementInstanceImpl.removeChildElement(childElement);
   }
 }

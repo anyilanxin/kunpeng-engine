@@ -14,7 +14,7 @@
 
 	<xsd:element name="Style" type="di:Style">
 		<xsd:annotation>
-			<xsd:documentation>This element should never be instantiated directly, but rather concrete implementation should. It is placed there only to be referred in the sequence</xsd:documentation>
+			<xsd:documentation>This element should never be instantiated directly, but rather concrete api should. It is placed there only to be referred in the sequence</xsd:documentation>
 		</xsd:annotation>
 	</xsd:element>
 
@@ -26,7 +26,7 @@
 			<xsd:element name="extension" minOccurs="0">
 				<xsd:complexType>
 					<xsd:sequence>
-						<xsd:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" /> 
+						<xsd:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
 					</xsd:sequence>
 				</xsd:complexType>
 			</xsd:element>
@@ -47,7 +47,7 @@
 
 	<xsd:complexType name="Diagram" abstract="true">
 		<xsd:complexContent>
-			<xsd:extension base="di:DiagramElement">			
+			<xsd:extension base="di:DiagramElement">
 				<xsd:attribute name="name" type="xsd:string">
 					<xsd:annotation>
 						<xsd:documentation>the name of the diagram.</xsd:documentation>
@@ -103,7 +103,7 @@
 			<xsd:element name="extension" minOccurs="0">
 				<xsd:complexType>
 					<xsd:sequence>
-						<xsd:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" /> 
+						<xsd:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
 					</xsd:sequence>
 				</xsd:complexType>
 			</xsd:element>

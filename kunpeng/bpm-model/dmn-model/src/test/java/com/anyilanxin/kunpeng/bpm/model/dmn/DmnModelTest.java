@@ -16,14 +16,6 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
-
-import java.io.File;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DmnElement;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DmnModelElementInstance;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.NamedElement;
@@ -38,9 +30,16 @@ import org.w3c.dom.Document;
 import org.xmlunit.builder.DiffBuilder;
 import org.xmlunit.diff.Diff;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.File;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
+
 public abstract class DmnModelTest {
 
-  public final static String TEST_NAMESPACE = "http://camunda.org/schema/1.0/dmn";
+  public final static String TEST_NAMESPACE = "https://anyilanxin.com/schema/1.0/dmn";
 
   @Rule
   public final ParseDmnModelRule parseDmnModelRule = new ParseDmnModelRule();
@@ -109,7 +108,7 @@ public abstract class DmnModelTest {
     if (diff.hasDifferences()) {
 
       final String failMsg = "XML differs:\n" + diff.getDifferences() +
-          "\n\nActual XML:\n" + Dmn.convertToString(modelInstance);
+        "\n\nActual XML:\n" + Dmn.convertToString(modelInstance);
       fail(failMsg);
     }
   }

@@ -19,7 +19,9 @@ package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_BINDING;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.*;
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Binding;
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Expression;
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Parameter;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
@@ -32,39 +34,44 @@ public class BindingImpl extends DmnModelElementInstanceImpl implements Binding 
   protected static ChildElement<Parameter> parameterChild;
   protected static ChildElement<Expression> expressionChild;
 
-  public BindingImpl(ModelTypeInstanceContext instanceContext) {
+  public BindingImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public Parameter getParameter() {
     return parameterChild.getChild(this);
   }
 
-  public void setParameter(Parameter parameter) {
+  @Override
+  public void setParameter(final Parameter parameter) {
     parameterChild.setChild(this, parameter);
   }
 
+  @Override
   public Expression getExpression() {
     return expressionChild.getChild(this);
   }
 
-  public void setExpression(Expression expression) {
+  @Override
+  public void setExpression(final Expression expression) {
     expressionChild.setChild(this, expression);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(Binding.class, DMN_ELEMENT_BINDING)
             .namespaceUri(LATEST_DMN_NS)
             .instanceProvider(
                 new ModelTypeInstanceProvider<Binding>() {
-                  public Binding newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public Binding newInstance(final ModelTypeInstanceContext instanceContext) {
                     return new BindingImpl(instanceContext);
                   }
                 });
 
-    SequenceBuilder sequenceBuilder = typeBuilder.sequence();
+    final SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
     parameterChild = sequenceBuilder.element(Parameter.class).required().build();
 

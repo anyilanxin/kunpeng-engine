@@ -16,9 +16,7 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_EXPRESSION_LANGUAGE;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_UNARY_TESTS;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.*;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DmnElement;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Text;
@@ -37,35 +35,40 @@ public class UnaryTestsImpl extends DmnElementImpl implements UnaryTests {
 
   protected static ChildElement<Text> textChild;
 
-  public UnaryTestsImpl(ModelTypeInstanceContext instanceContext) {
+  public UnaryTestsImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public String getExpressionLanguage() {
     return expressionLanguageAttribute.getValue(this);
   }
 
-  public void setExpressionLanguage(String expressionLanguage) {
+  @Override
+  public void setExpressionLanguage(final String expressionLanguage) {
     expressionLanguageAttribute.setValue(this, expressionLanguage);
   }
 
+  @Override
   public Text getText() {
     return textChild.getChild(this);
   }
 
-  public void setText(Text text) {
+  @Override
+  public void setText(final Text text) {
     textChild.setChild(this, text);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(UnaryTests.class, DMN_ELEMENT_UNARY_TESTS)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(DmnElement.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<UnaryTests>() {
-                  public UnaryTests newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public UnaryTests newInstance(final ModelTypeInstanceContext instanceContext) {
                     return new UnaryTestsImpl(instanceContext);
                   }
                 });
@@ -73,7 +76,7 @@ public class UnaryTestsImpl extends DmnElementImpl implements UnaryTests {
     expressionLanguageAttribute =
         typeBuilder.stringAttribute(DMN_ATTRIBUTE_EXPRESSION_LANGUAGE).build();
 
-    SequenceBuilder sequenceBuilder = typeBuilder.sequence();
+    final SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
     textChild = sequenceBuilder.element(Text.class).build();
 

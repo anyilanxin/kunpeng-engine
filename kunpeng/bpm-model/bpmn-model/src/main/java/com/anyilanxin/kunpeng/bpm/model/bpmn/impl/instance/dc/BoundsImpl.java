@@ -17,12 +17,7 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.dc;
 
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DC_ATTRIBUTE_HEIGHT;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DC_ATTRIBUTE_WIDTH;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DC_ATTRIBUTE_X;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DC_ATTRIBUTE_Y;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DC_ELEMENT_BOUNDS;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DC_NS;
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.*;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.BpmnModelElementInstanceImpl;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.dc.Bounds;

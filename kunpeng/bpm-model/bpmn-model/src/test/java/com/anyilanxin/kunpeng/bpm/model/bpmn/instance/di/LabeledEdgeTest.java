@@ -17,28 +17,29 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn.instance.di;
 
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DI_NS;
-
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BpmnModelElementInstanceTest;
+
 import java.util.Collection;
+
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DI_NS;
 
 /**
  * @author Sebastian Menski
  */
 public class LabeledEdgeTest extends BpmnModelElementInstanceTest {
 
-  @Override
-  public TypeAssumption getTypeAssumption() {
-    return new TypeAssumption(DI_NS, Edge.class, true);
-  }
+    @Override
+    public TypeAssumption getTypeAssumption() {
+        return new TypeAssumption(DI_NS, Edge.class, true);
+    }
 
-  @Override
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
-    return null;
-  }
+    @Override
+    public Collection<ChildElementAssumption> getChildElementAssumptions() {
+        return null;
+    }
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return null;
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return null;
+    }
 }

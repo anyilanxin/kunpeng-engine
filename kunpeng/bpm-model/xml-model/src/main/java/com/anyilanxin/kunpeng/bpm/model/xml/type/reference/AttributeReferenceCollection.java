@@ -41,15 +41,18 @@ public abstract class AttributeReferenceCollection<T extends ModelElementInstanc
 
   protected String separator = " ";
 
-  public AttributeReferenceCollection(AttributeImpl<String> referenceSourceAttribute) {
+  public AttributeReferenceCollection(final AttributeImpl<String> referenceSourceAttribute) {
     super(referenceSourceAttribute);
   }
 
   @Override
   protected void updateReference(
-      ModelElementInstance referenceSourceElement, String oldIdentifier, String newIdentifier) {
+      final ModelElementInstance referenceSourceElement,
+      final String oldIdentifier,
+      final String newIdentifier) {
     String referencingIdentifier = getReferenceIdentifier(referenceSourceElement);
-    List<String> references = StringUtil.splitListBySeparator(referencingIdentifier, separator);
+    final List<String> references =
+        StringUtil.splitListBySeparator(referencingIdentifier, separator);
     if (oldIdentifier != null && references.contains(oldIdentifier)) {
       referencingIdentifier = referencingIdentifier.replace(oldIdentifier, newIdentifier);
       setReferenceIdentifier(referenceSourceElement, newIdentifier);
@@ -59,10 +62,11 @@ public abstract class AttributeReferenceCollection<T extends ModelElementInstanc
   @Override
   @SuppressWarnings("unchecked")
   protected void removeReference(
-      ModelElementInstance referenceSourceElement, ModelElementInstance referenceTargetElement) {
+      final ModelElementInstance referenceSourceElement,
+      final ModelElementInstance referenceTargetElement) {
     String identifier = getReferenceIdentifier(referenceSourceElement);
-    List<String> references = StringUtil.splitListBySeparator(identifier, separator);
-    String identifierToRemove = getTargetElementIdentifier((T) referenceTargetElement);
+    final List<String> references = StringUtil.splitListBySeparator(identifier, separator);
+    final String identifierToRemove = getTargetElementIdentifier((T) referenceTargetElement);
     references.remove(identifierToRemove);
     identifier = StringUtil.joinList(references, separator);
     setReferenceIdentifier(referenceSourceElement, identifier);
@@ -70,15 +74,15 @@ public abstract class AttributeReferenceCollection<T extends ModelElementInstanc
 
   protected abstract String getTargetElementIdentifier(T referenceTargetElement);
 
-  private Collection<DomElement> getView(ModelElementInstance referenceSourceElement) {
-    DomDocument document = referenceSourceElement.getModelInstance().getDocument();
+  private Collection<DomElement> getView(final ModelElementInstance referenceSourceElement) {
+    final DomDocument document = referenceSourceElement.getModelInstance().getDocument();
 
-    String identifier = getReferenceIdentifier(referenceSourceElement);
-    List<String> references = StringUtil.splitListBySeparator(identifier, separator);
+    final String identifier = getReferenceIdentifier(referenceSourceElement);
+    final List<String> references = StringUtil.splitListBySeparator(identifier, separator);
 
-    Collection<DomElement> referenceTargetElements = new ArrayList<DomElement>();
-    for (String reference : references) {
-      DomElement referenceTargetElement = document.getElementById(reference);
+    final Collection<DomElement> referenceTargetElements = new ArrayList<DomElement>();
+    for (final String reference : references) {
+      final DomElement referenceTargetElement = document.getElementById(reference);
       if (referenceTargetElement != null) {
         referenceTargetElements.add(referenceTargetElement);
       } else {
@@ -93,15 +97,18 @@ public abstract class AttributeReferenceCollection<T extends ModelElementInstanc
 
     return new Collection<T>() {
 
+      @Override
       public int size() {
         return getView(referenceSourceElement).size();
       }
 
+      @Override
       public boolean isEmpty() {
         return getView(referenceSourceElement).isEmpty();
       }
 
-      public boolean contains(Object o) {
+      @Override
+      public boolean contains(final Object o) {
         if (o == null) {
           return false;
         } else if (!(o instanceof ModelElementInstanceImpl)) {
@@ -112,84 +119,94 @@ public abstract class AttributeReferenceCollection<T extends ModelElementInstanc
         }
       }
 
+      @Override
       public Iterator<T> iterator() {
-        Collection<T> modelElementCollection =
+        final Collection<T> modelElementCollection =
             ModelUtil.getModelElementCollection(
                 getView(referenceSourceElement),
                 (ModelInstanceImpl) referenceSourceElement.getModelInstance());
         return modelElementCollection.iterator();
       }
 
+      @Override
       public Object[] toArray() {
-        Collection<T> modelElementCollection =
+        final Collection<T> modelElementCollection =
             ModelUtil.getModelElementCollection(
                 getView(referenceSourceElement),
                 (ModelInstanceImpl) referenceSourceElement.getModelInstance());
         return modelElementCollection.toArray();
       }
 
-      public <T1> T1[] toArray(T1[] a) {
-        Collection<T> modelElementCollection =
+      @Override
+      public <T1> T1[] toArray(final T1[] a) {
+        final Collection<T> modelElementCollection =
             ModelUtil.getModelElementCollection(
                 getView(referenceSourceElement),
                 (ModelInstanceImpl) referenceSourceElement.getModelInstance());
         return modelElementCollection.toArray(a);
       }
 
-      public boolean add(T t) {
+      @Override
+      public boolean add(final T t) {
         if (!contains(t)) {
           performAddOperation(referenceSourceElement, t);
         }
         return true;
       }
 
-      public boolean remove(Object o) {
+      @Override
+      public boolean remove(final Object o) {
         ModelUtil.ensureInstanceOf(o, ModelElementInstanceImpl.class);
         performRemoveOperation(referenceSourceElement, o);
         return true;
       }
 
-      public boolean containsAll(Collection<?> c) {
-        Collection<T> modelElementCollection =
+      @Override
+      public boolean containsAll(final Collection<?> c) {
+        final Collection<T> modelElementCollection =
             ModelUtil.getModelElementCollection(
                 getView(referenceSourceElement),
                 (ModelInstanceImpl) referenceSourceElement.getModelInstance());
         return modelElementCollection.containsAll(c);
       }
 
-      public boolean addAll(Collection<? extends T> c) {
+      @Override
+      public boolean addAll(final Collection<? extends T> c) {
         boolean result = false;
-        for (T o : c) {
+        for (final T o : c) {
           result |= add(o);
         }
         return result;
       }
 
-      public boolean removeAll(Collection<?> c) {
+      @Override
+      public boolean removeAll(final Collection<?> c) {
         boolean result = false;
-        for (Object o : c) {
+        for (final Object o : c) {
           result |= remove(o);
         }
         return result;
       }
 
-      public boolean retainAll(Collection<?> c) {
+      @Override
+      public boolean retainAll(final Collection<?> c) {
         throw new UnsupportedModelOperationException("retainAll()", "not implemented");
       }
 
+      @Override
       public void clear() {
         performClearOperation(referenceSourceElement);
       }
     };
   }
 
-  protected void performClearOperation(ModelElementInstance referenceSourceElement) {
+  protected void performClearOperation(final ModelElementInstance referenceSourceElement) {
     setReferenceIdentifier(referenceSourceElement, "");
   }
 
   @Override
   protected void setReferenceIdentifier(
-      ModelElementInstance referenceSourceElement, String referenceIdentifier) {
+      final ModelElementInstance referenceSourceElement, final String referenceIdentifier) {
     if (referenceIdentifier != null && !referenceIdentifier.isEmpty()) {
       super.setReferenceIdentifier(referenceSourceElement, referenceIdentifier);
     } else {
@@ -201,16 +218,17 @@ public abstract class AttributeReferenceCollection<T extends ModelElementInstanc
    * @param referenceSourceElement
    * @param o
    */
-  protected void performRemoveOperation(ModelElementInstance referenceSourceElement, Object o) {
+  protected void performRemoveOperation(
+      final ModelElementInstance referenceSourceElement, final Object o) {
     removeReference(referenceSourceElement, (ModelElementInstance) o);
   }
 
   protected void performAddOperation(
-      ModelElementInstance referenceSourceElement, T referenceTargetElement) {
+      final ModelElementInstance referenceSourceElement, final T referenceTargetElement) {
     String identifier = getReferenceIdentifier(referenceSourceElement);
-    List<String> references = StringUtil.splitListBySeparator(identifier, separator);
+    final List<String> references = StringUtil.splitListBySeparator(identifier, separator);
 
-    String targetIdentifier = getTargetElementIdentifier(referenceTargetElement);
+    final String targetIdentifier = getTargetElementIdentifier(referenceTargetElement);
     references.add(targetIdentifier);
 
     identifier = StringUtil.joinList(references, separator);

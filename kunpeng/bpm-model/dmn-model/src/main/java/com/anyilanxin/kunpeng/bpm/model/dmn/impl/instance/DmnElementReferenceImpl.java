@@ -16,9 +16,7 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_HREF;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_REFERENCE;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.*;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DmnElementReference;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
@@ -32,26 +30,30 @@ public class DmnElementReferenceImpl extends DmnModelElementInstanceImpl
 
   protected static Attribute<String> hrefAttribute;
 
-  public DmnElementReferenceImpl(ModelTypeInstanceContext instanceContext) {
+  public DmnElementReferenceImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public String getHref() {
     return hrefAttribute.getValue(this);
   }
 
-  public void setHref(String href) {
+  @Override
+  public void setHref(final String href) {
     hrefAttribute.setValue(this, href);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(DmnElementReference.class, DMN_ELEMENT_REFERENCE)
             .namespaceUri(LATEST_DMN_NS)
             .instanceProvider(
                 new ModelTypeInstanceProvider<DmnElementReference>() {
-                  public DmnElementReference newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public DmnElementReference newInstance(
+                      final ModelTypeInstanceContext instanceContext) {
                     return new DmnElementReferenceImpl(instanceContext);
                   }
                 });

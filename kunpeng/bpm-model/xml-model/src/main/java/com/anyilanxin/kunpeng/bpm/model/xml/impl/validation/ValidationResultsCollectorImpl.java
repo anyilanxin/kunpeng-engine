@@ -40,7 +40,7 @@ public class ValidationResultsCollectorImpl implements ValidationResultCollector
   protected int warningCount = 0;
 
   @Override
-  public void addError(int code, String message) {
+  public void addError(final int code, final String message) {
     resultsForCurrentElement()
         .add(
             new ModelValidationResultImpl(
@@ -50,7 +50,7 @@ public class ValidationResultsCollectorImpl implements ValidationResultCollector
   }
 
   @Override
-  public void addWarning(int code, String message) {
+  public void addWarning(final int code, final String message) {
     resultsForCurrentElement()
         .add(
             new ModelValidationResultImpl(
@@ -59,7 +59,7 @@ public class ValidationResultsCollectorImpl implements ValidationResultCollector
     ++warningCount;
   }
 
-  public void setCurrentElement(ModelElementInstance currentElement) {
+  public void setCurrentElement(final ModelElementInstance currentElement) {
     this.currentElement = currentElement;
   }
 

@@ -22,8 +22,8 @@ import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 /**
  * A validator for model element instances.
  *
- * @see ModelInstance#validate(java.util.Collection)
  * @param <T> the type of the elements to validate.
+ * @see ModelInstance#validate(java.util.Collection)
  * @since 7.6
  */
 public interface ModelElementValidator<T extends ModelElementInstance> {

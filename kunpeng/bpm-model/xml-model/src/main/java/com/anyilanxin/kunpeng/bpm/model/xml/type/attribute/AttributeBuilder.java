@@ -17,8 +17,8 @@
 package com.anyilanxin.kunpeng.bpm.model.xml.type.attribute;
 
 /**
- * @author Daniel Meyer
  * @param <T> the type of the {@link Attribute}
+ * @author Daniel Meyer
  */
 public interface AttributeBuilder<T> {
 

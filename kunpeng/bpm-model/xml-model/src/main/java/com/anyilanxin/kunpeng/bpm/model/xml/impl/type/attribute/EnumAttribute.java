@@ -27,12 +27,13 @@ public class EnumAttribute<T extends Enum<T>> extends AttributeImpl<T> {
 
   private final Class<T> type;
 
-  public EnumAttribute(ModelElementType owningElementType, Class<T> type) {
+  public EnumAttribute(final ModelElementType owningElementType, final Class<T> type) {
     super(owningElementType);
     this.type = type;
   }
 
-  protected T convertXmlValueToModelValue(String rawValue) {
+  @Override
+  protected T convertXmlValueToModelValue(final String rawValue) {
     if (rawValue != null) {
       return Enum.valueOf(type, rawValue);
     } else {
@@ -40,7 +41,8 @@ public class EnumAttribute<T extends Enum<T>> extends AttributeImpl<T> {
     }
   }
 
-  protected String convertModelValueToXmlValue(T modelValue) {
+  @Override
+  protected String convertModelValueToXmlValue(final T modelValue) {
     return modelValue.name();
   }
 }

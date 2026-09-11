@@ -25,22 +25,22 @@ import java.util.Collection;
  */
 public class IoSpecificationTest extends BpmnModelElementInstanceTest {
 
-  @Override
-  public TypeAssumption getTypeAssumption() {
-    return new TypeAssumption(BaseElement.class, false);
-  }
+    @Override
+    public TypeAssumption getTypeAssumption() {
+        return new TypeAssumption(BaseElement.class, false);
+    }
 
-  @Override
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
-    return Arrays.asList(
-        new ChildElementAssumption(DataInput.class),
-        new ChildElementAssumption(DataOutput.class),
-        new ChildElementAssumption(InputSet.class, 1),
-        new ChildElementAssumption(OutputSet.class, 1));
-  }
+    @Override
+    public Collection<ChildElementAssumption> getChildElementAssumptions() {
+        return Arrays.asList(
+                new ChildElementAssumption(DataInput.class),
+                new ChildElementAssumption(DataOutput.class),
+                new ChildElementAssumption(InputSet.class, 1),
+                new ChildElementAssumption(OutputSet.class, 1));
+    }
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return null;
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return null;
+    }
 }

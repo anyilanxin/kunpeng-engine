@@ -51,9 +51,9 @@ public abstract class AbstractModelParser {
   protected Map<String, Schema> schemas = new HashMap<>();
 
   protected AbstractModelParser() {
-    DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+    final DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
     configureFactory(dbf);
-    this.documentBuilderFactory = dbf;
+    documentBuilderFactory = dbf;
   }
 
   /**
@@ -61,7 +61,7 @@ public abstract class AbstractModelParser {
    *
    * @param dbf the factory to configure
    */
-  protected void configureFactory(DocumentBuilderFactory dbf) {
+  protected void configureFactory(final DocumentBuilderFactory dbf) {
     dbf.setValidating(true);
     dbf.setIgnoringComments(false);
     dbf.setIgnoringElementContentWhitespace(false);
@@ -75,25 +75,25 @@ public abstract class AbstractModelParser {
    * Entity Attacks. If the implementing parser does not support one or multiple features, the
    * failed feature is ignored. The parser might not protected, if the feature assignment fails.
    *
+   * @param dbf The factory to configure.
    * @see <a
    *     href="https://www.owasp.org/index.php/XML_External_Entity_(XXE)_Prevention_Cheat_Sheet">OWASP
    *     Information of XXE attacks</a>
-   * @param dbf The factory to configure.
    */
   private void protectAgainstXxeAttacks(final DocumentBuilderFactory dbf) {
     try {
       dbf.setFeature("http://xml.org/sax/features/external-general-entities", false);
-    } catch (ParserConfigurationException ignored) {
+    } catch (final ParserConfigurationException ignored) {
     }
 
     try {
       dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-    } catch (ParserConfigurationException ignored) {
+    } catch (final ParserConfigurationException ignored) {
     }
 
     try {
       dbf.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
-    } catch (ParserConfigurationException ignored) {
+    } catch (final ParserConfigurationException ignored) {
     }
 
     dbf.setXIncludeAware(false);
@@ -104,7 +104,7 @@ public abstract class AbstractModelParser {
     try {
       dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
       dbf.setAttribute(JAXP_ACCESS_EXTERNAL_SCHEMA, resolveAccessExternalSchemaProperty());
-    } catch (ParserConfigurationException | IllegalArgumentException ignored) {
+    } catch (final ParserConfigurationException | IllegalArgumentException ignored) {
       // ignored
     }
   }
@@ -117,7 +117,7 @@ public abstract class AbstractModelParser {
    * The properties file is not supported at the moment.
    */
   protected String resolveAccessExternalSchemaProperty() {
-    String systemProperty = System.getProperty(JAXP_ACCESS_EXTERNAL_SCHEMA_SYSTEM_PROPERTY);
+    final String systemProperty = System.getProperty(JAXP_ACCESS_EXTERNAL_SCHEMA_SYSTEM_PROPERTY);
 
     if (systemProperty != null) {
       return systemProperty;
@@ -126,7 +126,7 @@ public abstract class AbstractModelParser {
     }
   }
 
-  public ModelInstance parseModelFromStream(InputStream inputStream) {
+  public ModelInstance parseModelFromStream(final InputStream inputStream) {
     DomDocument document = null;
 
     synchronized (documentBuilderFactory) {
@@ -152,41 +152,41 @@ public abstract class AbstractModelParser {
    *
    * @param document the DOM document to validate
    */
-  public void validateModel(DomDocument document) {
+  public void validateModel(final DomDocument document) {
 
-    Schema schema = getSchema(document);
+    final Schema schema = getSchema(document);
 
     if (schema == null) {
       return;
     }
 
-    Validator validator = schema.newValidator();
+    final Validator validator = schema.newValidator();
     try {
       synchronized (document) {
         validator.validate(document.getDomSource());
       }
-    } catch (IOException e) {
+    } catch (final IOException e) {
       throw new ModelValidationException("Error during DOM document validation", e);
-    } catch (SAXException e) {
+    } catch (final SAXException e) {
       throw new ModelValidationException("DOM document is not valid", e);
     }
   }
 
-  protected Schema getSchema(DomDocument document) {
-    DomElement rootElement = document.getRootElement();
-    String namespaceURI = rootElement.getNamespaceURI();
+  protected Schema getSchema(final DomDocument document) {
+    final DomElement rootElement = document.getRootElement();
+    final String namespaceURI = rootElement.getNamespaceURI();
     return schemas.get(namespaceURI);
   }
 
-  protected void addSchema(String namespaceURI, Schema schema) {
+  protected void addSchema(final String namespaceURI, final Schema schema) {
     schemas.put(namespaceURI, schema);
   }
 
-  protected Schema createSchema(String location, ClassLoader classLoader) {
-    URL cmmnSchema = ReflectUtil.getResource(location, classLoader);
+  protected Schema createSchema(final String location, final ClassLoader classLoader) {
+    final URL cmmnSchema = ReflectUtil.getResource(location, classLoader);
     try {
       return schemaFactory.newSchema(cmmnSchema);
-    } catch (SAXException e) {
+    } catch (final SAXException e) {
       throw new ModelValidationException("Unable to parse schema:" + cmmnSchema);
     }
   }

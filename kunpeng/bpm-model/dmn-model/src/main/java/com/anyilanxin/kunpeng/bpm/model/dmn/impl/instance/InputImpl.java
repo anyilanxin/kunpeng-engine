@@ -28,19 +28,20 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 
 public class InputImpl extends InputClauseImpl implements Input {
 
-  public InputImpl(ModelTypeInstanceContext instanceContext) {
+  public InputImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(Input.class, DMN_ELEMENT_INPUT)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(InputClause.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<Input>() {
-                  public Input newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public Input newInstance(final ModelTypeInstanceContext instanceContext) {
                     return new InputImpl(instanceContext);
                   }
                 });

@@ -18,6 +18,7 @@
 package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.CorrelationPropertyRef;
+
 import java.util.Arrays;
 import java.util.Collection;
 

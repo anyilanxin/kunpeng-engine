@@ -16,59 +16,40 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.BusinessContextElement;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Decision;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DecisionTable;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Definitions;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DrgElement;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.ElementCollection;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Import;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Input;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.InputEntry;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.InputExpression;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.InputValues;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.ItemDefinition;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Output;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.OutputEntry;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.OutputValues;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Rule;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Text;
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import java.util.*;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
 @RunWith(Parameterized.class)
 public class ExampleCompatibilityTest extends DmnModelTest {
 
-  public static final String EXAMPLE_DMN = "org/camunda/bpm/model/dmn/Example.dmn";
+  public static final String EXAMPLE_DMN = "com/anyilanxin/kunpeng/bpm/model/dmn/Example.dmn";
 
   private final DmnModelInstance originalModelInstance;
 
-   @Parameterized.Parameters(name="Namespace: {0}")
-   public static Collection<Object[]> parameters(){
-     return Arrays.asList(new Object[][]{
-         {Dmn.readModelFromStream(ExampleCompatibilityTest.class.getResourceAsStream("Example.dmn"))},
-         // for compatibility reasons we gotta check the old namespace, too
-         {Dmn.readModelFromStream(ExampleCompatibilityTest.class.getResourceAsStream("ExampleCompatibility.dmn"))},
-         // DMN 1.2
-         {Dmn.readModelFromStream(ExampleCompatibilityTest.class.getResourceAsStream("Example-DMN-1.2.dmn"))},
-         // DMN 1.3
-         {Dmn.readModelFromStream(ExampleCompatibilityTest.class.getResourceAsStream("Example-DMN-1.3.dmn"))},
-         // DMN 1.4
-         {Dmn.readModelFromStream(ExampleCompatibilityTest.class.getResourceAsStream("Example-DMN-1.4.dmn"))},
-         // DMN 1.5
-         {Dmn.readModelFromStream(ExampleCompatibilityTest.class.getResourceAsStream("Example-DMN-1.5.dmn"))}
-     });
-   }
+  @Parameterized.Parameters(name = "Namespace: {0}")
+  public static Collection<Object[]> parameters() {
+    return Arrays.asList(new Object[][]{
+      {Dmn.readModelFromStream(ExampleCompatibilityTest.class.getResourceAsStream("Example.dmn"))},
+      // for compatibility reasons we gotta check the old namespace, too
+      {Dmn.readModelFromStream(ExampleCompatibilityTest.class.getResourceAsStream("ExampleCompatibility.dmn"))},
+      // DMN 1.2
+      {Dmn.readModelFromStream(ExampleCompatibilityTest.class.getResourceAsStream("Example-DMN-1.2.dmn"))},
+      // DMN 1.3
+      {Dmn.readModelFromStream(ExampleCompatibilityTest.class.getResourceAsStream("Example-DMN-1.3.dmn"))},
+      // DMN 1.4
+      {Dmn.readModelFromStream(ExampleCompatibilityTest.class.getResourceAsStream("Example-DMN-1.4.dmn"))},
+      // DMN 1.5
+      {Dmn.readModelFromStream(ExampleCompatibilityTest.class.getResourceAsStream("Example-DMN-1.5.dmn"))}
+    });
+  }
 
   public ExampleCompatibilityTest(final DmnModelInstance originalModelInstance) {
     this.originalModelInstance = originalModelInstance;

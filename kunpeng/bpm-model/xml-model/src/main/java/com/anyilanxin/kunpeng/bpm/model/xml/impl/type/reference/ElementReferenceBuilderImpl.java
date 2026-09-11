@@ -30,13 +30,14 @@ public class ElementReferenceBuilderImpl<
     implements ElementReferenceBuilder<Target, Source> {
 
   public ElementReferenceBuilderImpl(
-      Class<Source> childElementType,
-      Class<Target> referenceTargetClass,
-      ChildElementImpl<Source> child) {
+      final Class<Source> childElementType,
+      final Class<Target> referenceTargetClass,
+      final ChildElementImpl<Source> child) {
     super(childElementType, referenceTargetClass, child);
-    this.elementReferenceCollectionImpl = new ElementReferenceImpl<Target, Source>(child);
+    elementReferenceCollectionImpl = new ElementReferenceImpl<Target, Source>(child);
   }
 
+  @Override
   @SuppressWarnings("unchecked")
   public ElementReference<Target, Source> build() {
     return (ElementReference<Target, Source>) elementReferenceCollectionImpl;

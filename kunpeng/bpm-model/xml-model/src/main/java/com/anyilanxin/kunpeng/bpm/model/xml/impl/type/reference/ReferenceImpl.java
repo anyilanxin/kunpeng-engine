@@ -54,16 +54,17 @@ public abstract class ReferenceImpl<T extends ModelElementInstance> implements R
    * @param referenceSourceElement the reference source model element instance
    * @return the reference target model element instance or null if not set
    */
+  @Override
   @SuppressWarnings("unchecked")
-  public T getReferenceTargetElement(ModelElementInstance referenceSourceElement) {
-    String identifier = getReferenceIdentifier(referenceSourceElement);
-    ModelElementInstance referenceTargetElement =
+  public T getReferenceTargetElement(final ModelElementInstance referenceSourceElement) {
+    final String identifier = getReferenceIdentifier(referenceSourceElement);
+    final ModelElementInstance referenceTargetElement =
         referenceSourceElement.getModelInstance().getModelElementById(identifier);
     if (referenceTargetElement != null) {
       try {
         return (T) referenceTargetElement;
 
-      } catch (ClassCastException e) {
+      } catch (final ClassCastException e) {
         throw new ModelReferenceException(
             "Element "
                 + referenceSourceElement
@@ -87,11 +88,13 @@ public abstract class ReferenceImpl<T extends ModelElementInstance> implements R
    * @param referenceTargetElement the reference target model element instance
    * @throws ModelReferenceException if element is not already added to the model
    */
+  @Override
   public void setReferenceTargetElement(
-      ModelElementInstance referenceSourceElement, T referenceTargetElement) {
-    ModelInstance modelInstance = referenceSourceElement.getModelInstance();
-    String referenceTargetIdentifier = referenceTargetAttribute.getValue(referenceTargetElement);
-    ModelElementInstance existingElement =
+      final ModelElementInstance referenceSourceElement, final T referenceTargetElement) {
+    final ModelInstance modelInstance = referenceSourceElement.getModelInstance();
+    final String referenceTargetIdentifier =
+        referenceTargetAttribute.getValue(referenceTargetElement);
+    final ModelElementInstance existingElement =
         modelInstance.getModelElementById(referenceTargetIdentifier);
 
     if (existingElement == null || !existingElement.equals(referenceTargetElement)) {
@@ -109,7 +112,7 @@ public abstract class ReferenceImpl<T extends ModelElementInstance> implements R
    *
    * @param referenceTargetAttribute the reference target string attribute
    */
-  public void setReferenceTargetAttribute(AttributeImpl<String> referenceTargetAttribute) {
+  public void setReferenceTargetAttribute(final AttributeImpl<String> referenceTargetAttribute) {
     this.referenceTargetAttribute = referenceTargetAttribute;
   }
 
@@ -118,6 +121,7 @@ public abstract class ReferenceImpl<T extends ModelElementInstance> implements R
    *
    * @return the reference target string attribute
    */
+  @Override
   public Attribute<String> getReferenceTargetAttribute() {
     return referenceTargetAttribute;
   }
@@ -127,14 +131,15 @@ public abstract class ReferenceImpl<T extends ModelElementInstance> implements R
    *
    * @param referenceTargetElementType the referenceTargetElementType to set
    */
-  public void setReferenceTargetElementType(ModelElementTypeImpl referenceTargetElementType) {
+  public void setReferenceTargetElementType(final ModelElementTypeImpl referenceTargetElementType) {
     this.referenceTargetElementType = referenceTargetElementType;
   }
 
+  @Override
   public Collection<ModelElementInstance> findReferenceSourceElements(
-      ModelElementInstance referenceTargetElement) {
+      final ModelElementInstance referenceTargetElement) {
     if (referenceTargetElementType.isBaseTypeOf(referenceTargetElement.getElementType())) {
-      ModelElementType owningElementType = getReferenceSourceElementType();
+      final ModelElementType owningElementType = getReferenceSourceElementType();
       return referenceTargetElement.getModelInstance().getModelElementsByType(owningElementType);
     } else {
       return Collections.emptyList();
@@ -159,8 +164,10 @@ public abstract class ReferenceImpl<T extends ModelElementInstance> implements R
    * @param newIdentifier the new reference identifier
    */
   public void referencedElementUpdated(
-      ModelElementInstance referenceTargetElement, String oldIdentifier, String newIdentifier) {
-    for (ModelElementInstance referenceSourceElement :
+      final ModelElementInstance referenceTargetElement,
+      final String oldIdentifier,
+      final String newIdentifier) {
+    for (final ModelElementInstance referenceSourceElement :
         findReferenceSourceElements(referenceTargetElement)) {
       updateReference(referenceSourceElement, oldIdentifier, newIdentifier);
     }
@@ -181,8 +188,8 @@ public abstract class ReferenceImpl<T extends ModelElementInstance> implements R
    * @param referenceIdentifier the identifier of the reference to filter reference source elements
    */
   public void referencedElementRemoved(
-      ModelElementInstance referenceTargetElement, Object referenceIdentifier) {
-    for (ModelElementInstance referenceSourceElement :
+      final ModelElementInstance referenceTargetElement, final Object referenceIdentifier) {
+    for (final ModelElementInstance referenceSourceElement :
         findReferenceSourceElements(referenceTargetElement)) {
       if (referenceIdentifier.equals(getReferenceIdentifier(referenceSourceElement))) {
         removeReference(referenceSourceElement, referenceTargetElement);

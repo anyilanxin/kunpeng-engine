@@ -16,19 +16,21 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.instance;
 
+import com.anyilanxin.kunpeng.bpm.model.xml.test.AbstractModelElementInstanceTest;
+
 import java.util.Collection;
 
 public abstract class AbstractDmnElementReferenceTest extends DmnModelElementInstanceTest {
 
-  public TypeAssumption getTypeAssumption() {
-    return new TypeAssumption(DmnElementReference.class, false);
+  public AbstractModelElementInstanceTest.TypeAssumption getTypeAssumption() {
+    return new AbstractModelElementInstanceTest.TypeAssumption(DmnElementReference.class, false);
   }
 
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
+  public Collection<AbstractModelElementInstanceTest.ChildElementAssumption> getChildElementAssumptions() {
     return null;
   }
 
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
+  public Collection<AbstractModelElementInstanceTest.AttributeAssumption> getAttributesAssumptions() {
     return null;
   }
 

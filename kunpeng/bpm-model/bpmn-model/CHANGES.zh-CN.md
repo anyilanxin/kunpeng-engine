@@ -15,7 +15,7 @@
 
 ## 本仓库的更改
 
-1. 当前按导入原样保留：上游 `com.anyilanxin.kunpeng.bpm.model.bpmn.*` 包名、Maven `pom.xml`
+1. 当前按导入原样保留：上游 `io.camunda.zeebe.model.bpmn.*` 包名、Maven `pom.xml`
    以及 QA 配置（spotbugs、revapi）均未修改。
 2. 后续将逐步合入本仓库的 Gradle 统一构建、进行包名重命名等调整，均在后续提交中完成。
 

@@ -17,16 +17,9 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN20_NS;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ATTRIBUTE_DATA_OBJECT_REF;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ATTRIBUTE_ITEM_SUBJECT_REF;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ELEMENT_DATA_OBJECT_REFERENCE;
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.*;
 
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.DataObject;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.DataObjectReference;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.DataState;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.FlowElement;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ItemDefinition;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.*;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;

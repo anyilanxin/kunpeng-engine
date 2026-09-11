@@ -28,19 +28,20 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 
 public class InputValuesImpl extends UnaryTestsImpl implements InputValues {
 
-  public InputValuesImpl(ModelTypeInstanceContext instanceContext) {
+  public InputValuesImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(InputValues.class, DMN_ELEMENT_INPUT_VALUES)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(UnaryTests.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<InputValues>() {
-                  public InputValues newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public InputValues newInstance(final ModelTypeInstanceContext instanceContext) {
                     return new InputValuesImpl(instanceContext);
                   }
                 });

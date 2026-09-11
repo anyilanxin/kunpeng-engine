@@ -27,18 +27,19 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 
 public class QuestionImpl extends DmnModelElementInstanceImpl implements Question {
 
-  public QuestionImpl(ModelTypeInstanceContext instanceContext) {
+  public QuestionImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(Question.class, DMN_ELEMENT_QUESTION)
             .namespaceUri(LATEST_DMN_NS)
             .instanceProvider(
                 new ModelTypeInstanceProvider<Question>() {
-                  public Question newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public Question newInstance(final ModelTypeInstanceContext instanceContext) {
                     return new QuestionImpl(instanceContext);
                   }
                 });

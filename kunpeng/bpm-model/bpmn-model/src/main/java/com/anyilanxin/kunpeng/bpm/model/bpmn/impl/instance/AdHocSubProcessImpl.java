@@ -16,12 +16,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN20_NS;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ATTRIBUTE_CANCEL_REMAINING_INSTANCES;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ELEMENT_AD_HOC_SUB_PROCESS;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.ZEEBE_NS;
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.*;
 
-import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.ZeebeConstants;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.AdHocSubProcess;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.CompletionCondition;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.SubProcess;
@@ -37,7 +33,6 @@ public class AdHocSubProcessImpl extends SubProcessImpl implements AdHocSubProce
 
   private static Attribute<Boolean> cancelRemainingInstancesAttribute;
   private static ChildElement<CompletionCondition> completionConditionChild;
-  private static Attribute<String> modelerTemplateAttribute;
 
   public AdHocSubProcessImpl(final ModelTypeInstanceContext context) {
     super(context);
@@ -67,12 +62,6 @@ public class AdHocSubProcessImpl extends SubProcessImpl implements AdHocSubProce
     final SequenceBuilder sequenceBuilder = typeBuilder.sequence();
     completionConditionChild = sequenceBuilder.element(CompletionCondition.class).build();
 
-    modelerTemplateAttribute =
-        typeBuilder
-            .stringAttribute(ZeebeConstants.ATTRIBUTE_MODELER_TEMPLATE)
-            .namespace(ZEEBE_NS)
-            .build();
-
     typeBuilder.build();
   }
 
@@ -94,15 +83,5 @@ public class AdHocSubProcessImpl extends SubProcessImpl implements AdHocSubProce
   @Override
   public void setCancelRemainingInstances(final boolean cancelRemainingInstances) {
     cancelRemainingInstancesAttribute.setValue(this, cancelRemainingInstances);
-  }
-
-  @Override
-  public String getModelerTemplate() {
-    return modelerTemplateAttribute.getValue(this);
-  }
-
-  @Override
-  public void setModelerTemplate(final String modelerTemplate) {
-    modelerTemplateAttribute.setValue(this, modelerTemplate);
   }
 }

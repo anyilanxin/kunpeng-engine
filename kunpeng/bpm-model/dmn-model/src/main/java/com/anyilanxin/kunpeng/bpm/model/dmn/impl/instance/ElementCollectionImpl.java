@@ -36,28 +36,31 @@ public class ElementCollectionImpl extends NamedElementImpl implements ElementCo
   protected static ElementReferenceCollection<DrgElement, DrgElementReference>
       drgElementRefCollection;
 
-  public ElementCollectionImpl(ModelTypeInstanceContext instanceContext) {
+  public ElementCollectionImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public Collection<DrgElement> getDrgElements() {
     return drgElementRefCollection.getReferenceTargetElements(this);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(ElementCollection.class, DMN_ELEMENT_ELEMENT_COLLECTION)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(NamedElement.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<ElementCollection>() {
-                  public ElementCollection newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public ElementCollection newInstance(
+                      final ModelTypeInstanceContext instanceContext) {
                     return new ElementCollectionImpl(instanceContext);
                   }
                 });
 
-    SequenceBuilder sequenceBuilder = typeBuilder.sequence();
+    final SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
     drgElementRefCollection =
         sequenceBuilder

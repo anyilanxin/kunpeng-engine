@@ -26,12 +26,16 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.AttributeReferenceCol
  */
 public interface StringAttributeBuilder extends AttributeBuilder<String> {
 
+  @Override
   StringAttributeBuilder namespace(String namespaceUri);
 
+  @Override
   StringAttributeBuilder defaultValue(String defaultValue);
 
+  @Override
   StringAttributeBuilder required();
 
+  @Override
   StringAttributeBuilder idAttribute();
 
   <V extends ModelElementInstance> AttributeReferenceBuilder<V> qNameAttributeReference(

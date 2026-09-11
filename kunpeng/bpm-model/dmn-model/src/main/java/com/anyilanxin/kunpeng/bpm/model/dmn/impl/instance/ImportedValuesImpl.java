@@ -16,9 +16,7 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_EXPRESSION_LANGUAGE;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_IMPORTED_VALUES;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.*;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Import;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.ImportedElement;
@@ -37,35 +35,41 @@ public class ImportedValuesImpl extends ImportImpl implements ImportedValues {
 
   protected static ChildElement<ImportedElement> importedElementChild;
 
-  public ImportedValuesImpl(ModelTypeInstanceContext instanceContext) {
+  public ImportedValuesImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public String getExpressionLanguage() {
     return expressionLanguageAttribute.getValue(this);
   }
 
-  public void setExpressionLanguage(String expressionLanguage) {
+  @Override
+  public void setExpressionLanguage(final String expressionLanguage) {
     expressionLanguageAttribute.setValue(this, expressionLanguage);
   }
 
+  @Override
   public ImportedElement getImportedElement() {
     return importedElementChild.getChild(this);
   }
 
-  public void setImportedElement(ImportedElement importedElement) {
+  @Override
+  public void setImportedElement(final ImportedElement importedElement) {
     importedElementChild.setChild(this, importedElement);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(ImportedValues.class, DMN_ELEMENT_IMPORTED_VALUES)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(Import.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<ImportedValues>() {
-                  public ImportedValues newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public ImportedValues newInstance(
+                      final ModelTypeInstanceContext instanceContext) {
                     return new ImportedValuesImpl(instanceContext);
                   }
                 });
@@ -73,7 +77,7 @@ public class ImportedValuesImpl extends ImportImpl implements ImportedValues {
     expressionLanguageAttribute =
         typeBuilder.stringAttribute(DMN_ATTRIBUTE_EXPRESSION_LANGUAGE).build();
 
-    SequenceBuilder sequenceBuilder = typeBuilder.sequence();
+    final SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
     importedElementChild = sequenceBuilder.element(ImportedElement.class).required().build();
 

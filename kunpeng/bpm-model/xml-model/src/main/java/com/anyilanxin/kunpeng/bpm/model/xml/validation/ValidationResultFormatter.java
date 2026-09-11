@@ -52,7 +52,7 @@ public interface ValidationResultFormatter {
    * @param writer the writer
    * @param count the count of results omitted from the writer output
    */
-  default void formatSuffixWithOmittedResultsCount(StringWriter writer, int count) {
+  default void formatSuffixWithOmittedResultsCount(final StringWriter writer, final int count) {
     // Do NOTHING by default
   }
 
@@ -62,7 +62,7 @@ public interface ValidationResultFormatter {
    * @param count the count of results to be omitted from the writer output
    * @return the size of the formatted suffix in bytes
    */
-  default int getFormattedSuffixWithOmittedResultsSize(int count) {
+  default int getFormattedSuffixWithOmittedResultsSize(final int count) {
     return 0;
   }
 }

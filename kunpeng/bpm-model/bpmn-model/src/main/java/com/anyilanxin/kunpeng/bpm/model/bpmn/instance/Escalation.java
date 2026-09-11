@@ -22,7 +22,11 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
  *
  * @author Sebastian Menski
  */
-public interface Escalation extends RootElement, NamedBpmnElement {
+public interface Escalation extends RootElement {
+
+  String getName();
+
+  void setName(String name);
 
   String getEscalationCode();
 

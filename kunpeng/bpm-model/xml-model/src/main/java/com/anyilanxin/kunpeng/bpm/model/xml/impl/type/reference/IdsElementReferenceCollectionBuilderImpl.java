@@ -27,11 +27,11 @@ public class IdsElementReferenceCollectionBuilderImpl<
     extends ElementReferenceCollectionBuilderImpl<Target, Source> {
 
   public IdsElementReferenceCollectionBuilderImpl(
-      Class<Source> childElementType,
-      Class<Target> referenceTargetClass,
-      ChildElementCollectionImpl<Source> collection) {
+      final Class<Source> childElementType,
+      final Class<Target> referenceTargetClass,
+      final ChildElementCollectionImpl<Source> collection) {
     super(childElementType, referenceTargetClass, collection);
-    this.elementReferenceCollectionImpl =
+    elementReferenceCollectionImpl =
         new IdsElementReferenceCollectionImpl<Target, Source>(collection);
   }
 }

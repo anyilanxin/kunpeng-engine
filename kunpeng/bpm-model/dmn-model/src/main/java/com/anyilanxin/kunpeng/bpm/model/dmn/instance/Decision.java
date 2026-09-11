@@ -54,17 +54,11 @@ public interface Decision extends DrgElement {
 
   void setExpression(Expression expression);
 
-  // camunda extensions
+  // kunpeng extensions
 
-  @Deprecated
-  Integer getCamundaHistoryTimeToLive();
+  String getKunpengHistoryTimeToLiveString();
 
-  @Deprecated
-  void setCamundaHistoryTimeToLive(Integer historyTimeToLive);
-
-  String getCamundaHistoryTimeToLiveString();
-
-  void setCamundaHistoryTimeToLiveString(String historyTimeToLive);
+  void setKunpengHistoryTimeToLiveString(String historyTimeToLive);
 
   String getVersionTag();
 

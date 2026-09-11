@@ -22,7 +22,11 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
  *
  * @author Sebastian Menski
  */
-public interface Message extends RootElement, NamedBpmnElement {
+public interface Message extends RootElement {
+
+  String getName();
+
+  void setName(String name);
 
   ItemDefinition getItem();
 

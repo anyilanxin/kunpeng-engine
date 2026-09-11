@@ -1,0 +1,178 @@
+/*
+ * Copyright © 2017 camunda services GmbH (info@camunda.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.anyilanxin.kunpeng.bpm.model.bpmn.validation;
+
+import com.anyilanxin.kunpeng.bpm.model.bpmn.Bpmn;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelInstance;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.builder.ProcessBuilder;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Process;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.StartEvent;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.SubProcess;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengFormDefinition;
+import org.junit.runners.Parameterized.Parameters;
+
+import java.util.Arrays;
+import java.util.Collections;
+
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.validation.ExpectedValidationResult.expect;
+import static java.util.Collections.EMPTY_LIST;
+import static java.util.Collections.singletonList;
+
+public class KunpengStartEventValidationTest extends AbstractKunpengValidationTest {
+
+    @Parameters(name = "{index}: {1}")
+    public static Object[][] parameters() {
+        return new Object[][]{
+                {
+                        "no-start-event-sub-process.bpmn",
+                        singletonList(expect("subProcess", "Must have exactly one start event"))
+                },
+                {
+                        Bpmn.createExecutableProcess().startEvent().signal("signal").endEvent().done(), valid(),
+                },
+                {
+                        Bpmn.createExecutableProcess()
+                                .startEvent()
+                                .timerWithCycle("R1/PT2H")
+                                .signal("signal")
+                                .endEvent()
+                                .done(),
+                        singletonList(expect(StartEvent.class, "Start event can't have more than one type")),
+                },
+                {
+                        "multiple-timer-start-event-sub-process.bpmn",
+                        Arrays.asList(
+                                expect(SubProcess.class, "Start events in subprocesses must be of type none"),
+                                expect(SubProcess.class, "Must have exactly one start event"))
+                },
+                {
+                        processWithMultipleNoneStartEvents(),
+                        singletonList(expect(Process.class, "Multiple none start events are not allowed"))
+                },
+                {
+                        cycleTimerStartEventSubprocess(false), valid(),
+                },
+                {
+                        cycleTimerStartEventSubprocess(true),
+                        Collections.singletonList(
+                                expect(SubProcess.class, "Interrupting timer event with time cycle is not allowed.")),
+                },
+                {processWithNoneStartEventAndMultipleOtherStartEvents(), valid()},
+                // Form Deployment validation
+                {
+                  Bpmn.createExecutableProcess().startEvent().kunpengFormKey("").endEvent().done(),
+                        singletonList(
+                                expect(
+                                  KunpengFormDefinition.class,
+                                        "Exactly one of the attributes 'formId, formKey' must be present and not blank"))
+                },
+                {
+                  Bpmn.createExecutableProcess().startEvent().kunpengFormId("").endEvent().done(),
+                        singletonList(
+                                expect(
+                                  KunpengFormDefinition.class,
+                                        "Exactly one of the attributes 'formId, formKey' must be present and not blank"))
+                },
+                {
+                        Bpmn.createExecutableProcess()
+                                .startEvent()
+                          .kunpengFormKey("")
+                          .kunpengFormId("")
+                                .endEvent()
+                                .done(),
+                        singletonList(
+                                expect(
+                                  KunpengFormDefinition.class,
+                                        "Exactly one of the attributes 'formId, formKey' must be present and not blank"))
+                },
+                {
+                        Bpmn.createExecutableProcess()
+                                .startEvent()
+                          .kunpengFormKey("form-key")
+                          .kunpengFormId("form-id")
+                                .endEvent()
+                                .done(),
+                        singletonList(
+                                expect(
+                                  KunpengFormDefinition.class,
+                                        "Exactly one of the attributes 'formId, formKey' must be present and not blank"))
+                },
+                {
+                  Bpmn.createExecutableProcess().startEvent().kunpengFormKey(" ").endEvent().done(),
+                        singletonList(
+                                expect(
+                                  KunpengFormDefinition.class,
+                                        "Exactly one of the attributes 'formId, formKey' must be present and not blank"))
+                },
+                {
+                  Bpmn.createExecutableProcess().startEvent().kunpengFormId(" ").endEvent().done(),
+                        singletonList(
+                                expect(
+                                  KunpengFormDefinition.class,
+                                        "Exactly one of the attributes 'formId, formKey' must be present and not blank"))
+                },
+                {
+                  Bpmn.createExecutableProcess().startEvent().kunpengFormKey("  ").endEvent().done(),
+                        singletonList(
+                                expect(
+                                  KunpengFormDefinition.class,
+                                        "Exactly one of the attributes 'formId, formKey' must be present and not blank"))
+                },
+                {
+                  Bpmn.createExecutableProcess().startEvent().kunpengFormId("  ").endEvent().done(),
+                        singletonList(
+                                expect(
+                                  KunpengFormDefinition.class,
+                                        "Exactly one of the attributes 'formId, formKey' must be present and not blank"))
+                },
+                {
+                  Bpmn.createExecutableProcess().startEvent().kunpengFormId("form-id").endEvent().done(),
+                        EMPTY_LIST
+                },
+                {
+                  Bpmn.createExecutableProcess().startEvent().kunpengFormKey("form-key").endEvent().done(),
+                        EMPTY_LIST
+                },
+        };
+    }
+
+    private static BpmnModelInstance processWithMultipleNoneStartEvents() {
+        final ProcessBuilder process = Bpmn.createExecutableProcess();
+        process.startEvent().endEvent();
+        return process.startEvent().endEvent().done();
+    }
+
+    private static BpmnModelInstance cycleTimerStartEventSubprocess(final boolean interrupting) {
+        final ProcessBuilder processBuilder = Bpmn.createExecutableProcess();
+      processBuilder.startEvent().serviceTask("task", b -> b.kunpengJobType("type")).endEvent();
+        return processBuilder
+                .eventSubProcess()
+                .startEvent()
+                .interrupting(interrupting)
+                .timerWithCycle("R/PT60S")
+                .endEvent()
+                .done();
+    }
+
+    private static BpmnModelInstance processWithNoneStartEventAndMultipleOtherStartEvents() {
+        final ProcessBuilder process = Bpmn.createExecutableProcess();
+        process.startEvent().endEvent();
+        process.startEvent().timerWithCycle("R/PT1H");
+        process.startEvent().message("start");
+        return process.done();
+    }
+}

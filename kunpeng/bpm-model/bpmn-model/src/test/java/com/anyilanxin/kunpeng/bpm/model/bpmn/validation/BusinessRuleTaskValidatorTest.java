@@ -16,17 +16,14 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.bpmn.validation;
 
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.validation.ExpectedValidationResult.expect;
-
 import com.anyilanxin.kunpeng.bpm.model.bpmn.Bpmn;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelInstance;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.builder.BusinessRuleTaskBuilder;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.ZeebeConstants;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.KunpengConstants;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BusinessRuleTask;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeBindingType;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeCalledDecision;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeTaskDefinition;
-import java.util.function.Consumer;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengBindingType;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengCalledDecision;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengTaskDefinition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -34,182 +31,159 @@ import org.junit.jupiter.params.provider.EnumSource.Mode;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.util.function.Consumer;
+
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.validation.ExpectedValidationResult.expect;
+
 class BusinessRuleTaskValidatorTest {
 
-  @Test
-  void emptyDecisionId() {
-    // when
-    final BpmnModelInstance process =
-        process(task -> task.zeebeCalledDecisionId("").zeebeResultVariable("result"));
+    @Test
+    void emptyDecisionId() {
+        // when
+        final BpmnModelInstance process =
+          process(task -> task.kunpengCalledDecisionId("").kunpengResultVariable("result"));
 
-    // then
-    ProcessValidationUtil.assertThatProcessHasViolations(
-        process,
-        ExpectedValidationResult.expect(
-            ZeebeCalledDecision.class, "Attribute 'decisionId' must be present and not empty"));
-  }
+        // then
+        ProcessValidationUtil.assertThatProcessHasViolations(
+                process,
+                ExpectedValidationResult.expect(
+                  KunpengCalledDecision.class, "Attribute 'decisionId' must be present and not empty"));
+    }
 
-  @Test
-  void emptyDecisionIdExpression() {
-    // when
-    final BpmnModelInstance process =
-        process(task -> task.zeebeCalledDecisionIdExpression("").zeebeResultVariable("result"));
+    @Test
+    void emptyDecisionIdExpression() {
+        // when
+        final BpmnModelInstance process =
+          process(task -> task.kunpengCalledDecisionIdExpression("").kunpengResultVariable("result"));
 
-    // then
-    ProcessValidationUtil.assertThatProcessHasViolations(
-        process,
-        ExpectedValidationResult.expect(
-            ZeebeCalledDecision.class, "Attribute 'decisionId' must be present and not empty"));
-  }
+        // then
+        ProcessValidationUtil.assertThatProcessHasViolations(
+                process,
+                ExpectedValidationResult.expect(
+                  KunpengCalledDecision.class, "Attribute 'decisionId' must be present and not empty"));
+    }
 
-  @Test
-  void emptyResultVariable() {
-    // when
-    final BpmnModelInstance process =
-        process(task -> task.zeebeCalledDecisionId("decisionId").zeebeResultVariable(""));
+    @Test
+    void emptyResultVariable() {
+        // when
+        final BpmnModelInstance process =
+          process(task -> task.kunpengCalledDecisionId("decisionId").kunpengResultVariable(""));
 
-    // then
-    ProcessValidationUtil.assertThatProcessHasViolations(
-        process,
-        ExpectedValidationResult.expect(
-            ZeebeCalledDecision.class, "Attribute 'resultVariable' must be present and not empty"));
-  }
+        // then
+        ProcessValidationUtil.assertThatProcessHasViolations(
+                process,
+                ExpectedValidationResult.expect(
+                  KunpengCalledDecision.class, "Attribute 'resultVariable' must be present and not empty"));
+    }
 
-  @Test
-  void invalidBindingType() {
-    // when
-    final BpmnModelInstance process =
-        process(
-            task ->
-                task.zeebeCalledDecisionId("decisionId")
-                    .zeebeResultVariable("result")
-                    .getElement()
-                    .getSingleExtensionElement(ZeebeCalledDecision.class)
-                    .setAttributeValue(ZeebeConstants.ATTRIBUTE_BINDING_TYPE, "foo"));
+    @Test
+    void invalidBindingType() {
+        // when
+        final BpmnModelInstance process =
+                process(
+                        task ->
+                          task.kunpengCalledDecisionId("decisionId")
+                            .kunpengResultVariable("result")
+                                        .getElement()
+                            .getSingleExtensionElement(KunpengCalledDecision.class)
+                            .setAttributeValue(KunpengConstants.ATTRIBUTE_BINDING_TYPE, "foo"));
 
-    // then
-    ProcessValidationUtil.assertThatProcessHasViolations(
-        process,
-        ExpectedValidationResult.expect(
-            ZeebeCalledDecision.class,
-            "Attribute 'bindingType' must be one of: deployment, latest, versionTag"));
-  }
+        // then
+        ProcessValidationUtil.assertThatProcessHasViolations(
+                process,
+                ExpectedValidationResult.expect(
+                  KunpengCalledDecision.class,
+                        "Attribute 'bindingType' must be one of: deployment, latest, versionTag"));
+    }
 
-  @ParameterizedTest
-  @ValueSource(strings = {"", " "})
-  @NullSource
-  void emptyVersionTagForBindingTypeVersionTag(final String versionTag) {
-    // when
-    final BpmnModelInstance process =
-        process(
-            task ->
-                task.zeebeCalledDecisionId("decisionId")
-                    .zeebeBindingType(ZeebeBindingType.versionTag)
-                    .zeebeVersionTag(versionTag)
-                    .zeebeResultVariable("result"));
+    @ParameterizedTest
+    @ValueSource(strings = {"", " "})
+    @NullSource
+    void emptyVersionTagForBindingTypeVersionTag(final String versionTag) {
+        // when
+        final BpmnModelInstance process =
+                process(
+                        task ->
+                          task.kunpengCalledDecisionId("decisionId")
+                            .kunpengBindingType(KunpengBindingType.versionTag)
+                            .kunpengVersionTag(versionTag)
+                            .kunpengResultVariable("result"));
 
-    // then
-    ProcessValidationUtil.assertThatProcessHasViolations(
-        process,
-        ExpectedValidationResult.expect(
-            ZeebeCalledDecision.class,
-            "Attribute 'versionTag' must be present and not empty if 'bindingType' is 'versionTag'"));
-  }
+        // then
+        ProcessValidationUtil.assertThatProcessHasViolations(
+                process,
+                ExpectedValidationResult.expect(
+                  KunpengCalledDecision.class,
+                        "Attribute 'versionTag' must be present and not empty if 'bindingType' is 'versionTag'"));
+    }
 
-  @ParameterizedTest
-  @EnumSource(value = ZeebeBindingType.class, names = "versionTag", mode = Mode.EXCLUDE)
-  void notEmptyVersionTagForWrongBindingType(final ZeebeBindingType bindingType) {
-    // when
-    final BpmnModelInstance process =
-        process(
-            task ->
-                task.zeebeCalledDecisionId("decisionId")
-                    .zeebeBindingType(bindingType)
-                    .zeebeVersionTag("v1.0")
-                    .zeebeResultVariable("result"));
+    @ParameterizedTest
+    @EnumSource(value = KunpengBindingType.class, names = "versionTag", mode = Mode.EXCLUDE)
+    void notEmptyVersionTagForWrongBindingType(final KunpengBindingType bindingType) {
+        // when
+        final BpmnModelInstance process =
+                process(
+                        task ->
+                          task.kunpengCalledDecisionId("decisionId")
+                            .kunpengBindingType(bindingType)
+                            .kunpengVersionTag("v1.0")
+                            .kunpengResultVariable("result"));
 
-    // then
-    ProcessValidationUtil.assertThatProcessHasViolations(
-        process,
-        ExpectedValidationResult.expect(
-            ZeebeCalledDecision.class,
-            "Attribute 'versionTag' may only be used if 'bindingType' is 'versionTag'"));
-  }
+        // then
+        ProcessValidationUtil.assertThatProcessHasViolations(
+                process,
+                ExpectedValidationResult.expect(
+                  KunpengCalledDecision.class,
+                        "Attribute 'versionTag' may only be used if 'bindingType' is 'versionTag'"));
+    }
 
-  @Test
-  void emptyJobType() {
-    // when
-    final BpmnModelInstance process = process(task -> task.zeebeJobType(""));
+    @Test
+    void emptyJobType() {
+        // when
+      final BpmnModelInstance process = process(task -> task.kunpengJobType(""));
 
-    // then
-    ProcessValidationUtil.assertThatProcessHasViolations(
-        process,
-        expect(ZeebeTaskDefinition.class, "Attribute 'type' must be present and not empty"));
-  }
+        // then
+        ProcessValidationUtil.assertThatProcessHasViolations(
+                process,
+                expect(KunpengTaskDefinition.class, "Attribute 'type' must be present and not empty"));
+    }
 
-  @Test
-  void noCalledDecisionAndTaskDefinitionExtension() {
-    // when
-    final BpmnModelInstance process = process(task -> {});
+    @Test
+    void noCalledDecisionAndTaskDefinitionExtension() {
+        // when
+        final BpmnModelInstance process = process(task -> {
+        });
 
-    // then
-    ProcessValidationUtil.assertThatProcessHasViolations(
-        process,
-        ExpectedValidationResult.expect(
-            BusinessRuleTask.class,
-            "Must have either one 'zeebe:calledDecision' or one 'zeebe:taskDefinition' extension element"));
-  }
+        // then
+        ProcessValidationUtil.assertThatProcessHasViolations(
+                process,
+                ExpectedValidationResult.expect(
+                        BusinessRuleTask.class,
+                  "Must have either one 'kunpeng:calledDecision' or one 'kunpeng:taskDefinition' extension element"));
+    }
 
-  @Test
-  void bothCalledDecisionAndTaskDefinitionExtension() {
-    // when
-    final BpmnModelInstance process =
-        process(
-            task ->
-                task.zeebeCalledDecisionId("decisionId")
-                    .zeebeResultVariable("result")
-                    .zeebeJobType("jobType"));
+    @Test
+    void bothCalledDecisionAndTaskDefinitionExtension() {
+        // when
+        final BpmnModelInstance process =
+                process(
+                        task ->
+                          task.kunpengCalledDecisionId("decisionId")
+                            .kunpengResultVariable("result")
+                            .kunpengJobType("jobType"));
 
-    // then
-    ProcessValidationUtil.assertThatProcessHasViolations(
-        process,
-        ExpectedValidationResult.expect(
-            BusinessRuleTask.class,
-            "Must have either one 'zeebe:calledDecision' or one 'zeebe:taskDefinition' extension element"));
-  }
+        // then
+        ProcessValidationUtil.assertThatProcessHasViolations(
+                process,
+                ExpectedValidationResult.expect(
+                        BusinessRuleTask.class,
+                  "Must have either one 'kunpeng:calledDecision' or one 'kunpeng:taskDefinition' extension element"));
+    }
 
-  @Test
-  void jobPriorityDefinitionNotAllowedWithCalledDecision() {
-    // given / when
-    final BpmnModelInstance process =
-        process(
-            task ->
-                task.zeebeCalledDecisionId("decisionId")
-                    .zeebeResultVariable("result")
-                    .zeebeJobPriority("42"));
-
-    // then
-    ProcessValidationUtil.assertThatProcessHasViolations(
-        process,
-        expect(
-            BusinessRuleTask.class,
-            "'zeebe:jobPriorityDefinition' is only allowed in job-worker mode ('zeebe:taskDefinition')"));
-  }
-
-  @Test
-  void jobPriorityDefinitionAllowedWithTaskDefinition() {
-    // given / when
-    final BpmnModelInstance process =
-        process(task -> task.zeebeJobType("type").zeebeJobPriority("42"));
-
-    // then
-    ProcessValidationUtil.assertThatProcessIsValid(process);
-  }
-
-  private BpmnModelInstance process(final Consumer<BusinessRuleTaskBuilder> taskBuilder) {
-    return Bpmn.createExecutableProcess("process")
-        .startEvent()
-        .businessRuleTask("task", taskBuilder)
-        .done();
-  }
+    private BpmnModelInstance process(final Consumer<BusinessRuleTaskBuilder> taskBuilder) {
+        return Bpmn.createExecutableProcess("process")
+                .startEvent()
+                .businessRuleTask("task", taskBuilder)
+                .done();
+    }
 }

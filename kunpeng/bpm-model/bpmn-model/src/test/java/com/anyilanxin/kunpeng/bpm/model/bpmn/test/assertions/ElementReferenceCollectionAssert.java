@@ -23,10 +23,10 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.ElementReferenceColle
  * @author Sebastian Menski
  */
 public class ElementReferenceCollectionAssert
-    extends AbstractReferenceAssert<
+        extends AbstractReferenceAssert<
         ElementReferenceCollectionAssert, ElementReferenceCollection<?, ?>> {
 
-  protected ElementReferenceCollectionAssert(final ElementReferenceCollection<?, ?> actual) {
-    super(actual, ElementReferenceCollectionAssert.class);
-  }
+    protected ElementReferenceCollectionAssert(final ElementReferenceCollection<?, ?> actual) {
+        super(actual, ElementReferenceCollectionAssert.class);
+    }
 }

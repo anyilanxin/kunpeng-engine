@@ -32,7 +32,7 @@ public class ChildElementBuilderImpl<T extends ModelElementInstance>
     extends ChildElementCollectionBuilderImpl<T> implements ChildElementBuilder<T> {
 
   public ChildElementBuilderImpl(
-      Class<T> childElementTypeClass, ModelElementType parentElementType) {
+      final Class<T> childElementTypeClass, final ModelElementType parentElementType) {
     super(childElementTypeClass, parentElementType);
   }
 
@@ -41,52 +41,60 @@ public class ChildElementBuilderImpl<T extends ModelElementInstance>
     return new ChildElementImpl<T>(childElementType, parentElementType);
   }
 
+  @Override
   public ChildElementBuilder<T> immutable() {
     super.immutable();
     return this;
   }
 
+  @Override
   public ChildElementBuilder<T> required() {
     super.required();
     return this;
   }
 
-  public ChildElementBuilder<T> minOccurs(int i) {
+  @Override
+  public ChildElementBuilder<T> minOccurs(final int i) {
     super.minOccurs(i);
     return this;
   }
 
-  public ChildElementBuilder<T> maxOccurs(int i) {
+  @Override
+  public ChildElementBuilder<T> maxOccurs(final int i) {
     super.maxOccurs(i);
     return this;
   }
 
+  @Override
   public ChildElement<T> build() {
     return (ChildElement<T>) super.build();
   }
 
+  @Override
   public <V extends ModelElementInstance> ElementReferenceBuilder<V, T> qNameElementReference(
-      Class<V> referenceTargetType) {
-    ChildElementImpl<T> child = (ChildElementImpl<T>) build();
-    QNameElementReferenceBuilderImpl<V, T> builder =
+      final Class<V> referenceTargetType) {
+    final ChildElementImpl<T> child = (ChildElementImpl<T>) build();
+    final QNameElementReferenceBuilderImpl<V, T> builder =
         new QNameElementReferenceBuilderImpl<V, T>(childElementType, referenceTargetType, child);
     setReferenceBuilder(builder);
     return builder;
   }
 
+  @Override
   public <V extends ModelElementInstance> ElementReferenceBuilder<V, T> idElementReference(
-      Class<V> referenceTargetType) {
-    ChildElementImpl<T> child = (ChildElementImpl<T>) build();
-    ElementReferenceBuilderImpl<V, T> builder =
+      final Class<V> referenceTargetType) {
+    final ChildElementImpl<T> child = (ChildElementImpl<T>) build();
+    final ElementReferenceBuilderImpl<V, T> builder =
         new ElementReferenceBuilderImpl<V, T>(childElementType, referenceTargetType, child);
     setReferenceBuilder(builder);
     return builder;
   }
 
+  @Override
   public <V extends ModelElementInstance> ElementReferenceBuilder<V, T> uriElementReference(
-      Class<V> referenceTargetType) {
-    ChildElementImpl<T> child = (ChildElementImpl<T>) build();
-    ElementReferenceBuilderImpl<V, T> builder =
+      final Class<V> referenceTargetType) {
+    final ChildElementImpl<T> child = (ChildElementImpl<T>) build();
+    final ElementReferenceBuilderImpl<V, T> builder =
         new UriElementReferenceBuilderImpl<V, T>(childElementType, referenceTargetType, child);
     setReferenceBuilder(builder);
     return builder;

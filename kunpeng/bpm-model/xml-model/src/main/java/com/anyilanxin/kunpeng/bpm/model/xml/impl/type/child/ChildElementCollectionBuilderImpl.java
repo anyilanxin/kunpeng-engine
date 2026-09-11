@@ -50,85 +50,95 @@ public class ChildElementCollectionBuilderImpl<T extends ModelElementInstance>
       new ArrayList<ModelBuildOperation>();
 
   public ChildElementCollectionBuilderImpl(
-      Class<T> childElementTypeClass, ModelElementType parentElementType) {
-    this.childElementType = childElementTypeClass;
+      final Class<T> childElementTypeClass, final ModelElementType parentElementType) {
+    childElementType = childElementTypeClass;
     this.parentElementType = (ModelElementTypeImpl) parentElementType;
-    this.collection = createCollectionInstance();
+    collection = createCollectionInstance();
   }
 
   protected ChildElementCollectionImpl<T> createCollectionInstance() {
     return new ChildElementCollectionImpl<T>(childElementType, parentElementType);
   }
 
+  @Override
   public ChildElementCollectionBuilder<T> immutable() {
     collection.setImmutable();
     return this;
   }
 
+  @Override
   public ChildElementCollectionBuilder<T> required() {
     collection.setMinOccurs(1);
     return this;
   }
 
-  public ChildElementCollectionBuilder<T> maxOccurs(int i) {
+  @Override
+  public ChildElementCollectionBuilder<T> maxOccurs(final int i) {
     collection.setMaxOccurs(i);
     return this;
   }
 
-  public ChildElementCollectionBuilder<T> minOccurs(int i) {
+  @Override
+  public ChildElementCollectionBuilder<T> minOccurs(final int i) {
     collection.setMinOccurs(i);
     return this;
   }
 
+  @Override
   public ChildElementCollection<T> build() {
     return collection;
   }
 
+  @Override
   public <V extends ModelElementInstance>
       ElementReferenceCollectionBuilder<V, T> qNameElementReferenceCollection(
-          Class<V> referenceTargetType) {
-    ChildElementCollectionImpl<T> collection = (ChildElementCollectionImpl<T>) build();
-    QNameElementReferenceCollectionBuilderImpl<V, T> builder =
+          final Class<V> referenceTargetType) {
+    final ChildElementCollectionImpl<T> collection = (ChildElementCollectionImpl<T>) build();
+    final QNameElementReferenceCollectionBuilderImpl<V, T> builder =
         new QNameElementReferenceCollectionBuilderImpl<V, T>(
             childElementType, referenceTargetType, collection);
     setReferenceBuilder(builder);
     return builder;
   }
 
+  @Override
   public <V extends ModelElementInstance>
       ElementReferenceCollectionBuilder<V, T> idElementReferenceCollection(
-          Class<V> referenceTargetType) {
-    ChildElementCollectionImpl<T> collection = (ChildElementCollectionImpl<T>) build();
-    ElementReferenceCollectionBuilder<V, T> builder =
+          final Class<V> referenceTargetType) {
+    final ChildElementCollectionImpl<T> collection = (ChildElementCollectionImpl<T>) build();
+    final ElementReferenceCollectionBuilder<V, T> builder =
         new ElementReferenceCollectionBuilderImpl<V, T>(
             childElementType, referenceTargetType, collection);
     setReferenceBuilder(builder);
     return builder;
   }
 
+  @Override
   public <V extends ModelElementInstance>
       ElementReferenceCollectionBuilder<V, T> idsElementReferenceCollection(
-          Class<V> referenceTargetType) {
-    ChildElementCollectionImpl<T> collection = (ChildElementCollectionImpl<T>) build();
-    ElementReferenceCollectionBuilder<V, T> builder =
+          final Class<V> referenceTargetType) {
+    final ChildElementCollectionImpl<T> collection = (ChildElementCollectionImpl<T>) build();
+    final ElementReferenceCollectionBuilder<V, T> builder =
         new IdsElementReferenceCollectionBuilderImpl<V, T>(
             childElementType, referenceTargetType, collection);
     setReferenceBuilder(builder);
     return builder;
   }
 
+  @Override
   public <V extends ModelElementInstance>
       ElementReferenceCollectionBuilder<V, T> uriElementReferenceCollection(
-          Class<V> referenceTargetType) {
-    ChildElementCollectionImpl<T> collection = (ChildElementCollectionImpl<T>) build();
-    ElementReferenceCollectionBuilder<V, T> builder =
+          final Class<V> referenceTargetType) {
+    final ChildElementCollectionImpl<T> collection = (ChildElementCollectionImpl<T>) build();
+    final ElementReferenceCollectionBuilder<V, T> builder =
         new UriElementReferenceCollectionBuilderImpl<V, T>(
             childElementType, referenceTargetType, collection);
     setReferenceBuilder(builder);
     return builder;
   }
 
-  protected void setReferenceBuilder(ElementReferenceCollectionBuilder<?, ?> referenceBuilder) {
+  protected void setReferenceBuilder(
+      final ElementReferenceCollectionBuilder<?, ?> referenceBuilder) {
     if (this.referenceBuilder != null) {
       throw new ModelException("An collection cannot have more than one reference");
     }
@@ -136,8 +146,9 @@ public class ChildElementCollectionBuilderImpl<T extends ModelElementInstance>
     modelBuildOperations.add(referenceBuilder);
   }
 
-  public void performModelBuild(Model model) {
-    ModelElementType elementType = model.getType(childElementType);
+  @Override
+  public void performModelBuild(final Model model) {
+    final ModelElementType elementType = model.getType(childElementType);
     if (elementType == null) {
       throw new ModelException(
           parentElementType
@@ -147,7 +158,7 @@ public class ChildElementCollectionBuilderImpl<T extends ModelElementInstance>
     }
     parentElementType.registerChildElementType(elementType);
     parentElementType.registerChildElementCollection(collection);
-    for (ModelBuildOperation modelBuildOperation : modelBuildOperations) {
+    for (final ModelBuildOperation modelBuildOperation : modelBuildOperations) {
       modelBuildOperation.performModelBuild(model);
     }
   }

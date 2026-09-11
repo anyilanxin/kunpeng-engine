@@ -24,7 +24,11 @@ import java.util.Collection;
  *
  * @author Sebastian Menski
  */
-public interface CorrelationProperty extends RootElement, NamedBpmnElement {
+public interface CorrelationProperty extends RootElement {
+
+  String getName();
+
+  void setName(String name);
 
   ItemDefinition getType();
 

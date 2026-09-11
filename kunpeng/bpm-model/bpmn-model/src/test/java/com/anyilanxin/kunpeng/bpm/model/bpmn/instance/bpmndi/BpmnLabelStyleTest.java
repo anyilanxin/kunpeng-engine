@@ -17,32 +17,33 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn.instance.bpmndi;
 
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMNDI_NS;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DC_NS;
-
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BpmnModelElementInstanceTest;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.dc.Font;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.di.Style;
+
 import java.util.Arrays;
 import java.util.Collection;
+
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMNDI_NS;
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DC_NS;
 
 /**
  * @author Sebastian Menski
  */
 public class BpmnLabelStyleTest extends BpmnModelElementInstanceTest {
 
-  @Override
-  public TypeAssumption getTypeAssumption() {
-    return new TypeAssumption(BPMNDI_NS, Style.class, false);
-  }
+    @Override
+    public TypeAssumption getTypeAssumption() {
+        return new TypeAssumption(BPMNDI_NS, Style.class, false);
+    }
 
-  @Override
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
-    return Arrays.asList(new ChildElementAssumption(DC_NS, Font.class, 1, 1));
-  }
+    @Override
+    public Collection<ChildElementAssumption> getChildElementAssumptions() {
+        return Arrays.asList(new ChildElementAssumption(DC_NS, Font.class, 1, 1));
+    }
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return null;
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return null;
+    }
 }

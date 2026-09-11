@@ -16,40 +16,41 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.bpmn.util.time;
 
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.util.time.TimeDateTimer.parse;
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Test;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import org.junit.Test;
+
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.util.time.TimeDateTimer.parse;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class TimeDateTimerTest {
-  @Test
-  public void shouldParseTimeDateCorrectly() {
-    // given
-    final ZonedDateTime currentTime = ZonedDateTime.now();
+    @Test
+    public void shouldParseTimeDateCorrectly() {
+        // given
+        final ZonedDateTime currentTime = ZonedDateTime.now();
 
-    // when
-    final Timer timeDate = TimeDateTimer.parse(currentTime.toString());
+        // when
+        final Timer timeDate = TimeDateTimer.parse(currentTime.toString());
 
-    // then
-    assertThat(timeDate.getRepetitions()).isEqualTo(1);
-    assertThat(timeDate.getDueDate(0)).isEqualTo(currentTime.toInstant().toEpochMilli());
-  }
+        // then
+        assertThat(timeDate.getRepetitions()).isEqualTo(1);
+        assertThat(timeDate.getDueDate(0)).isEqualTo(currentTime.toInstant().toEpochMilli());
+    }
 
-  @Test
-  public void shouldConvertTimezoneCorrectly() {
-    // given
-    final ZonedDateTime localTime = ZonedDateTime.now();
-    final ZonedDateTime utcTime = localTime.withZoneSameInstant(ZoneId.of("UTC"));
+    @Test
+    public void shouldConvertTimezoneCorrectly() {
+        // given
+        final ZonedDateTime localTime = ZonedDateTime.now();
+        final ZonedDateTime utcTime = localTime.withZoneSameInstant(ZoneId.of("UTC"));
 
-    // when
-    final Timer localTimeDate = parse(localTime.toString());
-    final Timer utcTimeDate = parse(utcTime.toString());
+        // when
+        final Timer localTimeDate = parse(localTime.toString());
+        final Timer utcTimeDate = parse(utcTime.toString());
 
-    // then
-    assertThat(localTimeDate.getDueDate(0)).isEqualTo(utcTimeDate.getDueDate(0));
-    assertThat(localTimeDate.getRepetitions()).isEqualTo(1);
-    assertThat(utcTimeDate.getRepetitions()).isEqualTo(1);
-  }
+        // then
+        assertThat(localTimeDate.getDueDate(0)).isEqualTo(utcTimeDate.getDueDate(0));
+        assertThat(localTimeDate.getRepetitions()).isEqualTo(1);
+        assertThat(utcTimeDate.getRepetitions()).isEqualTo(1);
+    }
 }

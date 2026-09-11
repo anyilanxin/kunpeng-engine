@@ -17,28 +17,28 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn.validation;
 
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.validation.ExpectedValidationResult.expect;
-import static java.util.Collections.singletonList;
-
 import com.anyilanxin.kunpeng.bpm.model.bpmn.Bpmn;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Process;
 import org.junit.runners.Parameterized.Parameters;
 
-public class ValidateProcessTest extends AbstractZeebeValidationTest {
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.validation.ExpectedValidationResult.expect;
+import static java.util.Collections.singletonList;
 
-  @Parameters(name = "{index}: {1}")
-  public static Object[][] parameters() {
-    return new Object[][] {
-      {"non-executable-elements.bpmn", valid()},
-      {"collaboration-with-lanes.bpmn", valid()},
-      {
-        "default-base-start-event-end-event-process-id-missing.bpmn",
-        singletonList(expect(Process.class, "Element id must be present and not empty."))
-      },
-      {
-        Bpmn.createExecutableProcess().done(),
-        singletonList(expect(Process.class, "Must have at least one start event"))
-      }
-    };
-  }
+public class ValidateProcessTest extends AbstractKunpengValidationTest {
+
+    @Parameters(name = "{index}: {1}")
+    public static Object[][] parameters() {
+        return new Object[][]{
+                {"non-executable-elements.bpmn", valid()},
+                {"collaboration-with-lanes.bpmn", valid()},
+                {
+                        "default-base-start-event-end-event-process-id-missing.bpmn",
+                        singletonList(expect(Process.class, "Element id must be present and not empty."))
+                },
+                {
+                        Bpmn.createExecutableProcess().done(),
+                        singletonList(expect(Process.class, "Must have at least one start event"))
+                }
+        };
+    }
 }

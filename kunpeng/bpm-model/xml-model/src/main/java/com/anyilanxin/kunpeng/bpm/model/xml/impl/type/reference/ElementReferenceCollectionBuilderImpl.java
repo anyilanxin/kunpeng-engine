@@ -37,30 +37,31 @@ public class ElementReferenceCollectionBuilderImpl<
   protected ElementReferenceCollectionImpl<Target, Source> elementReferenceCollectionImpl;
 
   public ElementReferenceCollectionBuilderImpl(
-      Class<Source> childElementType,
-      Class<Target> referenceTargetClass,
-      ChildElementCollectionImpl<Source> collection) {
+      final Class<Source> childElementType,
+      final Class<Target> referenceTargetClass,
+      final ChildElementCollectionImpl<Source> collection) {
     this.childElementType = childElementType;
     this.referenceTargetClass = referenceTargetClass;
-    this.elementReferenceCollectionImpl =
-        new ElementReferenceCollectionImpl<Target, Source>(collection);
+    elementReferenceCollectionImpl = new ElementReferenceCollectionImpl<Target, Source>(collection);
   }
 
+  @Override
   public ElementReferenceCollection<Target, Source> build() {
     return elementReferenceCollectionImpl;
   }
 
+  @Override
   @SuppressWarnings("unchecked")
-  public void performModelBuild(Model model) {
-    ModelElementTypeImpl referenceTargetType =
+  public void performModelBuild(final Model model) {
+    final ModelElementTypeImpl referenceTargetType =
         (ModelElementTypeImpl) model.getType(referenceTargetClass);
-    ModelElementTypeImpl referenceSourceType =
+    final ModelElementTypeImpl referenceSourceType =
         (ModelElementTypeImpl) model.getType(childElementType);
     elementReferenceCollectionImpl.setReferenceTargetElementType(referenceTargetType);
     elementReferenceCollectionImpl.setReferenceSourceElementType(referenceSourceType);
 
     // the referenced attribute may be declared on a base type of the referenced type.
-    AttributeImpl<String> idAttribute =
+    final AttributeImpl<String> idAttribute =
         (AttributeImpl<String>) referenceTargetType.getAttribute("id");
     if (idAttribute != null) {
       idAttribute.registerIncoming(elementReferenceCollectionImpl);

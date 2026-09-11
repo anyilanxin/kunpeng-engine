@@ -16,276 +16,133 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.bpmn.validation;
 
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.validation.ExpectedValidationResult.expect;
-
 import com.anyilanxin.kunpeng.bpm.model.bpmn.Bpmn;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelInstance;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.builder.AdHocSubProcessBuilder;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.AdHocSubProcess;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.StartEvent;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeTaskDefinition;
-import java.util.function.Consumer;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 import org.junit.jupiter.api.Test;
 
+import java.util.function.Consumer;
+
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.validation.ExpectedValidationResult.expect;
+
 class AdHocSubProcessValidatorTest {
 
-  private static final String AD_HOC_SUB_PROCESS_ELEMENT_ID = "ad-hoc";
+    private static final String AD_HOC_SUB_PROCESS_ELEMENT_ID = "ad-hoc";
 
-  @Test
-  void withOneActivity() {
-    // given
-    final BpmnModelInstance process = process(adHocSubProcess -> adHocSubProcess.task("A"));
+    @Test
+    void withOneActivity() {
+        // given
+        final BpmnModelInstance process = process(adHocSubProcess -> adHocSubProcess.task("A"));
 
-    // when/then
-    ProcessValidationUtil.assertThatProcessIsValid(process);
-  }
+        // when/then
+        ProcessValidationUtil.assertThatProcessIsValid(process);
+    }
 
-  @Test
-  void withMultipleActivities() {
-    // given
-    final BpmnModelInstance process =
-        process(
-            adHocSubProcess -> {
-              adHocSubProcess.task("A");
-              adHocSubProcess.task("B");
-            });
+    @Test
+    void withMultipleActivities() {
+        // given
+        final BpmnModelInstance process =
+                process(
+                        adHocSubProcess -> {
+                            adHocSubProcess.task("A");
+                            adHocSubProcess.task("B");
+                        });
 
-    // when/then
-    ProcessValidationUtil.assertThatProcessIsValid(process);
-  }
+        // when/then
+        ProcessValidationUtil.assertThatProcessIsValid(process);
+    }
 
-  @Test
-  void withNoActivity() {
-    // given
-    final BpmnModelInstance process = process(adHocSubProcess -> {});
+    @Test
+    void withNoActivity() {
+        // given
+        final BpmnModelInstance process = process(adHocSubProcess -> {
+        });
 
-    // when/then
-    ProcessValidationUtil.assertThatProcessHasViolations(
-        process, expect(AdHocSubProcess.class, "Must have at least one activity."));
-  }
+        // when/then
+        ProcessValidationUtil.assertThatProcessHasViolations(
+                process, expect(AdHocSubProcess.class, "Must have at least one activity."));
+    }
 
-  @Test
-  void withStartEvent() {
-    // given
-    final BpmnModelInstance process = process(adHocSubProcess -> {});
+    @Test
+    void withStartEvent() {
+        // given
+        final BpmnModelInstance process = process(adHocSubProcess -> {
+        });
 
-    final ModelElementInstance adHocSubProcess =
-        process.getModelElementById(AD_HOC_SUB_PROCESS_ELEMENT_ID);
-    adHocSubProcess.addChildElement(process.newInstance(StartEvent.class));
+        final ModelElementInstance adHocSubProcess =
+                process.getModelElementById(AD_HOC_SUB_PROCESS_ELEMENT_ID);
+        adHocSubProcess.addChildElement(process.newInstance(StartEvent.class));
 
-    // when/then
-    ProcessValidationUtil.assertThatProcessHasViolations(
-        process, expect(AdHocSubProcess.class, "Must not contain a start event"));
-  }
+        // when/then
+        ProcessValidationUtil.assertThatProcessHasViolations(
+                process, expect(AdHocSubProcess.class, "Must not contain a start event"));
+    }
 
-  @Test
-  void withEndEvent() {
-    // given
-    final BpmnModelInstance process =
-        process(adHocSubProcess -> adHocSubProcess.endEvent("invalid"));
+    @Test
+    void withEndEvent() {
+        // given
+        final BpmnModelInstance process =
+                process(adHocSubProcess -> adHocSubProcess.endEvent("invalid"));
 
-    // when/then
-    ProcessValidationUtil.assertThatProcessHasViolations(
-        process, expect(AdHocSubProcess.class, "Must not contain an end event"));
-  }
+        // when/then
+        ProcessValidationUtil.assertThatProcessHasViolations(
+                process, expect(AdHocSubProcess.class, "Must not contain an end event"));
+    }
 
-  @Test
-  void withIntermediateCatchEventAndOutgoingSequenceFlow() {
-    // given
-    final BpmnModelInstance process =
-        process(
-            adHocSubProcess -> adHocSubProcess.intermediateCatchEvent().signal("signal").task("A"));
+    @Test
+    void withIntermediateCatchEventAndOutgoingSequenceFlow() {
+        // given
+        final BpmnModelInstance process =
+                process(
+                        adHocSubProcess -> adHocSubProcess.intermediateCatchEvent().signal("signal").task("A"));
 
-    // when/then
-    ProcessValidationUtil.assertThatProcessIsValid(process);
-  }
+        // when/then
+        ProcessValidationUtil.assertThatProcessIsValid(process);
+    }
 
-  @Test
-  void withIntermediateCatchEventAndNoOutgoingSequenceFlow() {
-    // given
-    final BpmnModelInstance process =
-        process(adHocSubProcess -> adHocSubProcess.intermediateCatchEvent().signal("signal"));
+    @Test
+    void withIntermediateCatchEventAndNoOutgoingSequenceFlow() {
+        // given
+        final BpmnModelInstance process =
+                process(adHocSubProcess -> adHocSubProcess.intermediateCatchEvent().signal("signal"));
 
-    // when/then
-    ProcessValidationUtil.assertThatProcessIsValid(process);
-  }
+        // when/then
+        ProcessValidationUtil.assertThatProcessHasViolations(
+                process,
+                expect(
+                        AdHocSubProcess.class,
+                        "Any intermediate catch event must have an outgoing sequence flow."));
+    }
 
-  @Test
-  void withIntermediateThrowEventAndOutgoingSequenceFlow() {
-    // given
-    final BpmnModelInstance process =
-        process(
-            adHocSubProcess -> adHocSubProcess.intermediateThrowEvent().signal("signal").task("A"));
+    @Test
+    void withIntermediateThrowEventAndOutgoingSequenceFlow() {
+        // given
+        final BpmnModelInstance process =
+                process(
+                        adHocSubProcess -> adHocSubProcess.intermediateThrowEvent().signal("signal").task("A"));
 
-    // when/then
-    ProcessValidationUtil.assertThatProcessIsValid(process);
-  }
+        // when/then
+        ProcessValidationUtil.assertThatProcessIsValid(process);
+    }
 
-  @Test
-  void withIntermediateThrowEventAndNoOutgoingSequenceFlow() {
-    // given
-    final BpmnModelInstance process =
-        process(adHocSubProcess -> adHocSubProcess.intermediateThrowEvent().signal("signal"));
+    @Test
+    void withIntermediateThrowEventAndNoOutgoingSequenceFlow() {
+        // given
+        final BpmnModelInstance process =
+                process(adHocSubProcess -> adHocSubProcess.intermediateThrowEvent().signal("signal"));
 
-    // when/then
-    ProcessValidationUtil.assertThatProcessIsValid(process);
-  }
+        // when/then
+        ProcessValidationUtil.assertThatProcessIsValid(process);
+    }
 
-  @Test
-  void withBpmnImplementationProperties() {
-    // given
-    final BpmnModelInstance process =
-        process(
-            adHocSubProcess ->
-                adHocSubProcess
-                    .completionCondition("=true")
-                    .cancelRemainingInstances(false)
-                    .zeebeActiveElementsCollectionExpression("=activeElements")
-                    .task("A"));
-
-    // when/then
-    ProcessValidationUtil.assertThatProcessIsValid(process);
-  }
-
-  @Test
-  void withTaskDefinitionProperties() {
-    // given
-    final BpmnModelInstance process =
-        process(
-            adHocSubProcess ->
-                adHocSubProcess
-                    .zeebeJobType("jobType")
-                    .zeebeJobRetries("1")
-                    .zeebeTaskHeader("header", "value")
-                    .task("A"));
-
-    // when/then
-    ProcessValidationUtil.assertThatProcessIsValid(process);
-  }
-
-  @Test
-  void withTaskDefinitionPropertiesAndCancelRemainingInstancesFalse() {
-    // given
-    final BpmnModelInstance process =
-        process(
-            adHocSubProcess ->
-                adHocSubProcess.zeebeJobType("jobType").cancelRemainingInstances(false).task("A"));
-
-    // when/then
-    ProcessValidationUtil.assertThatProcessHasViolations(
-        process,
-        expect(
-            AdHocSubProcess.class,
-            "Must not define cancelRemainingInstances in combination with zeebe:taskDefinition."));
-  }
-
-  @Test
-  void withTaskDefinitionPropertiesAndCompletionCondition() {
-    // given
-    final BpmnModelInstance process =
-        process(
-            adHocSubProcess ->
-                adHocSubProcess.zeebeJobType("jobType").completionCondition("=true").task("A"));
-
-    // when/then
-    ProcessValidationUtil.assertThatProcessHasViolations(
-        process,
-        expect(
-            AdHocSubProcess.class,
-            "Must not define completionCondition in combination with zeebe:taskDefinition."));
-  }
-
-  @Test
-  void withTaskDefinitionPropertiesAndActiveElementsCollection() {
-    // given
-    final BpmnModelInstance process =
-        process(
-            adHocSubProcess ->
-                adHocSubProcess
-                    .zeebeJobType("jobType")
-                    .zeebeActiveElementsCollectionExpression("=activeElements")
-                    .task("A"));
-
-    // when/then
-    ProcessValidationUtil.assertThatProcessHasViolations(
-        process,
-        expect(
-            AdHocSubProcess.class,
-            "Must not define activeElementsCollection in combination with zeebe:taskDefinition."));
-  }
-
-  @Test
-  void withTaskDefinitionPropertiesAndEmptyJobType() {
-    // given
-    final BpmnModelInstance process =
-        process(adHocSubProcess -> adHocSubProcess.zeebeJobType("").task("A"));
-
-    // when/then
-    ProcessValidationUtil.assertThatProcessHasViolations(
-        process,
-        expect(ZeebeTaskDefinition.class, "Attribute 'type' must be present and not empty"));
-  }
-
-  private BpmnModelInstance process(final Consumer<AdHocSubProcessBuilder> modifier) {
-    return Bpmn.createExecutableProcess("process")
-        .startEvent()
-        .adHocSubProcess(AD_HOC_SUB_PROCESS_ELEMENT_ID, modifier)
-        .endEvent()
-        .done();
-  }
-
-  @Test
-  void withMissingOutputElement() {
-    // when
-    final BpmnModelInstance outputElementDoesntExist =
-        process(adHocSubProcess -> adHocSubProcess.zeebeOutputCollection("collection").task("A"));
-
-    // then
-    ProcessValidationUtil.assertThatProcessHasViolations(
-        outputElementDoesntExist,
-        expect(
-            AdHocSubProcess.class,
-            "OutputElement and OutputCollection must both be set, or neither of them set. outputElement:null and outputCollection:collection."));
-  }
-
-  @Test
-  void withMissingOutputCollection() {
-    // when
-    final BpmnModelInstance outputCollectionDoesntExist =
-        process(
-            adHocSubProcess -> adHocSubProcess.zeebeOutputElementExpression("element").task("A"));
-
-    // then
-    ProcessValidationUtil.assertThatProcessHasViolations(
-        outputCollectionDoesntExist,
-        expect(
-            AdHocSubProcess.class,
-            "OutputElement and OutputCollection must both be set, or neither of them set. outputElement:=element and outputCollection:null."));
-  }
-
-  @Test
-  void withOutputElementAndCollection() {
-    // when
-    final BpmnModelInstance bothOutputElementOrOutputCollectionExist =
-        process(
-            adHocSubProcess ->
-                adHocSubProcess
-                    .zeebeOutputElementExpression("element")
-                    .zeebeOutputCollection("collection")
-                    .task("A"));
-
-    // then
-    ProcessValidationUtil.assertThatProcessIsValid(bothOutputElementOrOutputCollectionExist);
-  }
-
-  @Test
-  void withNeitherOutputElementOrCollection() {
-    // when
-    final BpmnModelInstance neitherOutputElementOrOutputCollectionExist =
-        process(adHocSubProcess -> adHocSubProcess.task("A"));
-
-    // then
-    ProcessValidationUtil.assertThatProcessIsValid(neitherOutputElementOrOutputCollectionExist);
-  }
+    private BpmnModelInstance process(final Consumer<AdHocSubProcessBuilder> modifier) {
+        return Bpmn.createExecutableProcess("process")
+                .startEvent()
+                .adHocSubProcess(AD_HOC_SUB_PROCESS_ELEMENT_ID, modifier)
+                .endEvent()
+                .done();
+    }
 }

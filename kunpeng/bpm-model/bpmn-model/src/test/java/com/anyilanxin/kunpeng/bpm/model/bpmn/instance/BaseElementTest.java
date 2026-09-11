@@ -17,43 +17,44 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.Collection;
-import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Sebastian Menski
  */
 public class BaseElementTest extends BpmnModelElementInstanceTest {
 
-  @Override
-  public TypeAssumption getTypeAssumption() {
-    return new TypeAssumption(true);
-  }
+    @Override
+    public TypeAssumption getTypeAssumption() {
+        return new TypeAssumption(true);
+    }
 
-  @Override
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
-    return Arrays.asList(
-        new ChildElementAssumption(Documentation.class),
-        new ChildElementAssumption(ExtensionElements.class, 0, 1));
-  }
+    @Override
+    public Collection<ChildElementAssumption> getChildElementAssumptions() {
+        return Arrays.asList(
+                new ChildElementAssumption(Documentation.class),
+                new ChildElementAssumption(ExtensionElements.class, 0, 1));
+    }
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return Arrays.asList(new AttributeAssumption("id", true));
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return Arrays.asList(new AttributeAssumption("id", true));
+    }
 
-  @Test
-  public void testId() {
-    final Task task = modelInstance.newInstance(Task.class);
-    assertThat(task.getId()).isNotNull().startsWith("task");
-    task.setId("test");
-    assertThat(task.getId()).isEqualTo("test");
-    final StartEvent startEvent = modelInstance.newInstance(StartEvent.class);
-    assertThat(startEvent.getId()).isNotNull().startsWith("startEvent");
-    startEvent.setId("test");
-    assertThat(startEvent.getId()).isEqualTo("test");
-  }
+    @Test
+    public void testId() {
+        final Task task = modelInstance.newInstance(Task.class);
+        assertThat(task.getId()).isNotNull().startsWith("task");
+        task.setId("test");
+        assertThat(task.getId()).isEqualTo("test");
+        final StartEvent startEvent = modelInstance.newInstance(StartEvent.class);
+        assertThat(startEvent.getId()).isNotNull().startsWith("startEvent");
+        startEvent.setId("test");
+        assertThat(startEvent.getId()).isEqualTo("test");
+    }
 }

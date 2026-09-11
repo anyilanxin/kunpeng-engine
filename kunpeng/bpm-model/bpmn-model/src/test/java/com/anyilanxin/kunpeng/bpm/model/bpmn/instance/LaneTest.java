@@ -20,6 +20,7 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.ChildLaneSet;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.FlowNodeRef;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.PartitionElement;
+
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -28,22 +29,22 @@ import java.util.Collection;
  */
 public class LaneTest extends BpmnModelElementInstanceTest {
 
-  @Override
-  public TypeAssumption getTypeAssumption() {
-    return new TypeAssumption(BaseElement.class, false);
-  }
+    @Override
+    public TypeAssumption getTypeAssumption() {
+        return new TypeAssumption(BaseElement.class, false);
+    }
 
-  @Override
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
-    return Arrays.asList(
-        new ChildElementAssumption(PartitionElement.class, 0, 1),
-        new ChildElementAssumption(FlowNodeRef.class),
-        new ChildElementAssumption(ChildLaneSet.class, 0, 1));
-  }
+    @Override
+    public Collection<ChildElementAssumption> getChildElementAssumptions() {
+        return Arrays.asList(
+                new ChildElementAssumption(PartitionElement.class, 0, 1),
+                new ChildElementAssumption(FlowNodeRef.class),
+                new ChildElementAssumption(ChildLaneSet.class, 0, 1));
+    }
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return Arrays.asList(
-        new AttributeAssumption("name"), new AttributeAssumption("partitionElementRef"));
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return Arrays.asList(
+                new AttributeAssumption("name"), new AttributeAssumption("partitionElementRef"));
+    }
 }

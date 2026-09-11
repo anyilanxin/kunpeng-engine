@@ -17,30 +17,19 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn.builder;
 
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.ZeebeConstants.USER_TASK_FORM_KEY_BPMN_LOCATION;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.ZeebeConstants.USER_TASK_FORM_KEY_CAMUNDA_FORMS_FORMAT;
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.KunpengConstants.USER_TASK_FORM_KEY_BPMN_LOCATION;
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.KunpengConstants.USER_TASK_FORM_KEY_KUNPENG_FORMS_FORMAT;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelInstance;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.UserTask;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeAssignmentDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeBindingType;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeFormDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeHeader;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebePriorityDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeTaskHeaders;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeTaskListener;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeTaskListeners;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeTaskSchedule;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeUserTask;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeUserTaskForm;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.*;
 import java.util.function.Consumer;
 
 /**
  * @author Sebastian Menski
  */
 public abstract class AbstractUserTaskBuilder<B extends AbstractUserTaskBuilder<B>>
-    extends AbstractTaskBuilder<B, UserTask>
-    implements ZeebeUserTaskPropertiesBuilder<B>, BuilderWithTaskHeaders<B> {
+    extends AbstractTaskBuilder<B, UserTask> implements KunpengUserTaskPropertiesBuilder<B> {
 
   protected AbstractUserTaskBuilder(
       final BpmnModelInstance modelInstance, final UserTask element, final Class<?> selfType) {
@@ -59,181 +48,171 @@ public abstract class AbstractUserTaskBuilder<B extends AbstractUserTaskBuilder<
   }
 
   @Override
-  public B zeebeFormKey(final String format, final String location, final String id) {
-    return zeebeFormKey(String.format("%s:%s:%s", format, location, id));
+  public B kunpengFormKey(final String format, final String location, final String id) {
+    return kunpengFormKey(String.format("%s:%s:%s", format, location, id));
   }
 
   @Override
-  public B zeebeFormKey(final String formKey) {
-    final ZeebeFormDefinition formDefinition =
-        getCreateSingleExtensionElement(ZeebeFormDefinition.class);
+  public B kunpengFormKey(final String formKey) {
+    final KunpengFormDefinition formDefinition =
+        getCreateSingleExtensionElement(KunpengFormDefinition.class);
     formDefinition.setFormKey(formKey);
     return myself;
   }
 
   @Override
-  public B zeebeUserTaskForm(final String userTaskForm) {
-    final ZeebeUserTaskForm zeebeUserTaskForm = createZeebeUserTaskForm();
-    zeebeUserTaskForm.setTextContent(userTaskForm);
-    return zeebeFormKey(
-        USER_TASK_FORM_KEY_CAMUNDA_FORMS_FORMAT,
+  public B kunpengUserTaskForm(final String userTaskForm) {
+    final KunpengUserTaskForm kunpengUserTaskForm = createKunpengUserTaskForm();
+    kunpengUserTaskForm.setTextContent(userTaskForm);
+    return kunpengFormKey(
+        USER_TASK_FORM_KEY_KUNPENG_FORMS_FORMAT,
         USER_TASK_FORM_KEY_BPMN_LOCATION,
-        zeebeUserTaskForm.getId());
+        kunpengUserTaskForm.getId());
   }
 
   @Override
-  public B zeebeUserTaskForm(final String id, final String userTaskForm) {
-    final ZeebeUserTaskForm zeebeUserTaskForm = createZeebeUserTaskForm();
-    zeebeUserTaskForm.setId(id);
-    zeebeUserTaskForm.setTextContent(userTaskForm);
-    return zeebeFormKey(
-        USER_TASK_FORM_KEY_CAMUNDA_FORMS_FORMAT, USER_TASK_FORM_KEY_BPMN_LOCATION, id);
+  public B kunpengUserTaskForm(final String id, final String userTaskForm) {
+    final KunpengUserTaskForm kunpengUserTaskForm = createKunpengUserTaskForm();
+    kunpengUserTaskForm.setId(id);
+    kunpengUserTaskForm.setTextContent(userTaskForm);
+    return kunpengFormKey(
+        USER_TASK_FORM_KEY_KUNPENG_FORMS_FORMAT, USER_TASK_FORM_KEY_BPMN_LOCATION, id);
   }
 
   @Override
-  public B zeebeAssignee(final String assignee) {
-    final ZeebeAssignmentDefinition assignment =
-        myself.getCreateSingleExtensionElement(ZeebeAssignmentDefinition.class);
+  public B kunpengAssignee(final String assignee) {
+    final KunpengAssignmentDefinition assignment =
+        myself.getCreateSingleExtensionElement(KunpengAssignmentDefinition.class);
     assignment.setAssignee(assignee);
     return myself;
   }
 
   @Override
-  public B zeebeAssigneeExpression(final String expression) {
-    return zeebeAssignee(asZeebeExpression(expression));
+  public B kunpengAssigneeExpression(final String expression) {
+    return kunpengAssignee(asKunpengExpression(expression));
   }
 
   @Override
-  public B zeebeCandidateGroups(final String candidateGroups) {
-    final ZeebeAssignmentDefinition assignment =
-        myself.getCreateSingleExtensionElement(ZeebeAssignmentDefinition.class);
+  public B kunpengCandidateGroups(final String candidateGroups) {
+    final KunpengAssignmentDefinition assignment =
+        myself.getCreateSingleExtensionElement(KunpengAssignmentDefinition.class);
     assignment.setCandidateGroups(candidateGroups);
     return myself;
   }
 
   @Override
-  public B zeebeCandidateGroupsExpression(final String expression) {
-    return zeebeCandidateGroups(asZeebeExpression(expression));
+  public B kunpengCandidateGroupsExpression(final String expression) {
+    return kunpengCandidateGroups(asKunpengExpression(expression));
   }
 
   @Override
-  public B zeebeCandidateUsers(final String candidateUsers) {
-    final ZeebeAssignmentDefinition assignment =
-        myself.getCreateSingleExtensionElement(ZeebeAssignmentDefinition.class);
+  public B kunpengCandidateUsers(final String candidateUsers) {
+    final KunpengAssignmentDefinition assignment =
+        myself.getCreateSingleExtensionElement(KunpengAssignmentDefinition.class);
     assignment.setCandidateUsers(candidateUsers);
     return myself;
   }
 
   @Override
-  public B zeebeCandidateUsersExpression(final String expression) {
-    return zeebeCandidateUsers(asZeebeExpression(expression));
+  public B kunpengCandidateUsersExpression(final String expression) {
+    return kunpengCandidateUsers(asKunpengExpression(expression));
   }
 
   @Override
-  public B zeebeDueDate(final String dueDate) {
-    final ZeebeTaskSchedule taskSchedule =
-        myself.getCreateSingleExtensionElement(ZeebeTaskSchedule.class);
+  public B kunpengDueDate(final String dueDate) {
+    final KunpengTaskSchedule taskSchedule =
+        myself.getCreateSingleExtensionElement(KunpengTaskSchedule.class);
     taskSchedule.setDueDate(dueDate);
     return myself;
   }
 
   @Override
-  public B zeebeDueDateExpression(final String expression) {
-    return zeebeDueDate(asZeebeExpression(expression));
+  public B kunpengDueDateExpression(final String expression) {
+    return kunpengDueDate(asKunpengExpression(expression));
   }
 
   @Override
-  public B zeebeFollowUpDate(final String followUpDate) {
-    final ZeebeTaskSchedule taskSchedule =
-        myself.getCreateSingleExtensionElement(ZeebeTaskSchedule.class);
+  public B kunpengFollowUpDate(final String followUpDate) {
+    final KunpengTaskSchedule taskSchedule =
+        myself.getCreateSingleExtensionElement(KunpengTaskSchedule.class);
     taskSchedule.setFollowUpDate(followUpDate);
     return myself;
   }
 
   @Override
-  public B zeebeFollowUpDateExpression(final String expression) {
-    return zeebeFollowUpDate(asZeebeExpression(expression));
+  public B kunpengFollowUpDateExpression(final String expression) {
+    return kunpengFollowUpDate(asKunpengExpression(expression));
   }
 
   @Override
-  public B zeebeFormId(final String formId) {
-    final ZeebeFormDefinition formDefinition =
-        getCreateSingleExtensionElement(ZeebeFormDefinition.class);
+  public B kunpengFormId(final String formId) {
+    final KunpengFormDefinition formDefinition =
+        getCreateSingleExtensionElement(KunpengFormDefinition.class);
     formDefinition.setFormId(formId);
     return myself;
   }
 
   @Override
-  public B zeebeUserTask() {
-    getCreateSingleExtensionElement(ZeebeUserTask.class);
-    getCreateSingleExtensionElement(ZeebePriorityDefinition.class);
+  public B kunpengUserTask() {
+    getCreateSingleExtensionElement(KunpengUserTask.class);
+    getCreateSingleExtensionElement(KunpengPriorityDefinition.class);
     return myself;
   }
 
   @Override
-  public B zeebeExternalFormReference(final String externalFormReference) {
-    final ZeebeFormDefinition formDefinition =
-        getCreateSingleExtensionElement(ZeebeFormDefinition.class);
+  public B kunpengExternalFormReference(final String externalFormReference) {
+    final KunpengFormDefinition formDefinition =
+        getCreateSingleExtensionElement(KunpengFormDefinition.class);
     formDefinition.setExternalReference(externalFormReference);
     return myself;
   }
 
   @Override
-  public B zeebeExternalFormReferenceExpression(final String expression) {
-    return zeebeExternalFormReference(asZeebeExpression(expression));
+  public B kunpengExternalFormReferenceExpression(final String expression) {
+    return kunpengExternalFormReference(asKunpengExpression(expression));
   }
 
   @Override
-  public B zeebeFormBindingType(final ZeebeBindingType bindingType) {
-    final ZeebeFormDefinition formDefinition =
-        getCreateSingleExtensionElement(ZeebeFormDefinition.class);
+  public B kunpengFormBindingType(final KunpengBindingType bindingType) {
+    final KunpengFormDefinition formDefinition =
+        getCreateSingleExtensionElement(KunpengFormDefinition.class);
     formDefinition.setBindingType(bindingType);
     return myself;
   }
 
   @Override
-  public B zeebeFormVersionTag(final String versionTag) {
-    final ZeebeFormDefinition formDefinition =
-        getCreateSingleExtensionElement(ZeebeFormDefinition.class);
+  public B kunpengFormVersionTag(final String versionTag) {
+    final KunpengFormDefinition formDefinition =
+        getCreateSingleExtensionElement(KunpengFormDefinition.class);
     formDefinition.setVersionTag(versionTag);
     return myself;
   }
 
   @Override
-  public B zeebeTaskPriority(final String priority) {
-    final ZeebePriorityDefinition priorityDefinition =
-        myself.getCreateSingleExtensionElement(ZeebePriorityDefinition.class);
+  public B kunpengTaskPriority(final String priority) {
+    final KunpengPriorityDefinition priorityDefinition =
+        myself.getCreateSingleExtensionElement(KunpengPriorityDefinition.class);
     priorityDefinition.setPriority(priority);
     return myself;
   }
 
   @Override
-  public B zeebeTaskPriorityExpression(final String expression) {
-    return zeebeTaskPriority(asZeebeExpression(expression));
+  public B kunpengTaskPriorityExpression(final String expression) {
+    return kunpengTaskPriority(asKunpengExpression(expression));
   }
 
-  @Override
-  public B zeebeTaskHeader(final String key, final String value) {
-    final ZeebeTaskHeaders taskHeaders = getCreateSingleExtensionElement(ZeebeTaskHeaders.class);
-    final ZeebeHeader header = createChild(taskHeaders, ZeebeHeader.class);
-    header.setKey(key);
-    header.setValue(value);
-
-    return myself;
-  }
-
-  public B zeebeTaskListener(final Consumer<TaskListenerBuilder> taskListenerBuilderConsumer) {
-    final ZeebeTaskListener listener = createTaskListenerElement();
-    listener.setRetries(ZeebeTaskListener.DEFAULT_RETRIES);
+  public B kunpengTaskListener(final Consumer<TaskListenerBuilder> taskListenerBuilderConsumer) {
+    final KunpengTaskListener listener = createTaskListenerElement();
+    listener.setRetries(KunpengTaskListener.DEFAULT_RETRIES);
 
     final TaskListenerBuilder builder = new TaskListenerBuilder(listener, myself);
     taskListenerBuilderConsumer.accept(builder);
     return myself;
   }
 
-  private ZeebeTaskListener createTaskListenerElement() {
-    final ZeebeTaskListeners taskListeners =
-        myself.getCreateSingleExtensionElement(ZeebeTaskListeners.class);
-    return myself.createChild(taskListeners, ZeebeTaskListener.class);
+  private KunpengTaskListener createTaskListenerElement() {
+    final KunpengTaskListeners taskListeners =
+        myself.getCreateSingleExtensionElement(KunpengTaskListeners.class);
+    return myself.createChild(taskListeners, KunpengTaskListener.class);
   }
 }

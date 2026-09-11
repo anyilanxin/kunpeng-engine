@@ -17,33 +17,34 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn.instance.dc;
 
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DC_NS;
-
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BpmnModelElementInstanceTest;
+
 import java.util.Arrays;
 import java.util.Collection;
+
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DC_NS;
 
 /**
  * @author Sebastian Menski
  */
 public class BoundsTest extends BpmnModelElementInstanceTest {
 
-  @Override
-  public TypeAssumption getTypeAssumption() {
-    return new TypeAssumption(DC_NS, false);
-  }
+    @Override
+    public TypeAssumption getTypeAssumption() {
+        return new TypeAssumption(DC_NS, false);
+    }
 
-  @Override
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
-    return null;
-  }
+    @Override
+    public Collection<ChildElementAssumption> getChildElementAssumptions() {
+        return null;
+    }
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return Arrays.asList(
-        new AttributeAssumption("x", false, true),
-        new AttributeAssumption("y", false, true),
-        new AttributeAssumption("width", false, true),
-        new AttributeAssumption("height", false, true));
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return Arrays.asList(
+                new AttributeAssumption("x", false, true),
+                new AttributeAssumption("y", false, true),
+                new AttributeAssumption("width", false, true),
+                new AttributeAssumption("height", false, true));
+    }
 }

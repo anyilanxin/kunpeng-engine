@@ -28,19 +28,20 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 
 public class SourceRefImpl extends DmnElementReferenceImpl implements SourceRef {
 
-  public SourceRefImpl(ModelTypeInstanceContext instanceContext) {
+  public SourceRefImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(SourceRef.class, DMN_ELEMENT_SOURCE_REF)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(DmnElementReference.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<SourceRef>() {
-                  public SourceRef newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public SourceRef newInstance(final ModelTypeInstanceContext instanceContext) {
                     return new SourceRefImpl(instanceContext);
                   }
                 });

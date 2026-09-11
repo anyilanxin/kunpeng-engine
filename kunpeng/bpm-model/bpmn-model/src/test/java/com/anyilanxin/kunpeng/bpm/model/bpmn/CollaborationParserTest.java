@@ -17,94 +17,88 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Collaboration;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Conversation;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ConversationLink;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ConversationNode;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Event;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.MessageFlow;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Participant;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ServiceTask;
-import java.util.Collection;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.*;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.util.Collection;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Sebastian Menski
  */
 public class CollaborationParserTest {
 
-  private static BpmnModelInstance modelInstance;
-  private static Collaboration collaboration;
+    private static BpmnModelInstance modelInstance;
+    private static Collaboration collaboration;
 
-  @BeforeClass
-  public static void parseModel() {
-    modelInstance =
-        Bpmn.readModelFromStream(
-            CollaborationParserTest.class.getResourceAsStream("CollaborationParserTest.bpmn"));
-    collaboration = modelInstance.getModelElementById("collaboration1");
-  }
-
-  @Test
-  public void testConversations() {
-    assertThat(collaboration.getConversationNodes()).hasSize(1);
-
-    final ConversationNode conversationNode =
-        collaboration.getConversationNodes().iterator().next();
-    assertThat(conversationNode).isInstanceOf(Conversation.class);
-    assertThat(conversationNode.getParticipants()).isEmpty();
-    assertThat(conversationNode.getCorrelationKeys()).isEmpty();
-    assertThat(conversationNode.getMessageFlows()).isEmpty();
-  }
-
-  @Test
-  public void testConversationLink() {
-    final Collection<ConversationLink> conversationLinks = collaboration.getConversationLinks();
-    for (final ConversationLink conversationLink : conversationLinks) {
-      assertThat(conversationLink.getId()).startsWith("conversationLink");
-      assertThat(conversationLink.getSource()).isInstanceOf(Participant.class);
-      final Participant source = (Participant) conversationLink.getSource();
-      assertThat(source.getName()).isEqualTo("Pool");
-      assertThat(source.getId()).startsWith("participant");
-
-      assertThat(conversationLink.getTarget()).isInstanceOf(Conversation.class);
-      final Conversation target = (Conversation) conversationLink.getTarget();
-      assertThat(target.getId()).isEqualTo("conversation1");
+    @BeforeClass
+    public static void parseModel() {
+        modelInstance =
+                Bpmn.readModelFromStream(
+                        CollaborationParserTest.class.getResourceAsStream("CollaborationParserTest.bpmn"));
+        collaboration = modelInstance.getModelElementById("collaboration1");
     }
-  }
 
-  @Test
-  public void testMessageFlow() {
-    final Collection<MessageFlow> messageFlows = collaboration.getMessageFlows();
-    for (final MessageFlow messageFlow : messageFlows) {
-      assertThat(messageFlow.getId()).startsWith("messageFlow");
-      assertThat(messageFlow.getSource()).isInstanceOf(ServiceTask.class);
-      assertThat(messageFlow.getTarget()).isInstanceOf(Event.class);
+    @Test
+    public void testConversations() {
+        assertThat(collaboration.getConversationNodes()).hasSize(1);
+
+        final ConversationNode conversationNode =
+                collaboration.getConversationNodes().iterator().next();
+        assertThat(conversationNode).isInstanceOf(Conversation.class);
+        assertThat(conversationNode.getParticipants()).isEmpty();
+        assertThat(conversationNode.getCorrelationKeys()).isEmpty();
+        assertThat(conversationNode.getMessageFlows()).isEmpty();
     }
-  }
 
-  @Test
-  public void testParticipant() {
-    final Collection<Participant> participants = collaboration.getParticipants();
-    for (final Participant participant : participants) {
-      assertThat(participant.getProcess().getId()).startsWith("process");
+    @Test
+    public void testConversationLink() {
+        final Collection<ConversationLink> conversationLinks = collaboration.getConversationLinks();
+        for (final ConversationLink conversationLink : conversationLinks) {
+            assertThat(conversationLink.getId()).startsWith("conversationLink");
+            assertThat(conversationLink.getSource()).isInstanceOf(Participant.class);
+            final Participant source = (Participant) conversationLink.getSource();
+            assertThat(source.getName()).isEqualTo("Pool");
+            assertThat(source.getId()).startsWith("participant");
+
+            assertThat(conversationLink.getTarget()).isInstanceOf(Conversation.class);
+            final Conversation target = (Conversation) conversationLink.getTarget();
+            assertThat(target.getId()).isEqualTo("conversation1");
+        }
     }
-  }
 
-  @Test
-  public void testUnused() {
-    assertThat(collaboration.getCorrelationKeys()).isEmpty();
-    assertThat(collaboration.getArtifacts()).isEmpty();
-    assertThat(collaboration.getConversationAssociations()).isEmpty();
-    assertThat(collaboration.getMessageFlowAssociations()).isEmpty();
-    assertThat(collaboration.getParticipantAssociations()).isEmpty();
-  }
+    @Test
+    public void testMessageFlow() {
+        final Collection<MessageFlow> messageFlows = collaboration.getMessageFlows();
+        for (final MessageFlow messageFlow : messageFlows) {
+            assertThat(messageFlow.getId()).startsWith("messageFlow");
+            assertThat(messageFlow.getSource()).isInstanceOf(ServiceTask.class);
+            assertThat(messageFlow.getTarget()).isInstanceOf(Event.class);
+        }
+    }
 
-  @AfterClass
-  public static void validateModel() {
-    Bpmn.validateModel(modelInstance);
-  }
+    @Test
+    public void testParticipant() {
+        final Collection<Participant> participants = collaboration.getParticipants();
+        for (final Participant participant : participants) {
+            assertThat(participant.getProcess().getId()).startsWith("process");
+        }
+    }
+
+    @Test
+    public void testUnused() {
+        assertThat(collaboration.getCorrelationKeys()).isEmpty();
+        assertThat(collaboration.getArtifacts()).isEmpty();
+        assertThat(collaboration.getConversationAssociations()).isEmpty();
+        assertThat(collaboration.getMessageFlowAssociations()).isEmpty();
+        assertThat(collaboration.getParticipantAssociations()).isEmpty();
+    }
+
+    @AfterClass
+    public static void validateModel() {
+        Bpmn.validateModel(modelInstance);
+    }
 }

@@ -22,7 +22,11 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
  *
  * @author Sebastian Menski
  */
-public interface DataInput extends ItemAwareElement, NamedBpmnElement {
+public interface DataInput extends ItemAwareElement {
+
+  String getName();
+
+  void setName(String name);
 
   boolean isCollection();
 

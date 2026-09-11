@@ -28,19 +28,21 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 
 public class FormalParameterImpl extends InformationItemImpl implements FormalParameter {
 
-  public FormalParameterImpl(ModelTypeInstanceContext instanceContext) {
+  public FormalParameterImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(FormalParameter.class, DMN_ELEMENT_FORMAL_PARAMETER)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(InformationItem.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<FormalParameter>() {
-                  public FormalParameter newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public FormalParameter newInstance(
+                      final ModelTypeInstanceContext instanceContext) {
                     return new FormalParameterImpl(instanceContext);
                   }
                 });

@@ -24,7 +24,11 @@ import java.util.Collection;
  *
  * @author Daniel Meyer
  */
-public interface CallableElement extends RootElement, NamedBpmnElement {
+public interface CallableElement extends RootElement {
+
+  String getName();
+
+  void setName(String name);
 
   Collection<Interface> getSupportedInterfaces();
 

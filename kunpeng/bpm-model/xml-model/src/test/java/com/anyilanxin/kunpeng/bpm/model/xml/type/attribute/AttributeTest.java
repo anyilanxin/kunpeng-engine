@@ -50,7 +50,7 @@ public class AttributeTest extends TestModelTest {
     super(testName, testModelInstance, modelParser);
   }
 
-  @Parameters(name="Model {0}")
+  @Parameters(name = "Model {0}")
   public static Collection<Object[]> models() {
     final Object[][] models = {createModel(), parseModel(AnimalTest.class)};
     return Arrays.asList(models);
@@ -136,7 +136,7 @@ public class AttributeTest extends TestModelTest {
 
   @Test
   public void testSetNamespaceUri() {
-    final String testNamespace = "http://camunda.org/test";
+    final String testNamespace = "https://anyilanxin.com/test";
 
     ((AttributeImpl<String>) idAttribute).setNamespaceUri(testNamespace);
     assertThat(idAttribute).hasNamespaceUri(testNamespace);

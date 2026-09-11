@@ -16,21 +16,12 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_AGGREGATION;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_HIT_POLICY;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_OUTPUT_LABEL;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_PREFERRED_ORIENTATION;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_DECISION_TABLE;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.*;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.BuiltinAggregator;
 import com.anyilanxin.kunpeng.bpm.model.dmn.DecisionTableOrientation;
 import com.anyilanxin.kunpeng.bpm.model.dmn.HitPolicy;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DecisionTable;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Expression;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Input;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Output;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Rule;
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.*;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
@@ -51,63 +42,75 @@ public class DecisionTableImpl extends ExpressionImpl implements DecisionTable {
   protected static ChildElementCollection<Output> outputCollection;
   protected static ChildElementCollection<Rule> ruleCollection;
 
-  public DecisionTableImpl(ModelTypeInstanceContext instanceContext) {
+  public DecisionTableImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public HitPolicy getHitPolicy() {
     return hitPolicyAttribute.getValue(this);
   }
 
-  public void setHitPolicy(HitPolicy hitPolicy) {
+  @Override
+  public void setHitPolicy(final HitPolicy hitPolicy) {
     hitPolicyAttribute.setValue(this, hitPolicy);
   }
 
+  @Override
   public BuiltinAggregator getAggregation() {
     return aggregationAttribute.getValue(this);
   }
 
-  public void setAggregation(BuiltinAggregator aggregation) {
+  @Override
+  public void setAggregation(final BuiltinAggregator aggregation) {
     aggregationAttribute.setValue(this, aggregation);
   }
 
+  @Override
   public DecisionTableOrientation getPreferredOrientation() {
     return preferredOrientationAttribute.getValue(this);
   }
 
-  public void setPreferredOrientation(DecisionTableOrientation preferredOrientation) {
+  @Override
+  public void setPreferredOrientation(final DecisionTableOrientation preferredOrientation) {
     preferredOrientationAttribute.setValue(this, preferredOrientation);
   }
 
+  @Override
   public String getOutputLabel() {
     return outputLabelAttribute.getValue(this);
   }
 
-  public void setOutputLabel(String outputLabel) {
+  @Override
+  public void setOutputLabel(final String outputLabel) {
     outputLabelAttribute.setValue(this, outputLabel);
   }
 
+  @Override
   public Collection<Input> getInputs() {
     return inputCollection.get(this);
   }
 
+  @Override
   public Collection<Output> getOutputs() {
     return outputCollection.get(this);
   }
 
+  @Override
   public Collection<Rule> getRules() {
     return ruleCollection.get(this);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(DecisionTable.class, DMN_ELEMENT_DECISION_TABLE)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(Expression.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<DecisionTable>() {
-                  public DecisionTable newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public DecisionTable newInstance(final ModelTypeInstanceContext instanceContext) {
                     return new DecisionTableImpl(instanceContext);
                   }
                 });
@@ -129,7 +132,7 @@ public class DecisionTableImpl extends ExpressionImpl implements DecisionTable {
 
     outputLabelAttribute = typeBuilder.stringAttribute(DMN_ATTRIBUTE_OUTPUT_LABEL).build();
 
-    SequenceBuilder sequenceBuilder = typeBuilder.sequence();
+    final SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
     inputCollection = sequenceBuilder.elementCollection(Input.class).build();
 

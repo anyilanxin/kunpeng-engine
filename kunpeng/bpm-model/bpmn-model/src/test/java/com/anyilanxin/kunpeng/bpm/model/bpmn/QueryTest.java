@@ -17,9 +17,6 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
-
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.FlowNode;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Gateway;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Task;
@@ -28,96 +25,99 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
+
 /**
  * @author Sebastian Menski
  */
 public class QueryTest {
 
-  private static BpmnModelInstance modelInstance;
-  private static Query<FlowNode> startSucceeding;
-  private static Query<FlowNode> gateway1Succeeding;
-  private static Query<FlowNode> gateway2Succeeding;
+    private static BpmnModelInstance modelInstance;
+    private static Query<FlowNode> startSucceeding;
+    private static Query<FlowNode> gateway1Succeeding;
+    private static Query<FlowNode> gateway2Succeeding;
 
-  @BeforeClass
-  public static void createModelInstance() {
-    modelInstance =
-        Bpmn.createProcess()
-            .startEvent()
-            .id("start")
-            .userTask()
-            .id("user")
-            .parallelGateway()
-            .id("gateway1")
-            .serviceTask()
-            .endEvent()
-            .moveToLastGateway()
-            .parallelGateway()
-            .id("gateway2")
-            .userTask()
-            .endEvent()
-            .moveToLastGateway()
-            .serviceTask()
-            .endEvent()
-            .moveToLastGateway()
-            .scriptTask()
-            .endEvent()
-            .done();
+    @BeforeClass
+    public static void createModelInstance() {
+        modelInstance =
+                Bpmn.createProcess()
+                        .startEvent()
+                        .id("start")
+                        .userTask()
+                        .id("user")
+                        .parallelGateway()
+                        .id("gateway1")
+                        .serviceTask()
+                        .endEvent()
+                        .moveToLastGateway()
+                        .parallelGateway()
+                        .id("gateway2")
+                        .userTask()
+                        .endEvent()
+                        .moveToLastGateway()
+                        .serviceTask()
+                        .endEvent()
+                        .moveToLastGateway()
+                        .scriptTask()
+                        .endEvent()
+                        .done();
 
-    startSucceeding = ((FlowNode) modelInstance.getModelElementById("start")).getSucceedingNodes();
-    gateway1Succeeding =
-        ((FlowNode) modelInstance.getModelElementById("gateway1")).getSucceedingNodes();
-    gateway2Succeeding =
-        ((FlowNode) modelInstance.getModelElementById("gateway2")).getSucceedingNodes();
-  }
-
-  @AfterClass
-  public static void validateModelInstance() {
-    Bpmn.validateModel(modelInstance);
-  }
-
-  @Test
-  public void testList() {
-    assertThat(startSucceeding.list()).hasSize(1);
-    assertThat(gateway1Succeeding.list()).hasSize(2);
-    assertThat(gateway2Succeeding.list()).hasSize(3);
-  }
-
-  @Test
-  public void testCount() {
-    assertThat(startSucceeding.count()).isEqualTo(1);
-    assertThat(gateway1Succeeding.count()).isEqualTo(2);
-    assertThat(gateway2Succeeding.count()).isEqualTo(3);
-  }
-
-  @Test
-  public void testFilterByType() {
-    final ModelElementType taskType = modelInstance.getModel().getType(Task.class);
-    final ModelElementType gatewayType = modelInstance.getModel().getType(Gateway.class);
-
-    assertThat(startSucceeding.filterByType(taskType).list()).hasSize(1);
-    assertThat(startSucceeding.filterByType(gatewayType).list()).hasSize(0);
-
-    assertThat(gateway1Succeeding.filterByType(taskType).list()).hasSize(1);
-    assertThat(gateway1Succeeding.filterByType(gatewayType).list()).hasSize(1);
-
-    assertThat(gateway2Succeeding.filterByType(taskType).list()).hasSize(3);
-    assertThat(gateway2Succeeding.filterByType(gatewayType).list()).hasSize(0);
-  }
-
-  @Test
-  public void testSingleResult() {
-    assertThat(startSucceeding.singleResult().getId()).isEqualTo("user");
-    try {
-      gateway1Succeeding.singleResult();
-      fail("gateway1 has more than one succeeding flow node");
-    } catch (final Exception e) {
-      assertThat(e).isInstanceOf(BpmnModelException.class).hasMessageEndingWith("<2>");
+        startSucceeding = ((FlowNode) modelInstance.getModelElementById("start")).getSucceedingNodes();
+        gateway1Succeeding =
+                ((FlowNode) modelInstance.getModelElementById("gateway1")).getSucceedingNodes();
+        gateway2Succeeding =
+                ((FlowNode) modelInstance.getModelElementById("gateway2")).getSucceedingNodes();
     }
-    try {
-      gateway2Succeeding.singleResult();
-      fail("gateway2 has more than one succeeding flow node");
-    } catch (final Exception e) {
-      assertThat(e).isInstanceOf(BpmnModelException.class).hasMessageEndingWith("<3>");
+
+    @AfterClass
+    public static void validateModelInstance() {
+        Bpmn.validateModel(modelInstance);
     }
-  }
+
+    @Test
+    public void testList() {
+        assertThat(startSucceeding.list()).hasSize(1);
+        assertThat(gateway1Succeeding.list()).hasSize(2);
+        assertThat(gateway2Succeeding.list()).hasSize(3);
+    }
+
+    @Test
+    public void testCount() {
+        assertThat(startSucceeding.count()).isEqualTo(1);
+        assertThat(gateway1Succeeding.count()).isEqualTo(2);
+        assertThat(gateway2Succeeding.count()).isEqualTo(3);
+    }
+
+    @Test
+    public void testFilterByType() {
+        final ModelElementType taskType = modelInstance.getModel().getType(Task.class);
+        final ModelElementType gatewayType = modelInstance.getModel().getType(Gateway.class);
+
+        assertThat(startSucceeding.filterByType(taskType).list()).hasSize(1);
+        assertThat(startSucceeding.filterByType(gatewayType).list()).hasSize(0);
+
+        assertThat(gateway1Succeeding.filterByType(taskType).list()).hasSize(1);
+        assertThat(gateway1Succeeding.filterByType(gatewayType).list()).hasSize(1);
+
+        assertThat(gateway2Succeeding.filterByType(taskType).list()).hasSize(3);
+        assertThat(gateway2Succeeding.filterByType(gatewayType).list()).hasSize(0);
+    }
+
+    @Test
+    public void testSingleResult() {
+        assertThat(startSucceeding.singleResult().getId()).isEqualTo("user");
+        try {
+            gateway1Succeeding.singleResult();
+            fail("gateway1 has more than one succeeding flow node");
+        } catch (final Exception e) {
+            assertThat(e).isInstanceOf(BpmnModelException.class).hasMessageEndingWith("<2>");
+        }
+        try {
+            gateway2Succeeding.singleResult();
+            fail("gateway2 has more than one succeeding flow node");
+        } catch (final Exception e) {
+            assertThat(e).isInstanceOf(BpmnModelException.class).hasMessageEndingWith("<3>");
+        }
+    }
 }

@@ -16,197 +16,136 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.bpmn.builder;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
-
 import com.anyilanxin.kunpeng.bpm.model.bpmn.Bpmn;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelInstance;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ExtensionElements;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeBindingType;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeCalledDecision;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeJobPriorityDefinition;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengBindingType;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengCalledDecision;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
+
 public class BusinessRuleTaskBuilderTest {
 
-  @Test
-  void shouldSetDecisionId() {
-    // when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .businessRuleTask("task", task -> task.zeebeCalledDecisionId("decision-id-1"))
-            .done();
+    @Test
+    void shouldSetDecisionId() {
+        // when
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .businessRuleTask("task", task -> task.kunpengCalledDecisionId("decision-id-1"))
+                        .done();
 
-    // then
-    final ModelElementInstance businessRuleTask = instance.getModelElementById("task");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) businessRuleTask.getUniqueChildElementByType(ExtensionElements.class);
-    assertThat(extensionElements.getChildElementsByType(ZeebeCalledDecision.class))
-        .hasSize(1)
-        .extracting(ZeebeCalledDecision::getDecisionId)
-        .containsExactly("decision-id-1");
-  }
+        // then
+        final ModelElementInstance businessRuleTask = instance.getModelElementById("task");
+        final ExtensionElements extensionElements =
+                (ExtensionElements) businessRuleTask.getUniqueChildElementByType(ExtensionElements.class);
+        assertThat(extensionElements.getChildElementsByType(KunpengCalledDecision.class))
+                .hasSize(1)
+                .extracting(KunpengCalledDecision::getDecisionId)
+                .containsExactly("decision-id-1");
+    }
 
-  @Test
-  void shouldSetDecisionIdExpression() {
-    // when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .businessRuleTask(
-                "task", task -> task.zeebeCalledDecisionIdExpression("decisionIdExpr"))
-            .done();
+    @Test
+    void shouldSetDecisionIdExpression() {
+        // when
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .businessRuleTask(
+                                "task", task -> task.kunpengCalledDecisionIdExpression("decisionIdExpr"))
+                        .done();
 
-    // then
-    final ModelElementInstance businessRuleTask = instance.getModelElementById("task");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) businessRuleTask.getUniqueChildElementByType(ExtensionElements.class);
-    assertThat(extensionElements.getChildElementsByType(ZeebeCalledDecision.class))
-        .hasSize(1)
-        .extracting(ZeebeCalledDecision::getDecisionId)
-        .containsExactly("=decisionIdExpr");
-  }
+        // then
+        final ModelElementInstance businessRuleTask = instance.getModelElementById("task");
+        final ExtensionElements extensionElements =
+                (ExtensionElements) businessRuleTask.getUniqueChildElementByType(ExtensionElements.class);
+        assertThat(extensionElements.getChildElementsByType(KunpengCalledDecision.class))
+                .hasSize(1)
+                .extracting(KunpengCalledDecision::getDecisionId)
+                .containsExactly("=decisionIdExpr");
+    }
 
-  @Test
-  void shouldSetResultVariable() {
-    // when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .businessRuleTask("task", task -> task.zeebeResultVariable("result"))
-            .done();
+    @Test
+    void shouldSetResultVariable() {
+        // when
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .businessRuleTask("task", task -> task.kunpengResultVariable("result"))
+                        .done();
 
-    // then
-    final ModelElementInstance businessRuleTask = instance.getModelElementById("task");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) businessRuleTask.getUniqueChildElementByType(ExtensionElements.class);
-    assertThat(extensionElements.getChildElementsByType(ZeebeCalledDecision.class))
-        .hasSize(1)
-        .extracting(ZeebeCalledDecision::getResultVariable)
-        .containsExactly("result");
-  }
+        // then
+        final ModelElementInstance businessRuleTask = instance.getModelElementById("task");
+        final ExtensionElements extensionElements =
+                (ExtensionElements) businessRuleTask.getUniqueChildElementByType(ExtensionElements.class);
+        assertThat(extensionElements.getChildElementsByType(KunpengCalledDecision.class))
+                .hasSize(1)
+                .extracting(KunpengCalledDecision::getResultVariable)
+                .containsExactly("result");
+    }
 
-  @Test
-  void shouldSetDecisionIdAndResultVariable() {
-    // when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .businessRuleTask(
-                "task",
-                task -> task.zeebeCalledDecisionId("decision-id-1").zeebeResultVariable("result"))
-            .done();
+    @Test
+    void shouldSetDecisionIdAndResultVariable() {
+        // when
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .businessRuleTask(
+                                "task",
+                                task -> task.kunpengCalledDecisionId("decision-id-1").kunpengResultVariable("result"))
+                        .done();
 
-    // then
-    final ModelElementInstance businessRuleTask = instance.getModelElementById("task");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) businessRuleTask.getUniqueChildElementByType(ExtensionElements.class);
-    assertThat(extensionElements.getChildElementsByType(ZeebeCalledDecision.class))
-        .hasSize(1)
-        .extracting(ZeebeCalledDecision::getDecisionId, ZeebeCalledDecision::getResultVariable)
-        .containsExactly(tuple("decision-id-1", "result"));
-  }
+        // then
+        final ModelElementInstance businessRuleTask = instance.getModelElementById("task");
+        final ExtensionElements extensionElements =
+                (ExtensionElements) businessRuleTask.getUniqueChildElementByType(ExtensionElements.class);
+        assertThat(extensionElements.getChildElementsByType(KunpengCalledDecision.class))
+                .hasSize(1)
+                .extracting(KunpengCalledDecision::getDecisionId, KunpengCalledDecision::getResultVariable)
+                .containsExactly(tuple("decision-id-1", "result"));
+    }
 
-  @ParameterizedTest
-  @EnumSource(ZeebeBindingType.class)
-  void shouldSetBindingType(final ZeebeBindingType bindingType) {
-    // when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .businessRuleTask("task", task -> task.zeebeBindingType(bindingType))
-            .done();
+    @ParameterizedTest
+    @EnumSource(KunpengBindingType.class)
+    void shouldSetBindingType(final KunpengBindingType bindingType) {
+        // when
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .businessRuleTask("task", task -> task.kunpengBindingType(bindingType))
+                        .done();
 
-    // then
-    final ModelElementInstance businessRuleTask = instance.getModelElementById("task");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) businessRuleTask.getUniqueChildElementByType(ExtensionElements.class);
-    assertThat(extensionElements.getChildElementsByType(ZeebeCalledDecision.class))
-        .hasSize(1)
-        .extracting(ZeebeCalledDecision::getBindingType)
-        .containsExactly(bindingType);
-  }
+        // then
+        final ModelElementInstance businessRuleTask = instance.getModelElementById("task");
+        final ExtensionElements extensionElements =
+                (ExtensionElements) businessRuleTask.getUniqueChildElementByType(ExtensionElements.class);
+        assertThat(extensionElements.getChildElementsByType(KunpengCalledDecision.class))
+                .hasSize(1)
+                .extracting(KunpengCalledDecision::getBindingType)
+                .containsExactly(bindingType);
+    }
 
-  @Test
-  void shouldSetJobPriorityAsLiteralOnBusinessRuleTask() {
-    // given / when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .businessRuleTask("task", t -> t.zeebeJobType("type").zeebeJobPriority("42"))
-            .endEvent()
-            .done();
+    @Test
+    void shouldSetVersionTag() {
+        // when
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .businessRuleTask("task", task -> task.kunpengVersionTag("v1"))
+                        .done();
 
-    // then
-    final ModelElementInstance businessRuleTask = instance.getModelElementById("task");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) businessRuleTask.getUniqueChildElementByType(ExtensionElements.class);
-    assertThat(extensionElements.getChildElementsByType(ZeebeJobPriorityDefinition.class))
-        .singleElement()
-        .extracting(ZeebeJobPriorityDefinition::getPriority)
-        .isEqualTo("42");
-  }
-
-  @Test
-  void shouldSetJobPriorityAsExpressionOnBusinessRuleTask() {
-    // given / when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .businessRuleTask(
-                "task", t -> t.zeebeJobType("type").zeebeJobPriorityExpression("priority"))
-            .endEvent()
-            .done();
-
-    // then
-    final ModelElementInstance businessRuleTask = instance.getModelElementById("task");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) businessRuleTask.getUniqueChildElementByType(ExtensionElements.class);
-    assertThat(extensionElements.getChildElementsByType(ZeebeJobPriorityDefinition.class))
-        .singleElement()
-        .extracting(ZeebeJobPriorityDefinition::getPriority)
-        .isEqualTo("=priority");
-  }
-
-  @Test
-  void shouldSetVersionTag() {
-    // when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .businessRuleTask("task", task -> task.zeebeVersionTag("v1"))
-            .done();
-
-    // then
-    final ModelElementInstance businessRuleTask = instance.getModelElementById("task");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) businessRuleTask.getUniqueChildElementByType(ExtensionElements.class);
-    assertThat(extensionElements.getChildElementsByType(ZeebeCalledDecision.class))
-        .hasSize(1)
-        .extracting(ZeebeCalledDecision::getVersionTag)
-        .containsExactly("v1");
-  }
-
-  @Test
-  void shouldSetVersionTagExpression() {
-    // when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .businessRuleTask("task", task -> task.zeebeVersionTagExpression("myversion"))
-            .done();
-
-    // then
-    final ModelElementInstance businessRuleTask = instance.getModelElementById("task");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) businessRuleTask.getUniqueChildElementByType(ExtensionElements.class);
-    assertThat(extensionElements.getChildElementsByType(ZeebeCalledDecision.class))
-        .hasSize(1)
-        .extracting(ZeebeCalledDecision::getVersionTag)
-        .containsExactly("=myversion");
-  }
+        // then
+        final ModelElementInstance businessRuleTask = instance.getModelElementById("task");
+        final ExtensionElements extensionElements =
+                (ExtensionElements) businessRuleTask.getUniqueChildElementByType(ExtensionElements.class);
+        assertThat(extensionElements.getChildElementsByType(KunpengCalledDecision.class))
+                .hasSize(1)
+                .extracting(KunpengCalledDecision::getVersionTag)
+                .containsExactly("v1");
+    }
 }

@@ -31,38 +31,46 @@ public abstract class AttributeBuilderImpl<T> implements AttributeBuilder<T>, Mo
   private final ModelElementTypeImpl modelType;
 
   AttributeBuilderImpl(
-      String attributeName, ModelElementTypeImpl modelType, AttributeImpl<T> attribute) {
+      final String attributeName,
+      final ModelElementTypeImpl modelType,
+      final AttributeImpl<T> attribute) {
     this.modelType = modelType;
     this.attribute = attribute;
     attribute.setAttributeName(attributeName);
   }
 
-  public AttributeBuilder<T> namespace(String namespaceUri) {
+  @Override
+  public AttributeBuilder<T> namespace(final String namespaceUri) {
     attribute.setNamespaceUri(namespaceUri);
     return this;
   }
 
+  @Override
   public AttributeBuilder<T> idAttribute() {
     attribute.setId();
     return this;
   }
 
-  public AttributeBuilder<T> defaultValue(T defaultValue) {
+  @Override
+  public AttributeBuilder<T> defaultValue(final T defaultValue) {
     attribute.setDefaultValue(defaultValue);
     return this;
   }
 
+  @Override
   public AttributeBuilder<T> required() {
     attribute.setRequired(true);
     return this;
   }
 
+  @Override
   public Attribute<T> build() {
     modelType.registerAttribute(attribute);
     return attribute;
   }
 
-  public void performModelBuild(Model model) {
+  @Override
+  public void performModelBuild(final Model model) {
     // do nothing
   }
 }

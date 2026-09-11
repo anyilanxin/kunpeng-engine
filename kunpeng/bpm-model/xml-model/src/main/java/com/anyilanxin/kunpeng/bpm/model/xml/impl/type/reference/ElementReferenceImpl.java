@@ -32,7 +32,7 @@ public class ElementReferenceImpl<
     extends ElementReferenceCollectionImpl<Target, Source>
     implements ElementReference<Target, Source> {
 
-  public ElementReferenceImpl(ChildElement<Source> referenceSourceCollection) {
+  public ElementReferenceImpl(final ChildElement<Source> referenceSourceCollection) {
     super(referenceSourceCollection);
   }
 
@@ -40,21 +40,24 @@ public class ElementReferenceImpl<
     return (ChildElement<Source>) getReferenceSourceCollection();
   }
 
-  public Source getReferenceSource(ModelElementInstance referenceSourceParent) {
+  @Override
+  public Source getReferenceSource(final ModelElementInstance referenceSourceParent) {
     return getReferenceSourceChild().getChild(referenceSourceParent);
   }
 
   private void setReferenceSource(
-      ModelElementInstance referenceSourceParent, Source referenceSource) {
+      final ModelElementInstance referenceSourceParent, final Source referenceSource) {
     getReferenceSourceChild().setChild(referenceSourceParent, referenceSource);
   }
 
+  @Override
   @SuppressWarnings("unchecked")
-  public Target getReferenceTargetElement(ModelElementInstanceImpl referenceSourceParentElement) {
-    Source referenceSource = getReferenceSource(referenceSourceParentElement);
+  public Target getReferenceTargetElement(
+      final ModelElementInstanceImpl referenceSourceParentElement) {
+    final Source referenceSource = getReferenceSource(referenceSourceParentElement);
     if (referenceSource != null) {
-      String identifier = getReferenceIdentifier(referenceSource);
-      ModelElementInstance referenceTargetElement =
+      final String identifier = getReferenceIdentifier(referenceSource);
+      final ModelElementInstance referenceTargetElement =
           referenceSourceParentElement.getModelInstance().getModelElementById(identifier);
       if (referenceTargetElement != null) {
         return (Target) referenceTargetElement;
@@ -66,11 +69,13 @@ public class ElementReferenceImpl<
     }
   }
 
+  @Override
   public void setReferenceTargetElement(
-      ModelElementInstanceImpl referenceSourceParentElement, Target referenceTargetElement) {
-    ModelInstanceImpl modelInstance = referenceSourceParentElement.getModelInstance();
-    String identifier = referenceTargetAttribute.getValue(referenceTargetElement);
-    ModelElementInstance existingElement = modelInstance.getModelElementById(identifier);
+      final ModelElementInstanceImpl referenceSourceParentElement,
+      final Target referenceTargetElement) {
+    final ModelInstanceImpl modelInstance = referenceSourceParentElement.getModelInstance();
+    final String identifier = referenceTargetAttribute.getValue(referenceTargetElement);
+    final ModelElementInstance existingElement = modelInstance.getModelElementById(identifier);
 
     if (existingElement == null || !existingElement.equals(referenceTargetElement)) {
       throw new ModelReferenceException(
@@ -78,13 +83,16 @@ public class ElementReferenceImpl<
               + referenceTargetElement
               + ": element is not part of model. Please connect element to the model first.");
     } else {
-      Source referenceSourceElement = modelInstance.newInstance(getReferenceSourceElementType());
+      final Source referenceSourceElement =
+          modelInstance.newInstance(getReferenceSourceElementType());
       setReferenceSource(referenceSourceParentElement, referenceSourceElement);
       setReferenceIdentifier(referenceSourceElement, identifier);
     }
   }
 
-  public void clearReferenceTargetElement(ModelElementInstanceImpl referenceSourceParentElement) {
+  @Override
+  public void clearReferenceTargetElement(
+      final ModelElementInstanceImpl referenceSourceParentElement) {
     getReferenceSourceChild().removeChild(referenceSourceParentElement);
   }
 }

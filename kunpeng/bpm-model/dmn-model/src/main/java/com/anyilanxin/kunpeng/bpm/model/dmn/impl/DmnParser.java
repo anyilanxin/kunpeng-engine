@@ -16,18 +16,7 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN11_ALTERNATIVE_NS;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN11_NS;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN12_NS;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN13_NS;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN14_NS;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN15_NS;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_11_ALTERNATIVE_SCHEMA_LOCATION;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_11_SCHEMA_LOCATION;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_12_SCHEMA_LOCATION;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_13_SCHEMA_LOCATION;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_14_SCHEMA_LOCATION;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_15_SCHEMA_LOCATION;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.*;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.Dmn;
 import com.anyilanxin.kunpeng.bpm.model.dmn.DmnModelException;
@@ -50,7 +39,7 @@ public class DmnParser extends AbstractModelParser {
   private static final String W3C_XML_SCHEMA = "http://www.w3.org/2001/XMLSchema";
 
   public DmnParser() {
-    this.schemaFactory = SchemaFactory.newInstance(W3C_XML_SCHEMA);
+    schemaFactory = SchemaFactory.newInstance(W3C_XML_SCHEMA);
     addSchema(DMN15_NS, createSchema(DMN_15_SCHEMA_LOCATION, DmnParser.class.getClassLoader()));
     addSchema(DMN14_NS, createSchema(DMN_14_SCHEMA_LOCATION, DmnParser.class.getClassLoader()));
     addSchema(DMN13_NS, createSchema(DMN_13_SCHEMA_LOCATION, DmnParser.class.getClassLoader()));
@@ -62,7 +51,7 @@ public class DmnParser extends AbstractModelParser {
   }
 
   @Override
-  protected void configureFactory(DocumentBuilderFactory dbf) {
+  protected void configureFactory(final DocumentBuilderFactory dbf) {
     dbf.setAttribute(JAXP_SCHEMA_LANGUAGE, W3C_XML_SCHEMA);
     dbf.setAttribute(
         JAXP_SCHEMA_SOURCE,
@@ -85,16 +74,16 @@ public class DmnParser extends AbstractModelParser {
   }
 
   @Override
-  protected DmnModelInstanceImpl createModelInstance(DomDocument document) {
+  protected DmnModelInstanceImpl createModelInstance(final DomDocument document) {
     return new DmnModelInstanceImpl(
         (ModelImpl) Dmn.INSTANCE.getDmnModel(), Dmn.INSTANCE.getDmnModelBuilder(), document);
   }
 
   @Override
-  public DmnModelInstanceImpl parseModelFromStream(InputStream inputStream) {
+  public DmnModelInstanceImpl parseModelFromStream(final InputStream inputStream) {
     try {
       return (DmnModelInstanceImpl) super.parseModelFromStream(inputStream);
-    } catch (ModelParseException e) {
+    } catch (final ModelParseException e) {
       throw new DmnModelException("Unable to parse model", e);
     }
   }

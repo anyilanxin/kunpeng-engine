@@ -17,26 +17,12 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN20_NS;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ELEMENT_BEHAVIOR;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ELEMENT_IS_SEQUENTIAL;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ELEMENT_MULTI_INSTANCE_LOOP_CHARACTERISTICS;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ELEMENT_NONE_BEHAVIOR_EVENT_REF;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ELEMENT_ONE_BEHAVIOR_EVENT_REF;
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.*;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelInstance;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.MultiInstanceFlowCondition;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.builder.MultiInstanceLoopCharacteristicsBuilder;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.CompletionCondition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ComplexBehaviorDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.DataInput;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.DataOutput;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.EventDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.InputDataItem;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.LoopCardinality;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.LoopCharacteristics;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.MultiInstanceLoopCharacteristics;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.OutputDataItem;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.*;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;

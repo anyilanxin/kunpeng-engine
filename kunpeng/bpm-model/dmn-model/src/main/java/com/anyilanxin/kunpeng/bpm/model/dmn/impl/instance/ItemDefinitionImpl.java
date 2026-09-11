@@ -16,16 +16,9 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_IS_COLLECTION;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_TYPE_LANGUAGE;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_ITEM_DEFINITION;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.*;
 
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.AllowedValues;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.ItemComponent;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.ItemDefinition;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.NamedElement;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.TypeRef;
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.*;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
@@ -45,55 +38,66 @@ public class ItemDefinitionImpl extends NamedElementImpl implements ItemDefiniti
   protected static ChildElement<AllowedValues> allowedValuesChild;
   protected static ChildElementCollection<ItemComponent> itemComponentCollection;
 
-  public ItemDefinitionImpl(ModelTypeInstanceContext instanceContext) {
+  public ItemDefinitionImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public String getTypeLanguage() {
     return typeLanguageAttribute.getValue(this);
   }
 
-  public void setTypeLanguage(String typeLanguage) {
+  @Override
+  public void setTypeLanguage(final String typeLanguage) {
     typeLanguageAttribute.setValue(this, typeLanguage);
   }
 
+  @Override
   public boolean isCollection() {
     return isCollectionAttribute.getValue(this);
   }
 
-  public void setCollection(boolean isCollection) {
+  @Override
+  public void setCollection(final boolean isCollection) {
     isCollectionAttribute.setValue(this, isCollection);
   }
 
+  @Override
   public TypeRef getTypeRef() {
     return typeRefChild.getChild(this);
   }
 
-  public void setTypeRef(TypeRef typeRef) {
+  @Override
+  public void setTypeRef(final TypeRef typeRef) {
     typeRefChild.setChild(this, typeRef);
   }
 
+  @Override
   public AllowedValues getAllowedValues() {
     return allowedValuesChild.getChild(this);
   }
 
-  public void setAllowedValues(AllowedValues allowedValues) {
+  @Override
+  public void setAllowedValues(final AllowedValues allowedValues) {
     allowedValuesChild.setChild(this, allowedValues);
   }
 
+  @Override
   public Collection<ItemComponent> getItemComponents() {
     return itemComponentCollection.get(this);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(ItemDefinition.class, DMN_ELEMENT_ITEM_DEFINITION)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(NamedElement.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<ItemDefinition>() {
-                  public ItemDefinition newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public ItemDefinition newInstance(
+                      final ModelTypeInstanceContext instanceContext) {
                     return new ItemDefinitionImpl(instanceContext);
                   }
                 });
@@ -103,7 +107,7 @@ public class ItemDefinitionImpl extends NamedElementImpl implements ItemDefiniti
     isCollectionAttribute =
         typeBuilder.booleanAttribute(DMN_ATTRIBUTE_IS_COLLECTION).defaultValue(false).build();
 
-    SequenceBuilder sequenceBuilder = typeBuilder.sequence();
+    final SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
     typeRefChild = sequenceBuilder.element(TypeRef.class).build();
 

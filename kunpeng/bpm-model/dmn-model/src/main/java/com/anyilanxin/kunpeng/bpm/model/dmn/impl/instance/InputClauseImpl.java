@@ -16,10 +16,7 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.CAMUNDA_ATTRIBUTE_INPUT_VARIABLE;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.CAMUNDA_NS;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_INPUT_CLAUSE;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.*;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DmnElement;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.InputClause;
@@ -39,61 +36,68 @@ public class InputClauseImpl extends DmnElementImpl implements InputClause {
   protected static ChildElement<InputValues> inputValuesChild;
 
   // camunda extensions
-  protected static Attribute<String> camundaInputVariableAttribute;
+  protected static Attribute<String> kunpengInputVariableAttribute;
 
-  public InputClauseImpl(ModelTypeInstanceContext instanceContext) {
+  public InputClauseImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public InputExpression getInputExpression() {
     return inputExpressionChild.getChild(this);
   }
 
-  public void setInputExpression(InputExpression inputExpression) {
+  @Override
+  public void setInputExpression(final InputExpression inputExpression) {
     inputExpressionChild.setChild(this, inputExpression);
   }
 
+  @Override
   public InputValues getInputValues() {
     return inputValuesChild.getChild(this);
   }
 
-  public void setInputValues(InputValues inputValues) {
+  @Override
+  public void setInputValues(final InputValues inputValues) {
     inputValuesChild.setChild(this, inputValues);
   }
 
-  // camunda extensions
+  // kunpeng extensions
 
-  public String getCamundaInputVariable() {
-    return camundaInputVariableAttribute.getValue(this);
+  @Override
+  public String getKunpengInputVariable() {
+    return kunpengInputVariableAttribute.getValue(this);
   }
 
-  public void setCamundaInputVariable(String inputVariable) {
-    camundaInputVariableAttribute.setValue(this, inputVariable);
+  @Override
+  public void setKunpengInputVariable(final String inputVariable) {
+    kunpengInputVariableAttribute.setValue(this, inputVariable);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(InputClause.class, DMN_ELEMENT_INPUT_CLAUSE)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(DmnElement.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<InputClause>() {
-                  public InputClause newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public InputClause newInstance(final ModelTypeInstanceContext instanceContext) {
                     return new InputClauseImpl(instanceContext);
                   }
                 });
 
-    SequenceBuilder sequenceBuilder = typeBuilder.sequence();
+    final SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
     inputExpressionChild = sequenceBuilder.element(InputExpression.class).required().build();
 
     inputValuesChild = sequenceBuilder.element(InputValues.class).build();
 
-    // camunda extensions
+    // kunpeng extensions
 
-    camundaInputVariableAttribute =
-        typeBuilder.stringAttribute(CAMUNDA_ATTRIBUTE_INPUT_VARIABLE).namespace(CAMUNDA_NS).build();
+    kunpengInputVariableAttribute =
+        typeBuilder.stringAttribute(KUNPENG_ATTRIBUTE_INPUT_VARIABLE).namespace(KUNPENG_NS).build();
 
     typeBuilder.build();
   }

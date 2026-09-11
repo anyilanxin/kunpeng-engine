@@ -16,16 +16,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.bpmn.util.time;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.time.Period;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.Temporal;
-import java.time.temporal.TemporalAmount;
-import java.time.temporal.TemporalUnit;
-import java.time.temporal.UnsupportedTemporalTypeException;
+import java.time.*;
+import java.time.temporal.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -76,21 +68,21 @@ public class Interval implements TemporalAmount {
   }
 
   public long toEpochMilli(final long fromEpochMilli) {
-    if (start.isPresent()) {
-      final long startEpochMilli = start.get().toInstant().toEpochMilli();
-      // If the start date is in the past the timer is already overdue, so fire immediately.
-      return Math.max(startEpochMilli, fromEpochMilli);
+    final long epochMilli =
+        start.map(ZonedDateTime::toInstant).map(Instant::toEpochMilli).orElse(fromEpochMilli);
+
+    if (epochMilli <= fromEpochMilli) {
+      if (!isCalendarBased()) {
+        return fromEpochMilli + getDuration().toMillis();
+      }
+
+      return ZonedDateTime.ofInstant(Instant.ofEpochMilli(fromEpochMilli), ZoneId.systemDefault())
+          .plus(this)
+          .toInstant()
+          .toEpochMilli();
     }
 
-    // No explicit start date: schedule relative to fromEpochMilli.
-    if (!isCalendarBased()) {
-      return fromEpochMilli + getDuration().toMillis();
-    }
-
-    return ZonedDateTime.ofInstant(Instant.ofEpochMilli(fromEpochMilli), ZoneId.systemDefault())
-        .plus(this)
-        .toInstant()
-        .toEpochMilli();
+    return epochMilli;
   }
 
   /**

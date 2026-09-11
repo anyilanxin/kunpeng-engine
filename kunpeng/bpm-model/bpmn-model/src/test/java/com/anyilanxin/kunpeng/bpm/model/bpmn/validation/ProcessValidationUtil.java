@@ -16,19 +16,20 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.bpmn.validation;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatNoException;
-
 import com.anyilanxin.kunpeng.bpm.model.bpmn.Bpmn;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelInstance;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.traversal.ModelWalker;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.validation.zeebe.ZeebeDesignTimeValidators;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.validation.kunpeng.KunpengDesignTimeValidators;
+import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResult;
+import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResults;
+import org.assertj.core.api.SoftAssertions;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.assertj.core.api.SoftAssertions;
-import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResult;
-import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResults;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 
 public final class ProcessValidationUtil {
 
@@ -81,7 +82,7 @@ public final class ProcessValidationUtil {
   }
 
   private static List<ValidationResult> validate(final BpmnModelInstance model) {
-    final ValidationVisitor visitor = new ValidationVisitor(ZeebeDesignTimeValidators.VALIDATORS);
+    final ValidationVisitor visitor = new ValidationVisitor(KunpengDesignTimeValidators.VALIDATORS);
 
     final ModelWalker walker = new ModelWalker(model);
     walker.walk(visitor);

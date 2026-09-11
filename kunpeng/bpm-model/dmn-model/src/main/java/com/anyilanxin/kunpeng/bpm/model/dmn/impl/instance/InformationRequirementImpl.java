@@ -19,11 +19,7 @@ package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_INFORMATION_REQUIREMENT;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Decision;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.InformationRequirement;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.InputData;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.RequiredDecisionReference;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.RequiredInputReference;
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.*;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
@@ -37,40 +33,45 @@ public class InformationRequirementImpl extends DmnModelElementInstanceImpl
   protected static ElementReference<Decision, RequiredDecisionReference> requiredDecisionRef;
   protected static ElementReference<InputData, RequiredInputReference> requiredInputRef;
 
-  public InformationRequirementImpl(ModelTypeInstanceContext instanceContext) {
+  public InformationRequirementImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public Decision getRequiredDecision() {
     return requiredDecisionRef.getReferenceTargetElement(this);
   }
 
-  public void setRequiredDecision(Decision requiredDecision) {
+  @Override
+  public void setRequiredDecision(final Decision requiredDecision) {
     requiredDecisionRef.setReferenceTargetElement(this, requiredDecision);
   }
 
+  @Override
   public InputData getRequiredInput() {
     return requiredInputRef.getReferenceTargetElement(this);
   }
 
-  public void setRequiredInput(InputData requiredInput) {
+  @Override
+  public void setRequiredInput(final InputData requiredInput) {
     requiredInputRef.setReferenceTargetElement(this, requiredInput);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(InformationRequirement.class, DMN_ELEMENT_INFORMATION_REQUIREMENT)
             .namespaceUri(LATEST_DMN_NS)
             .instanceProvider(
                 new ModelTypeInstanceProvider<InformationRequirement>() {
+                  @Override
                   public InformationRequirement newInstance(
-                      ModelTypeInstanceContext instanceContext) {
+                      final ModelTypeInstanceContext instanceContext) {
                     return new InformationRequirementImpl(instanceContext);
                   }
                 });
 
-    SequenceBuilder sequenceBuilder = typeBuilder.sequence();
+    final SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
     requiredDecisionRef =
         sequenceBuilder

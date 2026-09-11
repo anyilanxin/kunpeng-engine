@@ -27,18 +27,20 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 
 public class AllowedAnswersImpl extends DmnModelElementInstanceImpl implements AllowedAnswers {
 
-  public AllowedAnswersImpl(ModelTypeInstanceContext instanceContext) {
+  public AllowedAnswersImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(AllowedAnswers.class, DMN_ELEMENT_ALLOWED_ANSWERS)
             .namespaceUri(LATEST_DMN_NS)
             .instanceProvider(
                 new ModelTypeInstanceProvider<AllowedAnswers>() {
-                  public AllowedAnswers newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public AllowedAnswers newInstance(
+                      final ModelTypeInstanceContext instanceContext) {
                     return new AllowedAnswersImpl(instanceContext);
                   }
                 });

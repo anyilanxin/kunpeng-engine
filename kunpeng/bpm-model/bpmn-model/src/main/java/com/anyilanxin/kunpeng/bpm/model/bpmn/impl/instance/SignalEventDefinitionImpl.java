@@ -17,9 +17,7 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN20_NS;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ATTRIBUTE_SIGNAL_REF;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ELEMENT_SIGNAL_EVENT_DEFINITION;
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.*;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.EventDefinition;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Signal;

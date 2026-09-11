@@ -16,15 +16,15 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.bpmn.builder;
 
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeBindingType;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeLinkedResource;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengBindingType;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengLinkedResource;
 
 public class LinkedResourceBuilder {
-  private final ZeebeLinkedResource element;
+  private final KunpengLinkedResource element;
   private final AbstractBaseElementBuilder<?, ?> elementBuilder;
 
   protected LinkedResourceBuilder(
-      final ZeebeLinkedResource element, final AbstractBaseElementBuilder<?, ?> elementBuilder) {
+      final KunpengLinkedResource element, final AbstractBaseElementBuilder<?, ?> elementBuilder) {
     this.element = element;
     this.elementBuilder = elementBuilder;
   }
@@ -34,7 +34,7 @@ public class LinkedResourceBuilder {
     return this;
   }
 
-  public LinkedResourceBuilder bindingType(final ZeebeBindingType bindingType) {
+  public LinkedResourceBuilder bindingType(final KunpengBindingType bindingType) {
     element.setBindingType(bindingType);
     return this;
   }

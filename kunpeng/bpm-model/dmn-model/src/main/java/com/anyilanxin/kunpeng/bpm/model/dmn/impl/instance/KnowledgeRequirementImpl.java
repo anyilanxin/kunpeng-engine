@@ -35,32 +35,35 @@ public class KnowledgeRequirementImpl extends DmnModelElementInstanceImpl
   protected static ElementReference<BusinessKnowledgeModel, RequiredKnowledgeReference>
       requiredKnowledgeRef;
 
-  public KnowledgeRequirementImpl(ModelTypeInstanceContext instanceContext) {
+  public KnowledgeRequirementImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public BusinessKnowledgeModel getRequiredKnowledge() {
     return requiredKnowledgeRef.getReferenceTargetElement(this);
   }
 
-  public void setRequiredKnowledge(BusinessKnowledgeModel requiredKnowledge) {
+  @Override
+  public void setRequiredKnowledge(final BusinessKnowledgeModel requiredKnowledge) {
     requiredKnowledgeRef.setReferenceTargetElement(this, requiredKnowledge);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(KnowledgeRequirement.class, DMN_ELEMENT_KNOWLEDGE_REQUIREMENT)
             .namespaceUri(LATEST_DMN_NS)
             .instanceProvider(
                 new ModelTypeInstanceProvider<KnowledgeRequirement>() {
+                  @Override
                   public KnowledgeRequirement newInstance(
-                      ModelTypeInstanceContext instanceContext) {
+                      final ModelTypeInstanceContext instanceContext) {
                     return new KnowledgeRequirementImpl(instanceContext);
                   }
                 });
 
-    SequenceBuilder sequenceBuilder = typeBuilder.sequence();
+    final SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
     requiredKnowledgeRef =
         sequenceBuilder

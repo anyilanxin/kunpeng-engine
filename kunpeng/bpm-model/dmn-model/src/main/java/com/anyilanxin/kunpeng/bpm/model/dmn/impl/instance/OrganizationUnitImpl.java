@@ -19,11 +19,7 @@ package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_ORGANIZATION_UNIT;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.BusinessContextElement;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Decision;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DecisionMadeReference;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DecisionOwnedReference;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.OrganizationUnit;
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.*;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
@@ -39,32 +35,36 @@ public class OrganizationUnitImpl extends BusinessContextElementImpl implements 
   protected static ElementReferenceCollection<Decision, DecisionOwnedReference>
       decisionDecisionOwnedRefCollection;
 
-  public OrganizationUnitImpl(ModelTypeInstanceContext instanceContext) {
+  public OrganizationUnitImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public Collection<Decision> getDecisionsMade() {
     return decisionDecisionMadeRefCollection.getReferenceTargetElements(this);
   }
 
+  @Override
   public Collection<Decision> getDecisionsOwned() {
     return decisionDecisionOwnedRefCollection.getReferenceTargetElements(this);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(OrganizationUnit.class, DMN_ELEMENT_ORGANIZATION_UNIT)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(BusinessContextElement.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<OrganizationUnit>() {
-                  public OrganizationUnit newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public OrganizationUnit newInstance(
+                      final ModelTypeInstanceContext instanceContext) {
                     return new OrganizationUnitImpl(instanceContext);
                   }
                 });
 
-    SequenceBuilder sequenceBuilder = typeBuilder.sequence();
+    final SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
     decisionDecisionMadeRefCollection =
         sequenceBuilder

@@ -17,10 +17,7 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN20_NS;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ATTRIBUTE_INNER_CONVERSATION_NODE_REF;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ATTRIBUTE_OUTER_CONVERSATION_NODE_REF;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ELEMENT_CONVERSATION_ASSOCIATION;
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.*;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BaseElement;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ConversationAssociation;

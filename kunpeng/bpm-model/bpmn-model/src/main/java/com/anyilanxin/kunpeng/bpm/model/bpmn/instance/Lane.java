@@ -26,7 +26,11 @@ import java.util.Collection;
  *
  * @author Sebastian Menski
  */
-public interface Lane extends BaseElement, NamedBpmnElement {
+public interface Lane extends BaseElement {
+
+  String getName();
+
+  void setName(String name);
 
   PartitionElement getPartitionElement();
 

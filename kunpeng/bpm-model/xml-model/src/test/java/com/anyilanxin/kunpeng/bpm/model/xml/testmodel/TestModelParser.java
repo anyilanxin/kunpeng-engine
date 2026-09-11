@@ -30,36 +30,35 @@ import javax.xml.validation.SchemaFactory;
 
 /**
  * @author Daniel Meyer
- *
  */
 public class TestModelParser extends AbstractModelParser {
 
   private static final String JAXP_SCHEMA_SOURCE = "http://java.sun.com/xml/jaxp/properties/schemaSource";
   private static final String JAXP_SCHEMA_LANGUAGE = "http://java.sun.com/xml/jaxp/properties/schemaLanguage";
 
-  private static final String SCHEMA_LOCATION = "org/camunda/bpm/model/xml/testmodel/Testmodel.xsd";
+  private static final String SCHEMA_LOCATION = "com/anyilanxin/kunpeng/bpm/model/xml/testmodel/Testmodel.xsd";
   private static final String W3C_XML_SCHEMA = "http://www.w3.org/2001/XMLSchema";
 
-  private static final String TEST_NS = "http://camunda.org/animals";
+  private static final String TEST_NS = "https://anyilanxin.com/animals";
 
   public TestModelParser() {
-    this.schemaFactory = SchemaFactory.newInstance(W3C_XML_SCHEMA);
+    schemaFactory = SchemaFactory.newInstance(W3C_XML_SCHEMA);
     try {
       addSchema(TEST_NS, schemaFactory.newSchema(ReflectUtil.getResource(SCHEMA_LOCATION)));
-    } catch (SAXException e) {
+    } catch (final SAXException e) {
       throw new ModelValidationException("Unable to parse schema:" + ReflectUtil.getResource(SCHEMA_LOCATION), e);
     }
   }
 
   @Override
-  protected void configureFactory(DocumentBuilderFactory dbf) {
+  protected void configureFactory(final DocumentBuilderFactory dbf) {
     dbf.setAttribute(JAXP_SCHEMA_LANGUAGE, W3C_XML_SCHEMA);
     dbf.setAttribute(JAXP_SCHEMA_SOURCE, ReflectUtil.getResource(SCHEMA_LOCATION).toString());
     super.configureFactory(dbf);
   }
 
   @Override
-  protected ModelInstance createModelInstance(DomDocument document) {
+  protected ModelInstance createModelInstance(final DomDocument document) {
     return new ModelInstanceImpl((ModelImpl) TestModel.getTestModel(), TestModel.getModelBuilder(), document);
   }
 

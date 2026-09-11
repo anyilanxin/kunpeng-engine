@@ -23,19 +23,21 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementType;
  */
 public class IntegerAttribute extends AttributeImpl<Integer> {
 
-  IntegerAttribute(ModelElementType owningElementType) {
+  IntegerAttribute(final ModelElementType owningElementType) {
     super(owningElementType);
   }
 
-  protected Integer convertXmlValueToModelValue(String rawValue) {
+  @Override
+  protected Integer convertXmlValueToModelValue(final String rawValue) {
     try {
       return Integer.parseInt(rawValue);
-    } catch (NumberFormatException e) {
+    } catch (final NumberFormatException e) {
       return null;
     }
   }
 
-  protected String convertModelValueToXmlValue(Integer modelValue) {
+  @Override
+  protected String convertModelValueToXmlValue(final Integer modelValue) {
     return modelValue.toString();
   }
 }

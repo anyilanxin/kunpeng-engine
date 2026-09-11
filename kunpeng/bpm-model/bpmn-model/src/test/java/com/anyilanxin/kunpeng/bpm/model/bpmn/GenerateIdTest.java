@@ -17,48 +17,48 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Definitions;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Process;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.StartEvent;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.UserTask;
 import org.junit.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 public class GenerateIdTest {
 
-  @Test
-  public void shouldNotGenerateIdsOnRead() {
-    final BpmnModelInstance modelInstance =
-        Bpmn.readModelFromStream(GenerateIdTest.class.getResourceAsStream("GenerateIdTest.bpmn"));
-    final Definitions definitions = modelInstance.getDefinitions();
-    assertThat(definitions.getId()).isNull();
+    @Test
+    public void shouldNotGenerateIdsOnRead() {
+        final BpmnModelInstance modelInstance =
+                Bpmn.readModelFromStream(GenerateIdTest.class.getResourceAsStream("GenerateIdTest.bpmn"));
+        final Definitions definitions = modelInstance.getDefinitions();
+        assertThat(definitions.getId()).isNull();
 
-    final Process process = modelInstance.getModelElementsByType(Process.class).iterator().next();
-    assertThat(process.getId()).isNull();
+        final Process process = modelInstance.getModelElementsByType(Process.class).iterator().next();
+        assertThat(process.getId()).isNull();
 
-    final StartEvent startEvent =
-        modelInstance.getModelElementsByType(StartEvent.class).iterator().next();
-    assertThat(startEvent.getId()).isNull();
+        final StartEvent startEvent =
+                modelInstance.getModelElementsByType(StartEvent.class).iterator().next();
+        assertThat(startEvent.getId()).isNull();
 
-    final UserTask userTask =
-        modelInstance.getModelElementsByType(UserTask.class).iterator().next();
-    assertThat(userTask.getId()).isNull();
-  }
+        final UserTask userTask =
+                modelInstance.getModelElementsByType(UserTask.class).iterator().next();
+        assertThat(userTask.getId()).isNull();
+    }
 
-  @Test
-  public void shouldGenerateIdsOnCreate() {
-    final BpmnModelInstance modelInstance = Bpmn.createEmptyModel();
-    final Definitions definitions = modelInstance.newInstance(Definitions.class);
-    assertThat(definitions.getId()).isNotNull();
+    @Test
+    public void shouldGenerateIdsOnCreate() {
+        final BpmnModelInstance modelInstance = Bpmn.createEmptyModel();
+        final Definitions definitions = modelInstance.newInstance(Definitions.class);
+        assertThat(definitions.getId()).isNotNull();
 
-    final Process process = modelInstance.newInstance(Process.class);
-    assertThat(process.getId()).isNotNull();
+        final Process process = modelInstance.newInstance(Process.class);
+        assertThat(process.getId()).isNotNull();
 
-    final StartEvent startEvent = modelInstance.newInstance(StartEvent.class);
-    assertThat(startEvent.getId()).isNotNull();
+        final StartEvent startEvent = modelInstance.newInstance(StartEvent.class);
+        assertThat(startEvent.getId()).isNotNull();
 
-    final UserTask userTask = modelInstance.newInstance(UserTask.class);
-    assertThat(userTask.getId()).isNotNull();
-  }
+        final UserTask userTask = modelInstance.newInstance(UserTask.class);
+        assertThat(userTask.getId()).isNotNull();
+    }
 }

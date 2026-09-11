@@ -22,8 +22,8 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.attribute.Attribute;
 import java.util.Collection;
 
 /**
- * @author Sebastian Menski
  * @param <T> the type of the referenced element
+ * @author Sebastian Menski
  */
 public interface Reference<T extends ModelElementInstance> {
 

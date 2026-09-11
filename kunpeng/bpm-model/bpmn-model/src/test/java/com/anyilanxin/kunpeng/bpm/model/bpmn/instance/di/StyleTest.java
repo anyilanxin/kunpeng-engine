@@ -17,29 +17,30 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn.instance.di;
 
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DI_NS;
-
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BpmnModelElementInstanceTest;
+
 import java.util.Arrays;
 import java.util.Collection;
+
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DI_NS;
 
 /**
  * @author Sebastian Menski
  */
 public class StyleTest extends BpmnModelElementInstanceTest {
 
-  @Override
-  public TypeAssumption getTypeAssumption() {
-    return new TypeAssumption(DI_NS, true);
-  }
+    @Override
+    public TypeAssumption getTypeAssumption() {
+        return new TypeAssumption(DI_NS, true);
+    }
 
-  @Override
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
-    return null;
-  }
+    @Override
+    public Collection<ChildElementAssumption> getChildElementAssumptions() {
+        return null;
+    }
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return Arrays.asList(new AttributeAssumption("id", true));
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return Arrays.asList(new AttributeAssumption("id", true));
+    }
 }

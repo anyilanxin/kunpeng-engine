@@ -28,19 +28,20 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 
 public class RuleImpl extends DecisionRuleImpl implements Rule {
 
-  public RuleImpl(ModelTypeInstanceContext instanceContext) {
+  public RuleImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(Rule.class, DMN_ELEMENT_RULE)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(DecisionRule.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<Rule>() {
-                  public Rule newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public Rule newInstance(final ModelTypeInstanceContext instanceContext) {
                     return new RuleImpl(instanceContext);
                   }
                 });

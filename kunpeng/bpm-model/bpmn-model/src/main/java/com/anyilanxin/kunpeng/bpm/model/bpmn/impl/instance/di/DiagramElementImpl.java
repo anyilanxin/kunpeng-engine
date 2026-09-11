@@ -17,9 +17,7 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.di;
 
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DI_ATTRIBUTE_ID;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DI_ELEMENT_DIAGRAM_ELEMENT;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DI_NS;
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.*;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.BpmnModelElementInstanceImpl;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.di.DiagramElement;

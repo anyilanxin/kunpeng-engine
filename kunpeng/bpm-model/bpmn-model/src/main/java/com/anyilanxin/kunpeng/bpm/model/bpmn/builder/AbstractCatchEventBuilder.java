@@ -18,23 +18,12 @@
 package com.anyilanxin.kunpeng.bpm.model.bpmn.builder;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelInstance;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.builder.zeebe.MessageBuilder;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.builder.zeebe.SignalBuilder;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.CatchEvent;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.CompensateEventDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ConditionalEventDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.LinkEventDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Message;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.MessageEventDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Signal;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.SignalEventDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.TimeCycle;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.TimeDate;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.TimeDuration;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.TimerEventDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeInput;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeIoMapping;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeOutput;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.builder.kunpeng.MessageBuilder;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.builder.kunpeng.SignalBuilder;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.*;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengInput;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengIoMapping;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengOutput;
 import java.time.Duration;
 import java.util.function.Consumer;
 
@@ -43,7 +32,7 @@ import java.util.function.Consumer;
  */
 public abstract class AbstractCatchEventBuilder<
         B extends AbstractCatchEventBuilder<B, E>, E extends CatchEvent>
-    extends AbstractEventBuilder<B, E> implements ZeebeVariablesMappingBuilder<B> {
+    extends AbstractEventBuilder<B, E> implements KunpengVariablesMappingBuilder<B> {
 
   protected AbstractCatchEventBuilder(
       final BpmnModelInstance modelInstance, final E element, final Class<?> selfType) {
@@ -130,7 +119,7 @@ public abstract class AbstractCatchEventBuilder<
   }
 
   public B timerWithDateExpression(final String timerDate) {
-    return timerWithDate(asZeebeExpression(timerDate));
+    return timerWithDate(asKunpengExpression(timerDate));
   }
 
   /**
@@ -158,7 +147,7 @@ public abstract class AbstractCatchEventBuilder<
    * @return the builder object
    */
   public B timerWithDurationExpression(final String timerDuration) {
-    return timerWithDuration(asZeebeExpression(timerDuration));
+    return timerWithDuration(asKunpengExpression(timerDuration));
   }
 
   /**
@@ -196,7 +185,7 @@ public abstract class AbstractCatchEventBuilder<
    * @return the builder object
    */
   public B timerWithCycleExpression(final String timerCycle) {
-    return timerWithCycle(asZeebeExpression(timerCycle));
+    return timerWithCycle(asKunpengExpression(timerCycle));
   }
 
   /**
@@ -253,13 +242,6 @@ public abstract class AbstractCatchEventBuilder<
     return myself;
   }
 
-  public B condition(final Consumer<ConditionalEventDefinitionBuilder> conditionalBuilderConsumer) {
-    final ConditionalEventDefinitionBuilder builder = conditionalEventDefinition();
-    conditionalBuilderConsumer.accept(builder);
-
-    return myself;
-  }
-
   /**
    * Sets a link event definition for the given link name.
    *
@@ -286,21 +268,21 @@ public abstract class AbstractCatchEventBuilder<
   }
 
   @Override
-  public B zeebeInputExpression(final String sourceExpression, final String target) {
-    final String expression = asZeebeExpression(sourceExpression);
-    return zeebeInput(expression, target);
+  public B kunpengInputExpression(final String sourceExpression, final String target) {
+    final String expression = asKunpengExpression(sourceExpression);
+    return kunpengInput(expression, target);
   }
 
   @Override
-  public B zeebeOutputExpression(final String sourceExpression, final String target) {
-    final String expression = asZeebeExpression(sourceExpression);
-    return zeebeOutput(expression, target);
+  public B kunpengOutputExpression(final String sourceExpression, final String target) {
+    final String expression = asKunpengExpression(sourceExpression);
+    return kunpengOutput(expression, target);
   }
 
   @Override
-  public B zeebeInput(final String source, final String target) {
-    final ZeebeIoMapping ioMapping = getCreateSingleExtensionElement(ZeebeIoMapping.class);
-    final ZeebeInput input = createChild(ioMapping, ZeebeInput.class);
+  public B kunpengInput(final String source, final String target) {
+    final KunpengIoMapping ioMapping = getCreateSingleExtensionElement(KunpengIoMapping.class);
+    final KunpengInput input = createChild(ioMapping, KunpengInput.class);
     input.setSource(source);
     input.setTarget(target);
 
@@ -308,9 +290,9 @@ public abstract class AbstractCatchEventBuilder<
   }
 
   @Override
-  public B zeebeOutput(final String source, final String target) {
-    final ZeebeIoMapping ioMapping = getCreateSingleExtensionElement(ZeebeIoMapping.class);
-    final ZeebeOutput input = createChild(ioMapping, ZeebeOutput.class);
+  public B kunpengOutput(final String source, final String target) {
+    final KunpengIoMapping ioMapping = getCreateSingleExtensionElement(KunpengIoMapping.class);
+    final KunpengOutput input = createChild(ioMapping, KunpengOutput.class);
     input.setSource(source);
     input.setTarget(target);
 

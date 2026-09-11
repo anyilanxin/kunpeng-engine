@@ -18,13 +18,8 @@
 package com.anyilanxin.kunpeng.bpm.model.bpmn.builder;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelInstance;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.builder.zeebe.PublishMessageBuilder;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.CompensateEventDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.EscalationEventDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.LinkEventDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.MessageEventDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.SignalEventDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ThrowEvent;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.builder.kunpeng.PublishMessageBuilder;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.*;
 import java.util.function.Consumer;
 
 /**
@@ -32,17 +27,16 @@ import java.util.function.Consumer;
  */
 public abstract class AbstractThrowEventBuilder<
         B extends AbstractThrowEventBuilder<B, E>, E extends ThrowEvent>
-    extends AbstractEventBuilder<B, E>
-    implements ZeebeJobWorkerElementBuilder<B>, BuilderWithTaskHeaders<B> {
+    extends AbstractEventBuilder<B, E> implements KunpengJobWorkerElementBuilder<B> {
 
-  private final ZeebeJobWorkerPropertiesBuilder<B> jobWorkerPropertiesBuilder;
-  private final ZeebeVariablesMappingBuilder<B> variablesMappingBuilder;
+  private final KunpengJobWorkerPropertiesBuilder<B> jobWorkerPropertiesBuilder;
+  private final KunpengVariablesMappingBuilder<B> variablesMappingBuilder;
 
   protected AbstractThrowEventBuilder(
       final BpmnModelInstance modelInstance, final E element, final Class<?> selfType) {
     super(modelInstance, element, selfType);
-    jobWorkerPropertiesBuilder = new ZeebeJobWorkerPropertiesBuilderImpl<>(myself);
-    variablesMappingBuilder = new ZeebeVariableMappingBuilderImpl<>(myself);
+    jobWorkerPropertiesBuilder = new KunpengJobWorkerPropertiesBuilderImpl<>(myself);
+    variablesMappingBuilder = new KunpengVariableMappingBuilderImpl<>(myself);
   }
 
   /**
@@ -145,7 +139,7 @@ public abstract class AbstractThrowEventBuilder<
    * @return the builder object
    */
   public B escalationExpression(final String escalationCodeExpression) {
-    return escalation(asZeebeExpression(escalationCodeExpression));
+    return escalation(asKunpengExpression(escalationCodeExpression));
   }
 
   /**
@@ -247,47 +241,42 @@ public abstract class AbstractThrowEventBuilder<
   }
 
   @Override
-  public B zeebeJobType(final String type) {
-    return jobWorkerPropertiesBuilder.zeebeJobType(type);
+  public B kunpengJobType(final String type) {
+    return jobWorkerPropertiesBuilder.kunpengJobType(type);
   }
 
   @Override
-  public B zeebeJobTypeExpression(final String expression) {
-    return jobWorkerPropertiesBuilder.zeebeJobTypeExpression(expression);
+  public B kunpengJobTypeExpression(final String expression) {
+    return jobWorkerPropertiesBuilder.kunpengJobTypeExpression(expression);
   }
 
   @Override
-  public B zeebeJobRetries(final String retries) {
-    return jobWorkerPropertiesBuilder.zeebeJobRetries(retries);
+  public B kunpengJobRetries(final String retries) {
+    return jobWorkerPropertiesBuilder.kunpengJobRetries(retries);
   }
 
   @Override
-  public B zeebeJobRetriesExpression(final String expression) {
-    return jobWorkerPropertiesBuilder.zeebeJobRetriesExpression(expression);
+  public B kunpengJobRetriesExpression(final String expression) {
+    return jobWorkerPropertiesBuilder.kunpengJobRetriesExpression(expression);
   }
 
   @Override
-  public B zeebeTaskHeader(final String key, final String value) {
-    return jobWorkerPropertiesBuilder.zeebeTaskHeader(key, value);
+  public B kunpengInputExpression(final String sourceExpression, final String target) {
+    return variablesMappingBuilder.kunpengInputExpression(sourceExpression, target);
   }
 
   @Override
-  public B zeebeInputExpression(final String sourceExpression, final String target) {
-    return variablesMappingBuilder.zeebeInputExpression(sourceExpression, target);
+  public B kunpengOutputExpression(final String sourceExpression, final String target) {
+    return variablesMappingBuilder.kunpengOutputExpression(sourceExpression, target);
   }
 
   @Override
-  public B zeebeOutputExpression(final String sourceExpression, final String target) {
-    return variablesMappingBuilder.zeebeOutputExpression(sourceExpression, target);
+  public B kunpengInput(final String source, final String target) {
+    return variablesMappingBuilder.kunpengInput(source, target);
   }
 
   @Override
-  public B zeebeInput(final String source, final String target) {
-    return variablesMappingBuilder.zeebeInput(source, target);
-  }
-
-  @Override
-  public B zeebeOutput(final String source, final String target) {
-    return variablesMappingBuilder.zeebeOutput(source, target);
+  public B kunpengOutput(final String source, final String target) {
+    return variablesMappingBuilder.kunpengOutput(source, target);
   }
 }

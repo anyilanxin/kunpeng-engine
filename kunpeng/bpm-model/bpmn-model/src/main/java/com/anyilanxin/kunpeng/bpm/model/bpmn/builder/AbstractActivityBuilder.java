@@ -25,7 +25,6 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.bpmndi.BpmnShape;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.dc.Bounds;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.function.Consumer;
 
 /**
@@ -34,20 +33,16 @@ import java.util.function.Consumer;
 public abstract class AbstractActivityBuilder<
         B extends AbstractActivityBuilder<B, E>, E extends Activity>
     extends AbstractFlowNodeBuilder<B, E>
-    implements ZeebeVariablesMappingBuilder<B>,
-        ZeebeExecutionListenersBuilder<B>,
-        ZeebePropertiesBuilder<B> {
+    implements KunpengVariablesMappingBuilder<B>, KunpengExecutionListenersBuilder<B> {
 
-  private final ZeebeVariablesMappingBuilder<B> variablesMappingBuilder;
-  private final ZeebeExecutionListenersBuilder<B> zeebeExecutionListenersBuilder;
-  private final ZeebePropertiesBuilder<B> zeebePropertiesBuilder;
+  private final KunpengVariablesMappingBuilder<B> variablesMappingBuilder;
+  private final KunpengExecutionListenersBuilder<B> kunpengExecutionListenersBuilder;
 
   protected AbstractActivityBuilder(
       final BpmnModelInstance modelInstance, final E element, final Class<?> selfType) {
     super(modelInstance, element, selfType);
-    variablesMappingBuilder = new ZeebeVariableMappingBuilderImpl<>(myself);
-    zeebeExecutionListenersBuilder = new ZeebeExecutionListenersBuilderImpl<>(myself);
-    zeebePropertiesBuilder = new ZeebePropertiesBuilderImpl<>(myself);
+    variablesMappingBuilder = new KunpengVariableMappingBuilderImpl<>(myself);
+    kunpengExecutionListenersBuilder = new KunpengExecutionListenersBuilderImpl<>(myself);
   }
 
   public BoundaryEventBuilder boundaryEvent() {
@@ -97,9 +92,7 @@ public abstract class AbstractActivityBuilder<
           element.getParentElement().getChildElementsByType(BoundaryEvent.class);
       final Collection<BoundaryEvent> attachedBoundaryEvents = new ArrayList<>();
 
-      final Iterator<BoundaryEvent> iterator = boundaryEvents.iterator();
-      while (iterator.hasNext()) {
-        final BoundaryEvent tmp = iterator.next();
+      for (final BoundaryEvent tmp : boundaryEvents) {
         if (tmp.getAttachedTo().equals(element)) {
           attachedBoundaryEvents.add(tmp);
         }
@@ -152,73 +145,49 @@ public abstract class AbstractActivityBuilder<
   }
 
   @Override
-  public B zeebeInputExpression(final String sourceExpression, final String target) {
-    return variablesMappingBuilder.zeebeInputExpression(sourceExpression, target);
+  public B kunpengInputExpression(final String sourceExpression, final String target) {
+    return variablesMappingBuilder.kunpengInputExpression(sourceExpression, target);
   }
 
   @Override
-  public B zeebeOutputExpression(final String sourceExpression, final String target) {
-    return variablesMappingBuilder.zeebeOutputExpression(sourceExpression, target);
+  public B kunpengOutputExpression(final String sourceExpression, final String target) {
+    return variablesMappingBuilder.kunpengOutputExpression(sourceExpression, target);
   }
 
   @Override
-  public B zeebeInput(final String source, final String target) {
-    return variablesMappingBuilder.zeebeInput(source, target);
+  public B kunpengInput(final String source, final String target) {
+    return variablesMappingBuilder.kunpengInput(source, target);
   }
 
   @Override
-  public B zeebeOutput(final String source, final String target) {
-    return variablesMappingBuilder.zeebeOutput(source, target);
+  public B kunpengOutput(final String source, final String target) {
+    return variablesMappingBuilder.kunpengOutput(source, target);
   }
 
   @Override
-  public B zeebeBeforeAllExecutionListener(final String type, final String retries) {
-    return zeebeExecutionListenersBuilder.zeebeBeforeAllExecutionListener(type, retries);
+  public B kunpengStartExecutionListener(final String type, final String retries) {
+    return kunpengExecutionListenersBuilder.kunpengStartExecutionListener(type, retries);
   }
 
   @Override
-  public B zeebeBeforeAllExecutionListener(final String type) {
-    return zeebeExecutionListenersBuilder.zeebeBeforeAllExecutionListener(type);
+  public B kunpengStartExecutionListener(final String type) {
+    return kunpengExecutionListenersBuilder.kunpengStartExecutionListener(type);
   }
 
   @Override
-  public B zeebeStartExecutionListener(final String type, final String retries) {
-    return zeebeExecutionListenersBuilder.zeebeStartExecutionListener(type, retries);
+  public B kunpengEndExecutionListener(final String type, final String retries) {
+    return kunpengExecutionListenersBuilder.kunpengEndExecutionListener(type, retries);
   }
 
   @Override
-  public B zeebeStartExecutionListener(final String type) {
-    return zeebeExecutionListenersBuilder.zeebeStartExecutionListener(type);
+  public B kunpengEndExecutionListener(final String type) {
+    return kunpengExecutionListenersBuilder.kunpengEndExecutionListener(type);
   }
 
   @Override
-  public B zeebeEndExecutionListener(final String type, final String retries) {
-    return zeebeExecutionListenersBuilder.zeebeEndExecutionListener(type, retries);
-  }
-
-  @Override
-  public B zeebeEndExecutionListener(final String type) {
-    return zeebeExecutionListenersBuilder.zeebeEndExecutionListener(type);
-  }
-
-  @Override
-  public B zeebeCancelExecutionListener(final String type, final String retries) {
-    return zeebeExecutionListenersBuilder.zeebeCancelExecutionListener(type, retries);
-  }
-
-  @Override
-  public B zeebeCancelExecutionListener(final String type) {
-    return zeebeExecutionListenersBuilder.zeebeCancelExecutionListener(type);
-  }
-
-  @Override
-  public B zeebeExecutionListener(
+  public B kunpengExecutionListener(
       final Consumer<ExecutionListenerBuilder> executionListenerBuilderConsumer) {
-    return zeebeExecutionListenersBuilder.zeebeExecutionListener(executionListenerBuilderConsumer);
-  }
-
-  @Override
-  public B zeebeProperty(final String name, final String value) {
-    return zeebePropertiesBuilder.zeebeProperty(name, value);
+    return kunpengExecutionListenersBuilder.kunpengExecutionListener(
+        executionListenerBuilderConsumer);
   }
 }

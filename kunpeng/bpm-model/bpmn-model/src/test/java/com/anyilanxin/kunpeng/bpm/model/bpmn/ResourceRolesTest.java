@@ -17,58 +17,55 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.HumanPerformer;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Performer;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.PotentialOwner;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ResourceRole;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.UserTask;
-import java.util.Collection;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.util.Collection;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dario Campagna
  */
 public class ResourceRolesTest {
 
-  private static BpmnModelInstance modelInstance;
+    private static BpmnModelInstance modelInstance;
 
-  @BeforeClass
-  public static void parseModel() {
-    modelInstance =
-        Bpmn.readModelFromStream(
-            ResourceRolesTest.class.getResourceAsStream("ResourceRolesTest.bpmn"));
-  }
+    @BeforeClass
+    public static void parseModel() {
+        modelInstance =
+                Bpmn.readModelFromStream(
+                        ResourceRolesTest.class.getResourceAsStream("ResourceRolesTest.bpmn"));
+    }
 
-  @Test
-  public void testGetPerformer() {
-    final UserTask userTask = modelInstance.getModelElementById("_3");
-    final Collection<ResourceRole> resourceRoles = userTask.getResourceRoles();
-    assertThat(resourceRoles).hasSize(1);
-    final ResourceRole resourceRole = resourceRoles.iterator().next();
-    assertThat(resourceRole instanceof Performer).isTrue();
-    assertThat(resourceRole.getName()).isEqualTo("Task performer");
-  }
+    @Test
+    public void testGetPerformer() {
+        final UserTask userTask = modelInstance.getModelElementById("_3");
+        final Collection<ResourceRole> resourceRoles = userTask.getResourceRoles();
+        assertThat(resourceRoles.size()).isEqualTo(1);
+        final ResourceRole resourceRole = resourceRoles.iterator().next();
+        assertThat(resourceRole instanceof Performer).isTrue();
+        assertThat(resourceRole.getName()).isEqualTo("Task performer");
+    }
 
-  @Test
-  public void testGetHumanPerformer() {
-    final UserTask userTask = modelInstance.getModelElementById("_7");
-    final Collection<ResourceRole> resourceRoles = userTask.getResourceRoles();
-    assertThat(resourceRoles).hasSize(1);
-    final ResourceRole resourceRole = resourceRoles.iterator().next();
-    assertThat(resourceRole instanceof HumanPerformer).isTrue();
-    assertThat(resourceRole.getName()).isEqualTo("Task human performer");
-  }
+    @Test
+    public void testGetHumanPerformer() {
+        final UserTask userTask = modelInstance.getModelElementById("_7");
+        final Collection<ResourceRole> resourceRoles = userTask.getResourceRoles();
+        assertThat(resourceRoles.size()).isEqualTo(1);
+        final ResourceRole resourceRole = resourceRoles.iterator().next();
+        assertThat(resourceRole instanceof HumanPerformer).isTrue();
+        assertThat(resourceRole.getName()).isEqualTo("Task human performer");
+    }
 
-  @Test
-  public void testGetPotentialOwner() {
-    final UserTask userTask = modelInstance.getModelElementById("_9");
-    final Collection<ResourceRole> resourceRoles = userTask.getResourceRoles();
-    assertThat(resourceRoles).hasSize(1);
-    final ResourceRole resourceRole = resourceRoles.iterator().next();
-    assertThat(resourceRole instanceof PotentialOwner).isTrue();
-    assertThat(resourceRole.getName()).isEqualTo("Task potential owner");
-  }
+    @Test
+    public void testGetPotentialOwner() {
+        final UserTask userTask = modelInstance.getModelElementById("_9");
+        final Collection<ResourceRole> resourceRoles = userTask.getResourceRoles();
+        assertThat(resourceRoles.size()).isEqualTo(1);
+        final ResourceRole resourceRole = resourceRoles.iterator().next();
+        assertThat(resourceRole instanceof PotentialOwner).isTrue();
+        assertThat(resourceRole.getName()).isEqualTo("Task potential owner");
+    }
 }

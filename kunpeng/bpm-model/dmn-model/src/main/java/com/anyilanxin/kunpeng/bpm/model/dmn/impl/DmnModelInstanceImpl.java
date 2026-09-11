@@ -25,15 +25,18 @@ import com.anyilanxin.kunpeng.bpm.model.xml.instance.DomDocument;
 
 public class DmnModelInstanceImpl extends ModelInstanceImpl implements DmnModelInstance {
 
-  public DmnModelInstanceImpl(ModelImpl model, ModelBuilder modelBuilder, DomDocument document) {
+  public DmnModelInstanceImpl(
+      final ModelImpl model, final ModelBuilder modelBuilder, final DomDocument document) {
     super(model, modelBuilder, document);
   }
 
+  @Override
   public Definitions getDefinitions() {
     return (Definitions) getDocumentElement();
   }
 
-  public void setDefinitions(Definitions definitions) {
+  @Override
+  public void setDefinitions(final Definitions definitions) {
     setDocumentElement(definitions);
   }
 

@@ -24,7 +24,11 @@ import java.util.Collection;
  *
  * @author Sebastian Menski
  */
-public interface Operation extends BaseElement, NamedBpmnElement {
+public interface Operation extends BaseElement {
+
+  String getName();
+
+  void setName(String name);
 
   String getImplementationRef();
 

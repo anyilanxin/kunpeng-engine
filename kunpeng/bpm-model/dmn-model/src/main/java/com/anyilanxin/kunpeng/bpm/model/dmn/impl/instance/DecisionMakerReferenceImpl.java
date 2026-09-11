@@ -29,20 +29,21 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 public class DecisionMakerReferenceImpl extends DmnElementReferenceImpl
     implements DecisionMakerReference {
 
-  public DecisionMakerReferenceImpl(ModelTypeInstanceContext instanceContext) {
+  public DecisionMakerReferenceImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(DecisionMakerReference.class, DMN_ELEMENT_DECISION_MAKER)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(DmnElementReference.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<DecisionMakerReference>() {
+                  @Override
                   public DecisionMakerReference newInstance(
-                      ModelTypeInstanceContext instanceContext) {
+                      final ModelTypeInstanceContext instanceContext) {
                     return new DecisionMakerReferenceImpl(instanceContext);
                   }
                 });

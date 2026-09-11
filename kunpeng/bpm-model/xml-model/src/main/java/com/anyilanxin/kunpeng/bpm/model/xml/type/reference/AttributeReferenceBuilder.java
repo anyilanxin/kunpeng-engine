@@ -24,5 +24,6 @@ import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 public interface AttributeReferenceBuilder<T extends ModelElementInstance>
     extends ReferenceBuilder<T> {
 
+  @Override
   AttributeReference<T> build();
 }

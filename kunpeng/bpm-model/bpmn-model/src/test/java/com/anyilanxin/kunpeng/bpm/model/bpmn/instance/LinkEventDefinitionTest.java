@@ -16,34 +16,35 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.Source;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.Target;
+import org.junit.Test;
+
 import java.util.Arrays;
 import java.util.Collection;
-import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class LinkEventDefinitionTest extends AbstractEventDefinitionTest {
 
-  @Override
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
-    return Arrays.asList(
-        new ChildElementAssumption(Source.class), new ChildElementAssumption(Target.class, 0, 1));
-  }
+    @Override
+    public Collection<ChildElementAssumption> getChildElementAssumptions() {
+        return Arrays.asList(
+                new ChildElementAssumption(Source.class), new ChildElementAssumption(Target.class, 0, 1));
+    }
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return Arrays.asList(new AttributeAssumption("name", false, true));
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return Arrays.asList(new AttributeAssumption("name", false, true));
+    }
 
-  @Test
-  public void getEventDefinition() {
-    final LinkEventDefinition eventDefinition =
-        eventDefinitionQuery.filterByType(LinkEventDefinition.class).singleResult();
-    assertThat(eventDefinition).isNotNull();
-    assertThat(eventDefinition.getName()).isEqualTo("link");
-    assertThat(eventDefinition.getSources().iterator().next().getName()).isEqualTo("link");
-    assertThat(eventDefinition.getTarget().getName()).isEqualTo("link");
-  }
+    @Test
+    public void getEventDefinition() {
+        final LinkEventDefinition eventDefinition =
+                eventDefinitionQuery.filterByType(LinkEventDefinition.class).singleResult();
+        assertThat(eventDefinition).isNotNull();
+        assertThat(eventDefinition.getName()).isEqualTo("link");
+        assertThat(eventDefinition.getSources().iterator().next().getName()).isEqualTo("link");
+        assertThat(eventDefinition.getTarget().getName()).isEqualTo("link");
+    }
 }

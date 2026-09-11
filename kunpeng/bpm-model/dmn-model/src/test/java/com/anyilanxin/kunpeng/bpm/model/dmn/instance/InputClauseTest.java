@@ -16,7 +16,7 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.CAMUNDA_NS;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.KUNPENG_NS;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -37,7 +37,7 @@ public class InputClauseTest extends DmnModelElementInstanceTest {
   public Collection<AttributeAssumption> getAttributesAssumptions() {
     return Arrays.asList(
       // camunda extensions
-      new AttributeAssumption(CAMUNDA_NS, "inputVariable")
+      new AttributeAssumption(KUNPENG_NS, "inputVariable")
     );
   }
 

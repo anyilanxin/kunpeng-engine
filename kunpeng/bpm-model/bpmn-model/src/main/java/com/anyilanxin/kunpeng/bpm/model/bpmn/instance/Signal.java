@@ -22,7 +22,11 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
  *
  * @author Sebastian Menski
  */
-public interface Signal extends RootElement, NamedBpmnElement {
+public interface Signal extends RootElement {
+
+  String getName();
+
+  void setName(String name);
 
   ItemDefinition getStructure();
 

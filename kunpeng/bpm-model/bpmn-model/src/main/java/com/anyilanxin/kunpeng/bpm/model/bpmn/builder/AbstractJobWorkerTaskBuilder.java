@@ -19,7 +19,6 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.builder;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelInstance;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Task;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeJobPriorityDefinition;
 
 /**
  * A builder for tasks that are based on jobs and should be processed by job workers. For example,
@@ -27,51 +26,34 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeJobPriorityDefi
  */
 public abstract class AbstractJobWorkerTaskBuilder<
         B extends AbstractJobWorkerTaskBuilder<B, T>, T extends Task>
-    extends AbstractTaskBuilder<B, T>
-    implements ZeebeJobWorkerElementBuilder<B>, BuilderWithTaskHeaders<B> {
+    extends AbstractTaskBuilder<B, T> implements KunpengJobWorkerElementBuilder<B> {
 
-  private final ZeebeJobWorkerPropertiesBuilder<B> jobWorkerPropertiesBuilder;
+  private final KunpengJobWorkerPropertiesBuilder<B> jobWorkerPropertiesBuilder;
 
   protected AbstractJobWorkerTaskBuilder(
       final BpmnModelInstance modelInstance, final T element, final Class<?> selfType) {
     super(modelInstance, element, selfType);
     // delegates to the element builder but keeping this class for backward compatibility
-    jobWorkerPropertiesBuilder = new ZeebeJobWorkerPropertiesBuilderImpl<>(myself);
+    jobWorkerPropertiesBuilder = new KunpengJobWorkerPropertiesBuilderImpl<>(myself);
   }
 
   @Override
-  public B zeebeJobType(final String type) {
-    return jobWorkerPropertiesBuilder.zeebeJobType(type);
+  public B kunpengJobType(final String type) {
+    return jobWorkerPropertiesBuilder.kunpengJobType(type);
   }
 
   @Override
-  public B zeebeJobTypeExpression(final String expression) {
-    return jobWorkerPropertiesBuilder.zeebeJobTypeExpression(expression);
+  public B kunpengJobTypeExpression(final String expression) {
+    return jobWorkerPropertiesBuilder.kunpengJobTypeExpression(expression);
   }
 
   @Override
-  public B zeebeJobRetries(final String retries) {
-    return jobWorkerPropertiesBuilder.zeebeJobRetries(retries);
+  public B kunpengJobRetries(final String retries) {
+    return jobWorkerPropertiesBuilder.kunpengJobRetries(retries);
   }
 
   @Override
-  public B zeebeJobRetriesExpression(final String expression) {
-    return jobWorkerPropertiesBuilder.zeebeJobRetriesExpression(expression);
-  }
-
-  @Override
-  public B zeebeTaskHeader(final String key, final String value) {
-    return jobWorkerPropertiesBuilder.zeebeTaskHeader(key, value);
-  }
-
-  public B zeebeJobPriority(final String priority) {
-    final ZeebeJobPriorityDefinition jobPriorityDefinition =
-        myself.getCreateSingleExtensionElement(ZeebeJobPriorityDefinition.class);
-    jobPriorityDefinition.setPriority(priority);
-    return myself;
-  }
-
-  public B zeebeJobPriorityExpression(final String expression) {
-    return zeebeJobPriority(asZeebeExpression(expression));
+  public B kunpengJobRetriesExpression(final String expression) {
+    return jobWorkerPropertiesBuilder.kunpengJobRetriesExpression(expression);
   }
 }

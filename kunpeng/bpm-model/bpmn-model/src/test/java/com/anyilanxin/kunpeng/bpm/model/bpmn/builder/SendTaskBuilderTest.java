@@ -16,211 +16,170 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.bpmn.builder;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
-
 import com.anyilanxin.kunpeng.bpm.model.bpmn.Bpmn;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelInstance;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ExtensionElements;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeJobPriorityDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebePublishMessage;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengPublishMessage;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
+
 public class SendTaskBuilderTest {
 
-  @Test
-  void shouldSetMessageId() {
-    // when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .sendTask("task")
-            .message(b -> b.name("message").zeebeMessageId("message-id-1"))
-            .done();
+    @Test
+    void shouldSetMessageId() {
+        // when
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .sendTask("task")
+                        .message(b -> b.name("message").kunpengMessageId("message-id-1"))
+                        .done();
 
-    // then
-    final ModelElementInstance sendTask = instance.getModelElementById("task");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) sendTask.getUniqueChildElementByType(ExtensionElements.class);
+        // then
+        final ModelElementInstance sendTask = instance.getModelElementById("task");
+        final ExtensionElements extensionElements =
+                (ExtensionElements) sendTask.getUniqueChildElementByType(ExtensionElements.class);
 
-    assertThat(extensionElements.getChildElementsByType(ZeebePublishMessage.class))
-        .hasSize(1)
-        .extracting(ZeebePublishMessage::getMessageId)
-        .containsExactly("message-id-1");
-  }
+        assertThat(extensionElements.getChildElementsByType(KunpengPublishMessage.class))
+                .hasSize(1)
+                .extracting(KunpengPublishMessage::getMessageId)
+                .containsExactly("message-id-1");
+    }
 
-  @Test
-  void shouldSetMessageIdExpression() {
-    // when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .sendTask("task")
-            .message(b -> b.name("message").zeebeMessageIdExpression("messageIdExpr"))
-            .done();
+    @Test
+    void shouldSetMessageIdExpression() {
+        // when
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .sendTask("task")
+                        .message(b -> b.name("message").kunpengMessageIdExpression("messageIdExpr"))
+                        .done();
 
-    // then
-    final ModelElementInstance sendTask = instance.getModelElementById("task");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) sendTask.getUniqueChildElementByType(ExtensionElements.class);
+        // then
+        final ModelElementInstance sendTask = instance.getModelElementById("task");
+        final ExtensionElements extensionElements =
+                (ExtensionElements) sendTask.getUniqueChildElementByType(ExtensionElements.class);
 
-    assertThat(extensionElements.getChildElementsByType(ZeebePublishMessage.class))
-        .hasSize(1)
-        .extracting(ZeebePublishMessage::getMessageId)
-        .containsExactly("=messageIdExpr");
-  }
+        assertThat(extensionElements.getChildElementsByType(KunpengPublishMessage.class))
+                .hasSize(1)
+                .extracting(KunpengPublishMessage::getMessageId)
+                .containsExactly("=messageIdExpr");
+    }
 
-  @Test
-  void shouldSetCorrelationKey() {
-    // when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .sendTask("task")
-            .message(b -> b.name("message").zeebeCorrelationKey("correlation-key-1"))
-            .done();
+    @Test
+    void shouldSetCorrelationKey() {
+        // when
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .sendTask("task")
+                        .message(b -> b.name("message").kunpengCorrelationKey("correlation-key-1"))
+                        .done();
 
-    // then
-    final ModelElementInstance sendTask = instance.getModelElementById("task");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) sendTask.getUniqueChildElementByType(ExtensionElements.class);
+        // then
+        final ModelElementInstance sendTask = instance.getModelElementById("task");
+        final ExtensionElements extensionElements =
+                (ExtensionElements) sendTask.getUniqueChildElementByType(ExtensionElements.class);
 
-    assertThat(extensionElements.getChildElementsByType(ZeebePublishMessage.class))
-        .hasSize(1)
-        .extracting(ZeebePublishMessage::getCorrelationKey)
-        .containsExactly("correlation-key-1");
-  }
+        assertThat(extensionElements.getChildElementsByType(KunpengPublishMessage.class))
+                .hasSize(1)
+                .extracting(KunpengPublishMessage::getCorrelationKey)
+                .containsExactly("correlation-key-1");
+    }
 
-  @Test
-  void shouldSetCorrelationKeyExpression() {
-    // when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .sendTask("task")
-            .message(b -> b.name("message").zeebeCorrelationKeyExpression("correlationKeyExpr"))
-            .done();
+    @Test
+    void shouldSetCorrelationKeyExpression() {
+        // when
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .sendTask("task")
+                        .message(b -> b.name("message").kunpengCorrelationKeyExpression("correlationKeyExpr"))
+                        .done();
 
-    // then
-    final ModelElementInstance sendTask = instance.getModelElementById("task");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) sendTask.getUniqueChildElementByType(ExtensionElements.class);
+        // then
+        final ModelElementInstance sendTask = instance.getModelElementById("task");
+        final ExtensionElements extensionElements =
+                (ExtensionElements) sendTask.getUniqueChildElementByType(ExtensionElements.class);
 
-    assertThat(extensionElements.getChildElementsByType(ZeebePublishMessage.class))
-        .hasSize(1)
-        .extracting(ZeebePublishMessage::getCorrelationKey)
-        .containsExactly("=correlationKeyExpr");
-  }
+        assertThat(extensionElements.getChildElementsByType(KunpengPublishMessage.class))
+                .hasSize(1)
+                .extracting(KunpengPublishMessage::getCorrelationKey)
+                .containsExactly("=correlationKeyExpr");
+    }
 
-  @Test
-  void shouldSetTimeToLive() {
-    // when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .sendTask("task")
-            .message(b -> b.name("message").zeebeTimeToLive("PT10S"))
-            .done();
+    @Test
+    void shouldSetTimeToLive() {
+        // when
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .sendTask("task")
+                        .message(b -> b.name("message").kunpengTimeToLive("PT10S"))
+                        .done();
 
-    // then
-    final ModelElementInstance sendTask = instance.getModelElementById("task");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) sendTask.getUniqueChildElementByType(ExtensionElements.class);
+        // then
+        final ModelElementInstance sendTask = instance.getModelElementById("task");
+        final ExtensionElements extensionElements =
+                (ExtensionElements) sendTask.getUniqueChildElementByType(ExtensionElements.class);
 
-    assertThat(extensionElements.getChildElementsByType(ZeebePublishMessage.class))
-        .hasSize(1)
-        .extracting(ZeebePublishMessage::getTimeToLive)
-        .containsExactly("PT10S");
-  }
+        assertThat(extensionElements.getChildElementsByType(KunpengPublishMessage.class))
+                .hasSize(1)
+                .extracting(KunpengPublishMessage::getTimeToLive)
+                .containsExactly("PT10S");
+    }
 
-  @Test
-  void shouldSetTimeToLiveExpression() {
-    // when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .sendTask("task")
-            .message(b -> b.name("message").zeebeTimeToLiveExpression("timeToLiveExpr"))
-            .done();
+    @Test
+    void shouldSetTimeToLiveExpression() {
+        // when
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .sendTask("task")
+                        .message(b -> b.name("message").kunpengTimeToLiveExpression("timeToLiveExpr"))
+                        .done();
 
-    // then
-    final ModelElementInstance sendTask = instance.getModelElementById("task");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) sendTask.getUniqueChildElementByType(ExtensionElements.class);
+        // then
+        final ModelElementInstance sendTask = instance.getModelElementById("task");
+        final ExtensionElements extensionElements =
+                (ExtensionElements) sendTask.getUniqueChildElementByType(ExtensionElements.class);
 
-    assertThat(extensionElements.getChildElementsByType(ZeebePublishMessage.class))
-        .hasSize(1)
-        .extracting(ZeebePublishMessage::getTimeToLive)
-        .containsExactly("=timeToLiveExpr");
-  }
+        assertThat(extensionElements.getChildElementsByType(KunpengPublishMessage.class))
+                .hasSize(1)
+                .extracting(KunpengPublishMessage::getTimeToLive)
+                .containsExactly("=timeToLiveExpr");
+    }
 
-  @Test
-  void shouldSetJobPriorityAsLiteralOnSendTask() {
-    // given / when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .sendTask("task", t -> t.zeebeJobType("type").zeebeJobPriority("42"))
-            .endEvent()
-            .done();
+    @Test
+    void shouldSetMessageNameAndMessageIdAndCorrelationKeyAndTimeToLive() {
+        // when
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .sendTask("task")
+                        .message(
+                                b ->
+                                        b.name("message")
+                                                .kunpengMessageId("message-id")
+                                                .kunpengCorrelationKey("correlation-key")
+                                                .kunpengTimeToLive("PT10S"))
+                        .done();
 
-    // then
-    final ModelElementInstance sendTask = instance.getModelElementById("task");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) sendTask.getUniqueChildElementByType(ExtensionElements.class);
-    assertThat(extensionElements.getChildElementsByType(ZeebeJobPriorityDefinition.class))
-        .singleElement()
-        .extracting(ZeebeJobPriorityDefinition::getPriority)
-        .isEqualTo("42");
-  }
+        // then
+        final ModelElementInstance sendTask = instance.getModelElementById("task");
+        final ExtensionElements extensionElements =
+                (ExtensionElements) sendTask.getUniqueChildElementByType(ExtensionElements.class);
 
-  @Test
-  void shouldSetJobPriorityAsExpressionOnSendTask() {
-    // given / when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .sendTask("task", t -> t.zeebeJobType("type").zeebeJobPriorityExpression("priority"))
-            .endEvent()
-            .done();
-
-    // then
-    final ModelElementInstance sendTask = instance.getModelElementById("task");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) sendTask.getUniqueChildElementByType(ExtensionElements.class);
-    assertThat(extensionElements.getChildElementsByType(ZeebeJobPriorityDefinition.class))
-        .singleElement()
-        .extracting(ZeebeJobPriorityDefinition::getPriority)
-        .isEqualTo("=priority");
-  }
-
-  @Test
-  void shouldSetMessageNameAndMessageIdAndCorrelationKeyAndTimeToLive() {
-    // when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .sendTask("task")
-            .message(
-                b ->
-                    b.name("message")
-                        .zeebeMessageId("message-id")
-                        .zeebeCorrelationKey("correlation-key")
-                        .zeebeTimeToLive("PT10S"))
-            .done();
-
-    // then
-    final ModelElementInstance sendTask = instance.getModelElementById("task");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) sendTask.getUniqueChildElementByType(ExtensionElements.class);
-
-    assertThat(extensionElements.getChildElementsByType(ZeebePublishMessage.class))
-        .hasSize(1)
-        .extracting(
-            ZeebePublishMessage::getMessageId,
-            ZeebePublishMessage::getCorrelationKey,
-            ZeebePublishMessage::getTimeToLive)
-        .containsExactly(tuple("message-id", "correlation-key", "PT10S"));
-  }
+        assertThat(extensionElements.getChildElementsByType(KunpengPublishMessage.class))
+                .hasSize(1)
+                .extracting(
+                        KunpengPublishMessage::getMessageId,
+                        KunpengPublishMessage::getCorrelationKey,
+                        KunpengPublishMessage::getTimeToLive)
+                .containsExactly(tuple("message-id", "correlation-key", "PT10S"));
+    }
 }

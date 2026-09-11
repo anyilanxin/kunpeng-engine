@@ -28,19 +28,20 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 
 public class OutputValuesImpl extends UnaryTestsImpl implements OutputValues {
 
-  public OutputValuesImpl(ModelTypeInstanceContext instanceContext) {
+  public OutputValuesImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(OutputValues.class, DMN_ELEMENT_OUTPUT_VALUES)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(UnaryTests.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<OutputValues>() {
-                  public OutputValues newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public OutputValues newInstance(final ModelTypeInstanceContext instanceContext) {
                     return new OutputValuesImpl(instanceContext);
                   }
                 });

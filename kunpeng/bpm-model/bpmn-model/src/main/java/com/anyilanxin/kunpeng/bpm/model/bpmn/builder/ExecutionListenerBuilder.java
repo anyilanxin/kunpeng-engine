@@ -16,36 +16,31 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.bpmn.builder;
 
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeExecutionListener;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeExecutionListenerEventType;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeHeader;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeTaskHeaders;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengExecutionListener;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengExecutionListenerEventType;
 
-public class ExecutionListenerBuilder implements BuilderWithTaskHeaders<ExecutionListenerBuilder> {
-  private final ZeebeExecutionListener element;
+public class ExecutionListenerBuilder {
+  private final KunpengExecutionListener element;
   private final AbstractBaseElementBuilder<?, ?> elementBuilder;
 
   protected ExecutionListenerBuilder(
-      final ZeebeExecutionListener element, final AbstractBaseElementBuilder<?, ?> elementBuilder) {
+      final KunpengExecutionListener element,
+      final AbstractBaseElementBuilder<?, ?> elementBuilder) {
     this.element = element;
     this.elementBuilder = elementBuilder;
   }
 
-  public ExecutionListenerBuilder eventType(final ZeebeExecutionListenerEventType eventType) {
+  public ExecutionListenerBuilder eventType(final KunpengExecutionListenerEventType eventType) {
     element.setEventType(eventType);
     return this;
   }
 
   public ExecutionListenerBuilder start() {
-    return eventType(ZeebeExecutionListenerEventType.start);
+    return eventType(KunpengExecutionListenerEventType.start);
   }
 
   public ExecutionListenerBuilder end() {
-    return eventType(ZeebeExecutionListenerEventType.end);
-  }
-
-  public ExecutionListenerBuilder cancel() {
-    return eventType(ZeebeExecutionListenerEventType.cancel);
+    return eventType(KunpengExecutionListenerEventType.end);
   }
 
   public ExecutionListenerBuilder type(final String type) {
@@ -54,7 +49,7 @@ public class ExecutionListenerBuilder implements BuilderWithTaskHeaders<Executio
   }
 
   public ExecutionListenerBuilder typeExpression(final String typeExpression) {
-    return type(elementBuilder.asZeebeExpression(typeExpression));
+    return type(elementBuilder.asKunpengExpression(typeExpression));
   }
 
   public ExecutionListenerBuilder retries(final String retries) {
@@ -63,21 +58,6 @@ public class ExecutionListenerBuilder implements BuilderWithTaskHeaders<Executio
   }
 
   public ExecutionListenerBuilder retriesExpression(final String retriesExpression) {
-    return retries(elementBuilder.asZeebeExpression(retriesExpression));
-  }
-
-  @Override
-  public ExecutionListenerBuilder zeebeTaskHeader(final String key, final String value) {
-    ZeebeTaskHeaders taskHeaders = element.getTaskHeaders();
-    if (taskHeaders == null) {
-      taskHeaders = elementBuilder.createInstance(ZeebeTaskHeaders.class);
-      element.setTaskHeaders(taskHeaders);
-    }
-
-    final ZeebeHeader header = elementBuilder.createChild(taskHeaders, ZeebeHeader.class);
-    header.setKey(key);
-    header.setValue(value);
-
-    return this;
+    return retries(elementBuilder.asKunpengExpression(retriesExpression));
   }
 }

@@ -1,6 +1,6 @@
 /*
  * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
- * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -233,12 +233,12 @@ public class DmnEngineConfigurationApiTest {
     preListeners.add(new DefaultEngineMetricCollector());
     ArrayList<DmnDecisionTableEvaluationListener> postListeners = new ArrayList<DmnDecisionTableEvaluationListener>();
     preListeners.add(new DefaultEngineMetricCollector());
-    
+
     ArrayList<DmnDecisionEvaluationListener> preDecisionListeners = new ArrayList<DmnDecisionEvaluationListener>();
     preDecisionListeners.add(new TestDecisionEvaluationListener());
     ArrayList<DmnDecisionEvaluationListener> postDecisionListeners = new ArrayList<DmnDecisionEvaluationListener>();
     postDecisionListeners.add(new TestDecisionEvaluationListener());
-    
+
     DmnEngine engine = DmnEngineConfiguration
       .createDefaultDmnEngineConfiguration()
       .engineMetricCollector(metricCollector)
@@ -269,13 +269,13 @@ public class DmnEngineConfigurationApiTest {
 
   // helper
   public static class TestDecisionEvaluationListener implements DmnDecisionEvaluationListener {
-    
+
     public DmnDecisionEvaluationEvent evaluationEvent;
-    
+
     public void notify(DmnDecisionEvaluationEvent evaluationEvent) {
       this.evaluationEvent = evaluationEvent;
     }
-    
+
     public DmnDecisionEvaluationEvent getEvaluationEvent() {
       return evaluationEvent;
     }

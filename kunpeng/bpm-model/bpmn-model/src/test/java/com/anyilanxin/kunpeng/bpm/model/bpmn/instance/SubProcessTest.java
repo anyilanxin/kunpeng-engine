@@ -25,21 +25,21 @@ import java.util.Collection;
  */
 public class SubProcessTest extends BpmnModelElementInstanceTest {
 
-  @Override
-  public TypeAssumption getTypeAssumption() {
-    return new TypeAssumption(Activity.class, false);
-  }
+    @Override
+    public TypeAssumption getTypeAssumption() {
+        return new TypeAssumption(Activity.class, false);
+    }
 
-  @Override
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
-    return Arrays.asList(
-        new ChildElementAssumption(LaneSet.class),
-        new ChildElementAssumption(FlowElement.class),
-        new ChildElementAssumption(Artifact.class));
-  }
+    @Override
+    public Collection<ChildElementAssumption> getChildElementAssumptions() {
+        return Arrays.asList(
+                new ChildElementAssumption(LaneSet.class),
+                new ChildElementAssumption(FlowElement.class),
+                new ChildElementAssumption(Artifact.class));
+    }
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return Arrays.asList(new AttributeAssumption("triggeredByEvent", false, false, false));
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return Arrays.asList(new AttributeAssumption("triggeredByEvent", false, false, false));
+    }
 }

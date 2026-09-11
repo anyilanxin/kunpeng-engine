@@ -37,17 +37,18 @@ public class StringAttributeBuilderImpl extends AttributeBuilderImpl<String>
 
   private AttributeReferenceBuilder<?> referenceBuilder;
 
-  public StringAttributeBuilderImpl(String attributeName, ModelElementTypeImpl modelType) {
+  public StringAttributeBuilderImpl(
+      final String attributeName, final ModelElementTypeImpl modelType) {
     super(attributeName, modelType, new StringAttribute(modelType));
   }
 
   @Override
-  public StringAttributeBuilder namespace(String namespaceUri) {
+  public StringAttributeBuilder namespace(final String namespaceUri) {
     return (StringAttributeBuilder) super.namespace(namespaceUri);
   }
 
   @Override
-  public StringAttributeBuilder defaultValue(String defaultValue) {
+  public StringAttributeBuilder defaultValue(final String defaultValue) {
     return (StringAttributeBuilder) super.defaultValue(defaultValue);
   }
 
@@ -67,31 +68,34 @@ public class StringAttributeBuilderImpl extends AttributeBuilderImpl<String>
    * @param referenceTargetElement the reference target model element instance
    * @return the new attribute reference builder
    */
+  @Override
   public <V extends ModelElementInstance> AttributeReferenceBuilder<V> qNameAttributeReference(
-      Class<V> referenceTargetElement) {
-    AttributeImpl<String> attribute = (AttributeImpl<String>) build();
-    AttributeReferenceBuilderImpl<V> referenceBuilder =
+      final Class<V> referenceTargetElement) {
+    final AttributeImpl<String> attribute = (AttributeImpl<String>) build();
+    final AttributeReferenceBuilderImpl<V> referenceBuilder =
         new QNameAttributeReferenceBuilderImpl<V>(attribute, referenceTargetElement);
     setAttributeReference(referenceBuilder);
     return referenceBuilder;
   }
 
+  @Override
   public <V extends ModelElementInstance> AttributeReferenceBuilder<V> idAttributeReference(
-      Class<V> referenceTargetElement) {
-    AttributeImpl<String> attribute = (AttributeImpl<String>) build();
-    AttributeReferenceBuilderImpl<V> referenceBuilder =
+      final Class<V> referenceTargetElement) {
+    final AttributeImpl<String> attribute = (AttributeImpl<String>) build();
+    final AttributeReferenceBuilderImpl<V> referenceBuilder =
         new AttributeReferenceBuilderImpl<V>(attribute, referenceTargetElement);
     setAttributeReference(referenceBuilder);
     return referenceBuilder;
   }
 
+  @Override
   @SuppressWarnings("rawtypes")
   public <V extends ModelElementInstance>
       AttributeReferenceCollectionBuilder<V> idAttributeReferenceCollection(
-          Class<V> referenceTargetElement,
-          Class<? extends AttributeReferenceCollection> attributeReferenceCollection) {
-    AttributeImpl<String> attribute = (AttributeImpl<String>) build();
-    AttributeReferenceCollectionBuilder<V> referenceBuilder =
+          final Class<V> referenceTargetElement,
+          final Class<? extends AttributeReferenceCollection> attributeReferenceCollection) {
+    final AttributeImpl<String> attribute = (AttributeImpl<String>) build();
+    final AttributeReferenceCollectionBuilder<V> referenceBuilder =
         new AttributeReferenceCollectionBuilderImpl<V>(
             attribute, referenceTargetElement, attributeReferenceCollection);
     setAttributeReference(referenceBuilder);
@@ -99,7 +103,7 @@ public class StringAttributeBuilderImpl extends AttributeBuilderImpl<String>
   }
 
   protected <V extends ModelElementInstance> void setAttributeReference(
-      AttributeReferenceBuilder<V> referenceBuilder) {
+      final AttributeReferenceBuilder<V> referenceBuilder) {
     if (this.referenceBuilder != null) {
       throw new ModelException("An attribute cannot have more than one reference");
     }
@@ -107,7 +111,7 @@ public class StringAttributeBuilderImpl extends AttributeBuilderImpl<String>
   }
 
   @Override
-  public void performModelBuild(Model model) {
+  public void performModelBuild(final Model model) {
     super.performModelBuild(model);
     if (referenceBuilder != null) {
       ((ModelBuildOperation) referenceBuilder).performModelBuild(model);

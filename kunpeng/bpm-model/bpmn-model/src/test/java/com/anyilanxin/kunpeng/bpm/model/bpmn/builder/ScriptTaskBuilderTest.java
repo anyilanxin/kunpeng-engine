@@ -16,114 +16,73 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.bpmn.builder;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
-
 import com.anyilanxin.kunpeng.bpm.model.bpmn.Bpmn;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelInstance;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ExtensionElements;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeJobPriorityDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeScript;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengScript;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
+
 public class ScriptTaskBuilderTest {
 
-  @Test
-  void shouldSetExpression() {
-    // when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .scriptTask("task", task -> task.zeebeExpression("true"))
-            .done();
+    @Test
+    void shouldSetExpression() {
+        // when
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .scriptTask("task", task -> task.kunpengExpression("true"))
+                        .done();
 
-    // then
-    final ModelElementInstance scriptTask = instance.getModelElementById("task");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) scriptTask.getUniqueChildElementByType(ExtensionElements.class);
-    assertThat(extensionElements.getChildElementsByType(ZeebeScript.class))
-        .hasSize(1)
-        .extracting(ZeebeScript::getExpression)
-        .containsExactly("=true");
-  }
+        // then
+        final ModelElementInstance scriptTask = instance.getModelElementById("task");
+        final ExtensionElements extensionElements =
+                (ExtensionElements) scriptTask.getUniqueChildElementByType(ExtensionElements.class);
+        assertThat(extensionElements.getChildElementsByType(KunpengScript.class))
+                .hasSize(1)
+                .extracting(KunpengScript::getExpression)
+                .containsExactly("=true");
+    }
 
-  @Test
-  void shouldSetResultVariable() {
-    // when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .scriptTask("task", task -> task.zeebeResultVariable("result"))
-            .done();
+    @Test
+    void shouldSetResultVariable() {
+        // when
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .scriptTask("task", task -> task.kunpengResultVariable("result"))
+                        .done();
 
-    // then
-    final ModelElementInstance scriptTask = instance.getModelElementById("task");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) scriptTask.getUniqueChildElementByType(ExtensionElements.class);
-    assertThat(extensionElements.getChildElementsByType(ZeebeScript.class))
-        .hasSize(1)
-        .extracting(ZeebeScript::getResultVariable)
-        .containsExactly("result");
-  }
+        // then
+        final ModelElementInstance scriptTask = instance.getModelElementById("task");
+        final ExtensionElements extensionElements =
+                (ExtensionElements) scriptTask.getUniqueChildElementByType(ExtensionElements.class);
+        assertThat(extensionElements.getChildElementsByType(KunpengScript.class))
+                .hasSize(1)
+                .extracting(KunpengScript::getResultVariable)
+                .containsExactly("result");
+    }
 
-  @Test
-  void shouldSetJobPriorityAsLiteralOnScriptTask() {
-    // given / when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .scriptTask("task", t -> t.zeebeJobType("type").zeebeJobPriority("42"))
-            .endEvent()
-            .done();
+    @Test
+    void shouldSetExpressionAndResultVariable() {
+        // when
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .scriptTask(
+                                "task", task -> task.kunpengExpression("expression").kunpengResultVariable("result"))
+                        .done();
 
-    // then
-    final ModelElementInstance scriptTask = instance.getModelElementById("task");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) scriptTask.getUniqueChildElementByType(ExtensionElements.class);
-    assertThat(extensionElements.getChildElementsByType(ZeebeJobPriorityDefinition.class))
-        .singleElement()
-        .extracting(ZeebeJobPriorityDefinition::getPriority)
-        .isEqualTo("42");
-  }
-
-  @Test
-  void shouldSetJobPriorityAsExpressionOnScriptTask() {
-    // given / when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .scriptTask("task", t -> t.zeebeJobType("type").zeebeJobPriorityExpression("priority"))
-            .endEvent()
-            .done();
-
-    // then
-    final ModelElementInstance scriptTask = instance.getModelElementById("task");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) scriptTask.getUniqueChildElementByType(ExtensionElements.class);
-    assertThat(extensionElements.getChildElementsByType(ZeebeJobPriorityDefinition.class))
-        .singleElement()
-        .extracting(ZeebeJobPriorityDefinition::getPriority)
-        .isEqualTo("=priority");
-  }
-
-  @Test
-  void shouldSetExpressionAndResultVariable() {
-    // when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .scriptTask(
-                "task", task -> task.zeebeExpression("expression").zeebeResultVariable("result"))
-            .done();
-
-    // then
-    final ModelElementInstance scriptTask = instance.getModelElementById("task");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) scriptTask.getUniqueChildElementByType(ExtensionElements.class);
-    assertThat(extensionElements.getChildElementsByType(ZeebeScript.class))
-        .hasSize(1)
-        .extracting(ZeebeScript::getExpression, ZeebeScript::getResultVariable)
-        .containsExactly(tuple("=expression", "result"));
-  }
+        // then
+        final ModelElementInstance scriptTask = instance.getModelElementById("task");
+        final ExtensionElements extensionElements =
+                (ExtensionElements) scriptTask.getUniqueChildElementByType(ExtensionElements.class);
+        assertThat(extensionElements.getChildElementsByType(KunpengScript.class))
+                .hasSize(1)
+                .extracting(KunpengScript::getExpression, KunpengScript::getResultVariable)
+                .containsExactly(tuple("=expression", "result"));
+    }
 }

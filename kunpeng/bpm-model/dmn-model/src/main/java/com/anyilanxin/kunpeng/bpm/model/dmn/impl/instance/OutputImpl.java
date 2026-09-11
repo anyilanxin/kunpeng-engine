@@ -28,19 +28,20 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 
 public class OutputImpl extends OutputClauseImpl implements Output {
 
-  public OutputImpl(ModelTypeInstanceContext instanceContext) {
+  public OutputImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(Output.class, DMN_ELEMENT_OUTPUT)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(OutputClause.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<Output>() {
-                  public Output newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public Output newInstance(final ModelTypeInstanceContext instanceContext) {
                     return new OutputImpl(instanceContext);
                   }
                 });

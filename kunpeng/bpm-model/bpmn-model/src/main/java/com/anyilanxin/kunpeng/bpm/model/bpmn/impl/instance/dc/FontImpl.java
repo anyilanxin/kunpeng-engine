@@ -17,14 +17,7 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.dc;
 
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DC_ATTRIBUTE_IS_BOLD;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DC_ATTRIBUTE_IS_ITALIC;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DC_ATTRIBUTE_IS_STRIKE_THROUGH;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DC_ATTRIBUTE_IS_UNDERLINE;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DC_ATTRIBUTE_NAME;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DC_ATTRIBUTE_SIZE;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DC_ELEMENT_FONT;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DC_NS;
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.*;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.BpmnModelElementInstanceImpl;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.dc.Font;

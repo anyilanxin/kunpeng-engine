@@ -18,6 +18,7 @@
 package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.ItemKind;
+
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -26,21 +27,21 @@ import java.util.Collection;
  */
 public class ItemDefinitionTest extends BpmnModelElementInstanceTest {
 
-  @Override
-  public TypeAssumption getTypeAssumption() {
-    return new TypeAssumption(RootElement.class, false);
-  }
+    @Override
+    public TypeAssumption getTypeAssumption() {
+        return new TypeAssumption(RootElement.class, false);
+    }
 
-  @Override
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
-    return null;
-  }
+    @Override
+    public Collection<ChildElementAssumption> getChildElementAssumptions() {
+        return null;
+    }
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return Arrays.asList(
-        new AttributeAssumption("structureRef"),
-        new AttributeAssumption("isCollection", false, false, false),
-        new AttributeAssumption("itemKind", false, false, ItemKind.Information));
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return Arrays.asList(
+                new AttributeAssumption("structureRef"),
+                new AttributeAssumption("isCollection", false, false, false),
+                new AttributeAssumption("itemKind", false, false, ItemKind.Information));
+    }
 }

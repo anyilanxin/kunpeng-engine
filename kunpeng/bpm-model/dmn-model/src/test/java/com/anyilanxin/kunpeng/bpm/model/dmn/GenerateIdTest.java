@@ -16,13 +16,13 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Decision;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DecisionTable;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Definitions;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Output;
 import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class GenerateIdTest {
 

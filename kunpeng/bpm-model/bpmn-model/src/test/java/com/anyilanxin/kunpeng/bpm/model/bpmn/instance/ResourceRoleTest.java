@@ -18,6 +18,7 @@
 package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.ResourceRef;
+
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -26,21 +27,21 @@ import java.util.Collection;
  */
 public class ResourceRoleTest extends BpmnModelElementInstanceTest {
 
-  @Override
-  public TypeAssumption getTypeAssumption() {
-    return new TypeAssumption(BaseElement.class, false);
-  }
+    @Override
+    public TypeAssumption getTypeAssumption() {
+        return new TypeAssumption(BaseElement.class, false);
+    }
 
-  @Override
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
-    return Arrays.asList(
-        new ChildElementAssumption(ResourceRef.class, 0, 1),
-        new ChildElementAssumption(ResourceParameterBinding.class),
-        new ChildElementAssumption(ResourceAssignmentExpression.class, 0, 1));
-  }
+    @Override
+    public Collection<ChildElementAssumption> getChildElementAssumptions() {
+        return Arrays.asList(
+                new ChildElementAssumption(ResourceRef.class, 0, 1),
+                new ChildElementAssumption(ResourceParameterBinding.class),
+                new ChildElementAssumption(ResourceAssignmentExpression.class, 0, 1));
+    }
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return Arrays.asList(new AttributeAssumption("name"));
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return Arrays.asList(new AttributeAssumption("name"));
+    }
 }

@@ -17,269 +17,270 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn.test.assertions;
 
-import java.util.Arrays;
-import java.util.List;
-import org.assertj.core.api.AbstractAssert;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementType;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.attribute.Attribute;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.Reference;
+import org.assertj.core.api.AbstractAssert;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author Sebastian Menski
  */
 public class AttributeAssert extends AbstractAssert<AttributeAssert, Attribute<?>> {
 
-  private final String attributeName;
+    private final String attributeName;
 
-  protected AttributeAssert(final Attribute<?> actual) {
-    super(actual, AttributeAssert.class);
-    attributeName = actual.getAttributeName();
-  }
-
-  public AttributeAssert isRequired() {
-    isNotNull();
-
-    if (!actual.isRequired()) {
-      failWithMessage("Expected attribute <%s> to be required but was not", attributeName);
+    protected AttributeAssert(final Attribute<?> actual) {
+        super(actual, AttributeAssert.class);
+        attributeName = actual.getAttributeName();
     }
 
-    return this;
-  }
+    public AttributeAssert isRequired() {
+        isNotNull();
 
-  public AttributeAssert isOptional() {
-    isNotNull();
+        if (!actual.isRequired()) {
+            failWithMessage("Expected attribute <%s> to be required but was not", attributeName);
+        }
 
-    if (actual.isRequired()) {
-      failWithMessage("Expected attribute <%s> to be optional but was required", attributeName);
+        return this;
     }
 
-    return this;
-  }
+    public AttributeAssert isOptional() {
+        isNotNull();
 
-  public AttributeAssert isIdAttribute() {
-    isNotNull();
+        if (actual.isRequired()) {
+            failWithMessage("Expected attribute <%s> to be optional but was required", attributeName);
+        }
 
-    if (!actual.isIdAttribute()) {
-      failWithMessage("Expected attribute <%s> to be an ID attribute but was not", attributeName);
+        return this;
     }
 
-    return this;
-  }
+    public AttributeAssert isIdAttribute() {
+        isNotNull();
 
-  public AttributeAssert isNotIdAttribute() {
-    isNotNull();
+        if (!actual.isIdAttribute()) {
+            failWithMessage("Expected attribute <%s> to be an ID attribute but was not", attributeName);
+        }
 
-    if (actual.isIdAttribute()) {
-      failWithMessage("Expected attribute <%s> to be not an ID attribute but was", attributeName);
+        return this;
     }
 
-    return this;
-  }
+    public AttributeAssert isNotIdAttribute() {
+        isNotNull();
 
-  public AttributeAssert hasDefaultValue(final Object defaultValue) {
-    isNotNull();
+        if (actual.isIdAttribute()) {
+            failWithMessage("Expected attribute <%s> to be not an ID attribute but was", attributeName);
+        }
 
-    final Object actualDefaultValue = actual.getDefaultValue();
-
-    if (!defaultValue.equals(actualDefaultValue)) {
-      failWithMessage(
-          "Expected attribute <%s> to have default value <%s> but was <%s>",
-          attributeName, defaultValue, actualDefaultValue);
+        return this;
     }
 
-    return this;
-  }
+    public AttributeAssert hasDefaultValue(final Object defaultValue) {
+        isNotNull();
 
-  public AttributeAssert hasNoDefaultValue() {
-    isNotNull();
+        final Object actualDefaultValue = actual.getDefaultValue();
 
-    final Object actualDefaultValue = actual.getDefaultValue();
+        if (!defaultValue.equals(actualDefaultValue)) {
+            failWithMessage(
+                    "Expected attribute <%s> to have default value <%s> but was <%s>",
+                    attributeName, defaultValue, actualDefaultValue);
+        }
 
-    if (actualDefaultValue != null) {
-      failWithMessage(
-          "Expected attribute <%s> to have no default value but was <%s>",
-          attributeName, actualDefaultValue);
+        return this;
     }
 
-    return this;
-  }
+    public AttributeAssert hasNoDefaultValue() {
+        isNotNull();
 
-  public AttributeAssert hasOwningElementType(final ModelElementType owningElementType) {
-    isNotNull();
+        final Object actualDefaultValue = actual.getDefaultValue();
 
-    final ModelElementType actualOwningElementType = actual.getOwningElementType();
+        if (actualDefaultValue != null) {
+            failWithMessage(
+                    "Expected attribute <%s> to have no default value but was <%s>",
+                    attributeName, actualDefaultValue);
+        }
 
-    if (!owningElementType.equals(actualOwningElementType)) {
-      failWithMessage(
-          "Expected attribute <%s> to have owning element type <%s> but was <%s>",
-          attributeName, owningElementType, actualOwningElementType);
+        return this;
     }
 
-    return this;
-  }
+    public AttributeAssert hasOwningElementType(final ModelElementType owningElementType) {
+        isNotNull();
 
-  public AttributeAssert hasValue(final ModelElementInstance modelElementInstance) {
-    isNotNull();
+        final ModelElementType actualOwningElementType = actual.getOwningElementType();
 
-    final Object actualValue = actual.getValue(modelElementInstance);
+        if (!owningElementType.equals(actualOwningElementType)) {
+            failWithMessage(
+                    "Expected attribute <%s> to have owning element type <%s> but was <%s>",
+                    attributeName, owningElementType, actualOwningElementType);
+        }
 
-    if (actualValue == null) {
-      failWithMessage("Expected attribute <%s> to have a value but has not", attributeName);
+        return this;
     }
 
-    return this;
-  }
+    public AttributeAssert hasValue(final ModelElementInstance modelElementInstance) {
+        isNotNull();
 
-  public AttributeAssert hasValue(
-      final ModelElementInstance modelElementInstance, final Object value) {
-    isNotNull();
+        final Object actualValue = actual.getValue(modelElementInstance);
 
-    final Object actualValue = actual.getValue(modelElementInstance);
+        if (actualValue == null) {
+            failWithMessage("Expected attribute <%s> to have a value but has not", attributeName);
+        }
 
-    if (!value.equals(actualValue)) {
-      failWithMessage(
-          "Expected attribute <%s> to have value <%s> but was <%s>",
-          attributeName, value, actualValue);
+        return this;
     }
 
-    return this;
-  }
+    public AttributeAssert hasValue(
+            final ModelElementInstance modelElementInstance, final Object value) {
+        isNotNull();
 
-  public AttributeAssert hasNoValue(final ModelElementInstance modelElementInstance) {
-    isNotNull();
+        final Object actualValue = actual.getValue(modelElementInstance);
 
-    final Object actualValue = actual.getValue(modelElementInstance);
+        if (!value.equals(actualValue)) {
+            failWithMessage(
+                    "Expected attribute <%s> to have value <%s> but was <%s>",
+                    attributeName, value, actualValue);
+        }
 
-    if (actualValue != null) {
-      failWithMessage(
-          "Expected attribute <%s> to have no value but was <%s>", attributeName, actualValue);
+        return this;
     }
 
-    return this;
-  }
+    public AttributeAssert hasNoValue(final ModelElementInstance modelElementInstance) {
+        isNotNull();
 
-  public AttributeAssert hasAttributeName(final String attributeName) {
-    isNotNull();
+        final Object actualValue = actual.getValue(modelElementInstance);
 
-    if (!attributeName.equals(this.attributeName)) {
-      failWithMessage(
-          "Expected attribute to have attribute name <%s> but was <%s>",
-          attributeName, this.attributeName);
+        if (actualValue != null) {
+            failWithMessage(
+                    "Expected attribute <%s> to have no value but was <%s>", attributeName, actualValue);
+        }
+
+        return this;
     }
 
-    return this;
-  }
+    public AttributeAssert hasAttributeName(final String attributeName) {
+        isNotNull();
 
-  public AttributeAssert hasNamespaceUri(final String namespaceUri) {
-    isNotNull();
+        if (!attributeName.equals(this.attributeName)) {
+            failWithMessage(
+                    "Expected attribute to have attribute name <%s> but was <%s>",
+                    attributeName, this.attributeName);
+        }
 
-    final String actualNamespaceUri1 = actual.getNamespaceUri();
-
-    if (!namespaceUri.equals(actualNamespaceUri1)) {
-      failWithMessage(
-          "Expected attribute <%s> to have namespace URI <%s> but was <%s>",
-          attributeName, namespaceUri, actualNamespaceUri1);
+        return this;
     }
 
-    return this;
-  }
+    public AttributeAssert hasNamespaceUri(final String namespaceUri) {
+        isNotNull();
 
-  public AttributeAssert hasNoNamespaceUri() {
-    isNotNull();
+        final String actualNamespaceUri1 = actual.getNamespaceUri();
 
-    final String actualNamespaceUri = actual.getNamespaceUri();
+        if (!namespaceUri.equals(actualNamespaceUri1)) {
+            failWithMessage(
+                    "Expected attribute <%s> to have namespace URI <%s> but was <%s>",
+                    attributeName, namespaceUri, actualNamespaceUri1);
+        }
 
-    if (actualNamespaceUri != null) {
-      failWithMessage(
-          "Expected attribute <%s> to have no namespace URI but was <%s>",
-          attributeName, actualNamespaceUri);
+        return this;
     }
 
-    return this;
-  }
+    public AttributeAssert hasNoNamespaceUri() {
+        isNotNull();
 
-  public AttributeAssert hasIncomingReferences() {
-    isNotNull();
+        final String actualNamespaceUri = actual.getNamespaceUri();
 
-    final List<Reference<?>> actualIncomingReferences = actual.getIncomingReferences();
+        if (actualNamespaceUri != null) {
+            failWithMessage(
+                    "Expected attribute <%s> to have no namespace URI but was <%s>",
+                    attributeName, actualNamespaceUri);
+        }
 
-    if (actualIncomingReferences.isEmpty()) {
-      failWithMessage(
-          "Expected attribute <%s> to have incoming references but has not", attributeName);
+        return this;
     }
 
-    return this;
-  }
+    public AttributeAssert hasIncomingReferences() {
+        isNotNull();
 
-  public AttributeAssert hasIncomingReferences(final Reference<?>... references) {
-    isNotNull();
+        final List<Reference<?>> actualIncomingReferences = actual.getIncomingReferences();
 
-    final List<Reference<?>> incomingReferences = Arrays.asList(references);
-    final List<Reference<?>> actualIncomingReferences = actual.getIncomingReferences();
+        if (actualIncomingReferences.isEmpty()) {
+            failWithMessage(
+                    "Expected attribute <%s> to have incoming references but has not", attributeName);
+        }
 
-    if (!actualIncomingReferences.containsAll(incomingReferences)) {
-      failWithMessage(
-          "Expected attribute <%s> to have incoming references <%s> but has <%s>",
-          attributeName, incomingReferences, actualIncomingReferences);
+        return this;
     }
 
-    return this;
-  }
+    public AttributeAssert hasIncomingReferences(final Reference<?>... references) {
+        isNotNull();
 
-  public AttributeAssert hasNoIncomingReferences() {
-    isNotNull();
+        final List<Reference<?>> incomingReferences = Arrays.asList(references);
+        final List<Reference<?>> actualIncomingReferences = actual.getIncomingReferences();
 
-    final List<Reference<?>> actualIncomingReferences = actual.getIncomingReferences();
+        if (!actualIncomingReferences.containsAll(incomingReferences)) {
+            failWithMessage(
+                    "Expected attribute <%s> to have incoming references <%s> but has <%s>",
+                    attributeName, incomingReferences, actualIncomingReferences);
+        }
 
-    if (!actualIncomingReferences.isEmpty()) {
-      failWithMessage(
-          "Expected attribute <%s> to have no incoming references but has <%s>",
-          attributeName, actualIncomingReferences);
+        return this;
     }
 
-    return this;
-  }
+    public AttributeAssert hasNoIncomingReferences() {
+        isNotNull();
 
-  public AttributeAssert hasOutgoingReferences() {
-    isNotNull();
+        final List<Reference<?>> actualIncomingReferences = actual.getIncomingReferences();
 
-    final List<Reference<?>> actualOutgoingReferences = actual.getOutgoingReferences();
+        if (!actualIncomingReferences.isEmpty()) {
+            failWithMessage(
+                    "Expected attribute <%s> to have no incoming references but has <%s>",
+                    attributeName, actualIncomingReferences);
+        }
 
-    if (actualOutgoingReferences.isEmpty()) {
-      failWithMessage(
-          "Expected attribute <%s> to have outgoing references but has not", attributeName);
+        return this;
     }
 
-    return this;
-  }
+    public AttributeAssert hasOutgoingReferences() {
+        isNotNull();
 
-  public AttributeAssert hasOutgoingReferences(final Reference<?>... references) {
-    isNotNull();
+        final List<Reference<?>> actualOutgoingReferences = actual.getOutgoingReferences();
 
-    final List<Reference<?>> outgoingReferences = Arrays.asList(references);
-    final List<Reference<?>> actualOutgoingReferences = actual.getOutgoingReferences();
+        if (actualOutgoingReferences.isEmpty()) {
+            failWithMessage(
+                    "Expected attribute <%s> to have outgoing references but has not", attributeName);
+        }
 
-    if (!actualOutgoingReferences.containsAll(outgoingReferences)) {
-      failWithMessage(
-          "Expected attribute <%s> to have outgoing references <%s> but has <%s>",
-          attributeName, outgoingReferences, actualOutgoingReferences);
+        return this;
     }
 
-    return this;
-  }
+    public AttributeAssert hasOutgoingReferences(final Reference<?>... references) {
+        isNotNull();
 
-  public AttributeAssert hasNoOutgoingReferences() {
-    isNotNull();
+        final List<Reference<?>> outgoingReferences = Arrays.asList(references);
+        final List<Reference<?>> actualOutgoingReferences = actual.getOutgoingReferences();
 
-    final List<Reference<?>> actualOutgoingReferences = actual.getOutgoingReferences();
+        if (!actualOutgoingReferences.containsAll(outgoingReferences)) {
+            failWithMessage(
+                    "Expected attribute <%s> to have outgoing references <%s> but has <%s>",
+                    attributeName, outgoingReferences, actualOutgoingReferences);
+        }
 
-    if (!actualOutgoingReferences.isEmpty()) {
-      failWithMessage(
-          "Expected attribute <%s> to have no outgoing references but has <%s>",
-          attributeName, actualOutgoingReferences);
+        return this;
     }
 
-    return this;
-  }
+    public AttributeAssert hasNoOutgoingReferences() {
+        isNotNull();
+
+        final List<Reference<?>> actualOutgoingReferences = actual.getOutgoingReferences();
+
+        if (!actualOutgoingReferences.isEmpty()) {
+            failWithMessage(
+                    "Expected attribute <%s> to have no outgoing references but has <%s>",
+                    attributeName, actualOutgoingReferences);
+        }
+
+        return this;
+    }
 }

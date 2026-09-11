@@ -22,25 +22,21 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.StartEvent;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.SubProcess;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.bpmndi.BpmnShape;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.dc.Bounds;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeInput;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeIoMapping;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeOutput;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengInput;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengIoMapping;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengOutput;
 import java.util.function.Consumer;
 
 public class AbstractEventSubProcessBuilder<B extends AbstractEventSubProcessBuilder<B>>
     extends AbstractFlowElementBuilder<B, SubProcess>
-    implements ZeebeVariablesMappingBuilder<B>,
-        ZeebeExecutionListenersBuilder<B>,
-        ZeebePropertiesBuilder<B> {
+    implements KunpengVariablesMappingBuilder<B>, KunpengExecutionListenersBuilder<B> {
 
-  private final ZeebeExecutionListenersBuilder<B> zeebeExecutionListenersBuilder;
-  private final ZeebePropertiesBuilder<B> zeebePropertiesBuilder;
+  private final KunpengExecutionListenersBuilder<B> kunpengExecutionListenersBuilder;
 
   protected AbstractEventSubProcessBuilder(
       final BpmnModelInstance modelInstance, final SubProcess element, final Class<?> selfType) {
     super(modelInstance, element, selfType);
-    zeebeExecutionListenersBuilder = new ZeebeExecutionListenersBuilderImpl<>(myself);
-    zeebePropertiesBuilder = new ZeebePropertiesBuilderImpl<>(myself);
+    kunpengExecutionListenersBuilder = new KunpengExecutionListenersBuilderImpl<>(myself);
   }
 
   public StartEventBuilder startEvent() {
@@ -76,21 +72,21 @@ public class AbstractEventSubProcessBuilder<B extends AbstractEventSubProcessBui
   }
 
   @Override
-  public B zeebeInputExpression(final String sourceExpression, final String target) {
-    final String expression = asZeebeExpression(sourceExpression);
-    return zeebeInput(expression, target);
+  public B kunpengInputExpression(final String sourceExpression, final String target) {
+    final String expression = asKunpengExpression(sourceExpression);
+    return kunpengInput(expression, target);
   }
 
   @Override
-  public B zeebeOutputExpression(final String sourceExpression, final String target) {
-    final String expression = asZeebeExpression(sourceExpression);
-    return zeebeOutput(expression, target);
+  public B kunpengOutputExpression(final String sourceExpression, final String target) {
+    final String expression = asKunpengExpression(sourceExpression);
+    return kunpengOutput(expression, target);
   }
 
   @Override
-  public B zeebeInput(final String source, final String target) {
-    final ZeebeIoMapping ioMapping = getCreateSingleExtensionElement(ZeebeIoMapping.class);
-    final ZeebeInput input = createChild(ioMapping, ZeebeInput.class);
+  public B kunpengInput(final String source, final String target) {
+    final KunpengIoMapping ioMapping = getCreateSingleExtensionElement(KunpengIoMapping.class);
+    final KunpengInput input = createChild(ioMapping, KunpengInput.class);
     input.setSource(source);
     input.setTarget(target);
 
@@ -98,9 +94,9 @@ public class AbstractEventSubProcessBuilder<B extends AbstractEventSubProcessBui
   }
 
   @Override
-  public B zeebeOutput(final String source, final String target) {
-    final ZeebeIoMapping ioMapping = getCreateSingleExtensionElement(ZeebeIoMapping.class);
-    final ZeebeOutput input = createChild(ioMapping, ZeebeOutput.class);
+  public B kunpengOutput(final String source, final String target) {
+    final KunpengIoMapping ioMapping = getCreateSingleExtensionElement(KunpengIoMapping.class);
+    final KunpengOutput input = createChild(ioMapping, KunpengOutput.class);
     input.setSource(source);
     input.setTarget(target);
 
@@ -108,43 +104,29 @@ public class AbstractEventSubProcessBuilder<B extends AbstractEventSubProcessBui
   }
 
   @Override
-  public B zeebeStartExecutionListener(final String type, final String retries) {
-    return zeebeExecutionListenersBuilder.zeebeStartExecutionListener(type, retries);
+  public B kunpengStartExecutionListener(final String type, final String retries) {
+    return kunpengExecutionListenersBuilder.kunpengStartExecutionListener(type, retries);
   }
 
   @Override
-  public B zeebeStartExecutionListener(final String type) {
-    return zeebeExecutionListenersBuilder.zeebeStartExecutionListener(type);
+  public B kunpengStartExecutionListener(final String type) {
+    return kunpengExecutionListenersBuilder.kunpengStartExecutionListener(type);
   }
 
   @Override
-  public B zeebeEndExecutionListener(final String type, final String retries) {
-    return zeebeExecutionListenersBuilder.zeebeEndExecutionListener(type, retries);
+  public B kunpengEndExecutionListener(final String type, final String retries) {
+    return kunpengExecutionListenersBuilder.kunpengEndExecutionListener(type, retries);
   }
 
   @Override
-  public B zeebeEndExecutionListener(final String type) {
-    return zeebeExecutionListenersBuilder.zeebeEndExecutionListener(type);
+  public B kunpengEndExecutionListener(final String type) {
+    return kunpengExecutionListenersBuilder.kunpengEndExecutionListener(type);
   }
 
   @Override
-  public B zeebeCancelExecutionListener(final String type, final String retries) {
-    return zeebeExecutionListenersBuilder.zeebeCancelExecutionListener(type, retries);
-  }
-
-  @Override
-  public B zeebeCancelExecutionListener(final String type) {
-    return zeebeExecutionListenersBuilder.zeebeCancelExecutionListener(type);
-  }
-
-  @Override
-  public B zeebeExecutionListener(
+  public B kunpengExecutionListener(
       final Consumer<ExecutionListenerBuilder> executionListenerBuilderConsumer) {
-    return zeebeExecutionListenersBuilder.zeebeExecutionListener(executionListenerBuilderConsumer);
-  }
-
-  @Override
-  public B zeebeProperty(final String name, final String value) {
-    return zeebePropertiesBuilder.zeebeProperty(name, value);
+    return kunpengExecutionListenersBuilder.kunpengExecutionListener(
+        executionListenerBuilderConsumer);
   }
 }

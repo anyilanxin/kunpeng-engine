@@ -28,15 +28,15 @@ public class QNameElementReferenceCollectionImpl<
     extends ElementReferenceCollectionImpl<Target, Source> {
 
   public QNameElementReferenceCollectionImpl(
-      ChildElementCollection<Source> referenceSourceCollection) {
+      final ChildElementCollection<Source> referenceSourceCollection) {
     super(referenceSourceCollection);
   }
 
   @Override
-  public String getReferenceIdentifier(ModelElementInstance referenceSourceElement) {
-    String identifier = super.getReferenceIdentifier(referenceSourceElement);
+  public String getReferenceIdentifier(final ModelElementInstance referenceSourceElement) {
+    final String identifier = super.getReferenceIdentifier(referenceSourceElement);
     if (identifier != null) {
-      QName qName = QName.parseQName(identifier);
+      final QName qName = QName.parseQName(identifier);
       return qName.getLocalName();
     } else {
       return null;

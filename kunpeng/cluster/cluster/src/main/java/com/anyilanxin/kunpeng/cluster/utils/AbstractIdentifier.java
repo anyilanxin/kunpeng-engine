@@ -1,7 +1,7 @@
 /*
  * Copyright 2016-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,6 +45,7 @@ public class AbstractIdentifier<T extends Comparable<T>> implements Identifier<T
    *
    * @return identifier
    */
+  @Override
   public T id() {
     return identifier;
   }
@@ -82,6 +83,7 @@ public class AbstractIdentifier<T extends Comparable<T>> implements Identifier<T
    *
    * @return string
    */
+  @Override
   public String toString() {
     return identifier.toString();
   }

@@ -19,8 +19,8 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.builder;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelInstance;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BusinessRuleTask;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeBindingType;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeCalledDecision;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengBindingType;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengCalledDecision;
 
 /**
  * @author Sebastian Menski
@@ -52,9 +52,9 @@ public abstract class AbstractBusinessRuleTaskBuilder<B extends AbstractBusiness
    * @param decisionId the id of the decision
    * @return the builder object
    */
-  public B zeebeCalledDecisionId(final String decisionId) {
-    final ZeebeCalledDecision calledDecision =
-        getCreateSingleExtensionElement(ZeebeCalledDecision.class);
+  public B kunpengCalledDecisionId(final String decisionId) {
+    final KunpengCalledDecision calledDecision =
+        getCreateSingleExtensionElement(KunpengCalledDecision.class);
     calledDecision.setDecisionId(decisionId);
     return myself;
   }
@@ -66,8 +66,8 @@ public abstract class AbstractBusinessRuleTaskBuilder<B extends AbstractBusiness
    * @param decisionIdExpression the expression for the id of the decision
    * @return the builder object
    */
-  public B zeebeCalledDecisionIdExpression(final String decisionIdExpression) {
-    return zeebeCalledDecisionId(asZeebeExpression(decisionIdExpression));
+  public B kunpengCalledDecisionIdExpression(final String decisionIdExpression) {
+    return kunpengCalledDecisionId(asKunpengExpression(decisionIdExpression));
   }
 
   /**
@@ -76,9 +76,9 @@ public abstract class AbstractBusinessRuleTaskBuilder<B extends AbstractBusiness
    * @param resultVariable the name of the result variable
    * @return the builder object
    */
-  public B zeebeResultVariable(final String resultVariable) {
-    final ZeebeCalledDecision calledDecision =
-        getCreateSingleExtensionElement(ZeebeCalledDecision.class);
+  public B kunpengResultVariable(final String resultVariable) {
+    final KunpengCalledDecision calledDecision =
+        getCreateSingleExtensionElement(KunpengCalledDecision.class);
     calledDecision.setResultVariable(resultVariable);
     return myself;
   }
@@ -89,9 +89,9 @@ public abstract class AbstractBusinessRuleTaskBuilder<B extends AbstractBusiness
    * @param bindingType the binding type for the decision
    * @return the builder object
    */
-  public B zeebeBindingType(final ZeebeBindingType bindingType) {
-    final ZeebeCalledDecision calledDecision =
-        getCreateSingleExtensionElement(ZeebeCalledDecision.class);
+  public B kunpengBindingType(final KunpengBindingType bindingType) {
+    final KunpengCalledDecision calledDecision =
+        getCreateSingleExtensionElement(KunpengCalledDecision.class);
     calledDecision.setBindingType(bindingType);
     return myself;
   }
@@ -102,21 +102,10 @@ public abstract class AbstractBusinessRuleTaskBuilder<B extends AbstractBusiness
    * @param versionTag the version tag for the decision
    * @return the builder object
    */
-  public B zeebeVersionTag(final String versionTag) {
-    final ZeebeCalledDecision calledDecision =
-        getCreateSingleExtensionElement(ZeebeCalledDecision.class);
+  public B kunpengVersionTag(final String versionTag) {
+    final KunpengCalledDecision calledDecision =
+        getCreateSingleExtensionElement(KunpengCalledDecision.class);
     calledDecision.setVersionTag(versionTag);
     return myself;
-  }
-
-  /**
-   * Sets a dynamic version tag for the decision that is called. The version tag is retrieved from
-   * the given expression.
-   *
-   * @param versionTagExpression the expression for the version tag of the decision
-   * @return the builder object
-   */
-  public B zeebeVersionTagExpression(final String versionTagExpression) {
-    return zeebeVersionTag(asZeebeExpression(versionTagExpression));
   }
 }

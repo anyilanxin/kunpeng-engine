@@ -16,40 +16,41 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class TimerEventDefinitionTest extends AbstractEventDefinitionTest {
 
-  @Override
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
-    return Arrays.asList(
-        new ChildElementAssumption(TimeDate.class, 0, 1),
-        new ChildElementAssumption(TimeDuration.class, 0, 1),
-        new ChildElementAssumption(TimeCycle.class, 0, 1));
-  }
-
-  @Test
-  public void getElementDefinition() {
-    final List<TimerEventDefinition> eventDefinitions =
-        eventDefinitionQuery.filterByType(TimerEventDefinition.class).list();
-    assertThat(eventDefinitions).hasSize(3);
-    for (final TimerEventDefinition eventDefinition : eventDefinitions) {
-      final String id = eventDefinition.getId();
-      String textContent = null;
-      if ("date".equals(id)) {
-        textContent = eventDefinition.getTimeDate().getTextContent();
-      } else if ("duration".equals(id)) {
-        textContent = eventDefinition.getTimeDuration().getTextContent();
-      } else if ("cycle".equals(id)) {
-        textContent = eventDefinition.getTimeCycle().getTextContent();
-      }
-
-      assertThat(textContent).isEqualTo("${test}");
+    @Override
+    public Collection<ChildElementAssumption> getChildElementAssumptions() {
+        return Arrays.asList(
+                new ChildElementAssumption(TimeDate.class, 0, 1),
+                new ChildElementAssumption(TimeDuration.class, 0, 1),
+                new ChildElementAssumption(TimeCycle.class, 0, 1));
     }
-  }
+
+    @Test
+    public void getElementDefinition() {
+        final List<TimerEventDefinition> eventDefinitions =
+                eventDefinitionQuery.filterByType(TimerEventDefinition.class).list();
+        assertThat(eventDefinitions).hasSize(3);
+        for (final TimerEventDefinition eventDefinition : eventDefinitions) {
+            final String id = eventDefinition.getId();
+            String textContent = null;
+            if ("date".equals(id)) {
+                textContent = eventDefinition.getTimeDate().getTextContent();
+            } else if ("duration".equals(id)) {
+                textContent = eventDefinition.getTimeDuration().getTextContent();
+            } else if ("cycle".equals(id)) {
+                textContent = eventDefinition.getTimeCycle().getTextContent();
+            }
+
+            assertThat(textContent).isEqualTo("${test}");
+        }
+    }
 }

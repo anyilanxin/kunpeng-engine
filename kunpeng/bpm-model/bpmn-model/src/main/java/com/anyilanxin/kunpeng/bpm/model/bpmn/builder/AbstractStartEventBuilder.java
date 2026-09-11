@@ -22,7 +22,7 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.CompensateEventDefinition;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ErrorEventDefinition;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.EscalationEventDefinition;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.StartEvent;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeFormDefinition;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengFormDefinition;
 
 /**
  * @author Sebastian Menski
@@ -137,16 +137,16 @@ public abstract class AbstractStartEventBuilder<B extends AbstractStartEventBuil
     return myself;
   }
 
-  public B zeebeFormKey(final String formKey) {
-    final ZeebeFormDefinition formDefinition =
-        getCreateSingleExtensionElement(ZeebeFormDefinition.class);
+  public B kunpengFormKey(final String formKey) {
+    final KunpengFormDefinition formDefinition =
+        getCreateSingleExtensionElement(KunpengFormDefinition.class);
     formDefinition.setFormKey(formKey);
     return myself;
   }
 
-  public B zeebeFormId(final String formId) {
-    final ZeebeFormDefinition formDefinition =
-        getCreateSingleExtensionElement(ZeebeFormDefinition.class);
+  public B kunpengFormId(final String formId) {
+    final KunpengFormDefinition formDefinition =
+        getCreateSingleExtensionElement(KunpengFormDefinition.class);
     formDefinition.setFormId(formId);
     return myself;
   }

@@ -27,10 +27,10 @@ public class QNameElementReferenceBuilderImpl<
     extends ElementReferenceBuilderImpl<Target, Source> {
 
   public QNameElementReferenceBuilderImpl(
-      Class<Source> childElementType,
-      Class<Target> referenceTargetClass,
-      ChildElementImpl<Source> child) {
+      final Class<Source> childElementType,
+      final Class<Target> referenceTargetClass,
+      final ChildElementImpl<Source> child) {
     super(childElementType, referenceTargetClass, child);
-    this.elementReferenceCollectionImpl = new QNameElementReferenceImpl<Target, Source>(child);
+    elementReferenceCollectionImpl = new QNameElementReferenceImpl<Target, Source>(child);
   }
 }

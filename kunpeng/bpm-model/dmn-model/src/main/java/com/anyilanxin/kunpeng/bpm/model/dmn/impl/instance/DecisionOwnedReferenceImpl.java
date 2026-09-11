@@ -29,20 +29,21 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 public class DecisionOwnedReferenceImpl extends DmnElementReferenceImpl
     implements DecisionOwnedReference {
 
-  public DecisionOwnedReferenceImpl(ModelTypeInstanceContext instanceContext) {
+  public DecisionOwnedReferenceImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(DecisionOwnedReference.class, DMN_ELEMENT_DECISION_OWNED)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(DmnElementReference.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<DecisionOwnedReference>() {
+                  @Override
                   public DecisionOwnedReference newInstance(
-                      ModelTypeInstanceContext instanceContext) {
+                      final ModelTypeInstanceContext instanceContext) {
                     return new DecisionOwnedReferenceImpl(instanceContext);
                   }
                 });

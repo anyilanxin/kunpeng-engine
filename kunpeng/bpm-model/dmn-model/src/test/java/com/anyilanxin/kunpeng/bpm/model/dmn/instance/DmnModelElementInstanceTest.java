@@ -24,16 +24,17 @@ import org.junit.ClassRule;
 
 public abstract class DmnModelElementInstanceTest extends AbstractModelElementInstanceTest {
 
-  @ClassRule
-  public static final GetDmnModelElementTypeRule modelElementTypeRule = new GetDmnModelElementTypeRule();
+    @ClassRule
+    public static final GetDmnModelElementTypeRule modelElementTypeRule = new GetDmnModelElementTypeRule();
 
-  @BeforeClass
-  public static void initModelElementType() {
-    initModelElementType(modelElementTypeRule);
-  }
+    @BeforeClass
+    public static void initModelElementType() {
+        initModelElementType(modelElementTypeRule);
+    }
 
-  public String getDefaultNamespace() {
-    return DmnModelConstants.LATEST_DMN_NS;
-  }
+    @Override
+    public String getDefaultNamespace() {
+        return DmnModelConstants.LATEST_DMN_NS;
+    }
 
 }

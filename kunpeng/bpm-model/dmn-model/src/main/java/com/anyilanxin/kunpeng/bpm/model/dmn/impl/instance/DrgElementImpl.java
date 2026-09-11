@@ -27,12 +27,12 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
 
 public abstract class DrgElementImpl extends NamedElementImpl implements DrgElement {
 
-  public DrgElementImpl(ModelTypeInstanceContext instanceContext) {
+  public DrgElementImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(DrgElement.class, DMN_ELEMENT_DRG_ELEMENT)
             .namespaceUri(LATEST_DMN_NS)

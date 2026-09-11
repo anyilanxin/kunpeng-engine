@@ -24,7 +24,11 @@ import java.util.Collection;
  *
  * @author Sebastian Menski
  */
-public interface Participant extends BaseElement, InteractionNode, NamedBpmnElement {
+public interface Participant extends BaseElement, InteractionNode {
+
+  String getName();
+
+  void setName(String name);
 
   Process getProcess();
 

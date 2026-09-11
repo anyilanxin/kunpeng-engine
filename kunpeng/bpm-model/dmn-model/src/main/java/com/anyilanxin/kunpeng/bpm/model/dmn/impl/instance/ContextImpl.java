@@ -34,28 +34,30 @@ public class ContextImpl extends ExpressionImpl implements Context {
 
   protected static ChildElementCollection<ContextEntry> contextEntryCollection;
 
-  public ContextImpl(ModelTypeInstanceContext instanceContext) {
+  public ContextImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public Collection<ContextEntry> getContextEntries() {
     return contextEntryCollection.get(this);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(Context.class, DMN_ELEMENT_CONTEXT)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(Expression.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<Context>() {
-                  public Context newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public Context newInstance(final ModelTypeInstanceContext instanceContext) {
                     return new ContextImpl(instanceContext);
                   }
                 });
 
-    SequenceBuilder sequenceBuilder = typeBuilder.sequence();
+    final SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
     contextEntryCollection = sequenceBuilder.elementCollection(ContextEntry.class).build();
 

@@ -17,16 +17,9 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN20_NS;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ATTRIBUTE_NAME;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ATTRIBUTE_PROCESS_REF;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ELEMENT_PARTICIPANT;
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.*;
 
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BaseElement;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.EndPoint;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Interface;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Participant;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ParticipantMultiplicity;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.*;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Process;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;

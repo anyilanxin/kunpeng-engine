@@ -67,7 +67,8 @@ public final class DomUtil {
   /** Filter retaining only Nodes of type {@link Node#ELEMENT_NODE} */
   public static class ElementNodeListFilter implements NodeListFilter {
 
-    public boolean matches(Node node) {
+    @Override
+    public boolean matches(final Node node) {
       return node.getNodeType() == Node.ELEMENT_NODE;
     }
   }
@@ -82,13 +83,13 @@ public final class DomUtil {
      * @param localName the local name to filter for
      * @param namespaceUri the namespaceUri to filter for
      */
-    public ElementByNameListFilter(String localName, String namespaceUri) {
+    public ElementByNameListFilter(final String localName, final String namespaceUri) {
       this.localName = localName;
       this.namespaceUri = namespaceUri;
     }
 
     @Override
-    public boolean matches(Node node) {
+    public boolean matches(final Node node) {
       return super.matches(node)
           && localName.equals(node.getLocalName())
           && namespaceUri.equals(node.getNamespaceURI());
@@ -100,17 +101,17 @@ public final class DomUtil {
     private final Class<?> type;
     private final ModelInstanceImpl model;
 
-    public ElementByTypeListFilter(Class<?> type, ModelInstanceImpl modelInstance) {
+    public ElementByTypeListFilter(final Class<?> type, final ModelInstanceImpl modelInstance) {
       this.type = type;
-      this.model = modelInstance;
+      model = modelInstance;
     }
 
     @Override
-    public boolean matches(Node node) {
+    public boolean matches(final Node node) {
       if (!super.matches(node)) {
         return false;
       }
-      ModelElementInstance modelElement =
+      final ModelElementInstance modelElement =
           ModelUtil.getModelElement(new DomElementImpl((Element) node), model);
       return type.isAssignableFrom(modelElement.getClass());
     }
@@ -124,11 +125,12 @@ public final class DomUtil {
    * @param filter the {@link NodeListFilter} to apply to the {@link NodeList}
    * @return the List of all Nodes which match the filter
    */
-  public static List<DomElement> filterNodeList(NodeList nodeList, NodeListFilter filter) {
+  public static List<DomElement> filterNodeList(
+      final NodeList nodeList, final NodeListFilter filter) {
 
-    List<DomElement> filteredList = new ArrayList<DomElement>();
+    final List<DomElement> filteredList = new ArrayList<DomElement>();
     for (int i = 0; i < nodeList.getLength(); i++) {
-      Node node = nodeList.item(i);
+      final Node node = nodeList.item(i);
       if (filter.matches(node)) {
         filteredList.add(new DomElementImpl((Element) node));
       }
@@ -143,7 +145,7 @@ public final class DomUtil {
    * @param nodeList the the {@link NodeList} to filter
    * @return the list of all elements
    */
-  public static List<DomElement> filterNodeListForElements(NodeList nodeList) {
+  public static List<DomElement> filterNodeListForElements(final NodeList nodeList) {
     return filterNodeList(nodeList, new ElementNodeListFilter());
   }
 
@@ -156,7 +158,7 @@ public final class DomUtil {
    * @return the List of all Elements which match the filter
    */
   public static List<DomElement> filterNodeListByName(
-      NodeList nodeList, String namespaceUri, String localName) {
+      final NodeList nodeList, final String namespaceUri, final String localName) {
     return filterNodeList(nodeList, new ElementByNameListFilter(localName, namespaceUri));
   }
 
@@ -169,7 +171,7 @@ public final class DomUtil {
    * @return the list of all Elements which match the filter
    */
   public static List<DomElement> filterNodeListByType(
-      NodeList nodeList, ModelInstanceImpl modelInstance, Class<?> type) {
+      final NodeList nodeList, final ModelInstanceImpl modelInstance, final Class<?> type) {
     return filterNodeList(nodeList, new ElementByTypeListFilter(type, modelInstance));
   }
 
@@ -177,21 +179,24 @@ public final class DomUtil {
 
     private static final Logger LOGGER = Logger.getLogger(DomErrorHandler.class.getName());
 
-    private String getParseExceptionInfo(SAXParseException spe) {
+    private String getParseExceptionInfo(final SAXParseException spe) {
       return "URI=" + spe.getSystemId() + " Line=" + spe.getLineNumber() + ": " + spe.getMessage();
     }
 
-    public void warning(SAXParseException spe) {
+    @Override
+    public void warning(final SAXParseException spe) {
       LOGGER.warning(getParseExceptionInfo(spe));
     }
 
-    public void error(SAXParseException spe) throws SAXException {
-      String message = "Error: " + getParseExceptionInfo(spe);
+    @Override
+    public void error(final SAXParseException spe) throws SAXException {
+      final String message = "Error: " + getParseExceptionInfo(spe);
       throw new SAXException(message);
     }
 
-    public void fatalError(SAXParseException spe) throws SAXException {
-      String message = "Fatal Error: " + getParseExceptionInfo(spe);
+    @Override
+    public void fatalError(final SAXParseException spe) throws SAXException {
+      final String message = "Fatal Error: " + getParseExceptionInfo(spe);
       throw new SAXException(message);
     }
   }
@@ -203,11 +208,11 @@ public final class DomUtil {
    * @return the new empty document
    * @throws ModelParseException if unable to create a new document
    */
-  public static DomDocument getEmptyDocument(DocumentBuilderFactory documentBuilderFactory) {
+  public static DomDocument getEmptyDocument(final DocumentBuilderFactory documentBuilderFactory) {
     try {
-      DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
+      final DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
       return new DomDocumentImpl(documentBuilder.newDocument());
-    } catch (ParserConfigurationException e) {
+    } catch (final ParserConfigurationException e) {
       throw new ModelParseException("Unable to create a new document", e);
     }
   }
@@ -221,19 +226,19 @@ public final class DomUtil {
    * @throws ModelParseException if a parsing or IO error is triggered
    */
   public static DomDocument parseInputStream(
-      DocumentBuilderFactory documentBuilderFactory, InputStream inputStream) {
+      final DocumentBuilderFactory documentBuilderFactory, final InputStream inputStream) {
 
     try {
-      DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
+      final DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
       documentBuilder.setErrorHandler(new DomErrorHandler());
       return new DomDocumentImpl(documentBuilder.parse(inputStream));
-    } catch (ParserConfigurationException e) {
+    } catch (final ParserConfigurationException e) {
       throw new ModelParseException("ParserConfigurationException while parsing input stream", e);
 
-    } catch (SAXException e) {
+    } catch (final SAXException e) {
       throw new ModelParseException("SAXException while parsing input stream", e);
 
-    } catch (IOException e) {
+    } catch (final IOException e) {
       throw new ModelParseException("IOException while parsing input stream", e);
     }
   }

@@ -20,7 +20,7 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.builder;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelInstance;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Script;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ScriptTask;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeScript;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengScript;
 
 /**
  * @author Sebastian Menski
@@ -67,9 +67,9 @@ public abstract class AbstractScriptTaskBuilder<B extends AbstractScriptTaskBuil
    * @param expression the feel expression for the script task
    * @return the builder object
    */
-  public B zeebeExpression(final String expression) {
-    final ZeebeScript zeebeScript = getCreateSingleExtensionElement(ZeebeScript.class);
-    zeebeScript.setExpression(asZeebeExpression(expression));
+  public B kunpengExpression(final String expression) {
+    final KunpengScript kunpengScript = getCreateSingleExtensionElement(KunpengScript.class);
+    kunpengScript.setExpression(asKunpengExpression(expression));
     return myself;
   }
 
@@ -79,9 +79,9 @@ public abstract class AbstractScriptTaskBuilder<B extends AbstractScriptTaskBuil
    * @param resultVariable the name of the result variable
    * @return the builder object
    */
-  public B zeebeResultVariable(final String resultVariable) {
-    final ZeebeScript zeebeScript = getCreateSingleExtensionElement(ZeebeScript.class);
-    zeebeScript.setResultVariable(resultVariable);
+  public B kunpengResultVariable(final String resultVariable) {
+    final KunpengScript kunpengScript = getCreateSingleExtensionElement(KunpengScript.class);
+    kunpengScript.setResultVariable(resultVariable);
     return myself;
   }
 }

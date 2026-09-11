@@ -27,18 +27,19 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 
 public class TypeRefImpl extends DmnModelElementInstanceImpl implements TypeRef {
 
-  public TypeRefImpl(ModelTypeInstanceContext instanceContext) {
+  public TypeRefImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(TypeRef.class, DMN_ELEMENT_TYPE_REF)
             .namespaceUri(LATEST_DMN_NS)
             .instanceProvider(
                 new ModelTypeInstanceProvider<TypeRef>() {
-                  public TypeRef newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public TypeRef newInstance(final ModelTypeInstanceContext instanceContext) {
                     return new TypeRefImpl(instanceContext);
                   }
                 });

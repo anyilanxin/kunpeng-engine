@@ -20,35 +20,8 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.builder;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.AssociationDirection;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelException;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelInstance;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Activity;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.AdHocSubProcess;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Association;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BoundaryEvent;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BusinessRuleTask;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.CallActivity;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.CompensateEventDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ConditionExpression;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.EndEvent;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.EventBasedGateway;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.EventDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ExclusiveGateway;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.FlowNode;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Gateway;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.InclusiveGateway;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.IntermediateCatchEvent;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.IntermediateThrowEvent;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ManualTask;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ParallelGateway;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.*;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Process;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ReceiveTask;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ScriptTask;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.SendTask;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.SequenceFlow;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ServiceTask;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.SubProcess;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Task;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Transaction;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.UserTask;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.bpmndi.BpmnShape;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 import java.util.function.Consumer;
@@ -92,7 +65,7 @@ public abstract class AbstractFlowNodeBuilder<
   }
 
   public B conditionExpression(final String conditionExpression) {
-    return condition(null, asZeebeExpression(conditionExpression));
+    return condition(null, asKunpengExpression(conditionExpression));
   }
 
   protected void connectTarget(final FlowNode target) {
@@ -458,15 +431,6 @@ public abstract class AbstractFlowNodeBuilder<
       return (T) ((Process) instance).builder();
     } else {
       throw new BpmnModelException("Process not found for id " + identifier);
-    }
-  }
-
-  public <T extends SubProcessBuilder> T moveToSubProcess(final String identifier) {
-    final ModelElementInstance instance = modelInstance.getModelElementById(identifier);
-    if (instance instanceof SubProcess) {
-      return (T) ((SubProcess) instance).builder();
-    } else {
-      throw new BpmnModelException("SubProcess not found for id " + identifier);
     }
   }
 

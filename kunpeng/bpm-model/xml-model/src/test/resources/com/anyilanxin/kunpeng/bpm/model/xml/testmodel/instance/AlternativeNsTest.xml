@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<animals xmlns="http://camunda.org/animals"
-  xmlns:tns="http://camunda.org/animals"
-  xmlns:mechanical="http://camunda.org/mechanical"
-  xmlns:yans="http://camunda.org/yans"
+<animals xmlns="https://anyilanxin.com/animals"
+  xmlns:tns="https://anyilanxin.com/animals"
+  xmlns:mechanical="https://anyilanxin.com/mechanical"
+  xmlns:yans="https://anyilanxin.com/yans"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://camunda.org/animals ../Testmodel.xsd ">
+  xsi:schemaLocation="https://anyilanxin.com/animals ../Testmodel.xsd ">
 
   <bird id="hedwig" gender="Male">
     <mechanical:wings>wusch</mechanical:wings>

@@ -25,15 +25,17 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementType;
  */
 public class StringAttribute extends AttributeImpl<String> {
 
-  public StringAttribute(ModelElementType owningElementType) {
+  public StringAttribute(final ModelElementType owningElementType) {
     super(owningElementType);
   }
 
-  protected String convertXmlValueToModelValue(String rawValue) {
+  @Override
+  protected String convertXmlValueToModelValue(final String rawValue) {
     return rawValue;
   }
 
-  protected String convertModelValueToXmlValue(String modelValue) {
+  @Override
+  protected String convertModelValueToXmlValue(final String modelValue) {
     return modelValue;
   }
 }

@@ -15,7 +15,7 @@
 	<xsd:element name="DMNDiagram" type="dmndi:DMNDiagram"/>
 	<xsd:element name="DMNDiagramElement" type="di:DiagramElement">
 		<xsd:annotation>
-			<xsd:documentation>This element should never be instantiated directly, but rather concrete implementation should. It is placed there only to be referred in the sequence</xsd:documentation>
+			<xsd:documentation>This element should never be instantiated directly, but rather concrete api should. It is placed there only to be referred in the sequence</xsd:documentation>
 		</xsd:annotation>
 	</xsd:element>
 	<xsd:element name="DMNShape" type="dmndi:DMNShape" substitutionGroup="dmndi:DMNDiagramElement"/>

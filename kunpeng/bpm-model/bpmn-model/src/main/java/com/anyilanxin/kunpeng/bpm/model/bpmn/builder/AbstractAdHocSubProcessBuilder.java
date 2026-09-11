@@ -23,22 +23,18 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.FlowElement;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.FlowNode;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.bpmndi.BpmnShape;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.dc.Bounds;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeAdHoc;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeAgentDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeAgentType;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengAdHoc;
 
 public class AbstractAdHocSubProcessBuilder<B extends AbstractAdHocSubProcessBuilder<B>>
-    extends AbstractSubProcessBuilder<B> implements ZeebeJobWorkerElementBuilder<B> {
+    extends AbstractSubProcessBuilder<B> {
 
   protected boolean isDone = false;
-  private final ZeebeJobWorkerPropertiesBuilder<B> jobWorkerPropertiesBuilder;
 
   protected AbstractAdHocSubProcessBuilder(
       final BpmnModelInstance modelInstance,
       final AdHocSubProcess element,
       final Class<?> selfType) {
     super(modelInstance, element, selfType);
-    jobWorkerPropertiesBuilder = new ZeebeJobWorkerPropertiesBuilderImpl<>(myself);
   }
 
   /**
@@ -47,9 +43,9 @@ public class AbstractAdHocSubProcessBuilder<B extends AbstractAdHocSubProcessBui
    * @param expression the expression for the active elements collection
    * @return the builder object
    */
-  public B zeebeActiveElementsCollectionExpression(final String expression) {
-    final ZeebeAdHoc adHoc = getCreateSingleExtensionElement(ZeebeAdHoc.class);
-    adHoc.setActiveElementsCollection(asZeebeExpression(expression));
+  public B kunpengActiveElementsCollectionExpression(final String expression) {
+    final KunpengAdHoc adHoc = getCreateSingleExtensionElement(KunpengAdHoc.class);
+    adHoc.setActiveElementsCollection(asKunpengExpression(expression));
     return myself;
   }
 
@@ -61,7 +57,7 @@ public class AbstractAdHocSubProcessBuilder<B extends AbstractAdHocSubProcessBui
    */
   public B completionCondition(final String expression) {
     final CompletionCondition condition = getCreateSingleChild(CompletionCondition.class);
-    condition.setTextContent(asZeebeExpression(expression));
+    condition.setTextContent(asKunpengExpression(expression));
     return myself;
   }
 
@@ -74,85 +70,6 @@ public class AbstractAdHocSubProcessBuilder<B extends AbstractAdHocSubProcessBui
   public B cancelRemainingInstances(final boolean cancelRemainingInstances) {
     ((AdHocSubProcess) element).setCancelRemainingInstances(cancelRemainingInstances);
     return myself;
-  }
-
-  /**
-   * Sets the zeebe:modelerTemplate attribute of the build ad-hoc sub-process.
-   *
-   * @param modelerTemplate the element template id to set
-   * @return the builder object
-   */
-  public B zeebeModelerTemplate(final String modelerTemplate) {
-    ((AdHocSubProcess) element).setModelerTemplate(modelerTemplate);
-    return myself;
-  }
-
-  public B zeebeOutputCollection(final String outputCollection) {
-    final ZeebeAdHoc adHoc = getCreateSingleExtensionElement(ZeebeAdHoc.class);
-    adHoc.setOutputCollection(outputCollection);
-    return myself;
-  }
-
-  public B zeebeOutputElementExpression(final String outputElementExpression) {
-    final ZeebeAdHoc adHoc = getCreateSingleExtensionElement(ZeebeAdHoc.class);
-    adHoc.setOutputElement(asZeebeExpression(outputElementExpression));
-    return myself;
-  }
-
-  /**
-   * Marks this ad-hoc sub-process as an agent definition.
-   *
-   * @param agentType the agent type declared on the marker
-   * @return the builder object
-   */
-  public B zeebeAgentDefinition(final ZeebeAgentType agentType) {
-    final ZeebeAgentDefinition agentDefinition =
-        getCreateSingleExtensionElement(ZeebeAgentDefinition.class);
-    agentDefinition.setAgentType(agentType);
-    return myself;
-  }
-
-  /**
-   * Marks this ad-hoc sub-process as a Camunda-native AI agent.
-   *
-   * @return the builder object
-   */
-  public B zeebeAiAgentSubProcessDefinition() {
-    return zeebeAgentDefinition(ZeebeAgentType.aiAgentSubProcess);
-  }
-
-  /**
-   * Marks this ad-hoc sub-process as an external agent.
-   *
-   * @return the builder object
-   */
-  public B zeebeExternalAgentDefinition() {
-    return zeebeAgentDefinition(ZeebeAgentType.external);
-  }
-
-  @Override
-  public B zeebeJobType(final String type) {
-    return jobWorkerPropertiesBuilder.zeebeJobType(type);
-  }
-
-  @Override
-  public B zeebeJobTypeExpression(final String expression) {
-    return jobWorkerPropertiesBuilder.zeebeJobTypeExpression(expression);
-  }
-
-  @Override
-  public B zeebeJobRetries(final String retries) {
-    return jobWorkerPropertiesBuilder.zeebeJobRetries(retries);
-  }
-
-  @Override
-  public B zeebeJobRetriesExpression(final String expression) {
-    return jobWorkerPropertiesBuilder.zeebeJobRetriesExpression(expression);
-  }
-
-  @Override
-  public B zeebeTaskHeader(final String key, final String value) {
-    return jobWorkerPropertiesBuilder.zeebeTaskHeader(key, value);
   }
 
   @Override

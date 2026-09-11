@@ -25,29 +25,29 @@ import java.util.Collection;
  */
 public class CollaborationTest extends BpmnModelElementInstanceTest {
 
-  @Override
-  public TypeAssumption getTypeAssumption() {
-    return new TypeAssumption(RootElement.class, false);
-  }
+    @Override
+    public TypeAssumption getTypeAssumption() {
+        return new TypeAssumption(RootElement.class, false);
+    }
 
-  @Override
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
-    return Arrays.asList(
-        new ChildElementAssumption(Participant.class),
-        new ChildElementAssumption(MessageFlow.class),
-        new ChildElementAssumption(Artifact.class),
-        new ChildElementAssumption(ConversationNode.class),
-        new ChildElementAssumption(ConversationAssociation.class),
-        new ChildElementAssumption(ParticipantAssociation.class),
-        new ChildElementAssumption(MessageFlowAssociation.class),
-        new ChildElementAssumption(CorrelationKey.class),
-        /** TODO: choreographyRef */
-        new ChildElementAssumption(ConversationLink.class));
-  }
+    @Override
+    public Collection<ChildElementAssumption> getChildElementAssumptions() {
+        return Arrays.asList(
+                new ChildElementAssumption(Participant.class),
+                new ChildElementAssumption(MessageFlow.class),
+                new ChildElementAssumption(Artifact.class),
+                new ChildElementAssumption(ConversationNode.class),
+                new ChildElementAssumption(ConversationAssociation.class),
+                new ChildElementAssumption(ParticipantAssociation.class),
+                new ChildElementAssumption(MessageFlowAssociation.class),
+                new ChildElementAssumption(CorrelationKey.class),
+                /** TODO: choreographyRef */
+                new ChildElementAssumption(ConversationLink.class));
+    }
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return Arrays.asList(
-        new AttributeAssumption("name"), new AttributeAssumption("isClosed", false, false, false));
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return Arrays.asList(
+                new AttributeAssumption("name"), new AttributeAssumption("isClosed", false, false, false));
+    }
 }

@@ -18,6 +18,7 @@
 package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.AssociationDirection;
+
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -26,21 +27,21 @@ import java.util.Collection;
  */
 public class AssociationTest extends BpmnModelElementInstanceTest {
 
-  @Override
-  public TypeAssumption getTypeAssumption() {
-    return new TypeAssumption(Artifact.class, false);
-  }
+    @Override
+    public TypeAssumption getTypeAssumption() {
+        return new TypeAssumption(Artifact.class, false);
+    }
 
-  @Override
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
-    return null;
-  }
+    @Override
+    public Collection<ChildElementAssumption> getChildElementAssumptions() {
+        return null;
+    }
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return Arrays.asList(
-        new AttributeAssumption("sourceRef", false, true),
-        new AttributeAssumption("targetRef", false, true),
-        new AttributeAssumption("associationDirection", false, false, AssociationDirection.None));
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return Arrays.asList(
+                new AttributeAssumption("sourceRef", false, true),
+                new AttributeAssumption("targetRef", false, true),
+                new AttributeAssumption("associationDirection", false, false, AssociationDirection.None));
+    }
 }

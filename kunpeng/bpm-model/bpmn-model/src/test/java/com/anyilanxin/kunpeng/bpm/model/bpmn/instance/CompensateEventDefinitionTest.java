@@ -16,26 +16,27 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.Collection;
-import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class CompensateEventDefinitionTest extends AbstractEventDefinitionTest {
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return Arrays.asList(
-        new AttributeAssumption("waitForCompletion"), new AttributeAssumption("activityRef"));
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return Arrays.asList(
+                new AttributeAssumption("waitForCompletion"), new AttributeAssumption("activityRef"));
+    }
 
-  @Test
-  public void getEventDefinition() {
-    final CompensateEventDefinition eventDefinition =
-        eventDefinitionQuery.filterByType(CompensateEventDefinition.class).singleResult();
-    assertThat(eventDefinition).isNotNull();
-    assertThat(eventDefinition.isWaitForCompletion()).isTrue();
-    assertThat(eventDefinition.getActivity().getId()).isEqualTo("task");
-  }
+    @Test
+    public void getEventDefinition() {
+        final CompensateEventDefinition eventDefinition =
+                eventDefinitionQuery.filterByType(CompensateEventDefinition.class).singleResult();
+        assertThat(eventDefinition).isNotNull();
+        assertThat(eventDefinition.isWaitForCompletion()).isTrue();
+        assertThat(eventDefinition.getActivity().getId()).isEqualTo("task");
+    }
 }

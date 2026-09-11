@@ -16,11 +16,7 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_IMPORT_TYPE;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_LOCATION_URI;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_NAMESPACE;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_IMPORT;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.*;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Import;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
@@ -35,42 +31,49 @@ public class ImportImpl extends DmnModelElementInstanceImpl implements Import {
   protected static Attribute<String> locationUriAttribute;
   protected static Attribute<String> importTypeAttribute;
 
-  public ImportImpl(ModelTypeInstanceContext instanceContext) {
+  public ImportImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public String getNamespace() {
     return namespaceAttribute.getValue(this);
   }
 
-  public void setNamespace(String namespace) {
+  @Override
+  public void setNamespace(final String namespace) {
     namespaceAttribute.setValue(this, namespace);
   }
 
+  @Override
   public String getLocationUri() {
     return locationUriAttribute.getValue(this);
   }
 
-  public void setLocationUri(String locationUri) {
+  @Override
+  public void setLocationUri(final String locationUri) {
     locationUriAttribute.setValue(this, locationUri);
   }
 
+  @Override
   public String getImportType() {
     return importTypeAttribute.getValue(this);
   }
 
-  public void setImportType(String importType) {
+  @Override
+  public void setImportType(final String importType) {
     importTypeAttribute.setValue(this, importType);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(Import.class, DMN_ELEMENT_IMPORT)
             .namespaceUri(LATEST_DMN_NS)
             .instanceProvider(
                 new ModelTypeInstanceProvider<Import>() {
-                  public Import newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public Import newInstance(final ModelTypeInstanceContext instanceContext) {
                     return new ImportImpl(instanceContext);
                   }
                 });

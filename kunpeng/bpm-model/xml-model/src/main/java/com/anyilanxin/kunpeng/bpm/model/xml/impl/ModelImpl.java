@@ -22,12 +22,7 @@ import com.anyilanxin.kunpeng.bpm.model.xml.impl.util.ModelUtil;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.util.QName;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementType;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * A model contains all defined types and the relationship between them.
@@ -36,13 +31,12 @@ import java.util.Set;
  */
 public class ModelImpl implements Model {
 
-  private final Map<QName, ModelElementType> typesByName = new HashMap<QName, ModelElementType>();
+  private final Map<QName, ModelElementType> typesByName = new HashMap<>();
   private final Map<Class<? extends ModelElementInstance>, ModelElementType> typesByClass =
-      new HashMap<Class<? extends ModelElementInstance>, ModelElementType>();
+      new HashMap<>();
   private final String modelName;
 
-  protected final Map<String, Set<String>> actualNsToAlternative =
-      new HashMap<String, Set<String>>();
+  protected final Map<String, Set<String>> actualNsToAlternative = new HashMap<>();
   protected final Map<String, String> alternativeNsToActual = new HashMap<String, String>();
 
   /**
@@ -50,7 +44,7 @@ public class ModelImpl implements Model {
    *
    * @param modelName the model name to identify the model
    */
-  public ModelImpl(String modelName) {
+  public ModelImpl(final String modelName) {
     this.modelName = modelName;
   }
 
@@ -64,7 +58,7 @@ public class ModelImpl implements Model {
    * @throws IllegalArgumentException if the alternative is already used or if the actual namespace
    *     has an alternative
    */
-  public void declareAlternativeNamespace(String alternativeNs, String actualNs) {
+  public void declareAlternativeNamespace(final String alternativeNs, final String actualNs) {
     Set<String> alternativeNamespaces = actualNsToAlternative.get(actualNs);
     if (alternativeNamespaces == null) {
       // linked hash set for consistent iteration order
@@ -76,21 +70,22 @@ public class ModelImpl implements Model {
     alternativeNsToActual.put(alternativeNs, actualNs);
   }
 
-  public void undeclareAlternativeNamespace(String alternativeNs) {
+  public void undeclareAlternativeNamespace(final String alternativeNs) {
     if (!alternativeNsToActual.containsKey(alternativeNs)) {
       return;
     }
-    String actual = alternativeNsToActual.remove(alternativeNs);
+    final String actual = alternativeNsToActual.remove(alternativeNs);
     actualNsToAlternative.remove(actual);
   }
 
-  public Set<String> getAlternativeNamespaces(String actualNs) {
+  @Override
+  public Set<String> getAlternativeNamespaces(final String actualNs) {
     return actualNsToAlternative.get(actualNs);
   }
 
   @Override
-  public String getAlternativeNamespace(String actualNs) {
-    Set<String> alternatives = getAlternativeNamespaces(actualNs);
+  public String getAlternativeNamespace(final String actualNs) {
+    final Set<String> alternatives = getAlternativeNamespaces(actualNs);
 
     if (alternatives == null || alternatives.size() == 0) {
       return null;
@@ -101,23 +96,28 @@ public class ModelImpl implements Model {
     }
   }
 
-  public String getActualNamespace(String alternativeNs) {
+  @Override
+  public String getActualNamespace(final String alternativeNs) {
     return alternativeNsToActual.get(alternativeNs);
   }
 
+  @Override
   public Collection<ModelElementType> getTypes() {
-    return new ArrayList<ModelElementType>(typesByName.values());
+    return new ArrayList<>(typesByName.values());
   }
 
-  public ModelElementType getType(Class<? extends ModelElementInstance> instanceClass) {
+  @Override
+  public ModelElementType getType(final Class<? extends ModelElementInstance> instanceClass) {
     return typesByClass.get(instanceClass);
   }
 
-  public ModelElementType getTypeForName(String typeName) {
+  @Override
+  public ModelElementType getTypeForName(final String typeName) {
     return getTypeForName(null, typeName);
   }
 
-  public ModelElementType getTypeForName(String namespaceUri, String typeName) {
+  @Override
+  public ModelElementType getTypeForName(final String namespaceUri, final String typeName) {
     return typesByName.get(ModelUtil.getQName(namespaceUri, typeName));
   }
 
@@ -128,27 +128,29 @@ public class ModelImpl implements Model {
    * @param instanceType the instance class of the type to register
    */
   public void registerType(
-      ModelElementType modelElementType, Class<? extends ModelElementInstance> instanceType) {
-    QName qName =
+      final ModelElementType modelElementType,
+      final Class<? extends ModelElementInstance> instanceType) {
+    final QName qName =
         ModelUtil.getQName(modelElementType.getTypeNamespace(), modelElementType.getTypeName());
     typesByName.put(qName, modelElementType);
     typesByClass.put(instanceType, modelElementType);
   }
 
+  @Override
   public String getModelName() {
     return modelName;
   }
 
   @Override
   public int hashCode() {
-    int prime = 31;
+    final int prime = 31;
     int result = 1;
     result = prime * result + ((modelName == null) ? 0 : modelName.hashCode());
     return result;
   }
 
   @Override
-  public boolean equals(Object obj) {
+  public boolean equals(final Object obj) {
     if (this == obj) {
       return true;
     }
@@ -158,7 +160,7 @@ public class ModelImpl implements Model {
     if (getClass() != obj.getClass()) {
       return false;
     }
-    ModelImpl other = (ModelImpl) obj;
+    final ModelImpl other = (ModelImpl) obj;
     if (modelName == null) {
       if (other.modelName != null) {
         return false;

@@ -16,22 +16,9 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_EXPORTER;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_EXPORTER_VERSION;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_EXPRESSION_LANGUAGE;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_NAMESPACE;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_TYPE_LANGUAGE;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_DEFINITIONS;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.*;
 
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Artifact;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.BusinessContextElement;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Definitions;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DrgElement;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.ElementCollection;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Import;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.ItemDefinition;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.NamedElement;
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.*;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
@@ -55,83 +42,100 @@ public class DefinitionsImpl extends NamedElementImpl implements Definitions {
   protected static ChildElementCollection<ElementCollection> elementCollectionCollection;
   protected static ChildElementCollection<BusinessContextElement> businessContextElementCollection;
 
-  public DefinitionsImpl(ModelTypeInstanceContext instanceContext) {
+  public DefinitionsImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public String getExpressionLanguage() {
     return expressionLanguageAttribute.getValue(this);
   }
 
-  public void setExpressionLanguage(String expressionLanguage) {
+  @Override
+  public void setExpressionLanguage(final String expressionLanguage) {
     expressionLanguageAttribute.setValue(this, expressionLanguage);
   }
 
+  @Override
   public String getTypeLanguage() {
     return typeLanguageAttribute.getValue(this);
   }
 
-  public void setTypeLanguage(String typeLanguage) {
+  @Override
+  public void setTypeLanguage(final String typeLanguage) {
     typeLanguageAttribute.setValue(this, typeLanguage);
   }
 
+  @Override
   public String getNamespace() {
     return namespaceAttribute.getValue(this);
   }
 
-  public void setNamespace(String namespace) {
+  @Override
+  public void setNamespace(final String namespace) {
     namespaceAttribute.setValue(this, namespace);
   }
 
+  @Override
   public String getExporter() {
     return exporterAttribute.getValue(this);
   }
 
-  public void setExporter(String exporter) {
+  @Override
+  public void setExporter(final String exporter) {
     exporterAttribute.setValue(this, exporter);
   }
 
+  @Override
   public String getExporterVersion() {
     return exporterVersionAttribute.getValue(this);
   }
 
-  public void setExporterVersion(String exporterVersion) {
+  @Override
+  public void setExporterVersion(final String exporterVersion) {
     exporterVersionAttribute.setValue(this, exporterVersion);
   }
 
+  @Override
   public Collection<Import> getImports() {
     return importCollection.get(this);
   }
 
+  @Override
   public Collection<ItemDefinition> getItemDefinitions() {
     return itemDefinitionCollection.get(this);
   }
 
+  @Override
   public Collection<DrgElement> getDrgElements() {
     return drgElementCollection.get(this);
   }
 
+  @Override
   public Collection<Artifact> getArtifacts() {
     return artifactCollection.get(this);
   }
 
+  @Override
   public Collection<ElementCollection> getElementCollections() {
     return elementCollectionCollection.get(this);
   }
 
+  @Override
   public Collection<BusinessContextElement> getBusinessContextElements() {
     return businessContextElementCollection.get(this);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(Definitions.class, DMN_ELEMENT_DEFINITIONS)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(NamedElement.class)
             .instanceProvider(
                 new ModelElementTypeBuilder.ModelTypeInstanceProvider<Definitions>() {
-                  public Definitions newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public Definitions newInstance(final ModelTypeInstanceContext instanceContext) {
                     return new DefinitionsImpl(instanceContext);
                   }
                 });
@@ -154,7 +158,7 @@ public class DefinitionsImpl extends NamedElementImpl implements Definitions {
 
     exporterVersionAttribute = typeBuilder.stringAttribute(DMN_ATTRIBUTE_EXPORTER_VERSION).build();
 
-    SequenceBuilder sequenceBuilder = typeBuilder.sequence();
+    final SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
     importCollection = sequenceBuilder.elementCollection(Import.class).build();
 

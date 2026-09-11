@@ -17,10 +17,11 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn.instance.di;
 
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DI_NS;
-
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BpmnModelElementInstanceTest;
+
 import java.util.Collection;
+
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DI_NS;
 
 /**
  * @author Sebastian Menski

@@ -20,7 +20,6 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelInstance;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Condition;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ConditionalEventDefinition;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Event;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeConditionalFilter;
 
 public class AbstractConditionalEventDefinitionBuilder<
         B extends AbstractConditionalEventDefinitionBuilder<B>>
@@ -40,17 +39,9 @@ public class AbstractConditionalEventDefinitionBuilder<
    * @return the builder object
    */
   public B condition(final String conditionText) {
-    final String conditionExpression = asZeebeExpression(conditionText);
     final Condition condition = createInstance(Condition.class);
-    condition.setTextContent(conditionExpression);
+    condition.setTextContent(conditionText);
     element.setCondition(condition);
-    return myself;
-  }
-
-  public B zeebeVariableEvents(final String variableEvents) {
-    final ZeebeConditionalFilter conditionalFilter =
-        myself.getCreateSingleExtensionElement(ZeebeConditionalFilter.class);
-    conditionalFilter.setVariableEvents(variableEvents);
     return myself;
   }
 

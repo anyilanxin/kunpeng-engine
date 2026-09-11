@@ -16,9 +16,7 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_TYPE_REF;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_INFORMATION_ITEM;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.*;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.InformationItem;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.NamedElement;
@@ -32,27 +30,31 @@ public class InformationItemImpl extends NamedElementImpl implements Information
 
   protected static Attribute<String> typeRefAttribute;
 
-  public InformationItemImpl(ModelTypeInstanceContext instanceContext) {
+  public InformationItemImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public String getTypeRef() {
     return typeRefAttribute.getValue(this);
   }
 
-  public void setTypeRef(String typeRef) {
+  @Override
+  public void setTypeRef(final String typeRef) {
     typeRefAttribute.setValue(this, typeRef);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(InformationItem.class, DMN_ELEMENT_INFORMATION_ITEM)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(NamedElement.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<InformationItem>() {
-                  public InformationItem newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public InformationItem newInstance(
+                      final ModelTypeInstanceContext instanceContext) {
                     return new InformationItemImpl(instanceContext);
                   }
                 });

@@ -17,56 +17,57 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.anyilanxin.kunpeng.bpm.model.bpmn.Bpmn;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelInstance;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.Incoming;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.Outgoing;
+import org.junit.Test;
+
 import java.util.Arrays;
 import java.util.Collection;
-import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Sebastian Menski
  */
 public class FlowNodeTest extends BpmnModelElementInstanceTest {
 
-  @Override
-  public TypeAssumption getTypeAssumption() {
-    return new TypeAssumption(FlowElement.class, true);
-  }
+    @Override
+    public TypeAssumption getTypeAssumption() {
+        return new TypeAssumption(FlowElement.class, true);
+    }
 
-  @Override
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
-    return Arrays.asList(
-        new ChildElementAssumption(Incoming.class), new ChildElementAssumption(Outgoing.class));
-  }
+    @Override
+    public Collection<ChildElementAssumption> getChildElementAssumptions() {
+        return Arrays.asList(
+                new ChildElementAssumption(Incoming.class), new ChildElementAssumption(Outgoing.class));
+    }
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return null;
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return null;
+    }
 
-  @Test
-  public void testUpdateIncomingOutgoingChildElements() {
-    final BpmnModelInstance modelInstance =
-        Bpmn.createProcess().startEvent().userTask("test").endEvent().done();
+    @Test
+    public void testUpdateIncomingOutgoingChildElements() {
+        final BpmnModelInstance modelInstance =
+                Bpmn.createProcess().startEvent().userTask("test").endEvent().done();
 
-    // save current incoming and outgoing sequence flows
-    final UserTask userTask = modelInstance.getModelElementById("test");
-    final Collection<SequenceFlow> incoming = userTask.getIncoming();
-    final Collection<SequenceFlow> outgoing = userTask.getOutgoing();
+        // save current incoming and outgoing sequence flows
+        final UserTask userTask = modelInstance.getModelElementById("test");
+        final Collection<SequenceFlow> incoming = userTask.getIncoming();
+        final Collection<SequenceFlow> outgoing = userTask.getOutgoing();
 
-    // create a new service task
-    final ServiceTask serviceTask = modelInstance.newInstance(ServiceTask.class);
-    serviceTask.setId("new");
+        // create a new service task
+        final ServiceTask serviceTask = modelInstance.newInstance(ServiceTask.class);
+        serviceTask.setId("new");
 
-    // replace the user task with the new service task
-    userTask.replaceWithElement(serviceTask);
+        // replace the user task with the new service task
+        userTask.replaceWithElement(serviceTask);
 
-    // assert that the new service task has the same incoming and outgoing sequence flows
-    assertThat(serviceTask.getIncoming()).containsExactlyElementsOf(incoming);
-    assertThat(serviceTask.getOutgoing()).containsExactlyElementsOf(outgoing);
-  }
+        // assert that the new service task has the same incoming and outgoing sequence flows
+        assertThat(serviceTask.getIncoming()).containsExactlyElementsOf(incoming);
+        assertThat(serviceTask.getOutgoing()).containsExactlyElementsOf(outgoing);
+    }
 }

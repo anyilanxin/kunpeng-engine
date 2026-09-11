@@ -25,10 +25,12 @@ public class RepeatingInterval implements Timer {
 
   private final int repetitions;
   private final Interval interval;
+  private final String content;
 
-  public RepeatingInterval(final int repetitions, final Interval interval) {
+  public RepeatingInterval(final String content, final int repetitions, final Interval interval) {
     this.repetitions = repetitions;
     this.interval = interval;
+    this.content = content;
   }
 
   @Override
@@ -97,15 +99,21 @@ public class RepeatingInterval implements Timer {
     }
 
     if (intervalDesignatorOffset == 1) { // startsWith("R/")
-      return new RepeatingInterval(INFINITE, Interval.parse(text.substring(2)));
+      return new RepeatingInterval(text, INFINITE, Interval.parse(text.substring(2)));
     }
 
     try {
       return new RepeatingInterval(
+          text,
           Integer.parseInt(text.substring(1, intervalDesignatorOffset)),
           Interval.parse(text.substring(intervalDesignatorOffset + 1)));
     } catch (final NumberFormatException e) {
       throw new DateTimeParseException("Cannot parse repetitions count", text, 1, e);
     }
+  }
+
+  @Override
+  public String getContent() {
+    return content;
   }
 }

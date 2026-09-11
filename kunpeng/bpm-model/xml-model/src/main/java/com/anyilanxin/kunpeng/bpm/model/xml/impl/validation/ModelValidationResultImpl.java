@@ -31,7 +31,10 @@ public class ModelValidationResultImpl implements ValidationResult {
   protected String message;
 
   public ModelValidationResultImpl(
-      ModelElementInstance element, ValidationResultType type, int code, String message) {
+      final ModelElementInstance element,
+      final ValidationResultType type,
+      final int code,
+      final String message) {
     this.element = element;
     this.type = type;
     this.code = code;

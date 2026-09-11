@@ -24,8 +24,8 @@ import org.junit.Test;
 
 import java.util.Collection;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static com.anyilanxin.kunpeng.bpm.model.xml.testmodel.TestModelConstants.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Sebastian Menski

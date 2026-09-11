@@ -16,7 +16,7 @@ constrained by the upstream release cadence.
 
 ## Changes in This Repository
 
-1. The module was imported as-is: the upstream `com.anyilanxin.kunpeng.bpm.model.bpmn.*` packages, the Maven
+1. The module was imported as-is: the upstream `io.camunda.zeebe.model.bpmn.*` packages, the Maven
    `pom.xml` and the QA configs (spotbugs, revapi) are preserved unchanged at this stage.
 2. Integration into this repository's unified Gradle build, package renames and other adjustments
    will be done in follow-up commits.

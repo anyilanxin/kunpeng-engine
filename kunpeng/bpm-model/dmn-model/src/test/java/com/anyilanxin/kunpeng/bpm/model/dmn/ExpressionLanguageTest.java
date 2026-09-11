@@ -16,26 +16,15 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Decision;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DecisionTable;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Definitions;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Input;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.InputEntry;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.InputExpression;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.InputValues;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Output;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.OutputEntry;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.OutputValues;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Rule;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Text;
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.*;
 import com.anyilanxin.kunpeng.bpm.model.dmn.util.DmnModelResource;
 import org.junit.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 public class ExpressionLanguageTest extends DmnModelTest {
 
-  public static final String EXPRESSION_LANGUAGE_DMN = "org/camunda/bpm/model/dmn/ExpressionLanguageTest.dmn";
+  public static final String EXPRESSION_LANGUAGE_DMN = "com/anyilanxin/kunpeng/bpm/model/dmn/ExpressionLanguageTest.dmn";
   public static final String EXPRESSION_LANGUAGE = "juel";
 
 

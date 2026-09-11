@@ -18,7 +18,7 @@ package com.anyilanxin.kunpeng.bpm.model.dmn.instance;
 
 import java.util.Arrays;
 import java.util.Collection;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.CAMUNDA_NS;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.KUNPENG_NS;
 
 public class DecisionTest extends DmnModelElementInstanceTest {
 
@@ -46,8 +46,8 @@ public class DecisionTest extends DmnModelElementInstanceTest {
 
   public Collection<AttributeAssumption> getAttributesAssumptions() {
     return Arrays.asList(
-      new AttributeAssumption(CAMUNDA_NS, "versionTag"),
-      new AttributeAssumption(CAMUNDA_NS, "historyTimeToLive")
+      new AttributeAssumption(KUNPENG_NS, "versionTag"),
+      new AttributeAssumption(KUNPENG_NS, "historyTimeToLive")
     );
   }
 

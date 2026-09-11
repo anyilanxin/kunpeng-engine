@@ -17,34 +17,32 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn;
 
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_EXECUTION_PLATFORM;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_EXPORTER;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.MODELER_NS;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Definitions;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.util.VersionUtil;
 import org.junit.Test;
+
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Sebastian Menski
  */
 public class BpmnTest {
 
-  @Test
-  public void testBpmn() {
-    assertThat(Bpmn.INSTANCE).isNotNull();
-  }
+    @Test
+    public void testBpmn() {
+        assertThat(Bpmn.INSTANCE).isNotNull();
+    }
 
-  @Test
-  public void testBpmnWithDefinitions() {
-    final BpmnModelInstance model = Bpmn.createProcess().startEvent().done();
-    final Definitions definitions = model.getDefinitions();
-    assertThat(definitions.getExporter()).isEqualTo(BPMN_EXPORTER);
-    assertThat(definitions.getExporterVersion()).isEqualTo(VersionUtil.getVersion());
-    assertThat(definitions.getAttributeValueNs(MODELER_NS, "executionPlatform"))
-        .isEqualTo(BPMN_EXECUTION_PLATFORM);
-    assertThat(definitions.getAttributeValueNs(MODELER_NS, "executionPlatformVersion"))
-        .isEqualTo(VersionUtil.getVersion());
-  }
+    @Test
+    public void testBpmnWithDefinitions() {
+        final BpmnModelInstance model = Bpmn.createProcess().startEvent().done();
+        final Definitions definitions = model.getDefinitions();
+        assertThat(definitions.getExporter()).isEqualTo(BPMN_EXPORTER);
+        assertThat(definitions.getExporterVersion()).isEqualTo(VersionUtil.getVersion());
+        assertThat(definitions.getAttributeValueNs(MODELER_NS, "executionPlatform"))
+                .isEqualTo(BPMN_EXECUTION_PLATFORM);
+        assertThat(definitions.getAttributeValueNs(MODELER_NS, "executionPlatformVersion"))
+                .isEqualTo(VersionUtil.getVersion());
+    }
 }

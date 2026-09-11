@@ -24,16 +24,16 @@ public class UriElementReferenceCollectionImpl<
     extends ElementReferenceCollectionImpl<Target, Source> {
 
   public UriElementReferenceCollectionImpl(
-      ChildElementCollection<Source> referenceSourceCollection) {
+      final ChildElementCollection<Source> referenceSourceCollection) {
     super(referenceSourceCollection);
   }
 
   @Override
-  public String getReferenceIdentifier(ModelElementInstance referenceSourceElement) {
+  public String getReferenceIdentifier(final ModelElementInstance referenceSourceElement) {
     // TODO: implement something more robust (CAM-4028)
-    String identifier = referenceSourceElement.getAttributeValue("href");
+    final String identifier = referenceSourceElement.getAttributeValue("href");
     if (identifier != null) {
-      String[] parts = identifier.split("#");
+      final String[] parts = identifier.split("#");
       if (parts.length > 1) {
         return parts[parts.length - 1];
       } else {
@@ -46,7 +46,7 @@ public class UriElementReferenceCollectionImpl<
 
   @Override
   protected void setReferenceIdentifier(
-      ModelElementInstance referenceSourceElement, String referenceIdentifier) {
+      final ModelElementInstance referenceSourceElement, final String referenceIdentifier) {
     // TODO: implement something more robust (CAM-4028)
     referenceSourceElement.setAttributeValue("href", "#" + referenceIdentifier);
   }

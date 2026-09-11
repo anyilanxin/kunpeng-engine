@@ -24,23 +24,23 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.AttributeReference;
  * @author Sebastian Menski
  */
 public class AttributeReferenceAssert
-    extends AbstractReferenceAssert<AttributeReferenceAssert, AttributeReference<?>> {
+        extends AbstractReferenceAssert<AttributeReferenceAssert, AttributeReference<?>> {
 
-  protected AttributeReferenceAssert(final AttributeReference<?> actual) {
-    super(actual, AttributeReferenceAssert.class);
-  }
-
-  public AttributeReferenceAssert hasSourceAttribute(final Attribute<?> sourceAttribute) {
-    isNotNull();
-
-    final Attribute<String> actualSourceAttribute = actual.getReferenceSourceAttribute();
-
-    if (!sourceAttribute.equals(actualSourceAttribute)) {
-      failWithMessage(
-          "Expected reference <%s> to have source attribute <%s> but was <%s>",
-          actual, sourceAttribute, actualSourceAttribute);
+    protected AttributeReferenceAssert(final AttributeReference<?> actual) {
+        super(actual, AttributeReferenceAssert.class);
     }
 
-    return this;
-  }
+    public AttributeReferenceAssert hasSourceAttribute(final Attribute<?> sourceAttribute) {
+        isNotNull();
+
+        final Attribute<String> actualSourceAttribute = actual.getReferenceSourceAttribute();
+
+        if (!sourceAttribute.equals(actualSourceAttribute)) {
+            failWithMessage(
+                    "Expected reference <%s> to have source attribute <%s> but was <%s>",
+                    actual, sourceAttribute, actualSourceAttribute);
+        }
+
+        return this;
+    }
 }

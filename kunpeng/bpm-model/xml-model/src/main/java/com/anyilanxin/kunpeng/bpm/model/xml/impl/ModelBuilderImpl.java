@@ -40,31 +40,35 @@ public class ModelBuilderImpl extends ModelBuilder {
       new ArrayList<ModelElementTypeBuilderImpl>();
   private final ModelImpl model;
 
-  public ModelBuilderImpl(String modelName) {
+  public ModelBuilderImpl(final String modelName) {
     model = new ModelImpl(modelName);
   }
 
-  public ModelBuilder alternativeNamespace(String alternativeNs, String actualNs) {
+  @Override
+  public ModelBuilder alternativeNamespace(final String alternativeNs, final String actualNs) {
     model.declareAlternativeNamespace(alternativeNs, actualNs);
     return this;
   }
 
+  @Override
   public ModelElementTypeBuilder defineType(
-      Class<? extends ModelElementInstance> modelInstanceType, String typeName) {
-    ModelElementTypeBuilderImpl typeBuilder =
+      final Class<? extends ModelElementInstance> modelInstanceType, final String typeName) {
+    final ModelElementTypeBuilderImpl typeBuilder =
         new ModelElementTypeBuilderImpl(modelInstanceType, typeName, model);
     typeBuilders.add(typeBuilder);
     return typeBuilder;
   }
 
-  public ModelElementType defineGenericType(String typeName, String typeNamespaceUri) {
-    ModelElementTypeBuilder typeBuilder =
+  @Override
+  public ModelElementType defineGenericType(final String typeName, final String typeNamespaceUri) {
+    final ModelElementTypeBuilder typeBuilder =
         defineType(ModelElementInstance.class, typeName)
             .namespaceUri(typeNamespaceUri)
             .instanceProvider(
                 new ModelTypeInstanceProvider<ModelElementInstance>() {
+                  @Override
                   public ModelElementInstance newInstance(
-                      ModelTypeInstanceContext instanceContext) {
+                      final ModelTypeInstanceContext instanceContext) {
                     return new ModelElementInstanceImpl(instanceContext);
                   }
                 });
@@ -72,11 +76,12 @@ public class ModelBuilderImpl extends ModelBuilder {
     return typeBuilder.build();
   }
 
+  @Override
   public Model build() {
-    for (ModelElementTypeBuilderImpl typeBuilder : typeBuilders) {
+    for (final ModelElementTypeBuilderImpl typeBuilder : typeBuilders) {
       typeBuilder.buildTypeHierarchy(model);
     }
-    for (ModelElementTypeBuilderImpl typeBuilder : typeBuilders) {
+    for (final ModelElementTypeBuilderImpl typeBuilder : typeBuilders) {
       typeBuilder.performModelBuild(model);
     }
     return model;

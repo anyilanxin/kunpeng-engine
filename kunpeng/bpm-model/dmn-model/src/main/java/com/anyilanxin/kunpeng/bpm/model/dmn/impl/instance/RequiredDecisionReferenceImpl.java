@@ -29,20 +29,21 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 public class RequiredDecisionReferenceImpl extends DmnElementReferenceImpl
     implements com.anyilanxin.kunpeng.bpm.model.dmn.instance.RequiredDecisionReference {
 
-  public RequiredDecisionReferenceImpl(ModelTypeInstanceContext instanceContext) {
+  public RequiredDecisionReferenceImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(RequiredDecisionReference.class, DMN_ELEMENT_REQUIRED_DECISION)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(DmnElementReference.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<RequiredDecisionReference>() {
+                  @Override
                   public RequiredDecisionReference newInstance(
-                      ModelTypeInstanceContext instanceContext) {
+                      final ModelTypeInstanceContext instanceContext) {
                     return new RequiredDecisionReferenceImpl(instanceContext);
                   }
                 });

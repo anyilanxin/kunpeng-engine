@@ -18,6 +18,7 @@
 package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.EventDefinitionRef;
+
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -26,23 +27,23 @@ import java.util.Collection;
  */
 public class ThrowEventTest extends BpmnModelElementInstanceTest {
 
-  @Override
-  public TypeAssumption getTypeAssumption() {
-    return new TypeAssumption(Event.class, true);
-  }
+    @Override
+    public TypeAssumption getTypeAssumption() {
+        return new TypeAssumption(Event.class, true);
+    }
 
-  @Override
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
-    return Arrays.asList(
-        new ChildElementAssumption(DataInput.class),
-        new ChildElementAssumption(DataInputAssociation.class),
-        new ChildElementAssumption(InputSet.class, 0, 1),
-        new ChildElementAssumption(EventDefinition.class),
-        new ChildElementAssumption(EventDefinitionRef.class));
-  }
+    @Override
+    public Collection<ChildElementAssumption> getChildElementAssumptions() {
+        return Arrays.asList(
+                new ChildElementAssumption(DataInput.class),
+                new ChildElementAssumption(DataInputAssociation.class),
+                new ChildElementAssumption(InputSet.class, 0, 1),
+                new ChildElementAssumption(EventDefinition.class),
+                new ChildElementAssumption(EventDefinitionRef.class));
+    }
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return null;
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return null;
+    }
 }

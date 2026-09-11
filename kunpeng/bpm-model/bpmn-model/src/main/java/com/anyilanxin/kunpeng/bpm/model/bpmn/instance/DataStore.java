@@ -22,7 +22,11 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
  *
  * @author Falko Menge
  */
-public interface DataStore extends RootElement, ItemAwareElement, NamedBpmnElement {
+public interface DataStore extends RootElement, ItemAwareElement {
+
+  String getName();
+
+  void setName(String name);
 
   Integer getCapacity();
 

@@ -16,11 +16,11 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Definitions;
 import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Filip Hrisafov
@@ -48,7 +48,7 @@ public class DmnModelInstanceTest {
     // given
     final DmnModelInstance modelInstance = Dmn.createEmptyModel();
     final Definitions definitions = modelInstance.newInstance(Definitions.class);
-    definitions.setNamespace("http://camunda.org/schema/1.0/dmn");
+    definitions.setNamespace("https://anyilanxin.com/schema/1.0/dmn");
     definitions.setName("definitions");
     definitions.setId("definitions");
     modelInstance.setDefinitions(definitions);

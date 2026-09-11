@@ -55,7 +55,7 @@ public abstract class AttributeImpl<T> implements Attribute<T> {
 
   private final ModelElementType owningElementType;
 
-  AttributeImpl(ModelElementType owningElementType) {
+  AttributeImpl(final ModelElementType owningElementType) {
     this.owningElementType = owningElementType;
   }
 
@@ -75,6 +75,7 @@ public abstract class AttributeImpl<T> implements Attribute<T> {
    */
   protected abstract String convertModelValueToXmlValue(T modelValue);
 
+  @Override
   public ModelElementType getOwningElementType() {
     return owningElementType;
   }
@@ -84,18 +85,19 @@ public abstract class AttributeImpl<T> implements Attribute<T> {
    *
    * @return the value of the attribute.
    */
-  public T getValue(ModelElementInstance modelElement) {
+  @Override
+  public T getValue(final ModelElementInstance modelElement) {
     String value;
     if (namespaceUri == null) {
       value = modelElement.getAttributeValue(attributeName);
     } else {
       value = modelElement.getAttributeValueNs(namespaceUri, attributeName);
       if (value == null) {
-        Set<String> alternativeNamespaces =
+        final Set<String> alternativeNamespaces =
             owningElementType.getModel().getAlternativeNamespaces(namespaceUri);
 
         if (alternativeNamespaces != null) {
-          Iterator<String> namespaceIt = alternativeNamespaces.iterator();
+          final Iterator<String> namespaceIt = alternativeNamespaces.iterator();
 
           while (value == null && namespaceIt.hasNext()) {
             value = modelElement.getAttributeValueNs(namespaceIt.next(), attributeName);
@@ -117,13 +119,15 @@ public abstract class AttributeImpl<T> implements Attribute<T> {
    *
    * <p>the value of the attribute.
    */
-  public void setValue(ModelElementInstance modelElement, T value) {
+  @Override
+  public void setValue(final ModelElementInstance modelElement, final T value) {
     setValue(modelElement, value, true);
   }
 
   @Override
-  public void setValue(ModelElementInstance modelElement, T value, boolean withReferenceUpdate) {
-    String xmlValue = convertModelValueToXmlValue(value);
+  public void setValue(
+      final ModelElementInstance modelElement, final T value, final boolean withReferenceUpdate) {
+    final String xmlValue = convertModelValueToXmlValue(value);
     if (namespaceUri == null) {
       modelElement.setAttributeValue(attributeName, xmlValue, isIdAttribute, withReferenceUpdate);
     } else {
@@ -133,58 +137,65 @@ public abstract class AttributeImpl<T> implements Attribute<T> {
   }
 
   public void updateIncomingReferences(
-      ModelElementInstance modelElement, String newIdentifier, String oldIdentifier) {
+      final ModelElementInstance modelElement,
+      final String newIdentifier,
+      final String oldIdentifier) {
     if (!incomingReferences.isEmpty()) {
-      for (Reference<?> incomingReference : incomingReferences) {
+      for (final Reference<?> incomingReference : incomingReferences) {
         ((ReferenceImpl<?>) incomingReference)
             .referencedElementUpdated(modelElement, oldIdentifier, newIdentifier);
       }
     }
   }
 
+  @Override
   public T getDefaultValue() {
     return defaultValue;
   }
 
-  public void setDefaultValue(T defaultValue) {
+  public void setDefaultValue(final T defaultValue) {
     this.defaultValue = defaultValue;
   }
 
+  @Override
   public boolean isRequired() {
     return isRequired;
   }
 
   /** */
-  public void setRequired(boolean required) {
-    this.isRequired = required;
+  public void setRequired(final boolean required) {
+    isRequired = required;
   }
 
   /**
    * @param namespaceUri the namespaceUri to set
    */
-  public void setNamespaceUri(String namespaceUri) {
+  public void setNamespaceUri(final String namespaceUri) {
     this.namespaceUri = namespaceUri;
   }
 
   /**
    * @return the namespaceUri
    */
+  @Override
   public String getNamespaceUri() {
     return namespaceUri;
   }
 
+  @Override
   public boolean isIdAttribute() {
     return isIdAttribute;
   }
 
   /** Indicate whether this attribute is an Id attribute */
   public void setId() {
-    this.isIdAttribute = true;
+    isIdAttribute = true;
   }
 
   /**
    * @return the attributeName
    */
+  @Override
   public String getAttributeName() {
     return attributeName;
   }
@@ -192,11 +203,12 @@ public abstract class AttributeImpl<T> implements Attribute<T> {
   /**
    * @param attributeName the attributeName to set
    */
-  public void setAttributeName(String attributeName) {
+  public void setAttributeName(final String attributeName) {
     this.attributeName = attributeName;
   }
 
-  public void removeAttribute(ModelElementInstance modelElement) {
+  @Override
+  public void removeAttribute(final ModelElementInstance modelElement) {
     if (namespaceUri == null) {
       modelElement.removeAttribute(attributeName);
     } else {
@@ -204,9 +216,10 @@ public abstract class AttributeImpl<T> implements Attribute<T> {
     }
   }
 
-  public void unlinkReference(ModelElementInstance modelElement, Object referenceIdentifier) {
+  public void unlinkReference(
+      final ModelElementInstance modelElement, final Object referenceIdentifier) {
     if (!incomingReferences.isEmpty()) {
-      for (Reference<?> incomingReference : incomingReferences) {
+      for (final Reference<?> incomingReference : incomingReferences) {
         ((ReferenceImpl<?>) incomingReference)
             .referencedElementRemoved(modelElement, referenceIdentifier);
       }
@@ -216,6 +229,7 @@ public abstract class AttributeImpl<T> implements Attribute<T> {
   /**
    * @return the incomingReferences
    */
+  @Override
   public List<Reference<?>> getIncomingReferences() {
     return incomingReferences;
   }
@@ -223,15 +237,16 @@ public abstract class AttributeImpl<T> implements Attribute<T> {
   /**
    * @return the outgoingReferences
    */
+  @Override
   public List<Reference<?>> getOutgoingReferences() {
     return outgoingReferences;
   }
 
-  public void registerOutgoingReference(Reference<?> ref) {
+  public void registerOutgoingReference(final Reference<?> ref) {
     outgoingReferences.add(ref);
   }
 
-  public void registerIncoming(Reference<?> ref) {
+  public void registerIncoming(final Reference<?> ref) {
     incomingReferences.add(ref);
   }
 }

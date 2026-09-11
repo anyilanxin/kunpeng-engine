@@ -30,16 +30,18 @@ public class AttributeReferenceImpl<T extends ModelElementInstance> extends Refe
 
   protected final AttributeImpl<String> referenceSourceAttribute;
 
-  public AttributeReferenceImpl(AttributeImpl<String> referenceSourceAttribute) {
+  public AttributeReferenceImpl(final AttributeImpl<String> referenceSourceAttribute) {
     this.referenceSourceAttribute = referenceSourceAttribute;
   }
 
-  public String getReferenceIdentifier(ModelElementInstance referenceSourceElement) {
+  @Override
+  public String getReferenceIdentifier(final ModelElementInstance referenceSourceElement) {
     return referenceSourceAttribute.getValue(referenceSourceElement);
   }
 
+  @Override
   protected void setReferenceIdentifier(
-      ModelElementInstance referenceSourceElement, String referenceIdentifier) {
+      final ModelElementInstance referenceSourceElement, final String referenceIdentifier) {
     referenceSourceAttribute.setValue(referenceSourceElement, referenceIdentifier);
   }
 
@@ -48,24 +50,31 @@ public class AttributeReferenceImpl<T extends ModelElementInstance> extends Refe
    *
    * @return the reference source attribute
    */
+  @Override
   public Attribute<String> getReferenceSourceAttribute() {
     return referenceSourceAttribute;
   }
 
+  @Override
   public ModelElementType getReferenceSourceElementType() {
     return referenceSourceAttribute.getOwningElementType();
   }
 
+  @Override
   protected void updateReference(
-      ModelElementInstance referenceSourceElement, String oldIdentifier, String newIdentifier) {
-    String referencingAttributeValue = getReferenceIdentifier(referenceSourceElement);
+      final ModelElementInstance referenceSourceElement,
+      final String oldIdentifier,
+      final String newIdentifier) {
+    final String referencingAttributeValue = getReferenceIdentifier(referenceSourceElement);
     if (oldIdentifier != null && oldIdentifier.equals(referencingAttributeValue)) {
       setReferenceIdentifier(referenceSourceElement, newIdentifier);
     }
   }
 
+  @Override
   protected void removeReference(
-      ModelElementInstance referenceSourceElement, ModelElementInstance referenceTargetElement) {
+      final ModelElementInstance referenceSourceElement,
+      final ModelElementInstance referenceTargetElement) {
     referenceSourceAttribute.removeAttribute(referenceSourceElement);
   }
 }

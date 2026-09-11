@@ -25,21 +25,21 @@ import java.util.Collection;
  */
 public class SendTaskTest extends BpmnModelElementInstanceTest {
 
-  @Override
-  public TypeAssumption getTypeAssumption() {
-    return new TypeAssumption(Task.class, false);
-  }
+    @Override
+    public TypeAssumption getTypeAssumption() {
+        return new TypeAssumption(Task.class, false);
+    }
 
-  @Override
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
-    return null;
-  }
+    @Override
+    public Collection<ChildElementAssumption> getChildElementAssumptions() {
+        return null;
+    }
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return Arrays.asList(
-        new AttributeAssumption("implementation", false, false, "##WebService"),
-        new AttributeAssumption("messageRef"),
-        new AttributeAssumption("operationRef"));
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return Arrays.asList(
+                new AttributeAssumption("implementation", false, false, "##WebService"),
+                new AttributeAssumption("messageRef"),
+                new AttributeAssumption("operationRef"));
+    }
 }

@@ -16,8 +16,6 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.util;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.anyilanxin.kunpeng.bpm.model.dmn.Dmn;
 import com.anyilanxin.kunpeng.bpm.model.xml.Model;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelInstance;
@@ -27,6 +25,8 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementType;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 public class GetDmnModelElementTypeRule extends TestWatcher implements GetModelElementTypeRule {
 
   private ModelInstance modelInstance;
@@ -35,14 +35,14 @@ public class GetDmnModelElementTypeRule extends TestWatcher implements GetModelE
 
   @Override
   @SuppressWarnings("unchecked")
-  protected void starting(Description description) {
+  protected void starting(final Description description) {
     String className = description.getClassName();
     assertThat(className).endsWith("Test");
     className = className.substring(0, className.length() - "Test".length());
-    Class<? extends ModelElementInstance> instanceClass;
+    final Class<? extends ModelElementInstance> instanceClass;
     try {
       instanceClass = (Class<? extends ModelElementInstance>) Class.forName(className);
-    } catch (ClassNotFoundException e) {
+    } catch (final ClassNotFoundException e) {
       throw new RuntimeException(e);
     }
     modelInstance = Dmn.createEmptyModel();
@@ -50,14 +50,17 @@ public class GetDmnModelElementTypeRule extends TestWatcher implements GetModelE
     modelElementType = model.getType(instanceClass);
   }
 
+  @Override
   public ModelInstance getModelInstance() {
     return modelInstance;
   }
 
+  @Override
   public Model getModel() {
     return model;
   }
 
+  @Override
   public ModelElementType getModelElementType() {
     return modelElementType;
   }

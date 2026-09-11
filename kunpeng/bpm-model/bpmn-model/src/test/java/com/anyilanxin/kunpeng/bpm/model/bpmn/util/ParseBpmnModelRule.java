@@ -19,40 +19,41 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.util;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.Bpmn;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelInstance;
-import java.io.InputStream;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.util.IoUtil;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
+
+import java.io.InputStream;
 
 /**
  * @author Daniel Meyer
  */
 public class ParseBpmnModelRule extends TestWatcher {
 
-  protected BpmnModelInstance bpmnModelInstance;
+    protected BpmnModelInstance bpmnModelInstance;
 
-  @Override
-  protected void starting(final Description description) {
+    @Override
+    protected void starting(final Description description) {
 
-    if (description.getAnnotation(BpmnModelResource.class) != null) {
+        if (description.getAnnotation(BpmnModelResource.class) != null) {
 
-      final Class<?> testClass = description.getTestClass();
-      final String methodName = description.getMethodName();
+            final Class<?> testClass = description.getTestClass();
+            final String methodName = description.getMethodName();
 
-      final String resourceFolderName = testClass.getName().replaceAll("\\.", "/");
-      final String bpmnResourceName = resourceFolderName + "." + methodName + ".bpmn";
+            final String resourceFolderName = testClass.getName().replaceAll("\\.", "/");
+            final String bpmnResourceName = resourceFolderName + "." + methodName + ".bpmn";
 
-      final InputStream resourceAsStream =
-          getClass().getClassLoader().getResourceAsStream(bpmnResourceName);
-      try {
-        bpmnModelInstance = Bpmn.readModelFromStream(resourceAsStream);
-      } finally {
-        IoUtil.closeSilently(resourceAsStream);
-      }
+            final InputStream resourceAsStream =
+                    getClass().getClassLoader().getResourceAsStream(bpmnResourceName);
+            try {
+                bpmnModelInstance = Bpmn.readModelFromStream(resourceAsStream);
+            } finally {
+                IoUtil.closeSilently(resourceAsStream);
+            }
+        }
     }
-  }
 
-  public BpmnModelInstance getBpmnModel() {
-    return bpmnModelInstance;
-  }
+    public BpmnModelInstance getBpmnModel() {
+        return bpmnModelInstance;
+    }
 }

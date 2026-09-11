@@ -28,19 +28,20 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 
 public class ItemComponentImpl extends ItemDefinitionImpl implements ItemComponent {
 
-  public ItemComponentImpl(ModelTypeInstanceContext instanceContext) {
+  public ItemComponentImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(ItemComponent.class, DMN_ELEMENT_ITEM_COMPONENT)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(ItemDefinition.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<ItemComponent>() {
-                  public ItemComponent newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public ItemComponent newInstance(final ModelTypeInstanceContext instanceContext) {
                     return new ItemComponentImpl(instanceContext);
                   }
                 });

@@ -23,17 +23,18 @@ import com.anyilanxin.kunpeng.bpm.model.xml.impl.type.ModelElementTypeImpl;
  */
 public class EnumAttributeBuilder<T extends Enum<T>> extends AttributeBuilderImpl<T> {
 
-  public EnumAttributeBuilder(String attributeName, ModelElementTypeImpl modelType, Class<T> type) {
+  public EnumAttributeBuilder(
+      final String attributeName, final ModelElementTypeImpl modelType, final Class<T> type) {
     super(attributeName, modelType, new EnumAttribute<T>(modelType, type));
   }
 
   @Override
-  public EnumAttributeBuilder<T> namespace(String namespaceUri) {
+  public EnumAttributeBuilder<T> namespace(final String namespaceUri) {
     return (EnumAttributeBuilder<T>) super.namespace(namespaceUri);
   }
 
   @Override
-  public EnumAttributeBuilder<T> defaultValue(T defaultValue) {
+  public EnumAttributeBuilder<T> defaultValue(final T defaultValue) {
     return (EnumAttributeBuilder<T>) super.defaultValue(defaultValue);
   }
 

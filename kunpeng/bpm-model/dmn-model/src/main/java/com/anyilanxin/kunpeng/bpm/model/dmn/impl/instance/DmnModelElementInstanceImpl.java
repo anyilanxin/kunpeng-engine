@@ -23,7 +23,7 @@ import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceConte
 public abstract class DmnModelElementInstanceImpl extends ModelElementInstanceImpl
     implements DmnModelElementInstance {
 
-  public DmnModelElementInstanceImpl(ModelTypeInstanceContext instanceContext) {
+  public DmnModelElementInstanceImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 }

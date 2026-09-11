@@ -23,17 +23,17 @@ import com.anyilanxin.kunpeng.bpm.model.xml.impl.type.ModelElementTypeImpl;
  */
 public class IntegerAttributeBuilder extends AttributeBuilderImpl<Integer> {
 
-  public IntegerAttributeBuilder(String attributeName, ModelElementTypeImpl modelType) {
+  public IntegerAttributeBuilder(final String attributeName, final ModelElementTypeImpl modelType) {
     super(attributeName, modelType, new IntegerAttribute(modelType));
   }
 
   @Override
-  public IntegerAttributeBuilder namespace(String namespaceUri) {
+  public IntegerAttributeBuilder namespace(final String namespaceUri) {
     return (IntegerAttributeBuilder) super.namespace(namespaceUri);
   }
 
   @Override
-  public IntegerAttributeBuilder defaultValue(Integer defaultValue) {
+  public IntegerAttributeBuilder defaultValue(final Integer defaultValue) {
     return (IntegerAttributeBuilder) super.defaultValue(defaultValue);
   }
 

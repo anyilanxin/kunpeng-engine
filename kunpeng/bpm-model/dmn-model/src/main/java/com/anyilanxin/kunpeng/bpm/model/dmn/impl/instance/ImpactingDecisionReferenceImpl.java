@@ -29,20 +29,21 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 public class ImpactingDecisionReferenceImpl extends DmnElementReferenceImpl
     implements ImpactingDecisionReference {
 
-  public ImpactingDecisionReferenceImpl(ModelTypeInstanceContext instanceContext) {
+  public ImpactingDecisionReferenceImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(ImpactingDecisionReference.class, DMN_ELEMENT_IMPACTING_DECISION)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(DmnElementReference.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<ImpactingDecisionReference>() {
+                  @Override
                   public ImpactingDecisionReference newInstance(
-                      ModelTypeInstanceContext instanceContext) {
+                      final ModelTypeInstanceContext instanceContext) {
                     return new ImpactingDecisionReferenceImpl(instanceContext);
                   }
                 });

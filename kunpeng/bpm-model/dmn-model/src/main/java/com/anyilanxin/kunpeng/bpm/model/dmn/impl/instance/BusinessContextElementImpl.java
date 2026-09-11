@@ -16,9 +16,7 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_URI;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_BUSINESS_CONTEXT_ELEMENT;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.*;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.BusinessContextElement;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.NamedElement;
@@ -32,20 +30,22 @@ public abstract class BusinessContextElementImpl extends NamedElementImpl
 
   protected static Attribute<String> uriAttribute;
 
-  public BusinessContextElementImpl(ModelTypeInstanceContext instanceContext) {
+  public BusinessContextElementImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public String getUri() {
     return uriAttribute.getValue(this);
   }
 
-  public void setUri(String uri) {
+  @Override
+  public void setUri(final String uri) {
     uriAttribute.setValue(this, uri);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(BusinessContextElement.class, DMN_ELEMENT_BUSINESS_CONTEXT_ELEMENT)
             .namespaceUri(LATEST_DMN_NS)

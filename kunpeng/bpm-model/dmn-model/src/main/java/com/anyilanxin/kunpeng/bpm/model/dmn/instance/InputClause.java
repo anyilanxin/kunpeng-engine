@@ -26,9 +26,9 @@ public interface InputClause extends DmnElement {
 
   void setInputValues(InputValues inputValues);
 
-  // camunda extensions
+  // kunpeng extensions
 
-  String getCamundaInputVariable();
+  String getKunpengInputVariable();
 
-  void setCamundaInputVariable(String inputVariable);
+  void setKunpengInputVariable(String inputVariable);
 }

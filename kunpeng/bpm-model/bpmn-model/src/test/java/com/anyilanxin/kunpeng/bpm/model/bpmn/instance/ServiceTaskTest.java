@@ -17,7 +17,6 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
 
-import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -26,21 +25,20 @@ import java.util.Collection;
  */
 public class ServiceTaskTest extends BpmnModelElementInstanceTest {
 
-  @Override
-  public TypeAssumption getTypeAssumption() {
-    return new TypeAssumption(Task.class, false);
-  }
+    @Override
+    public TypeAssumption getTypeAssumption() {
+        return new TypeAssumption(Task.class, false);
+    }
 
-  @Override
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
-    return null;
-  }
+    @Override
+    public Collection<ChildElementAssumption> getChildElementAssumptions() {
+        return null;
+    }
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return Arrays.asList(
-        new AttributeAssumption("implementation", false, false, "##WebService"),
-        new AttributeAssumption("operationRef"),
-        new AttributeAssumption(BpmnModelConstants.ZEEBE_NS, "modelerTemplate", false, false));
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return Arrays.asList(
+                new AttributeAssumption("implementation", false, false, "##WebService"),
+                new AttributeAssumption("operationRef"));
+    }
 }

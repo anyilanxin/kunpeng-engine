@@ -26,12 +26,13 @@ import org.junit.Rule;
  */
 public class BpmnModelTest {
 
-  @Rule public final ParseBpmnModelRule parseBpmnModelRule = new ParseBpmnModelRule();
+    @Rule
+    public final ParseBpmnModelRule parseBpmnModelRule = new ParseBpmnModelRule();
 
-  protected BpmnModelInstance bpmnModelInstance;
+    protected BpmnModelInstance bpmnModelInstance;
 
-  @Before
-  public void setup() {
-    bpmnModelInstance = parseBpmnModelRule.getBpmnModel();
-  }
+    @Before
+    public void setup() {
+        bpmnModelInstance = parseBpmnModelRule.getBpmnModel();
+    }
 }

@@ -28,19 +28,21 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 
 public class EncapsulatedLogicImpl extends FunctionDefinitionImpl implements EncapsulatedLogic {
 
-  public EncapsulatedLogicImpl(ModelTypeInstanceContext instanceContext) {
+  public EncapsulatedLogicImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(EncapsulatedLogic.class, DMN_ELEMENT_ENCAPSULATED_LOGIC)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(FunctionDefinition.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<EncapsulatedLogic>() {
-                  public EncapsulatedLogic newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public EncapsulatedLogic newInstance(
+                      final ModelTypeInstanceContext instanceContext) {
                     return new EncapsulatedLogicImpl(instanceContext);
                   }
                 });

@@ -27,15 +27,17 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementType;
  */
 public class BooleanAttribute extends AttributeImpl<Boolean> {
 
-  public BooleanAttribute(ModelElementType owningElementType) {
+  public BooleanAttribute(final ModelElementType owningElementType) {
     super(owningElementType);
   }
 
-  protected Boolean convertXmlValueToModelValue(String rawValue) {
+  @Override
+  protected Boolean convertXmlValueToModelValue(final String rawValue) {
     return ModelUtil.valueAsBoolean(rawValue);
   }
 
-  protected String convertModelValueToXmlValue(Boolean modelValue) {
+  @Override
+  protected String convertModelValueToXmlValue(final Boolean modelValue) {
     return ModelUtil.valueAsString(modelValue);
   }
 }

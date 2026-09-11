@@ -27,12 +27,12 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
 
 public abstract class ArtifactImpl extends DmnElementImpl implements Artifact {
 
-  public ArtifactImpl(ModelTypeInstanceContext instanceContext) {
+  public ArtifactImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(Artifact.class, DMN_ELEMENT_ARTIFACT)
             .namespaceUri(LATEST_DMN_NS)

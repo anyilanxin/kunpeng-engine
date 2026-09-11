@@ -16,11 +16,6 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.util.Arrays;
-import java.util.Collection;
-
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Decision;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Input;
 import org.junit.After;
@@ -29,6 +24,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+
+import java.util.Arrays;
+import java.util.Collection;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(Parameterized.class)
 public class CamundaExtensionsTest {

@@ -40,7 +40,7 @@ public abstract class AbstractEndEventBuilder<B extends AbstractEndEventBuilder<
    * @return the builder object
    */
   public B errorExpression(final String errorCodeExpression) {
-    return error(asZeebeExpression(errorCodeExpression));
+    return error(asKunpengExpression(errorCodeExpression));
   }
 
   /**

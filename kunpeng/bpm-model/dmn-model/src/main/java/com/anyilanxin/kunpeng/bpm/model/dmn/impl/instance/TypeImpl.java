@@ -27,18 +27,19 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 
 public class TypeImpl extends DmnModelElementInstanceImpl implements Type {
 
-  public TypeImpl(ModelTypeInstanceContext instanceContext) {
+  public TypeImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(Type.class, DMN_ELEMENT_TYPE)
             .namespaceUri(LATEST_DMN_NS)
             .instanceProvider(
                 new ModelTypeInstanceProvider<Type>() {
-                  public Type newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public Type newInstance(final ModelTypeInstanceContext instanceContext) {
                     return new TypeImpl(instanceContext);
                   }
                 });

@@ -19,39 +19,17 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.builder;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelException;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelInstance;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Activity;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Association;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BaseElement;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BpmnModelElementInstance;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.CompensateEventDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Definitions;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.*;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Error;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ErrorEventDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Escalation;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.EscalationEventDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Event;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ExclusiveGateway;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ExtensionElements;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.FlowElement;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.FlowNode;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Gateway;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.IntermediateCatchEvent;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Message;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.MessageEventDefinition;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Process;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.SequenceFlow;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Signal;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.SignalEventDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.SubProcess;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.bpmndi.BpmnEdge;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.bpmndi.BpmnPlane;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.bpmndi.BpmnShape;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.dc.Bounds;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.di.Waypoint;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeUserTaskForm;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengUserTaskForm;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.function.Consumer;
 
 /**
@@ -63,8 +41,8 @@ public abstract class AbstractBaseElementBuilder<
 
   public static final double SPACE = 50;
 
-  private static final String ZEEBE_EXPRESSION_PREFIX = "=";
-  public static final String ZEEBE_EXPRESSION_FORMAT = ZEEBE_EXPRESSION_PREFIX + "%s";
+  private static final String KUNPENG_EXPRESSION_PREFIX = "=";
+  public static final String KUNPENG_EXPRESSION_FORMAT = KUNPENG_EXPRESSION_PREFIX + "%s";
 
   protected AbstractBaseElementBuilder(
       final BpmnModelInstance modelInstance, final E element, final Class<?> selfType) {
@@ -325,11 +303,11 @@ public abstract class AbstractBaseElementBuilder<
     return (Process) parentElement;
   }
 
-  protected ZeebeUserTaskForm createZeebeUserTaskForm() {
+  protected KunpengUserTaskForm createKunpengUserTaskForm() {
     final Process process = findProcess();
     final ExtensionElements extensionElements =
         getCreateSingleChild(process, ExtensionElements.class);
-    return createChild(extensionElements, ZeebeUserTaskForm.class);
+    return createChild(extensionElements, KunpengUserTaskForm.class);
   }
 
   /**
@@ -362,11 +340,11 @@ public abstract class AbstractBaseElementBuilder<
     return addExtensionElement(element);
   }
 
-  protected String asZeebeExpression(final String expression) {
+  protected String asKunpengExpression(final String expression) {
     if ((expression != null)
         && (!expression.isEmpty())
-        && !(expression.startsWith(ZEEBE_EXPRESSION_PREFIX))) {
-      return String.format(ZEEBE_EXPRESSION_FORMAT, expression);
+        && !(expression.startsWith(KUNPENG_EXPRESSION_PREFIX))) {
+      return String.format(KUNPENG_EXPRESSION_FORMAT, expression);
     } else {
       return expression;
     }
@@ -525,9 +503,7 @@ public abstract class AbstractBaseElementBuilder<
   protected BpmnShape findBpmnShape(final BaseElement node) {
     final Collection<BpmnShape> allShapes = modelInstance.getModelElementsByType(BpmnShape.class);
 
-    final Iterator<BpmnShape> iterator = allShapes.iterator();
-    while (iterator.hasNext()) {
-      final BpmnShape shape = iterator.next();
+    for (final BpmnShape shape : allShapes) {
       if (shape.getBpmnElement().equals(node)) {
         return shape;
       }
@@ -537,10 +513,8 @@ public abstract class AbstractBaseElementBuilder<
 
   protected BpmnEdge findBpmnEdge(final BaseElement sequenceFlow) {
     final Collection<BpmnEdge> allEdges = modelInstance.getModelElementsByType(BpmnEdge.class);
-    final Iterator<BpmnEdge> iterator = allEdges.iterator();
 
-    while (iterator.hasNext()) {
-      final BpmnEdge edge = iterator.next();
+    for (final BpmnEdge edge : allEdges) {
       if (edge.getBpmnElement().equals(sequenceFlow)) {
         return edge;
       }
@@ -647,13 +621,13 @@ public abstract class AbstractBaseElementBuilder<
     final Collection<SequenceFlow> outgoing = flowNode.getOutgoing();
     double y = 0;
 
-    if (outgoing.size() == 0) {
+    if (outgoing.isEmpty()) {
       final double sourceY = sourceBounds.getY();
       final double sourceHeight = sourceBounds.getHeight();
       final double targetHeight = shapeBounds.getHeight();
       y = sourceY + sourceHeight / 2 - targetHeight / 2;
     } else {
-      final SequenceFlow[] sequenceFlows = outgoing.toArray(new SequenceFlow[outgoing.size()]);
+      final SequenceFlow[] sequenceFlows = outgoing.toArray(new SequenceFlow[0]);
       final SequenceFlow last = sequenceFlows[outgoing.size() - 1];
       final BpmnShape targetShape = findBpmnShape(last.getTarget());
 

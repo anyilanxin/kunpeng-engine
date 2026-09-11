@@ -29,15 +29,15 @@ public class ChildElementAssert
 
   private final Class<? extends ModelElementInstance> typeClass;
 
-  protected ChildElementAssert(ChildElementCollection<?> actual) {
+  protected ChildElementAssert(final ChildElementCollection<?> actual) {
     super(actual, ChildElementAssert.class);
     typeClass = actual.getChildElementTypeClass();
   }
 
-  public ChildElementAssert occursMinimal(int minOccurs) {
+  public ChildElementAssert occursMinimal(final int minOccurs) {
     isNotNull();
 
-    int actualMinOccurs = actual.getMinOccurs();
+    final int actualMinOccurs = actual.getMinOccurs();
 
     if (actualMinOccurs != minOccurs) {
       failWithMessage(
@@ -48,10 +48,10 @@ public class ChildElementAssert
     return this;
   }
 
-  public ChildElementAssert occursMaximal(int maxOccurs) {
+  public ChildElementAssert occursMaximal(final int maxOccurs) {
     isNotNull();
 
-    int actualMaxOccurs = actual.getMaxOccurs();
+    final int actualMaxOccurs = actual.getMaxOccurs();
 
     if (actualMaxOccurs != maxOccurs) {
       failWithMessage(
@@ -65,7 +65,7 @@ public class ChildElementAssert
   public ChildElementAssert isOptional() {
     isNotNull();
 
-    int actualMinOccurs = actual.getMinOccurs();
+    final int actualMinOccurs = actual.getMinOccurs();
 
     if (actualMinOccurs != 0) {
       failWithMessage(
@@ -79,7 +79,7 @@ public class ChildElementAssert
   public ChildElementAssert isUnbounded() {
     isNotNull();
 
-    int actualMaxOccurs = actual.getMaxOccurs();
+    final int actualMaxOccurs = actual.getMaxOccurs();
 
     if (actualMaxOccurs != -1) {
       failWithMessage(
@@ -93,7 +93,7 @@ public class ChildElementAssert
   public ChildElementAssert isMutable() {
     isNotNull();
 
-    boolean actualImmutable = actual.isImmutable();
+    final boolean actualImmutable = actual.isImmutable();
 
     if (actualImmutable) {
       failWithMessage("Expected child element <%s> to be mutable but was not", typeClass);
@@ -105,7 +105,7 @@ public class ChildElementAssert
   public ChildElementAssert isImmutable() {
     isNotNull();
 
-    boolean actualImmutable = actual.isImmutable();
+    final boolean actualImmutable = actual.isImmutable();
 
     if (!actualImmutable) {
       failWithMessage("Expected child element <%s> to be immutable but was not", typeClass);
@@ -115,10 +115,10 @@ public class ChildElementAssert
   }
 
   public ChildElementAssert containsType(
-      Class<? extends ModelElementInstance> childElementTypeClass) {
+      final Class<? extends ModelElementInstance> childElementTypeClass) {
     isNotNull();
 
-    Class<? extends ModelElementInstance> actualChildElementTypeClass =
+    final Class<? extends ModelElementInstance> actualChildElementTypeClass =
         actual.getChildElementTypeClass();
 
     if (!childElementTypeClass.equals(actualChildElementTypeClass)) {
@@ -130,10 +130,10 @@ public class ChildElementAssert
     return this;
   }
 
-  public ChildElementAssert hasParentElementType(ModelElementType parentElementType) {
+  public ChildElementAssert hasParentElementType(final ModelElementType parentElementType) {
     isNotNull();
 
-    ModelElementType actualParentElementType = actual.getParentElementType();
+    final ModelElementType actualParentElementType = actual.getParentElementType();
 
     if (!parentElementType.equals(actualParentElementType)) {
       failWithMessage(
@@ -144,10 +144,10 @@ public class ChildElementAssert
     return this;
   }
 
-  public ChildElementAssert isNotEmpty(ModelElementInstance instance) {
+  public ChildElementAssert isNotEmpty(final ModelElementInstance instance) {
     isNotNull();
 
-    int actualNumberOfChildElements = actual.get(instance).size();
+    final int actualNumberOfChildElements = actual.get(instance).size();
 
     if (actualNumberOfChildElements == 0) {
       failWithMessage("Expected child element <%s> to contain elements but was not", typeClass);
@@ -156,10 +156,11 @@ public class ChildElementAssert
     return this;
   }
 
-  public ChildElementAssert hasSize(ModelElementInstance instance, int numberOfChildElements) {
+  public ChildElementAssert hasSize(
+      final ModelElementInstance instance, final int numberOfChildElements) {
     isNotNull();
 
-    int actualNumberOfChildElements = actual.get(instance).size();
+    final int actualNumberOfChildElements = actual.get(instance).size();
 
     if (actualNumberOfChildElements != numberOfChildElements) {
       failWithMessage(
@@ -170,10 +171,10 @@ public class ChildElementAssert
     return this;
   }
 
-  public ChildElementAssert isEmpty(ModelElementInstance instance) {
+  public ChildElementAssert isEmpty(final ModelElementInstance instance) {
     isNotNull();
 
-    int actualNumberOfChildElements = actual.get(instance).size();
+    final int actualNumberOfChildElements = actual.get(instance).size();
 
     if (actualNumberOfChildElements > 0) {
       failWithMessage(

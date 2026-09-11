@@ -17,15 +17,9 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN20_NS;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ATTRIBUTE_NAME;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ELEMENT_RESOURCE_ROLE;
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.*;
 
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BaseElement;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Resource;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ResourceAssignmentExpression;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ResourceParameterBinding;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ResourceRole;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.*;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;

@@ -22,8 +22,8 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.Reference;
 import java.util.List;
 
 /**
- * @author meyerd
  * @param <T>
+ * @author meyerd
  */
 public interface Attribute<T> {
 

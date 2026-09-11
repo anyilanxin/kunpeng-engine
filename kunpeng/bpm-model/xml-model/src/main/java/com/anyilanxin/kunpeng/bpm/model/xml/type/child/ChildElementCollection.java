@@ -25,8 +25,8 @@ import java.util.Collection;
  * A collection containing all or a subset of the child elements of a given {@link
  * ModelElementInstance}.
  *
- * @author Daniel Meyer
  * @param <T> The type of the model elements in the collection
+ * @author Daniel Meyer
  */
 public interface ChildElementCollection<T extends ModelElementInstance> {
 

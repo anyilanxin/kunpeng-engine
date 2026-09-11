@@ -16,10 +16,7 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_NAME;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_TYPE_REF;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_OUTPUT_CLAUSE;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.*;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DefaultOutputEntry;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DmnElement;
@@ -41,51 +38,60 @@ public class OutputClauseImpl extends DmnElementImpl implements OutputClause {
   protected static ChildElement<OutputValues> outputValuesChild;
   protected static ChildElement<DefaultOutputEntry> defaultOutputEntryChild;
 
-  public OutputClauseImpl(ModelTypeInstanceContext instanceContext) {
+  public OutputClauseImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public String getName() {
     return nameAttribute.getValue(this);
   }
 
-  public void setName(String name) {
+  @Override
+  public void setName(final String name) {
     nameAttribute.setValue(this, name);
   }
 
+  @Override
   public String getTypeRef() {
     return typeRefAttribute.getValue(this);
   }
 
-  public void setTypeRef(String typeRef) {
+  @Override
+  public void setTypeRef(final String typeRef) {
     typeRefAttribute.setValue(this, typeRef);
   }
 
+  @Override
   public OutputValues getOutputValues() {
     return outputValuesChild.getChild(this);
   }
 
-  public void setOutputValues(OutputValues outputValues) {
+  @Override
+  public void setOutputValues(final OutputValues outputValues) {
     outputValuesChild.setChild(this, outputValues);
   }
 
+  @Override
   public DefaultOutputEntry getDefaultOutputEntry() {
     return defaultOutputEntryChild.getChild(this);
   }
 
-  public void setDefaultOutputEntry(DefaultOutputEntry defaultOutputEntry) {
+  @Override
+  public void setDefaultOutputEntry(final DefaultOutputEntry defaultOutputEntry) {
     defaultOutputEntryChild.setChild(this, defaultOutputEntry);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(OutputClause.class, DMN_ELEMENT_OUTPUT_CLAUSE)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(DmnElement.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<OutputClause>() {
-                  public OutputClause newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public OutputClause newInstance(final ModelTypeInstanceContext instanceContext) {
                     return new OutputClauseImpl(instanceContext);
                   }
                 });
@@ -94,7 +100,7 @@ public class OutputClauseImpl extends DmnElementImpl implements OutputClause {
 
     typeRefAttribute = typeBuilder.stringAttribute(DMN_ATTRIBUTE_TYPE_REF).build();
 
-    SequenceBuilder sequenceBuilder = typeBuilder.sequence();
+    final SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
     outputValuesChild = sequenceBuilder.element(OutputValues.class).build();
 

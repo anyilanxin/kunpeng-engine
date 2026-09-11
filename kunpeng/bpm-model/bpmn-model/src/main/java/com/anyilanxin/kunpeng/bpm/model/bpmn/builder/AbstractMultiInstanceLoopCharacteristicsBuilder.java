@@ -22,7 +22,7 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Activity;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.CompletionCondition;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.LoopCardinality;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.MultiInstanceLoopCharacteristics;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeLoopCharacteristics;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengLoopCharacteristics;
 
 /**
  * @author Thorben Lindhauer
@@ -93,44 +93,17 @@ public class AbstractMultiInstanceLoopCharacteristicsBuilder<
     return (T) ((Activity) element.getParentElement()).builder();
   }
 
-  public B zeebeInputCollection(final String inputCollection) {
-    final ZeebeLoopCharacteristics characteristics =
-        getCreateSingleExtensionElement(ZeebeLoopCharacteristics.class);
-    characteristics.setInputCollection(inputCollection);
+  public B collection(final String collection) {
+    final KunpengLoopCharacteristics characteristics =
+        getCreateSingleExtensionElement(KunpengLoopCharacteristics.class);
+    characteristics.setCollection(collection);
     return myself;
   }
 
-  public B zeebeInputCollectionExpression(final String inputCollectionExpression) {
-    return zeebeInputCollection(asZeebeExpression(inputCollectionExpression));
-  }
-
-  public B zeebeInputElement(final String inputElement) {
-    final ZeebeLoopCharacteristics characteristics =
-        getCreateSingleExtensionElement(ZeebeLoopCharacteristics.class);
-    characteristics.setInputElement(inputElement);
+  public B elementVariable(final String elementVariable) {
+    final KunpengLoopCharacteristics characteristics =
+        getCreateSingleExtensionElement(KunpengLoopCharacteristics.class);
+    characteristics.setElementVariable(elementVariable);
     return myself;
-  }
-
-  public B zeebeOutputCollection(final String outputCollection) {
-    final ZeebeLoopCharacteristics characteristics =
-        getCreateSingleExtensionElement(ZeebeLoopCharacteristics.class);
-    characteristics.setOutputCollection(outputCollection);
-    return myself;
-  }
-
-  /**
-   * Warn: the Output Element must be an expression.
-   *
-   * <p>Please use {@link #zeebeOutputElementExpression(String)} instead.
-   */
-  public B zeebeOutputElement(final String outputElement) {
-    final ZeebeLoopCharacteristics characteristics =
-        getCreateSingleExtensionElement(ZeebeLoopCharacteristics.class);
-    characteristics.setOutputElement(outputElement);
-    return myself;
-  }
-
-  public B zeebeOutputElementExpression(final String outputElementExpression) {
-    return zeebeOutputElement(asZeebeExpression(outputElementExpression));
   }
 }

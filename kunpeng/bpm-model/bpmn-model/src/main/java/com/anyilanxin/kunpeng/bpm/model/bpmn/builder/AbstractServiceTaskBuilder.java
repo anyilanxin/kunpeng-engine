@@ -19,11 +19,9 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.builder;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelInstance;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ServiceTask;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeAgentDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeAgentType;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeBindingType;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeLinkedResource;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeLinkedResources;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengBindingType;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengLinkedResource;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengLinkedResources;
 import java.util.function.Consumer;
 
 /**
@@ -48,61 +46,19 @@ public abstract class AbstractServiceTaskBuilder<B extends AbstractServiceTaskBu
     return myself;
   }
 
-  /**
-   * Sets the zeebe:modelerTemplate attribute of the build service task.
-   *
-   * @param modelerTemplate the element template id to set
-   * @return the builder object
-   */
-  public B zeebeModelerTemplate(final String modelerTemplate) {
-    element.setModelerTemplate(modelerTemplate);
-    return myself;
-  }
-
-  public B zeebeLinkedResources(
+  public B kunpengLinkedResources(
       final Consumer<LinkedResourceBuilder> linkedResourceBuilderConsumer) {
-    final ZeebeLinkedResource linkedResource = createLinkedResourceElement();
-    linkedResource.setBindingType(ZeebeBindingType.latest);
+    final KunpengLinkedResource linkedResource = createLinkedResourceElement();
+    linkedResource.setBindingType(KunpengBindingType.latest);
 
     final LinkedResourceBuilder builder = new LinkedResourceBuilder(linkedResource, myself);
     linkedResourceBuilderConsumer.accept(builder);
     return myself;
   }
 
-  /**
-   * Marks this service task as an agent definition.
-   *
-   * @param agentType the agent type declared on the marker
-   * @return the builder object
-   */
-  public B zeebeAgentDefinition(final ZeebeAgentType agentType) {
-    final ZeebeAgentDefinition agentDefinition =
-        myself.getCreateSingleExtensionElement(ZeebeAgentDefinition.class);
-    agentDefinition.setAgentType(agentType);
-    return myself;
-  }
-
-  /**
-   * Marks this service task as a Camunda-native AI agent task.
-   *
-   * @return the builder object
-   */
-  public B zeebeAiAgentTaskDefinition() {
-    return zeebeAgentDefinition(ZeebeAgentType.aiAgentTask);
-  }
-
-  /**
-   * Marks this service task as an external agent.
-   *
-   * @return the builder object
-   */
-  public B zeebeExternalAgentDefinition() {
-    return zeebeAgentDefinition(ZeebeAgentType.external);
-  }
-
-  private ZeebeLinkedResource createLinkedResourceElement() {
-    final ZeebeLinkedResources linkedResources =
-        myself.getCreateSingleExtensionElement(ZeebeLinkedResources.class);
-    return myself.createChild(linkedResources, ZeebeLinkedResource.class);
+  private KunpengLinkedResource createLinkedResourceElement() {
+    final KunpengLinkedResources linkedResources =
+        myself.getCreateSingleExtensionElement(KunpengLinkedResources.class);
+    return myself.createChild(linkedResources, KunpengLinkedResource.class);
   }
 }

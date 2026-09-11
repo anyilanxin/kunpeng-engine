@@ -17,21 +17,9 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.anyilanxin.kunpeng.bpm.model.bpmn.Bpmn;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelInstance;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.TransactionMethod;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.util.ReflectUtil;
 import org.junit.Test;
 import org.w3c.dom.Document;
@@ -39,70 +27,83 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
 /**
  * @author Thorben Lindhauer
  */
 public class TransactionTest extends BpmnModelElementInstanceTest {
 
-  @Override
-  public TypeAssumption getTypeAssumption() {
-    return new TypeAssumption(SubProcess.class, false);
-  }
+    @Override
+    public TypeAssumption getTypeAssumption() {
+        return new TypeAssumption(SubProcess.class, false);
+    }
 
-  @Override
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
-    return Collections.emptyList();
-  }
+    @Override
+    public Collection<ChildElementAssumption> getChildElementAssumptions() {
+        return Collections.emptyList();
+    }
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return Arrays.asList(
-        new AttributeAssumption("method", false, false, TransactionMethod.Compensate));
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return Arrays.asList(
+                new AttributeAssumption("method", false, false, TransactionMethod.Compensate));
+    }
 
-  @Test
-  public void shouldReadTransaction() {
-    final InputStream inputStream =
-        ReflectUtil.getResourceAsStream("io/camunda/zeebe/model/bpmn/TransactionTest.xml");
-    final Transaction transaction =
-        Bpmn.readModelFromStream(inputStream).getModelElementById("transaction");
+    @Test
+    public void shouldReadTransaction() {
+        final InputStream inputStream =
+                ReflectUtil.getResourceAsStream("com/anyilanxin/kunpeng/bpm/model/bpmn/TransactionTest.xml");
+        final Transaction transaction =
+                Bpmn.readModelFromStream(inputStream).getModelElementById("transaction");
 
-    assertThat(transaction).isNotNull();
-    assertThat(transaction.getMethod()).isEqualTo(TransactionMethod.Image);
-    assertThat(transaction.getFlowElements()).hasSize(1);
-  }
+        assertThat(transaction).isNotNull();
+        assertThat(transaction.getMethod()).isEqualTo(TransactionMethod.Image);
+        assertThat(transaction.getFlowElements()).hasSize(1);
+    }
 
-  @Test
-  public void shouldWriteTransaction()
-      throws ParserConfigurationException, SAXException, IOException {
-    // given a model
-    final BpmnModelInstance newModel = Bpmn.createProcess("process").done();
+    @Test
+    public void shouldWriteTransaction()
+            throws ParserConfigurationException, SAXException, IOException {
+        // given a model
+        final BpmnModelInstance newModel = Bpmn.createProcess("process").done();
 
-    final Process process = newModel.getModelElementById("process");
+        final Process process = newModel.getModelElementById("process");
 
-    final Transaction transaction = newModel.newInstance(Transaction.class);
-    transaction.setId("transaction");
-    transaction.setMethod(TransactionMethod.Store);
-    process.addChildElement(transaction);
+        final Transaction transaction = newModel.newInstance(Transaction.class);
+        transaction.setId("transaction");
+        transaction.setMethod(TransactionMethod.Store);
+        process.addChildElement(transaction);
 
-    // that is written to a stream
-    final ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-    Bpmn.writeModelToStream(outStream, newModel);
+        // that is written to a stream
+        final ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+        Bpmn.writeModelToStream(outStream, newModel);
 
-    // when reading from that stream
-    final ByteArrayInputStream inStream = new ByteArrayInputStream(outStream.toByteArray());
+        // when reading from that stream
+        final ByteArrayInputStream inStream = new ByteArrayInputStream(outStream.toByteArray());
 
-    final DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
-    final DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
-    final Document actualDocument = docBuilder.parse(inStream);
+        final DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
+        final DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
+        final Document actualDocument = docBuilder.parse(inStream);
 
-    // then it possible to traverse to the transaction element and assert its attributes
-    final NodeList transactionElements = actualDocument.getElementsByTagName("transaction");
-    assertThat(transactionElements.getLength()).isEqualTo(1);
+        // then it possible to traverse to the transaction element and assert its attributes
+        final NodeList transactionElements = actualDocument.getElementsByTagName("transaction");
+        assertThat(transactionElements.getLength()).isEqualTo(1);
 
-    final Node transactionElement = transactionElements.item(0);
-    assertThat(transactionElement).isNotNull();
-    final Node methodAttribute = transactionElement.getAttributes().getNamedItem("method");
-    assertThat(methodAttribute.getNodeValue()).isEqualTo("##Store");
-  }
+        final Node transactionElement = transactionElements.item(0);
+        assertThat(transactionElement).isNotNull();
+        final Node methodAttribute = transactionElement.getAttributes().getNamedItem("method");
+        assertThat(methodAttribute.getNodeValue()).isEqualTo("##Store");
+    }
 }

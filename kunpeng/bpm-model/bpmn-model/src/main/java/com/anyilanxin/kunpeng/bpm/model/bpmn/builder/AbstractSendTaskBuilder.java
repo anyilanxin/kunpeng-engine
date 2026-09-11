@@ -18,7 +18,7 @@
 package com.anyilanxin.kunpeng.bpm.model.bpmn.builder;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelInstance;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.builder.zeebe.PublishMessageBuilder;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.builder.kunpeng.PublishMessageBuilder;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Message;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Operation;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.SendTask;

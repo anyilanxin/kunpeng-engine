@@ -16,16 +16,10 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_ASSOCIATION_DIRECTION;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_ASSOCIATION;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.*;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.AssociationDirection;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Artifact;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Association;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DmnElement;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.SourceRef;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.TargetRef;
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.*;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
@@ -41,43 +35,50 @@ public class AssociationImpl extends ArtifactImpl implements Association {
   protected static ElementReference<DmnElement, SourceRef> sourceRef;
   protected static ElementReference<DmnElement, TargetRef> targetRef;
 
-  public AssociationImpl(ModelTypeInstanceContext instanceContext) {
+  public AssociationImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public AssociationDirection getAssociationDirection() {
     return associationDirectionAttribute.getValue(this);
   }
 
-  public void setAssociationDirection(AssociationDirection associationDirection) {
+  @Override
+  public void setAssociationDirection(final AssociationDirection associationDirection) {
     associationDirectionAttribute.setValue(this, associationDirection);
   }
 
+  @Override
   public DmnElement getSource() {
     return sourceRef.getReferenceTargetElement(this);
   }
 
-  public void setSource(DmnElement source) {
+  @Override
+  public void setSource(final DmnElement source) {
     sourceRef.setReferenceTargetElement(this, source);
   }
 
+  @Override
   public DmnElement getTarget() {
     return targetRef.getReferenceTargetElement(this);
   }
 
-  public void setTarget(DmnElement target) {
+  @Override
+  public void setTarget(final DmnElement target) {
     targetRef.setReferenceTargetElement(this, target);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(Association.class, DMN_ELEMENT_ASSOCIATION)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(Artifact.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<Association>() {
-                  public Association newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public Association newInstance(final ModelTypeInstanceContext instanceContext) {
                     return new AssociationImpl(instanceContext);
                   }
                 });
@@ -88,7 +89,7 @@ public class AssociationImpl extends ArtifactImpl implements Association {
             .defaultValue(AssociationDirection.None)
             .build();
 
-    SequenceBuilder sequenceBuilder = typeBuilder.sequence();
+    final SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
     sourceRef =
         sequenceBuilder

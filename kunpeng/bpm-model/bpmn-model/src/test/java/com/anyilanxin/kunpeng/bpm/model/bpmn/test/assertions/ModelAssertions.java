@@ -17,36 +17,36 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn.test.assertions;
 
-import org.assertj.core.api.Assertions;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementType;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.attribute.Attribute;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.child.ChildElementCollection;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.AttributeReference;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.ElementReferenceCollection;
+import org.assertj.core.api.Assertions;
 
 /**
  * @author Sebastian Menski
  */
 public class ModelAssertions extends Assertions {
 
-  public static AttributeAssert assertThat(final Attribute<?> actual) {
-    return new AttributeAssert(actual);
-  }
+    public static AttributeAssert assertThat(final Attribute<?> actual) {
+        return new AttributeAssert(actual);
+    }
 
-  public static ModelElementTypeAssert assertThat(final ModelElementType actual) {
-    return new ModelElementTypeAssert(actual);
-  }
+    public static ModelElementTypeAssert assertThat(final ModelElementType actual) {
+        return new ModelElementTypeAssert(actual);
+    }
 
-  public static ChildElementAssert assertThat(final ChildElementCollection<?> actual) {
-    return new ChildElementAssert(actual);
-  }
+    public static ChildElementAssert assertThat(final ChildElementCollection<?> actual) {
+        return new ChildElementAssert(actual);
+    }
 
-  public static AttributeReferenceAssert assertThat(final AttributeReference<?> actual) {
-    return new AttributeReferenceAssert(actual);
-  }
+    public static AttributeReferenceAssert assertThat(final AttributeReference<?> actual) {
+        return new AttributeReferenceAssert(actual);
+    }
 
-  public static ElementReferenceCollectionAssert assertThat(
-      final ElementReferenceCollection<?, ?> actual) {
-    return new ElementReferenceCollectionAssert(actual);
-  }
+    public static ElementReferenceCollectionAssert assertThat(
+            final ElementReferenceCollection<?, ?> actual) {
+        return new ElementReferenceCollectionAssert(actual);
+    }
 }

@@ -17,25 +17,12 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ATTRIBUTE_COMPLETION_QUANTITY;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ATTRIBUTE_DEFAULT;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ATTRIBUTE_IS_FOR_COMPENSATION;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ATTRIBUTE_START_QUANTITY;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ELEMENT_ACTIVITY;
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.*;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.Query;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.QueryImpl;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Activity;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BoundaryEvent;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.DataInputAssociation;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.DataOutputAssociation;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.FlowNode;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.IoSpecification;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.LoopCharacteristics;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Property;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ResourceRole;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.SequenceFlow;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.*;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
@@ -198,7 +185,7 @@ public abstract class ActivityImpl extends FlowNodeImpl implements Activity {
   public Query<BoundaryEvent> getBoundaryEvents() {
     final Collection<BoundaryEvent> queryElements =
         getParentElement().getChildElementsByType(BoundaryEvent.class).stream()
-            .filter(event -> event.getAttachedTo() != null && event.getAttachedTo().equals(this))
+            .filter(event -> event.getAttachedTo().equals(this))
             .collect(Collectors.toSet());
 
     return new QueryImpl<>(queryElements);

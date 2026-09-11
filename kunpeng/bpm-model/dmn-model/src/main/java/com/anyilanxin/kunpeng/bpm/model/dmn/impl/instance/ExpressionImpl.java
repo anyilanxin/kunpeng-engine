@@ -16,9 +16,7 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_TYPE_REF;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_EXPRESSION;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.*;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DmnElement;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Expression;
@@ -31,20 +29,22 @@ public abstract class ExpressionImpl extends DmnElementImpl implements Expressio
 
   protected static Attribute<String> typeRefAttribute;
 
-  public ExpressionImpl(ModelTypeInstanceContext instanceContext) {
+  public ExpressionImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public String getTypeRef() {
     return typeRefAttribute.getValue(this);
   }
 
-  public void setTypeRef(String typeRef) {
+  @Override
+  public void setTypeRef(final String typeRef) {
     typeRefAttribute.setValue(this, typeRef);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(Expression.class, DMN_ELEMENT_EXPRESSION)
             .namespaceUri(LATEST_DMN_NS)

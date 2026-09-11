@@ -28,19 +28,21 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 
 public class InputExpressionImpl extends LiteralExpressionImpl implements InputExpression {
 
-  public InputExpressionImpl(ModelTypeInstanceContext instanceContext) {
+  public InputExpressionImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(InputExpression.class, DMN_ELEMENT_INPUT_EXPRESSION)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(LiteralExpression.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<InputExpression>() {
-                  public InputExpression newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public InputExpression newInstance(
+                      final ModelTypeInstanceContext instanceContext) {
                     return new InputExpressionImpl(instanceContext);
                   }
                 });

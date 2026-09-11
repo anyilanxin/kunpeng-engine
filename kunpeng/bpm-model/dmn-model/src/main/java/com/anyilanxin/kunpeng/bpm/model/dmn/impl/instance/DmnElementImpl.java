@@ -16,10 +16,7 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_ID;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_LABEL;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.*;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Description;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DmnElement;
@@ -39,44 +36,52 @@ public abstract class DmnElementImpl extends DmnModelElementInstanceImpl impleme
   protected static ChildElement<Description> descriptionChild;
   protected static ChildElement<ExtensionElements> extensionElementsChild;
 
-  public DmnElementImpl(ModelTypeInstanceContext instanceContext) {
+  public DmnElementImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public String getId() {
     return idAttribute.getValue(this);
   }
 
-  public void setId(String id) {
+  @Override
+  public void setId(final String id) {
     idAttribute.setValue(this, id);
   }
 
+  @Override
   public String getLabel() {
     return labelAttribute.getValue(this);
   }
 
-  public void setLabel(String label) {
+  @Override
+  public void setLabel(final String label) {
     labelAttribute.setValue(this, label);
   }
 
+  @Override
   public Description getDescription() {
     return descriptionChild.getChild(this);
   }
 
-  public void setDescription(Description description) {
+  @Override
+  public void setDescription(final Description description) {
     descriptionChild.setChild(this, description);
   }
 
+  @Override
   public ExtensionElements getExtensionElements() {
     return extensionElementsChild.getChild(this);
   }
 
-  public void setExtensionElements(ExtensionElements extensionElements) {
+  @Override
+  public void setExtensionElements(final ExtensionElements extensionElements) {
     extensionElementsChild.setChild(this, extensionElements);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(DmnElement.class, DMN_ELEMENT)
             .namespaceUri(LATEST_DMN_NS)
@@ -86,7 +91,7 @@ public abstract class DmnElementImpl extends DmnModelElementInstanceImpl impleme
 
     labelAttribute = typeBuilder.stringAttribute(DMN_ATTRIBUTE_LABEL).build();
 
-    SequenceBuilder sequenceBuilder = typeBuilder.sequence();
+    final SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
     descriptionChild = sequenceBuilder.element(Description.class).build();
 

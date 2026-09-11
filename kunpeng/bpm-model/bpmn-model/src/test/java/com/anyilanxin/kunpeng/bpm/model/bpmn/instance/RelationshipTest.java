@@ -19,6 +19,7 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.Source;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.Target;
+
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -27,20 +28,20 @@ import java.util.Collection;
  */
 public class RelationshipTest extends BpmnModelElementInstanceTest {
 
-  @Override
-  public TypeAssumption getTypeAssumption() {
-    return new TypeAssumption(BaseElement.class, false);
-  }
+    @Override
+    public TypeAssumption getTypeAssumption() {
+        return new TypeAssumption(BaseElement.class, false);
+    }
 
-  @Override
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
-    return Arrays.asList(
-        new ChildElementAssumption(Source.class, 1), new ChildElementAssumption(Target.class, 1));
-  }
+    @Override
+    public Collection<ChildElementAssumption> getChildElementAssumptions() {
+        return Arrays.asList(
+                new ChildElementAssumption(Source.class, 1), new ChildElementAssumption(Target.class, 1));
+    }
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return Arrays.asList(
-        new AttributeAssumption("type", false, true), new AttributeAssumption("direction"));
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return Arrays.asList(
+                new AttributeAssumption("type", false, true), new AttributeAssumption("direction"));
+    }
 }

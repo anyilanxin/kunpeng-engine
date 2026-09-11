@@ -24,7 +24,11 @@ import java.util.Collection;
  *
  * @author Sebastian Menski
  */
-public interface Collaboration extends RootElement, NamedBpmnElement {
+public interface Collaboration extends RootElement {
+
+  String getName();
+
+  void setName(String name);
 
   boolean isClosed();
 

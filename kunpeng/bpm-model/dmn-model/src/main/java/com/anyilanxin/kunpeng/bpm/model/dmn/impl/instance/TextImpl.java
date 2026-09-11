@@ -27,18 +27,19 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 
 public class TextImpl extends DmnModelElementInstanceImpl implements Text {
 
-  public TextImpl(ModelTypeInstanceContext instanceContext) {
+  public TextImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(Text.class, DMN_ELEMENT_TEXT)
             .namespaceUri(LATEST_DMN_NS)
             .instanceProvider(
                 new ModelTypeInstanceProvider<Text>() {
-                  public Text newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public Text newInstance(final ModelTypeInstanceContext instanceContext) {
                     return new TextImpl(instanceContext);
                   }
                 });

@@ -27,16 +27,14 @@ import java.util.function.Consumer;
  */
 public abstract class AbstractGatewayBuilder<
         B extends AbstractGatewayBuilder<B, E>, E extends Gateway>
-    extends AbstractFlowNodeBuilder<B, E> implements ZeebePropertiesBuilder<B> {
+    extends AbstractFlowNodeBuilder<B, E> {
 
-  private final ZeebeExecutionListenersBuilder<B> zeebeExecutionListenersBuilder;
-  private final ZeebePropertiesBuilder<B> zeebePropertiesBuilder;
+  private final KunpengExecutionListenersBuilder<B> kunpengExecutionListenersBuilder;
 
   protected AbstractGatewayBuilder(
       final BpmnModelInstance modelInstance, final E element, final Class<?> selfType) {
     super(modelInstance, element, selfType);
-    zeebeExecutionListenersBuilder = new ZeebeExecutionListenersBuilderImpl<>(myself);
-    zeebePropertiesBuilder = new ZeebePropertiesBuilderImpl<>(myself);
+    kunpengExecutionListenersBuilder = new KunpengExecutionListenersBuilderImpl<>(myself);
   }
 
   /**
@@ -50,21 +48,17 @@ public abstract class AbstractGatewayBuilder<
     return myself;
   }
 
-  public B zeebeStartExecutionListener(final String type, final String retries) {
-    return zeebeExecutionListenersBuilder.zeebeStartExecutionListener(type, retries);
+  public B kunpengStartExecutionListener(final String type, final String retries) {
+    return kunpengExecutionListenersBuilder.kunpengStartExecutionListener(type, retries);
   }
 
-  public B zeebeStartExecutionListener(final String type) {
-    return zeebeExecutionListenersBuilder.zeebeStartExecutionListener(type);
+  public B kunpengStartExecutionListener(final String type) {
+    return kunpengExecutionListenersBuilder.kunpengStartExecutionListener(type);
   }
 
-  public B zeebeExecutionListener(
+  public B kunpengExecutionListener(
       final Consumer<ExecutionListenerBuilder> executionListenerBuilderConsumer) {
-    return zeebeExecutionListenersBuilder.zeebeExecutionListener(executionListenerBuilderConsumer);
-  }
-
-  @Override
-  public B zeebeProperty(final String name, final String value) {
-    return zeebePropertiesBuilder.zeebeProperty(name, value);
+    return kunpengExecutionListenersBuilder.kunpengExecutionListener(
+        executionListenerBuilderConsumer);
   }
 }

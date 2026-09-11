@@ -31,38 +31,38 @@ import org.junit.runner.Description;
  */
 public class GetBpmnModelElementTypeRule extends TestWatcher implements GetModelElementTypeRule {
 
-  private ModelInstance modelInstance;
-  private Model model;
-  private ModelElementType modelElementType;
+    private ModelInstance modelInstance;
+    private Model model;
+    private ModelElementType modelElementType;
 
-  @Override
-  @SuppressWarnings("unchecked")
-  protected void starting(final Description description) {
-    String className = description.getClassName();
-    className = className.replaceAll("Test", "");
-    Class<? extends ModelElementInstance> instanceClass = null;
-    try {
-      instanceClass = (Class<? extends ModelElementInstance>) Class.forName(className);
-    } catch (final ClassNotFoundException e) {
-      throw new RuntimeException(e);
+    @Override
+    @SuppressWarnings("unchecked")
+    protected void starting(final Description description) {
+        String className = description.getClassName();
+        className = className.replaceAll("Test", "");
+        Class<? extends ModelElementInstance> instanceClass = null;
+        try {
+            instanceClass = (Class<? extends ModelElementInstance>) Class.forName(className);
+        } catch (final ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        modelInstance = Bpmn.createEmptyModel();
+        model = modelInstance.getModel();
+        modelElementType = model.getType(instanceClass);
     }
-    modelInstance = Bpmn.createEmptyModel();
-    model = modelInstance.getModel();
-    modelElementType = model.getType(instanceClass);
-  }
 
-  @Override
-  public ModelInstance getModelInstance() {
-    return modelInstance;
-  }
+    @Override
+    public ModelInstance getModelInstance() {
+        return modelInstance;
+    }
 
-  @Override
-  public Model getModel() {
-    return model;
-  }
+    @Override
+    public Model getModel() {
+        return model;
+    }
 
-  @Override
-  public ModelElementType getModelElementType() {
-    return modelElementType;
-  }
+    @Override
+    public ModelElementType getModelElementType() {
+        return modelElementType;
+    }
 }

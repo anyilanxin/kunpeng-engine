@@ -17,38 +17,39 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Process;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.RootElement;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.util.BpmnModelResource;
-import java.util.Collection;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 import org.junit.Test;
+
+import java.util.Collection;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Daniel Meyer
  */
 public class ProcessTest extends BpmnModelTest {
 
-  @Test
-  @BpmnModelResource
-  public void shouldImportProcess() {
+    @Test
+    @BpmnModelResource
+    public void shouldImportProcess() {
 
-    final ModelElementInstance modelElementById =
-        bpmnModelInstance.getModelElementById("exampleProcessId");
-    assertThat(modelElementById).isNotNull();
+        final ModelElementInstance modelElementById =
+                bpmnModelInstance.getModelElementById("exampleProcessId");
+        assertThat(modelElementById).isNotNull();
 
-    final Collection<RootElement> rootElements =
-        bpmnModelInstance.getDefinitions().getRootElements();
-    assertThat(rootElements).hasSize(1);
-    final com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Process process =
-        (Process) rootElements.iterator().next();
+        final Collection<RootElement> rootElements =
+                bpmnModelInstance.getDefinitions().getRootElements();
+        assertThat(rootElements).hasSize(1);
+        final com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Process process =
+                (Process) rootElements.iterator().next();
 
-    assertThat(process.getId()).isEqualTo("exampleProcessId");
-    assertThat(process.getName()).isNull();
-    assertThat(process.getProcessType()).isEqualTo(ProcessType.None);
-    assertThat(process.isExecutable()).isFalse();
-    assertThat(process.isClosed()).isFalse();
-  }
+        assertThat(process.getId()).isEqualTo("exampleProcessId");
+        assertThat(process.getName()).isNull();
+        assertThat(process.getProcessType()).isEqualTo(ProcessType.None);
+        assertThat(process.isExecutable()).isFalse();
+        assertThat(process.isClosed()).isFalse();
+    }
 }

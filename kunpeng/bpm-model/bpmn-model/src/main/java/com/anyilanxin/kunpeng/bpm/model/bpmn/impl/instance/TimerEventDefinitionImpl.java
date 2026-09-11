@@ -20,11 +20,7 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance;
 import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN20_NS;
 import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ELEMENT_TIMER_EVENT_DEFINITION;
 
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.EventDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.TimeCycle;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.TimeDate;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.TimeDuration;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.TimerEventDefinition;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.*;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;

@@ -29,9 +29,9 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.Collection;
 
+import static com.anyilanxin.kunpeng.bpm.model.xml.testmodel.TestModelConstants.MODEL_NAMESPACE;
 import static javax.xml.XMLConstants.XMLNS_ATTRIBUTE_NS_URI;
 import static org.assertj.core.api.Assertions.assertThat;
-import static com.anyilanxin.kunpeng.bpm.model.xml.testmodel.TestModelConstants.MODEL_NAMESPACE;
 import static org.junit.runners.Parameterized.Parameters;
 
 /**
@@ -39,8 +39,8 @@ import static org.junit.runners.Parameterized.Parameters;
  */
 public class DomTest extends TestModelTest {
 
-  private static final String TEST_NS = "http://camunda.org/test";
-  private static final String UNKNOWN_NS = "http://camunda.org/unknown";
+  private static final String TEST_NS = "https://anyilanxin.com/test";
+  private static final String UNKNOWN_NS = "https://anyilanxin.com/unknown";
   private static final String CAMUNDA_NS = "http://activiti.org/bpmn";
   private static final String FOX_NS = "http://www.camunda.com/fox";
   private static final String BPMN_NS = "http://www.omg.org/spec/BPMN/20100524/MODEL";
@@ -51,7 +51,7 @@ public class DomTest extends TestModelTest {
     super(testName, testModelInstance, modelParser);
   }
 
-  @Parameters(name="Model {0}")
+  @Parameters(name = "Model {0}")
   public static Collection<Object[]> models() {
     return Arrays.asList(
       createModel(),

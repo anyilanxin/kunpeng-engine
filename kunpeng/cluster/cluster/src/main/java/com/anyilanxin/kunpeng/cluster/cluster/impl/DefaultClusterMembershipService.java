@@ -1,7 +1,7 @@
 /*
  * Copyright 2017-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,13 +20,7 @@ package com.anyilanxin.kunpeng.cluster.cluster.impl;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import com.anyilanxin.kunpeng.cluster.cluster.BootstrapService;
-import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipEvent;
-import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipEventListener;
-import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
-import com.anyilanxin.kunpeng.cluster.cluster.ManagedClusterMembershipService;
-import com.anyilanxin.kunpeng.cluster.cluster.Member;
-import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.cluster.*;
 import com.anyilanxin.kunpeng.cluster.cluster.discovery.ManagedNodeDiscoveryService;
 import com.anyilanxin.kunpeng.cluster.cluster.protocol.GroupMembershipEvent;
 import com.anyilanxin.kunpeng.cluster.cluster.protocol.GroupMembershipEventListener;

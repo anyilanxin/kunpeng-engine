@@ -26,8 +26,8 @@ import java.util.Collection;
  * <p>The {@link Collection#add(Object)} operation provided by this collection has special behavior:
  * it will replace an existing element if it exists.
  *
- * @author Daniel Meyer
  * @param <T> the type of the child element
+ * @author Daniel Meyer
  */
 public interface ChildElement<T extends ModelElementInstance> extends ChildElementCollection<T> {
 

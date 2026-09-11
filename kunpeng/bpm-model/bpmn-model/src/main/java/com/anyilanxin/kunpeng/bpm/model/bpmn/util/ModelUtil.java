@@ -19,43 +19,14 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.util;
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Activity;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BaseElement;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BoundaryEvent;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BpmnModelElementInstance;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.CallActivity;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Condition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ConditionalEventDefinition;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.*;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Error;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ErrorEventDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Escalation;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.EscalationEventDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.EventDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ExtensionElements;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.IntermediateCatchEvent;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.IntermediateThrowEvent;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.LinkEventDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Message;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.MessageEventDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Signal;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.SignalEventDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.StartEvent;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.SubProcess;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.TimerEventDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeExecutionListener;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeExecutionListeners;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengExecutionListener;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengExecutionListeners;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResultCollector;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -68,8 +39,7 @@ public class ModelUtil {
           MessageEventDefinition.class,
           TimerEventDefinition.class,
           SignalEventDefinition.class,
-          EscalationEventDefinition.class,
-          ConditionalEventDefinition.class);
+          EscalationEventDefinition.class);
 
   private static final List<Class<? extends Activity>>
       ESCALATION_BOUNDARY_EVENT_SUPPORTED_ACTIVITIES =
@@ -87,9 +57,9 @@ public class ModelUtil {
   public static void validateExecutionListenersDefinitionForElement(
       final BaseElement element,
       final ValidationResultCollector validationResultCollector,
-      final Consumer<Collection<ZeebeExecutionListener>> executionListenersSupportValidation) {
-    final Collection<ZeebeExecutionListeners> executionListeners =
-        ModelUtil.getExtensionElementsByType(element, ZeebeExecutionListeners.class);
+      final Consumer<Collection<KunpengExecutionListener>> executionListenersSupportValidation) {
+    final Collection<KunpengExecutionListeners> executionListeners =
+        ModelUtil.getExtensionElementsByType(element, KunpengExecutionListeners.class);
 
     if (!executionListeners.isEmpty()) {
       if (executionListeners.size() == 1) {
@@ -125,22 +95,6 @@ public class ModelUtil {
     return element.getChildElementsByType(StartEvent.class).stream()
         .flatMap(i -> i.getEventDefinitions().stream())
         .filter(e -> e instanceof SignalEventDefinition)
-        .collect(Collectors.toList());
-  }
-
-  public static List<EventDefinition> getEventDefinitionsForMessageStartEvents(
-      final ModelElementInstance element) {
-    // Only validates that there are no duplicate message names in message definitions that refer to
-    // different messages, other cases are already handled by MessageValidator.
-    final Set<Message> referredMessages = new HashSet<>();
-    return element.getChildElementsByType(StartEvent.class).stream()
-        .flatMap(i -> i.getEventDefinitions().stream())
-        .filter(MessageEventDefinition.class::isInstance)
-        .filter(
-            definition -> {
-              final Message message = ((MessageEventDefinition) definition).getMessage();
-              return referredMessages.add(message);
-            })
         .collect(Collectors.toList());
   }
 
@@ -181,14 +135,6 @@ public class ModelUtil {
       final ModelElementInstance element, final Consumer<String> errorCollector) {
 
     final List<EventDefinition> definitions = getEventDefinitionsForSignalStartEvents(element);
-
-    verifyNoDuplicatedEventDefinition(definitions, errorCollector);
-  }
-
-  public static void verifyNoDuplicateMessageStartEvents(
-      final ModelElementInstance element, final Consumer<String> errorCollector) {
-
-    final List<EventDefinition> definitions = getEventDefinitionsForMessageStartEvents(element);
 
     verifyNoDuplicatedEventDefinition(definitions, errorCollector);
   }
@@ -403,23 +349,6 @@ public class ModelUtil {
         .map(Entry::getKey);
   }
 
-  public static void verifyNoDuplicatedConditionalExpressions(
-      final Collection<ConditionalEventDefinition> definitions,
-      final Consumer<String> errorCollector) {
-
-    final Stream<String> conditionExpressions =
-        definitions.stream()
-            .map(ConditionalEventDefinition::getCondition)
-            .filter(Objects::nonNull)
-            .map(Condition::getTextContent)
-            .filter(text -> text != null && !text.isEmpty())
-            .map(String::trim);
-
-    getDuplicatedEntries(conditionExpressions)
-        .map(ModelUtil::duplicatedConditionalExpressions)
-        .forEach(errorCollector);
-  }
-
   private static String duplicatedMessageNames(final String messageName) {
     return String.format(
         "Multiple message event definitions with the same name '%s' are not allowed.", messageName);
@@ -467,11 +396,5 @@ public class ModelUtil {
       errorCollector.accept(
           "An escalation boundary event should only be attached to a subprocess, or a call activity.");
     }
-  }
-
-  private static String duplicatedConditionalExpressions(final String expression) {
-    return String.format(
-        "Multiple conditional event definitions with the same condition expression '%s' are not allowed.",
-        expression);
   }
 }

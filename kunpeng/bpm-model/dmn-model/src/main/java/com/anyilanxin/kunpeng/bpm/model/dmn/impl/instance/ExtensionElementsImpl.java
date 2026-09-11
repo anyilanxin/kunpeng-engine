@@ -34,15 +34,17 @@ import java.util.Collection;
 public class ExtensionElementsImpl extends DmnModelElementInstanceImpl
     implements ExtensionElements {
 
-  public static void registerType(ModelBuilder modelBuilder) {
+  public static void registerType(final ModelBuilder modelBuilder) {
 
-    ModelElementTypeBuilder typeBuilder =
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(ExtensionElements.class, DMN_ELEMENT_EXTENSION_ELEMENTS)
             .namespaceUri(LATEST_DMN_NS)
             .instanceProvider(
                 new ModelElementTypeBuilder.ModelTypeInstanceProvider<ExtensionElements>() {
-                  public ExtensionElements newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public ExtensionElements newInstance(
+                      final ModelTypeInstanceContext instanceContext) {
                     return new ExtensionElementsImpl(instanceContext);
                   }
                 });
@@ -50,34 +52,40 @@ public class ExtensionElementsImpl extends DmnModelElementInstanceImpl
     typeBuilder.build();
   }
 
-  public ExtensionElementsImpl(ModelTypeInstanceContext context) {
+  public ExtensionElementsImpl(final ModelTypeInstanceContext context) {
     super(context);
   }
 
+  @Override
   public Collection<ModelElementInstance> getElements() {
     return ModelUtil.getModelElementCollection(getDomElement().getChildElements(), modelInstance);
   }
 
+  @Override
   public Query<ModelElementInstance> getElementsQuery() {
     return new QueryImpl<ModelElementInstance>(getElements());
   }
 
-  public ModelElementInstance addExtensionElement(String namespaceUri, String localName) {
-    ModelElementType extensionElementType =
+  @Override
+  public ModelElementInstance addExtensionElement(
+      final String namespaceUri, final String localName) {
+    final ModelElementType extensionElementType =
         modelInstance.registerGenericType(namespaceUri, localName);
-    ModelElementInstance extensionElement = extensionElementType.newInstance(modelInstance);
+    final ModelElementInstance extensionElement = extensionElementType.newInstance(modelInstance);
     addChildElement(extensionElement);
     return extensionElement;
   }
 
-  public <T extends ModelElementInstance> T addExtensionElement(Class<T> extensionElementClass) {
-    ModelElementInstance extensionElement = modelInstance.newInstance(extensionElementClass);
+  @Override
+  public <T extends ModelElementInstance> T addExtensionElement(
+      final Class<T> extensionElementClass) {
+    final ModelElementInstance extensionElement = modelInstance.newInstance(extensionElementClass);
     addChildElement(extensionElement);
     return extensionElementClass.cast(extensionElement);
   }
 
   @Override
-  public void addChildElement(ModelElementInstance extensionElement) {
+  public void addChildElement(final ModelElementInstance extensionElement) {
     getDomElement().appendChild(extensionElement.getDomElement());
   }
 }

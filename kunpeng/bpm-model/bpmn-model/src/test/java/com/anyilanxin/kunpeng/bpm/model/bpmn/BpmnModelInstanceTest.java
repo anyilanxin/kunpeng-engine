@@ -16,26 +16,28 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.bpmn;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Definitions;
 import org.junit.Test;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+
 public class BpmnModelInstanceTest {
 
-  @Test
-  public void testClone() throws Exception {
+    @Test
+    public void testClone() throws Exception {
 
-    final BpmnModelInstance modelInstance = Bpmn.createEmptyModel();
+        final BpmnModelInstance modelInstance = Bpmn.createEmptyModel();
 
-    final Definitions definitions = modelInstance.newInstance(Definitions.class);
-    definitions.setId("TestId");
-    modelInstance.setDefinitions(definitions);
+        final Definitions definitions = modelInstance.newInstance(Definitions.class);
+        definitions.setId("TestId");
+        modelInstance.setDefinitions(definitions);
 
-    final BpmnModelInstance cloneInstance = modelInstance.clone();
-    cloneInstance.getDefinitions().setId("TestId2");
+        final BpmnModelInstance cloneInstance = modelInstance.clone();
+        cloneInstance.getDefinitions().setId("TestId2");
 
-    assertThat(modelInstance.getDefinitions().getId()).isEqualTo("TestId");
-    assertThat(cloneInstance.getDefinitions().getId()).isEqualTo("TestId2");
-  }
+        assertThat(modelInstance.getDefinitions().getId(), is(equalTo("TestId")));
+        assertThat(cloneInstance.getDefinitions().getId(), is(equalTo("TestId2")));
+    }
 }

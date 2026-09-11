@@ -17,34 +17,35 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn.instance.bpmndi;
 
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMNDI_NS;
-
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BpmnModelElementInstanceTest;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.di.LabeledEdge;
+
 import java.util.Arrays;
 import java.util.Collection;
+
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMNDI_NS;
 
 /**
  * @author Sebastian Menski
  */
 public class BpmnEdgeTest extends BpmnModelElementInstanceTest {
 
-  @Override
-  public TypeAssumption getTypeAssumption() {
-    return new TypeAssumption(BPMNDI_NS, LabeledEdge.class, false);
-  }
+    @Override
+    public TypeAssumption getTypeAssumption() {
+        return new TypeAssumption(BPMNDI_NS, LabeledEdge.class, false);
+    }
 
-  @Override
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
-    return Arrays.asList(new ChildElementAssumption(BPMNDI_NS, BpmnLabel.class, 0, 1));
-  }
+    @Override
+    public Collection<ChildElementAssumption> getChildElementAssumptions() {
+        return Arrays.asList(new ChildElementAssumption(BPMNDI_NS, BpmnLabel.class, 0, 1));
+    }
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return Arrays.asList(
-        new AttributeAssumption("bpmnElement"),
-        new AttributeAssumption("sourceElement"),
-        new AttributeAssumption("targetElement"),
-        new AttributeAssumption("messageVisibleKind"));
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return Arrays.asList(
+                new AttributeAssumption("bpmnElement"),
+                new AttributeAssumption("sourceElement"),
+                new AttributeAssumption("targetElement"),
+                new AttributeAssumption("messageVisibleKind"));
+    }
 }

@@ -25,15 +25,15 @@ public class ModelIoException extends RuntimeException {
 
   public ModelIoException() {}
 
-  public ModelIoException(String message) {
+  public ModelIoException(final String message) {
     super(message);
   }
 
-  public ModelIoException(String message, Throwable cause) {
+  public ModelIoException(final String message, final Throwable cause) {
     super(message, cause);
   }
 
-  public ModelIoException(Throwable cause) {
+  public ModelIoException(final Throwable cause) {
     super(cause);
   }
 }

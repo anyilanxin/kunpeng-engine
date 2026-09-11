@@ -17,30 +17,31 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn.instance.di;
 
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DC_NS;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DI_NS;
-
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BpmnModelElementInstanceTest;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.dc.Bounds;
+
 import java.util.Arrays;
 import java.util.Collection;
+
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DC_NS;
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DI_NS;
 
 /**
  * @author Sebastian Menski
  */
 public class ShapeTest extends BpmnModelElementInstanceTest {
-  @Override
-  public TypeAssumption getTypeAssumption() {
-    return new TypeAssumption(DI_NS, Node.class, true);
-  }
+    @Override
+    public TypeAssumption getTypeAssumption() {
+        return new TypeAssumption(DI_NS, Node.class, true);
+    }
 
-  @Override
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
-    return Arrays.asList(new ChildElementAssumption(DC_NS, Bounds.class, 1, 1));
-  }
+    @Override
+    public Collection<ChildElementAssumption> getChildElementAssumptions() {
+        return Arrays.asList(new ChildElementAssumption(DC_NS, Bounds.class, 1, 1));
+    }
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return null;
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return null;
+    }
 }

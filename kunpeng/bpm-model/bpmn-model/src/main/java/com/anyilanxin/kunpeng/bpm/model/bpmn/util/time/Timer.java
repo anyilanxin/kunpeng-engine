@@ -23,4 +23,6 @@ public interface Timer {
   int getRepetitions();
 
   long getDueDate(long epochMillis);
+
+  String getContent();
 }

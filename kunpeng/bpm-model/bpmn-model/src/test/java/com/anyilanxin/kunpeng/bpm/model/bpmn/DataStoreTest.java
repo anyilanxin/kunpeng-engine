@@ -17,42 +17,42 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.DataStore;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.DataStoreReference;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Falko Menge
  */
 public class DataStoreTest {
 
-  private static BpmnModelInstance modelInstance;
+    private static BpmnModelInstance modelInstance;
 
-  @BeforeClass
-  public static void parseModel() {
-    modelInstance =
-        Bpmn.readModelFromStream(DataStoreTest.class.getResourceAsStream("DataStoreTest.bpmn"));
-  }
+    @BeforeClass
+    public static void parseModel() {
+        modelInstance =
+                Bpmn.readModelFromStream(DataStoreTest.class.getResourceAsStream("DataStoreTest.bpmn"));
+    }
 
-  @Test
-  public void testGetDataStore() {
-    final DataStore dataStore = modelInstance.getModelElementById("myDataStore");
-    assertThat(dataStore).isNotNull();
-    assertThat(dataStore.getName()).isEqualTo("My Data Store");
-    assertThat(dataStore.getCapacity()).isEqualTo(23);
-    assertThat(dataStore.isUnlimited()).isFalse();
-  }
+    @Test
+    public void testGetDataStore() {
+        final DataStore dataStore = modelInstance.getModelElementById("myDataStore");
+        assertThat(dataStore).isNotNull();
+        assertThat(dataStore.getName()).isEqualTo("My Data Store");
+        assertThat(dataStore.getCapacity()).isEqualTo(23);
+        assertThat(dataStore.isUnlimited()).isFalse();
+    }
 
-  @Test
-  public void testGetDataStoreReference() {
-    final DataStoreReference dataStoreReference =
-        modelInstance.getModelElementById("myDataStoreReference");
-    final DataStore dataStore = modelInstance.getModelElementById("myDataStore");
-    assertThat(dataStoreReference).isNotNull();
-    assertThat(dataStoreReference.getName()).isEqualTo("My Data Store Reference");
-    assertThat(dataStoreReference.getDataStore()).isEqualTo(dataStore);
-  }
+    @Test
+    public void testGetDataStoreReference() {
+        final DataStoreReference dataStoreReference =
+                modelInstance.getModelElementById("myDataStoreReference");
+        final DataStore dataStore = modelInstance.getModelElementById("myDataStore");
+        assertThat(dataStoreReference).isNotNull();
+        assertThat(dataStoreReference.getName()).isEqualTo("My Data Store Reference");
+        assertThat(dataStoreReference.getDataStore()).isEqualTo(dataStore);
+    }
 }

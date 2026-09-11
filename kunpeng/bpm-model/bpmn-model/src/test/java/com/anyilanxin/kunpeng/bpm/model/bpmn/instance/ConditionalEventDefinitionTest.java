@@ -16,31 +16,32 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.Collection;
-import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class ConditionalEventDefinitionTest extends AbstractEventDefinitionTest {
 
-  @Override
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
-    return Arrays.asList(new ChildElementAssumption(Condition.class, 1, 1));
-  }
+    @Override
+    public Collection<ChildElementAssumption> getChildElementAssumptions() {
+        return Arrays.asList(new ChildElementAssumption(Condition.class, 1, 1));
+    }
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return null;
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return null;
+    }
 
-  @Test
-  public void getEventDefinition() {
-    final ConditionalEventDefinition eventDefinition =
-        eventDefinitionQuery.filterByType(ConditionalEventDefinition.class).singleResult();
-    assertThat(eventDefinition).isNotNull();
-    final Expression condition = eventDefinition.getCondition();
-    assertThat(condition).isNotNull();
-    assertThat(condition.getTextContent()).isEqualTo("${test}");
-  }
+    @Test
+    public void getEventDefinition() {
+        final ConditionalEventDefinition eventDefinition =
+                eventDefinitionQuery.filterByType(ConditionalEventDefinition.class).singleResult();
+        assertThat(eventDefinition).isNotNull();
+        final Expression condition = eventDefinition.getCondition();
+        assertThat(condition).isNotNull();
+        assertThat(condition.getTextContent()).isEqualTo("${test}");
+    }
 }

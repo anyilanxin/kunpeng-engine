@@ -16,9 +16,7 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_NAME;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_NAMED_ELEMENT;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.*;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DmnElement;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.NamedElement;
@@ -31,20 +29,22 @@ public abstract class NamedElementImpl extends DmnElementImpl implements NamedEl
 
   protected static Attribute<String> nameAttribute;
 
-  public NamedElementImpl(ModelTypeInstanceContext instanceContext) {
+  public NamedElementImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public String getName() {
     return nameAttribute.getValue(this);
   }
 
-  public void setName(String name) {
+  @Override
+  public void setName(final String name) {
     nameAttribute.setValue(this, name);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(NamedElement.class, DMN_ELEMENT_NAMED_ELEMENT)
             .namespaceUri(LATEST_DMN_NS)

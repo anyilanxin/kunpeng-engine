@@ -16,36 +16,36 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.util;
 
-import java.io.InputStream;
-
 import com.anyilanxin.kunpeng.bpm.model.dmn.Dmn;
 import com.anyilanxin.kunpeng.bpm.model.dmn.DmnModelInstance;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.util.IoUtil;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 
+import java.io.InputStream;
+
 public class ParseDmnModelRule extends TestWatcher {
 
   protected DmnModelInstance dmnModelInstance;
 
   @Override
-  protected void starting(Description description) {
+  protected void starting(final Description description) {
 
-    DmnModelResource dmnModelResource = description.getAnnotation(DmnModelResource.class);
+    final DmnModelResource dmnModelResource = description.getAnnotation(DmnModelResource.class);
 
-    if(dmnModelResource != null) {
+    if (dmnModelResource != null) {
 
       String resourcePath = dmnModelResource.resource();
 
       if (resourcePath.isEmpty()) {
-        Class<?> testClass = description.getTestClass();
-        String methodName = description.getMethodName();
+        final Class<?> testClass = description.getTestClass();
+        final String methodName = description.getMethodName();
 
-        String resourceFolderName = testClass.getName().replaceAll("\\.", "/");
+        final String resourceFolderName = testClass.getName().replaceAll("\\.", "/");
         resourcePath = resourceFolderName + "." + methodName + ".dmn";
       }
 
-      InputStream resourceAsStream = getClass().getClassLoader().getResourceAsStream(resourcePath);
+      final InputStream resourceAsStream = getClass().getClassLoader().getResourceAsStream(resourcePath);
       try {
         dmnModelInstance = Dmn.readModelFromStream(resourceAsStream);
       } finally {

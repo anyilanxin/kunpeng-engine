@@ -38,13 +38,14 @@ public class DomDocumentImpl implements DomDocument {
 
   private final Document document;
 
-  public DomDocumentImpl(Document document) {
+  public DomDocumentImpl(final Document document) {
     this.document = document;
   }
 
+  @Override
   public DomElement getRootElement() {
     synchronized (document) {
-      Element documentElement = document.getDocumentElement();
+      final Element documentElement = document.getDocumentElement();
       if (documentElement != null) {
         return new DomElementImpl(documentElement);
       } else {
@@ -53,10 +54,11 @@ public class DomDocumentImpl implements DomDocument {
     }
   }
 
-  public void setRootElement(DomElement rootElement) {
+  @Override
+  public void setRootElement(final DomElement rootElement) {
     synchronized (document) {
-      Element documentElement = document.getDocumentElement();
-      Element newDocumentElement = ((DomElementImpl) rootElement).getElement();
+      final Element documentElement = document.getDocumentElement();
+      final Element newDocumentElement = ((DomElementImpl) rootElement).getElement();
       if (documentElement != null) {
         document.replaceChild(newDocumentElement, documentElement);
       } else {
@@ -65,18 +67,20 @@ public class DomDocumentImpl implements DomDocument {
     }
   }
 
-  public DomElement createElement(String namespaceUri, String localName) {
+  @Override
+  public DomElement createElement(final String namespaceUri, final String localName) {
     synchronized (document) {
-      XmlQName xmlQName = new XmlQName(this, namespaceUri, localName);
-      Element element =
+      final XmlQName xmlQName = new XmlQName(this, namespaceUri, localName);
+      final Element element =
           document.createElementNS(xmlQName.getNamespaceUri(), xmlQName.getPrefixedName());
       return new DomElementImpl(element);
     }
   }
 
-  public DomElement getElementById(String id) {
+  @Override
+  public DomElement getElementById(final String id) {
     synchronized (document) {
-      Element element = document.getElementById(id);
+      final Element element = document.getElementById(id);
       if (element != null) {
         return new DomElementImpl(element);
       } else {
@@ -85,20 +89,23 @@ public class DomDocumentImpl implements DomDocument {
     }
   }
 
-  public List<DomElement> getElementsByNameNs(String namespaceUri, String localName) {
+  @Override
+  public List<DomElement> getElementsByNameNs(final String namespaceUri, final String localName) {
     synchronized (document) {
-      NodeList elementsByTagNameNS = document.getElementsByTagNameNS(namespaceUri, localName);
+      final NodeList elementsByTagNameNS = document.getElementsByTagNameNS(namespaceUri, localName);
       return DomUtil.filterNodeListByName(elementsByTagNameNS, namespaceUri, localName);
     }
   }
 
+  @Override
   public DOMSource getDomSource() {
     return new DOMSource(document);
   }
 
-  public String registerNamespace(String namespaceUri) {
+  @Override
+  public String registerNamespace(final String namespaceUri) {
     synchronized (document) {
-      DomElement rootElement = getRootElement();
+      final DomElement rootElement = getRootElement();
       if (rootElement != null) {
         return rootElement.registerNamespace(namespaceUri);
       } else {
@@ -108,9 +115,10 @@ public class DomDocumentImpl implements DomDocument {
     }
   }
 
-  public void registerNamespace(String prefix, String namespaceUri) {
+  @Override
+  public void registerNamespace(final String prefix, final String namespaceUri) {
     synchronized (document) {
-      DomElement rootElement = getRootElement();
+      final DomElement rootElement = getRootElement();
       if (rootElement != null) {
         rootElement.registerNamespace(prefix, namespaceUri);
       } else {
@@ -122,7 +130,7 @@ public class DomDocumentImpl implements DomDocument {
 
   protected String getUnusedGenericNsPrefix() {
     synchronized (document) {
-      Element documentElement = document.getDocumentElement();
+      final Element documentElement = document.getDocumentElement();
       if (documentElement == null) {
         return GENERIC_NS_PREFIX + "0";
       } else {
@@ -136,13 +144,15 @@ public class DomDocumentImpl implements DomDocument {
     }
   }
 
+  @Override
   public DomDocument clone() {
     synchronized (document) {
       return new DomDocumentImpl((Document) document.cloneNode(true));
     }
   }
 
-  public boolean equals(Object o) {
+  @Override
+  public boolean equals(final Object o) {
     if (this == o) {
       return true;
     }
@@ -150,10 +160,11 @@ public class DomDocumentImpl implements DomDocument {
       return false;
     }
 
-    DomDocumentImpl that = (DomDocumentImpl) o;
+    final DomDocumentImpl that = (DomDocumentImpl) o;
     return document.equals(that.document);
   }
 
+  @Override
   public int hashCode() {
     return document.hashCode();
   }

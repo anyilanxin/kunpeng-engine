@@ -29,20 +29,21 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 public class InputDecisionReferenceImpl extends DmnElementReferenceImpl
     implements InputDecisionReference {
 
-  public InputDecisionReferenceImpl(ModelTypeInstanceContext instanceContext) {
+  public InputDecisionReferenceImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(InputDecisionReference.class, DMN_ELEMENT_INPUT_DECISION_REFERENCE)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(DmnElementReference.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<InputDecisionReference>() {
+                  @Override
                   public InputDecisionReference newInstance(
-                      ModelTypeInstanceContext instanceContext) {
+                      final ModelTypeInstanceContext instanceContext) {
                     return new InputDecisionReferenceImpl(instanceContext);
                   }
                 });

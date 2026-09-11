@@ -25,7 +25,7 @@ import com.anyilanxin.kunpeng.bpm.model.xml.impl.type.ModelElementTypeImpl;
  */
 public class BooleanAttributeBuilder extends AttributeBuilderImpl<Boolean> {
 
-  public BooleanAttributeBuilder(String attributeName, ModelElementTypeImpl modelType) {
+  public BooleanAttributeBuilder(final String attributeName, final ModelElementTypeImpl modelType) {
     super(attributeName, modelType, new BooleanAttribute(modelType));
   }
 }

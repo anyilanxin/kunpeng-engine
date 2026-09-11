@@ -18,14 +18,17 @@
 package com.anyilanxin.kunpeng.bpm.model.bpmn.instance.dc;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BpmnModelElementInstance;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.NamedBpmnElement;
 
 /**
  * The DC font element
  *
  * @author Sebastian Menski
  */
-public interface Font extends BpmnModelElementInstance, NamedBpmnElement {
+public interface Font extends BpmnModelElementInstance {
+
+  String getName();
+
+  void setName(String name);
 
   Double getSize();
 

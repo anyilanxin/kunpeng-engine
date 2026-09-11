@@ -54,7 +54,7 @@ public class ChildElementCollectionImpl<T extends ModelElementInstance>
   private boolean isMutable = true;
 
   public ChildElementCollectionImpl(
-      Class<T> childElementTypeClass, ModelElementTypeImpl parentElementType) {
+      final Class<T> childElementTypeClass, final ModelElementTypeImpl parentElementType) {
     this.childElementTypeClass = childElementTypeClass;
     this.parentElementType = parentElementType;
   }
@@ -63,10 +63,11 @@ public class ChildElementCollectionImpl<T extends ModelElementInstance>
     setMutable(false);
   }
 
-  public void setMutable(boolean isMutable) {
+  public void setMutable(final boolean isMutable) {
     this.isMutable = isMutable;
   }
 
+  @Override
   public boolean isImmutable() {
     return !isMutable;
   }
@@ -78,67 +79,75 @@ public class ChildElementCollectionImpl<T extends ModelElementInstance>
    *
    * @return the view represented by this collection
    */
-  private Collection<DomElement> getView(ModelElementInstanceImpl modelElement) {
+  private Collection<DomElement> getView(final ModelElementInstanceImpl modelElement) {
     return modelElement
         .getDomElement()
         .getChildElementsByType(modelElement.getModelInstance(), childElementTypeClass);
   }
 
+  @Override
   public int getMinOccurs() {
     return minOccurs;
   }
 
-  public void setMinOccurs(int minOccurs) {
+  public void setMinOccurs(final int minOccurs) {
     this.minOccurs = minOccurs;
   }
 
+  @Override
   public int getMaxOccurs() {
     return maxOccurs;
   }
 
-  public ModelElementType getChildElementType(Model model) {
+  @Override
+  public ModelElementType getChildElementType(final Model model) {
     return model.getType(childElementTypeClass);
   }
 
+  @Override
   public Class<T> getChildElementTypeClass() {
     return childElementTypeClass;
   }
 
+  @Override
   public ModelElementType getParentElementType() {
     return parentElementType;
   }
 
-  public void setMaxOccurs(int maxOccurs) {
+  public void setMaxOccurs(final int maxOccurs) {
     this.maxOccurs = maxOccurs;
   }
 
   /** the "add" operation used by the collection */
-  private void performAddOperation(ModelElementInstanceImpl modelElement, T e) {
+  private void performAddOperation(final ModelElementInstanceImpl modelElement, final T e) {
     modelElement.addChildElement(e);
   }
 
   /** the "remove" operation used by this collection */
-  private boolean performRemoveOperation(ModelElementInstanceImpl modelElement, Object e) {
+  private boolean performRemoveOperation(
+      final ModelElementInstanceImpl modelElement, final Object e) {
     return modelElement.removeChildElement((ModelElementInstanceImpl) e);
   }
 
   /** the "clear" operation used by this collection */
   private void performClearOperation(
-      ModelElementInstanceImpl modelElement, Collection<DomElement> elementsToRemove) {
-    Collection<ModelElementInstance> modelElements =
+      final ModelElementInstanceImpl modelElement, final Collection<DomElement> elementsToRemove) {
+    final Collection<ModelElementInstance> modelElements =
         ModelUtil.getModelElementCollection(elementsToRemove, modelElement.getModelInstance());
-    for (ModelElementInstance element : modelElements) {
+    for (final ModelElementInstance element : modelElements) {
       modelElement.removeChildElement(element);
     }
   }
 
-  public Collection<T> get(ModelElementInstance element) {
+  @Override
+  public Collection<T> get(final ModelElementInstance element) {
 
     final ModelElementInstanceImpl modelElement = (ModelElementInstanceImpl) element;
 
     return new Collection<T>() {
 
-      public boolean contains(Object o) {
+      @Override
+      public boolean contains(final Object o) {
         if (o == null) {
           return false;
 
@@ -150,8 +159,9 @@ public class ChildElementCollectionImpl<T extends ModelElementInstance>
         }
       }
 
-      public boolean containsAll(Collection<?> c) {
-        for (Object elementToCheck : c) {
+      @Override
+      public boolean containsAll(final Collection<?> c) {
+        for (final Object elementToCheck : c) {
           if (!contains(elementToCheck)) {
             return false;
           }
@@ -159,36 +169,42 @@ public class ChildElementCollectionImpl<T extends ModelElementInstance>
         return true;
       }
 
+      @Override
       public boolean isEmpty() {
         return getView(modelElement).isEmpty();
       }
 
+      @Override
       public Iterator<T> iterator() {
-        Collection<T> modelElementCollection =
+        final Collection<T> modelElementCollection =
             ModelUtil.getModelElementCollection(
                 getView(modelElement), modelElement.getModelInstance());
         return modelElementCollection.iterator();
       }
 
+      @Override
       public Object[] toArray() {
-        Collection<T> modelElementCollection =
+        final Collection<T> modelElementCollection =
             ModelUtil.getModelElementCollection(
                 getView(modelElement), modelElement.getModelInstance());
         return modelElementCollection.toArray();
       }
 
-      public <U> U[] toArray(U[] a) {
-        Collection<T> modelElementCollection =
+      @Override
+      public <U> U[] toArray(final U[] a) {
+        final Collection<T> modelElementCollection =
             ModelUtil.getModelElementCollection(
                 getView(modelElement), modelElement.getModelInstance());
         return modelElementCollection.toArray(a);
       }
 
+      @Override
       public int size() {
         return getView(modelElement).size();
       }
 
-      public boolean add(T e) {
+      @Override
+      public boolean add(final T e) {
         if (!isMutable) {
           throw new UnsupportedModelOperationException("add()", "collection is immutable");
         }
@@ -196,26 +212,29 @@ public class ChildElementCollectionImpl<T extends ModelElementInstance>
         return true;
       }
 
-      public boolean addAll(Collection<? extends T> c) {
+      @Override
+      public boolean addAll(final Collection<? extends T> c) {
         if (!isMutable) {
           throw new UnsupportedModelOperationException("addAll()", "collection is immutable");
         }
         boolean result = false;
-        for (T t : c) {
+        for (final T t : c) {
           result |= add(t);
         }
         return result;
       }
 
+      @Override
       public void clear() {
         if (!isMutable) {
           throw new UnsupportedModelOperationException("clear()", "collection is immutable");
         }
-        Collection<DomElement> view = getView(modelElement);
+        final Collection<DomElement> view = getView(modelElement);
         performClearOperation(modelElement, view);
       }
 
-      public boolean remove(Object e) {
+      @Override
+      public boolean remove(final Object e) {
         if (!isMutable) {
           throw new UnsupportedModelOperationException("remove()", "collection is immutable");
         }
@@ -223,18 +242,20 @@ public class ChildElementCollectionImpl<T extends ModelElementInstance>
         return performRemoveOperation(modelElement, e);
       }
 
-      public boolean removeAll(Collection<?> c) {
+      @Override
+      public boolean removeAll(final Collection<?> c) {
         if (!isMutable) {
           throw new UnsupportedModelOperationException("removeAll()", "collection is immutable");
         }
         boolean result = false;
-        for (Object t : c) {
+        for (final Object t : c) {
           result |= remove(t);
         }
         return result;
       }
 
-      public boolean retainAll(Collection<?> c) {
+      @Override
+      public boolean retainAll(final Collection<?> c) {
         throw new UnsupportedModelOperationException("retainAll()", "not implemented");
       }
     };

@@ -28,14 +28,14 @@ public abstract class AbstractReferenceAssert<
         S extends AbstractReferenceAssert<S, T>, T extends Reference<?>>
     extends AbstractAssert<S, T> {
 
-  protected AbstractReferenceAssert(T actual, Class<?> selfType) {
+  protected AbstractReferenceAssert(final T actual, final Class<?> selfType) {
     super(actual, selfType);
   }
 
-  public S hasIdentifier(ModelElementInstance instance, String identifier) {
+  public S hasIdentifier(final ModelElementInstance instance, final String identifier) {
     isNotNull();
 
-    String actualIdentifier = actual.getReferenceIdentifier(instance);
+    final String actualIdentifier = actual.getReferenceIdentifier(instance);
 
     if (!identifier.equals(actualIdentifier)) {
       failWithMessage(
@@ -46,10 +46,11 @@ public abstract class AbstractReferenceAssert<
     return myself;
   }
 
-  public S hasTargetElement(ModelElementInstance instance, ModelElementInstance targetElement) {
+  public S hasTargetElement(
+      final ModelElementInstance instance, final ModelElementInstance targetElement) {
     isNotNull();
 
-    ModelElementInstance actualTargetElement = actual.getReferenceTargetElement(instance);
+    final ModelElementInstance actualTargetElement = actual.getReferenceTargetElement(instance);
 
     if (!targetElement.equals(actualTargetElement)) {
       failWithMessage(
@@ -60,10 +61,10 @@ public abstract class AbstractReferenceAssert<
     return myself;
   }
 
-  public S hasNoTargetElement(ModelElementInstance instance) {
+  public S hasNoTargetElement(final ModelElementInstance instance) {
     isNotNull();
 
-    ModelElementInstance actualTargetElement = actual.getReferenceTargetElement(instance);
+    final ModelElementInstance actualTargetElement = actual.getReferenceTargetElement(instance);
 
     if (actualTargetElement != null) {
       failWithMessage(
@@ -74,10 +75,10 @@ public abstract class AbstractReferenceAssert<
     return myself;
   }
 
-  public S hasTargetAttribute(Attribute<?> targetAttribute) {
+  public S hasTargetAttribute(final Attribute<?> targetAttribute) {
     isNotNull();
 
-    Attribute<String> actualTargetAttribute = actual.getReferenceTargetAttribute();
+    final Attribute<String> actualTargetAttribute = actual.getReferenceTargetAttribute();
 
     if (!targetAttribute.equals(actualTargetAttribute)) {
       failWithMessage(

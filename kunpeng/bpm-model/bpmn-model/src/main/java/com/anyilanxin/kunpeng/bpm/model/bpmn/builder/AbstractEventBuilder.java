@@ -25,57 +25,40 @@ import java.util.function.Consumer;
  * @author Sebastian Menski
  */
 public abstract class AbstractEventBuilder<B extends AbstractEventBuilder<B, E>, E extends Event>
-    extends AbstractFlowNodeBuilder<B, E>
-    implements ZeebeExecutionListenersBuilder<B>, ZeebePropertiesBuilder<B> {
+    extends AbstractFlowNodeBuilder<B, E> implements KunpengExecutionListenersBuilder<B> {
 
-  private final ZeebeExecutionListenersBuilder<B> zeebeExecutionListenersBuilder;
-  private final ZeebePropertiesBuilder<B> zeebePropertiesBuilder;
+  private final KunpengExecutionListenersBuilder<B> kunpengExecutionListenersBuilder;
 
   protected AbstractEventBuilder(
       final BpmnModelInstance modelInstance, final E element, final Class<?> selfType) {
     super(modelInstance, element, selfType);
-    zeebeExecutionListenersBuilder = new ZeebeExecutionListenersBuilderImpl<>(myself);
-    zeebePropertiesBuilder = new ZeebePropertiesBuilderImpl<>(myself);
+    kunpengExecutionListenersBuilder = new KunpengExecutionListenersBuilderImpl<>(myself);
   }
 
   @Override
-  public B zeebeStartExecutionListener(final String type, final String retries) {
-    return zeebeExecutionListenersBuilder.zeebeStartExecutionListener(type, retries);
+  public B kunpengStartExecutionListener(final String type, final String retries) {
+    return kunpengExecutionListenersBuilder.kunpengStartExecutionListener(type, retries);
   }
 
   @Override
-  public B zeebeStartExecutionListener(final String type) {
-    return zeebeExecutionListenersBuilder.zeebeStartExecutionListener(type);
+  public B kunpengStartExecutionListener(final String type) {
+    return kunpengExecutionListenersBuilder.kunpengStartExecutionListener(type);
   }
 
   @Override
-  public B zeebeEndExecutionListener(final String type, final String retries) {
-    return zeebeExecutionListenersBuilder.zeebeEndExecutionListener(type, retries);
+  public B kunpengEndExecutionListener(final String type, final String retries) {
+    return kunpengExecutionListenersBuilder.kunpengEndExecutionListener(type, retries);
   }
 
   @Override
-  public B zeebeEndExecutionListener(final String type) {
-    return zeebeExecutionListenersBuilder.zeebeEndExecutionListener(type);
+  public B kunpengEndExecutionListener(final String type) {
+    return kunpengExecutionListenersBuilder.kunpengEndExecutionListener(type);
   }
 
   @Override
-  public B zeebeCancelExecutionListener(final String type, final String retries) {
-    return zeebeExecutionListenersBuilder.zeebeCancelExecutionListener(type, retries);
-  }
-
-  @Override
-  public B zeebeCancelExecutionListener(final String type) {
-    return zeebeExecutionListenersBuilder.zeebeCancelExecutionListener(type);
-  }
-
-  @Override
-  public B zeebeExecutionListener(
+  public B kunpengExecutionListener(
       final Consumer<ExecutionListenerBuilder> executionListenerBuilderConsumer) {
-    return zeebeExecutionListenersBuilder.zeebeExecutionListener(executionListenerBuilderConsumer);
-  }
-
-  @Override
-  public B zeebeProperty(final String name, final String value) {
-    return zeebePropertiesBuilder.zeebeProperty(name, value);
+    return kunpengExecutionListenersBuilder.kunpengExecutionListener(
+        executionListenerBuilderConsumer);
   }
 }

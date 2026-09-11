@@ -17,10 +17,10 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn.test.assertions;
 
-import org.assertj.core.api.AbstractAssert;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.attribute.Attribute;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.Reference;
+import org.assertj.core.api.AbstractAssert;
 
 /**
  * @author Sebastian Menski

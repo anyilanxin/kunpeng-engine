@@ -16,9 +16,7 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_EXPRESSION_LANGUAGE;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_LITERAL_EXPRESSION;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.*;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Expression;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.ImportedValues;
@@ -39,43 +37,51 @@ public class LiteralExpressionImpl extends ExpressionImpl implements LiteralExpr
   protected static ChildElement<Text> textChild;
   protected static ChildElement<ImportedValues> importedValuesChild;
 
-  public LiteralExpressionImpl(ModelTypeInstanceContext instanceContext) {
+  public LiteralExpressionImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public String getExpressionLanguage() {
     return expressionLanguageAttribute.getValue(this);
   }
 
-  public void setExpressionLanguage(String expressionLanguage) {
+  @Override
+  public void setExpressionLanguage(final String expressionLanguage) {
     expressionLanguageAttribute.setValue(this, expressionLanguage);
   }
 
+  @Override
   public Text getText() {
     return textChild.getChild(this);
   }
 
-  public void setText(Text text) {
+  @Override
+  public void setText(final Text text) {
     textChild.setChild(this, text);
   }
 
+  @Override
   public ImportedValues getImportValues() {
     return importedValuesChild.getChild(this);
   }
 
-  public void setImportValues(ImportedValues importedValues) {
+  @Override
+  public void setImportValues(final ImportedValues importedValues) {
     importedValuesChild.setChild(this, importedValues);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(LiteralExpression.class, DMN_ELEMENT_LITERAL_EXPRESSION)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(Expression.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<LiteralExpression>() {
-                  public LiteralExpression newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public LiteralExpression newInstance(
+                      final ModelTypeInstanceContext instanceContext) {
                     return new LiteralExpressionImpl(instanceContext);
                   }
                 });
@@ -83,7 +89,7 @@ public class LiteralExpressionImpl extends ExpressionImpl implements LiteralExpr
     expressionLanguageAttribute =
         typeBuilder.stringAttribute(DMN_ATTRIBUTE_EXPRESSION_LANGUAGE).build();
 
-    SequenceBuilder sequenceBuilder = typeBuilder.sequence();
+    final SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
     textChild = sequenceBuilder.element(Text.class).build();
 

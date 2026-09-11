@@ -34,39 +34,44 @@ public class ContextEntryImpl extends DmnModelElementInstanceImpl implements Con
   protected static ChildElement<Variable> variableChild;
   protected static ChildElement<Expression> expressionChild;
 
-  public ContextEntryImpl(ModelTypeInstanceContext instanceContext) {
+  public ContextEntryImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public Variable getVariable() {
     return variableChild.getChild(this);
   }
 
-  public void setVariable(Variable variable) {
+  @Override
+  public void setVariable(final Variable variable) {
     variableChild.setChild(this, variable);
   }
 
+  @Override
   public Expression getExpression() {
     return expressionChild.getChild(this);
   }
 
-  public void setExpression(Expression expression) {
+  @Override
+  public void setExpression(final Expression expression) {
     expressionChild.setChild(this, expression);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(ContextEntry.class, DMN_ELEMENT_CONTEXT_ENTRY)
             .namespaceUri(LATEST_DMN_NS)
             .instanceProvider(
                 new ModelTypeInstanceProvider<ContextEntry>() {
-                  public ContextEntry newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public ContextEntry newInstance(final ModelTypeInstanceContext instanceContext) {
                     return new ContextEntryImpl(instanceContext);
                   }
                 });
 
-    SequenceBuilder sequenceBuilder = typeBuilder.sequence();
+    final SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
     variableChild = sequenceBuilder.element(Variable.class).build();
 

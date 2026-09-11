@@ -28,19 +28,21 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 
 public class InputDataReferenceImpl extends DmnElementReferenceImpl implements InputDataReference {
 
-  public InputDataReferenceImpl(ModelTypeInstanceContext instanceContext) {
+  public InputDataReferenceImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(InputDataReference.class, DMN_ELEMENT_INPUT_DATA_REFERENCE)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(DmnElementReference.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<InputDataReference>() {
-                  public InputDataReference newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public InputDataReference newInstance(
+                      final ModelTypeInstanceContext instanceContext) {
                     return new InputDataReferenceImpl(instanceContext);
                   }
                 });

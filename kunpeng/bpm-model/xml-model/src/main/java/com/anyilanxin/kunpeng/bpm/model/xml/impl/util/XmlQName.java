@@ -34,7 +34,7 @@ public class XmlQName {
     KNOWN_PREFIXES = new HashMap<String, String>();
     KNOWN_PREFIXES.put("http://www.camunda.com/fox", "fox");
     KNOWN_PREFIXES.put("http://activiti.org/bpmn", "camunda");
-    KNOWN_PREFIXES.put("http://camunda.org/schema/1.0/bpmn", "camunda");
+    KNOWN_PREFIXES.put("https://anyilanxin.com/schema/1.0/bpmn", "camunda");
     KNOWN_PREFIXES.put("http://www.omg.org/spec/BPMN/20100524/MODEL", "bpmn2");
     KNOWN_PREFIXES.put("http://www.omg.org/spec/BPMN/20100524/DI", "bpmndi");
     KNOWN_PREFIXES.put("http://www.omg.org/spec/DD/20100524/DI", "di");
@@ -49,20 +49,24 @@ public class XmlQName {
   protected String namespaceUri;
   protected String prefix;
 
-  public XmlQName(DomDocument document, String namespaceUri, String localName) {
+  public XmlQName(final DomDocument document, final String namespaceUri, final String localName) {
     this(document, null, namespaceUri, localName);
   }
 
-  public XmlQName(DomElement element, String namespaceUri, String localName) {
+  public XmlQName(final DomElement element, final String namespaceUri, final String localName) {
     this(element.getDocument(), element, namespaceUri, localName);
   }
 
-  public XmlQName(DomDocument document, DomElement element, String namespaceUri, String localName) {
-    this.rootElement = document.getRootElement();
+  public XmlQName(
+      final DomDocument document,
+      final DomElement element,
+      final String namespaceUri,
+      final String localName) {
+    rootElement = document.getRootElement();
     this.element = element;
     this.localName = localName;
     this.namespaceUri = namespaceUri;
-    this.prefix = null;
+    prefix = null;
   }
 
   public String getNamespaceUri() {
@@ -77,7 +81,7 @@ public class XmlQName {
     if (prefix == null) {
       synchronized (this) {
         if (prefix == null) {
-          this.prefix = determinePrefixAndNamespaceUri();
+          prefix = determinePrefixAndNamespaceUri();
         }
       }
     }
@@ -99,11 +103,11 @@ public class XmlQName {
         return null;
       } else {
         // lookup for prefix
-        String lookupPrefix = lookupPrefix();
+        final String lookupPrefix = lookupPrefix();
         if (lookupPrefix == null && rootElement != null) {
           // if no prefix is found we generate a new one
           // search for known prefixes
-          String knownPrefix = KNOWN_PREFIXES.get(namespaceUri);
+          final String knownPrefix = KNOWN_PREFIXES.get(namespaceUri);
           if (knownPrefix == null) {
             // generate namespace
             return rootElement.registerNamespace(namespaceUri);

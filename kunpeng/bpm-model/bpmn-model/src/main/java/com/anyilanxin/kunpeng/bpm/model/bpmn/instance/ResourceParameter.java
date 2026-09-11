@@ -22,7 +22,11 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
  *
  * @author Sebastian Menski
  */
-public interface ResourceParameter extends BaseElement, NamedBpmnElement {
+public interface ResourceParameter extends BaseElement {
+
+  String getName();
+
+  void setName(String name);
 
   ItemDefinition getType();
 

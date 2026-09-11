@@ -29,12 +29,12 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 public class EncapsulatedDecisionReferenceImpl extends DmnElementReferenceImpl
     implements EncapsulatedDecisionReference {
 
-  public EncapsulatedDecisionReferenceImpl(ModelTypeInstanceContext instanceContext) {
+  public EncapsulatedDecisionReferenceImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(
                 EncapsulatedDecisionReference.class, DMN_ELEMENT_ENCAPSULATED_DECISION_REFERENCE)
@@ -42,8 +42,9 @@ public class EncapsulatedDecisionReferenceImpl extends DmnElementReferenceImpl
             .extendsType(DmnElementReference.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<EncapsulatedDecisionReference>() {
+                  @Override
                   public EncapsulatedDecisionReference newInstance(
-                      ModelTypeInstanceContext instanceContext) {
+                      final ModelTypeInstanceContext instanceContext) {
                     return new EncapsulatedDecisionReferenceImpl(instanceContext);
                   }
                 });

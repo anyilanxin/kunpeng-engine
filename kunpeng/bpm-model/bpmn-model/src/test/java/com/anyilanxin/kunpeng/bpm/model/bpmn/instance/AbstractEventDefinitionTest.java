@@ -19,36 +19,37 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.Bpmn;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.Query;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.QueryImpl;
-import java.io.InputStream;
-import java.util.Collection;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.util.ReflectUtil;
 import org.junit.Before;
 
+import java.io.InputStream;
+import java.util.Collection;
+
 public abstract class AbstractEventDefinitionTest extends BpmnModelElementInstanceTest {
 
-  protected Query<EventDefinition> eventDefinitionQuery;
+    protected Query<EventDefinition> eventDefinitionQuery;
 
-  @Override
-  public TypeAssumption getTypeAssumption() {
-    return new TypeAssumption(EventDefinition.class, false);
-  }
+    @Override
+    public TypeAssumption getTypeAssumption() {
+        return new TypeAssumption(EventDefinition.class, false);
+    }
 
-  @Override
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
-    return null;
-  }
+    @Override
+    public Collection<ChildElementAssumption> getChildElementAssumptions() {
+        return null;
+    }
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return null;
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return null;
+    }
 
-  @Before
-  public void getEvent() {
-    final InputStream inputStream =
-        ReflectUtil.getResourceAsStream("io/camunda/zeebe/model/bpmn/EventDefinitionsTest.xml");
-    final IntermediateThrowEvent event =
-        Bpmn.readModelFromStream(inputStream).getModelElementById("event");
-    eventDefinitionQuery = new QueryImpl<>(event.getEventDefinitions());
-  }
+    @Before
+    public void getEvent() {
+        final InputStream inputStream =
+                ReflectUtil.getResourceAsStream("com/anyilanxin/kunpeng/bpm/model/bpmn/EventDefinitionsTest.xml");
+        final IntermediateThrowEvent event =
+                Bpmn.readModelFromStream(inputStream).getModelElementById("event");
+        eventDefinitionQuery = new QueryImpl<>(event.getEventDefinitions());
+    }
 }

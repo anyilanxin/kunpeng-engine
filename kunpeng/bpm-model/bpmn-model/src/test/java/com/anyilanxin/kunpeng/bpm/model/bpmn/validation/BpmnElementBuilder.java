@@ -17,34 +17,35 @@
 package com.anyilanxin.kunpeng.bpm.model.bpmn.validation;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.builder.AbstractFlowNodeBuilder;
+
 import java.util.function.UnaryOperator;
 
 final class BpmnElementBuilder {
 
-  private final String elementType;
-  private final UnaryOperator<AbstractFlowNodeBuilder<?, ?>> builder;
+    private final String elementType;
+    private final UnaryOperator<AbstractFlowNodeBuilder<?, ?>> builder;
 
-  private BpmnElementBuilder(
-      final String elementType, final UnaryOperator<AbstractFlowNodeBuilder<?, ?>> builder) {
-    this.elementType = elementType;
-    this.builder = builder;
-  }
+    private BpmnElementBuilder(
+            final String elementType, final UnaryOperator<AbstractFlowNodeBuilder<?, ?>> builder) {
+        this.elementType = elementType;
+        this.builder = builder;
+    }
 
-  public AbstractFlowNodeBuilder<?, ?> build(final AbstractFlowNodeBuilder<?, ?> processBuilder) {
-    return builder.apply(processBuilder);
-  }
+    public AbstractFlowNodeBuilder<?, ?> build(final AbstractFlowNodeBuilder<?, ?> processBuilder) {
+        return builder.apply(processBuilder);
+    }
 
-  public static BpmnElementBuilder of(
-      final String elementType, final UnaryOperator<AbstractFlowNodeBuilder<?, ?>> builder) {
-    return new BpmnElementBuilder(elementType, builder);
-  }
+    public static BpmnElementBuilder of(
+            final String elementType, final UnaryOperator<AbstractFlowNodeBuilder<?, ?>> builder) {
+        return new BpmnElementBuilder(elementType, builder);
+    }
 
-  public String getElementType() {
-    return elementType;
-  }
+    public String getElementType() {
+        return elementType;
+    }
 
-  @Override
-  public String toString() {
-    return elementType;
-  }
+    @Override
+    public String toString() {
+        return elementType;
+    }
 }

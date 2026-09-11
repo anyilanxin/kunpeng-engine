@@ -24,7 +24,7 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.StartEvent;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.SubProcess;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.bpmndi.BpmnShape;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.dc.Bounds;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeVersionTag;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengVersionTag;
 import java.util.Collection;
 import java.util.function.Consumer;
 
@@ -32,16 +32,13 @@ import java.util.function.Consumer;
  * @author Sebastian Menski
  */
 public class ProcessBuilder extends AbstractProcessBuilder<ProcessBuilder>
-    implements ZeebeExecutionListenersBuilder<ProcessBuilder>,
-        ZeebePropertiesBuilder<ProcessBuilder> {
+    implements KunpengExecutionListenersBuilder<ProcessBuilder> {
 
-  private final ZeebeExecutionListenersBuilder<ProcessBuilder> zeebeExecutionListenersBuilder;
-  private final ZeebePropertiesBuilder<ProcessBuilder> zeebePropertiesBuilder;
+  private final KunpengExecutionListenersBuilder<ProcessBuilder> kunpengExecutionListenersBuilder;
 
   public ProcessBuilder(final BpmnModelInstance modelInstance, final Process process) {
     super(modelInstance, process, ProcessBuilder.class);
-    zeebeExecutionListenersBuilder = new ZeebeExecutionListenersBuilderImpl<>(myself);
-    zeebePropertiesBuilder = new ZeebePropertiesBuilderImpl<>(myself);
+    kunpengExecutionListenersBuilder = new KunpengExecutionListenersBuilderImpl<>(myself);
   }
 
   public StartEventBuilder startEvent() {
@@ -129,48 +126,34 @@ public class ProcessBuilder extends AbstractProcessBuilder<ProcessBuilder>
   }
 
   @Override
-  public ProcessBuilder zeebeStartExecutionListener(final String type, final String retries) {
-    return zeebeExecutionListenersBuilder.zeebeStartExecutionListener(type, retries);
+  public ProcessBuilder kunpengStartExecutionListener(final String type, final String retries) {
+    return kunpengExecutionListenersBuilder.kunpengStartExecutionListener(type, retries);
   }
 
   @Override
-  public ProcessBuilder zeebeStartExecutionListener(final String type) {
-    return zeebeExecutionListenersBuilder.zeebeStartExecutionListener(type);
+  public ProcessBuilder kunpengStartExecutionListener(final String type) {
+    return kunpengExecutionListenersBuilder.kunpengStartExecutionListener(type);
   }
 
   @Override
-  public ProcessBuilder zeebeEndExecutionListener(final String type, final String retries) {
-    return zeebeExecutionListenersBuilder.zeebeEndExecutionListener(type, retries);
+  public ProcessBuilder kunpengEndExecutionListener(final String type, final String retries) {
+    return kunpengExecutionListenersBuilder.kunpengEndExecutionListener(type, retries);
   }
 
   @Override
-  public ProcessBuilder zeebeEndExecutionListener(final String type) {
-    return zeebeExecutionListenersBuilder.zeebeEndExecutionListener(type);
+  public ProcessBuilder kunpengEndExecutionListener(final String type) {
+    return kunpengExecutionListenersBuilder.kunpengEndExecutionListener(type);
   }
 
   @Override
-  public ProcessBuilder zeebeCancelExecutionListener(final String type, final String retries) {
-    return zeebeExecutionListenersBuilder.zeebeCancelExecutionListener(type, retries);
-  }
-
-  @Override
-  public ProcessBuilder zeebeCancelExecutionListener(final String type) {
-    return zeebeExecutionListenersBuilder.zeebeCancelExecutionListener(type);
-  }
-
-  @Override
-  public ProcessBuilder zeebeExecutionListener(
+  public ProcessBuilder kunpengExecutionListener(
       final Consumer<ExecutionListenerBuilder> executionListenerBuilderConsumer) {
-    return zeebeExecutionListenersBuilder.zeebeExecutionListener(executionListenerBuilderConsumer);
-  }
-
-  @Override
-  public ProcessBuilder zeebeProperty(final String name, final String value) {
-    return zeebePropertiesBuilder.zeebeProperty(name, value);
+    return kunpengExecutionListenersBuilder.kunpengExecutionListener(
+        executionListenerBuilderConsumer);
   }
 
   public ProcessBuilder versionTag(final String value) {
-    addExtensionElement(ZeebeVersionTag.class, versionTag -> versionTag.setValue(value));
+    addExtensionElement(KunpengVersionTag.class, versionTag -> versionTag.setValue(value));
     return this;
   }
 }

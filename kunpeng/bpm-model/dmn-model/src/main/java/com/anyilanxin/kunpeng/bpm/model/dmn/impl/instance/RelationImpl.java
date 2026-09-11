@@ -36,32 +36,35 @@ public class RelationImpl extends ExpressionImpl implements Relation {
   protected static ChildElementCollection<Column> columnCollection;
   protected static ChildElementCollection<Row> rowCollection;
 
-  public RelationImpl(ModelTypeInstanceContext instanceContext) {
+  public RelationImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public Collection<Column> getColumns() {
     return columnCollection.get(this);
   }
 
+  @Override
   public Collection<Row> getRows() {
     return rowCollection.get(this);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(Relation.class, DMN_ELEMENT_RELATION)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(Expression.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<Relation>() {
-                  public Relation newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public Relation newInstance(final ModelTypeInstanceContext instanceContext) {
                     return new RelationImpl(instanceContext);
                   }
                 });
 
-    SequenceBuilder sequenceBuilder = typeBuilder.sequence();
+    final SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
     columnCollection = sequenceBuilder.elementCollection(Column.class).build();
 

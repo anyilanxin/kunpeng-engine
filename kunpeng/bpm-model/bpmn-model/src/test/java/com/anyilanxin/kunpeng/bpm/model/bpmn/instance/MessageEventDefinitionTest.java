@@ -17,34 +17,35 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.OperationRef;
+import org.junit.Test;
+
 import java.util.Arrays;
 import java.util.Collection;
-import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Sebastian Menski
  */
 public class MessageEventDefinitionTest extends AbstractEventDefinitionTest {
 
-  @Override
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
-    return Arrays.asList(new ChildElementAssumption(OperationRef.class, 0, 1));
-  }
+    @Override
+    public Collection<ChildElementAssumption> getChildElementAssumptions() {
+        return Arrays.asList(new ChildElementAssumption(OperationRef.class, 0, 1));
+    }
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return Arrays.asList(new AttributeAssumption("messageRef"));
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return Arrays.asList(new AttributeAssumption("messageRef"));
+    }
 
-  @Test
-  public void getEventDefinition() {
-    final MessageEventDefinition eventDefinition =
-        eventDefinitionQuery.filterByType(MessageEventDefinition.class).singleResult();
-    assertThat(eventDefinition).isNotNull();
-    assertThat(eventDefinition.getMessage().getId()).isEqualTo("message");
-    assertThat(eventDefinition.getOperation()).isNull();
-  }
+    @Test
+    public void getEventDefinition() {
+        final MessageEventDefinition eventDefinition =
+                eventDefinitionQuery.filterByType(MessageEventDefinition.class).singleResult();
+        assertThat(eventDefinition).isNotNull();
+        assertThat(eventDefinition.getMessage().getId()).isEqualTo("message");
+        assertThat(eventDefinition.getOperation()).isNull();
+    }
 }

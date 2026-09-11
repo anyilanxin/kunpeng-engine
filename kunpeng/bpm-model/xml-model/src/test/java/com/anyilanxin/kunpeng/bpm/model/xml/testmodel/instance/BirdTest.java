@@ -46,40 +46,40 @@ public class BirdTest extends TestModelTest {
   private Egg egg2;
   private Egg egg3;
 
-  public BirdTest(final String testName, final ModelInstance testModelInstance, final AbstractModelParser modelParser) {
+  public BirdTest(String testName, ModelInstance testModelInstance, AbstractModelParser modelParser) {
     super(testName, testModelInstance, modelParser);
   }
 
   @Parameters(name="Model {0}")
   public static Collection<Object[]> models() {
-    final Object[][] models = {createModel(), parseModel(BirdTest.class)};
+    Object[][] models = {createModel(), parseModel(BirdTest.class)};
     return Arrays.asList(models);
   }
 
   public static Object[] createModel() {
-    final TestModelParser modelParser = new TestModelParser();
-    final ModelInstance modelInstance = modelParser.getEmptyModel();
+    TestModelParser modelParser = new TestModelParser();
+    ModelInstance modelInstance = modelParser.getEmptyModel();
 
-    final Animals animals = modelInstance.newInstance(Animals.class);
+    Animals animals = modelInstance.newInstance(Animals.class);
     modelInstance.setDocumentElement(animals);
 
     // add a tns namespace prefix for QName testing
     animals.getDomElement().registerNamespace("tns", MODEL_NAMESPACE);
 
-    final Bird tweety = createBird(modelInstance, "tweety", Gender.Female);
-    final Bird hedwig = createBird(modelInstance, "hedwig", Gender.Female);
-    final Bird timmy = createBird(modelInstance, "timmy", Gender.Female);
-    final Egg egg1 = createEgg(modelInstance, "egg1");
+    Bird tweety = createBird(modelInstance, "tweety", Gender.Female);
+    Bird hedwig = createBird(modelInstance, "hedwig", Gender.Female);
+    Bird timmy = createBird(modelInstance, "timmy", Gender.Female);
+    Egg egg1 = createEgg(modelInstance, "egg1");
     egg1.setMother(tweety);
     Collection<Animal> guards = egg1.getGuardians();
     guards.add(hedwig);
     guards.add(timmy);
-    final Egg egg2 = createEgg(modelInstance, "egg2");
+    Egg egg2 = createEgg(modelInstance, "egg2");
     egg2.setMother(tweety);
     guards = egg2.getGuardians();
     guards.add(hedwig);
     guards.add(timmy);
-    final Egg egg3 = createEgg(modelInstance, "egg3");
+    Egg egg3 = createEgg(modelInstance, "egg3");
     guards = egg3.getGuardians();
     guards.add(timmy);
 
@@ -88,11 +88,11 @@ public class BirdTest extends TestModelTest {
     tweety.getEggs().add(egg2);
     tweety.getEggs().add(egg3);
 
-    final Collection<Egg> guardedEggs = hedwig.getGuardedEggs();
+    Collection<Egg> guardedEggs = hedwig.getGuardedEggs();
     guardedEggs.add(egg1);
     guardedEggs.add(egg2);
 
-    final GuardEgg guardEgg = modelInstance.newInstance(GuardEgg.class);
+    GuardEgg guardEgg = modelInstance.newInstance(GuardEgg.class);
     guardEgg.setTextContent(egg1.getId() + " " + egg2.getId());
     timmy.getGuardedEggRefs().add(guardEgg);
     timmy.getGuardedEggs().add(egg3);
@@ -118,9 +118,9 @@ public class BirdTest extends TestModelTest {
       .hasSize(3)
       .containsOnly(egg1, egg2, egg3);
 
-    final Egg egg4 = createEgg(modelInstance, "egg4");
+    Egg egg4 = createEgg(modelInstance, "egg4");
     tweety.getEggs().add(egg4);
-    final Egg egg5 = createEgg(modelInstance, "egg5");
+    Egg egg5 = createEgg(modelInstance, "egg5");
     tweety.getEggs().add(egg5);
 
     assertThat(tweety.getEggs())
@@ -148,8 +148,8 @@ public class BirdTest extends TestModelTest {
 
   @Test
   public void testUpdateEggsByReplaceElements() {
-    final Egg egg4 = createEgg(modelInstance, "egg4");
-    final Egg egg5 = createEgg(modelInstance, "egg5");
+    Egg egg4 = createEgg(modelInstance, "egg4");
+    Egg egg5 = createEgg(modelInstance, "egg5");
     egg1.replaceWithElement(egg4);
     egg2.replaceWithElement(egg5);
     assertThat(tweety.getEggs())
@@ -198,7 +198,7 @@ public class BirdTest extends TestModelTest {
 
   @Test
   public void testUpdateSpouseByRemoveElement() {
-    final Animals animals = (Animals) modelInstance.getDocumentElement();
+    Animals animals = (Animals) modelInstance.getDocumentElement();
     animals.getAnimals().remove(hedwig);
     assertThat(tweety.getSpouse()).isNull();
   }
@@ -211,7 +211,7 @@ public class BirdTest extends TestModelTest {
 
   @Test
   public void testSetSpouseRefsByHelper() {
-    final SpouseRef spouseRef = modelInstance.newInstance(SpouseRef.class);
+    SpouseRef spouseRef = modelInstance.newInstance(SpouseRef.class);
     spouseRef.setTextContent(timmy.getId());
     tweety.getSpouseRef().replaceWithElement(spouseRef);
     assertThat(tweety.getSpouse()).isEqualTo(timmy);
@@ -219,20 +219,20 @@ public class BirdTest extends TestModelTest {
 
   @Test
   public void testSpouseRefsByTextContent() {
-    final SpouseRef spouseRef = tweety.getSpouseRef();
+    SpouseRef spouseRef = tweety.getSpouseRef();
     assertThat(spouseRef.getTextContent()).isEqualTo(hedwig.getId());
   }
 
   @Test
   public void testUpdateSpouseRefsByTextContent() {
-    final SpouseRef spouseRef = tweety.getSpouseRef();
+    SpouseRef spouseRef = tweety.getSpouseRef();
     spouseRef.setTextContent(timmy.getId());
     assertThat(tweety.getSpouse()).isEqualTo(timmy);
   }
 
   @Test
   public void testUpdateSpouseRefsByTextContentWithNamespace() {
-    final SpouseRef spouseRef = tweety.getSpouseRef();
+    SpouseRef spouseRef = tweety.getSpouseRef();
     spouseRef.setTextContent("tns:" + timmy.getId());
     assertThat(tweety.getSpouse()).isEqualTo(timmy);
   }
@@ -273,7 +273,7 @@ public class BirdTest extends TestModelTest {
   @Test
   public void testUpdateMotherByRemoveElement() {
     egg1.setMother(hedwig);
-    final Animals animals = (Animals) modelInstance.getDocumentElement();
+    Animals animals = (Animals) modelInstance.getDocumentElement();
     animals.getAnimals().remove(hedwig);
     assertThat(egg1.getMother()).isNull();
   }
@@ -286,7 +286,7 @@ public class BirdTest extends TestModelTest {
 
   @Test
   public void testSetMotherRefsByHelper() {
-    final Mother mother = modelInstance.newInstance(Mother.class);
+    Mother mother = modelInstance.newInstance(Mother.class);
     mother.setHref("#" + timmy.getId());
     egg1.getMotherRef().replaceWithElement(mother);
     assertThat(egg1.getMother()).isEqualTo(timmy);
@@ -294,13 +294,13 @@ public class BirdTest extends TestModelTest {
 
   @Test
   public void testMotherRefsByTextContent() {
-    final Mother mother = egg1.getMotherRef();
+    Mother mother = egg1.getMotherRef();
     assertThat(mother.getHref()).isEqualTo("#" + tweety.getId());
   }
 
   @Test
   public void testUpdateMotherRefsByTextContent() {
-    final Mother mother = egg1.getMotherRef();
+    Mother mother = egg1.getMotherRef();
     mother.setHref("#" + timmy.getId());
     assertThat(egg1.getMother()).isEqualTo(timmy);
   }
@@ -322,7 +322,7 @@ public class BirdTest extends TestModelTest {
       .isNotEmpty()
       .hasSize(2);
 
-    final Guardian tweetyGuardian = modelInstance.newInstance(Guardian.class);
+    Guardian tweetyGuardian = modelInstance.newInstance(Guardian.class);
     tweetyGuardian.setHref("#" + tweety.getId());
     egg1.getGuardianRefs().add(tweetyGuardian);
 
@@ -334,10 +334,10 @@ public class BirdTest extends TestModelTest {
 
   @Test
   public void testGuardianRefsByTextContent() {
-    final Collection<Guardian> guardianRefs = egg1.getGuardianRefs();
-    final Collection<String> hrefs = new ArrayList<String>();
-    for (final Guardian guardianRef : guardianRefs) {
-      final String href = guardianRef.getHref();
+    Collection<Guardian> guardianRefs = egg1.getGuardianRefs();
+    Collection<String> hrefs = new ArrayList<String>();
+    for (Guardian guardianRef : guardianRefs) {
+      String href = guardianRef.getHref();
       assertThat(href).isNotEmpty();
       hrefs.add(href);
     }
@@ -349,7 +349,7 @@ public class BirdTest extends TestModelTest {
 
   @Test
   public void testUpdateGuardianRefsByTextContent() {
-    final List<Guardian> guardianRefs = new ArrayList<Guardian>(egg1.getGuardianRefs());
+    List<Guardian> guardianRefs = new ArrayList<Guardian>(egg1.getGuardianRefs());
 
     guardianRefs.get(0).setHref("#" + tweety.getId());
 
@@ -360,7 +360,7 @@ public class BirdTest extends TestModelTest {
 
   @Test
   public void testUpdateGuardianRefsByRemoveElements() {
-    final List<Guardian> guardianRefs = new ArrayList<Guardian>(egg1.getGuardianRefs());
+    List<Guardian> guardianRefs = new ArrayList<Guardian>(egg1.getGuardianRefs());
     egg1.getGuardianRefs().remove(guardianRefs.get(1));
     assertThat(egg1.getGuardians())
       .hasSize(1)
@@ -373,7 +373,7 @@ public class BirdTest extends TestModelTest {
     assertThat(egg1.getGuardianRefs()).isEmpty();
 
     // should not affect animals collection
-    final Animals animals = (Animals) modelInstance.getDocumentElement();
+    Animals animals = (Animals) modelInstance.getDocumentElement();
     assertThat(animals.getAnimals())
       .isNotEmpty()
       .hasSize(3);
@@ -400,7 +400,7 @@ public class BirdTest extends TestModelTest {
       .isNotEmpty()
       .hasSize(2);
 
-    final GuardEgg egg3GuardedEgg = modelInstance.newInstance(GuardEgg.class);
+    GuardEgg egg3GuardedEgg = modelInstance.newInstance(GuardEgg.class);
     egg3GuardedEgg.setTextContent(egg3.getId());
     hedwig.getGuardedEggRefs().add(egg3GuardedEgg);
 
@@ -412,10 +412,10 @@ public class BirdTest extends TestModelTest {
 
   @Test
   public void testGuardedEggRefsByTextContent() {
-    final Collection<GuardEgg> guardianRefs = timmy.getGuardedEggRefs();
-    final Collection<String> textContents = new ArrayList<String>();
-    for (final GuardEgg guardianRef : guardianRefs) {
-      final String textContent = guardianRef.getTextContent();
+    Collection<GuardEgg> guardianRefs = timmy.getGuardedEggRefs();
+    Collection<String> textContents = new ArrayList<String>();
+    for (GuardEgg guardianRef : guardianRefs) {
+      String textContent = guardianRef.getTextContent();
       assertThat(textContent).isNotEmpty();
       textContents.addAll(StringUtil.splitListBySeparator(textContent, " "));
     }
@@ -427,7 +427,7 @@ public class BirdTest extends TestModelTest {
 
   @Test
   public void testUpdateGuardedEggRefsByTextContent() {
-    final List<GuardEgg> guardianRefs = new ArrayList<GuardEgg>(hedwig.getGuardedEggRefs());
+    List<GuardEgg> guardianRefs = new ArrayList<GuardEgg>(hedwig.getGuardedEggRefs());
 
     guardianRefs.get(0).setTextContent(egg1.getId() + " " + egg3.getId());
 
@@ -438,7 +438,7 @@ public class BirdTest extends TestModelTest {
 
   @Test
   public void testUpdateGuardedEggRefsByRemoveElements() {
-    final List<GuardEgg> guardianRefs = new ArrayList<GuardEgg>(timmy.getGuardedEggRefs());
+    List<GuardEgg> guardianRefs = new ArrayList<GuardEgg>(timmy.getGuardedEggRefs());
     timmy.getGuardedEggRefs().remove(guardianRefs.get(0));
     assertThat(timmy.getGuardedEggs())
       .hasSize(1)
@@ -451,7 +451,7 @@ public class BirdTest extends TestModelTest {
     assertThat(timmy.getGuardedEggRefs()).isEmpty();
 
     // should not affect animals collection
-    final Animals animals = (Animals) modelInstance.getDocumentElement();
+    Animals animals = (Animals) modelInstance.getDocumentElement();
     assertThat(animals.getAnimals())
       .isNotEmpty()
       .hasSize(3);

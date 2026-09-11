@@ -36,36 +36,40 @@ public class InvocationImpl extends ExpressionImpl implements Invocation {
   protected static ChildElement<Expression> expressionChild;
   protected static ChildElementCollection<Binding> bindingCollection;
 
-  public InvocationImpl(ModelTypeInstanceContext instanceContext) {
+  public InvocationImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public Expression getExpression() {
     return expressionChild.getChild(this);
   }
 
-  public void setExpression(Expression expression) {
+  @Override
+  public void setExpression(final Expression expression) {
     expressionChild.setChild(this, expression);
   }
 
+  @Override
   public Collection<Binding> getBindings() {
     return bindingCollection.get(this);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(Invocation.class, DMN_ELEMENT_INVOCATION)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(Expression.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<Invocation>() {
-                  public Invocation newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public Invocation newInstance(final ModelTypeInstanceContext instanceContext) {
                     return new InvocationImpl(instanceContext);
                   }
                 });
 
-    SequenceBuilder sequenceBuilder = typeBuilder.sequence();
+    final SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
     expressionChild = sequenceBuilder.element(Expression.class).build();
 

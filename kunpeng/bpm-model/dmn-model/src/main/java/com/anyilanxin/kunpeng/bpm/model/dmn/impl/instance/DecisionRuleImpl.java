@@ -36,32 +36,35 @@ public class DecisionRuleImpl extends DmnElementImpl implements DecisionRule {
   protected static ChildElementCollection<InputEntry> inputEntryCollection;
   protected static ChildElementCollection<OutputEntry> outputEntryCollection;
 
-  public DecisionRuleImpl(ModelTypeInstanceContext instanceContext) {
+  public DecisionRuleImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public Collection<InputEntry> getInputEntries() {
     return inputEntryCollection.get(this);
   }
 
+  @Override
   public Collection<OutputEntry> getOutputEntries() {
     return outputEntryCollection.get(this);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(DecisionRule.class, DMN_ELEMENT_DECISION_RULE)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(DmnElement.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<DecisionRule>() {
-                  public DecisionRule newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public DecisionRule newInstance(final ModelTypeInstanceContext instanceContext) {
                     return new DecisionRuleImpl(instanceContext);
                   }
                 });
 
-    SequenceBuilder sequenceBuilder = typeBuilder.sequence();
+    final SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
     inputEntryCollection = sequenceBuilder.elementCollection(InputEntry.class).build();
 

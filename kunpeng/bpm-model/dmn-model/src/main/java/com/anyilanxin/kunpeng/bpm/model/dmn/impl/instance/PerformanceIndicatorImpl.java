@@ -37,29 +37,31 @@ public class PerformanceIndicatorImpl extends BusinessContextElementImpl
   protected static ElementReferenceCollection<Decision, ImpactingDecisionReference>
       impactingDecisionRefCollection;
 
-  public PerformanceIndicatorImpl(ModelTypeInstanceContext instanceContext) {
+  public PerformanceIndicatorImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public Collection<Decision> getImpactingDecisions() {
     return impactingDecisionRefCollection.getReferenceTargetElements(this);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(PerformanceIndicator.class, DMN_ELEMENT_PERFORMANCE_INDICATOR)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(BusinessContextElement.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<PerformanceIndicator>() {
+                  @Override
                   public PerformanceIndicator newInstance(
-                      ModelTypeInstanceContext instanceContext) {
+                      final ModelTypeInstanceContext instanceContext) {
                     return new PerformanceIndicatorImpl(instanceContext);
                   }
                 });
 
-    SequenceBuilder sequenceBuilder = typeBuilder.sequence();
+    final SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
     impactingDecisionRefCollection =
         sequenceBuilder

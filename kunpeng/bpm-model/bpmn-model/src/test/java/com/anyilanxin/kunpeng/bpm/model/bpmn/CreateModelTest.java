@@ -17,16 +17,8 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn;
 
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BpmnModelElementInstance;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Definitions;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.EndEvent;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.FlowNode;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ParallelGateway;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.*;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Process;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.SequenceFlow;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ServiceTask;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.StartEvent;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.UserTask;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,78 +28,78 @@ import org.junit.Test;
  */
 public class CreateModelTest {
 
-  public BpmnModelInstance modelInstance;
-  public Definitions definitions;
-  public Process process;
+    public BpmnModelInstance modelInstance;
+    public Definitions definitions;
+    public Process process;
 
-  @Before
-  public void createEmptyModel() {
-    modelInstance = Bpmn.createEmptyModel();
-    definitions = modelInstance.newInstance(Definitions.class);
-    definitions.setTargetNamespace("http://camunda.org/examples");
-    modelInstance.setDefinitions(definitions);
-  }
+    @Before
+    public void createEmptyModel() {
+        modelInstance = Bpmn.createEmptyModel();
+        definitions = modelInstance.newInstance(Definitions.class);
+        definitions.setTargetNamespace("https://anyilanxin.com/examples");
+        modelInstance.setDefinitions(definitions);
+    }
 
-  protected <T extends BpmnModelElementInstance> T createElement(
-      final BpmnModelElementInstance parentElement, final String id, final Class<T> elementClass) {
-    final T element = modelInstance.newInstance(elementClass);
-    element.setAttributeValue("id", id, true);
-    parentElement.addChildElement(element);
-    return element;
-  }
+    protected <T extends BpmnModelElementInstance> T createElement(
+            final BpmnModelElementInstance parentElement, final String id, final Class<T> elementClass) {
+        final T element = modelInstance.newInstance(elementClass);
+        element.setAttributeValue("id", id, true);
+        parentElement.addChildElement(element);
+        return element;
+    }
 
-  public SequenceFlow createSequenceFlow(
-      final Process process, final FlowNode from, final FlowNode to) {
-    final SequenceFlow sequenceFlow =
-        createElement(process, from.getId() + "-" + to.getId(), SequenceFlow.class);
-    process.addChildElement(sequenceFlow);
-    sequenceFlow.setSource(from);
-    from.getOutgoing().add(sequenceFlow);
-    sequenceFlow.setTarget(to);
-    to.getIncoming().add(sequenceFlow);
-    return sequenceFlow;
-  }
+    public SequenceFlow createSequenceFlow(
+            final Process process, final FlowNode from, final FlowNode to) {
+        final SequenceFlow sequenceFlow =
+                createElement(process, from.getId() + "-" + to.getId(), SequenceFlow.class);
+        process.addChildElement(sequenceFlow);
+        sequenceFlow.setSource(from);
+        from.getOutgoing().add(sequenceFlow);
+        sequenceFlow.setTarget(to);
+        to.getIncoming().add(sequenceFlow);
+        return sequenceFlow;
+    }
 
-  @Test
-  public void createProcessWithOneTask() {
-    // create process
-    final Process process = createElement(definitions, "process-with-one-task", Process.class);
+    @Test
+    public void createProcessWithOneTask() {
+        // create process
+        final Process process = createElement(definitions, "process-with-one-task", Process.class);
 
-    // create elements
-    final StartEvent startEvent = createElement(process, "start", StartEvent.class);
-    final UserTask task1 = createElement(process, "task1", UserTask.class);
-    final EndEvent endEvent = createElement(process, "end", EndEvent.class);
+        // create elements
+        final StartEvent startEvent = createElement(process, "start", StartEvent.class);
+        final UserTask task1 = createElement(process, "task1", UserTask.class);
+        final EndEvent endEvent = createElement(process, "end", EndEvent.class);
 
-    // create flows
-    createSequenceFlow(process, startEvent, task1);
-    createSequenceFlow(process, task1, endEvent);
-  }
+        // create flows
+        createSequenceFlow(process, startEvent, task1);
+        createSequenceFlow(process, task1, endEvent);
+    }
 
-  @Test
-  public void createProcessWithParallelGateway() {
-    // create process
-    final Process process =
-        createElement(definitions, "process-with-parallel-gateway", Process.class);
+    @Test
+    public void createProcessWithParallelGateway() {
+        // create process
+        final Process process =
+                createElement(definitions, "process-with-parallel-gateway", Process.class);
 
-    // create elements
-    final StartEvent startEvent = createElement(process, "start", StartEvent.class);
-    final ParallelGateway fork = createElement(process, "fork", ParallelGateway.class);
-    final UserTask task1 = createElement(process, "task1", UserTask.class);
-    final ServiceTask task2 = createElement(process, "task2", ServiceTask.class);
-    final ParallelGateway join = createElement(process, "join", ParallelGateway.class);
-    final EndEvent endEvent = createElement(process, "end", EndEvent.class);
+        // create elements
+        final StartEvent startEvent = createElement(process, "start", StartEvent.class);
+        final ParallelGateway fork = createElement(process, "fork", ParallelGateway.class);
+        final UserTask task1 = createElement(process, "task1", UserTask.class);
+        final ServiceTask task2 = createElement(process, "task2", ServiceTask.class);
+        final ParallelGateway join = createElement(process, "join", ParallelGateway.class);
+        final EndEvent endEvent = createElement(process, "end", EndEvent.class);
 
-    // create flows
-    createSequenceFlow(process, startEvent, fork);
-    createSequenceFlow(process, fork, task1);
-    createSequenceFlow(process, fork, task2);
-    createSequenceFlow(process, task1, join);
-    createSequenceFlow(process, task2, join);
-    createSequenceFlow(process, join, endEvent);
-  }
+        // create flows
+        createSequenceFlow(process, startEvent, fork);
+        createSequenceFlow(process, fork, task1);
+        createSequenceFlow(process, fork, task2);
+        createSequenceFlow(process, task1, join);
+        createSequenceFlow(process, task2, join);
+        createSequenceFlow(process, join, endEvent);
+    }
 
-  @After
-  public void validateModel() {
-    Bpmn.validateModel(modelInstance);
-  }
+    @After
+    public void validateModel() {
+        Bpmn.validateModel(modelInstance);
+    }
 }

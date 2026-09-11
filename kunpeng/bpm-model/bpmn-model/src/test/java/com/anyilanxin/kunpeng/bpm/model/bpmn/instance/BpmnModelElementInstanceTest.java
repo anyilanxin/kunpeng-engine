@@ -28,17 +28,17 @@ import org.junit.ClassRule;
  */
 public abstract class BpmnModelElementInstanceTest extends AbstractModelElementInstanceTest {
 
-  @ClassRule
-  public static final GetBpmnModelElementTypeRule MODEL_ELEMENT_TYPE_RULE =
-      new GetBpmnModelElementTypeRule();
+    @ClassRule
+    public static final GetBpmnModelElementTypeRule MODEL_ELEMENT_TYPE_RULE =
+            new GetBpmnModelElementTypeRule();
 
-  @BeforeClass
-  public static void initModelElementType() {
-    initModelElementType(MODEL_ELEMENT_TYPE_RULE);
-  }
+    @BeforeClass
+    public static void initModelElementType() {
+        initModelElementType(MODEL_ELEMENT_TYPE_RULE);
+    }
 
-  @Override
-  public String getDefaultNamespace() {
-    return BpmnModelConstants.BPMN20_NS;
-  }
+    @Override
+    public String getDefaultNamespace() {
+        return BpmnModelConstants.BPMN20_NS;
+    }
 }

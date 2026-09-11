@@ -28,7 +28,7 @@ import java.net.URL;
  */
 public abstract class ReflectUtil {
 
-  public static InputStream getResourceAsStream(String name) {
+  public static InputStream getResourceAsStream(final String name) {
     // Try the current Thread context class loader
     ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
     InputStream resourceStream = classLoader.getResourceAsStream(name);
@@ -41,11 +41,11 @@ public abstract class ReflectUtil {
     return resourceStream;
   }
 
-  public static URL getResource(String name) {
+  public static URL getResource(final String name) {
     return getResource(name, null);
   }
 
-  public static URL getResource(String name, ClassLoader classLoader) {
+  public static URL getResource(final String name, ClassLoader classLoader) {
     if (classLoader == null) {
       // Try the current Thread context class loader
       classLoader = Thread.currentThread().getContextClassLoader();
@@ -60,11 +60,11 @@ public abstract class ReflectUtil {
     return url;
   }
 
-  public static File getResourceAsFile(String path) {
-    URL resource = getResource(path);
+  public static File getResourceAsFile(final String path) {
+    final URL resource = getResource(path);
     try {
       return new File(resource.toURI());
-    } catch (URISyntaxException e) {
+    } catch (final URISyntaxException e) {
       throw new ModelException("Exception while loading resource file " + path, e);
     }
   }
@@ -76,21 +76,21 @@ public abstract class ReflectUtil {
    * @param parameters the parameters to pass to the constructor
    * @return the created instance
    */
-  public static <T> T createInstance(Class<T> type, Object... parameters) {
+  public static <T> T createInstance(final Class<T> type, final Object... parameters) {
 
     // get types for parameters
-    Class<?>[] parameterTypes = new Class<?>[parameters.length];
+    final Class<?>[] parameterTypes = new Class<?>[parameters.length];
     for (int i = 0; i < parameters.length; i++) {
-      Object parameter = parameters[i];
+      final Object parameter = parameters[i];
       parameterTypes[i] = parameter.getClass();
     }
 
     try {
       // create instance
-      Constructor<T> constructor = type.getConstructor(parameterTypes);
+      final Constructor<T> constructor = type.getConstructor(parameterTypes);
       return constructor.newInstance(parameters);
 
-    } catch (Exception e) {
+    } catch (final Exception e) {
       throw new ModelException("Exception while creating an instance of type " + type, e);
     }
   }

@@ -19,13 +19,7 @@ package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_AUTHORITY_REQUIREMENT;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.AuthorityRequirement;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Decision;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.InputData;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.KnowledgeSource;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.RequiredAuthorityReference;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.RequiredDecisionReference;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.RequiredInputReference;
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.*;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
@@ -41,48 +35,55 @@ public class AuthorityRequirementImpl extends DmnModelElementInstanceImpl
   protected static ElementReference<KnowledgeSource, RequiredAuthorityReference>
       requiredAuthorityRef;
 
-  public AuthorityRequirementImpl(ModelTypeInstanceContext instanceContext) {
+  public AuthorityRequirementImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public Decision getRequiredDecision() {
     return requiredDecisionRef.getReferenceTargetElement(this);
   }
 
-  public void setRequiredDecision(Decision requiredDecision) {
+  @Override
+  public void setRequiredDecision(final Decision requiredDecision) {
     requiredDecisionRef.setReferenceTargetElement(this, requiredDecision);
   }
 
+  @Override
   public InputData getRequiredInput() {
     return requiredInputRef.getReferenceTargetElement(this);
   }
 
-  public void setRequiredInput(InputData requiredInput) {
+  @Override
+  public void setRequiredInput(final InputData requiredInput) {
     requiredInputRef.setReferenceTargetElement(this, requiredInput);
   }
 
+  @Override
   public KnowledgeSource getRequiredAuthority() {
     return requiredAuthorityRef.getReferenceTargetElement(this);
   }
 
-  public void setRequiredAuthority(KnowledgeSource requiredAuthority) {
+  @Override
+  public void setRequiredAuthority(final KnowledgeSource requiredAuthority) {
     requiredAuthorityRef.setReferenceTargetElement(this, requiredAuthority);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(AuthorityRequirement.class, DMN_ELEMENT_AUTHORITY_REQUIREMENT)
             .namespaceUri(LATEST_DMN_NS)
             .instanceProvider(
                 new ModelTypeInstanceProvider<AuthorityRequirement>() {
+                  @Override
                   public AuthorityRequirement newInstance(
-                      ModelTypeInstanceContext instanceContext) {
+                      final ModelTypeInstanceContext instanceContext) {
                     return new AuthorityRequirementImpl(instanceContext);
                   }
                 });
 
-    SequenceBuilder sequenceBuilder = typeBuilder.sequence();
+    final SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
     requiredDecisionRef =
         sequenceBuilder

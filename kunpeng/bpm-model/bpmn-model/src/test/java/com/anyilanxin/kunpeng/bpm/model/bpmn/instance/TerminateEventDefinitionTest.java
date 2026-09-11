@@ -16,16 +16,16 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class TerminateEventDefinitionTest extends AbstractEventDefinitionTest {
 
-  @Test
-  public void getEventDefinition() {
-    final TerminateEventDefinition eventDefinition =
-        eventDefinitionQuery.filterByType(TerminateEventDefinition.class).singleResult();
-    assertThat(eventDefinition).isNotNull();
-  }
+    @Test
+    public void getEventDefinition() {
+        final TerminateEventDefinition eventDefinition =
+                eventDefinitionQuery.filterByType(TerminateEventDefinition.class).singleResult();
+        assertThat(eventDefinition).isNotNull();
+    }
 }

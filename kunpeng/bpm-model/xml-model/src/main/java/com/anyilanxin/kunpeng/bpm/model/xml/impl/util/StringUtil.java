@@ -37,12 +37,12 @@ public final class StringUtil {
    * @param text the comma separated list
    * @return the Strings of the list or an empty List if text is empty or null
    */
-  public static List<String> splitCommaSeparatedList(String text) {
+  public static List<String> splitCommaSeparatedList(final String text) {
     if (text == null || text.isEmpty()) {
       return Collections.emptyList();
     }
-    Matcher matcher = pattern.matcher(text);
-    List<String> parts = new ArrayList<String>();
+    final Matcher matcher = pattern.matcher(text);
+    final List<String> parts = new ArrayList<String>();
     while (matcher.find()) {
       parts.add(matcher.group().trim());
     }
@@ -55,11 +55,11 @@ public final class StringUtil {
    * @param list the list to join
    * @return the resulting comma separated string or null if the list is null
    */
-  public static String joinCommaSeparatedList(List<String> list) {
+  public static String joinCommaSeparatedList(final List<String> list) {
     return joinList(list, ", ");
   }
 
-  public static List<String> splitListBySeparator(String text, String separator) {
+  public static List<String> splitListBySeparator(final String text, final String separator) {
     String[] result = new String[] {};
     if (text != null) {
       result = text.split(separator);
@@ -67,20 +67,20 @@ public final class StringUtil {
     return new ArrayList<String>(Arrays.asList(result));
   }
 
-  public static String joinList(List<String> list, String separator) {
+  public static String joinList(final List<String> list, final String separator) {
     if (list == null) {
       return null;
     }
 
-    int size = list.size();
+    final int size = list.size();
     if (size == 0) {
       return "";
     } else if (size == 1) {
       return list.get(0);
     } else {
-      StringBuilder builder = new StringBuilder(size * 8);
+      final StringBuilder builder = new StringBuilder(size * 8);
       builder.append(list.get(0));
-      for (Object element : list.subList(1, size)) {
+      for (final Object element : list.subList(1, size)) {
         builder.append(separator);
         builder.append(element);
       }

@@ -17,22 +17,9 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN20_NS;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ATTRIBUTE_IS_CLOSED;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ATTRIBUTE_NAME;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ELEMENT_COLLABORATION;
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.*;
 
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Artifact;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Collaboration;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ConversationAssociation;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ConversationLink;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ConversationNode;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.CorrelationKey;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.MessageFlow;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.MessageFlowAssociation;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Participant;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ParticipantAssociation;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.RootElement;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.*;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;

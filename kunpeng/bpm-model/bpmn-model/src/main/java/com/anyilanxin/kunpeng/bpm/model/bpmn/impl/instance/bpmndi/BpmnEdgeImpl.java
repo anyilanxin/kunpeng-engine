@@ -17,12 +17,7 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.bpmndi;
 
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMNDI_ATTRIBUTE_BPMN_ELEMENT;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMNDI_ATTRIBUTE_MESSAGE_VISIBLE_KIND;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMNDI_ATTRIBUTE_SOURCE_ELEMENT;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMNDI_ATTRIBUTE_TARGET_ELEMENT;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMNDI_ELEMENT_BPMN_EDGE;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMNDI_NS;
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.*;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.di.LabeledEdgeImpl;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BaseElement;

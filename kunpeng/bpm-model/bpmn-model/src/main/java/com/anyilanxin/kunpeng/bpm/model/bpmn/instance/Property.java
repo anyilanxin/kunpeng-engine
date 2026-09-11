@@ -22,4 +22,9 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
  *
  * @author Sebastian Menski
  */
-public interface Property extends ItemAwareElement, NamedBpmnElement {}
+public interface Property extends ItemAwareElement {
+
+  String getName();
+
+  void setName(String name);
+}

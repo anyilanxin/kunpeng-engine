@@ -24,7 +24,11 @@ import java.util.Collection;
  *
  * @author Sebastian Menski
  */
-public interface Resource extends RootElement, NamedBpmnElement {
+public interface Resource extends RootElement {
+
+  String getName();
+
+  void setName(String name);
 
   Collection<ResourceParameter> getResourceParameters();
 }

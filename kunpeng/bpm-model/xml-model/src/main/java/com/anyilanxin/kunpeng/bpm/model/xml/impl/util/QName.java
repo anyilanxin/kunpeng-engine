@@ -24,11 +24,11 @@ public class QName {
   private final String qualifier;
   private final String localName;
 
-  public QName(String localName) {
+  public QName(final String localName) {
     this(null, localName);
   }
 
-  public QName(String qualifier, String localName) {
+  public QName(final String qualifier, final String localName) {
     this.localName = localName;
     this.qualifier = qualifier;
   }
@@ -41,11 +41,11 @@ public class QName {
     return localName;
   }
 
-  public static QName parseQName(String identifier) {
-    String qualifier;
-    String localName;
+  public static QName parseQName(final String identifier) {
+    final String qualifier;
+    final String localName;
 
-    String[] split = identifier.split(":", 2);
+    final String[] split = identifier.split(":", 2);
     if (split.length == 2) {
       qualifier = split[0];
       localName = split[1];
@@ -62,7 +62,7 @@ public class QName {
     return combine(qualifier, localName);
   }
 
-  public static String combine(String qualifier, String localName) {
+  public static String combine(final String qualifier, final String localName) {
     if (qualifier == null || qualifier.isEmpty()) {
       return localName;
     } else {
@@ -72,7 +72,7 @@ public class QName {
 
   @Override
   public int hashCode() {
-    int prime = 31;
+    final int prime = 31;
     int result = 1;
     result = prime * result + ((localName == null) ? 0 : localName.hashCode());
     result = prime * result + ((qualifier == null) ? 0 : qualifier.hashCode());
@@ -80,7 +80,7 @@ public class QName {
   }
 
   @Override
-  public boolean equals(Object obj) {
+  public boolean equals(final Object obj) {
     if (this == obj) {
       return true;
     }
@@ -90,7 +90,7 @@ public class QName {
     if (getClass() != obj.getClass()) {
       return false;
     }
-    QName other = (QName) obj;
+    final QName other = (QName) obj;
     if (localName == null) {
       if (other.localName != null) {
         return false;

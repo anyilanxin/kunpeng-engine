@@ -19,8 +19,8 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.builder;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelInstance;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.CallActivity;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeBindingType;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeCalledElement;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengBindingType;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengCalledElement;
 
 /**
  * @author Sebastian Menski
@@ -44,51 +44,44 @@ public class AbstractCallActivityBuilder<B extends AbstractCallActivityBuilder<B
     return myself;
   }
 
-  public B zeebeProcessId(final String processId) {
-    final ZeebeCalledElement calledElement =
-        getCreateSingleExtensionElement(ZeebeCalledElement.class);
+  public B kunpengProcessId(final String processId) {
+    final KunpengCalledElement calledElement =
+        getCreateSingleExtensionElement(KunpengCalledElement.class);
     calledElement.setProcessId(processId);
     return myself;
   }
 
-  public B zeebeProcessIdExpression(final String processIdExpression) {
-    final ZeebeCalledElement calledElement =
-        getCreateSingleExtensionElement(ZeebeCalledElement.class);
-    calledElement.setProcessId(asZeebeExpression(processIdExpression));
+  public B kunpengProcessIdExpression(final String processIdExpression) {
+    final KunpengCalledElement calledElement =
+        getCreateSingleExtensionElement(KunpengCalledElement.class);
+    calledElement.setProcessId(asKunpengExpression(processIdExpression));
     return myself;
   }
 
-  public B zeebeBusinessId(final String businessId) {
-    final ZeebeCalledElement calledElement =
-        getCreateSingleExtensionElement(ZeebeCalledElement.class);
-    calledElement.setBusinessId(businessId);
-    return myself;
-  }
-
-  public B zeebePropagateAllChildVariables(final boolean propagateAllChildVariables) {
-    final ZeebeCalledElement calledElement =
-        getCreateSingleExtensionElement(ZeebeCalledElement.class);
+  public B kunpengPropagateAllChildVariables(final boolean propagateAllChildVariables) {
+    final KunpengCalledElement calledElement =
+        getCreateSingleExtensionElement(KunpengCalledElement.class);
     calledElement.setPropagateAllChildVariablesEnabled(propagateAllChildVariables);
     return myself;
   }
 
-  public B zeebePropagateAllParentVariables(final boolean propagateAllParentVariables) {
-    final ZeebeCalledElement calledElement =
-        getCreateSingleExtensionElement(ZeebeCalledElement.class);
+  public B kunpengPropagateAllParentVariables(final boolean propagateAllParentVariables) {
+    final KunpengCalledElement calledElement =
+        getCreateSingleExtensionElement(KunpengCalledElement.class);
     calledElement.setPropagateAllParentVariablesEnabled(propagateAllParentVariables);
     return myself;
   }
 
-  public B zeebeBindingType(final ZeebeBindingType bindingType) {
-    final ZeebeCalledElement calledElement =
-        getCreateSingleExtensionElement(ZeebeCalledElement.class);
+  public B kunpengBindingType(final KunpengBindingType bindingType) {
+    final KunpengCalledElement calledElement =
+        getCreateSingleExtensionElement(KunpengCalledElement.class);
     calledElement.setBindingType(bindingType);
     return myself;
   }
 
-  public B zeebeVersionTag(final String versionTag) {
-    final ZeebeCalledElement calledElement =
-        getCreateSingleExtensionElement(ZeebeCalledElement.class);
+  public B kunpengVersionTag(final String versionTag) {
+    final KunpengCalledElement calledElement =
+        getCreateSingleExtensionElement(KunpengCalledElement.class);
     calledElement.setVersionTag(versionTag);
     return myself;
   }

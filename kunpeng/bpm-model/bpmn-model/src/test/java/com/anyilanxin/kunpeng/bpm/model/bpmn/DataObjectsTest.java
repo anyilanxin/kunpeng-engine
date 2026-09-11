@@ -17,69 +17,64 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.DataInputAssociation;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.DataObject;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.DataObjectReference;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.DataOutputAssociation;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ItemAwareElement;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ItemDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ScriptTask;
-import java.util.Collection;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.util.Collection;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Dario Campagna
  */
 public class DataObjectsTest {
 
-  private static BpmnModelInstance modelInstance;
+    private static BpmnModelInstance modelInstance;
 
-  @BeforeClass
-  public static void parseModel() {
-    modelInstance =
-        Bpmn.readModelFromStream(DataObjectsTest.class.getResourceAsStream("DataObjectTest.bpmn"));
-  }
+    @BeforeClass
+    public static void parseModel() {
+        modelInstance =
+                Bpmn.readModelFromStream(DataObjectsTest.class.getResourceAsStream("DataObjectTest.bpmn"));
+    }
 
-  @Test
-  public void testGetDataObject() {
-    final DataObject dataObject = modelInstance.getModelElementById("_21");
-    final ItemDefinition itemDefinition = modelInstance.getModelElementById("_100");
-    assertThat(dataObject).isNotNull();
-    assertThat(dataObject.getName()).isEqualTo("DataObject _21");
-    assertThat(dataObject.isCollection()).isFalse();
-    assertThat(dataObject.getItemSubject()).isEqualTo(itemDefinition);
-  }
+    @Test
+    public void testGetDataObject() {
+        final DataObject dataObject = modelInstance.getModelElementById("_21");
+        final ItemDefinition itemDefinition = modelInstance.getModelElementById("_100");
+        assertThat(dataObject).isNotNull();
+        assertThat(dataObject.getName()).isEqualTo("DataObject _21");
+        assertThat(dataObject.isCollection()).isFalse();
+        assertThat(dataObject.getItemSubject()).isEqualTo(itemDefinition);
+    }
 
-  @Test
-  public void testGetDataObjectReference() {
-    final DataObjectReference dataObjectReference = modelInstance.getModelElementById("_dataRef_7");
-    final DataObject dataObject = modelInstance.getModelElementById("_7");
-    assertThat(dataObjectReference).isNotNull();
-    assertThat(dataObjectReference.getName()).isNull();
-    assertThat(dataObjectReference.getDataObject()).isEqualTo(dataObject);
-  }
+    @Test
+    public void testGetDataObjectReference() {
+        final DataObjectReference dataObjectReference = modelInstance.getModelElementById("_dataRef_7");
+        final DataObject dataObject = modelInstance.getModelElementById("_7");
+        assertThat(dataObjectReference).isNotNull();
+        assertThat(dataObjectReference.getName()).isNull();
+        assertThat(dataObjectReference.getDataObject()).isEqualTo(dataObject);
+    }
 
-  @Test
-  public void testDataObjectReferenceAsDataAssociationSource() {
-    final ScriptTask scriptTask = modelInstance.getModelElementById("_3");
-    final DataObjectReference dataObjectReference =
-        modelInstance.getModelElementById("_dataRef_11");
-    final DataInputAssociation dataInputAssociation =
-        scriptTask.getDataInputAssociations().iterator().next();
-    final Collection<ItemAwareElement> sources = dataInputAssociation.getSources();
-    assertThat(sources).hasSize(1);
-    assertThat(sources.iterator().next()).isEqualTo(dataObjectReference);
-  }
+    @Test
+    public void testDataObjectReferenceAsDataAssociationSource() {
+        final ScriptTask scriptTask = modelInstance.getModelElementById("_3");
+        final DataObjectReference dataObjectReference =
+                modelInstance.getModelElementById("_dataRef_11");
+        final DataInputAssociation dataInputAssociation =
+                scriptTask.getDataInputAssociations().iterator().next();
+        final Collection<ItemAwareElement> sources = dataInputAssociation.getSources();
+        assertThat(sources.size()).isEqualTo(1);
+        assertThat(sources.iterator().next()).isEqualTo(dataObjectReference);
+    }
 
-  @Test
-  public void testDataObjectReferenceAsDataAssociationTarget() {
-    final ScriptTask scriptTask = modelInstance.getModelElementById("_3");
-    final DataObjectReference dataObjectReference = modelInstance.getModelElementById("_dataRef_7");
-    final DataOutputAssociation dataOutputAssociation =
-        scriptTask.getDataOutputAssociations().iterator().next();
-    assertThat(dataOutputAssociation.getTarget()).isEqualTo(dataObjectReference);
-  }
+    @Test
+    public void testDataObjectReferenceAsDataAssociationTarget() {
+        final ScriptTask scriptTask = modelInstance.getModelElementById("_3");
+        final DataObjectReference dataObjectReference = modelInstance.getModelElementById("_dataRef_7");
+        final DataOutputAssociation dataOutputAssociation =
+                scriptTask.getDataOutputAssociations().iterator().next();
+        assertThat(dataOutputAssociation.getTarget()).isEqualTo(dataObjectReference);
+    }
 }

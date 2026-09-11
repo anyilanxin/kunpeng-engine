@@ -16,222 +16,209 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.bpmn.traversal;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.anyilanxin.kunpeng.bpm.model.bpmn.Bpmn;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelInstance;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.CollaborationImpl;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.ProcessImpl;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.bpmndi.BpmnDiagramImpl;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Activity;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BaseElement;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BpmnModelElementInstance;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Definitions;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.EndEvent;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ExclusiveGateway;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.FlowElement;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.FlowNode;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.IntermediateCatchEvent;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ServiceTask;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.StartEvent;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.SubProcess;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Task;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.TimerEventDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.UserTask;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.*;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.bpmndi.BpmnDiagram;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.bpmndi.BpmnPlane;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementType;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
 public class ModelWalkerTest {
 
-  @Test
-  public void shouldVisitModelTopDownDepthFirst() {
-    // given
-    final BpmnModelInstance modelInstance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent("start-1-1")
-            .subProcess("sub-1-2")
-            .embeddedSubProcess()
-            .startEvent("start-2-1")
-            .subProcessDone()
-            .subProcess("sub-1-3")
-            .embeddedSubProcess()
-            .startEvent("start-3-1")
-            .subProcessDone()
-            .endEvent("end-1-4")
-            .done();
+    @Test
+    public void shouldVisitModelTopDownDepthFirst() {
+        // given
+        final BpmnModelInstance modelInstance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent("start-1-1")
+                        .subProcess("sub-1-2")
+                        .embeddedSubProcess()
+                        .startEvent("start-2-1")
+                        .subProcessDone()
+                        .subProcess("sub-1-3")
+                        .embeddedSubProcess()
+                        .startEvent("start-3-1")
+                        .subProcessDone()
+                        .endEvent("end-1-4")
+                        .done();
 
-    final List<BpmnModelElementInstance> visitedElements = new ArrayList<>();
+        final List<BpmnModelElementInstance> visitedElements = new ArrayList<>();
 
-    final ModelWalker walker = new ModelWalker(modelInstance);
+        final ModelWalker walker = new ModelWalker(modelInstance);
 
-    // when
-    walker.walk(visitedElements::add);
+        // when
+        walker.walk(visitedElements::add);
 
-    // then
-    final List<BaseElement> visitedBaseElements =
-        visitedElements.stream()
-            .filter(e -> e instanceof BaseElement)
-            .map(e -> (BaseElement) e)
-            .collect(Collectors.toList());
+        // then
+        final List<BaseElement> visitedBaseElements =
+                visitedElements.stream()
+                        .filter(e -> e instanceof BaseElement)
+                        .map(e -> (BaseElement) e)
+                        .collect(Collectors.toList());
 
-    final List<String> subprocessVisitingOrder =
-        visitedBaseElements.stream()
-            .filter(e -> e instanceof SubProcess)
-            .map(e -> e.getId())
-            .collect(Collectors.toList());
-    assertThat(subprocessVisitingOrder).hasSize(2);
+        final List<String> subprocessVisitingOrder =
+                visitedBaseElements.stream()
+                        .filter(e -> e instanceof SubProcess)
+                        .map(e -> e.getId())
+                        .collect(Collectors.toList());
+        assertThat(subprocessVisitingOrder).hasSize(2);
 
-    final String firstSubprocess = subprocessVisitingOrder.get(0);
-    final String secondSubprocess = subprocessVisitingOrder.get(1);
+        final String firstSubprocess = subprocessVisitingOrder.get(0);
+        final String secondSubprocess = subprocessVisitingOrder.get(1);
 
-    final String firstSubprocessStart =
-        "sub-1-2".equals(firstSubprocess) ? "start-2-1" : "start-3-1";
-    final String secondSubprocessStart =
-        "sub-1-2".equals(secondSubprocess) ? "start-2-1" : "start-3-1";
+        final String firstSubprocessStart =
+                "sub-1-2".equals(firstSubprocess) ? "start-2-1" : "start-3-1";
+        final String secondSubprocessStart =
+                "sub-1-2".equals(secondSubprocess) ? "start-2-1" : "start-3-1";
 
-    assertThat(visitedBaseElements)
-        .extracting(e -> e.getId())
-        .containsSubsequence("process", "start-1-1")
-        .containsSubsequence("process", "sub-1-2")
-        .containsSubsequence("process", "sub-1-3")
-        .containsSubsequence("process", "end-1-4")
-        .containsSubsequence(firstSubprocess, secondSubprocess)
-        .containsSubsequence(firstSubprocess, firstSubprocessStart)
-        .containsSubsequence(secondSubprocess, secondSubprocessStart)
-        .containsSubsequence(firstSubprocessStart, secondSubprocessStart);
-  }
+        assertThat(visitedBaseElements)
+                .extracting(e -> e.getId())
+                .containsSubsequence("process", "start-1-1")
+                .containsSubsequence("process", "sub-1-2")
+                .containsSubsequence("process", "sub-1-3")
+                .containsSubsequence("process", "end-1-4")
+                .containsSubsequence(firstSubprocess, secondSubprocess)
+                .containsSubsequence(firstSubprocess, firstSubprocessStart)
+                .containsSubsequence(secondSubprocess, secondSubprocessStart)
+                .containsSubsequence(firstSubprocessStart, secondSubprocessStart);
+    }
 
-  @Test
-  public void shouldInvokeTypedVisitors() {
-    // given
-    final BpmnModelInstance modelInstance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent("start-1")
-            .userTask("user-1")
-            .endEvent("end-1")
-            .done();
+    @Test
+    public void shouldInvokeTypedVisitors() {
+        // given
+        final BpmnModelInstance modelInstance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent("start-1")
+                        .userTask("user-1")
+                        .endEvent("end-1")
+                        .done();
 
-    final List<FlowNode> flowNodes = new ArrayList<>();
-    final List<UserTask> userTasks = new ArrayList<>();
+        final List<FlowNode> flowNodes = new ArrayList<>();
+        final List<UserTask> userTasks = new ArrayList<>();
 
-    final TypeHierarchyVisitor compositeVisitor =
-        new TypeHierarchyVisitor() {
+        final TypeHierarchyVisitor compositeVisitor =
+                new TypeHierarchyVisitor() {
 
-          @Override
-          protected void visit(
-              final ModelElementType implementedType, final BpmnModelElementInstance instance) {
-            if (implementedType.getInstanceType() == UserTask.class) {
-              userTasks.add((UserTask) instance);
-            }
-            if (implementedType.getInstanceType() == FlowNode.class) {
-              flowNodes.add((FlowNode) instance);
-            }
-          }
-        };
+                    @Override
+                    protected void visit(
+                            final ModelElementType implementedType, final BpmnModelElementInstance instance) {
+                        if (implementedType.getInstanceType() == UserTask.class) {
+                            userTasks.add((UserTask) instance);
+                        }
+                        if (implementedType.getInstanceType() == FlowNode.class) {
+                            flowNodes.add((FlowNode) instance);
+                        }
+                    }
+                };
 
-    final ModelWalker walker = new ModelWalker(modelInstance);
+        final ModelWalker walker = new ModelWalker(modelInstance);
 
-    // when
-    walker.walk(compositeVisitor);
+        // when
+        walker.walk(compositeVisitor);
 
-    // then
-    assertThat(flowNodes).extracting(f -> f.getId()).containsOnly("start-1", "user-1", "end-1");
-    assertThat(userTasks).extracting(f -> f.getId()).containsOnly("user-1");
-  }
+        // then
+        assertThat(flowNodes).extracting(f -> f.getId()).containsOnly("start-1", "user-1", "end-1");
+        assertThat(userTasks).extracting(f -> f.getId()).containsOnly("user-1");
+    }
 
-  @Test
-  public void shouldVisitTypeHiearchyInOrder() {
-    // given
-    final BpmnModelInstance modelInstance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent("start-1")
-            .userTask("user-1")
-            .endEvent("end-1")
-            .done();
+    @Test
+    public void shouldVisitTypeHiearchyInOrder() {
+        // given
+        final BpmnModelInstance modelInstance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent("start-1")
+                        .userTask("user-1")
+                        .endEvent("end-1")
+                        .done();
 
-    final ModelWalker walker = new ModelWalker(modelInstance);
-    final List<Class<?>> visitedUserTaskTypes = new ArrayList<>();
+        final ModelWalker walker = new ModelWalker(modelInstance);
+        final List<Class<?>> visitedUserTaskTypes = new ArrayList<>();
 
-    final TypeHierarchyVisitor visitor =
-        new TypeHierarchyVisitor() {
+        final TypeHierarchyVisitor visitor =
+                new TypeHierarchyVisitor() {
 
-          @Override
-          protected void visit(
-              final ModelElementType implementedType, final BpmnModelElementInstance instance) {
-            if (instance instanceof UserTask) {
-              visitedUserTaskTypes.add(implementedType.getInstanceType());
-            }
-          }
-        };
+                    @Override
+                    protected void visit(
+                            final ModelElementType implementedType, final BpmnModelElementInstance instance) {
+                        if (instance instanceof UserTask) {
+                            visitedUserTaskTypes.add(implementedType.getInstanceType());
+                        }
+                    }
+                };
 
-    // when
-    walker.walk(visitor);
+        // when
+        walker.walk(visitor);
 
-    // then
-    assertThat(visitedUserTaskTypes)
-        .containsExactly(
-            BaseElement.class,
-            FlowElement.class,
-            FlowNode.class,
-            Activity.class,
-            Task.class,
-            UserTask.class);
-  }
+        // then
+        assertThat(visitedUserTaskTypes)
+                .containsExactly(
+                        BaseElement.class,
+                        FlowElement.class,
+                        FlowNode.class,
+                        Activity.class,
+                        Task.class,
+                        UserTask.class);
+    }
 
-  @Test
-  public void shouldIgnoreUnknownElementsAndAttributes() {
-    // given
-    final BpmnModelInstance modelInstance =
-        Bpmn.readModelFromStream(ModelWalkerTest.class.getResourceAsStream("ModelWalkerTest.bpmn"));
+    @Test
+    public void shouldIgnoreUnknownElementsAndAttributes() {
+        // given
+        final BpmnModelInstance modelInstance =
+                Bpmn.readModelFromStream(ModelWalkerTest.class.getResourceAsStream("ModelWalkerTest.bpmn"));
 
-    final List<BpmnModelElementInstance> visitedElements = new ArrayList<>();
+        final List<BpmnModelElementInstance> visitedElements = new ArrayList<>();
 
-    final ModelWalker walker = new ModelWalker(modelInstance);
+        final ModelWalker walker = new ModelWalker(modelInstance);
 
-    // when
-    walker.walk(visitedElements::add);
+        // when
+        walker.walk(visitedElements::add);
 
-    // then
+        // then
 
-    assertThat(visitedElements)
-        .anyMatch(Definitions.class::isInstance)
-        .anyMatch(StartEvent.class::isInstance)
-        .anyMatch(ExclusiveGateway.class::isInstance)
-        .anyMatch(ServiceTask.class::isInstance)
-        .anyMatch(IntermediateCatchEvent.class::isInstance)
-        .anyMatch(TimerEventDefinition.class::isInstance)
-        .anyMatch(EndEvent.class::isInstance)
-        .anyMatch(BpmnDiagram.class::isInstance)
-        .anyMatch(BpmnPlane.class::isInstance);
-  }
+        assertThat(visitedElements)
+                .anyMatch(Definitions.class::isInstance)
+                .anyMatch(StartEvent.class::isInstance)
+                .anyMatch(ExclusiveGateway.class::isInstance)
+                .anyMatch(ServiceTask.class::isInstance)
+                .anyMatch(IntermediateCatchEvent.class::isInstance)
+                .anyMatch(TimerEventDefinition.class::isInstance)
+                .anyMatch(EndEvent.class::isInstance)
+                .anyMatch(BpmnDiagram.class::isInstance)
+                .anyMatch(BpmnPlane.class::isInstance);
+    }
 
-  @Test
-  public void shouldIgnoreNonExecutableProceses() {
-    // given
-    // a BPMN model containing one executable and one non-executable process
-    final BpmnModelInstance modelInstance =
-        Bpmn.readModelFromStream(
-            ModelWalkerTest.class.getResourceAsStream("CollaborationModelWalkerTest.bpmn"));
+    @Test
+    public void shouldIgnoreNonExecutableProceses() {
+        // given
+        // a BPMN model containing one executable and one non-executable process
+        final BpmnModelInstance modelInstance =
+                Bpmn.readModelFromStream(
+                        ModelWalkerTest.class.getResourceAsStream("CollaborationModelWalkerTest.bpmn"));
 
-    final List<BpmnModelElementInstance> visitedElements = new ArrayList<>();
+        final List<BpmnModelElementInstance> visitedElements = new ArrayList<>();
 
-    final ModelWalker walker = new ModelWalker(modelInstance);
+        final ModelWalker walker = new ModelWalker(modelInstance);
 
-    // when
-    walker.walk(visitedElements::add);
+        // when
+        walker.walk(visitedElements::add);
 
-    // then
-    // assert that all the direct executable child elements of DefinitionImpl have been
-    // walked through, including only the executable process
-    assertThat(visitedElements)
-        .extracting("class")
-        .containsOnlyOnce(ProcessImpl.class)
-        .containsOnlyOnce(BpmnDiagramImpl.class)
-        .containsOnlyOnce(CollaborationImpl.class);
-  }
+        // then
+        // assert that all the direct executable child elements of DefinitionImpl have been
+        // walked through, including only the executable process
+        assertThat(visitedElements)
+                .extracting("class")
+                .containsOnlyOnce(ProcessImpl.class)
+                .containsOnlyOnce(BpmnDiagramImpl.class)
+                .containsOnlyOnce(CollaborationImpl.class);
+    }
 }

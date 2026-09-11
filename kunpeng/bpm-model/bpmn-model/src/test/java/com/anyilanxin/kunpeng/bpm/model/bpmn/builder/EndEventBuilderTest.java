@@ -16,193 +16,193 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.bpmn.builder;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
-
 import com.anyilanxin.kunpeng.bpm.model.bpmn.Bpmn;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelInstance;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.QueryImpl;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.EndEvent;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ExtensionElements;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.MessageEventDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebePublishMessage;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengPublishMessage;
 import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 public class EndEventBuilderTest {
 
-  @Test
-  void shouldSetMessageId() {
-    // when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .endEvent("message")
-            .message(b -> b.name("message").zeebeMessageId("message-id-1"))
-            .done();
+    @Test
+    void shouldSetMessageId() {
+        // when
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .endEvent("message")
+                        .message(b -> b.name("message").kunpengMessageId("message-id-1"))
+                        .done();
 
-    // then
-    final EndEvent event = instance.getModelElementById("message");
-    final MessageEventDefinition messageEventDefinition = getEventDefinition(event);
+        // then
+        final EndEvent event = instance.getModelElementById("message");
+        final MessageEventDefinition messageEventDefinition = getEventDefinition(event);
 
-    final ExtensionElements extensionElements =
-        (ExtensionElements)
-            messageEventDefinition.getUniqueChildElementByType(ExtensionElements.class);
+        final ExtensionElements extensionElements =
+                (ExtensionElements)
+                        messageEventDefinition.getUniqueChildElementByType(ExtensionElements.class);
 
-    assertThat(extensionElements.getChildElementsByType(ZeebePublishMessage.class))
-        .hasSize(1)
-        .extracting(ZeebePublishMessage::getMessageId)
-        .containsExactly("message-id-1");
-  }
+        assertThat(extensionElements.getChildElementsByType(KunpengPublishMessage.class))
+                .hasSize(1)
+                .extracting(KunpengPublishMessage::getMessageId)
+                .containsExactly("message-id-1");
+    }
 
-  @Test
-  void shouldSetMessageIdExpression() {
-    // when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .endEvent("message")
-            .message(b -> b.name("message").zeebeMessageIdExpression("messageIdExpr"))
-            .done();
+    @Test
+    void shouldSetMessageIdExpression() {
+        // when
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .endEvent("message")
+                        .message(b -> b.name("message").kunpengMessageIdExpression("messageIdExpr"))
+                        .done();
 
-    // then
-    final EndEvent event = instance.getModelElementById("message");
-    final MessageEventDefinition messageEventDefinition = getEventDefinition(event);
+        // then
+        final EndEvent event = instance.getModelElementById("message");
+        final MessageEventDefinition messageEventDefinition = getEventDefinition(event);
 
-    final ExtensionElements extensionElements =
-        (ExtensionElements)
-            messageEventDefinition.getUniqueChildElementByType(ExtensionElements.class);
+        final ExtensionElements extensionElements =
+                (ExtensionElements)
+                        messageEventDefinition.getUniqueChildElementByType(ExtensionElements.class);
 
-    assertThat(extensionElements.getChildElementsByType(ZeebePublishMessage.class))
-        .hasSize(1)
-        .extracting(ZeebePublishMessage::getMessageId)
-        .containsExactly("=messageIdExpr");
-  }
+        assertThat(extensionElements.getChildElementsByType(KunpengPublishMessage.class))
+                .hasSize(1)
+                .extracting(KunpengPublishMessage::getMessageId)
+                .containsExactly("=messageIdExpr");
+    }
 
-  @Test
-  void shouldSetCorrelationKey() {
-    // when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .endEvent("message")
-            .message(b -> b.name("message").zeebeCorrelationKey("correlation-key-1"))
-            .done();
+    @Test
+    void shouldSetCorrelationKey() {
+        // when
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .endEvent("message")
+                        .message(b -> b.name("message").kunpengCorrelationKey("correlation-key-1"))
+                        .done();
 
-    // then
-    final EndEvent event = instance.getModelElementById("message");
-    final MessageEventDefinition messageEventDefinition = getEventDefinition(event);
-    final ExtensionElements extensionElements =
-        (ExtensionElements)
-            messageEventDefinition.getUniqueChildElementByType(ExtensionElements.class);
+        // then
+        final EndEvent event = instance.getModelElementById("message");
+        final MessageEventDefinition messageEventDefinition = getEventDefinition(event);
+        final ExtensionElements extensionElements =
+                (ExtensionElements)
+                        messageEventDefinition.getUniqueChildElementByType(ExtensionElements.class);
 
-    assertThat(extensionElements.getChildElementsByType(ZeebePublishMessage.class))
-        .hasSize(1)
-        .extracting(ZeebePublishMessage::getCorrelationKey)
-        .containsExactly("correlation-key-1");
-  }
+        assertThat(extensionElements.getChildElementsByType(KunpengPublishMessage.class))
+                .hasSize(1)
+                .extracting(KunpengPublishMessage::getCorrelationKey)
+                .containsExactly("correlation-key-1");
+    }
 
-  @Test
-  void shouldSetCorrelationKeyExpression() {
-    // when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .endEvent("message")
-            .message(b -> b.name("message").zeebeCorrelationKeyExpression("correlationKeyExpr"))
-            .done();
+    @Test
+    void shouldSetCorrelationKeyExpression() {
+        // when
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .endEvent("message")
+                        .message(b -> b.name("message").kunpengCorrelationKeyExpression("correlationKeyExpr"))
+                        .done();
 
-    // then
-    final EndEvent event = instance.getModelElementById("message");
-    final MessageEventDefinition messageEventDefinition = getEventDefinition(event);
-    final ExtensionElements extensionElements =
-        (ExtensionElements)
-            messageEventDefinition.getUniqueChildElementByType(ExtensionElements.class);
+        // then
+        final EndEvent event = instance.getModelElementById("message");
+        final MessageEventDefinition messageEventDefinition = getEventDefinition(event);
+        final ExtensionElements extensionElements =
+                (ExtensionElements)
+                        messageEventDefinition.getUniqueChildElementByType(ExtensionElements.class);
 
-    assertThat(extensionElements.getChildElementsByType(ZeebePublishMessage.class))
-        .hasSize(1)
-        .extracting(ZeebePublishMessage::getCorrelationKey)
-        .containsExactly("=correlationKeyExpr");
-  }
+        assertThat(extensionElements.getChildElementsByType(KunpengPublishMessage.class))
+                .hasSize(1)
+                .extracting(KunpengPublishMessage::getCorrelationKey)
+                .containsExactly("=correlationKeyExpr");
+    }
 
-  @Test
-  void shouldSetTimeToLive() {
-    // when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .endEvent("message")
-            .message(b -> b.name("message").zeebeTimeToLive("PT10S"))
-            .done();
+    @Test
+    void shouldSetTimeToLive() {
+        // when
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .endEvent("message")
+                        .message(b -> b.name("message").kunpengTimeToLive("PT10S"))
+                        .done();
 
-    // then
-    final EndEvent event = instance.getModelElementById("message");
-    final MessageEventDefinition messageEventDefinition = getEventDefinition(event);
-    final ExtensionElements extensionElements =
-        (ExtensionElements)
-            messageEventDefinition.getUniqueChildElementByType(ExtensionElements.class);
+        // then
+        final EndEvent event = instance.getModelElementById("message");
+        final MessageEventDefinition messageEventDefinition = getEventDefinition(event);
+        final ExtensionElements extensionElements =
+                (ExtensionElements)
+                        messageEventDefinition.getUniqueChildElementByType(ExtensionElements.class);
 
-    assertThat(extensionElements.getChildElementsByType(ZeebePublishMessage.class))
-        .hasSize(1)
-        .extracting(ZeebePublishMessage::getTimeToLive)
-        .containsExactly("PT10S");
-  }
+        assertThat(extensionElements.getChildElementsByType(KunpengPublishMessage.class))
+                .hasSize(1)
+                .extracting(KunpengPublishMessage::getTimeToLive)
+                .containsExactly("PT10S");
+    }
 
-  @Test
-  void shouldSetTimeToLiveExpression() {
-    // when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .endEvent("message")
-            .message(b -> b.name("message").zeebeTimeToLiveExpression("timeToLiveExpr"))
-            .done();
+    @Test
+    void shouldSetTimeToLiveExpression() {
+        // when
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .endEvent("message")
+                        .message(b -> b.name("message").kunpengTimeToLiveExpression("timeToLiveExpr"))
+                        .done();
 
-    // then
-    final EndEvent event = instance.getModelElementById("message");
-    final MessageEventDefinition messageEventDefinition = getEventDefinition(event);
-    final ExtensionElements extensionElements =
-        (ExtensionElements)
-            messageEventDefinition.getUniqueChildElementByType(ExtensionElements.class);
+        // then
+        final EndEvent event = instance.getModelElementById("message");
+        final MessageEventDefinition messageEventDefinition = getEventDefinition(event);
+        final ExtensionElements extensionElements =
+                (ExtensionElements)
+                        messageEventDefinition.getUniqueChildElementByType(ExtensionElements.class);
 
-    assertThat(extensionElements.getChildElementsByType(ZeebePublishMessage.class))
-        .hasSize(1)
-        .extracting(ZeebePublishMessage::getTimeToLive)
-        .containsExactly("=timeToLiveExpr");
-  }
+        assertThat(extensionElements.getChildElementsByType(KunpengPublishMessage.class))
+                .hasSize(1)
+                .extracting(KunpengPublishMessage::getTimeToLive)
+                .containsExactly("=timeToLiveExpr");
+    }
 
-  @Test
-  void shouldSetMessageIdAndCorrelationKeyAndTimeToLive() {
-    // when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .endEvent("message")
-            .message(
-                m ->
-                    m.zeebeMessageId("message-id")
-                        .zeebeCorrelationKey("correlation-key")
-                        .zeebeTimeToLive("PT10S"))
-            .done();
+    @Test
+    void shouldSetMessageIdAndCorrelationKeyAndTimeToLive() {
+        // when
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .endEvent("message")
+                        .message(
+                                m ->
+                                        m.kunpengMessageId("message-id")
+                                                .kunpengCorrelationKey("correlation-key")
+                                                .kunpengTimeToLive("PT10S"))
+                        .done();
 
-    // then
-    final EndEvent event = instance.getModelElementById("message");
-    final MessageEventDefinition messageEventDefinition = getEventDefinition(event);
-    final ExtensionElements extensionElements =
-        (ExtensionElements)
-            messageEventDefinition.getUniqueChildElementByType(ExtensionElements.class);
+        // then
+        final EndEvent event = instance.getModelElementById("message");
+        final MessageEventDefinition messageEventDefinition = getEventDefinition(event);
+        final ExtensionElements extensionElements =
+                (ExtensionElements)
+                        messageEventDefinition.getUniqueChildElementByType(ExtensionElements.class);
 
-    assertThat(extensionElements.getChildElementsByType(ZeebePublishMessage.class))
-        .hasSize(1)
-        .extracting(
-            ZeebePublishMessage::getMessageId,
-            ZeebePublishMessage::getCorrelationKey,
-            ZeebePublishMessage::getTimeToLive)
-        .containsExactly(tuple("message-id", "correlation-key", "PT10S"));
-  }
+        assertThat(extensionElements.getChildElementsByType(KunpengPublishMessage.class))
+                .hasSize(1)
+                .extracting(
+                        KunpengPublishMessage::getMessageId,
+                        KunpengPublishMessage::getCorrelationKey,
+                        KunpengPublishMessage::getTimeToLive)
+                .containsExactly(tuple("message-id", "correlation-key", "PT10S"));
+    }
 
-  private MessageEventDefinition getEventDefinition(final EndEvent event) {
-    return new QueryImpl<>(event.getEventDefinitions())
-        .filterByType(MessageEventDefinition.class)
-        .singleResult();
-  }
+    private MessageEventDefinition getEventDefinition(final EndEvent event) {
+        return new QueryImpl<>(event.getEventDefinitions())
+                .filterByType(MessageEventDefinition.class)
+                .singleResult();
+    }
 }

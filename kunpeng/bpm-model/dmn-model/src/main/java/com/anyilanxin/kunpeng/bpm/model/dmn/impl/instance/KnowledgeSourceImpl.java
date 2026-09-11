@@ -16,16 +16,9 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_LOCATION_URI;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_KNOWLEDGE_SOURCE;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.*;
 
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.AuthorityRequirement;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DrgElement;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.KnowledgeSource;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.OrganizationUnit;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.OwnerReference;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Type;
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.*;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
@@ -45,54 +38,63 @@ public class KnowledgeSourceImpl extends DrgElementImpl implements KnowledgeSour
   protected static ChildElement<Type> typeChild;
   protected static ElementReference<OrganizationUnit, OwnerReference> ownerRef;
 
-  public KnowledgeSourceImpl(ModelTypeInstanceContext instanceContext) {
+  public KnowledgeSourceImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public String getLocationUri() {
     return locationUriAttribute.getValue(this);
   }
 
-  public void setLocationUri(String locationUri) {
+  @Override
+  public void setLocationUri(final String locationUri) {
     locationUriAttribute.setValue(this, locationUri);
   }
 
+  @Override
   public Collection<AuthorityRequirement> getAuthorityRequirement() {
     return authorityRequirementCollection.get(this);
   }
 
+  @Override
   public Type getType() {
     return typeChild.getChild(this);
   }
 
-  public void setType(Type type) {
+  @Override
+  public void setType(final Type type) {
     typeChild.setChild(this, type);
   }
 
+  @Override
   public OrganizationUnit getOwner() {
     return ownerRef.getReferenceTargetElement(this);
   }
 
-  public void setOwner(OrganizationUnit owner) {
+  @Override
+  public void setOwner(final OrganizationUnit owner) {
     ownerRef.setReferenceTargetElement(this, owner);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(KnowledgeSource.class, DMN_ELEMENT_KNOWLEDGE_SOURCE)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(DrgElement.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<KnowledgeSource>() {
-                  public KnowledgeSource newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public KnowledgeSource newInstance(
+                      final ModelTypeInstanceContext instanceContext) {
                     return new KnowledgeSourceImpl(instanceContext);
                   }
                 });
 
     locationUriAttribute = typeBuilder.stringAttribute(DMN_ATTRIBUTE_LOCATION_URI).build();
 
-    SequenceBuilder sequenceBuilder = typeBuilder.sequence();
+    final SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
     authorityRequirementCollection =
         sequenceBuilder.elementCollection(AuthorityRequirement.class).build();

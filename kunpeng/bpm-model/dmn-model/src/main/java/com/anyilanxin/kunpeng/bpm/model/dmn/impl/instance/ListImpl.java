@@ -33,28 +33,30 @@ public class ListImpl extends ExpressionImpl implements List {
 
   protected static ChildElementCollection<Expression> expressionCollection;
 
-  public ListImpl(ModelTypeInstanceContext instanceContext) {
+  public ListImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public Collection<Expression> getExpressions() {
     return expressionCollection.get(this);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(List.class, DMN_ELEMENT_LIST)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(Expression.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<List>() {
-                  public List newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public List newInstance(final ModelTypeInstanceContext instanceContext) {
                     return new ListImpl(instanceContext);
                   }
                 });
 
-    SequenceBuilder sequenceBuilder = typeBuilder.sequence();
+    final SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
     expressionCollection = sequenceBuilder.elementCollection(Expression.class).build();
 

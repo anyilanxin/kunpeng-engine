@@ -17,57 +17,57 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ConditionExpression;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.SequenceFlow;
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Sebastian Menski
  */
 public class ConditionalSequenceFlowTest {
 
-  protected BpmnModelInstance modelInstance;
-  protected SequenceFlow flow1;
-  protected SequenceFlow flow2;
-  protected SequenceFlow flow3;
-  protected ConditionExpression conditionExpression1;
-  protected ConditionExpression conditionExpression2;
-  protected ConditionExpression conditionExpression3;
+    protected BpmnModelInstance modelInstance;
+    protected SequenceFlow flow1;
+    protected SequenceFlow flow2;
+    protected SequenceFlow flow3;
+    protected ConditionExpression conditionExpression1;
+    protected ConditionExpression conditionExpression2;
+    protected ConditionExpression conditionExpression3;
 
-  @Before
-  public void parseModel() {
-    modelInstance =
-        Bpmn.readModelFromStream(
-            getClass().getResourceAsStream(getClass().getSimpleName() + ".xml"));
-    flow1 = modelInstance.getModelElementById("flow1");
-    flow2 = modelInstance.getModelElementById("flow2");
-    flow3 = modelInstance.getModelElementById("flow3");
-    conditionExpression1 = flow1.getConditionExpression();
-    conditionExpression2 = flow2.getConditionExpression();
-    conditionExpression3 = flow3.getConditionExpression();
-  }
+    @Before
+    public void parseModel() {
+        modelInstance =
+                Bpmn.readModelFromStream(
+                        getClass().getResourceAsStream(getClass().getSimpleName() + ".xml"));
+        flow1 = modelInstance.getModelElementById("flow1");
+        flow2 = modelInstance.getModelElementById("flow2");
+        flow3 = modelInstance.getModelElementById("flow3");
+        conditionExpression1 = flow1.getConditionExpression();
+        conditionExpression2 = flow2.getConditionExpression();
+        conditionExpression3 = flow3.getConditionExpression();
+    }
 
-  @Test
-  public void shouldHaveTypeTFormalExpression() {
-    assertThat(conditionExpression1.getType()).isEqualTo("tFormalExpression");
-    assertThat(conditionExpression2.getType()).isEqualTo("tFormalExpression");
-    assertThat(conditionExpression3.getType()).isEqualTo("tFormalExpression");
-  }
+    @Test
+    public void shouldHaveTypeTFormalExpression() {
+        assertThat(conditionExpression1.getType()).isEqualTo("tFormalExpression");
+        assertThat(conditionExpression2.getType()).isEqualTo("tFormalExpression");
+        assertThat(conditionExpression3.getType()).isEqualTo("tFormalExpression");
+    }
 
-  @Test
-  public void shouldHaveLanguage() {
-    assertThat(conditionExpression1.getLanguage()).isNull();
-    assertThat(conditionExpression2.getLanguage()).isNull();
-    assertThat(conditionExpression3.getLanguage()).isEqualTo("groovy");
-  }
+    @Test
+    public void shouldHaveLanguage() {
+        assertThat(conditionExpression1.getLanguage()).isNull();
+        assertThat(conditionExpression2.getLanguage()).isNull();
+        assertThat(conditionExpression3.getLanguage()).isEqualTo("groovy");
+    }
 
-  @Test
-  public void shouldHaveSourceCode() {
-    assertThat(conditionExpression1.getTextContent()).isEqualTo("test");
-    assertThat(conditionExpression2.getTextContent()).isEqualTo("${test}");
-    assertThat(conditionExpression3.getTextContent()).isEmpty();
-  }
+    @Test
+    public void shouldHaveSourceCode() {
+        assertThat(conditionExpression1.getTextContent()).isEqualTo("test");
+        assertThat(conditionExpression2.getTextContent()).isEqualTo("${test}");
+        assertThat(conditionExpression3.getTextContent()).isEmpty();
+    }
 }

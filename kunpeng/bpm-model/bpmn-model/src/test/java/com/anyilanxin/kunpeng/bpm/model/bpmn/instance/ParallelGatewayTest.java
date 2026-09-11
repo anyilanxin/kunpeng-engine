@@ -20,4 +20,5 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
 /**
  * @author Sebastian Menski
  */
-public class ParallelGatewayTest extends AbstractGatewayTest<ParallelGateway> {}
+public class ParallelGatewayTest extends AbstractGatewayTest<ParallelGateway> {
+}

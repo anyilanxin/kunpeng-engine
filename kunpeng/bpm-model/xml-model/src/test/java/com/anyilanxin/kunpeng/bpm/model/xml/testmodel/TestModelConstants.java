@@ -18,13 +18,12 @@ package com.anyilanxin.kunpeng.bpm.model.xml.testmodel;
 
 /**
  * @author Daniel Meyer
- *
  */
 public abstract class TestModelConstants {
 
   public static final String MODEL_NAME = "animals";
-  public static final String MODEL_NAMESPACE = "http://camunda.org/animals";
-  public static final String NEWER_NAMESPACE = "http://camunda.org/electronic";
+  public static final String MODEL_NAMESPACE = "https://anyilanxin.com/animals";
+  public static final String NEWER_NAMESPACE = "https://anyilanxin.com/electronic";
 
   public static final String TYPE_NAME_ANIMAL = "animal";
   public static final String TYPE_NAME_FLYING_ANIMAL = "flyingAnimal";

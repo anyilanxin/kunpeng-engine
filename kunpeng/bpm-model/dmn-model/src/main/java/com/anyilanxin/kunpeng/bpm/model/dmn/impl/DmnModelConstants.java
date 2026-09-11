@@ -36,16 +36,21 @@ public final class DmnModelConstants {
       "https://www.omg.org/spec/DMN/20191111/DMN13.xsd";
 
   /** The location of the DMN 1.1 XML schema. */
-  public static final String DMN_11_SCHEMA_LOCATION = "org/camunda/bpm/model/dmn/schema/DMN11.xsd";
+  public static final String DMN_11_SCHEMA_LOCATION =
+      "com/anyilanxin/kunpeng/bpm/model/dmn/schema/DMN11.xsd";
 
-  public static final String DMN_12_SCHEMA_LOCATION = "org/camunda/bpm/model/dmn/schema/DMN12.xsd";
-  public static final String DMN_13_SCHEMA_LOCATION = "org/camunda/bpm/model/dmn/schema/DMN13.xsd";
-  public static final String DMN_14_SCHEMA_LOCATION = "org/camunda/bpm/model/dmn/schema/DMN14.xsd";
-  public static final String DMN_15_SCHEMA_LOCATION = "org/camunda/bpm/model/dmn/schema/DMN15.xsd";
+  public static final String DMN_12_SCHEMA_LOCATION =
+      "com/anyilanxin/kunpeng/bpm/model/dmn/schema/DMN12.xsd";
+  public static final String DMN_13_SCHEMA_LOCATION =
+      "com/anyilanxin/kunpeng/bpm/model/dmn/schema/DMN13.xsd";
+  public static final String DMN_14_SCHEMA_LOCATION =
+      "com/anyilanxin/kunpeng/bpm/model/dmn/schema/DMN14.xsd";
+  public static final String DMN_15_SCHEMA_LOCATION =
+      "com/anyilanxin/kunpeng/bpm/model/dmn/schema/DMN15.xsd";
 
   /** The location of the DMN 1.1 XML schema released with Camunda 7.4.0 */
   public static final String DMN_11_ALTERNATIVE_SCHEMA_LOCATION =
-      "org/camunda/bpm/model/dmn/schema/DMN11_Alternative.xsd";
+      "com/anyilanxin/kunpeng/bpm/model/dmn/schema/DMN11_Alternative.xsd";
 
   /** The FEEL namespace */
   public static final String FEEL_NS = "http://www.omg.org/spec/FEEL/20140401";
@@ -56,7 +61,7 @@ public final class DmnModelConstants {
   public static final String FEEL15_NS = "https://www.omg.org/spec/DMN/20230324/FEEL/";
 
   /** Camunda namespace */
-  public static final String CAMUNDA_NS = "http://camunda.org/schema/1.0/dmn";
+  public static final String KUNPENG_NS = "https://anyilanxin.com/schema/1.0/dmn";
 
   /** DMN element */
   public static final String DMN_ELEMENT = "DMNElement";
@@ -170,9 +175,9 @@ public final class DmnModelConstants {
   public static final String DMN_ATTRIBUTE_TYPE_REF = "typeRef";
   public static final String DMN_ATTRIBUTE_URI = "URI";
 
-  /** camunda extensions */
-  public static final String CAMUNDA_ATTRIBUTE_INPUT_VARIABLE = "inputVariable";
+  /** kunpeng extensions */
+  public static final String KUNPENG_ATTRIBUTE_INPUT_VARIABLE = "inputVariable";
 
-  public static final String CAMUNDA_ATTRIBUTE_HISTORY_TIME_TO_LIVE = "historyTimeToLive";
-  public static final String CAMUNDA_ATTRIBUTE_VERSION_TAG = "versionTag";
+  public static final String KUNPENG_ATTRIBUTE_HISTORY_TIME_TO_LIVE = "historyTimeToLive";
+  public static final String KUNPENG_ATTRIBUTE_VERSION_TAG = "versionTag";
 }

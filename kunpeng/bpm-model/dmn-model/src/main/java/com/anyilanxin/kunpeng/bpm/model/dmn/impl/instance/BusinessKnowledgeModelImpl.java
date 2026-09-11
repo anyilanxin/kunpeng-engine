@@ -19,12 +19,7 @@ package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_BUSINESS_KNOWLEDGE_MODEL;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.AuthorityRequirement;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.BusinessKnowledgeModel;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DrgElement;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.EncapsulatedLogic;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.KnowledgeRequirement;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Variable;
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.*;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
@@ -41,49 +36,56 @@ public class BusinessKnowledgeModelImpl extends DrgElementImpl implements Busine
   protected static ChildElementCollection<KnowledgeRequirement> knowledgeRequirementCollection;
   protected static ChildElementCollection<AuthorityRequirement> authorityRequirementCollection;
 
-  public BusinessKnowledgeModelImpl(ModelTypeInstanceContext instanceContext) {
+  public BusinessKnowledgeModelImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public EncapsulatedLogic getEncapsulatedLogic() {
     return encapsulatedLogicChild.getChild(this);
   }
 
-  public void setEncapsulatedLogic(EncapsulatedLogic encapsulatedLogic) {
+  @Override
+  public void setEncapsulatedLogic(final EncapsulatedLogic encapsulatedLogic) {
     encapsulatedLogicChild.setChild(this, encapsulatedLogic);
   }
 
+  @Override
   public Variable getVariable() {
     return variableChild.getChild(this);
   }
 
-  public void setVariable(Variable variable) {
+  @Override
+  public void setVariable(final Variable variable) {
     variableChild.setChild(this, variable);
   }
 
+  @Override
   public Collection<KnowledgeRequirement> getKnowledgeRequirement() {
     return knowledgeRequirementCollection.get(this);
   }
 
+  @Override
   public Collection<AuthorityRequirement> getAuthorityRequirement() {
     return authorityRequirementCollection.get(this);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(BusinessKnowledgeModel.class, DMN_ELEMENT_BUSINESS_KNOWLEDGE_MODEL)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(DrgElement.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<BusinessKnowledgeModel>() {
+                  @Override
                   public BusinessKnowledgeModel newInstance(
-                      ModelTypeInstanceContext instanceContext) {
+                      final ModelTypeInstanceContext instanceContext) {
                     return new BusinessKnowledgeModelImpl(instanceContext);
                   }
                 });
 
-    SequenceBuilder sequenceBuilder = typeBuilder.sequence();
+    final SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
     encapsulatedLogicChild = sequenceBuilder.element(EncapsulatedLogic.class).build();
 

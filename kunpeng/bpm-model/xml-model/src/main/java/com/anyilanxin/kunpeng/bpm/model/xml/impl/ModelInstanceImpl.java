@@ -45,18 +45,21 @@ public class ModelInstanceImpl implements ModelInstance {
   protected ModelImpl model;
   protected final ModelBuilder modelBuilder;
 
-  public ModelInstanceImpl(ModelImpl model, ModelBuilder modelBuilder, DomDocument document) {
+  public ModelInstanceImpl(
+      final ModelImpl model, final ModelBuilder modelBuilder, final DomDocument document) {
     this.model = model;
     this.modelBuilder = modelBuilder;
     this.document = document;
   }
 
+  @Override
   public DomDocument getDocument() {
     return document;
   }
 
+  @Override
   public ModelElementInstance getDocumentElement() {
-    DomElement rootElement = document.getRootElement();
+    final DomElement rootElement = document.getRootElement();
     if (rootElement != null) {
       return ModelUtil.getModelElement(rootElement, this);
     } else {
@@ -64,18 +67,21 @@ public class ModelInstanceImpl implements ModelInstance {
     }
   }
 
-  public void setDocumentElement(ModelElementInstance modelElement) {
+  @Override
+  public void setDocumentElement(final ModelElementInstance modelElement) {
     ModelUtil.ensureInstanceOf(modelElement, ModelElementInstanceImpl.class);
-    DomElement domElement = modelElement.getDomElement();
+    final DomElement domElement = modelElement.getDomElement();
     document.setRootElement(domElement);
   }
 
-  public <T extends ModelElementInstance> T newInstance(Class<T> type) {
+  @Override
+  public <T extends ModelElementInstance> T newInstance(final Class<T> type) {
     return newInstance(type, null);
   }
 
-  public <T extends ModelElementInstance> T newInstance(Class<T> type, String id) {
-    ModelElementType modelElementType = model.getType(type);
+  @Override
+  public <T extends ModelElementInstance> T newInstance(final Class<T> type, final String id) {
+    final ModelElementType modelElementType = model.getType(type);
     if (modelElementType != null) {
       return newInstance(modelElementType, id);
     } else {
@@ -84,13 +90,16 @@ public class ModelInstanceImpl implements ModelInstance {
     }
   }
 
-  public <T extends ModelElementInstance> T newInstance(ModelElementType type) {
+  @Override
+  public <T extends ModelElementInstance> T newInstance(final ModelElementType type) {
     return newInstance(type, null);
   }
 
+  @Override
   @SuppressWarnings("unchecked")
-  public <T extends ModelElementInstance> T newInstance(ModelElementType type, String id) {
-    ModelElementInstance modelElementInstance = type.newInstance(this);
+  public <T extends ModelElementInstance> T newInstance(
+      final ModelElementType type, final String id) {
+    final ModelElementInstance modelElementInstance = type.newInstance(this);
     if (id != null && !id.isEmpty()) {
       ModelUtil.setNewIdentifier(type, modelElementInstance, id, false);
     } else {
@@ -99,11 +108,12 @@ public class ModelInstanceImpl implements ModelInstance {
     return (T) modelElementInstance;
   }
 
+  @Override
   public Model getModel() {
     return model;
   }
 
-  public ModelElementType registerGenericType(String namespaceUri, String localName) {
+  public ModelElementType registerGenericType(final String namespaceUri, final String localName) {
     ModelElementType elementType = model.getTypeForName(namespaceUri, localName);
     if (elementType == null) {
       elementType = modelBuilder.defineGenericType(localName, namespaceUri);
@@ -112,13 +122,14 @@ public class ModelInstanceImpl implements ModelInstance {
     return elementType;
   }
 
+  @Override
   @SuppressWarnings("unchecked")
-  public <T extends ModelElementInstance> T getModelElementById(String id) {
+  public <T extends ModelElementInstance> T getModelElementById(final String id) {
     if (id == null) {
       return null;
     }
 
-    DomElement element = document.getElementById(id);
+    final DomElement element = document.getElementById(id);
     if (element != null) {
       return (T) ModelUtil.getModelElement(element, this);
     } else {
@@ -126,11 +137,12 @@ public class ModelInstanceImpl implements ModelInstance {
     }
   }
 
-  public Collection<ModelElementInstance> getModelElementsByType(ModelElementType type) {
-    Collection<ModelElementType> extendingTypes = type.getAllExtendingTypes();
+  @Override
+  public Collection<ModelElementInstance> getModelElementsByType(final ModelElementType type) {
+    final Collection<ModelElementType> extendingTypes = type.getAllExtendingTypes();
 
-    List<ModelElementInstance> instances = new ArrayList<ModelElementInstance>();
-    for (ModelElementType modelElementType : extendingTypes) {
+    final List<ModelElementInstance> instances = new ArrayList<ModelElementInstance>();
+    for (final ModelElementType modelElementType : extendingTypes) {
       if (!modelElementType.isAbstract()) {
         instances.addAll(modelElementType.getInstances(this));
       }
@@ -138,9 +150,10 @@ public class ModelInstanceImpl implements ModelInstance {
     return instances;
   }
 
+  @Override
   @SuppressWarnings("unchecked")
   public <T extends ModelElementInstance> Collection<T> getModelElementsByType(
-      Class<T> referencingClass) {
+      final Class<T> referencingClass) {
     return (Collection<T>) getModelElementsByType(getModel().getType(referencingClass));
   }
 
@@ -150,7 +163,7 @@ public class ModelInstanceImpl implements ModelInstance {
   }
 
   @Override
-  public ValidationResults validate(Collection<ModelElementValidator<?>> validators) {
+  public ValidationResults validate(final Collection<ModelElementValidator<?>> validators) {
     return new ModelInstanceValidator(this, validators).validate();
   }
 }

@@ -24,10 +24,10 @@ public class UriElementReferenceBuilderImpl<
     extends ElementReferenceBuilderImpl<Target, Source> {
 
   public UriElementReferenceBuilderImpl(
-      Class<Source> childElementType,
-      Class<Target> referenceTargetClass,
-      ChildElementImpl<Source> child) {
+      final Class<Source> childElementType,
+      final Class<Target> referenceTargetClass,
+      final ChildElementImpl<Source> child) {
     super(childElementType, referenceTargetClass, child);
-    this.elementReferenceCollectionImpl = new UriElementReferenceImpl<Target, Source>(child);
+    elementReferenceCollectionImpl = new UriElementReferenceImpl<Target, Source>(child);
   }
 }

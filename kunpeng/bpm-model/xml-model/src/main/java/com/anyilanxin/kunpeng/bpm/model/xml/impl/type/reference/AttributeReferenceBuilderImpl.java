@@ -45,28 +45,30 @@ public class AttributeReferenceBuilderImpl<T extends ModelElementInstance>
    * @param referenceTargetElement the reference target model element instance
    */
   public AttributeReferenceBuilderImpl(
-      AttributeImpl<String> referenceSourceAttribute, Class<T> referenceTargetElement) {
+      final AttributeImpl<String> referenceSourceAttribute, final Class<T> referenceTargetElement) {
     this.referenceSourceAttribute = referenceSourceAttribute;
     this.referenceTargetElement = referenceTargetElement;
-    this.attributeReferenceImpl = new AttributeReferenceImpl<T>(referenceSourceAttribute);
+    attributeReferenceImpl = new AttributeReferenceImpl<T>(referenceSourceAttribute);
   }
 
+  @Override
   public AttributeReference<T> build() {
     referenceSourceAttribute.registerOutgoingReference(attributeReferenceImpl);
     return attributeReferenceImpl;
   }
 
+  @Override
   @SuppressWarnings("unchecked")
-  public void performModelBuild(Model model) {
+  public void performModelBuild(final Model model) {
     // register declaring type as a referencing type of referenced type
-    ModelElementTypeImpl referenceTargetType =
+    final ModelElementTypeImpl referenceTargetType =
         (ModelElementTypeImpl) model.getType(referenceTargetElement);
 
     // the actual referenced type
     attributeReferenceImpl.setReferenceTargetElementType(referenceTargetType);
 
     // the referenced attribute may be declared on a base type of the referenced type.
-    AttributeImpl<String> idAttribute =
+    final AttributeImpl<String> idAttribute =
         (AttributeImpl<String>) referenceTargetType.getAttribute("id");
     if (idAttribute != null) {
       idAttribute.registerIncoming(attributeReferenceImpl);

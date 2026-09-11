@@ -25,7 +25,11 @@ import java.util.Collection;
  * @author Daniel Meyer
  * @author Sebastian Menski
  */
-public interface FlowElement extends BaseElement, NamedBpmnElement {
+public interface FlowElement extends BaseElement {
+
+  String getName();
+
+  void setName(String name);
 
   Auditing getAuditing();
 

@@ -16,332 +16,327 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.bpmn.builder;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
-
 import com.anyilanxin.kunpeng.bpm.model.bpmn.Bpmn;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelInstance;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ExtensionElements;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeAssignmentDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeBindingType;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeFormDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebePriorityDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeTaskSchedule;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeUserTask;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeUserTaskForm;
-import java.util.Collection;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.*;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
+import java.util.Collection;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
+
 class UserTaskBuilderTest {
 
-  @Test
-  void testUserTaskAssigneeCanBeSet() {
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .userTask("userTask1", task -> task.zeebeAssignee("user1"))
-            .endEvent()
-            .done();
+    @Test
+    void testUserTaskAssigneeCanBeSet() {
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .userTask("userTask1", task -> task.kunpengAssignee("user1"))
+                        .endEvent()
+                        .done();
 
-    final ModelElementInstance userTask = instance.getModelElementById("userTask1");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) userTask.getUniqueChildElementByType(ExtensionElements.class);
-    assertThat(extensionElements.getChildElementsByType(ZeebeAssignmentDefinition.class))
-        .hasSize(1)
-        .extracting(ZeebeAssignmentDefinition::getAssignee)
-        .containsExactly("user1");
-  }
+        final ModelElementInstance userTask = instance.getModelElementById("userTask1");
+        final ExtensionElements extensionElements =
+                (ExtensionElements) userTask.getUniqueChildElementByType(ExtensionElements.class);
+        assertThat(extensionElements.getChildElementsByType(KunpengAssignmentDefinition.class))
+                .hasSize(1)
+                .extracting(KunpengAssignmentDefinition::getAssignee)
+                .containsExactly("user1");
+    }
 
-  @Test
-  void testUserTaskCandidateGroupsCanBeSet() {
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .userTask("userTask1", task -> task.zeebeCandidateGroups("role1"))
-            .endEvent()
-            .done();
+    @Test
+    void testUserTaskCandidateGroupsCanBeSet() {
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .userTask("userTask1", task -> task.kunpengCandidateGroups("role1"))
+                        .endEvent()
+                        .done();
 
-    final ModelElementInstance userTask = instance.getModelElementById("userTask1");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) userTask.getUniqueChildElementByType(ExtensionElements.class);
-    assertThat(extensionElements.getChildElementsByType(ZeebeAssignmentDefinition.class))
-        .hasSize(1)
-        .extracting(ZeebeAssignmentDefinition::getCandidateGroups)
-        .containsExactly("role1");
-  }
+        final ModelElementInstance userTask = instance.getModelElementById("userTask1");
+        final ExtensionElements extensionElements =
+                (ExtensionElements) userTask.getUniqueChildElementByType(ExtensionElements.class);
+        assertThat(extensionElements.getChildElementsByType(KunpengAssignmentDefinition.class))
+                .hasSize(1)
+                .extracting(KunpengAssignmentDefinition::getCandidateGroups)
+                .containsExactly("role1");
+    }
 
-  @Test
-  void testUserTaskCandidateUsersCanBeSet() {
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .userTask("userTask1", task -> task.zeebeCandidateUsers("user1"))
-            .endEvent()
-            .done();
+    @Test
+    void testUserTaskCandidateUsersCanBeSet() {
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .userTask("userTask1", task -> task.kunpengCandidateUsers("user1"))
+                        .endEvent()
+                        .done();
 
-    final ModelElementInstance userTask = instance.getModelElementById("userTask1");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) userTask.getUniqueChildElementByType(ExtensionElements.class);
-    assertThat(extensionElements.getChildElementsByType(ZeebeAssignmentDefinition.class))
-        .hasSize(1)
-        .extracting(ZeebeAssignmentDefinition::getCandidateUsers)
-        .containsExactly("user1");
-  }
+        final ModelElementInstance userTask = instance.getModelElementById("userTask1");
+        final ExtensionElements extensionElements =
+                (ExtensionElements) userTask.getUniqueChildElementByType(ExtensionElements.class);
+        assertThat(extensionElements.getChildElementsByType(KunpengAssignmentDefinition.class))
+                .hasSize(1)
+                .extracting(KunpengAssignmentDefinition::getCandidateUsers)
+                .containsExactly("user1");
+    }
 
-  @Test
-  void shouldSetDueDateOnUserTask() {
-    final String dueDate = "2023-02-24T14:29:00Z";
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .userTask("userTask1", task -> task.zeebeDueDate(dueDate))
-            .endEvent()
-            .done();
+    @Test
+    void shouldSetDueDateOnUserTask() {
+        final String dueDate = "2023-02-24T14:29:00Z";
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .userTask("userTask1", task -> task.kunpengDueDate(dueDate))
+                        .endEvent()
+                        .done();
 
-    final ModelElementInstance userTask = instance.getModelElementById("userTask1");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) userTask.getUniqueChildElementByType(ExtensionElements.class);
-    assertThat(extensionElements.getChildElementsByType(ZeebeTaskSchedule.class))
-        .hasSize(1)
-        .extracting(ZeebeTaskSchedule::getDueDate)
-        .containsExactly(dueDate);
-  }
+        final ModelElementInstance userTask = instance.getModelElementById("userTask1");
+        final ExtensionElements extensionElements =
+                (ExtensionElements) userTask.getUniqueChildElementByType(ExtensionElements.class);
+        assertThat(extensionElements.getChildElementsByType(KunpengTaskSchedule.class))
+                .hasSize(1)
+                .extracting(KunpengTaskSchedule::getDueDate)
+                .containsExactly(dueDate);
+    }
 
-  @Test
-  void shouldSetFollowUpDateOnUserTask() {
-    final String followUpDate = "2023-02-24T14:29:00Z";
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .userTask("userTask1", task -> task.zeebeFollowUpDate(followUpDate))
-            .endEvent()
-            .done();
+    @Test
+    void shouldSetFollowUpDateOnUserTask() {
+        final String followUpDate = "2023-02-24T14:29:00Z";
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .userTask("userTask1", task -> task.kunpengFollowUpDate(followUpDate))
+                        .endEvent()
+                        .done();
 
-    final ModelElementInstance userTask = instance.getModelElementById("userTask1");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) userTask.getUniqueChildElementByType(ExtensionElements.class);
-    assertThat(extensionElements.getChildElementsByType(ZeebeTaskSchedule.class))
-        .hasSize(1)
-        .extracting(ZeebeTaskSchedule::getFollowUpDate)
-        .containsExactly(followUpDate);
-  }
+        final ModelElementInstance userTask = instance.getModelElementById("userTask1");
+        final ExtensionElements extensionElements =
+                (ExtensionElements) userTask.getUniqueChildElementByType(ExtensionElements.class);
+        assertThat(extensionElements.getChildElementsByType(KunpengTaskSchedule.class))
+                .hasSize(1)
+                .extracting(KunpengTaskSchedule::getFollowUpDate)
+                .containsExactly(followUpDate);
+    }
 
-  @Test
-  void shouldSetAllExistingUserTaskProperties() {
-    final String dueDate = "2023-02-24T14:29:00Z";
-    final String followUpDate = "2023-02-24T14:29:00Z";
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .userTask(
-                "userTask1",
-                b ->
-                    b.zeebeAssignee("user1")
-                        .zeebeCandidateGroups("role1")
-                        .zeebeCandidateUsers("user2"))
-            .zeebeDueDate(dueDate)
-            .zeebeFollowUpDate(followUpDate)
-            .endEvent()
-            .done();
+    @Test
+    void shouldSetAllExistingUserTaskProperties() {
+        final String dueDate = "2023-02-24T14:29:00Z";
+        final String followUpDate = "2023-02-24T14:29:00Z";
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .userTask(
+                                "userTask1",
+                                b ->
+                                        b.kunpengAssignee("user1")
+                                                .kunpengCandidateGroups("role1")
+                                                .kunpengCandidateUsers("user2"))
+                        .kunpengDueDate(dueDate)
+                        .kunpengFollowUpDate(followUpDate)
+                        .endEvent()
+                        .done();
 
-    final ModelElementInstance userTask = instance.getModelElementById("userTask1");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) userTask.getUniqueChildElementByType(ExtensionElements.class);
-    assertThat(extensionElements.getChildElementsByType(ZeebeAssignmentDefinition.class))
-        .hasSize(1)
-        .extracting(
-            ZeebeAssignmentDefinition::getAssignee,
-            ZeebeAssignmentDefinition::getCandidateGroups,
-            ZeebeAssignmentDefinition::getCandidateUsers)
-        .containsExactly(tuple("user1", "role1", "user2"));
-    assertThat(extensionElements.getChildElementsByType(ZeebeTaskSchedule.class))
-        .hasSize(1)
-        .extracting(ZeebeTaskSchedule::getDueDate, ZeebeTaskSchedule::getFollowUpDate)
-        .containsExactly(tuple(dueDate, followUpDate));
-  }
+        final ModelElementInstance userTask = instance.getModelElementById("userTask1");
+        final ExtensionElements extensionElements =
+                (ExtensionElements) userTask.getUniqueChildElementByType(ExtensionElements.class);
+        assertThat(extensionElements.getChildElementsByType(KunpengAssignmentDefinition.class))
+                .hasSize(1)
+                .extracting(
+                        KunpengAssignmentDefinition::getAssignee,
+                        KunpengAssignmentDefinition::getCandidateGroups,
+                        KunpengAssignmentDefinition::getCandidateUsers)
+                .containsExactly(tuple("user1", "role1", "user2"));
+        assertThat(extensionElements.getChildElementsByType(KunpengTaskSchedule.class))
+                .hasSize(1)
+                .extracting(KunpengTaskSchedule::getDueDate, KunpengTaskSchedule::getFollowUpDate)
+                .containsExactly(tuple(dueDate, followUpDate));
+    }
 
-  @Test
-  void testUserTaskFormIdNotNull() {
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .userTask("userTask1")
-            .zeebeUserTaskForm("{}")
-            .endEvent()
-            .done();
+    @Test
+    void testUserTaskFormIdNotNull() {
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .userTask("userTask1")
+                        .kunpengUserTaskForm("{}")
+                        .endEvent()
+                        .done();
 
-    final Collection<ZeebeUserTaskForm> zeebeUserTaskForms =
-        instance.getModelElementsByType(ZeebeUserTaskForm.class);
+        final Collection<KunpengUserTaskForm> kunpengUserTaskForms =
+                instance.getModelElementsByType(KunpengUserTaskForm.class);
 
-    assertThat(zeebeUserTaskForms).hasSize(1);
-    final ZeebeUserTaskForm zeebeUserTaskForm = zeebeUserTaskForms.iterator().next();
-    assertThat(zeebeUserTaskForm.getId()).isNotEmpty();
-  }
+        assertThat(kunpengUserTaskForms).hasSize(1);
+        final KunpengUserTaskForm kunpengUserTaskForm = kunpengUserTaskForms.iterator().next();
+        assertThat(kunpengUserTaskForm.getId()).isNotEmpty();
+    }
 
-  @Test
-  void shouldMarkAsZeebeUserTask() {
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .userTask("userTask1")
-            .zeebeUserTask()
-            .endEvent()
-            .done();
+    @Test
+    void shouldMarkAsKunpengUserTask() {
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .userTask("userTask1")
+                        .kunpengUserTask()
+                        .endEvent()
+                        .done();
 
-    final Collection<ZeebeUserTask> zeebeUserTasks =
-        instance.getModelElementsByType(ZeebeUserTask.class);
+        final Collection<KunpengUserTask> kunpengUserTasks =
+                instance.getModelElementsByType(KunpengUserTask.class);
 
-    assertThat(zeebeUserTasks).hasSize(1);
-  }
+        assertThat(kunpengUserTasks).hasSize(1);
+    }
 
-  @Test
-  void shouldMarkAsZeebeUserTaskIfUsedMultipleTimes() {
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .userTask("userTask1")
-            .zeebeUserTask()
-            .zeebeUserTask()
-            .zeebeUserTask()
-            .endEvent()
-            .done();
+    @Test
+    void shouldMarkAsKunpengUserTaskIfUsedMultipleTimes() {
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .userTask("userTask1")
+                        .kunpengUserTask()
+                        .kunpengUserTask()
+                        .kunpengUserTask()
+                        .endEvent()
+                        .done();
 
-    final Collection<ZeebeUserTask> zeebeUserTasks =
-        instance.getModelElementsByType(ZeebeUserTask.class);
+        final Collection<KunpengUserTask> kunpengUserTasks =
+                instance.getModelElementsByType(KunpengUserTask.class);
 
-    assertThat(zeebeUserTasks).hasSize(1);
-  }
+        assertThat(kunpengUserTasks).hasSize(1);
+    }
 
-  @Test
-  void shouldNotMarkAsZeebeUserTaskByDefault() {
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .userTask("userTask1")
-            .endEvent()
-            .done();
+    @Test
+    void shouldNotMarkAsKunpengUserTaskByDefault() {
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .userTask("userTask1")
+                        .endEvent()
+                        .done();
 
-    final Collection<ZeebeUserTask> zeebeUserTasks =
-        instance.getModelElementsByType(ZeebeUserTask.class);
+        final Collection<KunpengUserTask> kunpengUserTasks =
+                instance.getModelElementsByType(KunpengUserTask.class);
 
-    assertThat(zeebeUserTasks).isEmpty();
-  }
+        assertThat(kunpengUserTasks).isEmpty();
+    }
 
-  @Test
-  void shouldSetAllExistingUserTaskPropertiesForZeebeUserTask() {
-    final String dueDate = "2023-02-24T14:29:00Z";
-    final String followUpDate = "2023-02-24T14:29:00Z";
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .userTask(
-                "userTask1",
-                b ->
-                    b.zeebeAssignee("user1")
-                        .zeebeCandidateGroups("role1")
-                        .zeebeCandidateUsers("user2"))
-            .zeebeDueDate(dueDate)
-            .zeebeFollowUpDate(followUpDate)
-            .zeebeUserTask()
-            .endEvent()
-            .done();
+    @Test
+    void shouldSetAllExistingUserTaskPropertiesForKunpengUserTask() {
+        final String dueDate = "2023-02-24T14:29:00Z";
+        final String followUpDate = "2023-02-24T14:29:00Z";
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .userTask(
+                                "userTask1",
+                                b ->
+                                        b.kunpengAssignee("user1")
+                                                .kunpengCandidateGroups("role1")
+                                                .kunpengCandidateUsers("user2"))
+                        .kunpengDueDate(dueDate)
+                        .kunpengFollowUpDate(followUpDate)
+                        .kunpengUserTask()
+                        .endEvent()
+                        .done();
 
-    final ModelElementInstance userTask = instance.getModelElementById("userTask1");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) userTask.getUniqueChildElementByType(ExtensionElements.class);
-    assertThat(extensionElements.getChildElementsByType(ZeebeAssignmentDefinition.class))
-        .hasSize(1)
-        .extracting(
-            ZeebeAssignmentDefinition::getAssignee,
-            ZeebeAssignmentDefinition::getCandidateGroups,
-            ZeebeAssignmentDefinition::getCandidateUsers)
-        .containsExactly(tuple("user1", "role1", "user2"));
-    assertThat(extensionElements.getChildElementsByType(ZeebeTaskSchedule.class))
-        .hasSize(1)
-        .extracting(ZeebeTaskSchedule::getDueDate, ZeebeTaskSchedule::getFollowUpDate)
-        .containsExactly(tuple(dueDate, followUpDate));
-  }
+        final ModelElementInstance userTask = instance.getModelElementById("userTask1");
+        final ExtensionElements extensionElements =
+                (ExtensionElements) userTask.getUniqueChildElementByType(ExtensionElements.class);
+        assertThat(extensionElements.getChildElementsByType(KunpengAssignmentDefinition.class))
+                .hasSize(1)
+                .extracting(
+                        KunpengAssignmentDefinition::getAssignee,
+                        KunpengAssignmentDefinition::getCandidateGroups,
+                        KunpengAssignmentDefinition::getCandidateUsers)
+                .containsExactly(tuple("user1", "role1", "user2"));
+        assertThat(extensionElements.getChildElementsByType(KunpengTaskSchedule.class))
+                .hasSize(1)
+                .extracting(KunpengTaskSchedule::getDueDate, KunpengTaskSchedule::getFollowUpDate)
+                .containsExactly(tuple(dueDate, followUpDate));
+    }
 
-  @ParameterizedTest
-  @EnumSource(ZeebeBindingType.class)
-  void shouldSetFormBindingType(final ZeebeBindingType bindingType) {
-    // when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .userTask("userTask1")
-            .zeebeFormBindingType(bindingType)
-            .endEvent()
-            .done();
+    @ParameterizedTest
+    @EnumSource(KunpengBindingType.class)
+    void shouldSetFormBindingType(final KunpengBindingType bindingType) {
+        // when
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .userTask("userTask1")
+                        .kunpengFormBindingType(bindingType)
+                        .endEvent()
+                        .done();
 
-    // then
-    final ModelElementInstance userTask = instance.getModelElementById("userTask1");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) userTask.getUniqueChildElementByType(ExtensionElements.class);
-    assertThat(extensionElements.getChildElementsByType(ZeebeFormDefinition.class))
-        .hasSize(1)
-        .extracting(ZeebeFormDefinition::getBindingType)
-        .containsExactly(bindingType);
-  }
+        // then
+        final ModelElementInstance userTask = instance.getModelElementById("userTask1");
+        final ExtensionElements extensionElements =
+                (ExtensionElements) userTask.getUniqueChildElementByType(ExtensionElements.class);
+        assertThat(extensionElements.getChildElementsByType(KunpengFormDefinition.class))
+                .hasSize(1)
+                .extracting(KunpengFormDefinition::getBindingType)
+                .containsExactly(bindingType);
+    }
 
-  @Test
-  void shouldSetFormVersionTag() {
-    // when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .userTask("userTask")
-            .zeebeFormVersionTag("v1")
-            .endEvent()
-            .done();
+    @Test
+    void shouldSetFormVersionTag() {
+        // when
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .userTask("userTask")
+                        .kunpengFormVersionTag("v1")
+                        .endEvent()
+                        .done();
 
-    // then
-    final ModelElementInstance userTask = instance.getModelElementById("userTask");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) userTask.getUniqueChildElementByType(ExtensionElements.class);
-    assertThat(extensionElements.getChildElementsByType(ZeebeFormDefinition.class))
-        .hasSize(1)
-        .extracting(ZeebeFormDefinition::getVersionTag)
-        .containsExactly("v1");
-  }
+        // then
+        final ModelElementInstance userTask = instance.getModelElementById("userTask");
+        final ExtensionElements extensionElements =
+                (ExtensionElements) userTask.getUniqueChildElementByType(ExtensionElements.class);
+        assertThat(extensionElements.getChildElementsByType(KunpengFormDefinition.class))
+                .hasSize(1)
+                .extracting(KunpengFormDefinition::getVersionTag)
+                .containsExactly("v1");
+    }
 
-  @Test
-  void shouldSetPriorityOnZeebeUserTask() {
-    final String priority = "20";
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .userTask("userTask1", task -> task.zeebeUserTask().zeebeTaskPriority(priority))
-            .endEvent()
-            .done();
+    @Test
+    void shouldSetPriorityOnKunpengUserTask() {
+        final String priority = "20";
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .userTask("userTask1", task -> task.kunpengUserTask().kunpengTaskPriority(priority))
+                        .endEvent()
+                        .done();
 
-    final ModelElementInstance userTask = instance.getModelElementById("userTask1");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) userTask.getUniqueChildElementByType(ExtensionElements.class);
-    assertThat(extensionElements.getChildElementsByType(ZeebePriorityDefinition.class))
-        .hasSize(1)
-        .extracting(ZeebePriorityDefinition::getPriority)
-        .containsExactly(priority);
-  }
+        final ModelElementInstance userTask = instance.getModelElementById("userTask1");
+        final ExtensionElements extensionElements =
+                (ExtensionElements) userTask.getUniqueChildElementByType(ExtensionElements.class);
+        assertThat(extensionElements.getChildElementsByType(KunpengPriorityDefinition.class))
+                .hasSize(1)
+                .extracting(KunpengPriorityDefinition::getPriority)
+                .containsExactly(priority);
+    }
 
-  @Test
-  void shouldSetDefaultPriorityOnZeebeUserTask() {
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .userTask("userTask1", AbstractUserTaskBuilder::zeebeUserTask)
-            .endEvent()
-            .done();
+    @Test
+    void shouldSetDefaultPriorityOnKunpengUserTask() {
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .userTask("userTask1", AbstractUserTaskBuilder::kunpengUserTask)
+                        .endEvent()
+                        .done();
 
-    final ModelElementInstance userTask = instance.getModelElementById("userTask1");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) userTask.getUniqueChildElementByType(ExtensionElements.class);
-    assertThat(extensionElements.getChildElementsByType(ZeebePriorityDefinition.class))
-        .hasSize(1)
-        .extracting(ZeebePriorityDefinition::getPriority)
-        .containsExactly(ZeebePriorityDefinition.DEFAULT_LITERAL_PRIORITY);
-  }
+        final ModelElementInstance userTask = instance.getModelElementById("userTask1");
+        final ExtensionElements extensionElements =
+                (ExtensionElements) userTask.getUniqueChildElementByType(ExtensionElements.class);
+        assertThat(extensionElements.getChildElementsByType(KunpengPriorityDefinition.class))
+                .hasSize(1)
+                .extracting(KunpengPriorityDefinition::getPriority)
+                .containsExactly(KunpengPriorityDefinition.DEFAULT_LITERAL_PRIORITY);
+    }
 }

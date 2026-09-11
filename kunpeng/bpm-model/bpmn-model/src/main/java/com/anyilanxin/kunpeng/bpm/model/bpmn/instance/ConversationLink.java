@@ -22,7 +22,11 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
  *
  * @author Sebastian Menski
  */
-public interface ConversationLink extends BaseElement, NamedBpmnElement {
+public interface ConversationLink extends BaseElement {
+
+  String getName();
+
+  void setName(String name);
 
   InteractionNode getSource();
 

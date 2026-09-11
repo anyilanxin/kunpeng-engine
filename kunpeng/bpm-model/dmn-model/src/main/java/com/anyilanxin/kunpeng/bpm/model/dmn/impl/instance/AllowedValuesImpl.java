@@ -28,19 +28,20 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 
 public class AllowedValuesImpl extends UnaryTestsImpl implements AllowedValues {
 
-  public AllowedValuesImpl(ModelTypeInstanceContext instanceContext) {
+  public AllowedValuesImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(AllowedValues.class, DMN_ELEMENT_ALLOWED_VALUE)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(LiteralExpression.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<AllowedValues>() {
-                  public AllowedValues newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public AllowedValues newInstance(final ModelTypeInstanceContext instanceContext) {
                     return new AllowedValuesImpl(instanceContext);
                   }
                 });

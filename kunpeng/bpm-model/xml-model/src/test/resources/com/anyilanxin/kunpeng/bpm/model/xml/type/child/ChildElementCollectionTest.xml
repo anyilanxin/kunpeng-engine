@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<animals xmlns="http://camunda.org/animals"
+<animals xmlns="https://anyilanxin.com/animals"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://camunda.org/animals ../../testmodel/Testmodel.xsd ">
+  xsi:schemaLocation="https://anyilanxin.com/animals ../../testmodel/Testmodel.xsd ">
 
   <bird id="tweety" gender="Female">
     <flightInstructor>daffy</flightInstructor>

@@ -16,83 +16,43 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.bpmn.builder;
 
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeTaskListener;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeTaskListenerEventType;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengTaskListener;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengTaskListenerEventType;
 
 public class TaskListenerBuilder {
 
-  private final ZeebeTaskListener element;
+  private final KunpengTaskListener element;
   private final AbstractBaseElementBuilder<?, ?> elementBuilder;
 
   protected TaskListenerBuilder(
-      final ZeebeTaskListener element, final AbstractBaseElementBuilder<?, ?> elementBuilder) {
+      final KunpengTaskListener element, final AbstractBaseElementBuilder<?, ?> elementBuilder) {
     this.element = element;
     this.elementBuilder = elementBuilder;
   }
 
-  public TaskListenerBuilder eventType(final ZeebeTaskListenerEventType eventType) {
+  public TaskListenerBuilder eventType(final KunpengTaskListenerEventType eventType) {
     element.setEventType(eventType);
     return this;
   }
 
-  /**
-   * @deprecated use {@link #creating()} instead
-   */
-  @Deprecated
-  public TaskListenerBuilder create() {
-    return eventType(ZeebeTaskListenerEventType.create);
-  }
-
   public TaskListenerBuilder creating() {
-    return eventType(ZeebeTaskListenerEventType.creating);
-  }
-
-  /**
-   * @deprecated use {@link #updating()} instead
-   */
-  @Deprecated
-  public TaskListenerBuilder update() {
-    return eventType(ZeebeTaskListenerEventType.update);
+    return eventType(KunpengTaskListenerEventType.creating);
   }
 
   public TaskListenerBuilder updating() {
-    return eventType(ZeebeTaskListenerEventType.updating);
-  }
-
-  /**
-   * @deprecated use {@link #assigning()} instead
-   */
-  @Deprecated
-  public TaskListenerBuilder assignment() {
-    return eventType(ZeebeTaskListenerEventType.assignment);
+    return eventType(KunpengTaskListenerEventType.updating);
   }
 
   public TaskListenerBuilder assigning() {
-    return eventType(ZeebeTaskListenerEventType.assigning);
-  }
-
-  /**
-   * @deprecated use {@link #completing()} instead
-   */
-  @Deprecated
-  public TaskListenerBuilder complete() {
-    return eventType(ZeebeTaskListenerEventType.complete);
+    return eventType(KunpengTaskListenerEventType.assigning);
   }
 
   public TaskListenerBuilder completing() {
-    return eventType(ZeebeTaskListenerEventType.completing);
-  }
-
-  /**
-   * @deprecated use {@link #canceling()} instead
-   */
-  @Deprecated
-  public TaskListenerBuilder cancel() {
-    return eventType(ZeebeTaskListenerEventType.cancel);
+    return eventType(KunpengTaskListenerEventType.completing);
   }
 
   public TaskListenerBuilder canceling() {
-    return eventType(ZeebeTaskListenerEventType.canceling);
+    return eventType(KunpengTaskListenerEventType.canceling);
   }
 
   public TaskListenerBuilder type(final String type) {
@@ -101,7 +61,7 @@ public class TaskListenerBuilder {
   }
 
   public TaskListenerBuilder typeExpression(final String typeExpression) {
-    return type(elementBuilder.asZeebeExpression(typeExpression));
+    return type(elementBuilder.asKunpengExpression(typeExpression));
   }
 
   public TaskListenerBuilder retries(final String retries) {
@@ -110,6 +70,6 @@ public class TaskListenerBuilder {
   }
 
   public TaskListenerBuilder retriesExpression(final String retriesExpression) {
-    return retries(elementBuilder.asZeebeExpression(retriesExpression));
+    return retries(elementBuilder.asKunpengExpression(retriesExpression));
   }
 }

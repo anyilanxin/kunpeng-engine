@@ -29,7 +29,7 @@ public class WrongDocumentException extends ModelException {
 
   private static final long serialVersionUID = 1L;
 
-  public WrongDocumentException(Node nodeToAdd, DomDocument targetDocument) {
+  public WrongDocumentException(final Node nodeToAdd, final DomDocument targetDocument) {
     super(
         "Cannot add attribute '"
             + nodeToAdd

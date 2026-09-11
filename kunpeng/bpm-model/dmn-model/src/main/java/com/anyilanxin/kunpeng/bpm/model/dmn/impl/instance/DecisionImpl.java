@@ -16,29 +16,9 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.CAMUNDA_ATTRIBUTE_HISTORY_TIME_TO_LIVE;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.CAMUNDA_ATTRIBUTE_VERSION_TAG;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.CAMUNDA_NS;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_DECISION;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.*;
 
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.AllowedAnswers;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.AuthorityRequirement;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Decision;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DecisionMakerReference;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DecisionOwnerReference;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DrgElement;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Expression;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.ImpactedPerformanceIndicatorReference;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.InformationRequirement;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.KnowledgeRequirement;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.OrganizationUnit;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.PerformanceIndicator;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Question;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.SupportedObjectiveReference;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.UsingProcessReference;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.UsingTaskReference;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Variable;
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.*;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
@@ -71,132 +51,136 @@ public class DecisionImpl extends DrgElementImpl implements Decision {
   protected static ChildElementCollection<UsingTaskReference> usingTaskCollection;
   protected static ChildElement<Expression> expressionChild;
 
-  // camunda extensions
-  protected static Attribute<String> camundaHistoryTimeToLiveAttribute;
-  protected static Attribute<String> camundaVersionTag;
+  // kunpeng extensions
+  protected static Attribute<String> kunpengHistoryTimeToLiveAttribute;
+  protected static Attribute<String> kunpengVersionTag;
 
-  public DecisionImpl(ModelTypeInstanceContext instanceContext) {
+  public DecisionImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public Question getQuestion() {
     return questionChild.getChild(this);
   }
 
-  public void setQuestion(Question question) {
+  @Override
+  public void setQuestion(final Question question) {
     questionChild.setChild(this, question);
   }
 
+  @Override
   public AllowedAnswers getAllowedAnswers() {
     return allowedAnswersChild.getChild(this);
   }
 
-  public void setAllowedAnswers(AllowedAnswers allowedAnswers) {
+  @Override
+  public void setAllowedAnswers(final AllowedAnswers allowedAnswers) {
     allowedAnswersChild.setChild(this, allowedAnswers);
   }
 
+  @Override
   public Variable getVariable() {
     return variableChild.getChild(this);
   }
 
-  public void setVariable(Variable variable) {
+  @Override
+  public void setVariable(final Variable variable) {
     variableChild.setChild(this, variable);
   }
 
+  @Override
   public Collection<InformationRequirement> getInformationRequirements() {
     return informationRequirementCollection.get(this);
   }
 
+  @Override
   public Collection<KnowledgeRequirement> getKnowledgeRequirements() {
     return knowledgeRequirementCollection.get(this);
   }
 
+  @Override
   public Collection<AuthorityRequirement> getAuthorityRequirements() {
     return authorityRequirementCollection.get(this);
   }
 
+  @Override
   public Collection<SupportedObjectiveReference> getSupportedObjectiveReferences() {
     return supportedObjectiveChildElementCollection.get(this);
   }
 
+  @Override
   public Collection<PerformanceIndicator> getImpactedPerformanceIndicators() {
     return impactedPerformanceIndicatorRefCollection.getReferenceTargetElements(this);
   }
 
+  @Override
   public Collection<OrganizationUnit> getDecisionMakers() {
     return decisionMakerRefCollection.getReferenceTargetElements(this);
   }
 
+  @Override
   public Collection<OrganizationUnit> getDecisionOwners() {
     return decisionOwnerRefCollection.getReferenceTargetElements(this);
   }
 
+  @Override
   public Collection<UsingProcessReference> getUsingProcessReferences() {
     return usingProcessCollection.get(this);
   }
 
+  @Override
   public Collection<UsingTaskReference> getUsingTaskReferences() {
     return usingTaskCollection.get(this);
   }
 
+  @Override
   public Expression getExpression() {
     return expressionChild.getChild(this);
   }
 
-  public void setExpression(Expression expression) {
+  @Override
+  public void setExpression(final Expression expression) {
     expressionChild.setChild(this, expression);
   }
 
-  // camunda extensions
-  @Override
-  public Integer getCamundaHistoryTimeToLive() {
-    String ttl = getCamundaHistoryTimeToLiveString();
+  // kunpeng extensions
 
-    if (ttl != null) {
-      return Integer.valueOf(ttl);
-    }
-    return null;
+  @Override
+  public String getKunpengHistoryTimeToLiveString() {
+    return kunpengHistoryTimeToLiveAttribute.getValue(this);
   }
 
   @Override
-  public void setCamundaHistoryTimeToLive(Integer historyTimeToLive) {
-    setCamundaHistoryTimeToLiveString(String.valueOf(historyTimeToLive));
-  }
-
-  @Override
-  public String getCamundaHistoryTimeToLiveString() {
-    return camundaHistoryTimeToLiveAttribute.getValue(this);
-  }
-
-  @Override
-  public void setCamundaHistoryTimeToLiveString(String historyTimeToLive) {
-    camundaHistoryTimeToLiveAttribute.setValue(this, historyTimeToLive);
+  public void setKunpengHistoryTimeToLiveString(final String historyTimeToLive) {
+    kunpengHistoryTimeToLiveAttribute.setValue(this, historyTimeToLive);
   }
 
   @Override
   public String getVersionTag() {
-    return camundaVersionTag.getValue(this);
+    return kunpengVersionTag.getValue(this);
   }
 
   @Override
-  public void setVersionTag(String inputVariable) {
-    camundaVersionTag.setValue(this, inputVariable);
+  public void setVersionTag(final String inputVariable) {
+    kunpengVersionTag.setValue(this, inputVariable);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(Decision.class, DMN_ELEMENT_DECISION)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(DrgElement.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<Decision>() {
-                  public Decision newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public Decision newInstance(final ModelTypeInstanceContext instanceContext) {
                     return new DecisionImpl(instanceContext);
                   }
                 });
 
-    SequenceBuilder sequenceBuilder = typeBuilder.sequence();
+    final SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
     questionChild = sequenceBuilder.element(Question.class).build();
 
@@ -240,16 +224,16 @@ public class DecisionImpl extends DrgElementImpl implements Decision {
 
     expressionChild = sequenceBuilder.element(Expression.class).build();
 
-    // camunda extensions
+    // kunpeng extensions
 
-    camundaHistoryTimeToLiveAttribute =
+    kunpengHistoryTimeToLiveAttribute =
         typeBuilder
-            .stringAttribute(CAMUNDA_ATTRIBUTE_HISTORY_TIME_TO_LIVE)
-            .namespace(CAMUNDA_NS)
+            .stringAttribute(KUNPENG_ATTRIBUTE_HISTORY_TIME_TO_LIVE)
+            .namespace(KUNPENG_NS)
             .build();
 
-    camundaVersionTag =
-        typeBuilder.stringAttribute(CAMUNDA_ATTRIBUTE_VERSION_TAG).namespace(CAMUNDA_NS).build();
+    kunpengVersionTag =
+        typeBuilder.stringAttribute(KUNPENG_ATTRIBUTE_VERSION_TAG).namespace(KUNPENG_NS).build();
 
     typeBuilder.build();
   }

@@ -20,12 +20,7 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance;
 import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN20_NS;
 import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ELEMENT_THROW_EVENT;
 
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.DataInput;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.DataInputAssociation;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Event;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.EventDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.InputSet;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ThrowEvent;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.*;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;

@@ -17,47 +17,48 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.anyilanxin.kunpeng.bpm.model.bpmn.Bpmn;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.GatewayDirection;
-import java.io.InputStream;
-import java.util.Collection;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.util.ReflectUtil;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 import org.junit.Before;
+
+import java.io.InputStream;
+import java.util.Collection;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Sebastian Menski
  */
 public abstract class AbstractGatewayTest<G extends Gateway> extends BpmnModelElementInstanceTest {
 
-  protected G gateway;
+    protected G gateway;
 
-  @Override
-  public TypeAssumption getTypeAssumption() {
-    return new TypeAssumption(Gateway.class, false);
-  }
+    @Override
+    public TypeAssumption getTypeAssumption() {
+        return new TypeAssumption(Gateway.class, false);
+    }
 
-  @Override
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
-    return null;
-  }
+    @Override
+    public Collection<ChildElementAssumption> getChildElementAssumptions() {
+        return null;
+    }
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return null;
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return null;
+    }
 
-  @Before
-  @SuppressWarnings("unchecked")
-  public void getGateway() {
-    final InputStream inputStream =
-        ReflectUtil.getResourceAsStream("io/camunda/zeebe/model/bpmn/GatewaysTest.xml");
-    final Collection<ModelElementInstance> elementInstances =
-        Bpmn.readModelFromStream(inputStream).getModelElementsByType(modelElementType);
-    assertThat(elementInstances).hasSize(1);
-    gateway = (G) elementInstances.iterator().next();
-    assertThat(gateway.getGatewayDirection()).isEqualTo(GatewayDirection.Mixed);
-  }
+    @Before
+    @SuppressWarnings("unchecked")
+    public void getGateway() {
+        final InputStream inputStream =
+                ReflectUtil.getResourceAsStream("com/anyilanxin/kunpeng/bpm/model/bpmn/GatewaysTest.xml");
+        final Collection<ModelElementInstance> elementInstances =
+                Bpmn.readModelFromStream(inputStream).getModelElementsByType(modelElementType);
+        assertThat(elementInstances).hasSize(1);
+        gateway = (G) elementInstances.iterator().next();
+        assertThat(gateway.getGatewayDirection()).isEqualTo(GatewayDirection.Mixed);
+    }
 }

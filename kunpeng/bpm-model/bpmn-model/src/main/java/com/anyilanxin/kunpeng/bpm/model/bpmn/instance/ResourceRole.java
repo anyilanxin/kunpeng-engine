@@ -24,7 +24,11 @@ import java.util.Collection;
  *
  * @author Sebastian Menski
  */
-public interface ResourceRole extends BaseElement, NamedBpmnElement {
+public interface ResourceRole extends BaseElement {
+
+  String getName();
+
+  void setName(String name);
 
   Resource getResource();
 

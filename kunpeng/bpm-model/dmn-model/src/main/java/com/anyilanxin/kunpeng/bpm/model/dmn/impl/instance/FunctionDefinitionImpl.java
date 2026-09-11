@@ -36,36 +36,41 @@ public class FunctionDefinitionImpl extends ExpressionImpl implements FunctionDe
   protected static ChildElementCollection<FormalParameter> formalParameterCollection;
   protected static ChildElement<Expression> expressionChild;
 
-  public FunctionDefinitionImpl(ModelTypeInstanceContext instanceContext) {
+  public FunctionDefinitionImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public Collection<FormalParameter> getFormalParameters() {
     return formalParameterCollection.get(this);
   }
 
+  @Override
   public Expression getExpression() {
     return expressionChild.getChild(this);
   }
 
-  public void setExpression(Expression expression) {
+  @Override
+  public void setExpression(final Expression expression) {
     expressionChild.setChild(this, expression);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(FunctionDefinition.class, DMN_ELEMENT_FUNCTION_DEFINITION)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(Expression.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<FunctionDefinition>() {
-                  public FunctionDefinition newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public FunctionDefinition newInstance(
+                      final ModelTypeInstanceContext instanceContext) {
                     return new FunctionDefinitionImpl(instanceContext);
                   }
                 });
 
-    SequenceBuilder sequenceBuilder = typeBuilder.sequence();
+    final SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
     formalParameterCollection = sequenceBuilder.elementCollection(FormalParameter.class).build();
 

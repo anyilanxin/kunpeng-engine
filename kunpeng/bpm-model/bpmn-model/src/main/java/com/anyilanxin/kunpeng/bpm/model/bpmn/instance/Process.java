@@ -54,6 +54,10 @@ public interface Process extends CallableElement {
 
   void setMonitoring(Monitoring monitoring);
 
+  String getHistoryTimeToLiveString();
+
+  void setHistoryTimeToLiveString(String historyTimeToLive);
+
   Collection<Property> getProperties();
 
   Collection<LaneSet> getLaneSets();

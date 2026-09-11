@@ -17,35 +17,36 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn.instance.dc;
 
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DC_NS;
-
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BpmnModelElementInstanceTest;
+
 import java.util.Arrays;
 import java.util.Collection;
+
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.DC_NS;
 
 /**
  * @author Sebastian Menski
  */
 public class FontTest extends BpmnModelElementInstanceTest {
 
-  @Override
-  public TypeAssumption getTypeAssumption() {
-    return new TypeAssumption(DC_NS, false);
-  }
+    @Override
+    public TypeAssumption getTypeAssumption() {
+        return new TypeAssumption(DC_NS, false);
+    }
 
-  @Override
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
-    return null;
-  }
+    @Override
+    public Collection<ChildElementAssumption> getChildElementAssumptions() {
+        return null;
+    }
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return Arrays.asList(
-        new AttributeAssumption("name"),
-        new AttributeAssumption("size"),
-        new AttributeAssumption("isBold"),
-        new AttributeAssumption("isItalic"),
-        new AttributeAssumption("isUnderline"),
-        new AttributeAssumption("isStrikeThrough"));
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return Arrays.asList(
+                new AttributeAssumption("name"),
+                new AttributeAssumption("size"),
+                new AttributeAssumption("isBold"),
+                new AttributeAssumption("isItalic"),
+                new AttributeAssumption("isUnderline"),
+                new AttributeAssumption("isStrikeThrough"));
+    }
 }

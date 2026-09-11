@@ -19,6 +19,7 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.InnerParticipantRef;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.OuterParticipantRef;
+
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -27,20 +28,20 @@ import java.util.Collection;
  */
 public class ParticipantAssociationTest extends BpmnModelElementInstanceTest {
 
-  @Override
-  public TypeAssumption getTypeAssumption() {
-    return new TypeAssumption(BaseElement.class, false);
-  }
+    @Override
+    public TypeAssumption getTypeAssumption() {
+        return new TypeAssumption(BaseElement.class, false);
+    }
 
-  @Override
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
-    return Arrays.asList(
-        new ChildElementAssumption(InnerParticipantRef.class, 1, 1),
-        new ChildElementAssumption(OuterParticipantRef.class, 1, 1));
-  }
+    @Override
+    public Collection<ChildElementAssumption> getChildElementAssumptions() {
+        return Arrays.asList(
+                new ChildElementAssumption(InnerParticipantRef.class, 1, 1),
+                new ChildElementAssumption(OuterParticipantRef.class, 1, 1));
+    }
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return null;
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return null;
+    }
 }

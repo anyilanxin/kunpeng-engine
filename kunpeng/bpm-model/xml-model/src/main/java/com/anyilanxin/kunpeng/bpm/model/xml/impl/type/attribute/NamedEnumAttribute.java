@@ -22,16 +22,17 @@ public class NamedEnumAttribute<T extends Enum<T>> extends AttributeImpl<T> {
 
   protected final Class<T> type;
 
-  public NamedEnumAttribute(ModelElementType owningElementType, Class<T> type) {
+  public NamedEnumAttribute(final ModelElementType owningElementType, final Class<T> type) {
     super(owningElementType);
     this.type = type;
   }
 
+  @Override
   @SuppressWarnings("unchecked")
-  protected T convertXmlValueToModelValue(String rawValue) {
-    T[] enumConstants = type.getEnumConstants();
+  protected T convertXmlValueToModelValue(final String rawValue) {
+    final T[] enumConstants = type.getEnumConstants();
     if (rawValue != null && enumConstants != null) {
-      for (T enumConstant : enumConstants) {
+      for (final T enumConstant : enumConstants) {
         if (rawValue.equals(enumConstant.toString())) {
           return enumConstant;
         }
@@ -40,7 +41,8 @@ public class NamedEnumAttribute<T extends Enum<T>> extends AttributeImpl<T> {
     return null;
   }
 
-  protected String convertModelValueToXmlValue(T modelValue) {
+  @Override
+  protected String convertModelValueToXmlValue(final T modelValue) {
     return modelValue.toString();
   }
 }

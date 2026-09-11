@@ -19,14 +19,7 @@ package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_DECISION_SERVICE;
 import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
 
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Decision;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DecisionService;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.EncapsulatedDecisionReference;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.InputData;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.InputDataReference;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.InputDecisionReference;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.NamedElement;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.OutputDecisionReference;
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.*;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
@@ -45,40 +38,46 @@ public class DecisionServiceImpl extends NamedElementImpl implements DecisionSer
       inputDecisionRefCollection;
   protected static ElementReferenceCollection<InputData, InputDataReference> inputDataRefCollection;
 
-  public DecisionServiceImpl(ModelTypeInstanceContext instanceContext) {
+  public DecisionServiceImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public Collection<Decision> getOutputDecisions() {
     return outputDecisionRefCollection.getReferenceTargetElements(this);
   }
 
+  @Override
   public Collection<Decision> getEncapsulatedDecisions() {
     return encapsulatedDecisionRefCollection.getReferenceTargetElements(this);
   }
 
+  @Override
   public Collection<Decision> getInputDecisions() {
     return inputDecisionRefCollection.getReferenceTargetElements(this);
   }
 
+  @Override
   public Collection<InputData> getInputData() {
     return inputDataRefCollection.getReferenceTargetElements(this);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(DecisionService.class, DMN_ELEMENT_DECISION_SERVICE)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(NamedElement.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<DecisionService>() {
-                  public DecisionService newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public DecisionService newInstance(
+                      final ModelTypeInstanceContext instanceContext) {
                     return new DecisionServiceImpl(instanceContext);
                   }
                 });
 
-    SequenceBuilder sequenceBuilder = typeBuilder.sequence();
+    final SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
     outputDecisionRefCollection =
         sequenceBuilder

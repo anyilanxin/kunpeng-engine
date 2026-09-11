@@ -17,73 +17,74 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.anyilanxin.kunpeng.bpm.model.bpmn.Bpmn;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelInstance;
-import java.util.Arrays;
-import java.util.Collection;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.util.Arrays;
+import java.util.Collection;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Filip Hrisafov
  */
 public class TextAnnotationTest extends BpmnModelElementInstanceTest {
 
-  protected static BpmnModelInstance modelInstance;
+    protected static BpmnModelInstance modelInstance;
 
-  @Override
-  public TypeAssumption getTypeAssumption() {
-    return new TypeAssumption(Artifact.class, false);
-  }
+    @Override
+    public TypeAssumption getTypeAssumption() {
+        return new TypeAssumption(Artifact.class, false);
+    }
 
-  @Override
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
-    return Arrays.asList(new ChildElementAssumption(Text.class, 0, 1));
-  }
+    @Override
+    public Collection<ChildElementAssumption> getChildElementAssumptions() {
+        return Arrays.asList(new ChildElementAssumption(Text.class, 0, 1));
+    }
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return Arrays.asList(new AttributeAssumption("textFormat", false, false, "text/plain"));
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return Arrays.asList(new AttributeAssumption("textFormat", false, false, "text/plain"));
+    }
 
-  @BeforeClass
-  public static void parseModel() {
-    modelInstance =
-        Bpmn.readModelFromStream(
-            TextAnnotationTest.class.getResourceAsStream("TextAnnotationTest.bpmn"));
-  }
+    @BeforeClass
+    public static void parseModel() {
+        modelInstance =
+                Bpmn.readModelFromStream(
+                        TextAnnotationTest.class.getResourceAsStream("TextAnnotationTest.bpmn"));
+    }
 
-  @Test
-  public void testGetTextAnnotationsByType() {
-    final Collection<TextAnnotation> textAnnotations =
-        modelInstance.getModelElementsByType(TextAnnotation.class);
-    assertThat(textAnnotations).isNotNull().hasSize(2);
-  }
+    @Test
+    public void testGetTextAnnotationsByType() {
+        final Collection<TextAnnotation> textAnnotations =
+                modelInstance.getModelElementsByType(TextAnnotation.class);
+        assertThat(textAnnotations).isNotNull().hasSize(2);
+    }
 
-  @Test
-  public void testGetTextAnnotationById() {
-    final TextAnnotation textAnnotation = modelInstance.getModelElementById("textAnnotation2");
-    assertThat(textAnnotation).isNotNull();
-    assertThat(textAnnotation.getTextFormat()).isEqualTo("text/plain");
-    final Text text = textAnnotation.getText();
-    assertThat(text.getTextContent()).isEqualTo("Attached text annotation");
-  }
+    @Test
+    public void testGetTextAnnotationById() {
+        final TextAnnotation textAnnotation = modelInstance.getModelElementById("textAnnotation2");
+        assertThat(textAnnotation).isNotNull();
+        assertThat(textAnnotation.getTextFormat()).isEqualTo("text/plain");
+        final Text text = textAnnotation.getText();
+        assertThat(text.getTextContent()).isEqualTo("Attached text annotation");
+    }
 
-  @Test
-  public void testTextAnnotationAsAssociationSource() {
-    final Association association = modelInstance.getModelElementById("Association_1");
-    final BaseElement source = association.getSource();
-    assertThat(source).isInstanceOf(TextAnnotation.class);
-    assertThat(source.getId()).isEqualTo("textAnnotation2");
-  }
+    @Test
+    public void testTextAnnotationAsAssociationSource() {
+        final Association association = modelInstance.getModelElementById("Association_1");
+        final BaseElement source = association.getSource();
+        assertThat(source).isInstanceOf(TextAnnotation.class);
+        assertThat(source.getId()).isEqualTo("textAnnotation2");
+    }
 
-  @Test
-  public void testTextAnnotationAsAssociationTarget() {
-    final Association association = modelInstance.getModelElementById("Association_2");
-    final BaseElement target = association.getTarget();
-    assertThat(target).isInstanceOf(TextAnnotation.class);
-    assertThat(target.getId()).isEqualTo("textAnnotation1");
-  }
+    @Test
+    public void testTextAnnotationAsAssociationTarget() {
+        final Association association = modelInstance.getModelElementById("Association_2");
+        final BaseElement target = association.getTarget();
+        assertThat(target).isInstanceOf(TextAnnotation.class);
+        assertThat(target.getId()).isEqualTo("textAnnotation1");
+    }
 }

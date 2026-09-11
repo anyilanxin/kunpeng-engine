@@ -29,19 +29,21 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 public class DrgElementReferenceImpl extends DmnElementReferenceImpl
     implements DrgElementReference {
 
-  public DrgElementReferenceImpl(ModelTypeInstanceContext instanceContext) {
+  public DrgElementReferenceImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(DrgElementReference.class, DMN_ELEMENT_DRG_ELEMENT_REFERENCE)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(DmnElementReference.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<DrgElementReference>() {
-                  public DrgElementReference newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public DrgElementReference newInstance(
+                      final ModelTypeInstanceContext instanceContext) {
                     return new DrgElementReferenceImpl(instanceContext);
                   }
                 });

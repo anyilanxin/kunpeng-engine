@@ -33,32 +33,35 @@ public class InputDataImpl extends DrgElementImpl implements InputData {
 
   protected static ChildElement<InformationItem> informationItemChild;
 
-  public InputDataImpl(ModelTypeInstanceContext instanceContext) {
+  public InputDataImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
+  @Override
   public InformationItem getInformationItem() {
     return informationItemChild.getChild(this);
   }
 
-  public void setInformationItem(InformationItem informationItem) {
+  @Override
+  public void setInformationItem(final InformationItem informationItem) {
     informationItemChild.setChild(this, informationItem);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(InputData.class, DMN_ELEMENT_INPUT_DATA)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(DrgElement.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<InputData>() {
-                  public InputData newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public InputData newInstance(final ModelTypeInstanceContext instanceContext) {
                     return new InputDataImpl(instanceContext);
                   }
                 });
 
-    SequenceBuilder sequenceBuilder = typeBuilder.sequence();
+    final SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
     informationItemChild = sequenceBuilder.element(InformationItem.class).build();
 

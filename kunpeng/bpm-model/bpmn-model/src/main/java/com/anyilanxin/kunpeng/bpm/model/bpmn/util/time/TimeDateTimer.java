@@ -24,8 +24,11 @@ public class TimeDateTimer implements Timer {
 
   private final Interval interval;
 
+  private final String content;
+
   public TimeDateTimer(final Interval interval) {
     this.interval = interval;
+    content = interval.toString();
   }
 
   public TimeDateTimer(final ZonedDateTime dateTime) {
@@ -56,5 +59,10 @@ public class TimeDateTimer implements Timer {
   @Override
   public long getDueDate(final long fromEpochMillis) {
     return getInterval().toEpochMilli(0);
+  }
+
+  @Override
+  public String getContent() {
+    return content;
   }
 }

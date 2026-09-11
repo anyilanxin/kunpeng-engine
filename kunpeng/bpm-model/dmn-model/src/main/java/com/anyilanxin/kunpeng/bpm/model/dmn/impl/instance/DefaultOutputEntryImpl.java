@@ -28,19 +28,21 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 
 public class DefaultOutputEntryImpl extends LiteralExpressionImpl implements DefaultOutputEntry {
 
-  public DefaultOutputEntryImpl(ModelTypeInstanceContext instanceContext) {
+  public DefaultOutputEntryImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(DefaultOutputEntry.class, DMN_ELEMENT_DEFAULT_OUTPUT_ENTRY)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(LiteralExpression.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<DefaultOutputEntry>() {
-                  public DefaultOutputEntry newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public DefaultOutputEntry newInstance(
+                      final ModelTypeInstanceContext instanceContext) {
                     return new DefaultOutputEntryImpl(instanceContext);
                   }
                 });

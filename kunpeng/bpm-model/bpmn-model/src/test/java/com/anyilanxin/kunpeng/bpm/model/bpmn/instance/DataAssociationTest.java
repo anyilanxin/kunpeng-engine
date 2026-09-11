@@ -20,6 +20,7 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.SourceRef;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.TargetRef;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.Transformation;
+
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -28,22 +29,22 @@ import java.util.Collection;
  */
 public class DataAssociationTest extends BpmnModelElementInstanceTest {
 
-  @Override
-  public TypeAssumption getTypeAssumption() {
-    return new TypeAssumption(BaseElement.class, false);
-  }
+    @Override
+    public TypeAssumption getTypeAssumption() {
+        return new TypeAssumption(BaseElement.class, false);
+    }
 
-  @Override
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
-    return Arrays.asList(
-        new ChildElementAssumption(SourceRef.class),
-        new ChildElementAssumption(TargetRef.class, 1, 1),
-        new ChildElementAssumption(Transformation.class, 0, 1),
-        new ChildElementAssumption(Assignment.class));
-  }
+    @Override
+    public Collection<ChildElementAssumption> getChildElementAssumptions() {
+        return Arrays.asList(
+                new ChildElementAssumption(SourceRef.class),
+                new ChildElementAssumption(TargetRef.class, 1, 1),
+                new ChildElementAssumption(Transformation.class, 0, 1),
+                new ChildElementAssumption(Assignment.class));
+    }
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return null;
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return null;
+    }
 }

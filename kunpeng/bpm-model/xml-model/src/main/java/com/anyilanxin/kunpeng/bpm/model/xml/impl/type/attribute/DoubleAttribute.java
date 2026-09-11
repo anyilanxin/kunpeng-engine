@@ -23,15 +23,16 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementType;
  */
 public class DoubleAttribute extends AttributeImpl<Double> {
 
-  DoubleAttribute(ModelElementType owningElementType) {
+  DoubleAttribute(final ModelElementType owningElementType) {
     super(owningElementType);
   }
 
-  protected Double convertXmlValueToModelValue(String rawValue) {
+  @Override
+  protected Double convertXmlValueToModelValue(final String rawValue) {
     if (rawValue != null) {
       try {
         return Double.parseDouble(rawValue);
-      } catch (NumberFormatException e) {
+      } catch (final NumberFormatException e) {
         return null;
       }
     } else {
@@ -39,7 +40,8 @@ public class DoubleAttribute extends AttributeImpl<Double> {
     }
   }
 
-  protected String convertModelValueToXmlValue(Double modelValue) {
+  @Override
+  protected String convertModelValueToXmlValue(final Double modelValue) {
     return modelValue.toString();
   }
 }

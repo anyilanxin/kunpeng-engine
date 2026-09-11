@@ -16,198 +16,138 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.bpmn.builder;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.tuple;
-
 import com.anyilanxin.kunpeng.bpm.model.bpmn.Bpmn;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelInstance;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ExtensionElements;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeBindingType;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeCalledElement;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeExecutionListener;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeExecutionListeners;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeHeader;
-import java.util.Collection;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengBindingType;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengCalledElement;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 public class CallActivityBuilderTest {
 
-  @Test
-  void shouldSetProcessId() {
-    // when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .callActivity("callActivity", c -> c.zeebeProcessId("process-id-1"))
-            .done();
+    @Test
+    void shouldSetProcessId() {
+        // when
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .callActivity("callActivity", c -> c.kunpengProcessId("process-id-1"))
+                        .done();
 
-    // then
-    final ModelElementInstance callActivity = instance.getModelElementById("callActivity");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) callActivity.getUniqueChildElementByType(ExtensionElements.class);
-    assertThat(extensionElements.getChildElementsByType(ZeebeCalledElement.class))
-        .hasSize(1)
-        .extracting(ZeebeCalledElement::getProcessId)
-        .containsExactly("process-id-1");
-  }
+        // then
+        final ModelElementInstance callActivity = instance.getModelElementById("callActivity");
+        final ExtensionElements extensionElements =
+                (ExtensionElements) callActivity.getUniqueChildElementByType(ExtensionElements.class);
+        assertThat(extensionElements.getChildElementsByType(KunpengCalledElement.class))
+                .hasSize(1)
+                .extracting(KunpengCalledElement::getProcessId)
+                .containsExactly("process-id-1");
+    }
 
-  @Test
-  void shouldSetProcessIdExpression() {
-    // when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .callActivity("callActivity", c -> c.zeebeProcessIdExpression("processIdExpr"))
-            .done();
+    @Test
+    void shouldSetProcessIdExpression() {
+        // when
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .callActivity("callActivity", c -> c.kunpengProcessIdExpression("processIdExpr"))
+                        .done();
 
-    // then
-    final ModelElementInstance callActivity = instance.getModelElementById("callActivity");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) callActivity.getUniqueChildElementByType(ExtensionElements.class);
-    assertThat(extensionElements.getChildElementsByType(ZeebeCalledElement.class))
-        .hasSize(1)
-        .extracting(ZeebeCalledElement::getProcessId)
-        .containsExactly("=processIdExpr");
-  }
+        // then
+        final ModelElementInstance callActivity = instance.getModelElementById("callActivity");
+        final ExtensionElements extensionElements =
+                (ExtensionElements) callActivity.getUniqueChildElementByType(ExtensionElements.class);
+        assertThat(extensionElements.getChildElementsByType(KunpengCalledElement.class))
+                .hasSize(1)
+                .extracting(KunpengCalledElement::getProcessId)
+                .containsExactly("=processIdExpr");
+    }
 
-  @Test
-  void shouldSetBusinessId() {
-    // when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .callActivity("callActivity", c -> c.zeebeBusinessId("=orderId"))
-            .done();
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void shouldSetPropagateAllChildVariables(final boolean propagateAllChildVariables) {
+        // when
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .callActivity(
+                                "callActivity", c -> c.kunpengPropagateAllChildVariables(propagateAllChildVariables))
+                        .done();
 
-    // then
-    final ModelElementInstance callActivity = instance.getModelElementById("callActivity");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) callActivity.getUniqueChildElementByType(ExtensionElements.class);
-    assertThat(extensionElements.getChildElementsByType(ZeebeCalledElement.class))
-        .hasSize(1)
-        .extracting(ZeebeCalledElement::getBusinessId)
-        .containsExactly("=orderId");
-  }
+        // then
+        final ModelElementInstance callActivity = instance.getModelElementById("callActivity");
+        final ExtensionElements extensionElements =
+                (ExtensionElements) callActivity.getUniqueChildElementByType(ExtensionElements.class);
+        assertThat(extensionElements.getChildElementsByType(KunpengCalledElement.class))
+                .hasSize(1)
+                .extracting(KunpengCalledElement::isPropagateAllChildVariablesEnabled)
+                .containsExactly(propagateAllChildVariables);
+    }
 
-  @ParameterizedTest
-  @ValueSource(booleans = {true, false})
-  void shouldSetPropagateAllChildVariables(final boolean propagateAllChildVariables) {
-    // when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .callActivity(
-                "callActivity", c -> c.zeebePropagateAllChildVariables(propagateAllChildVariables))
-            .done();
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void shouldSetPropagateAllParentVariables(final boolean propagateAllParentVariables) {
+        // when
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .callActivity(
+                                "callActivity",
+                                c -> c.kunpengPropagateAllParentVariables(propagateAllParentVariables))
+                        .done();
 
-    // then
-    final ModelElementInstance callActivity = instance.getModelElementById("callActivity");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) callActivity.getUniqueChildElementByType(ExtensionElements.class);
-    assertThat(extensionElements.getChildElementsByType(ZeebeCalledElement.class))
-        .hasSize(1)
-        .extracting(ZeebeCalledElement::isPropagateAllChildVariablesEnabled)
-        .containsExactly(propagateAllChildVariables);
-  }
+        // then
+        final ModelElementInstance callActivity = instance.getModelElementById("callActivity");
+        final ExtensionElements extensionElements =
+                (ExtensionElements) callActivity.getUniqueChildElementByType(ExtensionElements.class);
+        assertThat(extensionElements.getChildElementsByType(KunpengCalledElement.class))
+                .hasSize(1)
+                .extracting(KunpengCalledElement::isPropagateAllParentVariablesEnabled)
+                .containsExactly(propagateAllParentVariables);
+    }
 
-  @ParameterizedTest
-  @ValueSource(booleans = {true, false})
-  void shouldSetPropagateAllParentVariables(final boolean propagateAllParentVariables) {
-    // when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .callActivity(
-                "callActivity",
-                c -> c.zeebePropagateAllParentVariables(propagateAllParentVariables))
-            .done();
+    @ParameterizedTest
+    @EnumSource(KunpengBindingType.class)
+    void shouldSetBindingType(final KunpengBindingType bindingType) {
+        // when
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .callActivity("callActivity", c -> c.kunpengBindingType(bindingType))
+                        .done();
 
-    // then
-    final ModelElementInstance callActivity = instance.getModelElementById("callActivity");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) callActivity.getUniqueChildElementByType(ExtensionElements.class);
-    assertThat(extensionElements.getChildElementsByType(ZeebeCalledElement.class))
-        .hasSize(1)
-        .extracting(ZeebeCalledElement::isPropagateAllParentVariablesEnabled)
-        .containsExactly(propagateAllParentVariables);
-  }
+        // then
+        final ModelElementInstance callActivity = instance.getModelElementById("callActivity");
+        final ExtensionElements extensionElements =
+                (ExtensionElements) callActivity.getUniqueChildElementByType(ExtensionElements.class);
+        assertThat(extensionElements.getChildElementsByType(KunpengCalledElement.class))
+                .hasSize(1)
+                .extracting(KunpengCalledElement::getBindingType)
+                .containsExactly(bindingType);
+    }
 
-  @ParameterizedTest
-  @EnumSource(ZeebeBindingType.class)
-  void shouldSetBindingType(final ZeebeBindingType bindingType) {
-    // when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .callActivity("callActivity", c -> c.zeebeBindingType(bindingType))
-            .done();
+    @Test
+    void shouldSetVersionTag() {
+        // when
+        final BpmnModelInstance instance =
+                Bpmn.createExecutableProcess("process")
+                        .startEvent()
+                        .callActivity("callActivity", c -> c.kunpengVersionTag("v1"))
+                        .done();
 
-    // then
-    final ModelElementInstance callActivity = instance.getModelElementById("callActivity");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) callActivity.getUniqueChildElementByType(ExtensionElements.class);
-    assertThat(extensionElements.getChildElementsByType(ZeebeCalledElement.class))
-        .hasSize(1)
-        .extracting(ZeebeCalledElement::getBindingType)
-        .containsExactly(bindingType);
-  }
-
-  @Test
-  void shouldSetVersionTag() {
-    // when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .callActivity("callActivity", c -> c.zeebeVersionTag("v1"))
-            .done();
-
-    // then
-    final ModelElementInstance callActivity = instance.getModelElementById("callActivity");
-    final ExtensionElements extensionElements =
-        (ExtensionElements) callActivity.getUniqueChildElementByType(ExtensionElements.class);
-    assertThat(extensionElements.getChildElementsByType(ZeebeCalledElement.class))
-        .hasSize(1)
-        .extracting(ZeebeCalledElement::getVersionTag)
-        .containsExactly("v1");
-  }
-
-  @Test
-  void shouldSetExecutionListenerHeaders() {
-    // when
-    final BpmnModelInstance instance =
-        Bpmn.createExecutableProcess("process")
-            .startEvent()
-            .callActivity(
-                "callActivity",
-                c ->
-                    c.zeebeExecutionListener(
-                        listener ->
-                            listener
-                                .end()
-                                .type("el_end_type")
-                                .zeebeTaskHeader("aKey", "aValue")
-                                .zeebeTaskHeader("bKey", "bValue")))
-            .done();
-
-    // then
-    assertThat(getExecutionListeners(instance.getModelElementById("callActivity")))
-        .singleElement()
-        .satisfies(
-            listener ->
-                assertThat(listener.getTaskHeaders().getHeaders())
-                    .extracting(ZeebeHeader::getKey, ZeebeHeader::getValue)
-                    .containsExactly(tuple("aKey", "aValue"), tuple("bKey", "bValue")));
-  }
-
-  private Collection<ZeebeExecutionListener> getExecutionListeners(
-      final ModelElementInstance elementInstance) {
-    return elementInstance
-        .getUniqueChildElementByType(ExtensionElements.class)
-        .getUniqueChildElementByType(ZeebeExecutionListeners.class)
-        .getChildElementsByType(ZeebeExecutionListener.class);
-  }
+        // then
+        final ModelElementInstance callActivity = instance.getModelElementById("callActivity");
+        final ExtensionElements extensionElements =
+                (ExtensionElements) callActivity.getUniqueChildElementByType(ExtensionElements.class);
+        assertThat(extensionElements.getChildElementsByType(KunpengCalledElement.class))
+                .hasSize(1)
+                .extracting(KunpengCalledElement::getVersionTag)
+                .containsExactly("v1");
+    }
 }

@@ -54,26 +54,26 @@ public class ReferenceTest extends TestModelTest {
   private AttributeReferenceImpl<Animal> motherReference;
   private ElementReferenceCollection<FlyingAnimal, FlightPartnerRef> flightPartnerRefsColl;
 
-  public ReferenceTest(final String testName, final ModelInstance testModelInstance, final AbstractModelParser modelParser) {
+  public ReferenceTest(String testName, ModelInstance testModelInstance, AbstractModelParser modelParser) {
     super(testName, testModelInstance, modelParser);
   }
 
   @Parameters(name="Model {0}")
   public static Collection<Object[]> models() {
-    final Object[][] models = {createModel(), parseModel(ReferenceTest.class)};
+    Object[][] models = {createModel(), parseModel(ReferenceTest.class)};
     return Arrays.asList(models);
   }
 
   public static Object[] createModel() {
-    final TestModelParser modelParser = new TestModelParser();
-    final ModelInstance modelInstance = modelParser.getEmptyModel();
+    TestModelParser modelParser = new TestModelParser();
+    ModelInstance modelInstance = modelParser.getEmptyModel();
 
-    final Animals animals = modelInstance.newInstance(Animals.class);
+    Animals animals = modelInstance.newInstance(Animals.class);
     modelInstance.setDocumentElement(animals);
 
-    final Bird tweety = createBird(modelInstance, "tweety", Gender.Female);
-    final Bird daffy = createBird(modelInstance, "daffy", Gender.Male);
-    final Bird daisy = createBird(modelInstance, "daisy", Gender.Female);
+    Bird tweety = createBird(modelInstance, "tweety", Gender.Female);
+    Bird daffy = createBird(modelInstance, "daffy", Gender.Male);
+    Bird daisy = createBird(modelInstance, "daisy", Gender.Female);
     createBird(modelInstance, "plucky", Gender.Male);
     createBird(modelInstance, "birdo", Gender.Female);
     tweety.setFather(daffy);
@@ -106,7 +106,7 @@ public class ReferenceTest extends TestModelTest {
     // ID element reference
     flightPartnerRefsColl = FlyingAnimal.flightPartnerRefsColl;
 
-    final ModelElementType flightPartnerRefType = modelInstance.getModel().getType(FlightPartnerRef.class);
+    ModelElementType flightPartnerRefType = modelInstance.getModel().getType(FlightPartnerRef.class);
     flightPartnerRef = (FlightPartnerRef) modelInstance.getModelElementsByType(flightPartnerRefType).iterator().next();
   }
 
@@ -134,7 +134,7 @@ public class ReferenceTest extends TestModelTest {
 
   @Test
   public void testReferenceTargetAttribute() {
-    final Attribute<?> idAttribute = animalType.getAttribute("id");
+    Attribute<?> idAttribute = animalType.getAttribute("id");
     assertThat(idAttribute).hasIncomingReferences(fatherReference, motherReference);
 
     assertThat(fatherReference).hasTargetAttribute(idAttribute);
@@ -144,8 +144,8 @@ public class ReferenceTest extends TestModelTest {
 
   @Test
   public void testReferenceSourceAttribute() {
-    final Attribute<?> fatherAttribute = animalType.getAttribute("father");
-    final Attribute<?> motherAttribute = animalType.getAttribute("mother");
+    Attribute<?> fatherAttribute = animalType.getAttribute("father");
+    Attribute<?> motherAttribute = animalType.getAttribute("mother");
 
     assertThat(fatherReference).hasSourceAttribute(fatherAttribute);
     assertThat(motherReference).hasSourceAttribute(motherAttribute);
@@ -165,8 +165,8 @@ public class ReferenceTest extends TestModelTest {
 
   @Test
   public void testTargetElementsCollection() {
-    final Collection<FlyingAnimal> referenceTargetElements = flightPartnerRefsColl.getReferenceTargetElements(tweety);
-    final Collection<FlyingAnimal> flightPartners = Arrays.asList(new FlyingAnimal[]{birdo, daffy, daisy, plucky});
+    Collection<FlyingAnimal> referenceTargetElements = flightPartnerRefsColl.getReferenceTargetElements(tweety);
+    Collection<FlyingAnimal> flightPartners = Arrays.asList(new FlyingAnimal[]{birdo, daffy, daisy, plucky});
 
     // directly test collection methods and not use the	appropriate assertion methods
     assertThat(referenceTargetElements.size()).isEqualTo(1);
@@ -198,7 +198,7 @@ public class ReferenceTest extends TestModelTest {
       referenceTargetElements.retainAll(flightPartners);
       fail("retainAll method is not implemented");
     }
-    catch (final Exception e) {
+    catch (Exception e) {
       assertThat(e).isInstanceOf(UnsupportedModelOperationException.class);
     }
 

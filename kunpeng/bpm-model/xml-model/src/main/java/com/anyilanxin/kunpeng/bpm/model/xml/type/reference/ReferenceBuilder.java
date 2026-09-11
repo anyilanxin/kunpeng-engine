@@ -19,8 +19,8 @@ package com.anyilanxin.kunpeng.bpm.model.xml.type.reference;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 
 /**
- * @author Sebastian Menski
  * @param <T> the type of the referenced element
+ * @author Sebastian Menski
  */
 public interface ReferenceBuilder<T extends ModelElementInstance> {
 

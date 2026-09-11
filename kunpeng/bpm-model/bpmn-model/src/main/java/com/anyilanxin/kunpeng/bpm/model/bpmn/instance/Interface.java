@@ -24,7 +24,11 @@ import java.util.Collection;
  *
  * @author Sebastian Menski
  */
-public interface Interface extends RootElement, NamedBpmnElement {
+public interface Interface extends RootElement {
+
+  String getName();
+
+  void setName(String name);
 
   String getImplementationRef();
 

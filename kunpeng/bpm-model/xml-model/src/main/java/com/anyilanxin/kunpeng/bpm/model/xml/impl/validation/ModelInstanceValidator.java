@@ -31,7 +31,8 @@ public class ModelInstanceValidator {
   protected Collection<ModelElementValidator<?>> validators;
 
   public ModelInstanceValidator(
-      ModelInstanceImpl modelInstanceImpl, Collection<ModelElementValidator<?>> validators) {
+      final ModelInstanceImpl modelInstanceImpl,
+      final Collection<ModelElementValidator<?>> validators) {
     this.modelInstanceImpl = modelInstanceImpl;
     this.validators = validators;
   }
@@ -39,21 +40,21 @@ public class ModelInstanceValidator {
   @SuppressWarnings({"unchecked", "rawtypes"})
   public ValidationResults validate() {
 
-    ValidationResultsCollectorImpl resultsCollector = new ValidationResultsCollectorImpl();
+    final ValidationResultsCollectorImpl resultsCollector = new ValidationResultsCollectorImpl();
 
-    for (ModelElementValidator validator : validators) {
+    for (final ModelElementValidator validator : validators) {
 
-      Class<? extends ModelElementInstance> elementType = validator.getElementType();
-      Collection<? extends ModelElementInstance> modelElementsByType =
+      final Class<? extends ModelElementInstance> elementType = validator.getElementType();
+      final Collection<? extends ModelElementInstance> modelElementsByType =
           modelInstanceImpl.getModelElementsByType(elementType);
 
-      for (ModelElementInstance element : modelElementsByType) {
+      for (final ModelElementInstance element : modelElementsByType) {
 
         resultsCollector.setCurrentElement(element);
 
         try {
           validator.validate(element, resultsCollector);
-        } catch (RuntimeException e) {
+        } catch (final RuntimeException e) {
           throw new RuntimeException(
               "Validator " + validator + " threw an exception while validating " + element, e);
         }

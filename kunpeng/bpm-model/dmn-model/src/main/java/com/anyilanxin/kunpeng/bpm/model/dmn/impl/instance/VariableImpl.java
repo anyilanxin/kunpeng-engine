@@ -28,19 +28,20 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 
 public class VariableImpl extends InformationItemImpl implements Variable {
 
-  public VariableImpl(ModelTypeInstanceContext instanceContext) {
+  public VariableImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(Variable.class, DMN_ELEMENT_VARIABLE)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(InformationItem.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<Variable>() {
-                  public Variable newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public Variable newInstance(final ModelTypeInstanceContext instanceContext) {
                     return new VariableImpl(instanceContext);
                   }
                 });

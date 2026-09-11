@@ -16,8 +16,7 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.bpmn.util.time;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.Test;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -28,197 +27,199 @@ import java.time.temporal.UnsupportedTemporalTypeException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class IntervalTest {
-  @Test
-  public void shouldParseDurationWithNoPeriod() {
-    // given
-    final String text = "PT05S";
-    final Interval expected = new Interval(Period.ZERO, Duration.ofSeconds(5));
+    @Test
+    public void shouldParseDurationWithNoPeriod() {
+        // given
+        final String text = "PT05S";
+        final Interval expected = new Interval(Period.ZERO, Duration.ofSeconds(5));
 
-    // when
-    final Interval interval = Interval.parse(text);
+        // when
+        final Interval interval = Interval.parse(text);
 
-    // then
-    assertThat(interval).isEqualTo(expected);
-  }
-
-  @Test
-  public void shouldParsePeriodWithNoDuration() {
-    // given
-    final String text = "P1Y2M4D";
-    final Interval expected = new Interval(Period.of(1, 2, 4), Duration.ZERO);
-
-    // when
-    final Interval interval = Interval.parse(text);
-
-    // then
-    assertThat(interval).isEqualTo(expected);
-  }
-
-  @Test
-  public void shouldParseWithPeriodAndDuration() {
-    // given
-    final String text = "P1Y2M4DT1H2M3S";
-    final Interval expected =
-        new Interval(
-            Period.of(1, 2, 4),
-            Duration.ofHours(1).plus(Duration.ofMinutes(2)).plus(Duration.ofSeconds(3)));
-
-    // when
-    final Interval interval = Interval.parse(text);
-
-    // then
-    assertThat(interval).isEqualTo(expected);
-  }
-
-  @Test
-  public void shouldParseNegativeInterval() {
-    // given
-    final String text = "-P1Y2M4DT1H2M3S";
-    final Interval expected =
-        new Interval(
-            Period.of(-1, -2, -4),
-            Duration.ofHours(-1).plus(Duration.ofMinutes(-2)).plus(Duration.ofSeconds(-3)));
-
-    // when
-    final Interval interval = Interval.parse(text);
-
-    // then
-    assertThat(interval).isEqualTo(expected);
-  }
-
-  @Test
-  public void shouldParsePositiveInterval() {
-    // given
-    final String text = "+P1Y2M4DT1H2M3S";
-    final Interval expected =
-        new Interval(
-            Period.of(1, 2, 4),
-            Duration.ofHours(1).plus(Duration.ofMinutes(2)).plus(Duration.ofSeconds(3)));
-
-    // when
-    final Interval interval = Interval.parse(text);
-
-    // then
-    assertThat(interval).isEqualTo(expected);
-  }
-
-  @Test
-  public void shouldFailToParseWrongPeriod() {
-    // given
-    final String text = "P,DT1H2M3S";
-
-    // then
-    assertThatThrownBy(() -> Interval.parse(text)).isInstanceOf(DateTimeParseException.class);
-  }
-
-  @Test
-  public void shouldFailToParseWrongDuration() {
-    // given
-    final String text = "P1Y2D3MDT!";
-
-    // then
-    assertThatThrownBy(() -> Interval.parse(text)).isInstanceOf(DateTimeParseException.class);
-  }
-
-  @Test
-  public void shouldFailToParseWrongPeriodAndDuration() {
-    // given
-    final String text = "PGKLDT4.?";
-
-    // then
-    assertThatThrownBy(() -> Interval.parse(text)).isInstanceOf(DateTimeParseException.class);
-  }
-
-  @Test
-  public void shouldFailToParseIfNotStartingWithP() {
-    // given
-    final String text = "T01S";
-
-    // then
-    assertThatThrownBy(() -> Interval.parse(text)).isInstanceOf(DateTimeParseException.class);
-  }
-
-  @Test
-  public void shouldGetDurationTemporalUnit() {
-    // given
-    final Interval interval = new Interval(Period.of(1, 2, 3), Duration.ofSeconds(5, 35));
-    final ChronoUnit[] durationUnits = new ChronoUnit[] {ChronoUnit.SECONDS, ChronoUnit.NANOS};
-
-    // then
-    for (final ChronoUnit unit : durationUnits) {
-      assertThat(interval.get(unit)).isEqualTo(interval.getDuration().get(unit));
+        // then
+        assertThat(interval).isEqualTo(expected);
     }
-  }
 
-  @Test
-  public void shouldGetPeriodTemporalUnit() {
-    // given
-    final Interval interval = new Interval(Period.of(1, 2, 3), Duration.ofSeconds(5, 35));
-    final ChronoUnit[] periodUnits =
-        new ChronoUnit[] {ChronoUnit.DAYS, ChronoUnit.MONTHS, ChronoUnit.YEARS};
+    @Test
+    public void shouldParsePeriodWithNoDuration() {
+        // given
+        final String text = "P1Y2M4D";
+        final Interval expected = new Interval(Period.of(1, 2, 4), Duration.ZERO);
 
-    // then
-    for (final ChronoUnit unit : periodUnits) {
-      assertThat(interval.get(unit)).isEqualTo(interval.getPeriod().get(unit));
+        // when
+        final Interval interval = Interval.parse(text);
+
+        // then
+        assertThat(interval).isEqualTo(expected);
     }
-  }
 
-  @Test
-  public void shouldThrowExceptionOnGetUnsupportedTemporalUnit() {
-    // given
-    final Interval interval = new Interval(Period.of(1, 2, 3), Duration.ofSeconds(5, 35));
-    final List<ChronoUnit> supportedUnits =
-        Arrays.asList(
-            ChronoUnit.SECONDS,
-            ChronoUnit.NANOS,
-            ChronoUnit.DAYS,
-            ChronoUnit.MONTHS,
-            ChronoUnit.YEARS);
-    final List<ChronoUnit> unsupportedUnits =
-        Arrays.stream(ChronoUnit.values())
-            .filter(unit -> !supportedUnits.contains(unit))
-            .collect(Collectors.toList());
+    @Test
+    public void shouldParseWithPeriodAndDuration() {
+        // given
+        final String text = "P1Y2M4DT1H2M3S";
+        final Interval expected =
+                new Interval(
+                        Period.of(1, 2, 4),
+                        Duration.ofHours(1).plus(Duration.ofMinutes(2)).plus(Duration.ofSeconds(3)));
 
-    // then
-    for (final ChronoUnit unit : unsupportedUnits) {
-      assertThatThrownBy(() -> interval.get(unit))
-          .isInstanceOf(UnsupportedTemporalTypeException.class);
+        // when
+        final Interval interval = Interval.parse(text);
+
+        // then
+        assertThat(interval).isEqualTo(expected);
     }
-  }
 
-  @Test
-  public void shouldReturnAllPeriodAndDurationUnits() {
-    // given
-    final Interval interval = new Interval(Period.of(1, 2, 3), Duration.ofSeconds(5, 35));
+    @Test
+    public void shouldParseNegativeInterval() {
+        // given
+        final String text = "-P1Y2M4DT1H2M3S";
+        final Interval expected =
+                new Interval(
+                        Period.of(-1, -2, -4),
+                        Duration.ofHours(-1).plus(Duration.ofMinutes(-2)).plus(Duration.ofSeconds(-3)));
 
-    // then
-    assertThat(interval.getUnits())
-        .containsExactlyInAnyOrder(
-            ChronoUnit.SECONDS,
-            ChronoUnit.NANOS,
-            ChronoUnit.MONTHS,
-            ChronoUnit.DAYS,
-            ChronoUnit.YEARS);
-  }
+        // when
+        final Interval interval = Interval.parse(text);
 
-  @Test
-  public void shouldAddToTemporalAmount() {
-    // given
-    final Period period = Period.of(1, 2, 3);
-    final Duration duration = Duration.ofSeconds(5, 35);
-    final Interval interval = new Interval(period, duration);
-    final LocalDateTime amount = LocalDateTime.parse("2007-12-03T10:15:30");
-    final LocalDateTime expected = amount.plus(period).plus(duration);
+        // then
+        assertThat(interval).isEqualTo(expected);
+    }
 
-    // then
-    assertThat(interval.addTo(amount)).isEqualTo(expected);
-  }
+    @Test
+    public void shouldParsePositiveInterval() {
+        // given
+        final String text = "+P1Y2M4DT1H2M3S";
+        final Interval expected =
+                new Interval(
+                        Period.of(1, 2, 4),
+                        Duration.ofHours(1).plus(Duration.ofMinutes(2)).plus(Duration.ofSeconds(3)));
 
-  @Test
-  public void shouldFailToParseEmptyString() {
-    assertThatThrownBy(() -> Interval.parse("")).isInstanceOf(DateTimeParseException.class);
-  }
+        // when
+        final Interval interval = Interval.parse(text);
+
+        // then
+        assertThat(interval).isEqualTo(expected);
+    }
+
+    @Test
+    public void shouldFailToParseWrongPeriod() {
+        // given
+        final String text = "P,DT1H2M3S";
+
+        // then
+        assertThatThrownBy(() -> Interval.parse(text)).isInstanceOf(DateTimeParseException.class);
+    }
+
+    @Test
+    public void shouldFailToParseWrongDuration() {
+        // given
+        final String text = "P1Y2D3MDT!";
+
+        // then
+        assertThatThrownBy(() -> Interval.parse(text)).isInstanceOf(DateTimeParseException.class);
+    }
+
+    @Test
+    public void shouldFailToParseWrongPeriodAndDuration() {
+        // given
+        final String text = "PGKLDT4.?";
+
+        // then
+        assertThatThrownBy(() -> Interval.parse(text)).isInstanceOf(DateTimeParseException.class);
+    }
+
+    @Test
+    public void shouldFailToParseIfNotStartingWithP() {
+        // given
+        final String text = "T01S";
+
+        // then
+        assertThatThrownBy(() -> Interval.parse(text)).isInstanceOf(DateTimeParseException.class);
+    }
+
+    @Test
+    public void shouldGetDurationTemporalUnit() {
+        // given
+        final Interval interval = new Interval(Period.of(1, 2, 3), Duration.ofSeconds(5, 35));
+        final ChronoUnit[] durationUnits = new ChronoUnit[]{ChronoUnit.SECONDS, ChronoUnit.NANOS};
+
+        // then
+        for (final ChronoUnit unit : durationUnits) {
+            assertThat(interval.get(unit)).isEqualTo(interval.getDuration().get(unit));
+        }
+    }
+
+    @Test
+    public void shouldGetPeriodTemporalUnit() {
+        // given
+        final Interval interval = new Interval(Period.of(1, 2, 3), Duration.ofSeconds(5, 35));
+        final ChronoUnit[] periodUnits =
+                new ChronoUnit[]{ChronoUnit.DAYS, ChronoUnit.MONTHS, ChronoUnit.YEARS};
+
+        // then
+        for (final ChronoUnit unit : periodUnits) {
+            assertThat(interval.get(unit)).isEqualTo(interval.getPeriod().get(unit));
+        }
+    }
+
+    @Test
+    public void shouldThrowExceptionOnGetUnsupportedTemporalUnit() {
+        // given
+        final Interval interval = new Interval(Period.of(1, 2, 3), Duration.ofSeconds(5, 35));
+        final List<ChronoUnit> supportedUnits =
+                Arrays.asList(
+                        ChronoUnit.SECONDS,
+                        ChronoUnit.NANOS,
+                        ChronoUnit.DAYS,
+                        ChronoUnit.MONTHS,
+                        ChronoUnit.YEARS);
+        final List<ChronoUnit> unsupportedUnits =
+                Arrays.stream(ChronoUnit.values())
+                        .filter(unit -> !supportedUnits.contains(unit))
+                        .collect(Collectors.toList());
+
+        // then
+        for (final ChronoUnit unit : unsupportedUnits) {
+            assertThatThrownBy(() -> interval.get(unit))
+                    .isInstanceOf(UnsupportedTemporalTypeException.class);
+        }
+    }
+
+    @Test
+    public void shouldReturnAllPeriodAndDurationUnits() {
+        // given
+        final Interval interval = new Interval(Period.of(1, 2, 3), Duration.ofSeconds(5, 35));
+
+        // then
+        assertThat(interval.getUnits())
+                .containsExactlyInAnyOrder(
+                        ChronoUnit.SECONDS,
+                        ChronoUnit.NANOS,
+                        ChronoUnit.MONTHS,
+                        ChronoUnit.DAYS,
+                        ChronoUnit.YEARS);
+    }
+
+    @Test
+    public void shouldAddToTemporalAmount() {
+        // given
+        final Period period = Period.of(1, 2, 3);
+        final Duration duration = Duration.ofSeconds(5, 35);
+        final Interval interval = new Interval(period, duration);
+        final LocalDateTime amount = LocalDateTime.parse("2007-12-03T10:15:30");
+        final LocalDateTime expected = amount.plus(period).plus(duration);
+
+        // then
+        assertThat(interval.addTo(amount)).isEqualTo(expected);
+    }
+
+    @Test
+    public void shouldFailToParseEmptyString() {
+        assertThatThrownBy(() -> Interval.parse("")).isInstanceOf(DateTimeParseException.class);
+    }
 }

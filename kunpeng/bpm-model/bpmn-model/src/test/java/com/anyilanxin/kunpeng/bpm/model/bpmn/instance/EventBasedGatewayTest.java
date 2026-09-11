@@ -16,29 +16,30 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.anyilanxin.kunpeng.bpm.model.bpmn.EventBasedGatewayType;
+import org.junit.Test;
+
 import java.util.Arrays;
 import java.util.Collection;
-import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class EventBasedGatewayTest extends AbstractGatewayTest<EventBasedGateway> {
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return Arrays.asList(
-        new AttributeAssumption("instantiate", false, false, false),
-        new AttributeAssumption("eventGatewayType", false, false, EventBasedGatewayType.Exclusive));
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return Arrays.asList(
+                new AttributeAssumption("instantiate", false, false, false),
+                new AttributeAssumption("eventGatewayType", false, false, EventBasedGatewayType.Exclusive));
+    }
 
-  @Test
-  public void getInstantiate() {
-    assertThat(gateway.isInstantiate()).isTrue();
-  }
+    @Test
+    public void getInstantiate() {
+        assertThat(gateway.isInstantiate()).isTrue();
+    }
 
-  @Test
-  public void getEventGatewayType() {
-    assertThat(gateway.getEventGatewayType()).isEqualTo(EventBasedGatewayType.Parallel);
-  }
+    @Test
+    public void getEventGatewayType() {
+        assertThat(gateway.getEventGatewayType()).isEqualTo(EventBasedGatewayType.Parallel);
+    }
 }

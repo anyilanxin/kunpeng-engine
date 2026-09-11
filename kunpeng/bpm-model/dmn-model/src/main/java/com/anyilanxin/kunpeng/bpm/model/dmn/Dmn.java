@@ -16,113 +16,15 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN11_ALTERNATIVE_NS;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN11_NS;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN12_NS;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN13_ALTERNATIVE_NS;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN13_NS;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN14_NS;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN15_NS;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.*;
 
+import com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnImpl;
 import com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnParser;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.AllowedAnswersImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.AllowedValuesImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.ArtifactImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.AssociationImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.AuthorityRequirementImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.BindingImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.BusinessContextElementImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.BusinessKnowledgeModelImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.ColumnImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.ContextEntryImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.ContextImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.DecisionImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.DecisionMadeReferenceImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.DecisionMakerReferenceImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.DecisionOwnedReferenceImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.DecisionOwnerReferenceImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.DecisionRuleImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.DecisionServiceImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.DecisionTableImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.DefaultOutputEntryImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.DefinitionsImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.DescriptionImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.DmnElementImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.DmnElementReferenceImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.DrgElementImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.DrgElementReferenceImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.ElementCollectionImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.EncapsulatedDecisionReferenceImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.EncapsulatedLogicImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.ExpressionImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.ExtensionElementsImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.FormalParameterImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.FunctionDefinitionImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.ImpactedPerformanceIndicatorReferenceImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.ImpactingDecisionReferenceImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.ImportImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.ImportedElementImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.ImportedValuesImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.InformationItemImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.InformationRequirementImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.InputClauseImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.InputDataImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.InputDataReferenceImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.InputDecisionReferenceImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.InputEntryImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.InputExpressionImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.InputImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.InputValuesImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.InvocationImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.ItemComponentImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.ItemDefinitionImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.ItemDefinitionReferenceImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.KnowledgeRequirementImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.KnowledgeSourceImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.ListImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.LiteralExpressionImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.NamedElementImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.OrganizationUnitImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.OutputClauseImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.OutputDecisionReferenceImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.OutputEntryImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.OutputImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.OutputValuesImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.OwnerReferenceImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.ParameterImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.PerformanceIndicatorImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.QuestionImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.RelationImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.RequiredAuthorityReferenceImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.RequiredDecisionReferenceImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.RequiredInputReferenceImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.RequiredKnowledgeReferenceImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.RowImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.RuleImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.SourceRefImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.SupportedObjectiveReferenceImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.TargetRefImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.TextAnnotationImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.TextImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.TypeImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.TypeRefImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.UnaryTestsImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.UsingProcessReferenceImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.UsingTaskReferenceImpl;
-import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.VariableImpl;
-import com.anyilanxin.kunpeng.bpm.model.xml.Model;
-import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
-import com.anyilanxin.kunpeng.bpm.model.xml.ModelException;
-import com.anyilanxin.kunpeng.bpm.model.xml.ModelParseException;
-import com.anyilanxin.kunpeng.bpm.model.xml.ModelValidationException;
+import com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance.*;
+import com.anyilanxin.kunpeng.bpm.model.xml.*;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelElementInstanceImpl;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.util.IoUtil;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 
 public class Dmn {
 
@@ -130,7 +32,7 @@ public class Dmn {
    * the singleton instance of {@link Dmn}. If you want to customize the behavior of Dmn, replace
    * this instance with an instance of a custom subclass of {@link Dmn}.
    */
-  public static Dmn INSTANCE = new Dmn();
+  public static final Dmn INSTANCE = new DmnImpl();
 
   /** the parser used by the Dmn implementation. */
   private final DmnParser dmnParser = new DmnParser();
@@ -160,6 +62,17 @@ public class Dmn {
    */
   public static DmnModelInstance readModelFromStream(final InputStream stream) {
     return INSTANCE.doReadModelFromInputStream(stream);
+  }
+
+  /**
+   * Allows reading a {@link DmnModelInstance} from an {@link InputStream}
+   *
+   * @param bytes the {@link InputStream} to read the {@link DmnModelInstance} from
+   * @return the model read
+   * @throws ModelParseException if the model cannot be read
+   */
+  public static DmnModelInstance readModelFromBytes(final byte[] bytes) {
+    return INSTANCE.doReadModelFromInputStream(new ByteArrayInputStream(bytes));
   }
 
   /**

@@ -28,19 +28,21 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 
 public class UsingTaskReferenceImpl extends DmnElementReferenceImpl implements UsingTaskReference {
 
-  public UsingTaskReferenceImpl(ModelTypeInstanceContext instanceContext) {
+  public UsingTaskReferenceImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(UsingTaskReference.class, DMN_ELEMENT_USING_TASK)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(DmnElementReference.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<UsingTaskReference>() {
-                  public UsingTaskReference newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public UsingTaskReference newInstance(
+                      final ModelTypeInstanceContext instanceContext) {
                     return new UsingTaskReferenceImpl(instanceContext);
                   }
                 });

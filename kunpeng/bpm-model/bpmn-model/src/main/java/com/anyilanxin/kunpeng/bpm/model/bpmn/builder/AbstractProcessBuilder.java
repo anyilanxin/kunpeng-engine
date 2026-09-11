@@ -20,7 +20,6 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.builder;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelInstance;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.ProcessType;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Process;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.zeebe.ZeebeJobPriorityDefinition;
 
 /**
  * @author Sebastian Menski
@@ -62,16 +61,5 @@ public abstract class AbstractProcessBuilder<B extends AbstractProcessBuilder<B>
   public B executable() {
     element.setExecutable(true);
     return myself;
-  }
-
-  public B zeebeJobPriority(final String priority) {
-    final ZeebeJobPriorityDefinition jobPriorityDefinition =
-        myself.getCreateSingleExtensionElement(ZeebeJobPriorityDefinition.class);
-    jobPriorityDefinition.setPriority(priority);
-    return myself;
-  }
-
-  public B zeebeJobPriorityExpression(final String expression) {
-    return zeebeJobPriority(asZeebeExpression(expression));
   }
 }

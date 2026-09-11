@@ -17,9 +17,7 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.bpmndi;
 
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMNDI_ATTRIBUTE_LABEL_STYLE;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMNDI_ELEMENT_BPMN_LABEL;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMNDI_NS;
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.*;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.di.LabelImpl;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.bpmndi.BpmnLabel;

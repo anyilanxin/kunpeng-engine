@@ -45,89 +45,105 @@ public class ModelElementTypeBuilderImpl implements ModelElementTypeBuilder, Mod
   private Class<? extends ModelElementInstance> extendedType;
 
   public ModelElementTypeBuilderImpl(
-      Class<? extends ModelElementInstance> instanceType, String name, ModelImpl model) {
+      final Class<? extends ModelElementInstance> instanceType,
+      final String name,
+      final ModelImpl model) {
     this.instanceType = instanceType;
     this.model = model;
     modelType = new ModelElementTypeImpl(model, name, instanceType);
   }
 
-  public ModelElementTypeBuilder extendsType(Class<? extends ModelElementInstance> extendedType) {
+  @Override
+  public ModelElementTypeBuilder extendsType(
+      final Class<? extends ModelElementInstance> extendedType) {
     this.extendedType = extendedType;
     return this;
   }
 
+  @Override
   public <T extends ModelElementInstance> ModelElementTypeBuilder instanceProvider(
-      ModelTypeInstanceProvider<T> instanceProvider) {
+      final ModelTypeInstanceProvider<T> instanceProvider) {
     modelType.setInstanceProvider(instanceProvider);
     return this;
   }
 
-  public ModelElementTypeBuilder namespaceUri(String namespaceUri) {
+  @Override
+  public ModelElementTypeBuilder namespaceUri(final String namespaceUri) {
     modelType.setTypeNamespace(namespaceUri);
     return this;
   }
 
-  public AttributeBuilder<Boolean> booleanAttribute(String attributeName) {
-    BooleanAttributeBuilder builder = new BooleanAttributeBuilder(attributeName, modelType);
+  @Override
+  public AttributeBuilder<Boolean> booleanAttribute(final String attributeName) {
+    final BooleanAttributeBuilder builder = new BooleanAttributeBuilder(attributeName, modelType);
     modelBuildOperations.add(builder);
     return builder;
   }
 
-  public StringAttributeBuilder stringAttribute(String attributeName) {
-    StringAttributeBuilderImpl builder = new StringAttributeBuilderImpl(attributeName, modelType);
+  @Override
+  public StringAttributeBuilder stringAttribute(final String attributeName) {
+    final StringAttributeBuilderImpl builder =
+        new StringAttributeBuilderImpl(attributeName, modelType);
     modelBuildOperations.add(builder);
     return builder;
   }
 
-  public AttributeBuilder<Integer> integerAttribute(String attributeName) {
-    IntegerAttributeBuilder builder = new IntegerAttributeBuilder(attributeName, modelType);
+  @Override
+  public AttributeBuilder<Integer> integerAttribute(final String attributeName) {
+    final IntegerAttributeBuilder builder = new IntegerAttributeBuilder(attributeName, modelType);
     modelBuildOperations.add(builder);
     return builder;
   }
 
-  public AttributeBuilder<Double> doubleAttribute(String attributeName) {
-    DoubleAttributeBuilder builder = new DoubleAttributeBuilder(attributeName, modelType);
+  @Override
+  public AttributeBuilder<Double> doubleAttribute(final String attributeName) {
+    final DoubleAttributeBuilder builder = new DoubleAttributeBuilder(attributeName, modelType);
     modelBuildOperations.add(builder);
     return builder;
   }
 
+  @Override
   public <V extends Enum<V>> AttributeBuilder<V> enumAttribute(
-      String attributeName, Class<V> enumType) {
-    EnumAttributeBuilder<V> builder =
+      final String attributeName, final Class<V> enumType) {
+    final EnumAttributeBuilder<V> builder =
         new EnumAttributeBuilder<V>(attributeName, modelType, enumType);
     modelBuildOperations.add(builder);
     return builder;
   }
 
+  @Override
   public <V extends Enum<V>> AttributeBuilder<V> namedEnumAttribute(
-      String attributeName, Class<V> enumType) {
-    NamedEnumAttributeBuilder<V> builder =
+      final String attributeName, final Class<V> enumType) {
+    final NamedEnumAttributeBuilder<V> builder =
         new NamedEnumAttributeBuilder<V>(attributeName, modelType, enumType);
     modelBuildOperations.add(builder);
     return builder;
   }
 
+  @Override
   public ModelElementType build() {
     model.registerType(modelType, instanceType);
     return modelType;
   }
 
+  @Override
   public ModelElementTypeBuilder abstractType() {
     modelType.setAbstract(true);
     return this;
   }
 
+  @Override
   public SequenceBuilder sequence() {
-    SequenceBuilderImpl builder = new SequenceBuilderImpl(modelType);
+    final SequenceBuilderImpl builder = new SequenceBuilderImpl(modelType);
     modelBuildOperations.add(builder);
     return builder;
   }
 
-  public void buildTypeHierarchy(Model model) {
+  public void buildTypeHierarchy(final Model model) {
 
     // build type hierarchy
     if (extendedType != null) {
-      ModelElementTypeImpl extendedModelElementType =
+      final ModelElementTypeImpl extendedModelElementType =
           (ModelElementTypeImpl) model.getType(extendedType);
       if (extendedModelElementType == null) {
         throw new ModelException(
@@ -144,8 +160,9 @@ public class ModelElementTypeBuilderImpl implements ModelElementTypeBuilder, Mod
     }
   }
 
-  public void performModelBuild(Model model) {
-    for (ModelBuildOperation operation : modelBuildOperations) {
+  @Override
+  public void performModelBuild(final Model model) {
+    for (final ModelBuildOperation operation : modelBuildOperations) {
       operation.performModelBuild(model);
     }
   }

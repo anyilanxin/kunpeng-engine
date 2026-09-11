@@ -18,14 +18,17 @@
 package com.anyilanxin.kunpeng.bpm.model.bpmn.instance.di;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BpmnModelElementInstance;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.NamedBpmnElement;
 
 /**
  * The DI Diagram element
  *
  * @author Sebastian Menski
  */
-public interface Diagram extends BpmnModelElementInstance, NamedBpmnElement {
+public interface Diagram extends BpmnModelElementInstance {
+
+  String getName();
+
+  void setName(String name);
 
   String getDocumentation();
 

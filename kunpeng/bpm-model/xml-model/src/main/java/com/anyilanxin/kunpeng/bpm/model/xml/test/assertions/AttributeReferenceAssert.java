@@ -25,14 +25,14 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.reference.AttributeReference;
 public class AttributeReferenceAssert
     extends AbstractReferenceAssert<AttributeReferenceAssert, AttributeReference<?>> {
 
-  protected AttributeReferenceAssert(AttributeReference<?> actual) {
+  protected AttributeReferenceAssert(final AttributeReference<?> actual) {
     super(actual, AttributeReferenceAssert.class);
   }
 
-  public AttributeReferenceAssert hasSourceAttribute(Attribute<?> sourceAttribute) {
+  public AttributeReferenceAssert hasSourceAttribute(final Attribute<?> sourceAttribute) {
     isNotNull();
 
-    Attribute<String> actualSourceAttribute = actual.getReferenceSourceAttribute();
+    final Attribute<String> actualSourceAttribute = actual.getReferenceSourceAttribute();
 
     if (!sourceAttribute.equals(actualSourceAttribute)) {
       failWithMessage(

@@ -25,378 +25,372 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.util.VersionUtil;
  * @author Daniel Meyer
  * @author Falko Menge
  */
-public final class BpmnModelConstants {
+public interface BpmnModelConstants {
 
   /** The XSI namespace */
-  public static final String XSI_NS = "http://www.w3.org/2001/XMLSchema-instance";
+  String XSI_NS = "http://www.w3.org/2001/XMLSchema-instance";
 
   /** The BPMN 2.0 namespace */
-  public static final String BPMN20_NS = "http://www.omg.org/spec/BPMN/20100524/MODEL";
+  String BPMN20_NS = "http://www.omg.org/spec/BPMN/20100524/MODEL";
 
   /** The BPMNDI namespace */
-  public static final String BPMNDI_NS = "http://www.omg.org/spec/BPMN/20100524/DI";
+  String BPMNDI_NS = "http://www.omg.org/spec/BPMN/20100524/DI";
 
   /** The DC namespace */
-  public static final String DC_NS = "http://www.omg.org/spec/DD/20100524/DC";
+  String DC_NS = "http://www.omg.org/spec/DD/20100524/DC";
 
   /** The DI namespace */
-  public static final String DI_NS = "http://www.omg.org/spec/DD/20100524/DI";
+  String DI_NS = "http://www.omg.org/spec/DD/20100524/DI";
 
   /** The location of the BPMN 2.0 XML schema. */
-  public static final String BPMN_20_SCHEMA_LOCATION = "BPMN20.xsd";
+  String BPMN_20_SCHEMA_LOCATION = "BPMN20.xsd";
 
   /** Xml Schema is the default type language */
-  public static final String XML_SCHEMA_NS = "http://www.w3.org/2001/XMLSchema";
+  String XML_SCHEMA_NS = "http://www.w3.org/2001/XMLSchema";
 
-  public static final String XPATH_NS = "http://www.w3.org/1999/XPath";
+  String XPATH_NS = "http://www.w3.org/1999/XPath";
 
-  /** Zeebe namespace */
-  public static final String ZEEBE_NS = "http://camunda.org/schema/zeebe/1.0";
+  /** Kunpeng namespace */
+  String KUNPENG_NS = "http://anyilanxin.com/schema/kunpeng/1.0";
 
-  /** Zeebe namespace */
-  public static final String MODELER_NS = "http://camunda.org/schema/modeler/1.0";
+  /** Kunpeng namespace */
+  String MODELER_NS = "http://anyilanxin.com/schema/modeler/1.0";
 
-  /** Zeebe version */
-  public static final String ZEEBE_VERSION = VersionUtil.getVersion();
+  /** Kunpeng version */
+  String KUNPENG_VERSION = VersionUtil.getVersion();
 
   /** BPMN Exporter */
-  public static final String BPMN_EXPORTER = "Zeebe BPMN Model";
+  String BPMN_EXPORTER = "Kunpeng BPMN Model";
 
   /** BPMN Execution Platform */
-  public static final String BPMN_EXECUTION_PLATFORM = "Camunda Cloud";
+  String BPMN_EXECUTION_PLATFORM = "Kunpeng Cloud";
 
   // elements ////////////////////////////////////////
 
-  public static final String BPMN_ELEMENT_BASE_ELEMENT = "baseElement";
-  public static final String BPMN_ELEMENT_DEFINITIONS = "definitions";
-  public static final String BPMN_ELEMENT_DOCUMENTATION = "documentation";
-  public static final String BPMN_ELEMENT_EXTENSION = "extension";
-  public static final String BPMN_ELEMENT_EXTENSION_ELEMENTS = "extensionElements";
-  public static final String BPMN_ELEMENT_IMPORT = "import";
-  public static final String BPMN_ELEMENT_RELATIONSHIP = "relationship";
-  public static final String BPMN_ELEMENT_SOURCE = "source";
-  public static final String BPMN_ELEMENT_TARGET = "target";
-  public static final String BPMN_ELEMENT_ROOT_ELEMENT = "rootElement";
-  public static final String BPMN_ELEMENT_AUDITING = "auditing";
-  public static final String BPMN_ELEMENT_MONITORING = "monitoring";
-  public static final String BPMN_ELEMENT_CATEGORY_VALUE = "categoryValue";
-  public static final String BPMN_ELEMENT_FLOW_ELEMENT = "flowElement";
-  public static final String BPMN_ELEMENT_FLOW_NODE = "flowNode";
-  public static final String BPMN_ELEMENT_CATEGORY_VALUE_REF = "categoryValueRef";
-  public static final String BPMN_ELEMENT_EXPRESSION = "expression";
-  public static final String BPMN_ELEMENT_CONDITION_EXPRESSION = "conditionExpression";
-  public static final String BPMN_ELEMENT_SEQUENCE_FLOW = "sequenceFlow";
-  public static final String BPMN_ELEMENT_INCOMING = "incoming";
-  public static final String BPMN_ELEMENT_OUTGOING = "outgoing";
-  public static final String BPMN_ELEMENT_DATA_STATE = "dataState";
-  public static final String BPMN_ELEMENT_ITEM_DEFINITION = "itemDefinition";
-  public static final String BPMN_ELEMENT_ERROR = "error";
-  public static final String BPMN_ELEMENT_IN_MESSAGE_REF = "inMessageRef";
-  public static final String BPMN_ELEMENT_OUT_MESSAGE_REF = "outMessageRef";
-  public static final String BPMN_ELEMENT_ERROR_REF = "errorRef";
-  public static final String BPMN_ELEMENT_OPERATION = "operation";
-  public static final String BPMN_ELEMENT_IMPLEMENTATION_REF = "implementationRef";
-  public static final String BPMN_ELEMENT_OPERATION_REF = "operationRef";
-  public static final String BPMN_ELEMENT_DATA_OUTPUT = "dataOutput";
-  public static final String BPMN_ELEMENT_FROM = "from";
-  public static final String BPMN_ELEMENT_TO = "to";
-  public static final String BPMN_ELEMENT_ASSIGNMENT = "assignment";
-  public static final String BPMN_ELEMENT_ITEM_AWARE_ELEMENT = "itemAwareElement";
-  public static final String BPMN_ELEMENT_DATA_OBJECT = "dataObject";
-  public static final String BPMN_ELEMENT_DATA_OBJECT_REFERENCE = "dataObjectReference";
-  public static final String BPMN_ELEMENT_DATA_STORE = "dataStore";
-  public static final String BPMN_ELEMENT_DATA_STORE_REFERENCE = "dataStoreReference";
-  public static final String BPMN_ELEMENT_DATA_INPUT = "dataInput";
-  public static final String BPMN_ELEMENT_FORMAL_EXPRESSION = "formalExpression";
-  public static final String BPMN_ELEMENT_DATA_ASSOCIATION = "dataAssociation";
-  public static final String BPMN_ELEMENT_SOURCE_REF = "sourceRef";
-  public static final String BPMN_ELEMENT_TARGET_REF = "targetRef";
-  public static final String BPMN_ELEMENT_TRANSFORMATION = "transformation";
-  public static final String BPMN_ELEMENT_DATA_INPUT_ASSOCIATION = "dataInputAssociation";
-  public static final String BPMN_ELEMENT_DATA_OUTPUT_ASSOCIATION = "dataOutputAssociation";
-  public static final String BPMN_ELEMENT_INPUT_SET = "inputSet";
-  public static final String BPMN_ELEMENT_OUTPUT_SET = "outputSet";
-  public static final String BPMN_ELEMENT_DATA_INPUT_REFS = "dataInputRefs";
-  public static final String BPMN_ELEMENT_OPTIONAL_INPUT_REFS = "optionalInputRefs";
-  public static final String BPMN_ELEMENT_WHILE_EXECUTING_INPUT_REFS = "whileExecutingInputRefs";
-  public static final String BPMN_ELEMENT_OUTPUT_SET_REFS = "outputSetRefs";
-  public static final String BPMN_ELEMENT_DATA_OUTPUT_REFS = "dataOutputRefs";
-  public static final String BPMN_ELEMENT_OPTIONAL_OUTPUT_REFS = "optionalOutputRefs";
-  public static final String BPMN_ELEMENT_WHILE_EXECUTING_OUTPUT_REFS = "whileExecutingOutputRefs";
-  public static final String BPMN_ELEMENT_INPUT_SET_REFS = "inputSetRefs";
-  public static final String BPMN_ELEMENT_CATCH_EVENT = "catchEvent";
-  public static final String BPMN_ELEMENT_THROW_EVENT = "throwEvent";
-  public static final String BPMN_ELEMENT_END_EVENT = "endEvent";
-  public static final String BPMN_ELEMENT_IO_SPECIFICATION = "ioSpecification";
-  public static final String BPMN_ELEMENT_LOOP_CHARACTERISTICS = "loopCharacteristics";
-  public static final String BPMN_ELEMENT_RESOURCE_PARAMETER = "resourceParameter";
-  public static final String BPMN_ELEMENT_RESOURCE = "resource";
-  public static final String BPMN_ELEMENT_RESOURCE_PARAMETER_BINDING = "resourceParameterBinding";
-  public static final String BPMN_ELEMENT_RESOURCE_ASSIGNMENT_EXPRESSION =
-      "resourceAssignmentExpression";
-  public static final String BPMN_ELEMENT_RESOURCE_ROLE = "resourceRole";
-  public static final String BPMN_ELEMENT_RESOURCE_REF = "resourceRef";
-  public static final String BPMN_ELEMENT_PERFORMER = "performer";
-  public static final String BPMN_ELEMENT_HUMAN_PERFORMER = "humanPerformer";
-  public static final String BPMN_ELEMENT_POTENTIAL_OWNER = "potentialOwner";
-  public static final String BPMN_ELEMENT_ACTIVITY = "activity";
-  public static final String BPMN_ELEMENT_IO_BINDING = "ioBinding";
-  public static final String BPMN_ELEMENT_INTERFACE = "interface";
-  public static final String BPMN_ELEMENT_EVENT = "event";
-  public static final String BPMN_ELEMENT_MESSAGE = "message";
-  public static final String BPMN_ELEMENT_START_EVENT = "startEvent";
-  public static final String BPMN_ELEMENT_PROPERTY = "property";
-  public static final String BPMN_ELEMENT_EVENT_DEFINITION = "eventDefinition";
-  public static final String BPMN_ELEMENT_EVENT_DEFINITION_REF = "eventDefinitionRef";
-  public static final String BPMN_ELEMENT_MESSAGE_EVENT_DEFINITION = "messageEventDefinition";
-  public static final String BPMN_ELEMENT_CANCEL_EVENT_DEFINITION = "cancelEventDefinition";
-  public static final String BPMN_ELEMENT_COMPENSATE_EVENT_DEFINITION = "compensateEventDefinition";
-  public static final String BPMN_ELEMENT_CONDITIONAL_EVENT_DEFINITION =
-      "conditionalEventDefinition";
-  public static final String BPMN_ELEMENT_CONDITION = "condition";
-  public static final String BPMN_ELEMENT_ERROR_EVENT_DEFINITION = "errorEventDefinition";
-  public static final String BPMN_ELEMENT_LINK_EVENT_DEFINITION = "linkEventDefinition";
-  public static final String BPMN_ELEMENT_SIGNAL_EVENT_DEFINITION = "signalEventDefinition";
-  public static final String BPMN_ELEMENT_TERMINATE_EVENT_DEFINITION = "terminateEventDefinition";
-  public static final String BPMN_ELEMENT_TIMER_EVENT_DEFINITION = "timerEventDefinition";
-  public static final String BPMN_ELEMENT_SUPPORTED_INTERFACE_REF = "supportedInterfaceRef";
-  public static final String BPMN_ELEMENT_CALLABLE_ELEMENT = "callableElement";
-  public static final String BPMN_ELEMENT_PARTITION_ELEMENT = "partitionElement";
-  public static final String BPMN_ELEMENT_FLOW_NODE_REF = "flowNodeRef";
-  public static final String BPMN_ELEMENT_CHILD_LANE_SET = "childLaneSet";
-  public static final String BPMN_ELEMENT_LANE_SET = "laneSet";
-  public static final String BPMN_ELEMENT_LANE = "lane";
-  public static final String BPMN_ELEMENT_ARTIFACT = "artifact";
-  public static final String BPMN_ELEMENT_CORRELATION_PROPERTY_RETRIEVAL_EXPRESSION =
+  String BPMN_ELEMENT_BASE_ELEMENT = "baseElement";
+  String BPMN_ELEMENT_DEFINITIONS = "definitions";
+  String BPMN_ELEMENT_DOCUMENTATION = "documentation";
+  String BPMN_ELEMENT_EXTENSION = "extension";
+  String BPMN_ELEMENT_EXTENSION_ELEMENTS = "extensionElements";
+  String BPMN_ELEMENT_IMPORT = "import";
+  String BPMN_ELEMENT_RELATIONSHIP = "relationship";
+  String BPMN_ELEMENT_SOURCE = "source";
+  String BPMN_ELEMENT_TARGET = "target";
+  String BPMN_ELEMENT_ROOT_ELEMENT = "rootElement";
+  String BPMN_ELEMENT_AUDITING = "auditing";
+  String BPMN_ELEMENT_MONITORING = "monitoring";
+  String BPMN_ELEMENT_CATEGORY_VALUE = "categoryValue";
+  String BPMN_ELEMENT_FLOW_ELEMENT = "flowElement";
+  String BPMN_ELEMENT_FLOW_NODE = "flowNode";
+  String BPMN_ELEMENT_CATEGORY_VALUE_REF = "categoryValueRef";
+  String BPMN_ELEMENT_EXPRESSION = "expression";
+  String BPMN_ELEMENT_CONDITION_EXPRESSION = "conditionExpression";
+  String BPMN_ELEMENT_SEQUENCE_FLOW = "sequenceFlow";
+  String BPMN_ELEMENT_INCOMING = "incoming";
+  String BPMN_ELEMENT_OUTGOING = "outgoing";
+  String BPMN_ELEMENT_DATA_STATE = "dataState";
+  String BPMN_ELEMENT_ITEM_DEFINITION = "itemDefinition";
+  String BPMN_ELEMENT_ERROR = "error";
+  String BPMN_ELEMENT_IN_MESSAGE_REF = "inMessageRef";
+  String BPMN_ELEMENT_OUT_MESSAGE_REF = "outMessageRef";
+  String BPMN_ELEMENT_ERROR_REF = "errorRef";
+  String BPMN_ELEMENT_OPERATION = "operation";
+  String BPMN_ELEMENT_IMPLEMENTATION_REF = "implementationRef";
+  String BPMN_ELEMENT_OPERATION_REF = "operationRef";
+  String BPMN_ELEMENT_DATA_OUTPUT = "dataOutput";
+  String BPMN_ELEMENT_FROM = "from";
+  String BPMN_ELEMENT_TO = "to";
+  String BPMN_ELEMENT_ASSIGNMENT = "assignment";
+  String BPMN_ELEMENT_ITEM_AWARE_ELEMENT = "itemAwareElement";
+  String BPMN_ELEMENT_DATA_OBJECT = "dataObject";
+  String BPMN_ELEMENT_DATA_OBJECT_REFERENCE = "dataObjectReference";
+  String BPMN_ELEMENT_DATA_STORE = "dataStore";
+  String BPMN_ELEMENT_DATA_STORE_REFERENCE = "dataStoreReference";
+  String BPMN_ELEMENT_DATA_INPUT = "dataInput";
+  String BPMN_ELEMENT_FORMAL_EXPRESSION = "formalExpression";
+  String BPMN_ELEMENT_DATA_ASSOCIATION = "dataAssociation";
+  String BPMN_ELEMENT_SOURCE_REF = "sourceRef";
+  String BPMN_ELEMENT_TARGET_REF = "targetRef";
+  String BPMN_ELEMENT_TRANSFORMATION = "transformation";
+  String BPMN_ELEMENT_DATA_INPUT_ASSOCIATION = "dataInputAssociation";
+  String BPMN_ELEMENT_DATA_OUTPUT_ASSOCIATION = "dataOutputAssociation";
+  String BPMN_ELEMENT_INPUT_SET = "inputSet";
+  String BPMN_ELEMENT_OUTPUT_SET = "outputSet";
+  String BPMN_ELEMENT_DATA_INPUT_REFS = "dataInputRefs";
+  String BPMN_ELEMENT_OPTIONAL_INPUT_REFS = "optionalInputRefs";
+  String BPMN_ELEMENT_WHILE_EXECUTING_INPUT_REFS = "whileExecutingInputRefs";
+  String BPMN_ELEMENT_OUTPUT_SET_REFS = "outputSetRefs";
+  String BPMN_ELEMENT_DATA_OUTPUT_REFS = "dataOutputRefs";
+  String BPMN_ELEMENT_OPTIONAL_OUTPUT_REFS = "optionalOutputRefs";
+  String BPMN_ELEMENT_WHILE_EXECUTING_OUTPUT_REFS = "whileExecutingOutputRefs";
+  String BPMN_ELEMENT_INPUT_SET_REFS = "inputSetRefs";
+  String BPMN_ELEMENT_CATCH_EVENT = "catchEvent";
+  String BPMN_ELEMENT_THROW_EVENT = "throwEvent";
+  String BPMN_ELEMENT_END_EVENT = "endEvent";
+  String BPMN_ELEMENT_IO_SPECIFICATION = "ioSpecification";
+  String BPMN_ELEMENT_LOOP_CHARACTERISTICS = "loopCharacteristics";
+  String BPMN_ELEMENT_RESOURCE_PARAMETER = "resourceParameter";
+  String BPMN_ELEMENT_RESOURCE = "resource";
+  String BPMN_ELEMENT_RESOURCE_PARAMETER_BINDING = "resourceParameterBinding";
+  String BPMN_ELEMENT_RESOURCE_ASSIGNMENT_EXPRESSION = "resourceAssignmentExpression";
+  String BPMN_ELEMENT_RESOURCE_ROLE = "resourceRole";
+  String BPMN_ELEMENT_RESOURCE_REF = "resourceRef";
+  String BPMN_ELEMENT_PERFORMER = "performer";
+  String BPMN_ELEMENT_HUMAN_PERFORMER = "humanPerformer";
+  String BPMN_ELEMENT_POTENTIAL_OWNER = "potentialOwner";
+  String BPMN_ELEMENT_ACTIVITY = "activity";
+  String BPMN_ELEMENT_IO_BINDING = "ioBinding";
+  String BPMN_ELEMENT_INTERFACE = "interface";
+  String BPMN_ELEMENT_EVENT = "event";
+  String BPMN_ELEMENT_MESSAGE = "message";
+  String BPMN_ELEMENT_START_EVENT = "startEvent";
+  String BPMN_ELEMENT_PROPERTY = "property";
+  String BPMN_ELEMENT_EVENT_DEFINITION = "eventDefinition";
+  String BPMN_ELEMENT_EVENT_DEFINITION_REF = "eventDefinitionRef";
+  String BPMN_ELEMENT_MESSAGE_EVENT_DEFINITION = "messageEventDefinition";
+  String BPMN_ELEMENT_CANCEL_EVENT_DEFINITION = "cancelEventDefinition";
+  String BPMN_ELEMENT_COMPENSATE_EVENT_DEFINITION = "compensateEventDefinition";
+  String BPMN_ELEMENT_CONDITIONAL_EVENT_DEFINITION = "conditionalEventDefinition";
+  String BPMN_ELEMENT_CONDITION = "condition";
+  String BPMN_ELEMENT_ERROR_EVENT_DEFINITION = "errorEventDefinition";
+  String BPMN_ELEMENT_LINK_EVENT_DEFINITION = "linkEventDefinition";
+  String BPMN_ELEMENT_SIGNAL_EVENT_DEFINITION = "signalEventDefinition";
+  String BPMN_ELEMENT_TERMINATE_EVENT_DEFINITION = "terminateEventDefinition";
+  String BPMN_ELEMENT_TIMER_EVENT_DEFINITION = "timerEventDefinition";
+  String BPMN_ELEMENT_SUPPORTED_INTERFACE_REF = "supportedInterfaceRef";
+  String BPMN_ELEMENT_CALLABLE_ELEMENT = "callableElement";
+  String BPMN_ELEMENT_PARTITION_ELEMENT = "partitionElement";
+  String BPMN_ELEMENT_FLOW_NODE_REF = "flowNodeRef";
+  String BPMN_ELEMENT_CHILD_LANE_SET = "childLaneSet";
+  String BPMN_ELEMENT_LANE_SET = "laneSet";
+  String BPMN_ELEMENT_LANE = "lane";
+  String BPMN_ELEMENT_ARTIFACT = "artifact";
+  String BPMN_ELEMENT_CORRELATION_PROPERTY_RETRIEVAL_EXPRESSION =
       "correlationPropertyRetrievalExpression";
-  public static final String BPMN_ELEMENT_MESSAGE_PATH = "messagePath";
-  public static final String BPMN_ELEMENT_DATA_PATH = "dataPath";
-  public static final String BPMN_ELEMENT_CALL_ACTIVITY = "callActivity";
-  public static final String BPMN_ELEMENT_CORRELATION_PROPERTY_BINDING =
-      "correlationPropertyBinding";
-  public static final String BPMN_ELEMENT_CORRELATION_PROPERTY = "correlationProperty";
-  public static final String BPMN_ELEMENT_CORRELATION_PROPERTY_REF = "correlationPropertyRef";
-  public static final String BPMN_ELEMENT_CORRELATION_KEY = "correlationKey";
-  public static final String BPMN_ELEMENT_CORRELATION_SUBSCRIPTION = "correlationSubscription";
-  public static final String BPMN_ELEMENT_SUPPORTS = "supports";
-  public static final String BPMN_ELEMENT_PROCESS = "process";
-  public static final String BPMN_ELEMENT_TASK = "task";
-  public static final String BPMN_ELEMENT_SEND_TASK = "sendTask";
-  public static final String BPMN_ELEMENT_SERVICE_TASK = "serviceTask";
-  public static final String BPMN_ELEMENT_SCRIPT_TASK = "scriptTask";
-  public static final String BPMN_ELEMENT_USER_TASK = "userTask";
-  public static final String BPMN_ELEMENT_RECEIVE_TASK = "receiveTask";
-  public static final String BPMN_ELEMENT_BUSINESS_RULE_TASK = "businessRuleTask";
-  public static final String BPMN_ELEMENT_MANUAL_TASK = "manualTask";
-  public static final String BPMN_ELEMENT_SCRIPT = "script";
-  public static final String BPMN_ELEMENT_RENDERING = "rendering";
-  public static final String BPMN_ELEMENT_BOUNDARY_EVENT = "boundaryEvent";
-  public static final String BPMN_ELEMENT_SUB_PROCESS = "subProcess";
-  public static final String BPMN_ELEMENT_TRANSACTION = "transaction";
-  public static final String BPMN_ELEMENT_GATEWAY = "gateway";
-  public static final String BPMN_ELEMENT_PARALLEL_GATEWAY = "parallelGateway";
-  public static final String BPMN_ELEMENT_EXCLUSIVE_GATEWAY = "exclusiveGateway";
-  public static final String BPMN_ELEMENT_INTERMEDIATE_CATCH_EVENT = "intermediateCatchEvent";
-  public static final String BPMN_ELEMENT_INTERMEDIATE_THROW_EVENT = "intermediateThrowEvent";
-  public static final String BPMN_ELEMENT_END_POINT = "endPoint";
-  public static final String BPMN_ELEMENT_PARTICIPANT_MULTIPLICITY = "participantMultiplicity";
-  public static final String BPMN_ELEMENT_PARTICIPANT = "participant";
-  public static final String BPMN_ELEMENT_PARTICIPANT_REF = "participantRef";
-  public static final String BPMN_ELEMENT_INTERFACE_REF = "interfaceRef";
-  public static final String BPMN_ELEMENT_END_POINT_REF = "endPointRef";
-  public static final String BPMN_ELEMENT_MESSAGE_FLOW = "messageFlow";
-  public static final String BPMN_ELEMENT_MESSAGE_FLOW_REF = "messageFlowRef";
-  public static final String BPMN_ELEMENT_CONVERSATION_NODE = "conversationNode";
-  public static final String BPMN_ELEMENT_CONVERSATION = "conversation";
-  public static final String BPMN_ELEMENT_SUB_CONVERSATION = "subConversation";
-  public static final String BPMN_ELEMENT_GLOBAL_CONVERSATION = "globalConversation";
-  public static final String BPMN_ELEMENT_CALL_CONVERSATION = "callConversation";
-  public static final String BPMN_ELEMENT_PARTICIPANT_ASSOCIATION = "participantAssociation";
-  public static final String BPMN_ELEMENT_INNER_PARTICIPANT_REF = "innerParticipantRef";
-  public static final String BPMN_ELEMENT_OUTER_PARTICIPANT_REF = "outerParticipantRef";
-  public static final String BPMN_ELEMENT_CONVERSATION_ASSOCIATION = "conversationAssociation";
-  public static final String BPMN_ELEMENT_MESSAGE_FLOW_ASSOCIATION = "messageFlowAssociation";
-  public static final String BPMN_ELEMENT_CONVERSATION_LINK = "conversationLink";
-  public static final String BPMN_ELEMENT_COLLABORATION = "collaboration";
-  public static final String BPMN_ELEMENT_ASSOCIATION = "association";
-  public static final String BPMN_ELEMENT_SIGNAL = "signal";
-  public static final String BPMN_ELEMENT_TIME_DATE = "timeDate";
-  public static final String BPMN_ELEMENT_TIME_DURATION = "timeDuration";
-  public static final String BPMN_ELEMENT_TIME_CYCLE = "timeCycle";
-  public static final String BPMN_ELEMENT_ESCALATION = "escalation";
-  public static final String BPMN_ELEMENT_ESCALATION_EVENT_DEFINITION = "escalationEventDefinition";
-  public static final String BPMN_ELEMENT_ACTIVATION_CONDITION = "activationCondition";
-  public static final String BPMN_ELEMENT_COMPLEX_GATEWAY = "complexGateway";
-  public static final String BPMN_ELEMENT_EVENT_BASED_GATEWAY = "eventBasedGateway";
-  public static final String BPMN_ELEMENT_INCLUSIVE_GATEWAY = "inclusiveGateway";
-  public static final String BPMN_ELEMENT_TEXT_ANNOTATION = "textAnnotation";
-  public static final String BPMN_ELEMENT_TEXT = "text";
-  public static final String BPMN_ELEMENT_COMPLEX_BEHAVIOR_DEFINITION = "complexBehaviorDefinition";
-  public static final String BPMN_ELEMENT_MULTI_INSTANCE_LOOP_CHARACTERISTICS =
-      "multiInstanceLoopCharacteristics";
-  public static final String BPMN_ELEMENT_LOOP_CARDINALITY = "loopCardinality";
-  public static final String BPMN_ELEMENT_COMPLETION_CONDITION = "completionCondition";
-  public static final String BPMN_ELEMENT_OUTPUT_DATA_ITEM = "outputDataItem";
-  public static final String BPMN_ELEMENT_INPUT_DATA_ITEM = "inputDataItem";
-  public static final String BPMN_ELEMENT_LOOP_DATA_OUTPUT_REF = "loopDataOutputRef";
-  public static final String BPMN_ELEMENT_LOOP_DATA_INPUT_REF = "loopDataInputRef";
-  public static final String BPMN_ELEMENT_IS_SEQUENTIAL = "isSequential";
-  public static final String BPMN_ELEMENT_BEHAVIOR = "behavior";
-  public static final String BPMN_ELEMENT_ONE_BEHAVIOR_EVENT_REF = "oneBehaviorEventRef";
-  public static final String BPMN_ELEMENT_NONE_BEHAVIOR_EVENT_REF = "noneBehaviorEventRef";
-  public static final String BPMN_ELEMENT_GROUP = "group";
-  public static final String BPMN_ELEMENT_CATEGORY = "category";
-  public static final String BPMN_ELEMENT_AD_HOC_SUB_PROCESS = "adHocSubProcess";
+  String BPMN_ELEMENT_MESSAGE_PATH = "messagePath";
+  String BPMN_ELEMENT_DATA_PATH = "dataPath";
+  String BPMN_ELEMENT_CALL_ACTIVITY = "callActivity";
+  String BPMN_ELEMENT_CORRELATION_PROPERTY_BINDING = "correlationPropertyBinding";
+  String BPMN_ELEMENT_CORRELATION_PROPERTY = "correlationProperty";
+  String BPMN_ELEMENT_CORRELATION_PROPERTY_REF = "correlationPropertyRef";
+  String BPMN_ELEMENT_CORRELATION_KEY = "correlationKey";
+  String BPMN_ELEMENT_CORRELATION_SUBSCRIPTION = "correlationSubscription";
+  String BPMN_ELEMENT_SUPPORTS = "supports";
+  String BPMN_ELEMENT_PROCESS = "process";
+  String BPMN_ELEMENT_TASK = "task";
+  String BPMN_ELEMENT_SEND_TASK = "sendTask";
+  String BPMN_ELEMENT_SERVICE_TASK = "serviceTask";
+  String BPMN_ELEMENT_SCRIPT_TASK = "scriptTask";
+  String BPMN_ELEMENT_USER_TASK = "userTask";
+  String BPMN_ELEMENT_RECEIVE_TASK = "receiveTask";
+  String BPMN_ELEMENT_BUSINESS_RULE_TASK = "businessRuleTask";
+  String BPMN_ELEMENT_MANUAL_TASK = "manualTask";
+  String BPMN_ELEMENT_SCRIPT = "script";
+  String BPMN_ELEMENT_RENDERING = "rendering";
+  String BPMN_ELEMENT_BOUNDARY_EVENT = "boundaryEvent";
+  String BPMN_ELEMENT_SUB_PROCESS = "subProcess";
+  String BPMN_ELEMENT_TRANSACTION = "transaction";
+  String BPMN_ELEMENT_GATEWAY = "gateway";
+  String BPMN_ELEMENT_PARALLEL_GATEWAY = "parallelGateway";
+  String BPMN_ELEMENT_EXCLUSIVE_GATEWAY = "exclusiveGateway";
+  String BPMN_ELEMENT_INTERMEDIATE_CATCH_EVENT = "intermediateCatchEvent";
+  String BPMN_ELEMENT_INTERMEDIATE_THROW_EVENT = "intermediateThrowEvent";
+  String BPMN_ELEMENT_END_POINT = "endPoint";
+  String BPMN_ELEMENT_PARTICIPANT_MULTIPLICITY = "participantMultiplicity";
+  String BPMN_ELEMENT_PARTICIPANT = "participant";
+  String BPMN_ELEMENT_PARTICIPANT_REF = "participantRef";
+  String BPMN_ELEMENT_INTERFACE_REF = "interfaceRef";
+  String BPMN_ELEMENT_END_POINT_REF = "endPointRef";
+  String BPMN_ELEMENT_MESSAGE_FLOW = "messageFlow";
+  String BPMN_ELEMENT_MESSAGE_FLOW_REF = "messageFlowRef";
+  String BPMN_ELEMENT_CONVERSATION_NODE = "conversationNode";
+  String BPMN_ELEMENT_CONVERSATION = "conversation";
+  String BPMN_ELEMENT_SUB_CONVERSATION = "subConversation";
+  String BPMN_ELEMENT_GLOBAL_CONVERSATION = "globalConversation";
+  String BPMN_ELEMENT_CALL_CONVERSATION = "callConversation";
+  String BPMN_ELEMENT_PARTICIPANT_ASSOCIATION = "participantAssociation";
+  String BPMN_ELEMENT_INNER_PARTICIPANT_REF = "innerParticipantRef";
+  String BPMN_ELEMENT_OUTER_PARTICIPANT_REF = "outerParticipantRef";
+  String BPMN_ELEMENT_CONVERSATION_ASSOCIATION = "conversationAssociation";
+  String BPMN_ELEMENT_MESSAGE_FLOW_ASSOCIATION = "messageFlowAssociation";
+  String BPMN_ELEMENT_CONVERSATION_LINK = "conversationLink";
+  String BPMN_ELEMENT_COLLABORATION = "collaboration";
+  String BPMN_ELEMENT_ASSOCIATION = "association";
+  String BPMN_ELEMENT_SIGNAL = "signal";
+  String BPMN_ELEMENT_TIME_DATE = "timeDate";
+  String BPMN_ELEMENT_TIME_DURATION = "timeDuration";
+  String BPMN_ELEMENT_TIME_CYCLE = "timeCycle";
+  String BPMN_ELEMENT_ESCALATION = "escalation";
+  String BPMN_ELEMENT_ESCALATION_EVENT_DEFINITION = "escalationEventDefinition";
+  String BPMN_ELEMENT_ACTIVATION_CONDITION = "activationCondition";
+  String BPMN_ELEMENT_COMPLEX_GATEWAY = "complexGateway";
+  String BPMN_ELEMENT_EVENT_BASED_GATEWAY = "eventBasedGateway";
+  String BPMN_ELEMENT_INCLUSIVE_GATEWAY = "inclusiveGateway";
+  String BPMN_ELEMENT_TEXT_ANNOTATION = "textAnnotation";
+  String BPMN_ELEMENT_TEXT = "text";
+  String BPMN_ELEMENT_COMPLEX_BEHAVIOR_DEFINITION = "complexBehaviorDefinition";
+  String BPMN_ELEMENT_MULTI_INSTANCE_LOOP_CHARACTERISTICS = "multiInstanceLoopCharacteristics";
+  String BPMN_ELEMENT_LOOP_CARDINALITY = "loopCardinality";
+  String BPMN_ELEMENT_COMPLETION_CONDITION = "completionCondition";
+  String BPMN_ELEMENT_OUTPUT_DATA_ITEM = "outputDataItem";
+  String BPMN_ELEMENT_INPUT_DATA_ITEM = "inputDataItem";
+  String BPMN_ELEMENT_LOOP_DATA_OUTPUT_REF = "loopDataOutputRef";
+  String BPMN_ELEMENT_LOOP_DATA_INPUT_REF = "loopDataInputRef";
+  String BPMN_ELEMENT_IS_SEQUENTIAL = "isSequential";
+  String BPMN_ELEMENT_BEHAVIOR = "behavior";
+  String BPMN_ELEMENT_ONE_BEHAVIOR_EVENT_REF = "oneBehaviorEventRef";
+  String BPMN_ELEMENT_NONE_BEHAVIOR_EVENT_REF = "noneBehaviorEventRef";
+  String BPMN_ELEMENT_GROUP = "group";
+  String BPMN_ELEMENT_CATEGORY = "category";
+  String BPMN_ELEMENT_AD_HOC_SUB_PROCESS = "adHocSubProcess";
 
   /** DC */
-  public static final String DC_ELEMENT_FONT = "Font";
+  String DC_ELEMENT_FONT = "Font";
 
-  public static final String DC_ELEMENT_POINT = "Point";
-  public static final String DC_ELEMENT_BOUNDS = "Bounds";
+  String DC_ELEMENT_POINT = "Point";
+  String DC_ELEMENT_BOUNDS = "Bounds";
 
   /** DI */
-  public static final String DI_ELEMENT_DIAGRAM_ELEMENT = "DiagramElement";
+  String DI_ELEMENT_DIAGRAM_ELEMENT = "DiagramElement";
 
-  public static final String DI_ELEMENT_DIAGRAM = "Diagram";
-  public static final String DI_ELEMENT_EDGE = "Edge";
-  public static final String DI_ELEMENT_EXTENSION = "extension";
-  public static final String DI_ELEMENT_LABELED_EDGE = "LabeledEdge";
-  public static final String DI_ELEMENT_LABEL = "Label";
-  public static final String DI_ELEMENT_LABELED_SHAPE = "LabeledShape";
-  public static final String DI_ELEMENT_NODE = "Node";
-  public static final String DI_ELEMENT_PLANE = "Plane";
-  public static final String DI_ELEMENT_SHAPE = "Shape";
-  public static final String DI_ELEMENT_STYLE = "Style";
-  public static final String DI_ELEMENT_WAYPOINT = "waypoint";
+  String DI_ELEMENT_DIAGRAM = "Diagram";
+  String DI_ELEMENT_EDGE = "Edge";
+  String DI_ELEMENT_EXTENSION = "extension";
+  String DI_ELEMENT_LABELED_EDGE = "LabeledEdge";
+  String DI_ELEMENT_LABEL = "Label";
+  String DI_ELEMENT_LABELED_SHAPE = "LabeledShape";
+  String DI_ELEMENT_NODE = "Node";
+  String DI_ELEMENT_PLANE = "Plane";
+  String DI_ELEMENT_SHAPE = "Shape";
+  String DI_ELEMENT_STYLE = "Style";
+  String DI_ELEMENT_WAYPOINT = "waypoint";
 
   /** BPMNDI */
-  public static final String BPMNDI_ELEMENT_BPMN_DIAGRAM = "BPMNDiagram";
+  String BPMNDI_ELEMENT_BPMN_DIAGRAM = "BPMNDiagram";
 
-  public static final String BPMNDI_ELEMENT_BPMN_PLANE = "BPMNPlane";
-  public static final String BPMNDI_ELEMENT_BPMN_LABEL_STYLE = "BPMNLabelStyle";
-  public static final String BPMNDI_ELEMENT_BPMN_SHAPE = "BPMNShape";
-  public static final String BPMNDI_ELEMENT_BPMN_LABEL = "BPMNLabel";
-  public static final String BPMNDI_ELEMENT_BPMN_EDGE = "BPMNEdge";
+  String BPMNDI_ELEMENT_BPMN_PLANE = "BPMNPlane";
+  String BPMNDI_ELEMENT_BPMN_LABEL_STYLE = "BPMNLabelStyle";
+  String BPMNDI_ELEMENT_BPMN_SHAPE = "BPMNShape";
+  String BPMNDI_ELEMENT_BPMN_LABEL = "BPMNLabel";
+  String BPMNDI_ELEMENT_BPMN_EDGE = "BPMNEdge";
 
   // attributes //////////////////////////////////////
 
   /** XSI attributes * */
-  public static final String XSI_ATTRIBUTE_TYPE = "type";
+  String XSI_ATTRIBUTE_TYPE = "type";
 
   /** BPMN attributes * */
-  public static final String BPMN_ATTRIBUTE_EXPORTER = "exporter";
+  String BPMN_ATTRIBUTE_EXPORTER = "exporter";
 
-  public static final String BPMN_ATTRIBUTE_EXPORTER_VERSION = "exporterVersion";
-  public static final String BPMN_ATTRIBUTE_EXPRESSION_LANGUAGE = "expressionLanguage";
-  public static final String BPMN_ATTRIBUTE_ID = "id";
-  public static final String BPMN_ATTRIBUTE_NAME = "name";
-  public static final String BPMN_ATTRIBUTE_TARGET_NAMESPACE = "targetNamespace";
-  public static final String BPMN_ATTRIBUTE_TYPE_LANGUAGE = "typeLanguage";
-  public static final String BPMN_ATTRIBUTE_NAMESPACE = "namespace";
-  public static final String BPMN_ATTRIBUTE_LOCATION = "location";
-  public static final String BPMN_ATTRIBUTE_IMPORT_TYPE = "importType";
-  public static final String BPMN_ATTRIBUTE_TEXT_FORMAT = "textFormat";
-  public static final String BPMN_ATTRIBUTE_PROCESS_TYPE = "processType";
-  public static final String BPMN_ATTRIBUTE_IS_CLOSED = "isClosed";
-  public static final String BPMN_ATTRIBUTE_IS_EXECUTABLE = "isExecutable";
-  public static final String BPMN_ATTRIBUTE_MESSAGE_REF = "messageRef";
-  public static final String BPMN_ATTRIBUTE_DEFINITION = "definition";
-  public static final String BPMN_ATTRIBUTE_MUST_UNDERSTAND = "mustUnderstand";
-  public static final String BPMN_ATTRIBUTE_TYPE = "type";
-  public static final String BPMN_ATTRIBUTE_DIRECTION = "direction";
-  public static final String BPMN_ATTRIBUTE_SOURCE_REF = "sourceRef";
-  public static final String BPMN_ATTRIBUTE_TARGET_REF = "targetRef";
-  public static final String BPMN_ATTRIBUTE_IS_IMMEDIATE = "isImmediate";
-  public static final String BPMN_ATTRIBUTE_VALUE = "value";
-  public static final String BPMN_ATTRIBUTE_STRUCTURE_REF = "structureRef";
-  public static final String BPMN_ATTRIBUTE_IS_COLLECTION = "isCollection";
-  public static final String BPMN_ATTRIBUTE_ITEM_KIND = "itemKind";
-  public static final String BPMN_ATTRIBUTE_ITEM_REF = "itemRef";
-  public static final String BPMN_ATTRIBUTE_ITEM_SUBJECT_REF = "itemSubjectRef";
-  public static final String BPMN_ATTRIBUTE_ERROR_CODE = "errorCode";
-  public static final String BPMN_ATTRIBUTE_LANGUAGE = "language";
-  public static final String BPMN_ATTRIBUTE_EVALUATES_TO_TYPE_REF = "evaluatesToTypeRef";
-  public static final String BPMN_ATTRIBUTE_PARALLEL_MULTIPLE = "parallelMultiple";
-  public static final String BPMN_ATTRIBUTE_IS_INTERRUPTING = "isInterrupting";
-  public static final String BPMN_ATTRIBUTE_IS_REQUIRED = "isRequired";
-  public static final String BPMN_ATTRIBUTE_PARAMETER_REF = "parameterRef";
-  public static final String BPMN_ATTRIBUTE_IS_FOR_COMPENSATION = "isForCompensation";
-  public static final String BPMN_ATTRIBUTE_START_QUANTITY = "startQuantity";
-  public static final String BPMN_ATTRIBUTE_COMPLETION_QUANTITY = "completionQuantity";
-  public static final String BPMN_ATTRIBUTE_DEFAULT = "default";
-  public static final String BPMN_ATTRIBUTE_OPERATION_REF = "operationRef";
-  public static final String BPMN_ATTRIBUTE_INPUT_DATA_REF = "inputDataRef";
-  public static final String BPMN_ATTRIBUTE_OUTPUT_DATA_REF = "outputDataRef";
-  public static final String BPMN_ATTRIBUTE_IMPLEMENTATION_REF = "implementationRef";
-  public static final String BPMN_ATTRIBUTE_PARTITION_ELEMENT_REF = "partitionElementRef";
-  public static final String BPMN_ATTRIBUTE_CORRELATION_PROPERTY_REF = "correlationPropertyRef";
-  public static final String BPMN_ATTRIBUTE_CORRELATION_KEY_REF = "correlationKeyRef";
-  public static final String BPMN_ATTRIBUTE_IMPLEMENTATION = "implementation";
-  public static final String BPMN_ATTRIBUTE_SCRIPT_FORMAT = "scriptFormat";
-  public static final String BPMN_ATTRIBUTE_INSTANTIATE = "instantiate";
-  public static final String BPMN_ATTRIBUTE_CANCEL_ACTIVITY = "cancelActivity";
-  public static final String BPMN_ATTRIBUTE_ATTACHED_TO_REF = "attachedToRef";
-  public static final String BPMN_ATTRIBUTE_TRIGGERED_BY_EVENT = "triggeredByEvent";
-  public static final String BPMN_ATTRIBUTE_GATEWAY_DIRECTION = "gatewayDirection";
-  public static final String BPMN_ATTRIBUTE_CALLED_ELEMENT = "calledElement";
-  public static final String BPMN_ATTRIBUTE_MINIMUM = "minimum";
-  public static final String BPMN_ATTRIBUTE_MAXIMUM = "maximum";
-  public static final String BPMN_ATTRIBUTE_PROCESS_REF = "processRef";
-  public static final String BPMN_ATTRIBUTE_CALLED_COLLABORATION_REF = "calledCollaborationRef";
-  public static final String BPMN_ATTRIBUTE_INNER_CONVERSATION_NODE_REF =
-      "innerConversationNodeRef";
-  public static final String BPMN_ATTRIBUTE_OUTER_CONVERSATION_NODE_REF =
-      "outerConversationNodeRef";
-  public static final String BPMN_ATTRIBUTE_INNER_MESSAGE_FLOW_REF = "innerMessageFlowRef";
-  public static final String BPMN_ATTRIBUTE_OUTER_MESSAGE_FLOW_REF = "outerMessageFlowRef";
-  public static final String BPMN_ATTRIBUTE_ASSOCIATION_DIRECTION = "associationDirection";
-  public static final String BPMN_ATTRIBUTE_WAIT_FOR_COMPLETION = "waitForCompletion";
-  public static final String BPMN_ATTRIBUTE_ACTIVITY_REF = "activityRef";
-  public static final String BPMN_ATTRIBUTE_ERROR_REF = "errorRef";
-  public static final String BPMN_ATTRIBUTE_SIGNAL_REF = "signalRef";
-  public static final String BPMN_ATTRIBUTE_ESCALATION_CODE = "escalationCode";
-  public static final String BPMN_ATTRIBUTE_ESCALATION_REF = "escalationRef";
-  public static final String BPMN_ATTRIBUTE_EVENT_GATEWAY_TYPE = "eventGatewayType";
-  public static final String BPMN_ATTRIBUTE_DATA_OBJECT_REF = "dataObjectRef";
-  public static final String BPMN_ATTRIBUTE_DATA_STORE_REF = "dataStoreRef";
-  public static final String BPMN_ATTRIBUTE_METHOD = "method";
-  public static final String BPMN_ATTRIBUTE_CAPACITY = "capacity";
-  public static final String BPMN_ATTRIBUTE_IS_UNLIMITED = "isUnlimited";
-  public static final String BPMN_ATTRIBUTE_CATEGORY_VALUE_REF = "categoryValueRef";
-  public static final String BPMN_ATTRIBUTE_CANCEL_REMAINING_INSTANCES = "cancelRemainingInstances";
+  String BPMN_ATTRIBUTE_EXPORTER_VERSION = "exporterVersion";
+  String BPMN_ATTRIBUTE_EXPRESSION_LANGUAGE = "expressionLanguage";
+  String BPMN_ATTRIBUTE_ID = "id";
+  String BPMN_ATTRIBUTE_NAME = "name";
+  String BPMN_ATTRIBUTE_TARGET_NAMESPACE = "targetNamespace";
+  String BPMN_ATTRIBUTE_TYPE_LANGUAGE = "typeLanguage";
+  String BPMN_ATTRIBUTE_NAMESPACE = "namespace";
+  String BPMN_ATTRIBUTE_LOCATION = "location";
+  String BPMN_ATTRIBUTE_IMPORT_TYPE = "importType";
+  String BPMN_ATTRIBUTE_TEXT_FORMAT = "textFormat";
+  String BPMN_ATTRIBUTE_PROCESS_TYPE = "processType";
+  String BPMN_ATTRIBUTE_IS_CLOSED = "isClosed";
+  String BPMN_ATTRIBUTE_IS_EXECUTABLE = "isExecutable";
+  String ATTRIBUTE_HISTORY_TIME_TO_LIVE = "historyTimeToLive";
+  String BPMN_ATTRIBUTE_MESSAGE_REF = "messageRef";
+  String BPMN_ATTRIBUTE_DEFINITION = "definition";
+  String BPMN_ATTRIBUTE_MUST_UNDERSTAND = "mustUnderstand";
+  String BPMN_ATTRIBUTE_TYPE = "type";
+  String BPMN_ATTRIBUTE_DIRECTION = "direction";
+  String BPMN_ATTRIBUTE_SOURCE_REF = "sourceRef";
+  String BPMN_ATTRIBUTE_TARGET_REF = "targetRef";
+  String BPMN_ATTRIBUTE_IS_IMMEDIATE = "isImmediate";
+  String BPMN_ATTRIBUTE_VALUE = "value";
+  String BPMN_ATTRIBUTE_STRUCTURE_REF = "structureRef";
+  String BPMN_ATTRIBUTE_IS_COLLECTION = "isCollection";
+  String BPMN_ATTRIBUTE_ITEM_KIND = "itemKind";
+  String BPMN_ATTRIBUTE_ITEM_REF = "itemRef";
+  String BPMN_ATTRIBUTE_ITEM_SUBJECT_REF = "itemSubjectRef";
+  String BPMN_ATTRIBUTE_ERROR_CODE = "errorCode";
+  String BPMN_ATTRIBUTE_LANGUAGE = "language";
+  String BPMN_ATTRIBUTE_EVALUATES_TO_TYPE_REF = "evaluatesToTypeRef";
+  String BPMN_ATTRIBUTE_PARALLEL_MULTIPLE = "parallelMultiple";
+  String BPMN_ATTRIBUTE_IS_INTERRUPTING = "isInterrupting";
+  String BPMN_ATTRIBUTE_IS_REQUIRED = "isRequired";
+  String BPMN_ATTRIBUTE_PARAMETER_REF = "parameterRef";
+  String BPMN_ATTRIBUTE_IS_FOR_COMPENSATION = "isForCompensation";
+  String BPMN_ATTRIBUTE_START_QUANTITY = "startQuantity";
+  String BPMN_ATTRIBUTE_COMPLETION_QUANTITY = "completionQuantity";
+  String BPMN_ATTRIBUTE_DEFAULT = "default";
+  String BPMN_ATTRIBUTE_OPERATION_REF = "operationRef";
+  String BPMN_ATTRIBUTE_INPUT_DATA_REF = "inputDataRef";
+  String BPMN_ATTRIBUTE_OUTPUT_DATA_REF = "outputDataRef";
+  String BPMN_ATTRIBUTE_IMPLEMENTATION_REF = "implementationRef";
+  String BPMN_ATTRIBUTE_PARTITION_ELEMENT_REF = "partitionElementRef";
+  String BPMN_ATTRIBUTE_CORRELATION_PROPERTY_REF = "correlationPropertyRef";
+  String BPMN_ATTRIBUTE_CORRELATION_KEY_REF = "correlationKeyRef";
+  String BPMN_ATTRIBUTE_IMPLEMENTATION = "implementation";
+  String BPMN_ATTRIBUTE_SCRIPT_FORMAT = "scriptFormat";
+  String BPMN_ATTRIBUTE_INSTANTIATE = "instantiate";
+  String BPMN_ATTRIBUTE_CANCEL_ACTIVITY = "cancelActivity";
+  String BPMN_ATTRIBUTE_ATTACHED_TO_REF = "attachedToRef";
+  String BPMN_ATTRIBUTE_TRIGGERED_BY_EVENT = "triggeredByEvent";
+  String BPMN_ATTRIBUTE_GATEWAY_DIRECTION = "gatewayDirection";
+  String BPMN_ATTRIBUTE_CALLED_ELEMENT = "calledElement";
+  String BPMN_ATTRIBUTE_MINIMUM = "minimum";
+  String BPMN_ATTRIBUTE_MAXIMUM = "maximum";
+  String BPMN_ATTRIBUTE_PROCESS_REF = "processRef";
+  String BPMN_ATTRIBUTE_CALLED_COLLABORATION_REF = "calledCollaborationRef";
+  String BPMN_ATTRIBUTE_INNER_CONVERSATION_NODE_REF = "innerConversationNodeRef";
+  String BPMN_ATTRIBUTE_OUTER_CONVERSATION_NODE_REF = "outerConversationNodeRef";
+  String BPMN_ATTRIBUTE_INNER_MESSAGE_FLOW_REF = "innerMessageFlowRef";
+  String BPMN_ATTRIBUTE_OUTER_MESSAGE_FLOW_REF = "outerMessageFlowRef";
+  String BPMN_ATTRIBUTE_ASSOCIATION_DIRECTION = "associationDirection";
+  String BPMN_ATTRIBUTE_WAIT_FOR_COMPLETION = "waitForCompletion";
+  String BPMN_ATTRIBUTE_ACTIVITY_REF = "activityRef";
+  String BPMN_ATTRIBUTE_ERROR_REF = "errorRef";
+  String BPMN_ATTRIBUTE_SIGNAL_REF = "signalRef";
+  String BPMN_ATTRIBUTE_ESCALATION_CODE = "escalationCode";
+  String BPMN_ATTRIBUTE_ESCALATION_REF = "escalationRef";
+  String BPMN_ATTRIBUTE_EVENT_GATEWAY_TYPE = "eventGatewayType";
+  String BPMN_ATTRIBUTE_DATA_OBJECT_REF = "dataObjectRef";
+  String BPMN_ATTRIBUTE_DATA_STORE_REF = "dataStoreRef";
+  String BPMN_ATTRIBUTE_METHOD = "method";
+  String BPMN_ATTRIBUTE_CAPACITY = "capacity";
+  String BPMN_ATTRIBUTE_IS_UNLIMITED = "isUnlimited";
+  String BPMN_ATTRIBUTE_CATEGORY_VALUE_REF = "categoryValueRef";
+  String BPMN_ATTRIBUTE_CANCEL_REMAINING_INSTANCES = "cancelRemainingInstances";
 
   /** DC */
-  public static final String DC_ATTRIBUTE_NAME = "name";
+  String DC_ATTRIBUTE_NAME = "name";
 
-  public static final String DC_ATTRIBUTE_SIZE = "size";
-  public static final String DC_ATTRIBUTE_IS_BOLD = "isBold";
-  public static final String DC_ATTRIBUTE_IS_ITALIC = "isItalic";
-  public static final String DC_ATTRIBUTE_IS_UNDERLINE = "isUnderline";
-  public static final String DC_ATTRIBUTE_IS_STRIKE_THROUGH = "isStrikeThrough";
-  public static final String DC_ATTRIBUTE_X = "x";
-  public static final String DC_ATTRIBUTE_Y = "y";
-  public static final String DC_ATTRIBUTE_WIDTH = "width";
-  public static final String DC_ATTRIBUTE_HEIGHT = "height";
+  String DC_ATTRIBUTE_SIZE = "size";
+  String DC_ATTRIBUTE_IS_BOLD = "isBold";
+  String DC_ATTRIBUTE_IS_ITALIC = "isItalic";
+  String DC_ATTRIBUTE_IS_UNDERLINE = "isUnderline";
+  String DC_ATTRIBUTE_IS_STRIKE_THROUGH = "isStrikeThrough";
+  String DC_ATTRIBUTE_X = "x";
+  String DC_ATTRIBUTE_Y = "y";
+  String DC_ATTRIBUTE_WIDTH = "width";
+  String DC_ATTRIBUTE_HEIGHT = "height";
 
   /** DI */
-  public static final String DI_ATTRIBUTE_ID = "id";
+  String DI_ATTRIBUTE_ID = "id";
 
-  public static final String DI_ATTRIBUTE_NAME = "name";
-  public static final String DI_ATTRIBUTE_DOCUMENTATION = "documentation";
-  public static final String DI_ATTRIBUTE_RESOLUTION = "resolution";
+  String DI_ATTRIBUTE_NAME = "name";
+  String DI_ATTRIBUTE_DOCUMENTATION = "documentation";
+  String DI_ATTRIBUTE_RESOLUTION = "resolution";
 
   /** BPMNDI */
-  public static final String BPMNDI_ATTRIBUTE_BPMN_ELEMENT = "bpmnElement";
+  String BPMNDI_ATTRIBUTE_BPMN_ELEMENT = "bpmnElement";
 
-  public static final String BPMNDI_ATTRIBUTE_SOURCE_ELEMENT = "sourceElement";
-  public static final String BPMNDI_ATTRIBUTE_TARGET_ELEMENT = "targetElement";
-  public static final String BPMNDI_ATTRIBUTE_MESSAGE_VISIBLE_KIND = "messageVisibleKind";
-  public static final String BPMNDI_ATTRIBUTE_IS_HORIZONTAL = "isHorizontal";
-  public static final String BPMNDI_ATTRIBUTE_IS_EXPANDED = "isExpanded";
-  public static final String BPMNDI_ATTRIBUTE_IS_MARKER_VISIBLE = "isMarkerVisible";
-  public static final String BPMNDI_ATTRIBUTE_IS_MESSAGE_VISIBLE = "isMessageVisible";
-  public static final String BPMNDI_ATTRIBUTE_PARTICIPANT_BAND_KIND = "participantBandKind";
-  public static final String BPMNDI_ATTRIBUTE_CHOREOGRAPHY_ACTIVITY_SHAPE =
-      "choreographyActivityShape";
-  public static final String BPMNDI_ATTRIBUTE_LABEL_STYLE = "labelStyle";
+  String BPMNDI_ATTRIBUTE_SOURCE_ELEMENT = "sourceElement";
+  String BPMNDI_ATTRIBUTE_TARGET_ELEMENT = "targetElement";
+  String BPMNDI_ATTRIBUTE_MESSAGE_VISIBLE_KIND = "messageVisibleKind";
+  String BPMNDI_ATTRIBUTE_IS_HORIZONTAL = "isHorizontal";
+  String BPMNDI_ATTRIBUTE_IS_EXPANDED = "isExpanded";
+  String BPMNDI_ATTRIBUTE_IS_MARKER_VISIBLE = "isMarkerVisible";
+  String BPMNDI_ATTRIBUTE_IS_MESSAGE_VISIBLE = "isMessageVisible";
+  String BPMNDI_ATTRIBUTE_PARTICIPANT_BAND_KIND = "participantBandKind";
+  String BPMNDI_ATTRIBUTE_CHOREOGRAPHY_ACTIVITY_SHAPE = "choreographyActivityShape";
+  String BPMNDI_ATTRIBUTE_LABEL_STYLE = "labelStyle";
 }

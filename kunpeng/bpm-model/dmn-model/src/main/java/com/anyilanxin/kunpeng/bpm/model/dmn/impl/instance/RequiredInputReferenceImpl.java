@@ -29,20 +29,21 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 public class RequiredInputReferenceImpl extends DmnElementReferenceImpl
     implements RequiredInputReference {
 
-  public RequiredInputReferenceImpl(ModelTypeInstanceContext instanceContext) {
+  public RequiredInputReferenceImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(RequiredInputReference.class, DMN_ELEMENT_REQUIRED_INPUT)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(DmnElementReference.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<RequiredInputReference>() {
+                  @Override
                   public RequiredInputReference newInstance(
-                      ModelTypeInstanceContext instanceContext) {
+                      final ModelTypeInstanceContext instanceContext) {
                     return new RequiredInputReferenceImpl(instanceContext);
                   }
                 });

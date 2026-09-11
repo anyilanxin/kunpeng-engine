@@ -18,6 +18,7 @@
 package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.SupportedInterfaceRef;
+
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -26,21 +27,21 @@ import java.util.Collection;
  */
 public class CallableElementTest extends BpmnModelElementInstanceTest {
 
-  @Override
-  public TypeAssumption getTypeAssumption() {
-    return new TypeAssumption(RootElement.class, false);
-  }
+    @Override
+    public TypeAssumption getTypeAssumption() {
+        return new TypeAssumption(RootElement.class, false);
+    }
 
-  @Override
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
-    return Arrays.asList(
-        new ChildElementAssumption(SupportedInterfaceRef.class),
-        new ChildElementAssumption(IoSpecification.class, 0, 1),
-        new ChildElementAssumption(IoBinding.class));
-  }
+    @Override
+    public Collection<ChildElementAssumption> getChildElementAssumptions() {
+        return Arrays.asList(
+                new ChildElementAssumption(SupportedInterfaceRef.class),
+                new ChildElementAssumption(IoSpecification.class, 0, 1),
+                new ChildElementAssumption(IoBinding.class));
+    }
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return Arrays.asList(new AttributeAssumption("name"));
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return Arrays.asList(new AttributeAssumption("name"));
+    }
 }

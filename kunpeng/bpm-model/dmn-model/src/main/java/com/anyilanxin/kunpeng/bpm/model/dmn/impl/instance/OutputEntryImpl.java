@@ -28,19 +28,20 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 
 public class OutputEntryImpl extends LiteralExpressionImpl implements OutputEntry {
 
-  public OutputEntryImpl(ModelTypeInstanceContext instanceContext) {
+  public OutputEntryImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(OutputEntry.class, DMN_ELEMENT_OUTPUT_ENTRY)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(LiteralExpression.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<OutputEntry>() {
-                  public OutputEntry newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public OutputEntry newInstance(final ModelTypeInstanceContext instanceContext) {
                     return new OutputEntryImpl(instanceContext);
                   }
                 });

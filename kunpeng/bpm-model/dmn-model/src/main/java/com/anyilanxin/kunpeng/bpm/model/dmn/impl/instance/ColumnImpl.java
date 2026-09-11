@@ -28,19 +28,20 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 
 public class ColumnImpl extends InformationItemImpl implements Column {
 
-  public ColumnImpl(ModelTypeInstanceContext instanceContext) {
+  public ColumnImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(Column.class, DMN_ELEMENT_COLUMN)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(InformationItem.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<Column>() {
-                  public Column newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public Column newInstance(final ModelTypeInstanceContext instanceContext) {
                     return new ColumnImpl(instanceContext);
                   }
                 });

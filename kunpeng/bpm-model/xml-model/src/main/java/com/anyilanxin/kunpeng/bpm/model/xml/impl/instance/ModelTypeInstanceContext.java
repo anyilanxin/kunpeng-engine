@@ -31,7 +31,9 @@ public final class ModelTypeInstanceContext {
   private final ModelElementTypeImpl modelType;
 
   public ModelTypeInstanceContext(
-      DomElement domElement, ModelInstanceImpl model, ModelElementTypeImpl modelType) {
+      final DomElement domElement,
+      final ModelInstanceImpl model,
+      final ModelElementTypeImpl modelType) {
     this.domElement = domElement;
     this.model = model;
     this.modelType = modelType;

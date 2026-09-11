@@ -40,22 +40,23 @@ public abstract class AbstractModelElementInstanceTest {
     public final ModelElementType extendsType;
     public final boolean isAbstract;
 
-    public TypeAssumption(boolean isAbstract) {
+    public TypeAssumption(final boolean isAbstract) {
       this(getDefaultNamespace(), isAbstract);
     }
 
-    public TypeAssumption(String namespaceUri, boolean isAbstract) {
+    public TypeAssumption(final String namespaceUri, final boolean isAbstract) {
       this(namespaceUri, null, isAbstract);
     }
 
-    public TypeAssumption(Class<? extends ModelElementInstance> extendsType, boolean isAbstract) {
+    public TypeAssumption(
+        final Class<? extends ModelElementInstance> extendsType, final boolean isAbstract) {
       this(getDefaultNamespace(), extendsType, isAbstract);
     }
 
     public TypeAssumption(
-        String namespaceUri,
-        Class<? extends ModelElementInstance> extendsType,
-        boolean isAbstract) {
+        final String namespaceUri,
+        final Class<? extends ModelElementInstance> extendsType,
+        final boolean isAbstract) {
       this.namespaceUri = namespaceUri;
       this.extendsType = model.getType(extendsType);
       this.isAbstract = isAbstract;
@@ -69,37 +70,39 @@ public abstract class AbstractModelElementInstanceTest {
     public final int minOccurs;
     public final int maxOccurs;
 
-    public ChildElementAssumption(Class<? extends ModelElementInstance> childElementType) {
+    public ChildElementAssumption(final Class<? extends ModelElementInstance> childElementType) {
       this(childElementType, 0, -1);
     }
 
     public ChildElementAssumption(
-        String namespaceUri, Class<? extends ModelElementInstance> childElementType) {
+        final String namespaceUri, final Class<? extends ModelElementInstance> childElementType) {
       this(namespaceUri, childElementType, 0, -1);
     }
 
     public ChildElementAssumption(
-        Class<? extends ModelElementInstance> childElementType, int minOccurs) {
+        final Class<? extends ModelElementInstance> childElementType, final int minOccurs) {
       this(childElementType, minOccurs, -1);
     }
 
     public ChildElementAssumption(
-        String namespaceUri,
-        Class<? extends ModelElementInstance> childElementType,
-        int minOccurs) {
+        final String namespaceUri,
+        final Class<? extends ModelElementInstance> childElementType,
+        final int minOccurs) {
       this(namespaceUri, childElementType, minOccurs, -1);
     }
 
     public ChildElementAssumption(
-        Class<? extends ModelElementInstance> childElementType, int minOccurs, int maxOccurs) {
+        final Class<? extends ModelElementInstance> childElementType,
+        final int minOccurs,
+        final int maxOccurs) {
       this(getDefaultNamespace(), childElementType, minOccurs, maxOccurs);
     }
 
     public ChildElementAssumption(
-        String namespaceUri,
-        Class<? extends ModelElementInstance> childElementType,
-        int minOccurs,
-        int maxOccurs) {
+        final String namespaceUri,
+        final Class<? extends ModelElementInstance> childElementType,
+        final int minOccurs,
+        final int maxOccurs) {
       this.namespaceUri = namespaceUri;
       this.childElementType = model.getType(childElementType);
       this.minOccurs = minOccurs;
@@ -115,42 +118,50 @@ public abstract class AbstractModelElementInstanceTest {
     public final boolean isRequired;
     public final Object defaultValue;
 
-    public AttributeAssumption(String attributeName) {
+    public AttributeAssumption(final String attributeName) {
       this(attributeName, false, false);
     }
 
-    public AttributeAssumption(String namespace, String attributeName) {
+    public AttributeAssumption(final String namespace, final String attributeName) {
       this(namespace, attributeName, false, false);
     }
 
-    public AttributeAssumption(String attributeName, boolean isIdAttribute) {
+    public AttributeAssumption(final String attributeName, final boolean isIdAttribute) {
       this(attributeName, isIdAttribute, false);
     }
 
-    public AttributeAssumption(String namespace, String attributeName, boolean isIdAttribute) {
+    public AttributeAssumption(
+        final String namespace, final String attributeName, final boolean isIdAttribute) {
       this(namespace, attributeName, isIdAttribute, false);
     }
 
-    public AttributeAssumption(String attributeName, boolean isIdAttribute, boolean isRequired) {
+    public AttributeAssumption(
+        final String attributeName, final boolean isIdAttribute, final boolean isRequired) {
       this(attributeName, isIdAttribute, isRequired, null);
     }
 
     public AttributeAssumption(
-        String namespace, String attributeName, boolean isIdAttribute, boolean isRequired) {
+        final String namespace,
+        final String attributeName,
+        final boolean isIdAttribute,
+        final boolean isRequired) {
       this(namespace, attributeName, isIdAttribute, isRequired, null);
     }
 
     public AttributeAssumption(
-        String attributeName, boolean isIdAttribute, boolean isRequired, Object defaultValue) {
+        final String attributeName,
+        final boolean isIdAttribute,
+        final boolean isRequired,
+        final Object defaultValue) {
       this(null, attributeName, isIdAttribute, isRequired, defaultValue);
     }
 
     public AttributeAssumption(
-        String namespace,
-        String attributeName,
-        boolean isIdAttribute,
-        boolean isRequired,
-        Object defaultValue) {
+        final String namespace,
+        final String attributeName,
+        final boolean isIdAttribute,
+        final boolean isRequired,
+        final Object defaultValue) {
       this.attributeName = attributeName;
       this.namespace = namespace;
       this.isIdAttribute = isIdAttribute;
@@ -163,7 +174,7 @@ public abstract class AbstractModelElementInstanceTest {
   public static Model model;
   public static ModelElementType modelElementType;
 
-  public static void initModelElementType(GetModelElementTypeRule modelElementTypeRule) {
+  public static void initModelElementType(final GetModelElementTypeRule modelElementTypeRule) {
     modelInstance = modelElementTypeRule.getModelInstance();
     model = modelElementTypeRule.getModel();
     modelElementType = modelElementTypeRule.getModelElementType();
@@ -184,16 +195,16 @@ public abstract class AbstractModelElementInstanceTest {
     return assertThat(modelElementType);
   }
 
-  public AttributeAssert assertThatAttribute(String attributeName) {
+  public AttributeAssert assertThatAttribute(final String attributeName) {
     return assertThat(modelElementType.getAttribute(attributeName));
   }
 
-  public ChildElementAssert assertThatChildElement(ModelElementType childElementType) {
-    ModelElementTypeImpl modelElementTypeImpl = (ModelElementTypeImpl) modelElementType;
+  public ChildElementAssert assertThatChildElement(final ModelElementType childElementType) {
+    final ModelElementTypeImpl modelElementTypeImpl = (ModelElementTypeImpl) modelElementType;
     return assertThat(modelElementTypeImpl.getChildElementCollection(childElementType));
   }
 
-  public ModelElementType getType(Class<? extends ModelElementInstance> instanceClass) {
+  public ModelElementType getType(final Class<? extends ModelElementInstance> instanceClass) {
     return model.getType(instanceClass);
   }
 
@@ -201,7 +212,7 @@ public abstract class AbstractModelElementInstanceTest {
   public void testType() {
     assertThatType().isPartOfModel(model);
 
-    TypeAssumption assumption = getTypeAssumption();
+    final TypeAssumption assumption = getTypeAssumption();
     assertThatType().hasTypeNamespace(assumption.namespaceUri);
 
     if (assumption.isAbstract) {
@@ -219,28 +230,28 @@ public abstract class AbstractModelElementInstanceTest {
       try {
         modelInstance.newInstance(modelElementType);
         fail("Element type " + modelElementType.getTypeName() + " is abstract.");
-      } catch (DOMException e) {
+      } catch (final DOMException e) {
         // expected exception
-      } catch (ModelTypeException e) {
+      } catch (final ModelTypeException e) {
         // expected exception
-      } catch (Exception e) {
+      } catch (final Exception e) {
         fail("Unexpected exception " + e.getMessage());
       }
     } else {
-      ModelElementInstance modelElementInstance = modelInstance.newInstance(modelElementType);
+      final ModelElementInstance modelElementInstance = modelInstance.newInstance(modelElementType);
       assertThat(modelElementInstance).isNotNull();
     }
   }
 
   @Test
   public void testChildElements() {
-    Collection<ChildElementAssumption> childElementAssumptions = getChildElementAssumptions();
+    final Collection<ChildElementAssumption> childElementAssumptions = getChildElementAssumptions();
     if (childElementAssumptions == null) {
       assertThatType().hasNoChildElements();
     } else {
       assertThat(modelElementType.getChildElementTypes().size())
           .isEqualTo(childElementAssumptions.size());
-      for (ChildElementAssumption assumption : childElementAssumptions) {
+      for (final ChildElementAssumption assumption : childElementAssumptions) {
         assertThatType().hasChildElements(assumption.childElementType);
         if (assumption.namespaceUri != null) {
           assertThat(assumption.childElementType).hasTypeNamespace(assumption.namespaceUri);
@@ -254,14 +265,14 @@ public abstract class AbstractModelElementInstanceTest {
 
   @Test
   public void testAttributes() {
-    Collection<AttributeAssumption> attributesAssumptions = getAttributesAssumptions();
+    final Collection<AttributeAssumption> attributesAssumptions = getAttributesAssumptions();
     if (attributesAssumptions == null) {
       assertThatType().hasNoAttributes();
     } else {
       assertThat(attributesAssumptions).hasSameSizeAs(modelElementType.getAttributes());
-      for (AttributeAssumption assumption : attributesAssumptions) {
+      for (final AttributeAssumption assumption : attributesAssumptions) {
         assertThatType().hasAttributes(assumption.attributeName);
-        AttributeAssert attributeAssert = assertThatAttribute(assumption.attributeName);
+        final AttributeAssert attributeAssert = assertThatAttribute(assumption.attributeName);
 
         attributeAssert.hasOwningElementType(modelElementType);
 

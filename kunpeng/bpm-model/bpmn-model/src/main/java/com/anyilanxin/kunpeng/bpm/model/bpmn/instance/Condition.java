@@ -22,8 +22,4 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
  *
  * @author Sebastian Menski
  */
-public interface Condition extends FormalExpression {
-  String getType();
-
-  void setType(String type);
-}
+public interface Condition extends Expression {}

@@ -21,6 +21,7 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.DataOutputRefs;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.InputSetRefs;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.OptionalOutputRefs;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.WhileExecutingOutputRefs;
+
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -29,22 +30,22 @@ import java.util.Collection;
  */
 public class OutputSetTest extends BpmnModelElementInstanceTest {
 
-  @Override
-  public TypeAssumption getTypeAssumption() {
-    return new TypeAssumption(BaseElement.class, false);
-  }
+    @Override
+    public TypeAssumption getTypeAssumption() {
+        return new TypeAssumption(BaseElement.class, false);
+    }
 
-  @Override
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
-    return Arrays.asList(
-        new ChildElementAssumption(DataOutputRefs.class),
-        new ChildElementAssumption(OptionalOutputRefs.class),
-        new ChildElementAssumption(WhileExecutingOutputRefs.class),
-        new ChildElementAssumption(InputSetRefs.class));
-  }
+    @Override
+    public Collection<ChildElementAssumption> getChildElementAssumptions() {
+        return Arrays.asList(
+                new ChildElementAssumption(DataOutputRefs.class),
+                new ChildElementAssumption(OptionalOutputRefs.class),
+                new ChildElementAssumption(WhileExecutingOutputRefs.class),
+                new ChildElementAssumption(InputSetRefs.class));
+    }
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return Arrays.asList(new AttributeAssumption("name"));
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return Arrays.asList(new AttributeAssumption("name"));
+    }
 }

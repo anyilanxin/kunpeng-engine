@@ -27,12 +27,12 @@ import javax.xml.transform.stream.StreamResult;
  */
 public final class IoUtil {
 
-  public static void closeSilently(Closeable closeable) {
+  public static void closeSilently(final Closeable closeable) {
     try {
       if (closeable != null) {
         closeable.close();
       }
-    } catch (Exception e) {
+    } catch (final Exception e) {
       // ignored
     }
   }
@@ -44,7 +44,7 @@ public final class IoUtil {
    * @return the resulting {@link String}
    * @throws IOException
    */
-  public static String getStringFromInputStream(InputStream inputStream) throws IOException {
+  public static String getStringFromInputStream(final InputStream inputStream) throws IOException {
     return getStringFromInputStream(inputStream, true);
   }
 
@@ -56,10 +56,10 @@ public final class IoUtil {
    * @return the resulting {@link String}
    * @throws IOException
    */
-  private static String getStringFromInputStream(InputStream inputStream, boolean trim)
+  private static String getStringFromInputStream(final InputStream inputStream, final boolean trim)
       throws IOException {
     BufferedReader bufferedReader = null;
-    StringBuilder stringBuilder = new StringBuilder();
+    final StringBuilder stringBuilder = new StringBuilder();
     try {
       bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
       String line;
@@ -84,8 +84,8 @@ public final class IoUtil {
    * @param outputStream the {@link OutputStream} to convert
    * @return the resulting {@link InputStream}
    */
-  public static InputStream convertOutputStreamToInputStream(OutputStream outputStream) {
-    byte[] data = ((ByteArrayOutputStream) outputStream).toByteArray();
+  public static InputStream convertOutputStreamToInputStream(final OutputStream outputStream) {
+    final byte[] data = ((ByteArrayOutputStream) outputStream).toByteArray();
     return new ByteArrayInputStream(data);
   }
 
@@ -94,9 +94,9 @@ public final class IoUtil {
    *
    * @param document the XML document to convert
    */
-  public static String convertXmlDocumentToString(DomDocument document) {
-    StringWriter stringWriter = new StringWriter();
-    StreamResult result = new StreamResult(stringWriter);
+  public static String convertXmlDocumentToString(final DomDocument document) {
+    final StringWriter stringWriter = new StringWriter();
+    final StreamResult result = new StreamResult(stringWriter);
     transformDocumentToXml(document, result);
     return stringWriter.toString();
   }
@@ -107,8 +107,9 @@ public final class IoUtil {
    * @param document the DOM document to write
    * @param outputStream the {@link OutputStream} to write to
    */
-  public static void writeDocumentToOutputStream(DomDocument document, OutputStream outputStream) {
-    StreamResult result = new StreamResult(outputStream);
+  public static void writeDocumentToOutputStream(
+      final DomDocument document, final OutputStream outputStream) {
+    final StreamResult result = new StreamResult(outputStream);
     transformDocumentToXml(document, result);
   }
 
@@ -118,10 +119,10 @@ public final class IoUtil {
    * @param document the DOM document to transform
    * @param result the {@link StreamResult} to write to
    */
-  public static void transformDocumentToXml(DomDocument document, StreamResult result) {
-    TransformerFactory transformerFactory = TransformerFactory.newInstance();
+  public static void transformDocumentToXml(final DomDocument document, final StreamResult result) {
+    final TransformerFactory transformerFactory = TransformerFactory.newInstance();
     try {
-      Transformer transformer = transformerFactory.newTransformer();
+      final Transformer transformer = transformerFactory.newTransformer();
       transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
       transformer.setOutputProperty(OutputKeys.INDENT, "yes");
       transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
@@ -129,9 +130,9 @@ public final class IoUtil {
       synchronized (document) {
         transformer.transform(document.getDomSource(), result);
       }
-    } catch (TransformerConfigurationException e) {
+    } catch (final TransformerConfigurationException e) {
       throw new ModelIoException("Unable to create a transformer for the model", e);
-    } catch (TransformerException e) {
+    } catch (final TransformerException e) {
       throw new ModelIoException("Unable to transform model to xml", e);
     }
   }

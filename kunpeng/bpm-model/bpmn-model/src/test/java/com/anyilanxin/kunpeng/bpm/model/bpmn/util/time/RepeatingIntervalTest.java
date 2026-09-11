@@ -16,257 +16,205 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.bpmn.util.time;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.Test;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.time.Period;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.Optional;
-import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class RepeatingIntervalTest {
-  @Test
-  public void shouldFailToParseIfStartingWithIntervalDesignator() {
-    // given
-    final String text = "/P1Y2M3S";
+    @Test
+    public void shouldFailToParseIfStartingWithIntervalDesignator() {
+        // given
+        final String text = "/P1Y2M3S";
 
-    // then
-    assertThatThrownBy(() -> RepeatingInterval.parse(text))
-        .isInstanceOf(DateTimeParseException.class);
-  }
+        // then
+        assertThatThrownBy(() -> RepeatingInterval.parse(text))
+                .isInstanceOf(DateTimeParseException.class);
+    }
 
-  @Test
-  public void shouldFailToParseIfIntervalCannotBeParsed() {
-    // given
-    final String text = "R/PKF,!T2.:";
+    @Test
+    public void shouldFailToParseIfIntervalCannotBeParsed() {
+        // given
+        final String text = "R/PKF,!T2.:";
 
-    // then
-    assertThatThrownBy(() -> RepeatingInterval.parse(text))
-        .isInstanceOf(DateTimeParseException.class);
-  }
+        // then
+        assertThatThrownBy(() -> RepeatingInterval.parse(text))
+                .isInstanceOf(DateTimeParseException.class);
+    }
 
-  @Test
-  public void shouldFailToParseIfNoRepetitionSpecified() {
-    // given
-    final String text = "PT05S";
+    @Test
+    public void shouldFailToParseIfNoRepetitionSpecified() {
+        // given
+        final String text = "PT05S";
 
-    // then
-    assertThatThrownBy(() -> RepeatingInterval.parse(text))
-        .isInstanceOf(DateTimeParseException.class);
-  }
+        // then
+        assertThatThrownBy(() -> RepeatingInterval.parse(text))
+                .isInstanceOf(DateTimeParseException.class);
+    }
 
-  @Test
-  public void shouldFailToParseWithoutSpecs() {
-    // given
-    final String text = "/";
+    @Test
+    public void shouldFailToParseWithoutSpecs() {
+        // given
+        final String text = "/";
 
-    // then
-    assertThatThrownBy(() -> RepeatingInterval.parse(text))
-        .isInstanceOf(DateTimeParseException.class);
-  }
+        // then
+        assertThatThrownBy(() -> RepeatingInterval.parse(text))
+                .isInstanceOf(DateTimeParseException.class);
+    }
 
-  @Test
-  public void shouldBeInfiniteIfNoRepetitionsCountSpecified() {
-    // given
-    final String text = "R/PT05S";
-    final RepeatingInterval expected =
-        new RepeatingInterval(
-            RepeatingInterval.INFINITE, new Interval(Period.ZERO, Duration.ofSeconds(5)));
+    @Test
+    public void shouldBeInfiniteIfNoRepetitionsCountSpecified() {
+        // given
+        final String text = "R/PT05S";
+        final RepeatingInterval expected =
+                new RepeatingInterval(
+                        RepeatingInterval.INFINITE, new Interval(Period.ZERO, Duration.ofSeconds(5)));
 
-    // when
-    final RepeatingInterval parsed = RepeatingInterval.parse(text);
+        // when
+        final RepeatingInterval parsed = RepeatingInterval.parse(text);
 
-    // then
-    assertThat(parsed).isEqualTo(expected);
-  }
+        // then
+        assertThat(parsed).isEqualTo(expected);
+    }
 
-  @Test
-  public void shouldHaveSpecifiedRepetitionsCount() {
-    // given
-    final String text = "R5/PT05S";
-    final RepeatingInterval expected =
-        new RepeatingInterval(5, new Interval(Period.ZERO, Duration.ofSeconds(5)));
+    @Test
+    public void shouldHaveSpecifiedRepetitionsCount() {
+        // given
+        final String text = "R5/PT05S";
+        final RepeatingInterval expected =
+                new RepeatingInterval(5, new Interval(Period.ZERO, Duration.ofSeconds(5)));
 
-    // when
-    final RepeatingInterval parsed = RepeatingInterval.parse(text);
+        // when
+        final RepeatingInterval parsed = RepeatingInterval.parse(text);
 
-    // then
-    assertThat(parsed).isEqualTo(expected);
-  }
+        // then
+        assertThat(parsed).isEqualTo(expected);
+    }
 
-  @Test
-  public void shouldFailToParseIfCannotParseRepetitionsCount() {
-    // given
-    final String text = "RA,/PT05S";
+    @Test
+    public void shouldFailToParseIfCannotParseRepetitionsCount() {
+        // given
+        final String text = "RA,/PT05S";
 
-    // then
-    assertThatThrownBy(() -> RepeatingInterval.parse(text))
-        .isInstanceOf(DateTimeParseException.class);
-  }
+        // then
+        assertThatThrownBy(() -> RepeatingInterval.parse(text))
+                .isInstanceOf(DateTimeParseException.class);
+    }
 
-  @Test
-  public void shouldFailToParseIfNoInterval() {
-    // given
-    final String text = "R5/";
+    @Test
+    public void shouldFailToParseIfNoInterval() {
+        // given
+        final String text = "R5/";
 
-    // then
-    assertThatThrownBy(() -> RepeatingInterval.parse(text))
-        .isInstanceOf(DateTimeParseException.class);
-  }
+        // then
+        assertThatThrownBy(() -> RepeatingInterval.parse(text))
+                .isInstanceOf(DateTimeParseException.class);
+    }
 
-  @Test
-  public void shouldFailToParseIfRepetitionCountDoesNotStartWithR() {
-    // given
-    final String text = "B5/PT1S";
+    @Test
+    public void shouldFailToParseIfRepetitionCountDoesNotStartWithR() {
+        // given
+        final String text = "B5/PT1S";
 
-    // then
-    assertThatThrownBy(() -> RepeatingInterval.parse(text))
-        .isInstanceOf(DateTimeParseException.class);
-  }
+        // then
+        assertThatThrownBy(() -> RepeatingInterval.parse(text))
+                .isInstanceOf(DateTimeParseException.class);
+    }
 
-  @Test
-  public void shouldFailToParseEmptyString() {
-    assertThatThrownBy(() -> Interval.parse("")).isInstanceOf(DateTimeParseException.class);
-  }
+    @Test
+    public void shouldFailToParseEmptyString() {
+        assertThatThrownBy(() -> Interval.parse("")).isInstanceOf(DateTimeParseException.class);
+    }
 
-  @Test
-  public void shouldParseWithSpecifiedStartTime() {
-    // given
-    final String text = "R/2022-05-20T08:09:40+02:00[Europe/Berlin]/PT10S";
-    final RepeatingInterval expected =
-        new RepeatingInterval(
-            -1,
-            new Interval(
-                Optional.ofNullable(
-                    ZonedDateTime.parse("2022-05-20T08:09:40+02:00[Europe/Berlin]")),
-                Period.ZERO,
-                Duration.ofSeconds(10)));
+    @Test
+    public void shouldParseWithSpecifiedStartTime() {
+        // given
+        final String text = "R/2022-05-20T08:09:40+02:00[Europe/Berlin]/PT10S";
+        final RepeatingInterval expected =
+                new RepeatingInterval(
+                        -1,
+                        new Interval(
+                                Optional.ofNullable(
+                                        ZonedDateTime.parse("2022-05-20T08:09:40+02:00[Europe/Berlin]")),
+                                Period.ZERO,
+                                Duration.ofSeconds(10)));
 
-    // when
-    final RepeatingInterval parsed = RepeatingInterval.parse(text);
+        // when
+        final RepeatingInterval parsed = RepeatingInterval.parse(text);
 
-    // then
-    assertThat(parsed).isEqualTo(expected);
-  }
+        // then
+        assertThat(parsed).isEqualTo(expected);
+    }
 
-  @Test
-  public void shouldParseWithSpecialUTCStartTime() {
-    // given
-    final String text = "R/2022-05-20T08:09:40Z/PT10S";
-    final RepeatingInterval expected =
-        new RepeatingInterval(
-            -1,
-            new Interval(
-                Optional.ofNullable(ZonedDateTime.parse("2022-05-20T08:09:40Z")),
-                Period.ZERO,
-                Duration.ofSeconds(10)));
+    @Test
+    public void shouldParseWithSpecialUTCStartTime() {
+        // given
+        final String text = "R/2022-05-20T08:09:40Z/PT10S";
+        final RepeatingInterval expected =
+                new RepeatingInterval(
+                        -1,
+                        new Interval(
+                                Optional.ofNullable(ZonedDateTime.parse("2022-05-20T08:09:40Z")),
+                                Period.ZERO,
+                                Duration.ofSeconds(10)));
 
-    // when
-    final RepeatingInterval parsed = RepeatingInterval.parse(text);
+        // when
+        final RepeatingInterval parsed = RepeatingInterval.parse(text);
 
-    // then
-    assertThat(parsed).isEqualTo(expected);
-  }
+        // then
+        assertThat(parsed).isEqualTo(expected);
+    }
 
-  @Test
-  public void shouldParseWithEmptyStartTime() {
-    // given
-    final String text = "R//PT10S";
-    final RepeatingInterval expected =
-        new RepeatingInterval(-1, new Interval(Period.ZERO, Duration.ofSeconds(10)));
+    @Test
+    public void shouldParseWithEmptyStartTime() {
+        // given
+        final String text = "R//PT10S";
+        final RepeatingInterval expected =
+                new RepeatingInterval(-1, new Interval(Period.ZERO, Duration.ofSeconds(10)));
 
-    // when
-    final RepeatingInterval parsed = RepeatingInterval.parse(text);
+        // when
+        final RepeatingInterval parsed = RepeatingInterval.parse(text);
 
-    // then
-    assertThat(parsed).isEqualTo(expected);
-  }
+        // then
+        assertThat(parsed).isEqualTo(expected);
+    }
 
-  @Test
-  public void shouldCalculateDueDate() {
-    // given
-    final Interval interval = new Interval(Period.ZERO, Duration.ofSeconds(10));
-    final long dueDate = interval.toEpochMilli(System.currentTimeMillis());
-    final long expected = dueDate + 10_000L;
+    @Test
+    public void shouldCalculateDueDate() {
+        // given
+        final Interval interval = new Interval(Period.ZERO, Duration.ofSeconds(10));
+        final long dueDate = interval.toEpochMilli(System.currentTimeMillis());
+        final long expected = dueDate + 10_000L;
 
-    // when
-    final long newDueDate =
-        interval.withStart(Instant.ofEpochMilli(dueDate)).toEpochMilli(System.currentTimeMillis());
+        // when
+        final long newDueDate =
+                interval.withStart(Instant.ofEpochMilli(dueDate)).toEpochMilli(System.currentTimeMillis());
 
-    // then
-    assertThat(newDueDate).isEqualTo(expected);
-  }
+        // then
+        assertThat(newDueDate).isEqualTo(expected);
+    }
 
-  @Test
-  public void shouldReturnFromEpochMilliWhenStartDateIsInThePast() {
-    // given
-    final Instant currentTime = Instant.now();
-    final long fromEpochMilli = currentTime.toEpochMilli();
-    final Instant pastStart = currentTime.minus(Duration.ofDays(1));
-    final Interval interval =
-        new Interval(
-            Optional.of(ZonedDateTime.ofInstant(pastStart, ZoneId.systemDefault())),
-            Period.ZERO,
-            Duration.ofSeconds(10));
+    @Test
+    public void shouldNotBeLessThanCurrentTime() {
+        // given
+        final Interval interval = new Interval(Period.ZERO, Duration.ofSeconds(10));
+        final Instant currentTime = Instant.now();
+        final long fromEpochMilli = currentTime.toEpochMilli();
 
-    // when
-    final long dueDate = interval.toEpochMilli(fromEpochMilli);
+        // set start time to be less than current time
+        final Instant start = currentTime.minus(Duration.ofDays(1));
 
-    // then — start date is in the past, so fromEpochMilli is returned unchanged
-    assertThat(dueDate).isEqualTo(fromEpochMilli);
-  }
+        // when
+        final long dueDate = interval.withStart(start).toEpochMilli(fromEpochMilli);
 
-  @Test
-  public void shouldReturnStartDateWhenStartDateIsInTheFuture() {
-    // given — start date is after fromEpochMilli
-    final Instant now = Instant.now();
-    final long fromEpochMilli = now.toEpochMilli();
-    final Instant futureStart = now.plus(Duration.ofHours(1));
-    final Interval interval =
-        new Interval(
-            Optional.of(ZonedDateTime.ofInstant(futureStart, ZoneId.systemDefault())),
-            Period.ZERO,
-            Duration.ofSeconds(10));
-
-    // when
-    final long dueDate = interval.toEpochMilli(fromEpochMilli);
-
-    // then — must return the future start date unchanged
-    assertThat(dueDate).isEqualTo(futureStart.toEpochMilli());
-  }
-
-  @Test
-  public void shouldReturnFromEpochMilliPlusDurationWhenNoStartDatePresent() {
-    // given — no start date, short duration
-    final Interval interval = new Interval(Period.ZERO, Duration.ofSeconds(30));
-    final long fromEpochMilli = Instant.now().toEpochMilli();
-
-    // when
-    final long dueDate = interval.toEpochMilli(fromEpochMilli);
-
-    // then — due date is exactly fromEpochMilli + duration
-    assertThat(dueDate).isEqualTo(fromEpochMilli + Duration.ofSeconds(30).toMillis());
-  }
-
-  @Test
-  public void shouldReturnCalendarAdjustedDateWhenNoStartDatePresent() {
-    // given — no start date, period-based interval
-    final Interval interval = new Interval(Period.ofMonths(1), Duration.ZERO);
-    final ZonedDateTime from = ZonedDateTime.of(2026, 1, 31, 0, 0, 0, 0, ZoneId.systemDefault());
-    final long fromEpochMilli = from.toInstant().toEpochMilli();
-
-    // when
-    final long dueDate = interval.toEpochMilli(fromEpochMilli);
-
-    // then — calendar arithmetic: Jan 31 + P1M = Feb 28, not Jan 31 + 31 days
-    final long expected =
-        ZonedDateTime.of(2026, 2, 28, 0, 0, 0, 0, ZoneId.systemDefault())
-            .toInstant()
-            .toEpochMilli();
-    assertThat(dueDate).isEqualTo(expected);
-  }
+        // then
+        assertThat(dueDate).isEqualTo(currentTime.plusSeconds(10).toEpochMilli());
+    }
 }

@@ -16,9 +16,7 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.dmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ATTRIBUTE_TEXT_FORMAT;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.DMN_ELEMENT_TEXT_ANNOTATION;
-import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.LATEST_DMN_NS;
+import static com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants.*;
 
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Artifact;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Text;
@@ -37,35 +35,41 @@ public class TextAnnotationImpl extends ArtifactImpl implements TextAnnotation {
 
   protected static ChildElement<Text> textChild;
 
+  @Override
   public String getTextFormat() {
     return textFormatAttribute.getValue(this);
   }
 
-  public void setTextFormat(String textFormat) {
+  @Override
+  public void setTextFormat(final String textFormat) {
     textFormatAttribute.setValue(this, textFormat);
   }
 
+  @Override
   public Text getText() {
     return textChild.getChild(this);
   }
 
-  public void setText(Text text) {
+  @Override
+  public void setText(final Text text) {
     textChild.setChild(this, text);
   }
 
-  public TextAnnotationImpl(ModelTypeInstanceContext instanceContext) {
+  public TextAnnotationImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(TextAnnotation.class, DMN_ELEMENT_TEXT_ANNOTATION)
             .namespaceUri(LATEST_DMN_NS)
             .extendsType(Artifact.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<TextAnnotation>() {
-                  public TextAnnotation newInstance(ModelTypeInstanceContext instanceContext) {
+                  @Override
+                  public TextAnnotation newInstance(
+                      final ModelTypeInstanceContext instanceContext) {
                     return new TextAnnotationImpl(instanceContext);
                   }
                 });
@@ -73,7 +77,7 @@ public class TextAnnotationImpl extends ArtifactImpl implements TextAnnotation {
     textFormatAttribute =
         typeBuilder.stringAttribute(DMN_ATTRIBUTE_TEXT_FORMAT).defaultValue("text/plain").build();
 
-    SequenceBuilder sequenceBuilder = typeBuilder.sequence();
+    final SequenceBuilder sequenceBuilder = typeBuilder.sequence();
 
     textChild = sequenceBuilder.element(Text.class).build();
 

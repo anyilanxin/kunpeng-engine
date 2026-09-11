@@ -23,17 +23,17 @@ import com.anyilanxin.kunpeng.bpm.model.xml.impl.type.ModelElementTypeImpl;
  */
 public class DoubleAttributeBuilder extends AttributeBuilderImpl<Double> {
 
-  public DoubleAttributeBuilder(String attributeName, ModelElementTypeImpl modelType) {
+  public DoubleAttributeBuilder(final String attributeName, final ModelElementTypeImpl modelType) {
     super(attributeName, modelType, new DoubleAttribute(modelType));
   }
 
   @Override
-  public DoubleAttributeBuilder namespace(String namespaceUri) {
+  public DoubleAttributeBuilder namespace(final String namespaceUri) {
     return (DoubleAttributeBuilder) super.namespace(namespaceUri);
   }
 
   @Override
-  public DoubleAttributeBuilder defaultValue(Double defaultValue) {
+  public DoubleAttributeBuilder defaultValue(final Double defaultValue) {
     return (DoubleAttributeBuilder) super.defaultValue(defaultValue);
   }
 

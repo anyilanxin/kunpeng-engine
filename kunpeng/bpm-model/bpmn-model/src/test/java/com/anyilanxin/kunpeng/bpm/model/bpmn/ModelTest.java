@@ -17,66 +17,60 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BaseElement;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.CatchEvent;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Definitions;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Event;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.EventDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ExtensionElements;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.MessageEventDefinition;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.StartEvent;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.*;
 import com.anyilanxin.kunpeng.bpm.model.xml.Model;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.util.ModelUtil;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementType;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
 public class ModelTest {
 
-  @Test
-  public void testCreateEmptyModel() {
-    final BpmnModelInstance bpmnModelInstance = Bpmn.createEmptyModel();
+    @Test
+    public void testCreateEmptyModel() {
+        final BpmnModelInstance bpmnModelInstance = Bpmn.createEmptyModel();
 
-    Definitions definitions = bpmnModelInstance.getDefinitions();
-    assertThat(definitions).isNull();
+        Definitions definitions = bpmnModelInstance.getDefinitions();
+        assertThat(definitions).isNull();
 
-    definitions = bpmnModelInstance.newInstance(Definitions.class);
-    bpmnModelInstance.setDefinitions(definitions);
+        definitions = bpmnModelInstance.newInstance(Definitions.class);
+        bpmnModelInstance.setDefinitions(definitions);
 
-    definitions = bpmnModelInstance.getDefinitions();
-    assertThat(definitions).isNotNull();
-  }
+        definitions = bpmnModelInstance.getDefinitions();
+        assertThat(definitions).isNotNull();
+    }
 
-  @Test
-  public void testBaseTypeCalculation() {
-    final BpmnModelInstance bpmnModelInstance = Bpmn.createEmptyModel();
-    final Model model = bpmnModelInstance.getModel();
-    Collection<ModelElementType> allBaseTypes =
-        ModelUtil.calculateAllBaseTypes(model.getType(StartEvent.class));
-    assertThat(allBaseTypes).hasSize(5);
+    @Test
+    public void testBaseTypeCalculation() {
+        final BpmnModelInstance bpmnModelInstance = Bpmn.createEmptyModel();
+        final Model model = bpmnModelInstance.getModel();
+        Collection<ModelElementType> allBaseTypes =
+                ModelUtil.calculateAllBaseTypes(model.getType(StartEvent.class));
+        assertThat(allBaseTypes).hasSize(5);
 
-    allBaseTypes = ModelUtil.calculateAllBaseTypes(model.getType(MessageEventDefinition.class));
-    assertThat(allBaseTypes).hasSize(3);
+        allBaseTypes = ModelUtil.calculateAllBaseTypes(model.getType(MessageEventDefinition.class));
+        assertThat(allBaseTypes).hasSize(3);
 
-    allBaseTypes = ModelUtil.calculateAllBaseTypes(model.getType(BaseElement.class));
-    assertThat(allBaseTypes).hasSize(0);
-  }
+        allBaseTypes = ModelUtil.calculateAllBaseTypes(model.getType(BaseElement.class));
+        assertThat(allBaseTypes).hasSize(0);
+    }
 
-  @Test
-  public void testExtendingTypeCalculation() {
-    final BpmnModelInstance bpmnModelInstance = Bpmn.createEmptyModel();
-    final Model model = bpmnModelInstance.getModel();
-    final List<ModelElementType> baseInstanceTypes = new ArrayList<ModelElementType>();
-    baseInstanceTypes.add(model.getType(Event.class));
-    baseInstanceTypes.add(model.getType(CatchEvent.class));
-    baseInstanceTypes.add(model.getType(ExtensionElements.class));
-    baseInstanceTypes.add(model.getType(EventDefinition.class));
-    final Collection<ModelElementType> allExtendingTypes =
-        ModelUtil.calculateAllExtendingTypes(bpmnModelInstance.getModel(), baseInstanceTypes);
-    assertThat(allExtendingTypes).hasSize(17);
-  }
+    @Test
+    public void testExtendingTypeCalculation() {
+        final BpmnModelInstance bpmnModelInstance = Bpmn.createEmptyModel();
+        final Model model = bpmnModelInstance.getModel();
+        final List<ModelElementType> baseInstanceTypes = new ArrayList<ModelElementType>();
+        baseInstanceTypes.add(model.getType(Event.class));
+        baseInstanceTypes.add(model.getType(CatchEvent.class));
+        baseInstanceTypes.add(model.getType(ExtensionElements.class));
+        baseInstanceTypes.add(model.getType(EventDefinition.class));
+        final Collection<ModelElementType> allExtendingTypes =
+                ModelUtil.calculateAllExtendingTypes(bpmnModelInstance.getModel(), baseInstanceTypes);
+        assertThat(allExtendingTypes).hasSize(17);
+    }
 }

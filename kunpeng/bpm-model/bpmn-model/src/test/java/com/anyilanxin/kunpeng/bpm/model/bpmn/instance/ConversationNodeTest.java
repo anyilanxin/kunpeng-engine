@@ -19,6 +19,7 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.MessageFlowRef;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.ParticipantRef;
+
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -27,21 +28,21 @@ import java.util.Collection;
  */
 public class ConversationNodeTest extends BpmnModelElementInstanceTest {
 
-  @Override
-  public TypeAssumption getTypeAssumption() {
-    return new TypeAssumption(BaseElement.class, true);
-  }
+    @Override
+    public TypeAssumption getTypeAssumption() {
+        return new TypeAssumption(BaseElement.class, true);
+    }
 
-  @Override
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
-    return Arrays.asList(
-        new ChildElementAssumption(ParticipantRef.class),
-        new ChildElementAssumption(MessageFlowRef.class),
-        new ChildElementAssumption(CorrelationKey.class));
-  }
+    @Override
+    public Collection<ChildElementAssumption> getChildElementAssumptions() {
+        return Arrays.asList(
+                new ChildElementAssumption(ParticipantRef.class),
+                new ChildElementAssumption(MessageFlowRef.class),
+                new ChildElementAssumption(CorrelationKey.class));
+    }
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return Arrays.asList(new AttributeAssumption("name"));
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return Arrays.asList(new AttributeAssumption("name"));
+    }
 }

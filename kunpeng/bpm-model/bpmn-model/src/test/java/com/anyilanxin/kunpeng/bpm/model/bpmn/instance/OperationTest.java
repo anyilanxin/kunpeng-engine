@@ -20,6 +20,7 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.instance;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.ErrorRef;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.InMessageRef;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.OutMessageRef;
+
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -28,22 +29,22 @@ import java.util.Collection;
  */
 public class OperationTest extends BpmnModelElementInstanceTest {
 
-  @Override
-  public TypeAssumption getTypeAssumption() {
-    return new TypeAssumption(BaseElement.class, false);
-  }
+    @Override
+    public TypeAssumption getTypeAssumption() {
+        return new TypeAssumption(BaseElement.class, false);
+    }
 
-  @Override
-  public Collection<ChildElementAssumption> getChildElementAssumptions() {
-    return Arrays.asList(
-        new ChildElementAssumption(InMessageRef.class, 1, 1),
-        new ChildElementAssumption(OutMessageRef.class, 0, 1),
-        new ChildElementAssumption(ErrorRef.class));
-  }
+    @Override
+    public Collection<ChildElementAssumption> getChildElementAssumptions() {
+        return Arrays.asList(
+                new ChildElementAssumption(InMessageRef.class, 1, 1),
+                new ChildElementAssumption(OutMessageRef.class, 0, 1),
+                new ChildElementAssumption(ErrorRef.class));
+    }
 
-  @Override
-  public Collection<AttributeAssumption> getAttributesAssumptions() {
-    return Arrays.asList(
-        new AttributeAssumption("name", false, true), new AttributeAssumption("implementationRef"));
-  }
+    @Override
+    public Collection<AttributeAssumption> getAttributesAssumptions() {
+        return Arrays.asList(
+                new AttributeAssumption("name", false, true), new AttributeAssumption("implementationRef"));
+    }
 }

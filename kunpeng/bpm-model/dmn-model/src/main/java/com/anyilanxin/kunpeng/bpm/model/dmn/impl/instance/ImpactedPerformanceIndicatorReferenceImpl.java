@@ -29,12 +29,12 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder.ModelTy
 public class ImpactedPerformanceIndicatorReferenceImpl extends DmnElementReferenceImpl
     implements ImpactedPerformanceIndicatorReference {
 
-  public ImpactedPerformanceIndicatorReferenceImpl(ModelTypeInstanceContext instanceContext) {
+  public ImpactedPerformanceIndicatorReferenceImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
   }
 
-  public static void registerType(ModelBuilder modelBuilder) {
-    ModelElementTypeBuilder typeBuilder =
+  public static void registerType(final ModelBuilder modelBuilder) {
+    final ModelElementTypeBuilder typeBuilder =
         modelBuilder
             .defineType(
                 ImpactedPerformanceIndicatorReference.class,
@@ -43,8 +43,9 @@ public class ImpactedPerformanceIndicatorReferenceImpl extends DmnElementReferen
             .extendsType(DmnElementReference.class)
             .instanceProvider(
                 new ModelTypeInstanceProvider<ImpactedPerformanceIndicatorReference>() {
+                  @Override
                   public ImpactedPerformanceIndicatorReference newInstance(
-                      ModelTypeInstanceContext instanceContext) {
+                      final ModelTypeInstanceContext instanceContext) {
                     return new ImpactedPerformanceIndicatorReferenceImpl(instanceContext);
                   }
                 });

@@ -31,7 +31,7 @@ public class AttributeAssert extends AbstractAssert<AttributeAssert, Attribute<?
 
   private final String attributeName;
 
-  protected AttributeAssert(Attribute<?> actual) {
+  protected AttributeAssert(final Attribute<?> actual) {
     super(actual, AttributeAssert.class);
     attributeName = actual.getAttributeName();
   }
@@ -76,10 +76,10 @@ public class AttributeAssert extends AbstractAssert<AttributeAssert, Attribute<?
     return this;
   }
 
-  public AttributeAssert hasDefaultValue(Object defaultValue) {
+  public AttributeAssert hasDefaultValue(final Object defaultValue) {
     isNotNull();
 
-    Object actualDefaultValue = actual.getDefaultValue();
+    final Object actualDefaultValue = actual.getDefaultValue();
 
     if (!defaultValue.equals(actualDefaultValue)) {
       failWithMessage(
@@ -93,7 +93,7 @@ public class AttributeAssert extends AbstractAssert<AttributeAssert, Attribute<?
   public AttributeAssert hasNoDefaultValue() {
     isNotNull();
 
-    Object actualDefaultValue = actual.getDefaultValue();
+    final Object actualDefaultValue = actual.getDefaultValue();
 
     if (actualDefaultValue != null) {
       failWithMessage(
@@ -104,10 +104,10 @@ public class AttributeAssert extends AbstractAssert<AttributeAssert, Attribute<?
     return this;
   }
 
-  public AttributeAssert hasOwningElementType(ModelElementType owningElementType) {
+  public AttributeAssert hasOwningElementType(final ModelElementType owningElementType) {
     isNotNull();
 
-    ModelElementType actualOwningElementType = actual.getOwningElementType();
+    final ModelElementType actualOwningElementType = actual.getOwningElementType();
 
     if (!owningElementType.equals(actualOwningElementType)) {
       failWithMessage(
@@ -118,10 +118,10 @@ public class AttributeAssert extends AbstractAssert<AttributeAssert, Attribute<?
     return this;
   }
 
-  public AttributeAssert hasValue(ModelElementInstance modelElementInstance) {
+  public AttributeAssert hasValue(final ModelElementInstance modelElementInstance) {
     isNotNull();
 
-    Object actualValue = actual.getValue(modelElementInstance);
+    final Object actualValue = actual.getValue(modelElementInstance);
 
     if (actualValue == null) {
       failWithMessage("Expected attribute <%s> to have a value but has not", attributeName);
@@ -130,10 +130,11 @@ public class AttributeAssert extends AbstractAssert<AttributeAssert, Attribute<?
     return this;
   }
 
-  public AttributeAssert hasValue(ModelElementInstance modelElementInstance, Object value) {
+  public AttributeAssert hasValue(
+      final ModelElementInstance modelElementInstance, final Object value) {
     isNotNull();
 
-    Object actualValue = actual.getValue(modelElementInstance);
+    final Object actualValue = actual.getValue(modelElementInstance);
 
     if (!value.equals(actualValue)) {
       failWithMessage(
@@ -144,10 +145,10 @@ public class AttributeAssert extends AbstractAssert<AttributeAssert, Attribute<?
     return this;
   }
 
-  public AttributeAssert hasNoValue(ModelElementInstance modelElementInstance) {
+  public AttributeAssert hasNoValue(final ModelElementInstance modelElementInstance) {
     isNotNull();
 
-    Object actualValue = actual.getValue(modelElementInstance);
+    final Object actualValue = actual.getValue(modelElementInstance);
 
     if (actualValue != null) {
       failWithMessage(
@@ -157,7 +158,7 @@ public class AttributeAssert extends AbstractAssert<AttributeAssert, Attribute<?
     return this;
   }
 
-  public AttributeAssert hasAttributeName(String attributeName) {
+  public AttributeAssert hasAttributeName(final String attributeName) {
     isNotNull();
 
     if (!attributeName.equals(this.attributeName)) {
@@ -169,10 +170,10 @@ public class AttributeAssert extends AbstractAssert<AttributeAssert, Attribute<?
     return this;
   }
 
-  public AttributeAssert hasNamespaceUri(String namespaceUri) {
+  public AttributeAssert hasNamespaceUri(final String namespaceUri) {
     isNotNull();
 
-    String actualNamespaceUri1 = actual.getNamespaceUri();
+    final String actualNamespaceUri1 = actual.getNamespaceUri();
 
     if (!namespaceUri.equals(actualNamespaceUri1)) {
       failWithMessage(
@@ -186,7 +187,7 @@ public class AttributeAssert extends AbstractAssert<AttributeAssert, Attribute<?
   public AttributeAssert hasNoNamespaceUri() {
     isNotNull();
 
-    String actualNamespaceUri = actual.getNamespaceUri();
+    final String actualNamespaceUri = actual.getNamespaceUri();
 
     if (actualNamespaceUri != null) {
       failWithMessage(
@@ -200,7 +201,7 @@ public class AttributeAssert extends AbstractAssert<AttributeAssert, Attribute<?
   public AttributeAssert hasIncomingReferences() {
     isNotNull();
 
-    List<Reference<?>> actualIncomingReferences = actual.getIncomingReferences();
+    final List<Reference<?>> actualIncomingReferences = actual.getIncomingReferences();
 
     if (actualIncomingReferences.isEmpty()) {
       failWithMessage(
@@ -210,11 +211,11 @@ public class AttributeAssert extends AbstractAssert<AttributeAssert, Attribute<?
     return this;
   }
 
-  public AttributeAssert hasIncomingReferences(Reference<?>... references) {
+  public AttributeAssert hasIncomingReferences(final Reference<?>... references) {
     isNotNull();
 
-    List<Reference<?>> incomingReferences = Arrays.asList(references);
-    List<Reference<?>> actualIncomingReferences = actual.getIncomingReferences();
+    final List<Reference<?>> incomingReferences = Arrays.asList(references);
+    final List<Reference<?>> actualIncomingReferences = actual.getIncomingReferences();
 
     if (!actualIncomingReferences.containsAll(incomingReferences)) {
       failWithMessage(
@@ -228,7 +229,7 @@ public class AttributeAssert extends AbstractAssert<AttributeAssert, Attribute<?
   public AttributeAssert hasNoIncomingReferences() {
     isNotNull();
 
-    List<Reference<?>> actualIncomingReferences = actual.getIncomingReferences();
+    final List<Reference<?>> actualIncomingReferences = actual.getIncomingReferences();
 
     if (!actualIncomingReferences.isEmpty()) {
       failWithMessage(
@@ -242,7 +243,7 @@ public class AttributeAssert extends AbstractAssert<AttributeAssert, Attribute<?
   public AttributeAssert hasOutgoingReferences() {
     isNotNull();
 
-    List<Reference<?>> actualOutgoingReferences = actual.getOutgoingReferences();
+    final List<Reference<?>> actualOutgoingReferences = actual.getOutgoingReferences();
 
     if (actualOutgoingReferences.isEmpty()) {
       failWithMessage(
@@ -252,11 +253,11 @@ public class AttributeAssert extends AbstractAssert<AttributeAssert, Attribute<?
     return this;
   }
 
-  public AttributeAssert hasOutgoingReferences(Reference<?>... references) {
+  public AttributeAssert hasOutgoingReferences(final Reference<?>... references) {
     isNotNull();
 
-    List<Reference<?>> outgoingReferences = Arrays.asList(references);
-    List<Reference<?>> actualOutgoingReferences = actual.getOutgoingReferences();
+    final List<Reference<?>> outgoingReferences = Arrays.asList(references);
+    final List<Reference<?>> actualOutgoingReferences = actual.getOutgoingReferences();
 
     if (!actualOutgoingReferences.containsAll(outgoingReferences)) {
       failWithMessage(
@@ -270,7 +271,7 @@ public class AttributeAssert extends AbstractAssert<AttributeAssert, Attribute<?
   public AttributeAssert hasNoOutgoingReferences() {
     isNotNull();
 
-    List<Reference<?>> actualOutgoingReferences = actual.getOutgoingReferences();
+    final List<Reference<?>> actualOutgoingReferences = actual.getOutgoingReferences();
 
     if (!actualOutgoingReferences.isEmpty()) {
       failWithMessage(

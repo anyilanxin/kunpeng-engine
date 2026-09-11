@@ -24,7 +24,11 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.bpmndi.BpmnEdge;
  *
  * @author Sebastian Menski
  */
-public interface MessageFlow extends BaseElement, NamedBpmnElement {
+public interface MessageFlow extends BaseElement {
+
+  String getName();
+
+  void setName(String name);
 
   InteractionNode getSource();
 

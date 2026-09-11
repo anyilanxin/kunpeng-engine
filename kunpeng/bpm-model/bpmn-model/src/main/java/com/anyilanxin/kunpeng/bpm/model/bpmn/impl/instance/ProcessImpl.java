@@ -17,25 +17,13 @@
 
 package com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance;
 
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN20_NS;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ATTRIBUTE_IS_CLOSED;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ATTRIBUTE_IS_EXECUTABLE;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ATTRIBUTE_PROCESS_TYPE;
-import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN_ELEMENT_PROCESS;
+import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.*;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelInstance;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.ProcessType;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.builder.ProcessBuilder;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Artifact;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Auditing;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.CallableElement;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.CorrelationSubscription;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.FlowElement;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.LaneSet;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Monitoring;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.*;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Process;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Property;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.ResourceRole;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
@@ -58,6 +46,7 @@ public class ProcessImpl extends CallableElementImpl implements Process {
   protected static Attribute<ProcessType> processTypeAttribute;
   protected static Attribute<Boolean> isClosedAttribute;
   protected static Attribute<Boolean> isExecutableAttribute;
+  protected static Attribute<String> historyTimeToLiveAttribute;
   // TODO: definitionalCollaborationRef
   protected static ChildElement<Auditing> auditingChild;
   protected static ChildElement<Monitoring> monitoringChild;
@@ -98,6 +87,9 @@ public class ProcessImpl extends CallableElementImpl implements Process {
         typeBuilder.booleanAttribute(BPMN_ATTRIBUTE_IS_CLOSED).defaultValue(false).build();
 
     isExecutableAttribute = typeBuilder.booleanAttribute(BPMN_ATTRIBUTE_IS_EXECUTABLE).build();
+
+    historyTimeToLiveAttribute =
+        typeBuilder.stringAttribute(ATTRIBUTE_HISTORY_TIME_TO_LIVE).namespace(KUNPENG_NS).build();
 
     // TODO: definitionalCollaborationRef
 
@@ -182,6 +174,20 @@ public class ProcessImpl extends CallableElementImpl implements Process {
   @Override
   public void setMonitoring(final Monitoring monitoring) {
     monitoringChild.setChild(this, monitoring);
+  }
+
+  @Override
+  public String getHistoryTimeToLiveString() {
+    return historyTimeToLiveAttribute.getValue(this);
+  }
+
+  @Override
+  public void setHistoryTimeToLiveString(final String historyTimeToLive) {
+    if (historyTimeToLive == null) {
+      historyTimeToLiveAttribute.removeAttribute(this);
+    } else {
+      historyTimeToLiveAttribute.setValue(this, historyTimeToLive);
+    }
   }
 
   @Override

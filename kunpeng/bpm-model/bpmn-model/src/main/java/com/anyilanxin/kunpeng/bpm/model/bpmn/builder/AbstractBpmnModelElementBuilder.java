@@ -19,12 +19,7 @@ package com.anyilanxin.kunpeng.bpm.model.bpmn.builder;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelException;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelInstance;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BpmnModelElementInstance;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Documentation;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.EndEvent;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.IntermediateThrowEvent;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.SubProcess;
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Transaction;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.*;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 
 /**
