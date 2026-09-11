@@ -1,0 +1,171 @@
+/*
+ * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+plugins {
+    id "maven-publish"
+    id "java-library"
+    id "java"
+}
+
+interface PublishPluginExtension {
+    Property<String> getArchiveName()
+    // 1. mpl
+    // 2. apache,mpl
+    // 3. agpl
+    // 4. 默认agpl
+    Property<String> getLicenseType()
+}
+
+def extension = project.extensions.create("jarInfo", PublishPluginExtension)
+extension.archiveName.convention(project.name)
+extension.licenseType.convention('gpl')
+
+def metaAndLicense(Jar jarTask, String group, String archiveBaseName, boolean isProjectLicense) {
+    jarTask.manifest {
+        attributes(
+                'Implementation-Title': archiveBaseName,
+                'Implementation-Version': project.version,
+                'Created-By': System.getProperty('java.version') + ' (' + System.getProperty('java.vendor') + ')',
+                'Built-With': "gradle-${project.getGradle().getGradleVersion()}, groovy-${GroovySystem.getVersion()}",
+                'Build-Time': "${new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")}",
+                'Built-By': System.getProperty('user.name'),
+                'Built-On': "${InetAddress.localHost.hostName}/${InetAddress.localHost.hostAddress}"
+        )
+    }
+
+    jarTask.into("META-INF/maven/$group/$archiveBaseName") {
+        from { generatePomFileForMavenPublication }
+        from { tasks.generatePomProperties.outputs.files }
+        rename ".*\\.xml", "pom.xml"
+    }
+
+    jarTask.into("META-INF") {
+        from "$rootDir/NOTICE"
+        if (isProjectLicense) {
+            from "$projectDir/LICENSE"
+            from "$projectDir/licenses"
+        } else {
+            from "$rootDir/licenses/GNU-AGPL-3.0.txt"
+            rename "GNU-AGPL-3.0.txt", "LICENSE"
+        }
+    }
+}
+
+afterEvaluate {
+    def currentArchiveBaseName = extension.archiveName.get()
+    def licenseType = extension.licenseType.get()
+    tasks.register('generatePomProperties', WriteProperties) {
+        group = 'build'
+        description = 'Generates pom.properties file'
+        destinationFile = layout.buildDirectory.file('generated-resources/pom.properties')
+        properties = [
+                'version'   : project.version,
+                'groupId'   : project.group,
+                'artifactId': currentArchiveBaseName
+        ]
+    }
+
+    def projectLicense = false
+    if (file("$projectDir/LICENSE").file) {
+        projectLicense = true
+    }
+
+    jar {
+        enabled = true
+        archiveBaseName = currentArchiveBaseName
+        archiveClassifier = ''
+        metaAndLicense(it as Jar, project.group as String, currentArchiveBaseName, projectLicense)
+    }
+
+    //打包源码
+    tasks.register('sourcesJar', Jar) {
+        from sourceSets.main.allJava
+        archiveClassifier = 'sources'
+        archiveBaseName = currentArchiveBaseName
+        metaAndLicense(it, project.group as String, currentArchiveBaseName, projectLicense)
+    }
+
+    javadoc {
+        if (JavaVersion.current().isJava9Compatible()) {
+            options.addBooleanOption('html5', true)
+        }
+        options.addStringOption("charset", "UTF-8")
+    }
+
+    publishing {
+        publications {
+            maven(MavenPublication) {
+                groupId project.group
+                artifactId currentArchiveBaseName
+                version project.version
+                from components.java
+                artifact sourcesJar
+                pom {
+                    name = currentArchiveBaseName
+                    url = 'https://github.com/anyilanxin/anyi-zeebe.git'
+                    description = project.description
+                    developers {
+                        developer {
+                            id = 'zxh'
+                            name = 'zxh'
+                            email = 'zxuanhong@aliyun.com'
+                        }
+                    }
+                    licenses {
+                        if (licenseType == 'mpl') {
+                            license {
+                                name = 'MPL-2.0'
+                                url = 'https://github.com/anyilanxin/anyi-kunpeng/blob/master/licenses/MPL-2.0.txt'
+                            }
+                        } else if (licenseType == 'apache,mpl') {
+                            license {
+                                name = 'APACHE-2.0'
+                                url = 'https://github.com/anyilanxin/anyi-kunpeng/blob/master/licenses/APACHE-2.0.txt'
+                            }
+                            license {
+                                name = 'MPL-2.0'
+                                url = 'https://github.com/anyilanxin/anyi-kunpeng/blob/master/licenses/MPL-2.0.txt'
+                            }
+                        } else {
+                            license {
+                                name = 'AGPL-3.0'
+                                url = 'https://github.com/anyilanxin/anyi-kunpeng/blob/master/licenses/GNU-AGPL-3.0.txt'
+                            }
+                        }
+                    }
+                    scm {
+                        connection = 'scm:git:git://github.com/anyilanxin/anyi-kunpeng.gi'
+                        developerConnection = 'scm:git:ssh://github.com/anyilanxin/anyi-kunpeng.gi'
+                        url = 'https://anyilanxin.com'
+                    }
+                }
+            }
+        }
+        repositories {
+            maven {
+                allowInsecureProtocol = true
+                credentials {
+                    username = rootProject.ext.repo['username']
+                    password = rootProject.ext.repo['password']
+                }
+                url = version.endsWith('SNAPSHOT') ? rootProject.ext.repo['snapshotsRepoUrl'] : rootProject.ext.repo['releasesRepoUrl']
+            }
+        }
+    }
+}
+
+
+

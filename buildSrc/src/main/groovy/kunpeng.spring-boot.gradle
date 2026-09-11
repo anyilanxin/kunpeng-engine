@@ -1,0 +1,80 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
+/*
+ * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+plugins {
+    id 'idea'
+    id "java"
+    id 'java-library'
+    id 'org.springframework.boot'
+    id "org.springdoc.openapi-gradle-plugin"
+}
+
+interface SpringBootPluginExtension {
+    Property<String> getBootName()
+}
+
+def extension = project.extensions.create("bootInfo", SpringBootPluginExtension)
+extension.bootName.convention(project.name)
+
+processResources {
+    filteringCharset = 'UTF-8'
+    include('*.yml', 'META-INF/**', 'i18n/**')
+    // 只处理yml、yaml文件替换
+    filesMatching('*.yml') {
+        filter(
+                ReplaceTokens,
+                "tokens": [version: version, name: project.name],
+                "beginToken": "#@",
+                "endToken": "@#"
+        )
+    }
+}
+
+
+tasks.register('copyXml', Copy) {
+    copy {
+        from layout.projectDirectory.dir("src/main/java")
+        include "**/xml/*.xml"
+        into layout.buildDirectory.dir("classes/java/main")
+    }
+}
+
+afterEvaluate {
+    def currentBootName = extension.bootName.get()
+
+    bootJar {
+        enabled = true
+        archiveBaseName = currentBootName
+        version = ''
+        manifest {
+            attributes(
+                    "Manifest-Version": 1.0,
+                    'Implementation-Title': project.name,
+                    'Implementation-Version': project.version,
+                    'Created-By': System.getProperty('java.version') + ' (' + System.getProperty('java.vendor') + ')',
+                    'Built-With': "gradle-${project.getGradle().getGradleVersion()}, groovy-${GroovySystem.getVersion()}",
+                    'Build-Time': "${new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")}",
+                    'Built-By': System.getProperty('user.name'),
+                    'Built-On': "${InetAddress.localHost.hostName}/${InetAddress.localHost.hostAddress}",
+                    'Build-Jdk-Spec': JavaVersion.VERSION_21
+            )
+        }
+    }
+}
+
