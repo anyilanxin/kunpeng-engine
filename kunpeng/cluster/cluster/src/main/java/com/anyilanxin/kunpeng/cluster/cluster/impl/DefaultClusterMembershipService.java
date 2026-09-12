@@ -1,7 +1,7 @@
 /*
  * Copyright 2017-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import com.anyilanxin.kunpeng.cluster.cluster.protocol.GroupMembershipEventListe
 import com.anyilanxin.kunpeng.cluster.cluster.protocol.GroupMembershipProtocol;
 import com.anyilanxin.kunpeng.cluster.utils.Version;
 import com.anyilanxin.kunpeng.cluster.utils.event.AbstractListenerManager;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -66,6 +67,30 @@ public class DefaultClusterMembershipService
   @Override
   public Set<Member> getMembers() {
     return protocol.getMembers();
+  }
+
+  @Override
+  public Set<Member> getMembers(final String zone) {
+    final String currentZone = zone == null ? "" : zone;
+    final Set<Member> members = new HashSet<>();
+    for (final Member member : protocol.getMembers()) {
+      if (currentZone.equalsIgnoreCase(member.zone())) {
+        members.add(member);
+      }
+    }
+    return members;
+  }
+
+  @Override
+  public Set<MemberId> getMemberIds(final String zone) {
+    final String currentZone = zone == null ? "" : zone;
+    final Set<MemberId> members = new HashSet<>();
+    for (final Member member : protocol.getMembers()) {
+      if (currentZone.equalsIgnoreCase(member.zone())) {
+        members.add(member.id());
+      }
+    }
+    return members;
   }
 
   @Override

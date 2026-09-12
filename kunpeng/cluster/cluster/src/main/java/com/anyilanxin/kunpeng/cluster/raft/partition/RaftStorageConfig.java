@@ -1,7 +1,7 @@
 /*
  * Copyright 2018-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ package com.anyilanxin.kunpeng.cluster.raft.partition;
 import com.anyilanxin.kunpeng.cluster.raft.journal.file.SegmentAllocator;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLog;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLogFlusher;
-import com.anyilanxin.kunpeng.cluster.utils.concurrent.ThreadContext;
 
 /** Raft storage configuration. */
 public class RaftStorageConfig {
@@ -52,7 +51,7 @@ public class RaftStorageConfig {
    * Sets the Raft log segment size.
    *
    * @param segmentSizeBytes the Raft log segment size
-   * @return the partition group configuration
+   * @return the storage configuration
    */
   public RaftStorageConfig setSegmentSize(final long segmentSizeBytes) {
     segmentSize = segmentSizeBytes;
@@ -61,8 +60,8 @@ public class RaftStorageConfig {
 
   /**
    * Returns the {@link RaftLogFlusher.Factory} to create a new flushing strategy for the {@link
-   * RaftLog} when * {@link
-   * com.anyilanxin.kunpeng.cluster.raft.storage.RaftStorage#openLog(ThreadContext)} is called.
+   * RaftLog} when {@link com.anyilanxin.kunpeng.cluster.raft.storage.RaftStorage#openLog(MetaStore,
+   * ThreadContextFactory)} is called.
    *
    * @return the flusher factory for this storage
    */
@@ -72,11 +71,11 @@ public class RaftStorageConfig {
 
   /**
    * Sets the {@link RaftLogFlusher.Factory} to create a new flushing strategy for the {@link
-   * RaftLog} when {@link
-   * com.anyilanxin.kunpeng.cluster.raft.storage.RaftStorage#openLog(ThreadContext)} is called.
+   * RaftLog} when {@link com.anyilanxin.kunpeng.cluster.raft.storage.RaftStorage#openLog(MetaStore,
+   * ThreadContextFactory)} is called.
    *
    * @param flusherFactory factory to create the flushing strategy for the {@link RaftLog}
-   * @return the Raft partition group configuration
+   * @return the storage configuration
    */
   public RaftStorageConfig setFlusherFactory(final RaftLogFlusher.Factory flusherFactory) {
     this.flusherFactory = flusherFactory;
@@ -133,10 +132,9 @@ public class RaftStorageConfig {
   }
 
   /**
-   * Sets whether segment files are pre-allocated at creation. If true, segment files are
-   * pre-allocated to {@link #segmentSize} at creation before any writes happen.
+   * Sets the strategy for pre-allocating disk space for new segment files.
    *
-   * @param segmentAllocator to use to preallocate files
+   * @param segmentAllocator the segment allocator to use
    */
   public void setSegmentAllocator(final SegmentAllocator segmentAllocator) {
     this.segmentAllocator = segmentAllocator;

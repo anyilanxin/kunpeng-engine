@@ -1,7 +1,7 @@
 /*
  * Copyright 2018-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ public class BootstrapDiscoveryBuilder extends NodeDiscoveryBuilder {
    * Sets the bootstrap nodes.
    *
    * @param nodes the bootstrap nodes
-   * @return the location provider builder
+   * @return the discovery provider builder
    */
   public BootstrapDiscoveryBuilder withNodes(final Address... nodes) {
     return withNodes(
@@ -43,11 +43,11 @@ public class BootstrapDiscoveryBuilder extends NodeDiscoveryBuilder {
   /**
    * Sets the bootstrap nodes.
    *
-   * @param locations the bootstrap member locations
-   * @return the location provider builder
+   * @param nodes the bootstrap nodes
+   * @return the discovery provider builder
    */
-  public BootstrapDiscoveryBuilder withNodes(final Collection<Node> locations) {
-    config.setNodes(locations.stream().map(Node::config).collect(Collectors.toList()));
+  public BootstrapDiscoveryBuilder withNodes(final Collection<Node> nodes) {
+    config.setNodes(nodes.stream().map(Node::config).collect(Collectors.toList()));
     return this;
   }
 

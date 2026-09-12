@@ -1,38 +1,24 @@
 /*
- * Copyright 2018-present Open Networking Foundation
- * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package com.anyilanxin.kunpeng.cluster.cluster.protocol;
 
-import static com.anyilanxin.kunpeng.cluster.cluster.protocol.GroupMembershipEvent.Type.MEMBER_ADDED;
-import static com.anyilanxin.kunpeng.cluster.cluster.protocol.GroupMembershipEvent.Type.MEMBER_REMOVED;
-import static com.anyilanxin.kunpeng.cluster.cluster.protocol.GroupMembershipEvent.Type.METADATA_CHANGED;
-import static com.anyilanxin.kunpeng.cluster.cluster.protocol.GroupMembershipEvent.Type.REACHABILITY_CHANGED;
-import static org.assertj.core.api.Assertions.assertThat;
-
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.Sets;
-import com.anyilanxin.kunpeng.cluster.cluster.BootstrapService;
-import com.anyilanxin.kunpeng.cluster.cluster.Member;
-import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
-import com.anyilanxin.kunpeng.cluster.cluster.Node;
-import com.anyilanxin.kunpeng.cluster.cluster.TestBootstrapService;
+import com.anyilanxin.kunpeng.cluster.cluster.*;
 import com.anyilanxin.kunpeng.cluster.cluster.discovery.BootstrapDiscoveryProvider;
+import com.anyilanxin.kunpeng.cluster.cluster.discovery.NodeDiscoveryEvent;
 import com.anyilanxin.kunpeng.cluster.cluster.discovery.NodeDiscoveryProvider;
 import com.anyilanxin.kunpeng.cluster.cluster.discovery.NodeDiscoveryService;
 import com.anyilanxin.kunpeng.cluster.cluster.impl.DefaultNodeDiscoveryService;
@@ -42,20 +28,12 @@ import com.anyilanxin.kunpeng.cluster.cluster.protocol.SwimMembershipProtocol.Im
 import com.anyilanxin.kunpeng.cluster.cluster.protocol.SwimMembershipProtocol.SwimMember;
 import com.anyilanxin.kunpeng.cluster.utils.Version;
 import com.anyilanxin.kunpeng.cluster.utils.net.Address;
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.Sets;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.TimeUnit;
-import java.util.function.UnaryOperator;
 import net.jodah.concurrentunit.ConcurrentTestCase;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
@@ -63,6 +41,14 @@ import org.junit.jupiter.api.AutoClose;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+
+import java.time.Duration;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.function.UnaryOperator;
+
+import static com.anyilanxin.kunpeng.cluster.cluster.protocol.GroupMembershipEvent.Type.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /** SWIM membership protocol test. */
 public class SwimProtocolTest extends ConcurrentTestCase {
@@ -85,6 +71,7 @@ public class SwimProtocolTest extends ConcurrentTestCase {
   private Collection<Member> members;
   private Collection<Node> nodes;
   private Map<MemberId, TestGroupMembershipEventListener> listeners = Maps.newConcurrentMap();
+  private Map<MemberId, TestNodeDiscoveryService> discoveryServices = Maps.newConcurrentMap();
   @AutoClose private final MeterRegistry meterRegistry = new SimpleMeterRegistry();
 
   private SwimMember member(
@@ -122,6 +109,7 @@ public class SwimProtocolTest extends ConcurrentTestCase {
     members = Arrays.asList(member1, member2, member3);
     nodes = (Collection) members;
     listeners = Maps.newConcurrentMap();
+    discoveryServices = Maps.newConcurrentMap();
   }
 
   @AfterEach
@@ -136,7 +124,7 @@ public class SwimProtocolTest extends ConcurrentTestCase {
     reset(withVersions);
 
     // when
-    startProtocol(member1, member1.id().toString());
+    startProtocol(member1);
 
     // then
     checkEvent(member1, MEMBER_ADDED, member1);
@@ -156,10 +144,9 @@ public class SwimProtocolTest extends ConcurrentTestCase {
     // properties below
     reset(false);
     final var protocol =
-        startProtocol(
-            member1,
-            config -> config.setGossipInterval(Duration.ofSeconds(5)),
-            member1.id().toString());
+      startProtocol(
+        member1,
+        config -> config.setGossipInterval(Duration.ofSeconds(5)));
     checkEvent(member1, MEMBER_ADDED, member1);
 
     final var notifying = new CountDownLatch(1);
@@ -203,10 +190,10 @@ public class SwimProtocolTest extends ConcurrentTestCase {
       throws Exception {
     // given
     reset(withVersions);
-    startProtocol(member1, member1.id().toString());
+    startProtocol(member1);
 
     // when
-    startProtocol(member2, member2.id().toString());
+    startProtocol(member2);
 
     // then
     checkEvent(member2, MEMBER_ADDED, member2);
@@ -224,11 +211,11 @@ public class SwimProtocolTest extends ConcurrentTestCase {
       throws Exception {
     // given
     reset(withVersions);
-    startProtocol(member1, member1.id().toString());
-    startProtocol(member2, member2.id().toString());
+    startProtocol(member1);
+    startProtocol(member2);
 
     // when
-    startProtocol(member3, member3.id().toString());
+    startProtocol(member3);
 
     // then
     checkEvent(member2, MEMBER_ADDED, member2);
@@ -252,9 +239,9 @@ public class SwimProtocolTest extends ConcurrentTestCase {
   public void shouldRemoveNodeOnPartition(final boolean withVersions) throws Exception {
     // Start a node and check its events.
     reset(withVersions);
-    startProtocol(member1, member1.id().toString());
-    startProtocol(member2, member2.id().toString());
-    startProtocol(member3, member3.id().toString());
+    startProtocol(member1);
+    startProtocol(member2);
+    startProtocol(member3);
 
     awaitMembers(member3, member1, member2, member3);
     awaitMembers(member2, member1, member2, member3);
@@ -275,12 +262,43 @@ public class SwimProtocolTest extends ConcurrentTestCase {
 
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
+  public void shouldRemoveNodeOnDiscoveryLeaveEvent(final boolean withVersions) throws Exception {
+    // Start a node and check its events.
+    reset(withVersions);
+    startProtocol(member1);
+    startProtocol(member2);
+    startProtocol(member3);
+
+    awaitMembers(member3, member1, member2, member3);
+    awaitMembers(member2, member1, member2, member3);
+    awaitMembers(member1, member1, member2, member3);
+
+    // 等待若干个 gossip 周期，排空在途的成员更新，避免旧的 ALIVE 状态让已离开成员复活
+    Thread.sleep(GOSSIP_INTERVAL.toMillis() * 4);
+
+    clearEvents(member1, member2, member3);
+
+    // when - node 3 stops, and the discovery layer reports its leave to the remaining nodes
+    stopProtocol(member3);
+    discoverLeave(member3, member1);
+    discoverLeave(member3, member2);
+
+    // then
+    // Nodes 1 and 2 should see MEMBER_REMOVED events and no longer list member 3.
+    checkEvent(member1, MEMBER_REMOVED, member3);
+    checkEvent(member2, MEMBER_REMOVED, member3);
+    awaitMembers(member1, member1, member2);
+    awaitMembers(member2, member1, member2);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
   public void testSwimProtocol(final boolean withVersions) throws Exception {
     // Start a node and check its events.
     reset(withVersions);
-    startProtocol(member1, member1.id().toString());
-    startProtocol(member2, member2.id().toString());
-    startProtocol(member3, member3.id().toString());
+    startProtocol(member1);
+    startProtocol(member2);
+    startProtocol(member3);
 
     awaitMembers(member3, member1, member2, member3);
     awaitMembers(member2, member1, member2, member3);
@@ -302,7 +320,7 @@ public class SwimProtocolTest extends ConcurrentTestCase {
         new GroupMembershipEvent(REACHABILITY_CHANGED, member1),
         new GroupMembershipEvent(REACHABILITY_CHANGED, member2),
         new GroupMembershipEvent(MEMBER_REMOVED, member1),
-        new GroupMembershipEvent(MEMBER_REMOVED, member2));
+      new GroupMembershipEvent(MEMBER_REMOVED, member2));
 
     // Verify that nodes 1 and 2 were removed from node 3.
     checkMembers(member3, member3);
@@ -339,8 +357,8 @@ public class SwimProtocolTest extends ConcurrentTestCase {
       throws InterruptedException {
     // given
     reset(withVersions);
-    startProtocol(member1, member1.id().toString());
-    startProtocol(member2, member2.id().toString());
+    startProtocol(member1);
+    startProtocol(member2);
 
     awaitMembers(member2, member1, member2);
     awaitMembers(member1, member1, member2);
@@ -354,7 +372,7 @@ public class SwimProtocolTest extends ConcurrentTestCase {
     final int nextVersionPort = member2.address().port() + 10;
     final var member2NewVersion =
         member(member2.id().id(), nextVersion, member2.address().host(), nextVersionPort, version2);
-    startProtocol(member2NewVersion, "member2-" + member2.id().id());
+    startProtocol(member2NewVersion);
 
     // then - verify that version 1 is removed and version 2 is added.
     Awaitility.await("Member 2 old version removed")
@@ -382,8 +400,8 @@ public class SwimProtocolTest extends ConcurrentTestCase {
       throws InterruptedException {
     // given
     reset(true);
-    startProtocol(member1, member1.id().toString());
-    startProtocol(member2, member2.id().toString());
+    startProtocol(member1);
+    startProtocol(member2);
 
     awaitMembers(member2, member1, member2);
     awaitMembers(member1, member1, member2);
@@ -402,12 +420,12 @@ public class SwimProtocolTest extends ConcurrentTestCase {
             member2.address().port(),
             version1 // use the same software version
             );
-    startProtocol(member2NewVersion, "member2-" + member2.id().id());
+    startProtocol(member2NewVersion);
 
     // then
     Awaitility.await("Member 2 old node version removed")
         .atMost(Duration.ofSeconds(2))
-        .untilAsserted(() -> checkEvent(member1, MEMBER_REMOVED, member2));
+      .untilAsserted(() -> checkEvent(member1, MEMBER_REMOVED, member2));
     checkEvent(member1, MEMBER_ADDED, member2NewVersion);
 
     // verify that all members have only the new version of member2
@@ -426,8 +444,8 @@ public class SwimProtocolTest extends ConcurrentTestCase {
   public void oldVersionShouldLeaveWhenNewVersionIsDetected() throws InterruptedException {
     // given
     reset(true);
-    startProtocol(member1, member1.id().toString() + "-v" + member1.nodeVersion());
-    startProtocol(member2, member2.id().toString() + "-v" + member2.nodeVersion());
+    startProtocol(member1);
+    startProtocol(member2);
 
     awaitMembers(member2, member1, member2);
     awaitMembers(member1, member1, member2);
@@ -443,7 +461,7 @@ public class SwimProtocolTest extends ConcurrentTestCase {
     final var member2NewVersion =
         member(member2.id().id(), nextVersion, member2.address().host(), nextVersionPort, version2);
     startSwimMembershipProtocol(
-        member2NewVersion, UnaryOperator.identity(), member2.id().toString() + "-v" + nextVersion);
+      member2NewVersion, UnaryOperator.identity());
     Awaitility.await("Member 2 old version removed")
         .atMost(Duration.ofSeconds(2))
         .untilAsserted(() -> checkEvent(member1, MEMBER_REMOVED, member2));
@@ -460,9 +478,9 @@ public class SwimProtocolTest extends ConcurrentTestCase {
       throws InterruptedException {
     // given
     reset(withVersions);
-    startProtocol(member1, member1.id().toString());
-    startProtocol(member2, member2.id().toString());
-    final SwimMembershipProtocol protocol3 = startProtocol(member3, member3.id().toString());
+    startProtocol(member1);
+    startProtocol(member2);
+    final SwimMembershipProtocol protocol3 = startProtocol(member3);
 
     // wait for all nodes to know about each other
     checkEvents(
@@ -485,9 +503,9 @@ public class SwimProtocolTest extends ConcurrentTestCase {
     // isolate member3
     partition(member3);
     checkEvents(
-        member1,
-        new GroupMembershipEvent(REACHABILITY_CHANGED, member3),
-        new GroupMembershipEvent(MEMBER_REMOVED, member3));
+      member1,
+      new GroupMembershipEvent(REACHABILITY_CHANGED, member3),
+      new GroupMembershipEvent(MEMBER_REMOVED, member3));
     checkEvents(
         member2,
         new GroupMembershipEvent(REACHABILITY_CHANGED, member3),
@@ -528,17 +546,14 @@ public class SwimProtocolTest extends ConcurrentTestCase {
     return false;
   }
 
-  private SwimMembershipProtocol startProtocol(
-      final SwimMember member, final String actorSchedulerName) {
-    return startProtocol(member, UnaryOperator.identity(), actorSchedulerName);
+  private SwimMembershipProtocol startProtocol(final SwimMember member) {
+    return startProtocol(member, UnaryOperator.identity());
   }
 
   private SwimMembershipProtocol startProtocol(
       final SwimMember member,
-      final UnaryOperator<SwimMembershipProtocolConfig> configurator,
-      final String actorSchedulerName) {
-    final SwimMembershipProtocol protocol =
-        startSwimMembershipProtocol(member, configurator, actorSchedulerName);
+      final UnaryOperator<SwimMembershipProtocolConfig> configurator) {
+    final SwimMembershipProtocol protocol = startSwimMembershipProtocol(member, configurator);
     final var previous = protocols.put(member.id(), protocol);
     // stops previous one
     if (previous != null) {
@@ -549,19 +564,16 @@ public class SwimProtocolTest extends ConcurrentTestCase {
 
   // starts new version of the protocol for the same member id without stopping the previous one
   private SwimMembershipProtocol startSwimMembershipProtocol(
-      final SwimMember member,
-      final UnaryOperator<SwimMembershipProtocolConfig> configurator,
-      final String actorSchedulerName) {
+    final SwimMember member, final UnaryOperator<SwimMembershipProtocolConfig> configurator) {
     final SwimMembershipProtocol protocol =
         new SwimMembershipProtocol(
-            configurator.apply(
-                new SwimMembershipProtocolConfig()
-                    .setGossipInterval(GOSSIP_INTERVAL)
+          configurator.apply(
+            new SwimMembershipProtocolConfig()
+              .setGossipInterval(GOSSIP_INTERVAL)
                     .setProbeInterval(PROBE_INTERVAL)
-                    .setProbeTimeout(PROBE_TIMEOUT)
-                    .setFailureTimeout(FAILURE_INTERVAL)
-                    .setSyncInterval(SYNC_INTERVAL)),
-            actorSchedulerName,
+              .setProbeTimeout(PROBE_TIMEOUT)
+              .setFailureTimeout(FAILURE_INTERVAL)
+              .setSyncInterval(SYNC_INTERVAL)),
             meterRegistry);
     final TestGroupMembershipEventListener listener = new TestGroupMembershipEventListener();
     listeners.put(member.id(), listener);
@@ -569,13 +581,22 @@ public class SwimProtocolTest extends ConcurrentTestCase {
     final BootstrapService bootstrap =
         new TestBootstrapService(
             messagingServiceFactory.newMessagingService(member.address()).start().join(),
-            unicastServiceFactory.newUnicastService(member.address()).start().join());
+          unicastServiceFactory.newUnicastService(member.address()).start().join());
     final NodeDiscoveryProvider provider = new BootstrapDiscoveryProvider(nodes);
     provider.join(bootstrap, member).join();
-    final NodeDiscoveryService discovery =
-        new DefaultNodeDiscoveryService(bootstrap, member, provider).start().join();
+    final TestNodeDiscoveryService discovery =
+        new TestNodeDiscoveryService(bootstrap, member, provider);
+    discovery.start().join();
+    discoveryServices.put(member.id(), discovery);
     protocol.join(bootstrap, discovery, member).join();
     return protocol;
+  }
+
+  // 通过 discovery 通道向接收方派发目标节点的 LEAVE 事件，模拟 discovery 层感知到节点退出
+  private void discoverLeave(final Member leaving, final Member notified) {
+    discoveryServices
+        .get(notified.id())
+        .fireDiscoveryEvent(new NodeDiscoveryEvent(NodeDiscoveryEvent.Type.LEAVE, leaving));
   }
 
   private void stopProtocol(final Member member) {
@@ -668,6 +689,21 @@ public class SwimProtocolTest extends ConcurrentTestCase {
   private GroupMembershipEvent nextEvent(final Member member) throws InterruptedException {
     final TestGroupMembershipEventListener listener = listeners.get(member.id());
     return listener != null ? listener.nextEvent() : null;
+  }
+
+  // DefaultNodeDiscoveryService 的事件派发入口 post 为 protected，测试通过该子类注入 discovery 事件
+  private static final class TestNodeDiscoveryService extends DefaultNodeDiscoveryService {
+
+    private TestNodeDiscoveryService(
+        final BootstrapService bootstrapService,
+        final Node localNode,
+        final NodeDiscoveryProvider provider) {
+      super(bootstrapService, localNode, provider);
+    }
+
+    private void fireDiscoveryEvent(final NodeDiscoveryEvent event) {
+      post(event);
+    }
   }
 
   private static final class TestGroupMembershipEventListener

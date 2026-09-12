@@ -1,0 +1,56 @@
+/*
+ * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+import org.apache.tools.ant.filters.ReplaceTokens
+plugins {
+    id 'kunpeng.build-publish'
+}
+
+description = "Kunpeng Utils"
+
+configure(jarInfo) {
+    archiveName = "kunpeng-utils"
+}
+
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    implementation 'org.agrona:agrona'
+    implementation 'io.netty:netty-common'
+    implementation 'io.micrometer:micrometer-core'
+    implementation 'io.micrometer:micrometer-commons'
+    implementation 'org.apache.commons:commons-lang3'
+    implementation 'org.slf4j:slf4j-api'
+    implementation 'com.google.guava:guava'
+}
+
+
+
+processResources {
+    filteringCharset = 'UTF-8'
+    include( "*.properties")
+    filesMatching('*.properties') {
+        filter(
+                ReplaceTokens,
+                "tokens": ['project.version': rootProject.version,'backwards.compat.version': rootProject.version],
+                "beginToken": "#@",
+                "endToken": "@#"
+        )
+    }
+}

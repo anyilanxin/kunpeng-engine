@@ -1,18 +1,18 @@
 /*
- * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package com.anyilanxin.kunpeng.cluster.cluster.messaging.impl;
 
@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingConfig;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException;
 import com.anyilanxin.kunpeng.cluster.utils.net.Address;
-import io.camunda.zeebe.test.util.socket.SocketUtil;
+import com.anyilanxin.kunpeng.cluster.utils.SocketUtil;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
@@ -141,7 +141,7 @@ final class NettyMessagingServiceTlsTest {
     final var config =
         new MessagingConfig().setPort(SocketUtil.getNextAddress().getPort()).setTlsEnabled(false);
     return new NettyMessagingService(
-        "cluster", Address.from(config.getPort()), config, "insecureTestPrefix", registry);
+        "cluster", Address.from(config.getPort()), config, registry);
   }
 
   private NettyMessagingService createSecureMessagingService(
@@ -161,10 +161,6 @@ final class NettyMessagingServiceTlsTest {
             .setCertificateChain(certificate.certificate())
             .setPrivateKey(certificate.privateKey());
     return new NettyMessagingService(
-        "cluster",
-        Address.from(address.getHostString(), address.getPort()),
-        config,
-        "secureTestPrefix",
-        registry);
+        "cluster", Address.from(address.getHostString(), address.getPort()), config, registry);
   }
 }

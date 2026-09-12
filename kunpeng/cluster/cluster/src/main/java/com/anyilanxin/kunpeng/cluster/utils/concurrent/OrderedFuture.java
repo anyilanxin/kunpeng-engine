@@ -1,7 +1,7 @@
 /*
  * Copyright 2017-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,11 +45,11 @@ public class OrderedFuture<T> extends CompletableFuture<T> {
   }
 
   /**
-   * Wraps the given future in a new blockable future.
+   * Wraps the given future in a new OrderedFuture.
    *
    * @param future the future to wrap
    * @param <T> the future value type
-   * @return a new blockable future
+   * @return a new OrderedFuture
    */
   public static <T> CompletableFuture<T> wrap(final CompletableFuture<T> future) {
     final CompletableFuture<T> newFuture = new OrderedFuture<>();

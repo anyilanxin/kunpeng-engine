@@ -1,7 +1,7 @@
 /*
  * Copyright 2015-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,46 +27,27 @@ import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException;
 import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException.InvalidChecksum;
 import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException.InvalidIndex;
 import com.anyilanxin.kunpeng.cluster.raft.metrics.SnapshotReplicationMetrics;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.AppendResponse;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.ForceConfigureRequest;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.ForceConfigureResponse;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.InstallRequest;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.InstallResponse;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.InternalAppendRequest;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.JoinRequest;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.JoinResponse;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.LeaveRequest;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.LeaveResponse;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.PersistedRaftRecord;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.PollRequest;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.PollResponse;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.RaftRequest;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.RaftResponse;
+import com.anyilanxin.kunpeng.cluster.raft.protocol.*;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.RaftResponse.Status;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.ReconfigureRequest;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.ReconfigureResponse;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.ReplicatableJournalRecord;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.ReplicatableRaftRecord;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.VoteRequest;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.VoteResponse;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.SnapshotChunkImpl;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChunkBatch;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotException.SnapshotAlreadyExistsException;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotId;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotTransferCodec;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.receive.ReceivedSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.IndexedRaftLogEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLogReader;
 import com.anyilanxin.kunpeng.cluster.raft.storage.system.Configuration;
-import io.camunda.zeebe.snapshots.PersistedSnapshot;
-import io.camunda.zeebe.snapshots.ReceivedSnapshot;
-import io.camunda.zeebe.snapshots.SnapshotException.SnapshotAlreadyExistsException;
-import io.camunda.zeebe.snapshots.impl.SnapshotChunkId;
-import io.camunda.zeebe.util.CheckedRunnable;
-import io.camunda.zeebe.util.Either;
-import io.camunda.zeebe.util.logging.ThrottledLogger;
+import com.anyilanxin.kunpeng.cluster.utils.logging.ThrottledLogger;
+import com.anyilanxin.kunpeng.utils.CheckedRunnable;
+import com.anyilanxin.kunpeng.utils.Either;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import org.agrona.concurrent.UnsafeBuffer;
 
 /** Passive state. */
 public class PassiveRole extends InactiveRole {
@@ -78,6 +59,19 @@ public class PassiveRole extends InactiveRole {
   private ByteBuffer nextPendingSnapshotChunkId;
   private ByteBuffer previouslyReceivedSnapshotChunkId;
   private final int snapshotChunkSize;
+
+  /** 合并窗口内待 flush 后 ack 的 Append 请求（仅 raft 线程访问）。 */
+  private final List<PendingAppendAck> pendingAcks = new ArrayList<>();
+
+  /** 是否已有 flush+ack 合并任务排队。 */
+  private boolean flushAckPending;
+
+  /** 一条待确认的 Append 请求：flush 成功后依次 commit、ack。 */
+  private record PendingAppendAck(
+      CompletableFuture<AppendResponse> future,
+      long lastLogIndex,
+      long commitIndex,
+      long prevLogIndex) {}
 
   public PassiveRole(final RaftContext context) {
     super(context);
@@ -97,6 +91,8 @@ public class PassiveRole extends InactiveRole {
 
   @Override
   public CompletableFuture<Void> stop() {
+    failPendingAcks();
+
     abortPendingSnapshots();
 
     // as a safeguard, we clean up any orphaned pending snapshots
@@ -129,9 +125,10 @@ public class PassiveRole extends InactiveRole {
     logRequest(request);
     updateTermAndLeader(request.currentTerm(), request.leader());
 
-    final var snapshotChunk = new SnapshotChunkImpl();
-    final var snapshotChunkBuffer = new UnsafeBuffer(request.data());
-    if (!snapshotChunk.tryWrap(snapshotChunkBuffer)) {
+    final SnapshotChunkBatch batch;
+    try {
+      batch = SnapshotTransferCodec.decodeChunkBatch(bytesOf(request.data()));
+    } catch (final Exception e) {
       abortPendingSnapshots();
       return CompletableFuture.completedFuture(
           logResponse(
@@ -140,11 +137,14 @@ public class PassiveRole extends InactiveRole {
                   .withError(RaftError.Type.APPLICATION_ERROR, "Failed to parse request data")
                   .build()));
     }
+    // 镜像 id 由请求携带的 leader/index/term 推导：与发送侧目录名保持一致
+    final SnapshotId snapshotId =
+        new SnapshotId(request.leader().id(), request.index(), request.term());
 
     log.debug(
-        "Received snapshot chunk {} of snapshot {} from {}",
-        snapshotChunk.getChunkName(),
-        snapshotChunk.getSnapshotId(),
+        "Received snapshot batch of {} chunk(s) for snapshot {} from {}",
+        batch.chunks().size(),
+        snapshotId,
         request.leader());
 
     // If a snapshot is currently being received and the snapshot versions don't match, simply
@@ -153,11 +153,7 @@ public class PassiveRole extends InactiveRole {
     // where snapshots must be sent since entries can still legitimately exist prior to the
     // snapshot, and so snapshots aren't simply sent at the beginning of the follower's log, but
     // rather the leader dictates when a snapshot needs to be sent.
-    if (pendingSnapshot != null
-        && !pendingSnapshot
-            .snapshotId()
-            .getSnapshotIdAsString()
-            .equals(snapshotChunk.getSnapshotId())) {
+    if (pendingSnapshot != null && !pendingSnapshot.snapshotId().equals(snapshotId)) {
       abortPendingSnapshots();
     }
 
@@ -186,22 +182,9 @@ public class PassiveRole extends InactiveRole {
 
       try {
         pendingSnapshot =
-            raft.getPersistedSnapshotStore()
-                .newReceivedSnapshot(snapshotChunk.getSnapshotId())
-                .get();
-      } catch (final ExecutionException errorCreatingPendingSnapshot) {
-        return failIfSnapshotAlreadyExists(errorCreatingPendingSnapshot, snapshotChunk);
-      } catch (final InterruptedException e) {
-        log.warn(
-            "Failed to create pending snapshot when receiving snapshot {}",
-            snapshotChunk.getSnapshotId(),
-            e);
-        return CompletableFuture.completedFuture(
-            logResponse(
-                InstallResponse.builder()
-                    .withStatus(Status.ERROR)
-                    .withError(Type.APPLICATION_ERROR, "Failed to create pending snapshot")
-                    .build()));
+            raft.getPersistedSnapshotStore().newReceivedSnapshot(snapshotId.asString()).join();
+      } catch (final Exception e) {
+        return failIfSnapshotAlreadyExists(e, snapshotId);
       }
 
       log.info("Started receiving new snapshot {} from {}", pendingSnapshot, request.leader());
@@ -213,12 +196,15 @@ public class PassiveRole extends InactiveRole {
       raft.notifySnapshotReplicationStarted();
     }
 
+    snapshotReplicationMetrics.observeChunk(request.data().remaining());
+
     try {
-      pendingSnapshot.apply(snapshotChunk).join();
+      // install 批量写入：直接把整批分片交给接收 pending
+      pendingSnapshot.write(batch).join();
     } catch (final Exception e) {
       log.warn(
-          "Failed to write pending snapshot chunk {}, rolling back snapshot {}",
-          snapshotChunk,
+          "Failed to write pending snapshot batch of {} chunks, rolling back snapshot {}",
+          batch.chunks().size(),
           pendingSnapshot,
           e);
 
@@ -241,12 +227,17 @@ public class PassiveRole extends InactiveRole {
       try {
         // Reset before committing to prevent the edge case where the system crashes after
         // committing the snapshot, and restart with a snapshot and invalid log.
-        resetLogOnReceivingSnapshot(pendingSnapshot.index());
+        resetLogOnReceivingSnapshot(pendingSnapshot.snapshotId().index());
 
-        persistedSnapshot = pendingSnapshot.persist().join();
+        persistedSnapshot = pendingSnapshot.persist().toCompletableFuture().join();
         log.info("Committed snapshot {}", persistedSnapshot);
       } catch (final Exception e) {
-        log.error("Failed to commit pending snapshot {}, rolling back", pendingSnapshot, e);
+        log.error(
+            "Failed to persist pending snapshot {}. The log has already been reset and is now "
+                + "empty; this node stays in PASSIVE role and must wait for the leader to "
+                + "re-install the snapshot",
+            pendingSnapshot,
+            e);
         abortPendingSnapshots();
         return CompletableFuture.completedFuture(
             logResponse(
@@ -418,7 +409,9 @@ public class PassiveRole extends InactiveRole {
   public CompletableFuture<PollResponse> onPoll(final PollRequest request) {
     raft.checkThread();
     logRequest(request);
-    updateTermAndLeader(request.term(), null);
+    // pre-vote 只读性（raft dissertation §9.6）：poll 仅探测当选可能性，不推进本地任期、
+    // 不清空 leader。若在此采纳更高任期，一个未赢得任何选举的节点仅凭 poll 就能让
+    // 多数派 follower 抛弃现任 leader——这正是 pre-vote 要防止的 disruption。
     return CompletableFuture.completedFuture(logResponse(handlePoll(request)));
   }
 
@@ -427,7 +420,13 @@ public class PassiveRole extends InactiveRole {
     raft.checkThread();
     logRequest(request);
     updateTermAndLeader(request.term(), null);
-    return CompletableFuture.completedFuture(logResponse(handleVote(request)));
+    final var response = handleVote(request);
+    if (response.voted()) {
+      raft.getRaftRoleMetrics().countVoteGranted();
+    } else {
+      raft.getRaftRoleMetrics().countVoteRejected();
+    }
+    return CompletableFuture.completedFuture(logResponse(response));
   }
 
   /** Handles a poll request. */
@@ -584,9 +583,9 @@ public class PassiveRole extends InactiveRole {
         && !nextPendingSnapshotChunkId.equals(request.chunkId())) {
       final var errMsg =
           "Expected chunkId of ["
-              + new SnapshotChunkId(nextPendingSnapshotChunkId)
+              + chunkNameOf(nextPendingSnapshotChunkId)
               + "] got ["
-              + new SnapshotChunkId(request.chunkId())
+              + chunkNameOf(request.chunkId())
               + "].";
       abortPendingSnapshots();
       return Either.left(
@@ -650,9 +649,9 @@ public class PassiveRole extends InactiveRole {
   }
 
   private CompletableFuture<InstallResponse> failIfSnapshotAlreadyExists(
-      final ExecutionException errorCreatingPendingSnapshot,
-      final SnapshotChunkImpl snapshotChunk) {
-    if (errorCreatingPendingSnapshot.getCause() instanceof SnapshotAlreadyExistsException) {
+      final Throwable error, final SnapshotId snapshotId) {
+    if (error instanceof SnapshotAlreadyExistsException
+        || error.getCause() instanceof SnapshotAlreadyExistsException) {
       // This should not happen because we previously check for the latest snapshot. But, if it
       // happens, instead of crashing raft thread, we respond with success because we already
       // have the snapshot.
@@ -663,10 +662,7 @@ public class PassiveRole extends InactiveRole {
                   .withPreferredChunkSize(snapshotChunkSize)
                   .build()));
     } else {
-      log.warn(
-          "Failed to create pending snapshot when receiving snapshot {}",
-          snapshotChunk.getSnapshotId(),
-          errorCreatingPendingSnapshot);
+      log.warn("Failed to create pending snapshot when receiving snapshot {}", snapshotId, error);
       return CompletableFuture.completedFuture(
           logResponse(
               InstallResponse.builder()
@@ -686,13 +682,24 @@ public class PassiveRole extends InactiveRole {
     nextPendingSnapshotChunkId = nextChunkId;
   }
 
+  private static String chunkNameOf(final ByteBuffer chunkId) {
+    return new String(bytesOf(chunkId), StandardCharsets.UTF_8);
+  }
+
+  private static byte[] bytesOf(final ByteBuffer buffer) {
+    final ByteBuffer duplicate = buffer.slice();
+    final byte[] bytes = new byte[duplicate.remaining()];
+    duplicate.get(bytes);
+    return bytes;
+  }
+
   protected void abortPendingSnapshots() {
     if (pendingSnapshot != null) {
       setNextExpected(null);
       previouslyReceivedSnapshotChunkId = null;
       log.info("Rolling back snapshot {}", pendingSnapshot);
       try {
-        pendingSnapshot.abort();
+        pendingSnapshot.abort().toCompletableFuture().join();
       } catch (final Exception e) {
         log.error("Failed to abort pending snapshot, clearing status anyway", e);
       }
@@ -905,6 +912,19 @@ public class PassiveRole extends InactiveRole {
     // Set the first commit index.
     raft.setFirstCommitIndex(request.commitIndex(), lastLogIndex);
 
+    if (!request.entries().isEmpty()) {
+      // 有新条目：flush 与 ack 一并延迟到合并任务，攒批 fsync 后统一 ack（ack 发出时必已持久化）
+      pendingAcks.add(
+          new PendingAppendAck(future, lastLogIndex, commitIndex, request.prevLogIndex()));
+      if (!flushAckPending) {
+        flushAckPending = true;
+        // 排到事件队列尾：先处理完已排队事件，它们的 ack 一并合并进同一次 fsync
+        raft.getThreadContext().execute(this::flushAndAckPending);
+      }
+      return;
+    }
+
+    // 心跳（无新条目）：维持原同步路径。
     try {
       //     Make sure all entries are flushed before ack to ensure we have persisted what we
       //     acknowledge
@@ -926,6 +946,70 @@ public class PassiveRole extends InactiveRole {
 
     // Return a successful append response.
     succeedAppend(lastLogIndex, future);
+  }
+
+  /**
+   * 合并 flush 任务：一次 fsync 覆盖合并窗口内全部新条目，之后按序统一 commit + ack（ack 发出时必已持久化）。
+   *
+   * <p>flush 失败时整批以 {@code min(prevLogIndex)}（即上一次成功刷盘的持久化水位）失败应答，而非各自的 {@code
+   * lastLogIndex}：合并窗口内后继请求的 prevLogIndex 依赖前继请求刷盘成功，若按 lastLogIndex 应答，leader 会把 nextIndex
+   * 推进到未持久化位置，随后的心跳将无刷盘地 ack 该位置。
+   */
+  private void flushAndAckPending() {
+    flushAckPending = false;
+    if (pendingAcks.isEmpty()) {
+      return;
+    }
+    final var acks = List.copyOf(pendingAcks);
+    pendingAcks.clear();
+    long failReportIndex = Long.MAX_VALUE;
+    for (final var ack : acks) {
+      failReportIndex = Math.min(failReportIndex, ack.prevLogIndex());
+    }
+    try {
+      // 提交路径强制直刷：ack 发出即持久（即使底层配置了 DelayedFlusher）
+      raft.getLog().forceFlush();
+    } catch (final Exception e) {
+      // 捕获 Exception 而非仅 FlushException：任一运行时异常逃逸都会让整批 future 悬空、
+      // leader 的 in-flight 永远等不到应答；整批按持久化水位失败应答交由 leader 重试
+      log.warn(
+          "Failed to flush {} pending appends, failing them at durable watermark {} for leader retry",
+          acks.size(),
+          failReportIndex,
+          e);
+      for (final var ack : acks) {
+        failAppend(failReportIndex, ack.future());
+      }
+      return;
+    }
+    for (final var ack : acks) {
+      // Update the context commit and global indices.
+      final long previousCommitIndex = raft.setCommitIndex(ack.commitIndex());
+      if (previousCommitIndex < ack.commitIndex()) {
+        log.trace("Committed entries up to index {}", ack.commitIndex());
+      }
+
+      // Return a successful append response.
+      succeedAppend(ack.lastLogIndex(), ack.future());
+    }
+  }
+
+  /**
+   * 角色停止（含角色转换）时失败所有在途合并 ack：原同步实现不存在跨事件在途，此窗口为合并化新增； leader 侧把 future 失败当作一次 append
+   * 传输失败处理（failAttempt 计数 + 心跳/重发兜底）， 条目会在后续 AppendRequest 中重传并在 ack 前重新刷盘。
+   */
+  private void failPendingAcks() {
+    if (pendingAcks.isEmpty()) {
+      return;
+    }
+    final var acks = List.copyOf(pendingAcks);
+    pendingAcks.clear();
+    flushAckPending = false;
+    for (final var ack : acks) {
+      ack.future()
+          .completeExceptionally(
+              new IllegalStateException("Follower role stopped before flush completed"));
+    }
   }
 
   private void flush(final long lastFlushedIndex, final long previousEntryIndex)
@@ -1077,7 +1161,7 @@ public class PassiveRole extends InactiveRole {
    *
    * @param lastLogIndex the last log index
    * @param future the append response future
-   * @return the append response status
+   * @return whether the append succeeded
    */
   protected boolean failAppend(
       final long lastLogIndex, final CompletableFuture<AppendResponse> future) {
@@ -1089,7 +1173,7 @@ public class PassiveRole extends InactiveRole {
    *
    * @param lastLogIndex the last log index
    * @param future the append response future
-   * @return the append response status
+   * @return whether the append succeeded
    */
   protected boolean succeedAppend(
       final long lastLogIndex, final CompletableFuture<AppendResponse> future) {
@@ -1097,12 +1181,12 @@ public class PassiveRole extends InactiveRole {
   }
 
   /**
-   * Returns a successful append response.
+   * Completes the append with the given outcome.
    *
    * @param succeeded whether the append succeeded
    * @param lastLogIndex the last log index
    * @param future the append response future
-   * @return the append response status
+   * @return whether the append succeeded
    */
   protected boolean completeAppend(
       final boolean succeeded,

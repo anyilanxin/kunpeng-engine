@@ -1,7 +1,7 @@
 /*
  * Copyright 2017-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,11 +37,10 @@ import java.util.function.Function;
  * <ul>
  *   <li>{@link #broadcast(String, Object)} broadcasts a message to all subscribers registered for
  *       the topic
- *   <li>{@link #unicast(String, Object)} sends a unicast message directly to one of the subscribers
- *       registered for the topic; unicast messages are generally delivered in round-robin fashion
- *   <li>{@link #send(String, Object)} sends a message directly to one of the subscribers registered
- *       for the topic and awaits a reply; direct messages are generally delivered in round-robin
- *       fashion
+ *   <li>{@code unicast} sends a unicast message directly to one of the subscribers registered for
+ *       the topic; unicast messages are generally delivered in round-robin fashion
+ *   <li>{@code send} sends a message directly to one of the subscribers registered for the topic
+ *       and awaits a reply; direct messages are generally delivered in round-robin fashion
  * </ul>
  *
  * To register to listen for messages, use one of the {@link #subscribe(String, Consumer, Executor)}

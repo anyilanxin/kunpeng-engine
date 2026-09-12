@@ -1,7 +1,7 @@
 /*
  * Copyright 2016-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,11 +24,11 @@ package com.anyilanxin.kunpeng.cluster.raft;
  * its internal state so that it can start with a new log and a new snapshot.
  *
  * <p>The difference between this listener and {@link
- * io.camunda.zeebe.snapshots.PersistedSnapshotListener} is that {@link
- * io.camunda.zeebe.snapshots.PersistedSnapshotListener} notifies when a snapshot is taken locally
- * and when a snapshot is received via replication. This listener only notifies when a snapshot is
- * received via raft replication, which happens only when the follower's log is lagging behind the
- * leader.
+ * com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshotListener} is that {@link
+ * com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshotListener} notifies when a snapshot
+ * is taken locally and when a snapshot is received via replication. This listener only notifies
+ * when a snapshot is received via raft replication, which happens only when the follower's log is
+ * lagging behind the leader.
  *
  * <p>These listeners are invoked in the Raft thread. Hence it should not do any heavy computations.
  * Any time consuming steps should be delegated to another thread/actor.
@@ -42,9 +42,9 @@ public interface SnapshotReplicationListener {
   void onSnapshotReplicationStarted();
 
   /**
-   * Will be called after the snapshot replication is completed. The snapshot replication can //
-   * complete either a new snapshot is committed or the snapshot replication is aborted. // If a new
-   * snapshot has been committed, the log will be empty.
+   * Will be called after the snapshot replication is completed. The snapshot replication can
+   * complete either when a new snapshot is committed or when the snapshot replication is aborted.
+   * If a new snapshot has been committed, the log will be empty.
    *
    * @param term the current term
    */

@@ -1,7 +1,7 @@
 /*
  * Copyright 2015-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -160,11 +160,11 @@ public class PollRequest extends AbstractRaftRequest {
     }
 
     /**
-     * Sets the request leader.
+     * Sets the requesting candidate.
      *
      * @param candidate The request candidate.
      * @return The poll request builder.
-     * @throws IllegalArgumentException if {@code candidate} is not positive
+     * @throws NullPointerException if {@code candidate} is null
      */
     public Builder withCandidate(final MemberId candidate) {
       this.candidate = checkNotNull(candidate, "candidate cannot be null").id();

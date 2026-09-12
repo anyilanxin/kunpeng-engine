@@ -1,7 +1,7 @@
 /*
  * Copyright 2014-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,5 +19,5 @@ package com.anyilanxin.kunpeng.cluster.cluster;
 
 import com.anyilanxin.kunpeng.cluster.utils.event.EventListener;
 
-/** Entity capable of receiving device cluster-related events. */
+/** Entity capable of receiving cluster membership events. */
 public interface ClusterMembershipEventListener extends EventListener<ClusterMembershipEvent> {}

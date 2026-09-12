@@ -1,7 +1,7 @@
 /*
  * Copyright 2015-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,14 +21,16 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.raft.RaftBusinessMetaListener;
 import com.anyilanxin.kunpeng.cluster.raft.RaftRoleChangeListener;
+import com.anyilanxin.kunpeng.cluster.raft.RaftRoleStateListener;
 import com.anyilanxin.kunpeng.cluster.raft.RaftServer;
 import com.anyilanxin.kunpeng.cluster.raft.RaftThreadContextFactory;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftCluster;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember.Type;
 import com.anyilanxin.kunpeng.cluster.raft.impl.RaftContext.State;
 import com.anyilanxin.kunpeng.cluster.raft.storage.RaftStorage;
-import io.camunda.zeebe.util.health.FailureListener;
+import com.anyilanxin.kunpeng.cluster.utils.health.FailureListener;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Random;
@@ -84,6 +86,26 @@ public class DefaultRaftServer implements RaftServer {
   }
 
   @Override
+  public void addRoleStateListener(final RaftRoleStateListener listener) {
+    context.addRoleStateListener(listener);
+  }
+
+  @Override
+  public void removeRoleStateListener(final RaftRoleStateListener listener) {
+    context.removeRoleStateListener(listener);
+  }
+
+  @Override
+  public void addBusinessMetaListener(final RaftBusinessMetaListener listener) {
+    context.addBusinessMetaListener(listener);
+  }
+
+  @Override
+  public void removeBusinessMetaListener(final RaftBusinessMetaListener listener) {
+    context.removeBusinessMetaListener(listener);
+  }
+
+  @Override
   public void addFailureListener(final FailureListener listener) {
     context.addFailureListener(listener);
   }
@@ -121,6 +143,11 @@ public class DefaultRaftServer implements RaftServer {
   @Override
   public CompletableFuture<Void> reconfigurePriority(final int newPriority) {
     return context.reconfigurePriority(newPriority);
+  }
+
+  @Override
+  public CompletableFuture<Void> transferLeadership(final MemberId newLeader) {
+    return context.transferLeadership(newLeader);
   }
 
   @Override

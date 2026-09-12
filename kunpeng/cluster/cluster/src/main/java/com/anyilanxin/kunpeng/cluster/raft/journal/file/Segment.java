@@ -1,7 +1,7 @@
 /*
  * Copyright 2017-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,8 +22,8 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.anyilanxin.kunpeng.cluster.raft.journal.CheckedJournalException.FlushException;
 import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException;
+import com.anyilanxin.kunpeng.utils.FileUtil;
 import com.google.common.collect.Sets;
-import io.camunda.zeebe.util.FileUtil;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
@@ -120,7 +120,7 @@ final class Segment implements AutoCloseable, FlushableSegment {
    *
    * <p>{@inheritDoc}
    *
-   * @throws UncheckedIOException if the operation failed but the segment is live
+   * @throws FlushException if the operation failed but the segment is live
    */
   @Override
   public void flush() throws FlushException {

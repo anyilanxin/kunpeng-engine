@@ -1,7 +1,7 @@
 /*
  * Copyright 2017-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,12 @@ package com.anyilanxin.kunpeng.cluster.cluster.messaging.impl;
 
 import static com.anyilanxin.kunpeng.cluster.utils.concurrent.Threads.namedThreads;
 
-import com.anyilanxin.kunpeng.cluster.cluster.*;
+import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipEvent;
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipEvent.Type;
+import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipEventListener;
+import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
+import com.anyilanxin.kunpeng.cluster.cluster.Member;
+import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterEventService;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.ManagedClusterEventService;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
@@ -33,8 +37,16 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Base64;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -417,9 +429,9 @@ public class DefaultClusterEventService
     }
 
     /**
-     * Updates a subscription to the topic.
+     * Removes a subscription to the topic.
      *
-     * @param subscription the subscription to update
+     * @param subscription the subscription to remove
      */
     void removeRemoteSubscription(final MemberId subscription) {
       subscriptions.remove(subscription);

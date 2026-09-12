@@ -1,7 +1,7 @@
 /*
  * Copyright 2014-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,11 +37,11 @@ public class NodeId extends AbstractIdentifier<String> implements Comparable<Nod
    * @param id string identifier
    */
   public NodeId(final String id) {
-    super(id);
+    super(validateId(id));
   }
 
   /**
-   * Creates a new cluster node identifier from the specified string.
+   * Creates a new anonymous cluster node identifier with a random UUID.
    *
    * @return node id
    */
@@ -80,5 +80,16 @@ public class NodeId extends AbstractIdentifier<String> implements Comparable<Nod
   @Override
   public int compareTo(final NodeId that) {
     return identifier.compareTo(that.identifier);
+  }
+
+  public static String validateId(final String id) {
+    if (id == null) {
+      return null;
+    }
+    if (id.isEmpty()) {
+      throw new IllegalArgumentException(
+          "Expected id to be a non-empty string, but got [" + id + "]");
+    }
+    return id;
   }
 }

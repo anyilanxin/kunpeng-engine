@@ -69,6 +69,31 @@ if (file("${rootDir}/kunpeng/cluster").directory) {
 	}
 }
 
+if (file("${rootDir}/kunpeng/protocol").directory) {
+	file("${rootDir}/kunpeng/protocol").eachDir {
+		if (it.directory) {
+			if (file("${it.path}/build.gradle").file) {
+				if (!excludes.contains(it.name)) {
+					include "kunpeng:protocol:${it.name}"
+				}
+			}
+		}
+	}
+}
+
+
+if (file("${rootDir}/kunpeng/repository").directory) {
+	file("${rootDir}/kunpeng/repository").eachDir {
+		if (it.directory) {
+			if (file("${it.path}/build.gradle").file) {
+				if (!excludes.contains(it.name)) {
+					include "kunpeng:repository:${it.name}"
+				}
+			}
+		}
+	}
+}
+
 if (file("${rootDir}/kunpeng/engine").directory) {
 	file("${rootDir}/kunpeng/engine").eachDir {
 		if (it.directory) {

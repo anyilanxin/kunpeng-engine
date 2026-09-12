@@ -1,6 +1,6 @@
 /*
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,7 +70,7 @@ public class MetaStoreSerializer {
       final var memberId = member.memberId().id();
       newMembersEncoder
           .next()
-          .type(getSBEType(member.getType()))
+          .memberType(getSBEType(member.getType()))
           .updated(member.getLastUpdated().toEpochMilli())
           .memberId(memberId);
     }
@@ -81,7 +81,7 @@ public class MetaStoreSerializer {
       final var memberId = member.memberId().id();
       oldMembersEncoder
           .next()
-          .type(getSBEType(member.getType()))
+          .memberType(getSBEType(member.getType()))
           .updated(member.getLastUpdated().toEpochMilli())
           .memberId(memberId);
     }
@@ -109,7 +109,7 @@ public class MetaStoreSerializer {
     final var newMembersDecoder = configurationDecoder.newMembers();
     final var newMembers = new ArrayList<RaftMember>(newMembersDecoder.count());
     for (final var member : newMembersDecoder) {
-      final RaftMember.Type type = getRaftMemberType(member.type());
+      final RaftMember.Type type = getRaftMemberType(member.memberType());
       final Instant updated = Instant.ofEpochMilli(member.updated());
       final var memberId = member.memberId();
       newMembers.add(new DefaultRaftMember(MemberId.from(memberId), type, updated));
@@ -118,7 +118,7 @@ public class MetaStoreSerializer {
     final var oldMembersDecoder = configurationDecoder.oldMembers();
     final var oldMembers = new ArrayList<RaftMember>(oldMembersDecoder.count());
     for (final var member : oldMembersDecoder) {
-      final RaftMember.Type type = getRaftMemberType(member.type());
+      final RaftMember.Type type = getRaftMemberType(member.memberType());
       final Instant updated = Instant.ofEpochMilli(member.updated());
       final var memberId = member.memberId();
       oldMembers.add(new DefaultRaftMember(MemberId.from(memberId), type, updated));

@@ -1,7 +1,7 @@
 /*
  * Copyright 2015-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -220,6 +220,28 @@ public final class FollowerRole extends ActiveRole {
     return CompletableFuture.completedFuture(response);
   }
 
+  /**
+   * pre-vote 租约检查（etcd/jraft 的 pre-vote 同源）：选举超时窗口内仍从 leader 收到心跳的
+   * follower 拒绝 poll。否则空闲集群里短暂失联但日志不落后的节点仍可拿到多数派许可、任期+1
+   * 并冲击健康 leader。拒绝时携带本地任期，发起方可据此发现更高任期（handlePollResponse 会采纳）。
+   * 仅 follower 角色做此检查：{@code lastHeartbeat} 只在 follower 接收 leader 心跳时更新，
+   * 其他角色的该字段无租约语义。
+   */
+  @Override
+  protected PollResponse handlePoll(final PollRequest request) {
+    if (raft.getLeader() != null
+        && System.currentTimeMillis() - raft.getLastHeartbeat()
+            < raft.getElectionTimeout().toMillis()) {
+      log.debug("Rejected {}: leader contact is within the election timeout", request);
+      return PollResponse.builder()
+          .withStatus(RaftResponse.Status.OK)
+          .withTerm(raft.getTerm())
+          .withAccepted(false)
+          .build();
+    }
+    return super.handlePoll(request);
+  }
+
   @Override
   protected VoteResponse handleVote(final VoteRequest request) {
     // Reset the heartbeat timeout if we voted for another candidate.
@@ -262,7 +284,7 @@ public final class FollowerRole extends ActiveRole {
           currentLeader,
           currentTerm,
           leader,
-          leader);
+          term);
       return false;
     }
     return true;

@@ -1,7 +1,7 @@
 /*
  * Copyright 2018-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,6 +54,12 @@ public class MemberConfig extends NodeConfig {
   @Override
   public MemberConfig setId(final String id) {
     return setId(id != null ? MemberId.from(id) : null);
+  }
+
+  public MemberConfig setId(final String id, final String zone) {
+    final String idInfo = zone + "@" + id;
+    setId(idInfo);
+    return setZoneId(zone);
   }
 
   @Override

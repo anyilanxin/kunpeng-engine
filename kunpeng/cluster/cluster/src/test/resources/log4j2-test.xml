@@ -8,8 +8,8 @@
   </Appenders>
 
   <Loggers>
-    <Logger name="io.camunda.zeebe" level="debug"/>
-    <Logger name="com.anyilanxin.kunpeng.cluster" level="trace"/>
+    <Logger name="io.atomix" level="debug"/>
+    <Logger name="io.atomix" level="trace"/>
 
     <Root level="info">
       <AppenderRef ref="Console"/>

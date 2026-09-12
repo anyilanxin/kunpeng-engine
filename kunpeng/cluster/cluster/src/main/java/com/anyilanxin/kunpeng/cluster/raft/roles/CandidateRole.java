@@ -1,7 +1,7 @@
 /*
  * Copyright 2015-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -82,7 +82,7 @@ public final class CandidateRole extends ActiveRole {
     sendVoteRequests();
   }
 
-  /** Resets the election timer. */
+  /** Increments the term and sends vote requests to all members. */
   private void sendVoteRequests() {
     votingRound++;
     raft.checkThread();
@@ -285,7 +285,8 @@ public final class CandidateRole extends ActiveRole {
     }
 
     // If the vote request is not for this candidate then reject the vote.
-    if (request.candidate() == raft.getCluster().getLocalMember().memberId()) {
+    // MemberId 无实例缓存, 反序列化侧每次新建实例, 必须按值比较
+    if (request.candidate().equals(raft.getCluster().getLocalMember().memberId())) {
       return CompletableFuture.completedFuture(
           logResponse(
               VoteResponse.builder()

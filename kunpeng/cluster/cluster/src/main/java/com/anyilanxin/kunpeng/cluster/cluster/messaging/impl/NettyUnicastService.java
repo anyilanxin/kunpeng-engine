@@ -1,7 +1,7 @@
 /*
  * Copyright 2018-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,12 @@ import com.google.common.collect.Maps;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.*;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.DefaultMaxBytesRecvByteBufAllocator;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramChannel;
 import io.netty.channel.socket.DatagramPacket;
@@ -57,13 +62,17 @@ import org.slf4j.LoggerFactory;
 /** Netty unicast service. */
 public class NettyUnicastService implements ManagedUnicastService {
   private static final Logger LOGGER = LoggerFactory.getLogger(NettyUnicastService.class);
+
+  /** SWIM 消息远小于此值；防御 UDP 伪造 length 触发大分配。 */
+  private static final int MAX_PAYLOAD_SIZE = 1024 * 1024;
+
   private static final Serializer SERIALIZER =
       Serializer.using(
           new Namespace.Builder()
               .register(Namespaces.BASIC)
               .nextId(Namespaces.BEGIN_USER_CUSTOM_ID)
               .register(Message.class)
-              .register(new AddressSerializer(), Address.class)
+              .register(AddressSerializer.class, Address.class)
               .build());
 
   private final Logger log = LoggerFactory.getLogger(getClass());
@@ -83,21 +92,10 @@ public class NettyUnicastService implements ManagedUnicastService {
 
   private DnsAddressResolverGroup dnsAddressResolverGroup;
 
-  private final String actorSchedulerName;
-
   public NettyUnicastService(
       final String clusterId,
       final Address advertisedAddress,
       final MessagingConfig config,
-      final MeterRegistry registry) {
-    this(clusterId, advertisedAddress, config, "", registry);
-  }
-
-  public NettyUnicastService(
-      final String clusterId,
-      final Address advertisedAddress,
-      final MessagingConfig config,
-      final String actorSchedulerName,
       final MeterRegistry registry) {
     this.advertisedAddress = advertisedAddress;
     this.config = config;
@@ -108,7 +106,6 @@ public class NettyUnicastService implements ManagedUnicastService {
     // don't support binding to multiple interfaces here; wouldn't make sense anyway
     final var port = config.getPort() != null ? config.getPort() : advertisedAddress.port();
     bindAddress = new Address(new InetSocketAddress(port));
-    this.actorSchedulerName = actorSchedulerName != null ? actorSchedulerName : "";
   }
 
   @Override
@@ -183,15 +180,31 @@ public class NettyUnicastService implements ManagedUnicastService {
   }
 
   private void handleReceivedPacket(final DatagramPacket packet) {
-    final int preambleReceived = packet.content().readInt();
+    final ByteBuf content = packet.content();
+    // 前导码 + 长度字段最少 8 字节，过短报文无法解析，直接丢弃
+    if (content.readableBytes() < 8) {
+      log.warn("Received malformed unicast packet from {} (too short), ignoring.", packet.sender());
+      return;
+    }
+    final int preambleReceived = content.readInt();
     if (preambleReceived != preamble) {
       log.warn(
           "Received unicast message from {} which is outside of the cluster. Ignoring the message.",
           packet.sender());
       return;
     }
-    final byte[] payload = new byte[packet.content().readInt()];
-    packet.content().readBytes(payload);
+    final int payloadLength = content.readInt();
+    if (payloadLength < 0
+        || payloadLength > content.readableBytes()
+        || payloadLength > MAX_PAYLOAD_SIZE) {
+      log.warn(
+          "Received unicast message with invalid payload length {} from {}, ignoring.",
+          payloadLength,
+          packet.sender());
+      return;
+    }
+    final byte[] payload = new byte[payloadLength];
+    content.readBytes(payload);
     final Message message = SERIALIZER.decode(payload);
     final Map<BiConsumer<Address, byte[]>, Executor> subjectListeners =
         listeners.get(message.subject());
@@ -223,9 +236,7 @@ public class NettyUnicastService implements ManagedUnicastService {
 
   @Override
   public CompletableFuture<UnicastService> start() {
-    group =
-        new NioEventLoopGroup(
-            0, namedThreads("netty-unicast-event-nio-client-%d", log, actorSchedulerName));
+    group = new NioEventLoopGroup(0, namedThreads("netty-unicast-event-nio-client-%d", log));
     return bootstrap()
         .thenRun(
             () -> {
@@ -307,7 +318,7 @@ public class NettyUnicastService implements ManagedUnicastService {
   /**
    * Internal unicast service message.
    *
-   * <p>NOTE: Cannot be converted to a record as this would break kryo backwards compatibility
+   * <p>NOTE: Cannot be converted to a record as this would break fory backwards compatibility
    */
   @SuppressWarnings("ClassCanBeRecord")
   static final class Message {

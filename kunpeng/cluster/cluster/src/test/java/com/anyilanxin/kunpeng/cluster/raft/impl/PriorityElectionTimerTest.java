@@ -1,18 +1,18 @@
 /*
- * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package com.anyilanxin.kunpeng.cluster.raft.impl;
 
@@ -35,7 +35,8 @@ final class PriorityElectionTimerTest {
 
   private final Logger log = LoggerFactory.getLogger(PriorityElectionTimerTest.class);
   private final DeterministicSingleThreadContext threadContext =
-      new DeterministicSingleThreadContext(new DeterministicScheduler(), MemberId.from(""));
+      new DeterministicSingleThreadContext(
+          new DeterministicScheduler(), MemberId.from("priority-election-timer-test"));
 
   @AfterEach
   void afterEach() {
@@ -51,7 +52,13 @@ final class PriorityElectionTimerTest {
     final int targetPriority = 4;
     final PriorityElectionTimer timer =
         new PriorityElectionTimer(
-            electionTimeout, threadContext, triggerCount::getAndIncrement, log, targetPriority, 1);
+            electionTimeout,
+            threadContext,
+            triggerCount::getAndIncrement,
+            log,
+            targetPriority,
+            1,
+            1);
 
     // when
     timer.reset();
@@ -81,7 +88,8 @@ final class PriorityElectionTimerTest {
             () -> electionOrder.add(highPrioId),
             log,
             targetPriority,
-            targetPriority);
+            targetPriority,
+            1);
 
     final PriorityElectionTimer timerLowPrio =
         new PriorityElectionTimer(
@@ -90,6 +98,7 @@ final class PriorityElectionTimerTest {
             () -> electionOrder.add(lowPrioId),
             log,
             targetPriority,
+            1,
             1);
 
     // when
@@ -126,7 +135,8 @@ final class PriorityElectionTimerTest {
             () -> electionOrder.add(lowPrioId),
             log,
             targetPriority, // set higher priority first
-            2);
+            2,
+            1);
 
     final PriorityElectionTimer timerHighPrio =
         new PriorityElectionTimer(
@@ -135,7 +145,8 @@ final class PriorityElectionTimerTest {
             () -> electionOrder.add(highPrioId),
             log,
             targetPriority,
-            1); // set lower priority first
+            1, // set lower priority first
+            1);
 
     // when
     timerLowPrio.reset();
@@ -161,5 +172,70 @@ final class PriorityElectionTimerTest {
     assertThat(electionOrder.get(0))
         .as("the first election triggered should have been the high priority election")
         .isEqualTo(highPrioId);
+  }
+
+  /**
+   * 大优先级范围下 target 按比例衰减（max(gap, target/5)）：target=100、节点优先级 20 时，
+   * 第 9 次超时即放权（100→80→64→52→42→34→28→23→19），而不是线性 -1 的 80 次超时。
+   */
+  @Test
+  void largeTargetDecaysProportionally() {
+    // given
+    final AtomicInteger triggerCount = new AtomicInteger();
+    final Duration electionTimeout = Duration.ofMillis(100);
+    final PriorityElectionTimer timer =
+        new PriorityElectionTimer(
+            electionTimeout, threadContext, triggerCount::getAndIncrement, log, 100, 20, 1);
+
+    // when
+    timer.reset();
+    for (int i = 0; i < 8; i++) {
+      threadContext
+          .getDeterministicScheduler()
+          .tick(electionTimeout.toMillis(), TimeUnit.MILLISECONDS);
+    }
+
+    // then
+    assertThat(triggerCount.get())
+        .as("8 次衰减后 target=19，仍低于节点优先级 20，不应触发")
+        .isZero();
+
+    // when
+    threadContext
+        .getDeterministicScheduler()
+        .tick(electionTimeout.toMillis(), TimeUnit.MILLISECONDS);
+
+    // then
+    assertThat(triggerCount.get()).as("第 9 次超时后 target 已低于节点优先级，应触发选举").isOne();
+  }
+
+  /** 衰减步长可配置：gap=5 时 target=20 两次衰减即降至节点优先级 10，第三次超时触发选举。 */
+  @Test
+  void configuredGapAcceleratesDecay() {
+    // given
+    final AtomicInteger triggerCount = new AtomicInteger();
+    final Duration electionTimeout = Duration.ofMillis(100);
+    final PriorityElectionTimer timer =
+        new PriorityElectionTimer(
+            electionTimeout, threadContext, triggerCount::getAndIncrement, log, 20, 10, 5);
+
+    // when
+    timer.reset();
+    for (int i = 0; i < 2; i++) {
+      threadContext
+          .getDeterministicScheduler()
+          .tick(electionTimeout.toMillis(), TimeUnit.MILLISECONDS);
+    }
+
+    // then
+    assertThat(triggerCount.get()).as("两次衰减后 target=10，恰好未放权").isZero();
+
+    // when
+    threadContext
+        .getDeterministicScheduler()
+        .tick(electionTimeout.toMillis(), TimeUnit.MILLISECONDS);
+
+    // then
+    assertThat(triggerCount.get()).as("第三次超时 target 已低于等于节点优先级，应触发选举").isOne();
   }
 }

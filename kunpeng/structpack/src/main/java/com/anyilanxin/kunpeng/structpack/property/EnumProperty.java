@@ -1,0 +1,45 @@
+/*
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+package com.anyilanxin.kunpeng.structpack.property;
+
+import com.anyilanxin.kunpeng.structpack.value.EnumValue;
+
+/**
+ * 枚举属性：ordinal 整数编解码。
+ *
+ * <p>⚠️ wire 契约：ordinal 一旦上线即冻结，枚举常量只能尾部追加。
+ */
+public class EnumProperty<E extends Enum<E>> extends BaseProperty<EnumValue<E>> {
+
+  public E getValue() {
+    return resolveValue().getValue();
+  }
+
+  public EnumProperty<E> setValue(final E value) {
+    this.value.setValue(value);
+    this.isSet = true;
+    return this;
+  }
+
+  public EnumProperty(final int id, final String key, final Class<E> type) {
+    super(id, key, new EnumValue<>(type));
+  }
+
+  public EnumProperty(final int id, final String key, final Class<E> type, final E defaultValue) {
+    super(id, key, new EnumValue<>(type), new EnumValue<>(type, defaultValue));
+  }
+}

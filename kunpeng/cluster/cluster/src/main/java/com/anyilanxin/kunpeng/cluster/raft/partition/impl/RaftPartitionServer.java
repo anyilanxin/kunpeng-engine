@@ -1,7 +1,7 @@
 /*
  * Copyright 2016-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,39 +21,35 @@ import static com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartition.PARTIT
 
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.cluster.PhysicalTenantIds;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationService;
-import com.anyilanxin.kunpeng.cluster.primitive.partition.Partition;
-import com.anyilanxin.kunpeng.cluster.primitive.partition.PartitionMetadata;
-import com.anyilanxin.kunpeng.cluster.raft.LeadershipTransferCoordinatorCheck;
-import com.anyilanxin.kunpeng.cluster.raft.LeadershipTransferWriteBarrier;
-import com.anyilanxin.kunpeng.cluster.raft.RaftApplicationEntryCommittedPositionListener;
-import com.anyilanxin.kunpeng.cluster.raft.RaftCommitListener;
-import com.anyilanxin.kunpeng.cluster.raft.RaftRoleChangeListener;
-import com.anyilanxin.kunpeng.cluster.raft.RaftServer;
+import com.anyilanxin.kunpeng.cluster.raft.*;
 import com.anyilanxin.kunpeng.cluster.raft.RaftServer.Role;
-import com.anyilanxin.kunpeng.cluster.raft.SnapshotReplicationListener;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember.Type;
+import com.anyilanxin.kunpeng.cluster.raft.impl.RaftContext;
 import com.anyilanxin.kunpeng.cluster.raft.journal.SegmentInfo;
+import com.anyilanxin.kunpeng.cluster.raft.logentry.LogAppender;
+import com.anyilanxin.kunpeng.cluster.raft.metadata.BusinessMetaServer;
+import com.anyilanxin.kunpeng.cluster.raft.metadata.BusinessMetaSync;
+import com.anyilanxin.kunpeng.cluster.raft.metadata.BusinessMetaTransfer;
+import com.anyilanxin.kunpeng.cluster.raft.metadata.BusinessMetaUpdateResponse;
+import com.anyilanxin.kunpeng.cluster.raft.metadata.PartitionBusinessMeta;
 import com.anyilanxin.kunpeng.cluster.raft.metrics.RaftRequestMetrics;
 import com.anyilanxin.kunpeng.cluster.raft.metrics.RaftStartupMetrics;
-import com.anyilanxin.kunpeng.cluster.raft.partition.RaftElectionConfig;
-import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartition;
-import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartitionConfig;
-import com.anyilanxin.kunpeng.cluster.raft.partition.RaftStorageConfig;
+import com.anyilanxin.kunpeng.cluster.raft.partition.*;
 import com.anyilanxin.kunpeng.cluster.raft.roles.RaftRole;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.RaftSnapshotStore;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.transfer.SnapshotPushServer;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.transfer.SnapshotTransferServer;
 import com.anyilanxin.kunpeng.cluster.raft.storage.RaftStorage;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLogReader;
-import com.anyilanxin.kunpeng.cluster.raft.zeebe.ZeebeLogAppender;
+import com.anyilanxin.kunpeng.cluster.utils.VisibleForTesting;
+import com.anyilanxin.kunpeng.cluster.utils.health.FailureListener;
+import com.anyilanxin.kunpeng.cluster.utils.health.HealthMonitorable;
+import com.anyilanxin.kunpeng.cluster.utils.health.HealthReport;
 import com.anyilanxin.kunpeng.cluster.utils.serializer.Serializer;
-import io.camunda.cluster.PhysicalTenantIds;
-import io.camunda.zeebe.snapshots.PersistedSnapshotStore;
-import io.camunda.zeebe.snapshots.ReceivableSnapshotStore;
-import io.camunda.zeebe.util.FileUtil;
-import io.camunda.zeebe.util.VisibleForTesting;
-import io.camunda.zeebe.util.health.FailureListener;
-import io.camunda.zeebe.util.health.HealthMonitorable;
-import io.camunda.zeebe.util.health.HealthReport;
+import com.anyilanxin.kunpeng.utils.FileUtil;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.io.IOException;
 import java.time.Duration;
@@ -62,6 +58,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,9 +76,19 @@ public class RaftPartitionServer implements HealthMonitorable {
   private final Duration snapshotRequestTimeout;
   private final Duration configurationChangeTimeout;
 
-  private final ReceivableSnapshotStore persistedSnapshotStore;
+  private final RaftSnapshotStore persistedSnapshotStore;
   private final RaftServer server;
   private final MeterRegistry meterRegistry;
+  private final SnapshotTransferServer snapshotTransferServer;
+
+  /** 合并快照推送接收端：目标分区 leader 角色时注册，接收源分区 leader 推来的分片。 */
+  private final SnapshotPushServer mergePushServer;
+
+  /** 业务元数据修改请求接收端：server 存续期间常驻注册（非 leader 负责转发/拒绝）。 */
+  private final BusinessMetaServer businessMetaServer;
+
+  /** leader 同步拉取端：follower 缺口时向 leader 拉取全量状态（经 RaftContext 钩子触发）。 */
+  private final BusinessMetaSync businessMetaSync;
 
   public RaftPartitionServer(
       final RaftPartition partition,
@@ -89,7 +96,7 @@ public class RaftPartitionServer implements HealthMonitorable {
       final MemberId localMemberId,
       final ClusterMembershipService membershipService,
       final ClusterCommunicationService clusterCommunicator,
-      final ReceivableSnapshotStore persistedSnapshotStore,
+      final RaftSnapshotStore persistedSnapshotStore,
       final PartitionMetadata partitionMetadata,
       final MeterRegistry meterRegistry) {
     this.partition = partition;
@@ -104,6 +111,37 @@ public class RaftPartitionServer implements HealthMonitorable {
     snapshotRequestTimeout = config.getSnapshotRequestTimeout();
     configurationChangeTimeout = config.getConfigurationChangeTimeout();
     server = buildServer(meterRegistry);
+    mergePushServer =
+        new SnapshotPushServer(clusterCommunicator, partition.name(), persistedSnapshotStore);
+    snapshotTransferServer =
+        new SnapshotTransferServer(clusterCommunicator, partition.name(), persistedSnapshotStore);
+    businessMetaServer = new BusinessMetaServer(clusterCommunicator, this, partition.name());
+    businessMetaServer.register();
+    businessMetaSync =
+        new BusinessMetaSync(clusterCommunicator, this, partition.name(), requestTimeout);
+    server.getContext().setBusinessMetaSyncHook(businessMetaSync::requestSyncFromLeader);
+    // 角色变更时：把分区角色写入本节点成员属性广播集群；成为 leader 才注册快照传输服务，离开即卸载
+    server.addRoleChangeListener(this::onPartitionRoleChanged);
+  }
+
+  private void onPartitionRoleChanged(final RaftServer.Role newRole, final long term) {
+    publishPartitionRole(newRole);
+    if (newRole == RaftServer.Role.LEADER) {
+      snapshotTransferServer.register();
+      mergePushServer.register();
+      LOGGER.info("Leader registered snapshot transfer handler for partition {}", partition.id());
+    } else {
+      snapshotTransferServer.unregister();
+      mergePushServer.unregister();
+    }
+  }
+
+  /** 把本分区的最新角色写入本地成员属性，经成员元数据传播机制广播到集群。 */
+  private void publishPartitionRole(final RaftServer.Role role) {
+    membershipService
+        .getLocalMember()
+        .properties()
+        .setProperty(RaftPartitionTopology.rolePropertyKey(partition.name()), role.name());
   }
 
   public CompletableFuture<RaftPartitionServer> bootstrap() {
@@ -161,6 +199,9 @@ public class RaftPartitionServer implements HealthMonitorable {
   }
 
   public CompletableFuture<Void> stop() {
+    snapshotTransferServer.unregister();
+    mergePushServer.unregister();
+    businessMetaServer.unregister();
     return server != null ? server.shutdown() : CompletableFuture.completedFuture(null);
   }
 
@@ -196,8 +237,33 @@ public class RaftPartitionServer implements HealthMonitorable {
     return server.getContext().getLog().openCommittedReader();
   }
 
+  /** 底层 raft 上下文（业务元数据修改接收端/同步拉取端复用）。 */
+  public RaftContext getContext() {
+    return server.getContext();
+  }
+
   public void addRoleChangeListener(final RaftRoleChangeListener listener) {
     server.addRoleChangeListener(listener);
+  }
+
+  /** 注册业务三态状态监听器（LEADER/FOLLOWER/INACTIVE 聚合视图），注册后立即回调当前状态。 */
+  public void addRoleStateListener(final RaftRoleStateListener listener) {
+    server.addRoleStateListener(listener);
+  }
+
+  /** 注销业务三态状态监听器。 */
+  public void removeRoleStateListener(final RaftRoleStateListener listener) {
+    server.removeRoleStateListener(listener);
+  }
+
+  /** 注册业务元数据变更监听器（onStarted/onCompleted 成对触发，携带当时角色与 term）。 */
+  public void addBusinessMetaListener(final RaftBusinessMetaListener listener) {
+    server.addBusinessMetaListener(listener);
+  }
+
+  /** 注销业务元数据变更监听器。 */
+  public void removeBusinessMetaListener(final RaftBusinessMetaListener listener) {
+    server.removeBusinessMetaListener(listener);
   }
 
   @Override
@@ -273,26 +339,73 @@ public class RaftPartitionServer implements HealthMonitorable {
     server.getContext().removeSnapshotReplicationListener(listener);
   }
 
-  public PersistedSnapshotStore getPersistedSnapshotStore() {
+  public RaftSnapshotStore getPersistedSnapshotStore() {
     return persistedSnapshotStore;
   }
 
   /** Deletes the server. */
   public void delete() {
     try {
-      FileUtil.deleteFolderIfExists(partition.dataDirectory().toPath());
+      FileUtil.deleteTreeIfExists(partition.rootDirectory());
     } catch (final IOException e) {
       LOGGER.error("Failed to delete partition: {}", partition, e);
     }
   }
 
-  public Optional<ZeebeLogAppender> getAppender() {
+  public Optional<LogAppender> getAppender() {
     final RaftRole role = server.getContext().getRaftRole();
-    if (role instanceof ZeebeLogAppender) {
-      return Optional.of((ZeebeLogAppender) role);
+    if (role instanceof LogAppender) {
+      return Optional.of((LogAppender) role);
     }
 
     return Optional.empty();
+  }
+
+  /** 当前已提交业务元数据（内存只读视图）。 */
+  public PartitionBusinessMeta businessMeta() {
+    return server.getContext().getBusinessMetaManager().current();
+  }
+
+  /**
+   * 修改业务元数据入口（任意角色可调用）：本机 leader 直接追加；非 leader 且已知 leader 转发； 无 leader 返回 NO_LEADER。entries
+   * 为全量快照（整体覆盖语义，未携带的 key 即删除）；成功（多数派落盘提交）后返回提交条目 index。
+   */
+  public CompletableFuture<BusinessMetaUpdateResponse> updateBusinessMeta(
+      final Map<String, String> entries) {
+    if (server.getContext().isLeader()) {
+      return appendBusinessMeta(entries);
+    }
+    final var leader = server.getContext().getLeader();
+    if (leader == null) {
+      return CompletableFuture.completedFuture(BusinessMetaUpdateResponse.noLeader());
+    }
+    return forwardBusinessMetaTo(leader.memberId(), entries);
+  }
+
+  /** leader 路径：经 raft 内部入口追加 BusinessMetaEntry，多数派提交后完成 future；易主切换瞬间失主按无主拒绝。 */
+  public CompletableFuture<BusinessMetaUpdateResponse> appendBusinessMeta(
+      final Map<String, String> entries) {
+    return server
+        .getContext()
+        .appendBusinessMeta(entries)
+        .thenApply(BusinessMetaUpdateResponse::ok)
+        .exceptionally(
+            error ->
+                error instanceof RaftException.NoLeader
+                    ? BusinessMetaUpdateResponse.noLeader()
+                    : BusinessMetaUpdateResponse.error("append failed: " + error.getMessage()));
+  }
+
+  /** 非 leader 路径：把更新转发到 leader 所在成员（forwarded=true 防环）。 */
+  public CompletableFuture<BusinessMetaUpdateResponse> forwardBusinessMetaTo(
+      final MemberId leaderId, final Map<String, String> entries) {
+    return clusterCommunicator.send(
+        BusinessMetaServer.subjectOf(partition.name()),
+        BusinessMetaTransfer.encodeRequest(entries, true),
+        Function.identity(),
+        BusinessMetaTransfer::decodeResponse,
+        leaderId,
+        requestTimeout);
   }
 
   /**
@@ -322,6 +435,11 @@ public class RaftPartitionServer implements HealthMonitorable {
     return server.getTerm();
   }
 
+  /** 当前已提交索引（快照拍摄位点来源）。 */
+  public long getCommitIndex() {
+    return server.getContext().getCommitIndex();
+  }
+
   public MemberId getMemberId() {
     return localMemberId;
   }
@@ -330,8 +448,8 @@ public class RaftPartitionServer implements HealthMonitorable {
     final RaftStorageConfig storageConfig = config.getStorageConfig();
     return RaftStorage.builder(meterRegistry)
         .withPrefix(partition.name())
-        .withPartitionId(partition.id().number())
-        .withDirectory(partition.dataDirectory())
+        .withPartitionId(partition.id().id())
+        .withDirectory(partition.rootDirectory().toFile())
         .withMaxSegmentSize((int) storageConfig.getSegmentSize())
         .withFlusherFactory(storageConfig.flusherFactory())
         .withFreeDiskSpace(storageConfig.getFreeDiskSpace())
@@ -342,7 +460,7 @@ public class RaftPartitionServer implements HealthMonitorable {
   }
 
   private RaftServerCommunicator createServerProtocol() {
-    final var partitionId = partition.id().number();
+    final var partitionId = partition.id().id();
     final var partitionGroup = partition.id().group();
 
     final var sendingSubject = PARTITION_NAME_FORMAT.formatted(partitionGroup, partitionId);

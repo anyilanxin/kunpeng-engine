@@ -1,7 +1,7 @@
 /*
  * Copyright 2015-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.anyilanxin.kunpeng.cluster.raft.RaftException;
 import com.anyilanxin.kunpeng.cluster.raft.RaftException.AppendFailureException;
-import com.anyilanxin.kunpeng.cluster.raft.RaftException.CommitFailedException;
 import com.anyilanxin.kunpeng.cluster.raft.RaftException.NoLeader;
 import com.anyilanxin.kunpeng.cluster.raft.RaftServer;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember;
@@ -29,30 +28,14 @@ import com.anyilanxin.kunpeng.cluster.raft.cluster.impl.DefaultRaftMember;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.impl.RaftMemberContext;
 import com.anyilanxin.kunpeng.cluster.raft.impl.RaftContext;
 import com.anyilanxin.kunpeng.cluster.raft.metrics.LeaderAppenderMetrics;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.AppendRequest;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.AppendResponse;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.ConfigureRequest;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.ConfigureResponse;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.InstallRequest;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.InstallResponse;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.RaftRequest;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.RaftResponse;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.ReplicatableJournalRecord;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.VersionedAppendRequest;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.SnapshotChunkImpl;
+import com.anyilanxin.kunpeng.cluster.raft.protocol.*;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.*;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.transfer.SnapshotChunkBatcher;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.IndexedRaftLogEntry;
-import io.camunda.zeebe.snapshots.PersistedSnapshot;
-import io.camunda.zeebe.snapshots.SnapshotChunk;
-import io.camunda.zeebe.snapshots.SnapshotChunkReader;
 import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.NavigableMap;
-import java.util.Optional;
-import java.util.TreeMap;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
@@ -66,6 +49,9 @@ final class LeaderAppender {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(LeaderAppender.class);
   private static final int MIN_BACKOFF_FAILURE_COUNT = 5;
+
+  /** 单条 install 请求携带的传输单元累计字节上限（与传输模块一致）。 */
+  private static final int INSTALL_BATCH_BYTES = 4 * 1024 * 1024;
 
   private final int maxBatchSizePerAppend;
   private final RaftContext raft;
@@ -268,6 +254,29 @@ final class LeaderAppender {
     // If the replica returned a valid match index then update the existing match index.
     member.setMatchIndex(response.lastLogIndex());
     observeRemainingMemberEntries(member);
+    promoteIfCaughtUp(member);
+  }
+
+  /**
+   * 追平门控（参考 SOFAJRaft 的 catch-up 语义）：PASSIVE 成员追平 leader 最新日志后自动晋升为
+   * 投票成员（ACTIVE），晋升走联合共识重配置；未追平或掉线的成员不进入投票集，避免拖累 quorum。
+   * 仅服务加入流程（以 PASSIVE 身份加入、追平、晋升）：经重配置从 ACTIVE 显式降级的成员不自动
+   * 晋升，否则降级会在其下一次确认追加时被静默回滚。
+   */
+  private void promoteIfCaughtUp(final RaftMemberContext member) {
+    if (member.isPromotionTriggered()
+        || member.isDemotedFromVoting()
+        || member.getMember().getType() != RaftMember.Type.PASSIVE
+        || member.getMatchIndex() < raft.getLog().getLastIndex()) {
+      return;
+    }
+
+    member.markPromotionTriggered();
+    LOGGER.info(
+        "Passive member {} caught up to log index {}, promoting to ACTIVE",
+        member.getMember().memberId(),
+        member.getMatchIndex());
+    member.getMember().promote(RaftMember.Type.ACTIVE);
   }
 
   /** Resets the match index when a response fails. */
@@ -416,12 +425,13 @@ final class LeaderAppender {
       final RaftMemberContext member, final PersistedSnapshot persistedSnapshot) {
     if (member.getNextSnapshotIndex() != persistedSnapshot.getIndex()) {
       try {
-        final SnapshotChunkReader snapshotChunkReader = persistedSnapshot.newChunkReader();
-        member.setSnapshotChunkReader(snapshotChunkReader);
+        final SnapshotChunkReader snapshotChunkReader =
+            persistedSnapshot.newChunkReader(java.util.UUID.randomUUID());
+        member.setSnapshotChunkBatcher(new SnapshotChunkBatcher(snapshotChunkReader));
       } catch (final UncheckedIOException e) {
         LOGGER.warn(
-            "Expected to send Snapshot {} to {}. But could not open SnapshotChunkReader. Will retry.",
-            persistedSnapshot.getId(),
+            "Expected to send Snapshot {} to {}. But could not open PersistableSnapshotReader. Will retry.",
+            persistedSnapshot.snapshotId(),
             member,
             e);
         return Optional.empty();
@@ -430,29 +440,30 @@ final class LeaderAppender {
       observeReplicationLag(member);
     }
 
-    final SnapshotChunkReader reader = member.getSnapshotChunkReader();
+    final SnapshotChunkBatcher batcher = member.getSnapshotChunkBatcher();
 
     try {
       // Reader might have advanced to the next chunk already. But if we want to retry a chunk the
       // reader should seek to the chunk. To handle retries and not-retries the same, we seek
       // always.
       if (member.getNextSnapshotChunk() != null) {
-        reader.seek(member.getNextSnapshotChunk());
+        batcher.seek(member.getNextSnapshotChunk());
       } else {
-        // member.getNextSnapshotChunk is null when it is the first chunk.
-        reader.reset();
+        // member.getNextSnapshotChunk is null when it is the first batch.
+        batcher.reset();
       }
 
-      if (!reader.hasNext()) {
+      // 真批量：一次 install 携带一个传输单元（多个分片）
+      final SnapshotChunkBatch batch = batcher.nextBatch(INSTALL_BATCH_BYTES);
+      if (batch.chunks().isEmpty()) {
         return Optional.empty();
       }
-      final ByteBuffer currentChunkId = reader.nextId();
-      final SnapshotChunk chunk = reader.next();
-      // Remember the chunk's tracked size so it can be subtracted from the lag once acknowledged.
-      member.setSnapshotChunkBytesInFlight(chunk.getContentLength());
+      // 记住本批总字节，ack 后从复制滞后中扣除
+      final long batchBytes = batch.chunks().stream().mapToLong(SnapshotChunk::getLength).sum();
+      member.setSnapshotChunkBytesInFlight(batchBytes);
 
-      // Create the install request, indicating whether this is the last chunk of data based on
-      // the number of bytes remaining in the buffer.
+      final String firstChunkName = batch.chunks().get(0).getChunkName();
+      final String nextChunkName = batcher.nextChunkName();
       final DefaultRaftMember leader = raft.getLeader();
 
       final InstallRequest request =
@@ -462,17 +473,20 @@ final class LeaderAppender {
               .withIndex(persistedSnapshot.getIndex())
               .withTerm(persistedSnapshot.getTerm())
               .withVersion(persistedSnapshot.version())
-              .withData(new SnapshotChunkImpl(chunk).toByteBuffer())
-              .withChunkId(currentChunkId)
+              .withData(ByteBuffer.wrap(SnapshotTransferCodec.encodeChunkBatch(batch)))
+              .withChunkId(ByteBuffer.wrap(firstChunkName.getBytes(StandardCharsets.UTF_8)))
               .withInitial(member.getNextSnapshotChunk() == null)
-              .withComplete(!reader.hasNext())
-              .withNextChunkId(reader.nextId())
+              .withComplete(!batch.hasMore())
+              .withNextChunkId(
+                  nextChunkName == null
+                      ? null
+                      : ByteBuffer.wrap(nextChunkName.getBytes(StandardCharsets.UTF_8)))
               .build();
       return Optional.of(request);
     } catch (final UncheckedIOException e) {
       LOGGER.warn(
           "Expected to send next chunk of Snapshot {} to {}. But could not read SnapshotChunk. Snapshot may have been deleted. Will retry.",
-          persistedSnapshot.getId(),
+          persistedSnapshot.snapshotId(),
           member.getMember().memberId(),
           e);
       // If snapshot was deleted, a new reader should be created with the new snapshot
@@ -487,6 +501,8 @@ final class LeaderAppender {
     member.startInstall();
 
     final long timestamp = System.currentTimeMillis();
+
+    metrics.observeInstallSent(member.getMember().memberId().id(), request.data().remaining());
 
     LOGGER.trace("Sending {} to {}", request, member.getMember().memberId());
     raft.getProtocol()
@@ -536,7 +552,7 @@ final class LeaderAppender {
 
     //    if not given in response defaults to 0
     if (response.preferredChunkSize() > 0) {
-      member.getSnapshotChunkReader().setMaximumChunkSize(response.preferredChunkSize());
+      member.getSnapshotChunkBatcher().setMaximumChunkSize(response.preferredChunkSize());
     }
     // If the install request was completed successfully, set the member's snapshotIndex and reset
     // the next snapshot index/offset.
@@ -590,23 +606,19 @@ final class LeaderAppender {
       return CompletableFuture.completedFuture(index);
     }
 
+    if (!open) {
+      return CompletableFuture.failedFuture(
+          new NoLeader("Cannot replicate entries on closed leader"));
+    }
+
     // If there are no other stateful servers in the cluster, immediately commit the index OR
     // If there are no other active members in the cluster, update the commit index and complete the
     // commit.
     // The updated commit index will be sent to passive/reserve members on heartbeats.
     if (raft.getCluster().isSingleMemberCluster()) {
-      try {
-        raft.setCommitIndex(index);
-        completeCommits(index);
-        return CompletableFuture.completedFuture(index);
-      } catch (final CommitFailedException e) {
-        return CompletableFuture.failedFuture(e);
-      }
-    }
-
-    if (!open) {
-      return CompletableFuture.failedFuture(
-          new NoLeader("Cannot replicate entries on closed leader"));
+      // 合并任务 fsync 后经 commit listener 回调 completeCommits 完成此 future
+      raft.setCommitIndex(index);
+      return appendFutures.computeIfAbsent(index, i -> new CompletableFuture<>());
     }
 
     // Only send entry-specific AppendRequests to active members of the cluster.
@@ -652,8 +664,12 @@ final class LeaderAppender {
     return future;
   }
 
-  /** Completes append entries attempts up to the given index. */
-  private void completeCommits(final long commitIndex) {
+  /**
+   * Completes append entries attempts up to the given index.
+   *
+   * <p>包私有：由 LeaderRole 的 commit listener 在合并刷盘任务推进 commitIndex 后回调， 保证 client future 完成晚于本地 fsync。
+   */
+  void completeCommits(final long commitIndex) {
     final var completable = appendFutures.headMap(commitIndex, true);
     completable.forEach(
         (index, future) -> {
@@ -1064,8 +1080,8 @@ final class LeaderAppender {
         && commitIndex > previousCommitIndex
         && (leaderIndex > 0 && commitIndex >= leaderIndex)) {
       LOGGER.trace("Committed entries up to {}", commitIndex);
+      // 仅提交目标给 RaftContext：在途 append future 待合并 fsync 完成后经 commit listener 完成
       raft.setCommitIndex(commitIndex);
-      completeCommits(commitIndex);
     }
   }
 
@@ -1086,9 +1102,9 @@ final class LeaderAppender {
   }
 
   /**
-   * Returns the current commit time.
+   * Returns the current heartbeat time.
    *
-   * @return The current commit time.
+   * @return The current heartbeat time.
    */
   public long getTime() {
     return heartbeatTime;

@@ -1,132 +1,47 @@
 /*
- * Copyright © 2020  camunda services GmbH (info@camunda.com)
- *  Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
  *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- *        http://www.apache.org/licenses/LICENSE-2.0
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package com.anyilanxin.kunpeng.cluster.raft.snapshot.impl;
 
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.SbeBufferWriterReader;
-import io.camunda.zeebe.snapshots.SnapshotChunk;
-import io.camunda.zeebe.util.buffer.BufferUtil;
-import org.agrona.DirectBuffer;
-import org.agrona.MutableDirectBuffer;
-import org.agrona.concurrent.UnsafeBuffer;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChunk;
+import java.nio.ByteBuffer;
 
-public final class SnapshotChunkImpl
-    extends SbeBufferWriterReader<SnapshotChunkEncoder, SnapshotChunkDecoder>
-    implements SnapshotChunk {
+/** {@link SnapshotChunk} 的默认实现：不可变分片。 */
+public final class SnapshotChunkImpl implements SnapshotChunk {
 
-  private final SnapshotChunkEncoder encoder = new SnapshotChunkEncoder();
-  private final SnapshotChunkDecoder decoder = new SnapshotChunkDecoder();
-  private final DirectBuffer content = new UnsafeBuffer(0, 0);
-  private String snapshotId;
-  private int totalCount;
-  private String chunkName;
-  private long checksum;
-  private long fileBlockPosition;
-  private long totalFileSize;
+  private final String chunkName;
+  private final long snapshotChecksum;
+  private final long totalLength;
+  private final long checksum;
+  private final ByteBuffer content;
+  private final long offset;
 
-  public SnapshotChunkImpl() {}
-
-  public SnapshotChunkImpl(final SnapshotChunk chunk) {
-    snapshotId = chunk.getSnapshotId();
-    totalCount = chunk.getTotalCount();
-    chunkName = chunk.getChunkName();
-    checksum = chunk.getChecksum();
-    content.wrap(chunk.getContentBuffer());
-    fileBlockPosition = chunk.getFileBlockPosition();
-    totalFileSize = chunk.getTotalFileSize();
-  }
-
-  @Override
-  protected SnapshotChunkEncoder getBodyEncoder() {
-    return encoder;
-  }
-
-  @Override
-  protected SnapshotChunkDecoder getBodyDecoder() {
-    return decoder;
-  }
-
-  @Override
-  public void reset() {
-    super.reset();
-
-    totalCount = SnapshotChunkDecoder.totalCountNullValue();
-    checksum = SnapshotChunkDecoder.checksumNullValue();
-    fileBlockPosition = SnapshotChunkDecoder.fileBlockPositionNullValue();
-    totalFileSize = SnapshotChunkDecoder.totalFileSizeNullValue();
-
-    snapshotId = "";
-    chunkName = "";
-    content.wrap(0, 0);
-  }
-
-  @Override
-  public int getLength() {
-    return super.getLength()
-        + SnapshotChunkEncoder.snapshotIdHeaderLength()
-        + snapshotId.length()
-        + SnapshotChunkEncoder.chunkNameHeaderLength()
-        + chunkName.length()
-        + SnapshotChunkEncoder.contentHeaderLength()
-        + content.capacity();
-  }
-
-  @Override
-  public int write(final MutableDirectBuffer buffer, final int offset) {
-    final var len = super.write(buffer, offset);
-
-    // The snapshot checksum is 0 for backwards compatibility reasons, when sending chunk data to
-    // brokers on older versions which checks on the snapshot checksum.
-    encoder
-        .totalCount(totalCount)
-        .fileBlockPosition(fileBlockPosition)
-        .totalFileSize(totalFileSize)
-        .snapshotId(snapshotId)
-        .chunkName(chunkName)
-        .checksum(checksum)
-        .snapshotChecksum(0)
-        .putContent(content, 0, content.capacity());
-    return len + encoder.encodedLength();
-  }
-
-  @Override
-  public void wrap(final DirectBuffer buffer, final int offset, final int length) {
-    super.wrap(buffer, offset, length);
-
-    totalCount = decoder.totalCount();
-    fileBlockPosition = decoder.fileBlockPosition();
-    totalFileSize = decoder.totalFileSize();
-    snapshotId = decoder.snapshotId();
-    chunkName = decoder.chunkName();
-    checksum = decoder.checksum();
-
-    if (decoder.contentLength() > 0) {
-      decoder.wrapContent(content);
-    }
-  }
-
-  @Override
-  public String getSnapshotId() {
-    return snapshotId;
-  }
-
-  @Override
-  public int getTotalCount() {
-    return totalCount;
+  public SnapshotChunkImpl(
+      final String chunkName,
+      final long snapshotChecksum,
+      final long totalLength,
+      final long checksum,
+      final ByteBuffer content,
+      final long offset) {
+    this.chunkName = chunkName;
+    this.snapshotChecksum = snapshotChecksum;
+    this.totalLength = totalLength;
+    this.checksum = checksum;
+    this.content = content;
+    this.offset = offset;
   }
 
   @Override
@@ -135,57 +50,33 @@ public final class SnapshotChunkImpl
   }
 
   @Override
+  public long getSnapshotChecksum() {
+    return snapshotChecksum;
+  }
+
+  @Override
+  public long getTotalLength() {
+    return totalLength;
+  }
+
+  @Override
   public long getChecksum() {
     return checksum;
   }
 
+  /** 返回内容的只读视图，避免消费方改动内部缓冲区的读写位置。 */
   @Override
-  public byte[] getContent() {
-    return BufferUtil.bufferAsArray(content);
+  public ByteBuffer getContent() {
+    return content.asReadOnlyBuffer();
   }
 
   @Override
-  public long getFileBlockPosition() {
-    // backwards compatability
-    if (fileBlockPosition == SnapshotChunkDecoder.fileBlockPositionNullValue()) {
-      return 0;
-    }
-
-    return fileBlockPosition;
+  public int getLength() {
+    return content.remaining();
   }
 
   @Override
-  public long getTotalFileSize() {
-    // backwards comptability
-    if (totalFileSize == SnapshotChunkDecoder.totalFileSizeNullValue()) {
-      return content.capacity();
-    }
-
-    return totalFileSize;
-  }
-
-  @Override
-  public long getContentLength() {
-    return content.capacity();
-  }
-
-  @Override
-  public String toString() {
-    return "SnapshotChunkImpl{"
-        + "snapshotId="
-        + snapshotId
-        + ", totalCount="
-        + totalCount
-        + ", chunkName='"
-        + chunkName
-        + '\''
-        + ", checksum="
-        + checksum
-        + ", fileBlockPosition="
-        + fileBlockPosition
-        + ", totalFileSize="
-        + totalFileSize
-        + "} "
-        + super.toString();
+  public long getOffset() {
+    return offset;
   }
 }

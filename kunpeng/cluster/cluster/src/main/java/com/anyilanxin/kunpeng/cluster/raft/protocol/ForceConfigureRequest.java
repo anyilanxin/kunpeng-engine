@@ -1,7 +1,7 @@
 /*
  * Copyright 2015-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -142,7 +142,7 @@ public class ForceConfigureRequest extends AbstractRaftRequest {
     return MemberId.from(from);
   }
 
-  /** Heartbeat request builder. */
+  /** Force configure request builder. */
   public static class Builder extends AbstractRaftRequest.Builder<Builder, ForceConfigureRequest> {
 
     private long term;
@@ -155,7 +155,7 @@ public class ForceConfigureRequest extends AbstractRaftRequest {
      * Sets the request term.
      *
      * @param term The request term.
-     * @return The append request builder.
+     * @return The force configure request builder.
      * @throws IllegalArgumentException if the {@code term} is not positive
      */
     public Builder withTerm(final long term) {
@@ -206,7 +206,7 @@ public class ForceConfigureRequest extends AbstractRaftRequest {
     }
 
     /**
-     * @throws IllegalStateException if member is null
+     * @throws NullPointerException if {@code newMembers} is null
      */
     @Override
     public ForceConfigureRequest build() {

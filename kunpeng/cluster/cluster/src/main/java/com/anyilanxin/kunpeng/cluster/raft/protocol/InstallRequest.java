@@ -1,7 +1,7 @@
 /*
  * Copyright 2015-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,8 +23,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.utils.misc.StringUtils;
-import io.camunda.zeebe.snapshots.impl.SnapshotChunkId;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 /**
@@ -206,10 +206,8 @@ public class InstallRequest extends AbstractRaftRequest {
         .add("index", index)
         .add("term", term)
         .add("version", version)
-        .add("chunkId", new SnapshotChunkId(chunkId).toString())
-        .add(
-            "nextChunkId",
-            nextChunkId == null ? "null" : new SnapshotChunkId(nextChunkId).toString())
+        .add("chunkId", chunkNameOf(chunkId))
+        .add("nextChunkId", nextChunkId == null ? "null" : chunkNameOf(nextChunkId))
         .add("data", StringUtils.printShortBuffer(data))
         .add("initial", initial)
         .add("complete", complete)
@@ -219,6 +217,13 @@ public class InstallRequest extends AbstractRaftRequest {
   @Override
   public MemberId from() {
     return leader;
+  }
+
+  private static String chunkNameOf(final ByteBuffer chunkId) {
+    final ByteBuffer duplicate = chunkId.slice();
+    final byte[] bytes = new byte[duplicate.remaining()];
+    duplicate.get(bytes);
+    return new String(bytes, StandardCharsets.UTF_8);
   }
 
   /** Snapshot request builder. */
@@ -239,7 +244,7 @@ public class InstallRequest extends AbstractRaftRequest {
      * Sets the request current term.
      *
      * @param currentTerm The request current term.
-     * @return The append request builder.
+     * @return The install request builder.
      * @throws IllegalArgumentException if the {@code currentTerm} is not positive
      */
     public Builder withCurrentTerm(final long currentTerm) {
@@ -252,8 +257,8 @@ public class InstallRequest extends AbstractRaftRequest {
      * Sets the request leader.
      *
      * @param leader The request leader.
-     * @return The append request builder.
-     * @throws IllegalArgumentException if the {@code leader} is not positive
+     * @return The install request builder.
+     * @throws NullPointerException if the {@code leader} is null
      */
     public Builder withLeader(final MemberId leader) {
       this.leader = checkNotNull(leader, "leader cannot be null");
@@ -303,9 +308,9 @@ public class InstallRequest extends AbstractRaftRequest {
     }
 
     /**
-     * Sets the request offset.
+     * Sets the ID of the next expected chunk.
      *
-     * @param nextChunkId The request offset.
+     * @param nextChunkId The ID of the next expected chunk.
      * @return The request builder.
      */
     public Builder withNextChunkId(final ByteBuffer nextChunkId) {
@@ -329,7 +334,6 @@ public class InstallRequest extends AbstractRaftRequest {
      *
      * @param complete Whether the snapshot is complete.
      * @return The request builder.
-     * @throws NullPointerException if {@code member} is null
      */
     public Builder withComplete(final boolean complete) {
       this.complete = complete;
@@ -348,7 +352,8 @@ public class InstallRequest extends AbstractRaftRequest {
     }
 
     /**
-     * @throws IllegalStateException if member is null
+     * @throws IllegalArgumentException if the current term, index or snapshot term is invalid
+     * @throws NullPointerException if the leader, chunk id or data is null
      */
     @Override
     public InstallRequest build() {

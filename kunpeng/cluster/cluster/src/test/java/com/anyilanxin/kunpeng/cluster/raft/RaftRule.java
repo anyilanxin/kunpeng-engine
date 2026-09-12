@@ -1,29 +1,29 @@
 /*
- * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package com.anyilanxin.kunpeng.cluster.raft;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.raft.RaftServer.Role;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember;
 import com.anyilanxin.kunpeng.cluster.raft.impl.RaftContext;
+import com.anyilanxin.kunpeng.cluster.raft.logentry.EntryValidator;
+import com.anyilanxin.kunpeng.cluster.raft.logentry.EntryValidator.NoopEntryValidator;
+import com.anyilanxin.kunpeng.cluster.raft.logentry.LogAppender;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartitionConfig;
 import com.anyilanxin.kunpeng.cluster.raft.primitive.TestMember;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.PersistedRaftRecord;
@@ -32,39 +32,33 @@ import com.anyilanxin.kunpeng.cluster.raft.protocol.TestRaftProtocolFactory;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.TestRaftServerProtocol;
 import com.anyilanxin.kunpeng.cluster.raft.roles.LeaderRole;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.InMemorySnapshot;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.RaftSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.TestSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.storage.RaftStorage;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.IndexedRaftLogEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ApplicationEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.RaftEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.SerializedApplicationEntry;
-import com.anyilanxin.kunpeng.cluster.raft.zeebe.EntryValidator;
-import com.anyilanxin.kunpeng.cluster.raft.zeebe.EntryValidator.NoopEntryValidator;
-import com.anyilanxin.kunpeng.cluster.raft.zeebe.ZeebeLogAppender;
 import com.anyilanxin.kunpeng.cluster.utils.AbstractIdentifier;
 import com.anyilanxin.kunpeng.cluster.utils.concurrent.SingleThreadContext;
 import com.anyilanxin.kunpeng.cluster.utils.concurrent.ThreadContext;
-import io.camunda.zeebe.snapshots.PersistedSnapshot;
-import io.camunda.zeebe.snapshots.PersistedSnapshotStore;
-import io.camunda.zeebe.util.FileUtil;
-import io.camunda.zeebe.util.buffer.BufferUtil;
-import io.camunda.zeebe.util.micrometer.MicrometerUtil;
+import com.anyilanxin.kunpeng.utils.FileUtil;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.awaitility.Awaitility;
+import org.junit.rules.ExternalResource;
+import org.junit.rules.TemporaryFolder;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -73,11 +67,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import org.awaitility.Awaitility;
-import org.junit.rules.ExternalResource;
-import org.junit.rules.TemporaryFolder;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 public final class RaftRule extends ExternalResource {
 
@@ -170,7 +162,7 @@ public final class RaftRule extends ExternalResource {
     memberLog = null;
     position = 0;
     directory = null;
-    MicrometerUtil.close(meterRegistry);
+    meterRegistry.close();
   }
 
   /**
@@ -412,6 +404,29 @@ public final class RaftRule extends ExternalResource {
             withMetadata));
   }
 
+  /**
+   * 拍摄每个分片 {@code chunkSize} 字节的镜像，用于构造跨多个传输批的 install 场景。
+   */
+  public Optional<PersistedSnapshot> takeSnapshot(
+          final RaftServer raftServer, final long index, final int size, final int chunkSize) {
+    if (!raftServer.isRunning()) {
+      return Optional.empty();
+    }
+
+    final var raftContext = raftServer.getContext();
+    final var memberId = raftServer.cluster().getLocalMember().memberId();
+    final var snapshotStore = getSnapshotStore(memberId.id());
+
+    return Optional.of(
+            InMemorySnapshot.newPersistedSnapshot(
+                    Integer.parseInt(memberId.id()),
+                    index,
+                    raftContext.getTerm(),
+                    size,
+                    snapshotStore,
+                    chunkSize));
+  }
+
   private TestSnapshotStore getSnapshotStore(final String memberId) {
     return snapshotStores.get(memberId);
   }
@@ -424,7 +439,7 @@ public final class RaftRule extends ExternalResource {
     return servers.values().stream()
             .map(RaftServer::getContext)
             .map(RaftContext::getPersistedSnapshotStore)
-            .map(PersistedSnapshotStore::getCurrentSnapshotIndex)
+            .map(store -> store.getLatestSnapshot().map(PersistedSnapshot::getIndex).orElse(0L))
             .filter(idx -> idx == index)
             .count()
         == servers.values().size();
@@ -651,14 +666,14 @@ public final class RaftRule extends ExternalResource {
     boolean deletedMemberDirectory = false;
     while (!deletedMemberDirectory) {
       try {
-        FileUtil.deleteFolderIfExists(memberDirectory.toPath());
+        FileUtil.deleteTreeIfExists(memberDirectory.toPath());
         deletedMemberDirectory = true;
       } catch (final DirectoryNotEmptyException e) {
         // Deleting the directory may fail when journal asynchronously creates the next segment. In
         // that case we can simply retry deleting the directory. Eventually we should be able to
         // delete during a timeframe where the journal is not concurrently creating the next
         // segment.
-        FileUtil.deleteFolderIfExists(memberDirectory.toPath());
+        FileUtil.deleteTreeIfExists(memberDirectory.toPath());
       }
     }
 
@@ -666,7 +681,7 @@ public final class RaftRule extends ExternalResource {
     snapshots.remove(node);
   }
 
-  public PersistedSnapshotStore getPersistedSnapshotStore(final String followerB) {
+  public RaftSnapshotStore getPersistedSnapshotStore(final String followerB) {
     return servers.get(followerB).getContext().getPersistedSnapshotStore();
   }
 
@@ -691,7 +706,7 @@ public final class RaftRule extends ExternalResource {
     protocolFactory.heal(follower.cluster().getLocalMember().memberId());
   }
 
-  public static final class TestAppendListener implements ZeebeLogAppender.AppendListener {
+  public static final class TestAppendListener implements LogAppender.AppendListener {
 
     private final CompletableFuture<Long> commitFuture = new CompletableFuture<>();
 
@@ -753,7 +768,7 @@ public final class RaftRule extends ExternalResource {
       if (entry.entry() instanceof final SerializedApplicationEntry app) {
         copiedEntry =
             new SerializedApplicationEntry(
-                app.lowestPosition(), app.highestPosition(), BufferUtil.cloneBuffer(app.data()));
+                app.lowestPosition(), app.highestPosition(), new org.agrona.concurrent.UnsafeBuffer(java.util.Arrays.copyOf(app.data().byteArray(), app.data().capacity())));
       } else {
         copiedEntry = entry.entry();
       }

@@ -1,7 +1,7 @@
 /*
  * Copyright 2015-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,7 +55,7 @@ public final class Address {
   }
 
   /**
-   * Returns an address that binds to all interfaces.
+   * Returns an address for the local host with the default port.
    *
    * @return the address
    */
@@ -66,8 +66,11 @@ public final class Address {
   /**
    * Returns the address from the given host:port string.
    *
+   * <p>解析失败直接抛出而非静默回退到本机默认端口——配置里写错的成员地址必须在启动期报错， 不能悄悄变成一个错误的"本机"地址。
+   *
    * @param address the address string
    * @return the address
+   * @throws IllegalArgumentException 地址串非法时抛出
    */
   public static Address from(final String address) {
     try {
@@ -75,7 +78,7 @@ public final class Address {
           HostAndPort.fromString(address).withDefaultPort(DEFAULT_PORT);
       return new Address(parsedAddress.getHost(), parsedAddress.getPort());
     } catch (final IllegalStateException e) {
-      return from(DEFAULT_PORT);
+      throw new IllegalArgumentException("非法地址(期望 host:port): " + address, e);
     }
   }
 

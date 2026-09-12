@@ -1,7 +1,7 @@
 /*
  * Copyright 2018-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,53 +25,53 @@ import java.util.function.BiConsumer;
 /**
  * Service for unreliable unicast messaging between nodes.
  *
- * <p>The broadcast service is an unreliable broadcast messaging service backed by multicast. This
- * service provides no guaranteed regarding reliability or order of messages.
+ * <p>The unicast service is an unreliable unicast messaging service backed by UDP. This service
+ * provides no guarantee regarding reliability or order of messages.
  */
 public interface UnicastService {
 
   /**
-   * Broadcasts the given message to all listeners for the given subject.
+   * Sends a unicast message to the given address for the given subject.
    *
-   * <p>The message will be broadcast to all listeners for the given {@code subject}. This service
+   * <p>The message will be unicast to the listener for the given {@code subject}. This service
    * makes no guarantee regarding the reliability or order of delivery of the message.
    *
    * @param address the address to which to unicast the message
    * @param subject the message subject
-   * @param message the message to broadcast
+   * @param message the message to unicast
    */
   void unicast(Address address, String subject, byte[] message);
 
   /**
-   * Adds a broadcast listener for the given subject.
+   * Adds a unicast listener for the given subject.
    *
-   * <p>Messages broadcast to the given {@code subject} will be delivered to the provided listener.
+   * <p>Messages unicast to the given {@code subject} will be delivered to the provided listener.
    * This service provides no guarantee regarding the order in which messages arrive.
    *
    * @param subject the message subject
-   * @param listener the broadcast listener to add
+   * @param listener the unicast listener to add
    */
   default void addListener(final String subject, final BiConsumer<Address, byte[]> listener) {
     addListener(subject, listener, MoreExecutors.directExecutor());
   }
 
   /**
-   * Adds a broadcast listener for the given subject.
+   * Adds a unicast listener for the given subject.
    *
-   * <p>Messages broadcast to the given {@code subject} will be delivered to the provided listener.
+   * <p>Messages unicast to the given {@code subject} will be delivered to the provided listener.
    * This service provides no guarantee regarding the order in which messages arrive.
    *
    * @param subject the message subject
-   * @param listener the broadcast listener to add
+   * @param listener the unicast listener to add
    * @param executor an executor with which to call the listener
    */
   void addListener(String subject, BiConsumer<Address, byte[]> listener, Executor executor);
 
   /**
-   * Removes a broadcast listener for the given subject.
+   * Removes a unicast listener for the given subject.
    *
    * @param subject the message subject
-   * @param listener the broadcast listener to remove
+   * @param listener the unicast listener to remove
    */
   void removeListener(String subject, BiConsumer<Address, byte[]> listener);
 }

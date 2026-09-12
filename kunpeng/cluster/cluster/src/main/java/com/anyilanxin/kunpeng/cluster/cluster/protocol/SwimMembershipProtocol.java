@@ -1,7 +1,7 @@
 /*
  * Copyright 2018-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -89,7 +89,7 @@ public class SwimMembershipProtocol
               .register(Namespaces.BASIC)
               .nextId(Namespaces.BEGIN_USER_CUSTOM_ID)
               .register(MemberId.class)
-              .register(new AddressSerializer(), Address.class)
+              .register(AddressSerializer.class, Address.class)
               .register(ImmutableMember.class)
               .register(State.class)
               .register(ImmutablePair.class)
@@ -124,25 +124,21 @@ public class SwimMembershipProtocol
   private final BiFunction<Address, byte[], byte[]> probeHandler =
       (address, payload) -> SERIALIZER.encode(handleProbe(SERIALIZER.decode(payload)));
 
-  SwimMembershipProtocol(
-      final SwimMembershipProtocolConfig config,
-      final String actorSchedulerName,
-      final MeterRegistry registry) {
+  SwimMembershipProtocol(final SwimMembershipProtocolConfig config, final MeterRegistry registry) {
     this.config = config;
     swimMembershipProtocolMetrics = new SwimMembershipProtocolMetrics(registry);
 
     swimScheduler =
         Executors.newSingleThreadScheduledExecutor(
-            namedThreads("atomix-cluster-heartbeat-sender", LOGGER, actorSchedulerName));
+            namedThreads("atomix-cluster-heartbeat-sender", LOGGER));
     eventExecutor =
-        Executors.newSingleThreadExecutor(
-            namedThreads("atomix-cluster-events", LOGGER, actorSchedulerName));
+        Executors.newSingleThreadExecutor(namedThreads("atomix-cluster-events", LOGGER));
   }
 
   /**
-   * Creates a new bootstrap provider builder.
+   * Creates a new SWIM membership protocol builder.
    *
-   * @return a new bootstrap provider builder
+   * @return a new SWIM membership protocol builder
    */
   public static SwimMembershipProtocolBuilder builder(final MeterRegistry registry) {
     return new SwimMembershipProtocolBuilder(registry);
@@ -222,6 +218,11 @@ public class SwimMembershipProtocol
 
   @Override
   protected void post(final GroupMembershipEvent event) {
+    if (event.type() == GroupMembershipEvent.Type.MEMBER_ADDED) {
+      swimMembershipProtocolMetrics.countMemberAdded(members.size());
+    } else if (event.type() == GroupMembershipEvent.Type.MEMBER_REMOVED) {
+      swimMembershipProtocolMetrics.countMemberRemoved(members.size());
+    }
     eventExecutor.execute(() -> super.post(event));
   }
 
@@ -482,23 +483,26 @@ public class SwimMembershipProtocol
             config.getProbeTimeout())
         .whenCompleteAsync(
             (response, error) -> {
-              if (error == null) {
-                final Collection<ImmutableMember> members = SERIALIZER.decode(response);
-                SYNC_LOGGER.debug(
-                    "{} - Finished synchronizing membership with {}, received: '{}'",
-                    localMember.id(),
-                    member,
-                    members);
-                members.forEach(this::updateState);
-              } else {
-                SYNC_LOGGER.warn(
-                    "{} - Failed to synchronize membership with {}",
-                    localMember.id(),
-                    member,
-                    error);
+              // 自调度链: 重调度放 finally, 回调抛错(如坏响应解码失败)不至于永久杀死 sync 循环
+              try {
+                if (error == null) {
+                  final Collection<ImmutableMember> members = SERIALIZER.decode(response);
+                  SYNC_LOGGER.debug(
+                      "{} - Finished synchronizing membership with {}, received: '{}'",
+                      localMember.id(),
+                      member,
+                      members);
+                  members.forEach(this::updateState);
+                } else {
+                  SYNC_LOGGER.warn(
+                      "{} - Failed to synchronize membership with {}",
+                      localMember.id(),
+                      member,
+                      error);
+                }
+              } finally {
+                scheduleSync();
               }
-
-              scheduleSync();
             },
             swimScheduler);
   }
@@ -577,21 +581,25 @@ public class SwimMembershipProtocol
             config.getProbeTimeout())
         .whenCompleteAsync(
             (response, error) -> {
-              if (error == null) {
-                updateState(SERIALIZER.decode(response));
-              } else {
-                PROBE_LOGGER.trace("{} - Failed to probe {}", localMember.id(), member, error);
-                // Verify that the local member term has not changed and request probes from peers.
-                final SwimMember swimMember = members.get(member.id());
-                if (swimMember != null
-                    && swimMember.getIncarnationNumber() == member.incarnationNumber()) {
-                  PROBE_LOGGER.warn(
-                      "{} - Failed to probe {}", localMember.id(), member.id(), error);
-                  requestProbes(swimMember.copy());
+              // 自调度链: 重调度放 finally, 回调抛错(如坏响应解码失败)不至于永久杀死 probe 循环
+              try {
+                if (error == null) {
+                  updateState(SERIALIZER.decode(response));
+                } else {
+                  PROBE_LOGGER.trace("{} - Failed to probe {}", localMember.id(), member, error);
+                  // Verify that the local member term has not changed and request probes from
+                  // peers.
+                  final SwimMember swimMember = members.get(member.id());
+                  if (swimMember != null
+                      && swimMember.getIncarnationNumber() == member.incarnationNumber()) {
+                    PROBE_LOGGER.warn(
+                        "{} - Failed to probe {}", localMember.id(), member.id(), error);
+                    requestProbes(swimMember.copy());
+                  }
                 }
+              } finally {
+                scheduleProbe();
               }
-
-              scheduleProbe();
             },
             swimScheduler);
   }
@@ -801,22 +809,25 @@ public class SwimMembershipProtocol
 
   /** Gossips pending updates to the cluster. */
   private void gossip() {
-    // Check suspect nodes for failure timeouts.
-    checkFailures();
+    // 自调度链: 重调度放 finally, 循环体抛错不至于永久杀死 gossip(连带 checkFailures 的失效检测)
+    try {
+      // Check suspect nodes for failure timeouts.
+      checkFailures();
 
-    // Check local metadata for changes.
-    checkMetadata();
+      // Check local metadata for changes.
+      checkMetadata();
 
-    // Copy and clear the list of pending updates.
-    if (!updates.isEmpty()) {
-      final List<ImmutableMember> updates = Lists.newArrayList(this.updates.values());
-      this.updates.clear();
+      // Copy and clear the list of pending updates.
+      if (!updates.isEmpty()) {
+        final List<ImmutableMember> updates = Lists.newArrayList(this.updates.values());
+        this.updates.clear();
 
-      // Gossip the pending updates to peers.
-      gossip(updates);
+        // Gossip the pending updates to peers.
+        gossip(updates);
+      }
+    } finally {
+      scheduleGossip();
     }
-
-    scheduleGossip();
   }
 
   /**
@@ -859,21 +870,30 @@ public class SwimMembershipProtocol
   }
 
   /**
-   * Handles a member location event.
+   * Handles a node discovery event.
    *
-   * @param event the member location event
+   * <p>discovery 提供者在自己的刷新线程上同步回调本方法, 而 SWIM 状态(members/syncMembers 等) 仅应由 swimScheduler
+   * 单线程触达——这里统一切到 swimScheduler, 否则 tryRemoveMember 会与 sync() 并发操作非线程安全集合。
+   *
+   * @param event the node discovery event
    */
   private void handleDiscoveryEvent(final NodeDiscoveryEvent event) {
-    switch (event.type()) {
-      case JOIN:
-        handleJoinEvent(event.subject());
-        break;
-      case LEAVE:
-        handleLeaveEvent(event.subject());
-        break;
-      default:
-        throw new AssertionError();
+    if (!started.get()) {
+      return;
     }
+    swimScheduler.execute(
+        () -> {
+          switch (event.type()) {
+            case JOIN:
+              handleJoinEvent(event.subject());
+              break;
+            case LEAVE:
+              handleLeaveEvent(event.subject());
+              break;
+            default:
+              throw new AssertionError();
+          }
+        });
   }
 
   /** Handles a node join event. */
@@ -888,8 +908,10 @@ public class SwimMembershipProtocol
   /** Handles a node leave event. */
   private void handleLeaveEvent(final Node node) {
     final SwimMember member = members.get(MemberId.from(node.id().id()));
-    if (member != null && !member.isActive()) {
-      members.remove(member.id());
+    if (member != null) {
+      // 与 tryRemoveMember 保持同一移除路径：清理 randomMembers/syncMembers 并发布 MEMBER_REMOVED。
+      // 移除不经 gossip 传播 DEAD（区别于 checkFailures）：leaves 依赖 discovery 层对每个节点逐一通知
+      tryRemoveMember(member);
     }
   }
 
@@ -941,7 +963,7 @@ public class SwimMembershipProtocol
             (Runnable) this::probe, config.getProbeInterval().toMillis(), TimeUnit.MILLISECONDS);
   }
 
-  /** Bootstrap member location provider type. */
+  /** SWIM membership protocol type. */
   public static class Type implements GroupMembershipProtocol.Type<SwimMembershipProtocolConfig> {
     private static final String NAME = "swim";
 
@@ -952,18 +974,15 @@ public class SwimMembershipProtocol
 
     @Override
     public GroupMembershipProtocol newProtocol(
-        final SwimMembershipProtocolConfig config,
-        final String actorSchedulerName,
-        final MeterRegistry registry) {
-      return new SwimMembershipProtocol(config, actorSchedulerName, registry);
+        final SwimMembershipProtocolConfig config, final MeterRegistry registry) {
+      return new SwimMembershipProtocol(config, registry);
     }
   }
 
   /**
    * Immutable member.
    *
-   * <p>This class is serialized with Kryo using {@code CompatibleFieldSerializer} with chunked
-   * encoding, which provides backward and forward compatibility for field changes.
+   * <p>This class is serialized with Fory.
    *
    * <h2>Serialization Revisions</h2>
    *
@@ -1048,8 +1067,7 @@ public class SwimMembershipProtocol
   /**
    * Swim member.
    *
-   * <p>This class is serialized with Kryo using {@code CompatibleFieldSerializer} with chunked
-   * encoding, which provides backward and forward compatibility for field changes.
+   * <p>This class is serialized with Fory.
    *
    * <h2>Serialization Revisions</h2>
    *

@@ -45,10 +45,11 @@ description: Use when committing changes in kunpeng-engine — running spotlessA
 - **不要**包含 `Co-Authored-By: Claude ...` 尾行
 
 ```text
-feat: change package
+feat: add admin/business dispatch actuator endpoints
 
-- change cluster package
-- change dist clients package
+- expose AdminDispatchClient/BusinessDispatchClient as actuator endpoints
+- map structpack response records to plain DTOs for JSON output
+- add protocol module dependencies to dist build
 ```
 
 ## 常见错误

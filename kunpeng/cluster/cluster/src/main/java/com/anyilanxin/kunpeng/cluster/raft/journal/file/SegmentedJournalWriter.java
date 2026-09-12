@@ -1,7 +1,7 @@
 /*
  * Copyright 2017-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,8 +24,8 @@ import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException.SegmentFull;
 import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException.SegmentSizeTooSmall;
 import com.anyilanxin.kunpeng.cluster.raft.journal.JournalMetaStore;
 import com.anyilanxin.kunpeng.cluster.raft.journal.JournalRecord;
-import io.camunda.zeebe.util.Either;
-import io.camunda.zeebe.util.buffer.BufferWriter;
+import com.anyilanxin.kunpeng.structpack.buffer.BufferWriter;
+import com.anyilanxin.kunpeng.utils.Either;
 import java.util.Collection;
 import java.util.function.Function;
 import org.slf4j.Logger;
@@ -143,9 +143,7 @@ final class SegmentedJournalWriter {
   }
 
   /**
-   * Fetches all segments with a last index greater than or equal to current {@link
-   * #getLastFlushedIndex()}. These are then flushed in order. The {@link Segment#lastIndex()} of
-   * the last successful segment to be flushed will be stored in the given {@link JournalMetaStore}.
+   * Flushes the given dirty segments in order and records the flushed index in memory.
    *
    * @param dirtySegments the list of segments which need to be flushed
    */

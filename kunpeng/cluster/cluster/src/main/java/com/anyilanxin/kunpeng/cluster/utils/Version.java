@@ -1,7 +1,7 @@
 /*
  * Copyright 2018-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,10 @@
  */
 package com.anyilanxin.kunpeng.cluster.utils;
 
-import io.camunda.zeebe.util.SemanticVersion;
 import java.util.Objects;
 
 /**
- * Atomix software version.
+ * Cluster software version.
  *
  * <p>NOTE: eventually we should stop using this and use {@link SemanticVersion} directly instead.
  */

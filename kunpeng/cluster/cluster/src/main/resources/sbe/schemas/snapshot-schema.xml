@@ -1,45 +1,87 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <!--
-  ~ Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
-  ~
-  ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
-  ~
-  ~ This program is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  ~ GNU Affero General Public License for more details.
-  ~
-  ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
-  -->
-<sbe:messageSchema xmlns:sbe="http://fixprotocol.io/2016/sbe"
-  xmlns:xi="http://www.w3.org/2001/XInclude"
-  package="com.anyilanxin.kunpeng.cluster.raft.snapshot.impl" id="6" version="3"
-  semanticVersion="0.1.0" description="Zeebe Snapshot Management Protocol" byteOrder="littleEndian">
+  Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
 
-  <xi:include href="../../../../../protocol/src/main/resources/common-types.xml"/>
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU Affero General Public License for more details.
+
+  You should have received a copy of the GNU Affero General Public License
+  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+<sbe:messageSchema xmlns:sbe="http://fixprotocol.io/2016/sbe"
+  package="com.anyilanxin.kunpeng.cluster.raft.snapshot" id="9" version="1"
+  semanticVersion="0.1.0" description="Kunpeng Snapshot Chunk Transfer Protocol" byteOrder="littleEndian">
 
   <types>
+    <composite name="messageHeader" description="Message identifiers and length of message root">
+      <type name="blockLength" primitiveType="uint16"/>
+      <type name="templateId" primitiveType="uint16"/>
+      <type name="schemaId" primitiveType="uint16"/>
+      <type name="version" primitiveType="uint16"/>
+    </composite>
+    <composite name="groupSizeEncoding" description="Repeating group dimensions">
+      <type name="blockLength" primitiveType="uint16"/>
+      <type name="numInGroup" primitiveType="uint16" semanticType="NumInGroup"/>
+    </composite>
+    <composite name="varDataEncoding">
+      <type name="length" primitiveType="uint32" maxValue="2147483647"/>
+      <type name="varData" primitiveType="uint8" length="0" characterEncoding="UTF-8"/>
+    </composite>
     <!-- binary data -->
     <composite name="blob">
       <type name="length" primitiveType="uint32" maxValue="2147483647"/>
       <type name="varData" primitiveType="uint8" length="0"/>
     </composite>
-
+    <!-- 拉取请求命令：PULL 拉取下一个传输单元；COMPLETE 通知读取完成，可删除对应读取器 -->
+    <enum name="RequestCommand" encodingType="uint8">
+      <validValue name="PULL">0</validValue>
+      <validValue name="COMPLETE">1</validValue>
+    </enum>
+    <!-- 传输单元类型：BATCH_FILES 为批量完整小文件；FILE_CHUNKS 为同一文件的连续分片 -->
+    <enum name="TransferKind" encodingType="uint8">
+      <validValue name="BATCH_FILES">0</validValue>
+      <validValue name="FILE_CHUNKS">1</validValue>
+    </enum>
   </types>
 
-  <sbe:message name="SnapshotChunk" id="4">
-    <field name="totalCount" id="0" type="int32"/>
-    <field name="checksum" id="1" type="uint64"/>
-    <!-- snapshotChecksum is deprecated and not used anymore, here for backwards compatibility  -->
-    <field name="snapshotChecksum" id="5" type="uint64" sinceVersion="2"/>
-    <field name="fileBlockPosition" id="6" type="uint64" sinceVersion="3"/>
-    <field name="totalFileSize" id="7" type="uint64" sinceVersion="3"/>
-    <data name="snapshotId" id="2" type="varDataEncoding"/>
-    <data name="chunkName" id="3" type="varDataEncoding"/>
-    <data name="content" id="4" type="blob"/>
+  <!-- 分片拉取请求：requestId 标识一次传输，服务端据此找到对应的读取器 -->
+  <sbe:message name="SnapshotChunkRequest" id="1">
+    <field name="command" id="0" type="RequestCommand"/>
+    <data name="requestId" id="1" type="varDataEncoding"/>
+  </sbe:message>
+
+  <!-- 单分片：字段与传输单元的 chunks 条目一致。checksum 为本分片内容 CRC32，snapshotChecksum 与
+       totalLength 为所属文件的整文件 CRC32 与总大小，fileOffset 为分片在文件内的字节偏移 -->
+  <sbe:message name="SnapshotChunk" id="2">
+    <field name="checksum" id="0" type="uint64"/>
+    <field name="snapshotChecksum" id="1" type="uint64"/>
+    <field name="totalLength" id="2" type="uint64"/>
+    <field name="fileOffset" id="3" type="uint64"/>
+    <data name="chunkName" id="4" type="varDataEncoding"/>
+    <data name="content" id="5" type="blob"/>
+  </sbe:message>
+
+  <!-- 传输单元：一组同类型分片。group 条目定长字段在前，变长的 chunkName 与 content 作为条目
+       末尾的变长字段。hasMore 标记本单元之后是否还有更多传输单元（0 无 / 1 有），请求方据此决定
+       何时发送读取完成通知。约束：FILE_CHUNKS 下所有条目属于同一文件，若最后一个分片不足 1MB（文
+       件结束），本单元不可能再有其他内容；BATCH_FILES 下每个条目都是一个完整小文件。 -->
+  <sbe:message name="SnapshotChunkBatch" id="3">
+    <field name="kind" id="0" type="TransferKind"/>
+    <field name="hasMore" id="9" type="uint8" semanticType="Boolean"/>
+    <group name="chunks" id="1">
+      <field name="checksum" id="2" type="uint64"/>
+      <field name="snapshotChecksum" id="3" type="uint64"/>
+      <field name="totalLength" id="4" type="uint64"/>
+      <field name="fileOffset" id="5" type="uint64"/>
+      <data name="chunkName" id="6" type="varDataEncoding"/>
+      <data name="content" id="7" type="blob"/>
+    </group>
   </sbe:message>
 </sbe:messageSchema>

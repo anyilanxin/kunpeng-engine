@@ -1,6 +1,6 @@
 /*
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ public class PriorityElectionTimer implements ElectionTimer {
   private final Runnable triggerElection;
   private final Logger log;
   private final int initialTargetPriority;
+  private final int priorityDecayGap;
   private int nodePriority;
   private int targetPriority;
 
@@ -39,13 +40,15 @@ public class PriorityElectionTimer implements ElectionTimer {
       final Runnable triggerElection,
       final Logger log,
       final int initialTargetPriority,
-      final int nodePriority) {
+      final int nodePriority,
+      final int priorityDecayGap) {
     this.electionTimeout = electionTimeout;
     this.threadContext = threadContext;
     this.triggerElection = triggerElection;
     this.log = log;
     this.initialTargetPriority = initialTargetPriority;
     this.nodePriority = nodePriority;
+    this.priorityDecayGap = priorityDecayGap;
     targetPriority = initialTargetPriority;
   }
 
@@ -89,7 +92,9 @@ public class PriorityElectionTimer implements ElectionTimer {
           threadContext.schedule(
               pollTimeout,
               () -> {
-                targetPriority = targetPriority - 1;
+                // 指数衰减（jraft decayTargetPriority 同源）：步长 max(gap, target/5)，
+                // 大优先级范围下低优先级节点无需再等 O(N) 个选举超时才获准接管
+                targetPriority = targetPriority - Math.max(priorityDecayGap, targetPriority / 5);
                 onElectionTimeout();
               });
     }

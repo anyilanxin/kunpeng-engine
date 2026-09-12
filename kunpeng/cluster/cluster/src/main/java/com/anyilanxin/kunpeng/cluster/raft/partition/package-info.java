@@ -1,7 +1,7 @@
 /*
  * Copyright 2018-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,7 @@
  */
 
 /**
- * Provides {@link com.anyilanxin.kunpeng.cluster.primitive.partition.PartitionGroup} and {@link
- * com.anyilanxin.kunpeng.cluster.primitive.partition.Partition} implementations for the Raft
- * consensus protocol.
+ * Provides {@link com.anyilanxin.kunpeng.cluster.raft.partition.Partition} and related metadata,
+ * configuration, and management implementations for the Raft consensus protocol.
  */
 package com.anyilanxin.kunpeng.cluster.raft.partition;

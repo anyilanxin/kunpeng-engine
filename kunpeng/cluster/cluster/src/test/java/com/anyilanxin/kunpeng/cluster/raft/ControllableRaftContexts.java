@@ -1,71 +1,62 @@
 /*
- * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package com.anyilanxin.kunpeng.cluster.raft;
 
-import static com.anyilanxin.kunpeng.cluster.raft.impl.RaftContext.State.READY;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.withSettings;
-
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
+import com.anyilanxin.kunpeng.cluster.cluster.PhysicalTenantIds;
 import com.anyilanxin.kunpeng.cluster.raft.impl.RaftContext;
+import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException;
+import com.anyilanxin.kunpeng.cluster.raft.logentry.EntryValidator.NoopEntryValidator;
+import com.anyilanxin.kunpeng.cluster.raft.logentry.LogAppender.AppendListener;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftElectionConfig;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartitionConfig;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.ControllableRaftServerProtocol;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.TimeoutNowRequest;
 import com.anyilanxin.kunpeng.cluster.raft.roles.LeaderRole;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.RaftSnapshotStore;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.DefaultRaftSnapshotStore;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.DefaultSimpleFileVerificationStore;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.DefaultSnapshotFileInfoProvider;
 import com.anyilanxin.kunpeng.cluster.raft.storage.RaftStorage;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.IndexedRaftLogEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLog;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLogReader;
-import com.anyilanxin.kunpeng.cluster.raft.zeebe.EntryValidator.NoopEntryValidator;
-import com.anyilanxin.kunpeng.cluster.raft.zeebe.ZeebeLogAppender.AppendListener;
-import io.camunda.cluster.PartitionId;
-import io.camunda.cluster.PhysicalTenantIds;
-import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException;
-import io.camunda.zeebe.scheduler.testing.TestConcurrencyControl;
-import io.camunda.zeebe.snapshots.testing.TestFileBasedSnapshotStore;
-import io.camunda.zeebe.util.FileUtil;
-import io.camunda.zeebe.util.collection.Tuple;
-import io.camunda.zeebe.util.micrometer.MicrometerUtil;
+import com.anyilanxin.kunpeng.cluster.utils.TestConcurrencyControl;
+import com.anyilanxin.kunpeng.utils.Tuple;
+import com.anyilanxin.kunpeng.utils.FileUtil;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.jmock.lib.concurrent.DeterministicScheduler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.NavigableMap;
-import java.util.Queue;
-import java.util.Random;
-import java.util.Set;
-import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -73,10 +64,11 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.jmock.lib.concurrent.DeterministicScheduler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
+
+import static com.anyilanxin.kunpeng.cluster.raft.impl.RaftContext.State.READY;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 /**
  * Uses a DeterministicScheduler and controllable messaging layer to get a deterministic execution
@@ -99,7 +91,7 @@ public final class ControllableRaftContexts {
   private final int nodeCount;
   private final Set<MemberId> bootstrappedMembers = new HashSet<>();
   private final Map<MemberId, RaftContext> raftServers = new HashMap<>();
-  private final Map<MemberId, TestFileBasedSnapshotStore> snapshotStores = new HashMap<>();
+  private final Map<MemberId, RaftSnapshotStore> snapshotStores = new HashMap<>();
   private final Map<MemberId, MeterRegistry> meterRegistries = new HashMap<>();
   private Duration electionTimeout;
   private Duration heartbeatTimeout;
@@ -170,7 +162,7 @@ public final class ControllableRaftContexts {
   }
 
   public void shutdown() throws IOException {
-    snapshotStores.forEach((m, store) -> store.close());
+    snapshotStores.forEach((m, store) -> store.delete().join());
     snapshotStores.clear();
     raftServers.forEach((m, c) -> c.getThreadContext().execute(c::close));
     raftServers.keySet().forEach(this::runUntilDone);
@@ -184,7 +176,7 @@ public final class ControllableRaftContexts {
     futuresToFailOnClose.clear();
     bootstrappedMembers.clear();
     directory = null;
-    MicrometerUtil.close(meterRegistry);
+    meterRegistry.close();
   }
 
   private void bootstrapAllRaftServers()
@@ -236,11 +228,20 @@ public final class ControllableRaftContexts {
   private RaftContext createRaftContextForMember(final Random random, final int nodeId) {
     final var memberId = MemberId.from(String.valueOf(nodeId));
     final var snapshotStore =
-        new TestFileBasedSnapshotStore(
-            nodeId,
+            new DefaultRaftSnapshotStore(
+                    memberId.toString(),
             getMemberDirectory(directory, memberId.toString()).toPath().resolve("snapshots"),
-            new TestConcurrencyControl(),
-            meterRegistries.computeIfAbsent(memberId, this::meterRegistryForMember));
+            3,
+                    new DefaultSimpleFileVerificationStore(),
+                    new DefaultSnapshotFileInfoProvider(),
+                    new TestSnapshotProvider(
+                        dir -> {
+                          java.nio.file.Files.createDirectories(dir);
+                          java.nio.file.Files.writeString(
+                                  dir.resolve("data"), "x", java.nio.charset.StandardCharsets.UTF_8);
+                          return java.util.Map.of();
+                        }),
+                    new TestConcurrencyControl());
     snapshotStores.put(memberId, snapshotStore);
     final RaftContext raftContext =
         createRaftContext(
@@ -271,7 +272,9 @@ public final class ControllableRaftContexts {
   }
 
   private MeterRegistry meterRegistryForMember(final MemberId m) {
-    return MicrometerUtil.wrap(meterRegistry, Tags.of("memberId", m.id()));
+    final var registry = new SimpleMeterRegistry();
+    registry.config().commonTags(Tags.of("memberId", m.id()));
+    return registry;
   }
 
   private RaftThreadContextFactory getRaftThreadContextFactory(final MemberId memberId) {
@@ -443,10 +446,10 @@ public final class ControllableRaftContexts {
   public void snapshotAndCompact(final MemberId memberId) {
     final RaftContext raftContext = raftServers.get(memberId);
     // Take snapshot at an index between lastSnapshotIndex and current commitIndex
-    final TestFileBasedSnapshotStore testSnapshotStore = snapshotStores.get(memberId);
+    final RaftSnapshotStore testSnapshotStore = snapshotStores.get(memberId);
     final var startIndex =
         Math.max(
-            raftContext.getLog().getFirstIndex(), testSnapshotStore.getCurrentSnapshotIndex() + 1);
+            raftContext.getLog().getFirstIndex(), testSnapshotStore.getLatestSnapshot().map(PersistedSnapshot::getIndex).orElse(0L) + 1);
     if (startIndex >= raftContext.getCommitIndex()) {
       // cannot take snapshot
       return;
@@ -456,7 +459,15 @@ public final class ControllableRaftContexts {
       reader.seek(snapshotIndex);
       final long term = reader.next().term();
 
-      testSnapshotStore.newSnapshot(snapshotIndex, term, random.nextInt(1, 10), random);
+      try {
+        testSnapshotStore
+                .newTransientSnapshot(snapshotIndex, term)
+                .join()
+            .persist()
+                .join();
+      } catch (final Exception e) {
+        throw new java.util.concurrent.CompletionException(e);
+      }
 
       LOG.info(
           "Snapshot taken at index {}. Current commit index is {}",
@@ -472,8 +483,8 @@ public final class ControllableRaftContexts {
     raftcontext.getThreadContext().execute(raftcontext::close);
     runUntilDone(memberId);
     deterministicExecutors.remove(memberId).close();
-    snapshotStores.get(memberId).close();
-    MicrometerUtil.close(meterRegistries.get(memberId));
+    snapshotStores.get(memberId).delete().join();
+    meterRegistries.get(memberId).close();
     final var pendingJoin = futuresToFailOnClose.remove(memberId);
     if (pendingJoin != null) {
       if (pendingJoin.isDone() && !pendingJoin.isCompletedExceptionally()) {
@@ -505,8 +516,8 @@ public final class ControllableRaftContexts {
     runUntilDone(memberId);
 
     deterministicExecutors.remove(memberId).close();
-    snapshotStores.get(memberId).close();
-    MicrometerUtil.close(meterRegistries.get(memberId));
+    snapshotStores.get(memberId).delete().join();
+    meterRegistries.get(memberId).close();
     createRaftContextForMember(random, Integer.parseInt(memberId.id()));
     final var future = raftServers.get(memberId).getCluster().join(otherMembers);
     futuresToFailOnClose.put(memberId, future);
@@ -525,7 +536,7 @@ public final class ControllableRaftContexts {
       runUntilDone(memberId);
     }
     deterministicExecutors.remove(memberId).close();
-    MicrometerUtil.close(meterRegistries.get(memberId));
+    meterRegistries.get(memberId).close();
     final var nodeBeforeRestart = raftServers.remove(memberId);
     // Losing the metastore forfeits the vote promise: the restarted member may legitimately vote
     // for a different candidate in a term it already voted in.
@@ -539,7 +550,7 @@ public final class ControllableRaftContexts {
     final var dataDirectory = nodeBeforeRestart.getStorage().directory().toPath();
     LOG.info("Deleting directory {} of member {}", dataDirectory, memberId.id());
     try {
-      FileUtil.deleteFolderIfExists(dataDirectory);
+      FileUtil.deleteTreeIfExists(dataDirectory);
     } catch (final IOException e) {
       LOG.error("Failed to delete directory {} of member {}", dataDirectory, memberId.id());
       throw new UncheckedIOException(e);
@@ -777,7 +788,7 @@ public final class ControllableRaftContexts {
     }
 
     if (firstIndex != 1) {
-      final var currentSnapshotIndex = snapshotStores.get(memberId).getCurrentSnapshotIndex();
+      final var currentSnapshotIndex = snapshotStores.get(memberId).getLatestSnapshot().map(PersistedSnapshot::getIndex).orElse(0L);
       assertThat(currentSnapshotIndex)
           .describedAs("The log is compacted in %s. Hence a snapshot must exist.")
           .isGreaterThanOrEqualTo(firstIndex - 1);

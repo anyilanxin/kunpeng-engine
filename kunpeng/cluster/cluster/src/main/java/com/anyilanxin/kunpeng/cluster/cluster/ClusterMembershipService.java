@@ -1,7 +1,7 @@
 /*
  * Copyright 2014-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,6 +38,10 @@ public interface ClusterMembershipService
    * @return set of cluster members
    */
   Set<Member> getMembers();
+
+  Set<Member> getMembers(String zone);
+
+  Set<MemberId> getMemberIds(String zone);
 
   /**
    * Returns the specified member.

@@ -1,7 +1,7 @@
 /*
  * Copyright 2014-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,17 +28,17 @@ public class ClusterMembershipEvent extends AbstractEvent<ClusterMembershipEvent
    * Creates an event of a given type and for the specified instance and the current time.
    *
    * @param type cluster event type
-   * @param instance cluster device subject
+   * @param instance cluster member subject
    */
   public ClusterMembershipEvent(final Type type, final Member instance) {
     super(type, instance);
   }
 
   /**
-   * Creates an event of a given type and for the specified device and time.
+   * Creates an event of a given type and for the specified member and time.
    *
-   * @param type device event type
-   * @param instance event device subject
+   * @param type cluster event type
+   * @param instance event member subject
    * @param time occurrence time
    */
   public ClusterMembershipEvent(final Type type, final Member instance, final long time) {

@@ -1,7 +1,7 @@
 /*
  * Copyright 2018-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -74,10 +74,8 @@ public interface GroupMembershipProtocol
      * Creates a new instance of the protocol.
      *
      * @param config the protocol configuration
-     * @param actorSchedulerName the value for actor-scheduler to be set on MDC
      * @return the protocol instance
      */
-    GroupMembershipProtocol newProtocol(
-        C config, final String actorSchedulerName, final MeterRegistry registry);
+    GroupMembershipProtocol newProtocol(C config, final MeterRegistry registry);
   }
 }

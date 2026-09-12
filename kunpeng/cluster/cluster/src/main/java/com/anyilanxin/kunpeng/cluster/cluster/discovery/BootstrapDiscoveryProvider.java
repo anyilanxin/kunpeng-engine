@@ -1,7 +1,7 @@
 /*
  * Copyright 2018-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,19 +33,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Cluster membership provider that bootstraps membership from a pre-defined set of peers.
+ * Cluster discovery provider that bootstraps the cluster from a pre-defined set of seed nodes.
  *
- * <p>The bootstrap member provider takes a set of peer {@link
- * BootstrapDiscoveryConfig#setNodes(Collection) addresses} and uses them to join the cluster. Using
- * the {@link com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService}, each node sends a
- * heartbeat to its configured bootstrap peers. Peers respond to each heartbeat message with a list
- * of all known peers, thus propagating membership information using a gossip style protocol.
- *
- * <p>A phi accrual failure detector is used to detect failures and remove peers from the
- * configuration. In order to avoid flapping of membership following a {@link
- * com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipEvent.Type#MEMBER_ADDED} event, the
- * implementation attempts to heartbeat all newly discovered peers before triggering a {@link
- * com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipEvent.Type#MEMBER_REMOVED} event.
+ * <p>The bootstrap discovery provider takes a set of peer {@link
+ * BootstrapDiscoveryConfig#setNodes(Collection) addresses} and simply returns them from {@link
+ * #getNodes()}. {@link #join(BootstrapService, Node)} and {@link #leave(Node)} are no-ops: this
+ * provider does not exchange any messages with peers. Membership propagation and failure detection
+ * are delegated to the configured group membership protocol (e.g. SWIM).
  */
 public final class BootstrapDiscoveryProvider
     extends AbstractListenerManager<NodeDiscoveryEvent, NodeDiscoveryEventListener>
@@ -76,9 +70,9 @@ public final class BootstrapDiscoveryProvider
   }
 
   /**
-   * Creates a new bootstrap provider builder.
+   * Creates a new bootstrap discovery provider builder.
    *
-   * @return a new bootstrap provider builder
+   * @return a new bootstrap discovery provider builder
    */
   public static BootstrapDiscoveryBuilder builder() {
     return new BootstrapDiscoveryBuilder();
@@ -106,7 +100,7 @@ public final class BootstrapDiscoveryProvider
     return CompletableFuture.completedFuture(null);
   }
 
-  /** Bootstrap member location provider type. */
+  /** Bootstrap discovery provider type. */
   public static class Type implements NodeDiscoveryProvider.Type<BootstrapDiscoveryConfig> {
     private static final String NAME = "bootstrap";
 

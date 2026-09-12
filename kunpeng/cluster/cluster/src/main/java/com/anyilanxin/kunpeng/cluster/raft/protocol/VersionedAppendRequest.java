@@ -1,7 +1,7 @@
 /*
  * Copyright 2015-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -232,7 +232,7 @@ public class VersionedAppendRequest extends AbstractRaftRequest {
      *
      * @param leader The request leader.
      * @return The append request builder.
-     * @throws IllegalArgumentException if the {@code leader} is not positive
+     * @throws NullPointerException if the {@code leader} is null
      */
     public Builder withLeader(final MemberId leader) {
       this.leader = checkNotNull(leader, "leader cannot be null").id();
@@ -244,7 +244,7 @@ public class VersionedAppendRequest extends AbstractRaftRequest {
      *
      * @param prevLogIndex The request last log index.
      * @return The append request builder.
-     * @throws IllegalArgumentException if the {@code index} is not positive
+     * @throws IllegalArgumentException if the {@code index} is negative
      */
     public Builder withPrevLogIndex(final long prevLogIndex) {
       checkArgument(prevLogIndex >= 0, "prevLogIndex must be positive");
@@ -257,7 +257,7 @@ public class VersionedAppendRequest extends AbstractRaftRequest {
      *
      * @param prevLogTerm The request last log term.
      * @return The append request builder.
-     * @throws IllegalArgumentException if the {@code term} is not positive
+     * @throws IllegalArgumentException if the {@code term} is negative
      */
     public Builder withPrevLogTerm(final long prevLogTerm) {
       checkArgument(prevLogTerm >= 0, "prevLogTerm must be positive");

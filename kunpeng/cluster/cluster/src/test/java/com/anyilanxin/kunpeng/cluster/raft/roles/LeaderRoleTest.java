@@ -1,31 +1,20 @@
 /*
- * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package com.anyilanxin.kunpeng.cluster.raft.roles;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.AdditionalAnswers.answerVoid;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.timeout;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
@@ -36,24 +25,29 @@ import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember.Type;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.impl.DefaultRaftMember;
 import com.anyilanxin.kunpeng.cluster.raft.impl.LogCompactor;
 import com.anyilanxin.kunpeng.cluster.raft.impl.RaftContext;
+import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException;
+import com.anyilanxin.kunpeng.cluster.raft.logentry.EntryValidator.ValidationResult;
+import com.anyilanxin.kunpeng.cluster.raft.logentry.LogAppender.AppendListener;
+import com.anyilanxin.kunpeng.cluster.raft.logentry.util.TestAppender;
 import com.anyilanxin.kunpeng.cluster.raft.metrics.RaftReplicationMetrics;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.PersistedRaftRecord;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.ReplicatableJournalRecord;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.RaftSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.storage.RaftStorage;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.IndexedRaftLogEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLog;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ApplicationEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.RaftEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.RaftLogEntry;
-import com.anyilanxin.kunpeng.cluster.raft.zeebe.EntryValidator.ValidationResult;
-import com.anyilanxin.kunpeng.cluster.raft.zeebe.ZeebeLogAppender.AppendListener;
-import com.anyilanxin.kunpeng.cluster.raft.zeebe.util.TestAppender;
 import com.anyilanxin.kunpeng.cluster.utils.concurrent.SingleThreadContext;
-import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException;
-import io.camunda.zeebe.scheduler.future.CompletableActorFuture;
-import io.camunda.zeebe.snapshots.ReceivableSnapshotStore;
+import com.anyilanxin.kunpeng.scheduler.future.CompletableActorFuture;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.jupiter.api.AutoClose;
+import org.mockito.Mockito;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.time.Duration;
@@ -64,10 +58,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.jupiter.api.AutoClose;
-import org.mockito.Mockito;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.AdditionalAnswers.answerVoid;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 public class LeaderRoleTest {
 
@@ -102,9 +97,9 @@ public class LeaderRoleTest {
             });
     when(context.getLog()).thenReturn(log);
 
-    final ReceivableSnapshotStore persistedSnapshotStore = mock(ReceivableSnapshotStore.class);
+      final RaftSnapshotStore persistedSnapshotStore = mock(RaftSnapshotStore.class);
     when(persistedSnapshotStore.abortPendingSnapshots())
-        .thenReturn(CompletableActorFuture.completed(null));
+        .thenReturn(CompletableActorFuture.completed());
     when(context.getPersistedSnapshotStore()).thenReturn(persistedSnapshotStore);
     when(context.getEntryValidator()).thenReturn((a, b) -> ValidationResult.ok());
     when(context.getStorage())

@@ -1,7 +1,7 @@
 /*
  * Copyright 2017-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -212,14 +212,17 @@ public final class RaftLog implements Closeable {
   }
 
   /**
-   * Flushes the underlying journal in a blocking, synchronous way. When this returns, it is
-   * guaranteed that any appended data since the last flush is persisted on disk.
+   * 直刷日志：返回即保证自上次刷盘以来的全部追加数据已持久化。
    *
-   * <p>NOTE: this bypasses the configured flushing strategy, and is meant to be used when certain
-   * guarantees are required.
+   * <p>配置的刷盘策略本身为直刷（{@code isDirect()}）时直接复用——行为等价，且让测试注入的 计数 flusher
+   * 可观测提交路径；否则强制绕过配置策略走共享直刷单例，保证提交路径的持久性 不依赖延迟刷盘策略（保序 group commit 的前提）。
    */
   public void forceFlush() throws FlushException {
-    Factory.DIRECT.flush(journal);
+    if (flusher.isDirect()) {
+      flusher.flush(journal);
+    } else {
+      Factory.DIRECT.flush(journal);
+    }
   }
 
   @Override

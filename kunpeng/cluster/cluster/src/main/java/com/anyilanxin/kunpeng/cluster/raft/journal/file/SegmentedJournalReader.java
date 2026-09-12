@@ -1,7 +1,7 @@
 /*
  * Copyright 2017-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -132,7 +132,7 @@ class SegmentedJournalReader implements JournalReader {
         // being at the second position if the first entry has a greater ASQN
         JournalRecord record = null;
         while (unsafeHasNext()) {
-          final var currentRecord = next();
+          final var currentRecord = unsafeNext();
           if (currentRecord.index() > indexUpperBound) {
             break;
           }

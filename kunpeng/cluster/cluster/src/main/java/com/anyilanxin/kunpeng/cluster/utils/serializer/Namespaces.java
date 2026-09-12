@@ -1,51 +1,26 @@
 /*
- * Copyright 2014-present Open Networking Foundation
- * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package com.anyilanxin.kunpeng.cluster.utils.serializer;
 
 import com.anyilanxin.kunpeng.cluster.utils.Version;
-import com.anyilanxin.kunpeng.cluster.utils.serializer.serializers.ArraysAsListSerializer;
-import com.anyilanxin.kunpeng.cluster.utils.serializer.serializers.AtomicBooleanSerializer;
-import com.anyilanxin.kunpeng.cluster.utils.serializer.serializers.AtomicIntegerSerializer;
-import com.anyilanxin.kunpeng.cluster.utils.serializer.serializers.AtomicLongSerializer;
-import com.anyilanxin.kunpeng.cluster.utils.serializer.serializers.ByteBufferSerializer;
-import com.anyilanxin.kunpeng.cluster.utils.serializer.serializers.ImmutableListSerializer;
-import com.anyilanxin.kunpeng.cluster.utils.serializer.serializers.ImmutableMapSerializer;
-import com.anyilanxin.kunpeng.cluster.utils.serializer.serializers.ImmutableSetSerializer;
-import com.esotericsoftware.kryo.serializers.JavaSerializer;
-import com.google.common.collect.HashMultiset;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multisets;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 import java.nio.ByteBuffer;
 import java.time.Duration;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.Optional;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -54,27 +29,31 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public final class Namespaces {
 
+  /**
+   * 基础类型命名空间。
+   *
+   * <p><b>注册顺序即 wire 契约</b>：本块处于浮动 id 段（{@code nextId(FLOATING_ID)}），Fory 按注册调用顺序分配类型 id，
+   * 因此以下操作会平移后续所有类型的 id、 造成跨版本节点互解失败——<b>只允许尾部追加新类型，严禁插入、删除或重排既有条目</b>。 改动本块前先确认集群内不存在新旧版本混跑。
+   */
   public static final Namespace BASIC =
       new Namespace.Builder()
           .nextId(Namespace.FLOATING_ID)
           .register(byte[].class)
-          .register(new AtomicBooleanSerializer(), AtomicBoolean.class)
-          .register(new AtomicIntegerSerializer(), AtomicInteger.class)
-          .register(new AtomicLongSerializer(), AtomicLong.class)
+          .register(AtomicBoolean.class)
+          .register(AtomicInteger.class)
+          .register(AtomicLong.class)
           .register(
-              new ImmutableListSerializer(),
               ImmutableList.class,
               ImmutableList.of(1).getClass(),
               ImmutableList.of(1, 2).getClass(),
               ImmutableList.of(1, 2, 3).subList(1, 3).getClass())
+          .register(guavaImmutableSerializedForm())
           .register(
-              new ImmutableSetSerializer(),
               ImmutableSet.class,
               ImmutableSet.of().getClass(),
               ImmutableSet.of(1).getClass(),
               ImmutableSet.of(1, 2).getClass())
           .register(
-              new ImmutableMapSerializer(),
               ImmutableMap.class,
               ImmutableMap.of().getClass(),
               ImmutableMap.of("a", 1).getClass(),
@@ -91,9 +70,8 @@ public final class Namespaces {
               ArrayDeque.class)
           .register(HashMultiset.class)
           .register(Multisets.immutableEntry("", 0).getClass())
-          .register(Sets.class)
-          .register(new JavaSerializer(), Maps.immutableEntry("a", "b").getClass())
-          .register(new ArraysAsListSerializer(), Arrays.asList().getClass())
+          .register(Maps.immutableEntry("a", "b").getClass())
+          .register(Arrays.asList().getClass())
           .register(Collections.singletonList(1).getClass())
           .register(Duration.class)
           .register(Collections.emptySet().getClass())
@@ -114,16 +92,30 @@ public final class Namespaces {
           .register(Void.class) // placeholder for the deleted WallClockTimestamp class
           .register(Version.class)
           .register(
-              new ByteBufferSerializer(),
               ByteBuffer.class,
               ByteBuffer.allocate(1).getClass(),
               ByteBuffer.allocateDirect(1).getClass())
           .name("BASIC")
           .build();
 
-  /** Kryo registration Id for user custom registration. */
+  /**
+   * 用户自定义注册起始 id（显式绑定 Fory 类型 id 的安全下界，经 {@code nextId} 开启显式块）。Fory 预注册 JDK 常用类型占用低位段（如 ArrayList
+   * 固定 id 90），显式段从 500 起避免冲突；块内按 {@code begin + index} 分配，两端按 id 对齐、与注册顺序无关。
+   */
   public static final int BEGIN_USER_CUSTOM_ID = 500;
 
   // not to be instantiated
   private Namespaces() {}
+
+  /**
+   * Guava ImmutableList 的 subList 视图序列化时会落到包私有类 ImmutableList$SerializedForm，
+   * 只能通过反射注册（ForyTypeSupportTest 已验证）。
+   */
+  private static Class<?> guavaImmutableSerializedForm() {
+    try {
+      return Class.forName("com.google.common.collect.ImmutableList$SerializedForm");
+    } catch (final ClassNotFoundException e) {
+      throw new IllegalStateException("Guava ImmutableList$SerializedForm not found", e);
+    }
+  }
 }

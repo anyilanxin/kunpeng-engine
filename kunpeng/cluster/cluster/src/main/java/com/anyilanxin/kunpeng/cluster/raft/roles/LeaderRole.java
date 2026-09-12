@@ -1,7 +1,7 @@
 /*
  * Copyright 2015-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 package com.anyilanxin.kunpeng.cluster.raft.roles;
 
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.raft.RaftCommitListener;
 import com.anyilanxin.kunpeng.cluster.raft.RaftError;
 import com.anyilanxin.kunpeng.cluster.raft.RaftError.Type;
 import com.anyilanxin.kunpeng.cluster.raft.RaftException;
@@ -29,43 +30,18 @@ import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.impl.RaftMemberContext;
 import com.anyilanxin.kunpeng.cluster.raft.impl.RaftContext;
 import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.AppendResponse;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.ConfigureRequest;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.ConfigureResponse;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.ForceConfigureRequest;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.ForceConfigureResponse;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.InternalAppendRequest;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.JoinRequest;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.JoinResponse;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.LeadershipTransferInitiateRequest;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.LeadershipTransferInitiateResponse;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.LeaveRequest;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.LeaveResponse;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.PollRequest;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.PollResponse;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.RaftResponse;
+import com.anyilanxin.kunpeng.cluster.raft.logentry.EntryValidator.ValidationResult;
+import com.anyilanxin.kunpeng.cluster.raft.logentry.LogAppender;
+import com.anyilanxin.kunpeng.cluster.raft.protocol.*;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.RaftResponse.Status;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.ReconfigureRequest;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.ReconfigureResponse;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.TransferRequest;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.TransferResponse;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.VoteRequest;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.VoteResponse;
 import com.anyilanxin.kunpeng.cluster.raft.rebalance.LeadershipTransferRunner;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.IndexedRaftLogEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLogReader;
-import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ApplicationEntry;
-import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ConfigurationEntry;
-import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.InitialEntry;
-import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.RaftLogEntry;
-import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.SerializedApplicationEntry;
-import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.UnserializedApplicationEntry;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.*;
 import com.anyilanxin.kunpeng.cluster.raft.storage.system.Configuration;
-import com.anyilanxin.kunpeng.cluster.raft.zeebe.EntryValidator.ValidationResult;
-import com.anyilanxin.kunpeng.cluster.raft.zeebe.ZeebeLogAppender;
 import com.anyilanxin.kunpeng.cluster.utils.concurrent.Scheduled;
+import com.anyilanxin.kunpeng.structpack.buffer.BufferWriter;
 import com.google.common.base.Throwables;
-import io.camunda.zeebe.util.buffer.BufferWriter;
 import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.time.Duration;
@@ -76,10 +52,14 @@ import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
 
 /** Leader state. */
-public final class LeaderRole extends ActiveRole implements ZeebeLogAppender {
+public final class LeaderRole extends ActiveRole implements LogAppender {
 
   private static final int MAX_APPEND_ATTEMPTS = 5;
   private final LeaderAppender appender;
+
+  /** 合并刷盘任务推进 commitIndex 后完成 appender 在途提交 future 的回调。方法引用每次创建都不等值， 必须存字段才能在 stop 时等值注销。 */
+  private final RaftCommitListener commitListener;
+
   private final LeadershipTransferRunner leadershipTransferRunner;
   private Scheduled appendTimer;
   private long configuring;
@@ -92,6 +72,9 @@ public final class LeaderRole extends ActiveRole implements ZeebeLogAppender {
   public LeaderRole(final RaftContext context) {
     super(context);
     appender = new LeaderAppender(this);
+    // 合并刷盘任务 fsync 完成并推进 commitIndex 后，经此回调完成在途 append future
+    commitListener = index -> appender.completeCommits(index);
+    raft.addCommitListener(commitListener);
     // The paused supplier reads the guard lazily; the guard is constructed just below.
     leadershipTransferRunner =
         new LeadershipTransferRunner(
@@ -146,6 +129,8 @@ public final class LeaderRole extends ActiveRole implements ZeebeLogAppender {
 
   @Override
   public synchronized CompletableFuture<Void> stop() {
+    // 先注销提交监听：停止后合并任务即使再触发推进，也不应回调已关闭的 appender
+    raft.removeCommitListener(commitListener);
     raft.resetLastHeartbeat();
     // Close open resources (eg:- journal readers) used for replication by the leader
     raft.getCluster().getReplicationTargets().forEach(RaftMemberContext::closeReplicationContext);
@@ -795,6 +780,20 @@ public final class LeaderRole extends ActiveRole implements ZeebeLogAppender {
         .forEach(member -> member.recordAppendedBytes(entryBytes));
     appender.observeNonCommittedEntries(raft.getCommitIndex());
     return indexedEntry;
+  }
+
+  /**
+   * 追加业务元数据条目并复制到各副本，多数派提交后以条目 index 完成 future（仅经 {@code RaftContext.appendBusinessMeta} 内部入口触达）。
+   */
+  public CompletableFuture<Long> appendBusinessMetaEntry(final BusinessMetaEntry entry) {
+    raft.checkThread();
+    final IndexedRaftLogEntry indexed;
+    try {
+      indexed = append(new RaftLogEntry(raft.getTerm(), entry));
+    } catch (final Exception e) {
+      return CompletableFuture.failedFuture(e);
+    }
+    return appender.appendEntries(indexed.index());
   }
 
   @Override

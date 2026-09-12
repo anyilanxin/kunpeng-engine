@@ -1,7 +1,7 @@
 /*
  * Copyright 2016-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -136,7 +136,7 @@ public class ReconfigureRequest extends AbstractRaftRequest {
      *
      * @param member The member to update.
      * @return The request builder.
-     * @throws NullPointerException if {@code members} is null
+     * @throws NullPointerException if {@code member} is null
      */
     public Builder withMember(final RaftMember member) {
       checkNotNull(member, "member cannot be null");

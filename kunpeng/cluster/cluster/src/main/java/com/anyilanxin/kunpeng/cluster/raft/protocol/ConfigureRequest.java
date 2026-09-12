@@ -1,7 +1,7 @@
 /*
  * Copyright 2015-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -154,9 +154,9 @@ public class ConfigureRequest extends AbstractRaftRequest {
   }
 
   /**
-   * Returns the configuration members.
+   * Returns the members of the prior configuration.
    *
-   * @return The configuration members.
+   * @return The members of the prior configuration.
    */
   public Collection<RaftMember> oldMembers() {
     return oldMembers;
@@ -167,7 +167,7 @@ public class ConfigureRequest extends AbstractRaftRequest {
     return leader();
   }
 
-  /** Heartbeat request builder. */
+  /** Configure request builder. */
   public static class Builder extends AbstractRaftRequest.Builder<Builder, ConfigureRequest> {
 
     private long term;
@@ -195,7 +195,7 @@ public class ConfigureRequest extends AbstractRaftRequest {
      *
      * @param leader The request leader.
      * @return The append request builder.
-     * @throws IllegalArgumentException if the {@code leader} is not positive
+     * @throws NullPointerException if the {@code leader} is null
      */
     public Builder withLeader(final MemberId leader) {
       this.leader = checkNotNull(leader, "leader cannot be null").id();

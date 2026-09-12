@@ -1,7 +1,7 @@
 /*
  * Copyright 2015-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,35 +22,33 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.anyilanxin.kunpeng.cluster.raft.journal.file.SegmentAllocator;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.RaftSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLog;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLogFlusher;
+import com.anyilanxin.kunpeng.cluster.raft.storage.system.BusinessMetaStore;
 import com.anyilanxin.kunpeng.cluster.raft.storage.system.MetaStore;
-import com.anyilanxin.kunpeng.cluster.utils.concurrent.ThreadContext;
 import com.anyilanxin.kunpeng.cluster.utils.concurrent.ThreadContextFactory;
-import io.camunda.zeebe.snapshots.PersistedSnapshotStore;
-import io.camunda.zeebe.snapshots.ReceivableSnapshotStore;
-import io.camunda.zeebe.util.FileUtil;
+import com.anyilanxin.kunpeng.utils.FileUtil;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.Objects;
 
 /**
  * Immutable log configuration and {@link RaftLog} factory.
  *
- * <p>This class provides a factory for {@link RaftLog} objects. {@code Storage} objects are
+ * <p>This class provides a factory for {@link RaftLog} objects. {@code RaftStorage} objects are
  * immutable and can be created only via the {@link RaftStorage.Builder}. To create a new {@code
- * Storage.Builder}, use the static {@link #builder()} factory method:
+ * RaftStorage.Builder}, use the static {@link #builder(MeterRegistry)} factory method:
  *
  * <pre>{@code
- * Storage storage = Storage.builder()
+ * RaftStorage storage = RaftStorage.builder(meterRegistry)
  *   .withDirectory(new File("logs"))
- *   .withStorageLevel(StorageLevel.DISK)
+ *   .withMaxSegmentSize(1024 * 1024)
  *   .build();
  *
  * }</pre>
@@ -64,7 +62,7 @@ public final class RaftStorage {
   private final File directory;
   private final int maxSegmentSize;
   private final long freeDiskSpace;
-  private final ReceivableSnapshotStore persistedSnapshotStore;
+  private final RaftSnapshotStore persistedSnapshotStore;
   private final int journalIndexDensity;
   private final SegmentAllocator segmentAllocator;
   private final MeterRegistry meterRegistry;
@@ -77,7 +75,7 @@ public final class RaftStorage {
       final int maxSegmentSize,
       final long freeDiskSpace,
       final RaftLogFlusher.Factory flusherFactory,
-      final ReceivableSnapshotStore persistedSnapshotStore,
+      final RaftSnapshotStore persistedSnapshotStore,
       final int journalIndexDensity,
       final SegmentAllocator segmentAllocator,
       final MeterRegistry meterRegistry) {
@@ -93,7 +91,7 @@ public final class RaftStorage {
     this.meterRegistry = meterRegistry;
 
     try {
-      FileUtil.ensureDirectoryExists(directory.toPath());
+      FileUtil.ensureDirectory(directory.toPath());
     } catch (final IOException e) {
       throw new UncheckedIOException(
           String.format("Failed to create partition's directory %s", directory.toPath()), e);
@@ -121,32 +119,29 @@ public final class RaftStorage {
   /**
    * Attempts to acquire a lock on the storage directory.
    *
+   * <p>锁文件经 {@code CREATE_NEW} 原子独占创建：并发调用只有一方能创建成功，不存在旧实现「写 tmp 文件再 ATOMIC_MOVE」的竞态窗口 （并发方写同一个 tmp
+   * 文件、后 rename 的一方会抛 NoSuchFileException）。锁文件已存在时回读内容比对持有者：id 相同视为持锁（容忍本节点上次异常退出残留的锁文件），不同则持锁失败。
+   *
    * @param id the ID with which to lock the directory
    * @return indicates whether the lock was successfully acquired
    */
   public boolean lock(final String id) {
     final File lockFile = new File(directory, String.format(".%s.lock", prefix));
-    final File tempLockFile = new File(directory, String.format(".%s.lock.tmp", id));
     try {
-      if (!lockFile.exists()) {
-        // Create and update the file atomically
-        Files.writeString(
-            tempLockFile.toPath(),
-            id,
-            StandardOpenOption.CREATE,
-            StandardOpenOption.TRUNCATE_EXISTING,
-            StandardOpenOption.WRITE,
-            StandardOpenOption.SYNC);
-
-        // If two nodes tries to acquire lock, move will fail with FileAlreadyExistsException
-        FileUtil.moveDurably(
-            tempLockFile.toPath(), lockFile.toPath(), StandardCopyOption.ATOMIC_MOVE);
-      }
-      // Read the lock file again to ensure that contents matches the local id
+      Files.writeString(
+          lockFile.toPath(),
+          id,
+          StandardOpenOption.CREATE_NEW,
+          StandardOpenOption.WRITE,
+          StandardOpenOption.SYNC);
+    } catch (final FileAlreadyExistsException e) {
+      // 已有锁文件：落到下方回读比对持有者
+    } catch (final IOException e) {
+      throw new StorageException("Failed to acquire storage lock", e);
+    }
+    try {
       final String lock = Files.readString(lockFile.toPath());
       return lock != null && lock.equals(id);
-    } catch (final FileAlreadyExistsException e) {
-      return false;
     } catch (final IOException e) {
       throw new StorageException("Failed to acquire storage lock", e);
     }
@@ -168,11 +163,24 @@ public final class RaftStorage {
   }
 
   /**
-   * Returns the {@link PersistedSnapshotStore}.
+   * Opens the {@link BusinessMetaStore} for this partition, creating the file if missing.
+   *
+   * @return the business meta store.
+   */
+  public BusinessMetaStore openBusinessMetaStore() {
+    try {
+      return BusinessMetaStore.open(directory, prefix);
+    } catch (final IOException e) {
+      throw new StorageException("Failed to open business meta store", e);
+    }
+  }
+
+  /**
+   * Returns the {@link RaftSnapshotStore}.
    *
    * @return The snapshot store.
    */
-  public ReceivableSnapshotStore getPersistedSnapshotStore() {
+  public RaftSnapshotStore getPersistedSnapshotStore() {
     return persistedSnapshotStore;
   }
 
@@ -215,7 +223,7 @@ public final class RaftStorage {
    * <p>The storage directory is the directory to which all {@link RaftLog}s write files. Segment
    * files for multiple logs may be stored in the storage directory, and files for each log instance
    * will be identified by the {@code name} provided when the log is {@link #openLog(MetaStore,
-   * ThreadContext) opened}.
+   * ThreadContextFactory) opened}.
    *
    * @return The storage directory.
    */
@@ -231,15 +239,15 @@ public final class RaftStorage {
   /**
    * Builds a {@link RaftStorage} configuration.
    *
-   * <p>The storage builder provides simplifies building more complex {@link RaftStorage}
-   * configurations. To create a storage builder, use the {@link #builder()} factory method. Set
-   * properties of the configured {@code Storage} object with the various {@code with*} methods.
+   * <p>The storage builder simplifies building more complex {@link RaftStorage} configurations. To
+   * create a storage builder, use the {@link #builder(MeterRegistry)} factory method. Set
+   * properties of the configured {@code RaftStorage} object with the various {@code with*} methods.
    * Once the storage has been configured, call {@link #build()} to build the object.
    *
    * <pre>{@code
-   * Storage storage = Storage.builder()
+   * RaftStorage storage = RaftStorage.builder(meterRegistry)
    *   .withDirectory(new File("logs"))
-   *   .withPersistenceLevel(PersistenceLevel.DISK)
+   *   .withMaxSegmentSize(1024 * 1024)
    *   .build();
    *
    * }</pre>
@@ -265,7 +273,7 @@ public final class RaftStorage {
     private int maxSegmentSize = DEFAULT_MAX_SEGMENT_SIZE;
     private long freeDiskSpace = DEFAULT_FREE_DISK_SPACE;
     private RaftLogFlusher.Factory flusherFactory = DEFAULT_FLUSHER_FACTORY;
-    private ReceivableSnapshotStore persistedSnapshotStore;
+    private RaftSnapshotStore persistedSnapshotStore;
     private int journalIndexDensity = DEFAULT_JOURNAL_INDEX_DENSITY;
     private SegmentAllocator segmentAllocator = SegmentAllocator.defaultAllocator();
     private int partitionId = DEFAULT_PARTITION_ID;
@@ -336,7 +344,7 @@ public final class RaftStorage {
 
     /**
      * Sets the {@link RaftLogFlusher.Factory} to create a new flushing strategy for the {@link
-     * RaftLog} when {@link #openLog(MetaStore, ThreadContext)} is called.
+     * RaftLog} when {@link #openLog(MetaStore, ThreadContextFactory)} is called.
      *
      * @param flusherFactory factory to create the flushing strategy for the {@link RaftLog}
      * @return the storage builder.
@@ -352,7 +360,7 @@ public final class RaftStorage {
      * @param persistedSnapshotStore the snapshot store for this Raft
      * @return the storage builder
      */
-    public Builder withSnapshotStore(final ReceivableSnapshotStore persistedSnapshotStore) {
+    public Builder withSnapshotStore(final RaftSnapshotStore persistedSnapshotStore) {
       this.persistedSnapshotStore = persistedSnapshotStore;
       return this;
     }

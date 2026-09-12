@@ -1,7 +1,7 @@
 /*
  * Copyright 2015-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -79,6 +79,7 @@ public class MetaStore implements JournalMetaStore, AutoCloseable {
           StandardOpenOption.CREATE_NEW,
           StandardOpenOption.WRITE,
           StandardOpenOption.SYNC);
+      fsyncDirectory(storage.directory());
 
       // initialize the lastFlushedIndex to its null value; otherwise it will read it as 0 since
       // all bytes in the empty file are now 0
@@ -113,6 +114,7 @@ public class MetaStore implements JournalMetaStore, AutoCloseable {
           StandardOpenOption.CREATE_NEW,
           StandardOpenOption.WRITE,
           StandardOpenOption.SYNC);
+      fsyncDirectory(storage.directory());
     }
     configurationChannel =
         FileChannel.open(confFile.toPath(), StandardOpenOption.READ, StandardOpenOption.WRITE);
@@ -192,7 +194,7 @@ public class MetaStore implements JournalMetaStore, AutoCloseable {
     return lastFlushedIndex != MetaEncoder.lastFlushedIndexNullValue();
   }
 
-  public void storeCommitIndex(final long index) {
+  public synchronized void storeCommitIndex(final long index) {
     Preconditions.checkArgument(index >= 0, "commit index must be >= 0");
     if (index == commitIndex) {
       log.trace("Skip storing same last flushed commit index {}", index);
@@ -293,6 +295,15 @@ public class MetaStore implements JournalMetaStore, AutoCloseable {
       }
     } catch (final IOException e) {
       throw new StorageException(e);
+    }
+  }
+
+  /** 对存储目录执行 fsync，保证新建文件的目录项持久化；内容 SYNC 不保证目录项持久，掉电可致文件整体丢失。 */
+  private void fsyncDirectory(final File directory) {
+    try (final var dirChannel = FileChannel.open(directory.toPath(), StandardOpenOption.READ)) {
+      dirChannel.force(true);
+    } catch (final IOException e) {
+      log.debug("Failed to fsync meta storage directory {}", directory, e);
     }
   }
 }

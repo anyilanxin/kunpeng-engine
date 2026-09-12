@@ -1,7 +1,7 @@
 /*
  * Copyright 2018-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -118,7 +118,7 @@ public class SwimMembershipProtocolBuilder extends GroupMembershipProtocolBuilde
   }
 
   /**
-   * Sets the failure timeout to use prior to phi failure detectors being populated.
+   * Sets the failure timeout after which a suspect member is marked as dead and removed.
    *
    * @param failureTimeout the failure timeout
    * @return the protocol builder
@@ -142,6 +142,6 @@ public class SwimMembershipProtocolBuilder extends GroupMembershipProtocolBuilde
 
   @Override
   public GroupMembershipProtocol build() {
-    return new SwimMembershipProtocol(config, "", meterRegistry);
+    return new SwimMembershipProtocol(config, meterRegistry);
   }
 }

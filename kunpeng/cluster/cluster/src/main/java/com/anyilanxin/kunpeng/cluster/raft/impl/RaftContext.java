@@ -1,7 +1,7 @@
 /*
  * Copyright 2015-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,88 +18,61 @@
 package com.anyilanxin.kunpeng.cluster.raft.impl;
 
 import static com.anyilanxin.kunpeng.cluster.utils.concurrent.Threads.namedThreads;
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Preconditions.*;
 
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
-import com.anyilanxin.kunpeng.cluster.raft.ElectionTimer;
-import com.anyilanxin.kunpeng.cluster.raft.LeadershipTransferCoordinatorCheck;
-import com.anyilanxin.kunpeng.cluster.raft.LeadershipTransferWriteBarrier;
-import com.anyilanxin.kunpeng.cluster.raft.RaftApplicationEntryCommittedPositionListener;
-import com.anyilanxin.kunpeng.cluster.raft.RaftCommitListener;
-import com.anyilanxin.kunpeng.cluster.raft.RaftException.CommitFailedException;
-import com.anyilanxin.kunpeng.cluster.raft.RaftRoleChangeListener;
+import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
+import com.anyilanxin.kunpeng.cluster.raft.*;
+import com.anyilanxin.kunpeng.cluster.raft.RaftException.ProtocolException;
 import com.anyilanxin.kunpeng.cluster.raft.RaftServer.Role;
-import com.anyilanxin.kunpeng.cluster.raft.RaftThreadContextFactory;
-import com.anyilanxin.kunpeng.cluster.raft.RebalanceConfiguration;
-import com.anyilanxin.kunpeng.cluster.raft.SnapshotReplicationListener;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember.Type;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.impl.DefaultRaftMember;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.impl.RaftClusterContext;
 import com.anyilanxin.kunpeng.cluster.raft.journal.CheckedJournalException.FlushException;
 import com.anyilanxin.kunpeng.cluster.raft.journal.SegmentInfo;
+import com.anyilanxin.kunpeng.cluster.raft.logentry.EntryValidator;
+import com.anyilanxin.kunpeng.cluster.raft.metadata.BusinessMetaManager;
 import com.anyilanxin.kunpeng.cluster.raft.metrics.RaftReplicationMetrics;
 import com.anyilanxin.kunpeng.cluster.raft.metrics.RaftRoleMetrics;
 import com.anyilanxin.kunpeng.cluster.raft.metrics.RaftServiceMetrics;
 import com.anyilanxin.kunpeng.cluster.raft.metrics.RebalanceMetrics;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftElectionConfig;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartitionConfig;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.AppendResponse;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.ConfigureResponse;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.ForceConfigureResponse;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.InstallResponse;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.JoinResponse;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.LeadershipTransferInitiateResponse;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.LeaveResponse;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.PollResponse;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.ProtocolVersionHandler;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.RaftRequest;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.RaftResponse;
+import com.anyilanxin.kunpeng.cluster.raft.protocol.*;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.RaftResponse.Builder;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.RaftResponse.Status;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.RaftServerProtocol;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.ReconfigureResponse;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.TimeoutNowResponse;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.TransferResponse;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.VoteResponse;
-import com.anyilanxin.kunpeng.cluster.raft.roles.ActiveRole;
-import com.anyilanxin.kunpeng.cluster.raft.roles.CandidateRole;
-import com.anyilanxin.kunpeng.cluster.raft.roles.FollowerRole;
-import com.anyilanxin.kunpeng.cluster.raft.roles.InactiveRole;
-import com.anyilanxin.kunpeng.cluster.raft.roles.LeaderRole;
-import com.anyilanxin.kunpeng.cluster.raft.roles.PassiveRole;
-import com.anyilanxin.kunpeng.cluster.raft.roles.PromotableRole;
-import com.anyilanxin.kunpeng.cluster.raft.roles.RaftRole;
+import com.anyilanxin.kunpeng.cluster.raft.roles.*;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.RaftSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.storage.RaftStorage;
 import com.anyilanxin.kunpeng.cluster.raft.storage.StorageException;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLog;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.BusinessMetaEntry;
+import com.anyilanxin.kunpeng.cluster.raft.storage.system.BusinessMetaStore;
+import com.anyilanxin.kunpeng.cluster.raft.storage.system.Configuration;
 import com.anyilanxin.kunpeng.cluster.raft.storage.system.MetaStore;
 import com.anyilanxin.kunpeng.cluster.raft.utils.StateUtil;
-import com.anyilanxin.kunpeng.cluster.raft.zeebe.EntryValidator;
 import com.anyilanxin.kunpeng.cluster.utils.concurrent.ThreadContext;
-import io.camunda.cluster.PartitionId;
-import io.camunda.zeebe.snapshots.PersistedSnapshot;
-import io.camunda.zeebe.snapshots.ReceivableSnapshotStore;
-import io.camunda.zeebe.util.CheckedRunnable;
-import io.camunda.zeebe.util.exception.UnrecoverableException;
-import io.camunda.zeebe.util.health.FailureListener;
-import io.camunda.zeebe.util.health.HealthMonitorable;
-import io.camunda.zeebe.util.health.HealthReport;
-import io.camunda.zeebe.util.logging.ThrottledLogger;
+import com.anyilanxin.kunpeng.cluster.utils.health.FailureListener;
+import com.anyilanxin.kunpeng.cluster.utils.health.HealthMonitorable;
+import com.anyilanxin.kunpeng.cluster.utils.health.HealthReport;
+import com.anyilanxin.kunpeng.cluster.utils.logging.ThrottledLogger;
+import com.anyilanxin.kunpeng.utils.CheckedRunnable;
+import com.anyilanxin.kunpeng.utils.exception.UnrecoverableException;
+import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Objects;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import org.agrona.CloseHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -138,12 +111,26 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
   private final Set<SnapshotReplicationListener> snapshotReplicationListeners =
       new CopyOnWriteArraySet<>();
   private final Set<FailureListener> failureListeners = new CopyOnWriteArraySet<>();
+
+  /** 业务三态监听器到其聚合适配器的映射，注销时反查。 */
+  private final Map<RaftRoleStateListener, RaftRoleStateAdapter> roleStateAdapters =
+      new ConcurrentHashMap<>();
+
+  /** 业务元数据变更监听器（状态实际推进时成对回调 onStarted/onCompleted）。 */
+  private final Set<RaftBusinessMetaListener> businessMetaListeners = new CopyOnWriteArraySet<>();
+
   private final RaftRoleMetrics raftRoleMetrics;
   private final RebalanceMetrics rebalanceMetrics;
   private final RaftReplicationMetrics replicationMetrics;
   private final MetaStore meta;
+  private final BusinessMetaStore businessMetaStore;
+  private final BusinessMetaManager businessMetaManager;
+
+  /** leader 同步拉取钩子（RaftPartitionServer 装配 BusinessMetaSync 后注册；volatile 支持运行期注入）。 */
+  private volatile Runnable businessMetaSyncHook;
+
   private final RaftLog raftLog;
-  private final ReceivableSnapshotStore persistedSnapshotStore;
+  private final RaftSnapshotStore persistedSnapshotStore;
   private final LogCompactor logCompactor;
   private volatile State state = State.ACTIVE;
   // Some fields are read by external threads. To ensure thread-safe access, we can use the lock for
@@ -154,6 +141,13 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
   private volatile long term;
   private MemberId lastVotedFor;
   private long commitIndex;
+
+  /** 合并窗口内已达 quorum 的最高提交目标；fsync 完成后才真正推进 commitIndex（仅 raft 线程访问）。 */
+  private long pendingCommitIndex;
+
+  /** 是否已有合并刷盘任务在 threadContext 队列中排队，防止重复调度。 */
+  private boolean commitFlushPending;
+
   private long firstCommitIndex;
   private volatile boolean started;
   private EntryValidator entryValidator;
@@ -178,6 +172,9 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
   private final RaftPartitionConfig partitionConfig;
   private final PartitionId partitionId;
   private final MeterRegistry meterRegistry;
+
+  /** 单次合并刷盘覆盖的提交条数（保序 group commit 效果观测；batch=1 即未合并）。 */
+  private final DistributionSummary commitBatchSize;
 
   // after firstCommitIndex is set it will be null
   private AwaitingReadyCommitListener awaitingReadyCommitListener;
@@ -205,6 +202,13 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
 
     raftRoleMetrics = new RaftRoleMetrics(name, meterRegistry);
     rebalanceMetrics = new RebalanceMetrics(name, meterRegistry);
+    // registry 为进程级共享，必须带 partition 标签，避免同组多分区 meter 相互覆盖
+    commitBatchSize =
+        DistributionSummary.builder("raft.commit.batch.size")
+            .description("单次合并刷盘覆盖的提交条数（保序 group commit 效果观测）")
+            .baseUnit("entries")
+            .tag("partition", name)
+            .register(meterRegistry);
 
     this.electionConfig = electionConfig;
     if (electionConfig.isPriorityElectionEnabled()) {
@@ -226,6 +230,14 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
     // Open the metadata store.
     meta = storage.openMetaStore();
 
+    // Open the business meta store; projection is rebuilt on demand from the log.
+    businessMetaStore = storage.openBusinessMetaStore();
+    businessMetaManager = new BusinessMetaManager(businessMetaStore);
+    businessMetaManager.setStateChangeCallback(this::notifyBusinessMetaChanged);
+    businessMetaManager.loadFromStore();
+    // 先于 initial setCommitIndex 注册：重启时补放 (0, 持久化 commitIndex]，覆盖「已提交但投影未落盘」窗口
+    addCommitListener(this::applyBusinessMetaCommitted);
+
     // Load the current term and last vote from disk.
     term = meta.loadTerm();
     lastVotedFor = meta.loadVote();
@@ -246,7 +258,7 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
         .getLatestSnapshot()
         .ifPresent(persistedSnapshot -> currentSnapshot = persistedSnapshot);
     StateUtil.verifySnapshotLogConsistent(
-        partitionId.number(),
+        partitionId.id(),
         getCurrentSnapshotIndex(),
         raftLog.getFirstIndex(),
         raftLog.isEmpty(),
@@ -308,15 +320,15 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
       final String localMemberId) {
     final var context =
         threadContextFactory.createContext(
-            namedThreads("%s-%s-%d".formatted(name, localMemberId, partitionId.number()), LOGGER),
+            namedThreads("%s-%s-%d".formatted(name, localMemberId, partitionId.id()), LOGGER),
             this::onUncaughtException);
     // in order to set the partition id once in the raft thread
     context.execute(
         () -> {
-          MDC.put("partitionId", String.valueOf(partitionId.number()));
+          MDC.put("partitionId", String.valueOf(partitionId.id()));
           // matches Actor.ACTOR_PROP_PHYSICAL_TENANT
           MDC.put("physicalTenant", partitionId.group());
-          MDC.put("actor-name", name + "-" + partitionId.number());
+          MDC.put("actor-name", name + "-" + partitionId.id());
           MDC.put("actor-scheduler", "Broker-" + localMemberId);
           MDC.put(RAFT_ROLE_KEY, Role.INACTIVE.name());
         });
@@ -324,6 +336,9 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
   }
 
   private void onNewPersistedSnapshot(final PersistedSnapshot persistedSnapshot) {
+    // 日志压缩后检查 busimeta 缺口，必要时经钩子向 leader 拉取；
+    // 切 raft 线程与提交重放串行，避免与 applyCommitted 交错
+    threadContext.execute(this::syncBusinessMetaIfNeeded);
     threadContext.execute(this::updateCurrentSnapshot);
   }
 
@@ -331,7 +346,13 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
     LOGGER.error("An uncaught exception occurred, transition to inactive role", error);
     try {
       // to prevent further operations submitted to the threadcontext to execute
-      transition(Role.INACTIVE);
+      if (ThreadContext.currentContext() == threadContext) {
+        transition(Role.INACTIVE);
+      } else {
+        // raft-log 等其他单线程上下文的异常：转换必须回到 raft 线程执行，
+        // 否则 checkThread 抛错后在错误线程上走阻塞 close()
+        threadContext.execute(() -> transition(Role.INACTIVE));
+      }
     } catch (final Exception e) {
       LOGGER.error("An error occurred when transitioning to inactive, closing the raft context", e);
       close();
@@ -553,7 +574,103 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
    * @param lastCommitIndex index of the most recently committed entry
    */
   public void notifyCommitListeners(final long lastCommitIndex) {
-    commitListeners.forEach(listener -> listener.onCommit(lastCommitIndex));
+    // 逐监听器隔离: 单个监听器抛错不应沿提交路径扩散成未捕获异常(会触发整分区 INACTIVE)
+    for (final RaftCommitListener listener : commitListeners) {
+      try {
+        listener.onCommit(lastCommitIndex);
+      } catch (final Exception e) {
+        LOGGER.error(
+            "Commit listener {} failed on commit index {}",
+            listener.getClass().getName(),
+            lastCommitIndex,
+            e);
+      }
+    }
+  }
+
+  /** 提交推进时增量应用 busimeta 条目（raft 线程回调，IO 仅为小文件投影重写），并按需触发 leader 同步。 */
+  private void applyBusinessMetaCommitted(final long commitIndex) {
+    businessMetaManager.applyCommitted(raftLog, commitIndex);
+    syncBusinessMetaIfNeeded();
+  }
+
+  /** 业务元数据管理器（含内存状态读取）。 */
+  public BusinessMetaManager getBusinessMetaManager() {
+    return businessMetaManager;
+  }
+
+  /**
+   * 业务元数据追加入口（raft 内部处理，与配置变更同级，业务侧不直接触达日志追加）： 任意线程可调，切到 raft 线程后由 leader 角色追加 BusinessMetaEntry
+   * 并等待多数派提交， future 以提交条目 index 完成；本机非 leader（含易主切换瞬间）以 {@link RaftException.NoLeader} 异常完成，
+   * 由调用方决定转发或拒绝。
+   */
+  public CompletableFuture<Long> appendBusinessMeta(final Map<String, String> entries) {
+    final CompletableFuture<Long> future = new CompletableFuture<>();
+    threadContext.execute(
+        () -> {
+          if (role instanceof final LeaderRole leaderRole) {
+            leaderRole
+                .appendBusinessMetaEntry(new BusinessMetaEntry(entries))
+                .whenComplete(
+                    (index, error) -> {
+                      if (error != null) {
+                        future.completeExceptionally(error);
+                      } else {
+                        future.complete(index);
+                      }
+                    });
+          } else {
+            future.completeExceptionally(
+                new RaftException.NoLeader("Local role is not the leader"));
+          }
+        });
+    return future;
+  }
+
+  /** 非 leader 且日志压缩形成缺口（appliedIndex+1 &lt; firstIndex）时，经钩子向 leader 拉取全量状态（leader 自身投影启动时已恢复）。 */
+  private void syncBusinessMetaIfNeeded() {
+    if (isLeader()) {
+      return;
+    }
+    if (businessMetaManager.needsLeaderSync(raftLog) && businessMetaSyncHook != null) {
+      businessMetaSyncHook.run();
+    }
+  }
+
+  /** 注册同步拉取钩子（RaftPartitionServer 装配后调用）。 */
+  public void setBusinessMetaSyncHook(final Runnable hook) {
+    businessMetaSyncHook = hook;
+  }
+
+  /**
+   * busimeta 状态实际推进后通知变更监听器（仅业务视图，不改真实 raft 角色，leader/follower 一视同仁）： onStarted/onCompleted 在单次
+   * raft 线程回调内成对触发（紧配对，之间无其他事件插入）， 携带回调时刻的真实角色；晚注册监听器经 {@link #addBusinessMetaListener} 注册时以当前状态补发。
+   */
+  private void notifyBusinessMetaChanged() {
+    final Role currentRole = role.role();
+    final long currentTerm = term;
+    final Map<String, String> entries = businessMetaManager.current().entries();
+    businessMetaListeners.forEach(
+        listener -> {
+          listener.onStarted(partitionId, entries, currentTerm, currentRole);
+          listener.onCompleted(partitionId, entries, currentTerm, currentRole);
+        });
+  }
+
+  /** 注册业务元数据变更监听器（Raft 线程执行；注册时以当前状态补发一次成对回调，重启后无需等待新状态推进）。 */
+  public void addBusinessMetaListener(final RaftBusinessMetaListener listener) {
+    threadContext.execute(
+        () -> {
+          final Map<String, String> entries = businessMetaManager.current().entries();
+          listener.onStarted(partitionId, entries, term, role.role());
+          listener.onCompleted(partitionId, entries, term, role.role());
+          businessMetaListeners.add(listener);
+        });
+  }
+
+  /** 注销业务元数据变更监听器。 */
+  public void removeBusinessMetaListener(final RaftBusinessMetaListener listener) {
+    threadContext.execute(() -> businessMetaListeners.remove(listener));
   }
 
   /**
@@ -582,44 +699,83 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
     final long previousCommitIndex = this.commitIndex;
     if (commitIndex > previousCommitIndex) {
       if (isLeader()) {
-        // leader counts itself in quorum, so in order to commit the leader must persist
-        try {
-          raftLog.flush();
-        } catch (final FlushException e) {
-          if (LOGGER.isWarnEnabled()) {
-            LOGGER.warn(
-                "Failed to flush commit at index %s, resetting journal to %s and stepping down"
-                    .formatted(commitIndex, previousCommitIndex),
-                e);
-          }
-          transition(Role.FOLLOWER);
-          throw new CommitFailedException(
-              "Failed to commit index %s because of a flush error: %s", commitIndex, e);
+        // 保序 group commit：目标先累积，由合并任务统一 fsync 后推进。
+        // commitIndex 推进 / storeCommitIndex / client future 完成全部晚于本地 fsync。
+        pendingCommitIndex = Math.max(pendingCommitIndex, commitIndex);
+        if (!commitFlushPending) {
+          commitFlushPending = true;
+          // 排到事件队列尾：先处理完已排队事件，它们的提交目标一并合并进同一次 fsync
+          threadContext.execute(this::commitFlushAdvance);
         }
+        return previousCommitIndex;
       }
-      raftLog.setCommitIndex(commitIndex);
-      this.commitIndex = commitIndex;
-      final var clusterConfig = cluster.getConfiguration();
-      if (clusterConfig != null) {
-        final long configurationIndex = clusterConfig.index();
-        if (configurationIndex > previousCommitIndex && configurationIndex <= commitIndex) {
-          cluster.commitCurrentConfiguration();
-        }
-      }
-      // Persist the commit index only after the configuration it covers is persisted. This keeps
-      // the invariant that a committed configuration entry at or below the stored commit index is
-      // always recoverable from the meta store, so startup only needs to search the uncommitted
-      // part of the log for configuration entries. The reverse order would allow a crash to leave
-      // a stored commit index covering a configuration that is in neither the meta store nor,
-      // after restart, in memory.
-      meta.storeCommitIndex(commitIndex);
-      replicationMetrics.setCommitIndex(commitIndex);
-      notifyCommitListeners(commitIndex);
+      applyCommitAdvance(commitIndex, previousCommitIndex);
     }
     if (awaitingReadyCommitListener != null) {
       awaitingReadyCommitListener.onCommit(commitIndex);
     }
     return previousCommitIndex;
+  }
+
+  /**
+   * 推进提交水位并落盘：日志提交位、内存 commitIndex、配置提交、meta 持久化、监听器通知。
+   *
+   * <p>leader 路径由 {@link #commitFlushAdvance()} 在本地 fsync 完成后调用；follower 路径保持与原实现一致的同步推进。
+   *
+   * @param commitIndex 本次推进到的提交索引（已按日志末端收窄）
+   * @param previousCommitIndex 推进前的提交索引
+   */
+  private void applyCommitAdvance(final long commitIndex, final long previousCommitIndex) {
+    raftLog.setCommitIndex(commitIndex);
+    this.commitIndex = commitIndex;
+    final var clusterConfig = cluster.getConfiguration();
+    if (clusterConfig != null) {
+      final long configurationIndex = clusterConfig.index();
+      if (configurationIndex > previousCommitIndex && configurationIndex <= commitIndex) {
+        cluster.commitCurrentConfiguration();
+      }
+    }
+    // Persist the commit index only after the configuration it covers is persisted. This keeps
+    // the invariant that a committed configuration entry at or below the stored commit index is
+    // always recoverable from the meta store, so startup only needs to search the uncommitted
+    // part of the log for configuration entries. The reverse order would allow a crash to leave
+    // a stored commit index covering a configuration that is in neither the meta store nor,
+    // after restart, in memory.
+    meta.storeCommitIndex(commitIndex);
+    replicationMetrics.setCommitIndex(commitIndex);
+    notifyCommitListeners(commitIndex);
+    if (awaitingReadyCommitListener != null) {
+      awaitingReadyCommitListener.onCommit(commitIndex);
+    }
+  }
+
+  /**
+   * 合并刷盘任务：一次 fsync 覆盖窗口内全部已 append 记录，之后才推进 commitIndex（保序 group commit）。提交路径强制直刷：即使配置了
+   * DelayedFlusher，也必须 fsync 完成后才视为已提交。
+   */
+  private void commitFlushAdvance() {
+    commitFlushPending = false;
+    final long previousCommitIndex = commitIndex;
+    final long target = pendingCommitIndex;
+    pendingCommitIndex = 0;
+    if (target <= previousCommitIndex) {
+      return;
+    }
+    if (!isLeader()) {
+      // 刷盘排队期间已退位：丢弃 pending，由新 leader 心跳重建提交水位，防止旧 leader 无 quorum 授权推进
+      LOGGER.debug("Discarded pending commit index {} after stepping down", target);
+      return;
+    }
+    try {
+      raftLog.forceFlush();
+    } catch (final FlushException e) {
+      LOGGER.warn("Failed to flush commit up to index %s, stepping down".formatted(target), e);
+      // 退位触发 LeaderRole.stop() → appender.close()，在途 append future 由此失败
+      transition(Role.FOLLOWER);
+      return;
+    }
+    applyCommitAdvance(Math.min(target, raftLog.getLastIndex()), previousCommitIndex);
+    commitBatchSize.record(Math.min(target, raftLog.getLastIndex()) - previousCommitIndex);
   }
 
   /**
@@ -657,6 +813,92 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
   public void removeSnapshotReplicationListener(
       final SnapshotReplicationListener snapshotReplicationListener) {
     threadContext.execute(() -> snapshotReplicationListeners.remove(snapshotReplicationListener));
+  }
+
+  /**
+   * 注册业务三态状态监听器（把角色变更与快照复制事件聚合为 LEADER/FOLLOWER/INACTIVE 视图）， 注册后在 Raft 线程上立即回调一次当前状态。
+   *
+   * @param roleStateListener 业务监听器
+   */
+  public void addRoleStateListener(final RaftRoleStateListener roleStateListener) {
+    threadContext.execute(
+        () -> {
+          final RaftRoleStateAdapter adapter = new RaftRoleStateAdapter(roleStateListener);
+          roleStateAdapters.put(roleStateListener, adapter);
+          roleChangeListeners.add(adapter);
+          snapshotReplicationListeners.add(adapter);
+          // 先回调当前角色状态，再补发错过的快照复制周期，保证终止状态与真实进度一致
+          adapter.onNewRole(role.role(), term);
+          replayMissedReplicationEvents(adapter);
+        });
+  }
+
+  /** 为晚注册的监听器补发错过的快照复制事件，映射与运行期完全一致（开始→INACTIVE，结束→FOLLOWER）。 */
+  private void replayMissedReplicationEvents(final RaftRoleStateAdapter adapter) {
+    if (role.role() != Role.FOLLOWER) {
+      return;
+    }
+    switch (missedSnapshotReplicationEvents) {
+      case STARTED -> adapter.onSnapshotReplicationStarted();
+      case COMPLETED -> {
+        adapter.onSnapshotReplicationStarted();
+        adapter.onSnapshotReplicationCompleted(term);
+      }
+      default -> {
+        // 无错过事件
+      }
+    }
+  }
+
+  /** 注销业务三态状态监听器。 */
+  public void removeRoleStateListener(final RaftRoleStateListener roleStateListener) {
+    threadContext.execute(
+        () -> {
+          final RaftRoleStateAdapter adapter = roleStateAdapters.remove(roleStateListener);
+          if (adapter != null) {
+            roleChangeListeners.remove(adapter);
+            snapshotReplicationListeners.remove(adapter);
+          }
+        });
+  }
+
+  /** 把 Raft 角色变更与快照复制事件聚合为业务三态视图的适配器（包可见供测试）。 */
+  static final class RaftRoleStateAdapter
+      implements RaftRoleChangeListener, SnapshotReplicationListener {
+
+    private final RaftRoleStateListener listener;
+    private volatile long currentTerm;
+
+    RaftRoleStateAdapter(final RaftRoleStateListener listener) {
+      this.listener = listener;
+    }
+
+    @Override
+    public void onNewRole(final Role newRole, final long term) {
+      currentTerm = term;
+      dispatch(newRole, term);
+    }
+
+    @Override
+    public void onSnapshotReplicationStarted() {
+      // 快照复制进行中：日志将被重置、消费者需全部关闭，业务视角确定为不可用（INACTIVE）
+      listener.onInactive(currentTerm);
+    }
+
+    @Override
+    public void onSnapshotReplicationCompleted(final long term) {
+      currentTerm = term;
+      // 快照复制结束：确定性地恢复为 FOLLOWER，不依赖当时的具体角色
+      listener.onFollower(term);
+    }
+
+    private void dispatch(final Role role, final long term) {
+      switch (role) {
+        case LEADER -> listener.onLeader(term);
+        case FOLLOWER -> listener.onFollower(term);
+        default -> listener.onInactive(term);
+      }
+    }
   }
 
   public void notifySnapshotReplicationStarted() {
@@ -826,26 +1068,28 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
 
   /** Creates an internal state for the given state type. */
   private RaftRole createRole(final Role role) {
-    switch (role) {
-      case INACTIVE:
+    raftRoleMetrics.setTerm(getTerm());
+    return switch (role) {
+      case INACTIVE -> {
         raftRoleMetrics.becomingInactive();
-        return new InactiveRole(this);
-      case PASSIVE:
-        return new PassiveRole(this);
-      case PROMOTABLE:
-        return new PromotableRole(this);
-      case FOLLOWER:
+        yield new InactiveRole(this);
+      }
+      case PASSIVE -> new PassiveRole(this);
+      case PROMOTABLE -> new PromotableRole(this);
+      case FOLLOWER -> {
         raftRoleMetrics.becomingFollower();
-        return new FollowerRole(this, this::createElectionTimer);
-      case CANDIDATE:
+        yield new FollowerRole(this, this::createElectionTimer);
+      }
+      case CANDIDATE -> {
         raftRoleMetrics.becomingCandidate();
-        return new CandidateRole(this);
-      case LEADER:
+        yield new CandidateRole(this);
+      }
+      case LEADER -> {
         raftRoleMetrics.becomingLeader();
-        return new LeaderRole(this);
-      default:
-        throw new AssertionError();
-    }
+        yield new LeaderRole(this);
+      }
+      default -> throw new AssertionError();
+    };
   }
 
   private ElectionTimer createElectionTimer(final Runnable triggerElection, final Logger log) {
@@ -856,7 +1100,8 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
           triggerElection,
           log,
           electionConfig.getInitialTargetPriority(),
-          electionConfig.getNodePriority());
+          electionConfig.getNodePriority(),
+          partitionConfig.getPriorityDecayGap());
     } else {
       return new RandomizedElectionTimer(
           partitionConfig.getElectionTimeout(), threadContext, random, triggerElection, log);
@@ -927,6 +1172,9 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
     } catch (final Exception e) {
       LOGGER.error("Failed to close metastore", e);
     }
+
+    // Close the business meta store.
+    CloseHelper.quietClose(businessMetaStore);
 
     LOGGER.debug("Raft context closed");
     // close thread contexts
@@ -1011,13 +1259,13 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
         final var errorMessage =
             String.format(
                 """
-                   Expected to set first commit position to after restart, but firstCommitIndex(%d), lastflushedIndex(%d) < commitIndex(%d). \
-                   While commitIndex is the last committed index, persisted in the metadata file. \
-                   This means a majority of nodes has lost committed data: \
-                   This node will become inactive to avoid overwriting previously committed data, \
-                   but the leader have formed a quorum and will continue to commit new events, \
-                   creating an inconsistent timeline of events: \
-                   THE CLUSTER SHOULD BE STOPPED IMMEDIATELY to further prevent inconsistencies.""",
+              Expected to set first commit position to after restart, but firstCommitIndex(%d), lastflushedIndex(%d) < commitIndex(%d). \
+              While commitIndex is the last committed index, persisted in the metadata file. \
+              This means a majority of nodes has lost committed data: \
+              This node will become inactive to avoid overwriting previously committed data, \
+              but the leader have formed a quorum and will continue to commit new events, \
+              creating an inconsistent timeline of events: \
+              THE CLUSTER SHOULD BE STOPPED IMMEDIATELY to further prevent inconsistencies.""",
                 firstCommitIndex, lastFlushedIndex, commitIndex);
         throw new IllegalStateException(errorMessage);
       }
@@ -1223,7 +1471,7 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
   }
 
   /**
-   * Returns the server state machine.
+   * Returns the log compactor.
    *
    * @return The log compactor.
    */
@@ -1236,7 +1484,7 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
    *
    * @return The server snapshot store.
    */
-  public ReceivableSnapshotStore getPersistedSnapshotStore() {
+  public RaftSnapshotStore getPersistedSnapshotStore() {
     return persistedSnapshotStore;
   }
 
@@ -1420,8 +1668,109 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
     return configureFuture;
   }
 
+  /**
+   * Transfers leadership to the given member (jraft's {@code transferLeadershipTo} equivalent),
+   * reusing the coordinated transfer machinery: the leader pauses writes, catches the desired
+   * leader up to the frozen log head and promotes it with TimeoutNow. The future completes once the
+   * target has been observed as leader, and fails if another member is elected instead or the
+   * transfer is rejected.
+   *
+   * <pre>{@code
+   * Caller                Local Node (leader)              Target Member
+   *    |                        |                                |
+   *    | transferLeadership(t)  |                                |
+   *    |----------------------->|                                |
+   *    |                        | register leader-election listener
+   *    |                        | onLeadershipTransferInitiate   |
+   *    |                        | (admission: single in-flight,  |
+   *    |                        |  no config change, reachable)  |
+   *    |                        | freeze log head (pause writes) |
+   *    |                        |-- AppendRequest (catch-up) --->|
+   *    |                        |<-- AppendResponse (match=head)-|
+   *    |                        |-- TimeoutNowRequest ---------->|
+   *    |                        |                                | start election immediately
+   *    |                        |<-- VoteRequest ----------------|
+   *    |                        |--- vote for target ------------>|
+   *    |                        |          (target becomes leader, listener fires)
+   *    |<--- complete OK -------|                                |
+   * }</pre>
+   *
+   * <p>When the local node is not the leader, the initiate request is forwarded to the known leader
+   * instead; the completion path (election listener) is identical.
+   *
+   * @param targetMember the member that should take over leadership
+   */
+  public CompletableFuture<Void> transferLeadership(final MemberId targetMember) {
+    final CompletableFuture<Void> result = new CompletableFuture<>();
+    threadContext.execute(() -> startLocalLeadershipTransfer(targetMember, result));
+    return result;
+  }
+
+  private void startLocalLeadershipTransfer(
+      final MemberId targetMember, final CompletableFuture<Void> result) {
+    final var localMemberId = getCluster().getLocalMember().memberId();
+
+    final Consumer<RaftMember> electionListener =
+        new Consumer<>() {
+          @Override
+          public void accept(final RaftMember electedLeader) {
+            if (targetMember.equals(electedLeader.memberId())) {
+              result.complete(null);
+            } else {
+              result.completeExceptionally(
+                  new ProtocolException(
+                      "Leadership transfer to %s failed: %s was elected instead"
+                          .formatted(targetMember, electedLeader.memberId())));
+            }
+            removeLeaderElectionListener(this);
+          }
+        };
+    addLeaderElectionListener(electionListener);
+    result.whenComplete((ignored, error) -> removeLeaderElectionListener(electionListener));
+
+    final var request =
+        LeadershipTransferInitiateRequest.builder()
+            .withDesiredLeader(targetMember)
+            .withCoordinator(localMemberId)
+            .withCoordinatorConfigVersion(
+                Optional.ofNullable(getCluster().getConfiguration())
+                    .map(Configuration::index)
+                    .orElse(0L))
+            .build();
+
+    final java.util.function.BiConsumer<LeadershipTransferInitiateResponse, Throwable> onResponse =
+        (response, error) -> {
+          if (error != null) {
+            result.completeExceptionally(error);
+          } else if (response.status() != Status.OK) {
+            result.completeExceptionally(response.error().createException());
+          } else if (!response.accepted()) {
+            result.completeExceptionally(
+                new ProtocolException(
+                    "Leadership transfer to %s was rejected: %s"
+                        .formatted(targetMember, response.rejectionReason())));
+          }
+        };
+
+    if (getRole() == Role.LEADER) {
+      role.onLeadershipTransferInitiate(request).whenCompleteAsync(onResponse, threadContext);
+      return;
+    }
+
+    final var leader = getLeader();
+    if (leader == null) {
+      result.completeExceptionally(
+          new RaftError(RaftError.Type.NO_LEADER, "Cannot transfer leadership without a leader")
+              .createException());
+      return;
+    }
+    getProtocol()
+        .leadershipTransferInitiate(leader.memberId(), request)
+        .whenCompleteAsync(onResponse, threadContext);
+  }
+
   public int getPartitionId() {
-    return partitionId.number();
+    return partitionId.id();
   }
 
   public void updateState(final State newState) {

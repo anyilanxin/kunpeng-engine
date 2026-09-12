@@ -1,7 +1,7 @@
 /*
  * Copyright 2018-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,8 +25,8 @@ import com.anyilanxin.kunpeng.cluster.cluster.protocol.GroupMembershipProtocol;
 import com.anyilanxin.kunpeng.cluster.utils.Builder;
 import com.anyilanxin.kunpeng.cluster.utils.Version;
 import com.anyilanxin.kunpeng.cluster.utils.net.Address;
+import com.anyilanxin.kunpeng.utils.VersionUtil;
 import com.google.common.collect.Lists;
-import io.camunda.zeebe.util.VersionUtil;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.io.File;
 import java.util.Collection;
@@ -39,7 +39,7 @@ import java.util.Properties;
  * create a new builder, use one of the {@link AtomixCluster#builder(MeterRegistry)} static methods.
  *
  * <pre>{@code
- * AtomixClusterBuilder builder = AtomixCluster.builder();
+ * AtomixClusterBuilder builder = AtomixCluster.builder(registry);
  *
  * }</pre>
  *
@@ -47,7 +47,7 @@ import java.util.Properties;
  * instance has been configured, call {@link #build()} to build the instance:
  *
  * <pre>{@code
- * AtomixCluster cluster = AtomixCluster.builder()
+ * AtomixCluster cluster = AtomixCluster.builder(registry)
  *   .withMemberId("member-1")
  *   .withAddress("localhost", 5000)
  *   .build();
@@ -55,14 +55,13 @@ import java.util.Properties;
  * }</pre>
  *
  * Backing the builder is an {@link ClusterConfig} which is loaded when the builder is initially
- * constructed. To load a configuration from a file, use {@link
- * AtomixCluster#builder(MeterRegistry)}.
+ * constructed. To build a cluster from an existing configuration, use {@link
+ * AtomixCluster#builder(ClusterConfig, MeterRegistry)}.
  */
 public class AtomixClusterBuilder implements Builder<AtomixCluster> {
 
   protected final ClusterConfig config;
   private final MeterRegistry meterRegistry;
-  private String schedulerPrefix;
 
   public AtomixClusterBuilder(final ClusterConfig config, final MeterRegistry meterRegistry) {
     this.config = checkNotNull(config, "config cannot be null");
@@ -159,7 +158,6 @@ public class AtomixClusterBuilder implements Builder<AtomixCluster> {
    *
    * @param properties the member properties
    * @return the cluster builder
-   * @throws NullPointerException if the properties are null
    */
   public AtomixClusterBuilder withProperties(final Properties properties) {
     config.getNodeConfig().setProperties(properties);
@@ -254,14 +252,8 @@ public class AtomixClusterBuilder implements Builder<AtomixCluster> {
     return this;
   }
 
-  public AtomixClusterBuilder withSchedulerPrefix(final String schedulerPrefix) {
-    this.schedulerPrefix = schedulerPrefix;
-    return this;
-  }
-
   @Override
   public AtomixCluster build() {
-    return new AtomixCluster(
-        config, Version.from(VersionUtil.getVersion()), schedulerPrefix, meterRegistry);
+    return new AtomixCluster(config, Version.from(VersionUtil.getVersion()), meterRegistry);
   }
 }

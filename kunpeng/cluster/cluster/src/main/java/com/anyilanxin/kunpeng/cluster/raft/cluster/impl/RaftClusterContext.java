@@ -1,7 +1,7 @@
 /*
  * Copyright 2015-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,16 +30,17 @@ import com.anyilanxin.kunpeng.cluster.raft.storage.log.IndexedRaftLogEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ConfigurationEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.system.Configuration;
 import com.anyilanxin.kunpeng.cluster.raft.utils.JointConsensusVoteQuorum;
+import com.anyilanxin.kunpeng.cluster.raft.utils.Quorum;
 import com.anyilanxin.kunpeng.cluster.raft.utils.SimpleVoteQuorum;
 import com.anyilanxin.kunpeng.cluster.raft.utils.VoteQuorum;
 import com.google.common.collect.Comparators;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -196,27 +197,44 @@ public final class RaftClusterContext implements RaftCluster, AutoCloseable {
     // configuration.
     final var activeMembers =
         members.stream().filter(member -> member.getType() == Type.ACTIVE).toList();
-    final var includeLocalMemberInQuorum =
+    final boolean localMemberVoting =
         activeMembers.stream().anyMatch(member -> member.memberId().equals(localMember.memberId()));
-    final var contexts =
+    final var reportedValues =
         activeMembers.stream()
             .filter(member -> !member.memberId().equals(localMember.memberId()))
             .map(member -> remoteMemberContexts.get(member.memberId()))
-            .collect(Collectors.toCollection(ArrayList::new));
+            .filter(Objects::nonNull)
+            .map(calculateMemberValue)
+            .toList();
 
-    if (contexts.isEmpty()) {
+    if (reportedValues.isEmpty()) {
       return Optional.empty();
     }
-    contexts.sort(Comparator.comparing(calculateMemberValue).reversed());
 
-    final var remoteActiveMembers = contexts.size();
-    final int includeLocalMember = includeLocalMemberInQuorum ? 1 : 0;
-    final var totalActiveMembers = remoteActiveMembers + includeLocalMember;
-    final var quorum = (totalActiveMembers / 2) + 1;
+    // Ballot-style acknowledgement counting (jraft Ballot/Configuration#quorum): try candidate
+    // values from the largest down and count how many members reported at least that value. The
+    // local member, which by assumption always holds the highest value, counts as an
+    // acknowledgement for every candidate when it is a voting member.
+    final int votingSetSize = reportedValues.size() + (localMemberVoting ? 1 : 0);
+    final int majority = Quorum.majorityOf(votingSetSize);
+    final int localAcks = localMemberVoting ? 1 : 0;
 
-    final var remoteQuorumIndex = quorum - 1 - includeLocalMember;
-    final var context = contexts.get(remoteQuorumIndex);
-    return Optional.of(calculateMemberValue.apply(context));
+    for (final T candidate :
+        reportedValues.stream().distinct().sorted(Comparator.reverseOrder()).toList()) {
+      int acknowledgements = localAcks;
+      for (final T value : reportedValues) {
+        if (value.compareTo(candidate) >= 0) {
+          acknowledgements++;
+        }
+      }
+      if (acknowledgements >= majority) {
+        return Optional.of(candidate);
+      }
+    }
+
+    // Unreachable: the smallest reported value is held by at least one member, which alone forms
+    // a majority in a set of one. Retained as a safety net.
+    return reportedValues.stream().min(Comparator.naturalOrder());
   }
 
   /**
@@ -461,8 +479,13 @@ public final class RaftClusterContext implements RaftCluster, AutoCloseable {
 
     // If the member type has changed, update the member type and reset its state.
     if (context.getMember().getType() != member.getType()) {
+      final var demotedFromVoting =
+          context.getMember().getType() == Type.ACTIVE && member.getType() == Type.PASSIVE;
       context.getMember().update(member.getType(), time);
       context.resetState(raft.getLog());
+      if (demotedFromVoting) {
+        context.markDemotedFromVoting();
+      }
     }
 
     if (member.getType() == Type.ACTIVE) {

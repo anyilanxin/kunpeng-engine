@@ -1,27 +1,27 @@
 /*
- * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package com.anyilanxin.kunpeng.cluster.utils.serializer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.Serializer;
-import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.io.Output;
+import org.apache.fory.config.Config;
+import org.apache.fory.context.ReadContext;
+import org.apache.fory.context.WriteContext;
+import org.apache.fory.serializer.Serializer;
 import org.junit.Test;
 
 public class NamespaceTest {
@@ -44,7 +44,7 @@ public class NamespaceTest {
   public void shouldRegisterMultipleTypesSimultaneously() {
     // given
     final Namespace ns =
-        new Namespace.Builder().register(new NumberSerializer(), Integer.class, Long.class).build();
+        new Namespace.Builder().register(NumberSerializer.class, Integer.class, Long.class).build();
     final Long expectedLong = 5L;
     final Integer expectedInteger = 7;
 
@@ -57,24 +57,34 @@ public class NamespaceTest {
     assertThat(gotInteger).isEqualTo(expectedInteger);
   }
 
+  /** Number 测试序列化器：Fory read() 无类型参数，改为首字节写形态标记（0=Int，1=Long）。 */
   private static final class NumberSerializer extends Serializer<Number> {
 
+    private static final byte INT_FLAG = 0;
+    private static final byte LONG_FLAG = 1;
+
+    // Fory 反射实例化，构造器必须 public
+    public NumberSerializer(final Config config) {
+      super(config, Number.class);
+    }
+
     @Override
-    public void write(final Kryo kryo, final Output output, final Number object) {
+    public void write(final WriteContext writeContext, final Number object) {
       if (Integer.class.equals(object.getClass())) {
-        output.write(object.intValue());
+        writeContext.getBuffer().writeByte(INT_FLAG);
+        writeContext.writeInt32(object.intValue());
       } else {
-        output.writeLong(object.longValue());
+        writeContext.getBuffer().writeByte(LONG_FLAG);
+        writeContext.writeInt64(object.longValue());
       }
     }
 
     @Override
-    public Number read(final Kryo kryo, final Input input, final Class<? extends Number> type) {
-      if (Integer.class.equals(type)) {
-        return input.read();
-      } else {
-        return input.readLong();
+    public Number read(final ReadContext readContext) {
+      if (readContext.getBuffer().readByte() == INT_FLAG) {
+        return readContext.readInt32();
       }
+      return readContext.readInt64();
     }
   }
 }

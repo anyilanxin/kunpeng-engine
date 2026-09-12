@@ -1,7 +1,7 @@
 /*
  * Copyright 2017-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -149,7 +149,7 @@ public interface RaftServerProtocol {
   /**
    * Registers a transfer request callback.
    *
-   * @param handler the open session request handler to register
+   * @param handler the transfer request handler to register
    */
   void registerTransferHandler(
       Function<TransferRequest, CompletableFuture<TransferResponse>> handler);
@@ -197,7 +197,7 @@ public interface RaftServerProtocol {
   /**
    * Registers a configure request callback.
    *
-   * @param handler the open session request handler to register
+   * @param handler the configure request handler to register
    */
   void registerConfigureHandler(
       Function<ConfigureRequest, CompletableFuture<ConfigureResponse>> handler);
@@ -208,7 +208,7 @@ public interface RaftServerProtocol {
   /**
    * Registers a reconfigure request callback.
    *
-   * @param handler the open session request handler to register
+   * @param handler the reconfigure request handler to register
    */
   void registerReconfigureHandler(
       Function<ReconfigureRequest, CompletableFuture<ReconfigureResponse>> handler);
@@ -232,7 +232,7 @@ public interface RaftServerProtocol {
   /**
    * Registers a install request callback.
    *
-   * @param handler the open session request handler to register
+   * @param handler the install request handler to register
    */
   void registerInstallHandler(Function<InstallRequest, CompletableFuture<InstallResponse>> handler);
 
@@ -242,7 +242,7 @@ public interface RaftServerProtocol {
   /**
    * Registers a poll request callback.
    *
-   * @param handler the open session request handler to register
+   * @param handler the poll request handler to register
    */
   void registerPollHandler(Function<PollRequest, CompletableFuture<PollResponse>> handler);
 
@@ -252,7 +252,7 @@ public interface RaftServerProtocol {
   /**
    * Registers a vote request callback.
    *
-   * @param handler the open session request handler to register
+   * @param handler the vote request handler to register
    */
   void registerVoteHandler(Function<VoteRequest, CompletableFuture<VoteResponse>> handler);
 
@@ -262,7 +262,7 @@ public interface RaftServerProtocol {
   /**
    * Registers an append request callback.
    *
-   * @param handler the open session request handler to register
+   * @param handler the append request handler to register
    */
   void registerAppendV1Handler(Function<AppendRequest, CompletableFuture<AppendResponse>> handler);
 

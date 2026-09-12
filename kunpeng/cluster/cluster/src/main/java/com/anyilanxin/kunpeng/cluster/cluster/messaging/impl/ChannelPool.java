@@ -1,7 +1,7 @@
 /*
  * Copyright 2018-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@
 package com.anyilanxin.kunpeng.cluster.cluster.messaging.impl;
 
 import com.anyilanxin.kunpeng.cluster.utils.net.Address;
+import com.anyilanxin.kunpeng.utils.Tuple;
 import com.google.common.collect.Maps;
-import io.camunda.zeebe.util.collection.Tuple;
 import io.netty.channel.Channel;
 import java.net.InetAddress;
 import java.util.Map;
@@ -106,7 +106,8 @@ class ChannelPool {
               synchronized (channelPool) {
                 currentFuture = channelPool.get(messageType);
                 if (currentFuture == finalFuture) {
-                  channelPool.put(messageType, null);
+                  // CHM 不允许 null value；用条件 remove 摘除已失效的 future，避免 NPE 使调用方悬挂
+                  channelPool.remove(messageType, finalFuture);
                 } else if (currentFuture == null) {
                   currentFuture = factory.apply(address);
                   currentFuture.whenComplete(this::logConnection);

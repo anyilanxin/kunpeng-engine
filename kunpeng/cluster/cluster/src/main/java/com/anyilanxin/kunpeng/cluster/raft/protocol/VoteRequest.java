@@ -1,7 +1,7 @@
 /*
  * Copyright 2015-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -150,7 +150,7 @@ public class VoteRequest extends AbstractRaftRequest {
      * Sets the request term.
      *
      * @param term The request term.
-     * @return The poll request builder.
+     * @return The vote request builder.
      * @throws IllegalArgumentException if {@code term} is negative
      */
     public Builder withTerm(final long term) {
@@ -160,11 +160,11 @@ public class VoteRequest extends AbstractRaftRequest {
     }
 
     /**
-     * Sets the request leader.
+     * Sets the requesting candidate.
      *
      * @param candidate The request candidate.
-     * @return The poll request builder.
-     * @throws IllegalArgumentException if {@code candidate} is not positive
+     * @return The vote request builder.
+     * @throws NullPointerException if {@code candidate} is null
      */
     public Builder withCandidate(final MemberId candidate) {
       this.candidate = checkNotNull(candidate, "candidate cannot be null").id();
@@ -175,7 +175,7 @@ public class VoteRequest extends AbstractRaftRequest {
      * Sets the request last log index.
      *
      * @param logIndex The request last log index.
-     * @return The poll request builder.
+     * @return The vote request builder.
      * @throws IllegalArgumentException if {@code index} is negative
      */
     public Builder withLastLogIndex(final long logIndex) {
@@ -188,7 +188,7 @@ public class VoteRequest extends AbstractRaftRequest {
      * Sets the request last log term.
      *
      * @param logTerm The request last log term.
-     * @return The poll request builder.
+     * @return The vote request builder.
      * @throws IllegalArgumentException if {@code term} is negative
      */
     public Builder withLastLogTerm(final long logTerm) {

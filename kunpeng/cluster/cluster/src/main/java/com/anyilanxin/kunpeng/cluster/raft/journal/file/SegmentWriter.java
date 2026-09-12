@@ -1,7 +1,7 @@
 /*
  * Copyright 2017-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,15 +25,11 @@ import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException.InvalidCheck
 import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException.InvalidIndex;
 import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException.SegmentFull;
 import com.anyilanxin.kunpeng.cluster.raft.journal.JournalRecord;
-import com.anyilanxin.kunpeng.cluster.raft.journal.record.JournalRecordReaderUtil;
-import com.anyilanxin.kunpeng.cluster.raft.journal.record.JournalRecordSerializer;
-import com.anyilanxin.kunpeng.cluster.raft.journal.record.PersistedJournalRecord;
-import com.anyilanxin.kunpeng.cluster.raft.journal.record.RecordMetadata;
-import com.anyilanxin.kunpeng.cluster.raft.journal.record.SBESerializer;
+import com.anyilanxin.kunpeng.cluster.raft.journal.record.*;
 import com.anyilanxin.kunpeng.cluster.raft.journal.util.ChecksumGenerator;
-import io.camunda.zeebe.util.Either;
-import io.camunda.zeebe.util.buffer.BufferWriter;
-import io.camunda.zeebe.util.buffer.DirectBufferWriter;
+import com.anyilanxin.kunpeng.structpack.buffer.BufferWriter;
+import com.anyilanxin.kunpeng.structpack.buffer.DirectBufferWriter;
+import com.anyilanxin.kunpeng.utils.Either;
 import java.nio.BufferUnderflowException;
 import java.nio.MappedByteBuffer;
 import org.agrona.MutableDirectBuffer;
@@ -57,7 +53,7 @@ final class SegmentWriter {
   private int lastEntryPosition;
   private final JournalRecordReaderUtil recordUtil;
   private final ChecksumGenerator checksumGenerator = new ChecksumGenerator();
-  private final JournalRecordSerializer serializer = new SBESerializer();
+  private final JournalRecordSerializer serializer = new BinaryJournalRecordSerializer();
   private final MutableDirectBuffer writeBuffer = new UnsafeBuffer();
   private final int descriptorLength;
   private final JournalMetrics metrics;
@@ -122,7 +118,7 @@ final class SegmentWriter {
   Either<SegmentFull, JournalRecord> append(final JournalRecord record) {
     final var entryIndex = record.index();
     final var asqn = record.asqn();
-    final var recordDataWriter = new DirectBufferWriter(record.data());
+    final var recordDataWriter = DirectBufferWriter.writerFor(record.data());
     final var expectedChecksum = record.checksum();
 
     verifyAsqnIsIncreasing(asqn);
@@ -177,7 +173,7 @@ final class SegmentWriter {
       return Either.left(new SegmentFull("Not enough space to write record"));
     }
 
-    // write serialized RecordData
+    // write serialized JournalRecordData
     writeBuffer.putBytes(startPosition + frameLength + metadataLength, serializedRecord);
 
     final var record =
@@ -288,7 +284,7 @@ final class SegmentWriter {
 
   private void writeMetadata(
       final int startPosition, final int frameLength, final int recordLength, final long checksum) {
-    final RecordMetadata recordMetadata = new RecordMetadata(checksum, recordLength);
+    final JournalRecordMetadata recordMetadata = new JournalRecordMetadata(checksum, recordLength);
     serializer.writeMetadata(recordMetadata, writeBuffer, startPosition + frameLength);
   }
 

@@ -22,6 +22,80 @@ plugins {
     id "com.google.cloud.tools.jib"
 }
 
+dependencies {
+    implementation 'org.agrona:agrona'
+    implementation 'io.netty:netty-transport-native-unix-common'
+    implementation 'io.netty:netty-buffer'
+    implementation 'io.swagger.core.v3:swagger-annotations-jakarta'
+    implementation 'org.apache.logging.log4j:log4j-core'
+    implementation 'org.apache.logging.log4j:log4j-api'
+    implementation 'org.apache.logging.log4j:log4j-slf4j2-impl'
+    implementation 'org.slf4j:slf4j-api'
+    implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui'
+    implementation 'org.springframework.boot:spring-boot'
+    implementation 'org.springframework.security:spring-security-crypto'
+    implementation 'org.springframework.boot:spring-boot-autoconfigure'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-health'
+    implementation 'org.springframework.boot:spring-boot-actuator-autoconfigure'
+    implementation 'org.springframework.boot:spring-boot-micrometer-metrics'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+
+    annotationProcessor "org.projectlombok:lombok"
+    compileOnly "org.projectlombok:lombok"
+}
+
+
+processResources {
+    filteringCharset = 'UTF-8'
+    include('*.yml', "*.properties", "banners/*.txt", "*.xml")
+    filesMatching('*.yml') {
+        filter(
+                ReplaceTokens,
+                "tokens": [version: rootProject.version],
+                "beginToken": "#@",
+                "endToken": "@#"
+        )
+    }
+}
+
+
+configurations.configureEach {
+    exclude group: 'ch.qos.logback', module: 'logback-classic'
+    exclude group: 'org.apache.logging.log4j', module: 'log4j-to-slf4j'
+}
+
+
+jib {
+    allowInsecureRegistries = true
+    from {
+        image = 'eclipse-temurin:25-jre'
+    }
+    to {
+        image = 'kunpeng'
+        tags = ['latest', rootProject.version] as List<String>
+    }
+    extraDirectories {
+        paths {
+            path {
+                from = 'src/main/config'
+                into = '/kunpeng/config'
+            }
+        }
+    }
+    containerizingMode = 'packaged'
+    container {
+        ports = ['2020', '9600', '24500', '24501', '24502']
+        jvmFlags = ['-Xms1025m', '--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED']
+        environment = ["TZ": 'Asia/Shanghai']
+        volumes = ["/kunpeng/data", "/kunpeng/logs"]
+        mainClass = 'com.anyilanxin.Application'
+        appRoot = '/kunpeng'
+        workingDirectory = '/kunpeng'
+    }
+}
+
 
 jar {
     archiveClassifier = ''

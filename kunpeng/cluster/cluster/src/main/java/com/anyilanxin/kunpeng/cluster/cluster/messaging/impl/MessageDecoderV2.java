@@ -1,7 +1,7 @@
 /*
  * Copyright 2019-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,9 @@ import java.util.List;
 /** Protocol version 2 message decoder. */
 class MessageDecoderV2 extends AbstractMessageDecoder {
 
+  /** 单帧内容上限，防损坏流/异常节点以超大 contentLength 无限累积接收缓冲。 */
+  private static final int MAX_CONTENT_LENGTH = 32 * 1024 * 1024;
+
   private DecoderState currentState = DecoderState.READ_SENDER_HOST_LENGTH;
   private int senderHostLength;
   private String senderHost;
@@ -50,6 +53,10 @@ class MessageDecoderV2 extends AbstractMessageDecoder {
           return;
         }
         senderHostLength = buffer.readShort();
+        if (senderHostLength < 0) {
+          // 负的 host 长度即损坏流，交由 exceptionCaught 关闭连接
+          throw new IllegalStateException("Illegal sender host length " + senderHostLength);
+        }
         currentState = DecoderState.READ_SENDER_HOST;
       case READ_SENDER_HOST:
         if (buffer.readableBytes() < senderHostLength) {
@@ -82,6 +89,9 @@ class MessageDecoderV2 extends AbstractMessageDecoder {
           contentLength = readInt(buffer);
         } catch (final Escape e) {
           return;
+        }
+        if (contentLength < 0 || contentLength > MAX_CONTENT_LENGTH) {
+          throw new IllegalStateException("Illegal message content length " + contentLength);
         }
         currentState = DecoderState.READ_CONTENT;
       case READ_CONTENT:
@@ -119,6 +129,10 @@ class MessageDecoderV2 extends AbstractMessageDecoder {
               return;
             }
             subjectLength = buffer.readShort();
+            if (subjectLength < 0) {
+              // 负的 subject 长度即损坏流，交由 exceptionCaught 关闭连接
+              throw new IllegalStateException("Illegal subject length " + subjectLength);
+            }
             currentState = DecoderState.READ_SUBJECT;
           case READ_SUBJECT:
             if (buffer.readableBytes() < subjectLength) {

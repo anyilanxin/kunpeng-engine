@@ -1,7 +1,7 @@
 /*
  * Copyright 2017-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,21 +34,6 @@ public final class Threads {
     return new ThreadFactoryBuilder()
         .setNameFormat(pattern)
         .setThreadFactory(new AtomixThreadFactory())
-        .setUncaughtExceptionHandler((t, e) -> log.error("Uncaught exception on " + t.getName(), e))
-        .build();
-  }
-
-  /**
-   * Returns a thread factory that produces threads named according to the supplied name pattern.
-   *
-   * @param pattern name pattern
-   * @return thread factory
-   */
-  public static ThreadFactory namedThreads(
-      final String pattern, final Logger log, final String actorSchedulerName) {
-    return new ThreadFactoryBuilder()
-        .setNameFormat(pattern)
-        .setThreadFactory(new AtomixThreadFactory(actorSchedulerName))
         .setUncaughtExceptionHandler((t, e) -> log.error("Uncaught exception on " + t.getName(), e))
         .build();
   }

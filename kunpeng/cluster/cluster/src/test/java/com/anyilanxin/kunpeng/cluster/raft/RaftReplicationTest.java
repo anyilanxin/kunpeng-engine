@@ -1,25 +1,23 @@
 /*
- * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package com.anyilanxin.kunpeng.cluster.raft;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.anyilanxin.kunpeng.cluster.raft.RaftServer.Role;
-import java.util.stream.Collectors;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
 import org.awaitility.Awaitility;
 import org.junit.Rule;
 import org.junit.Test;
@@ -27,6 +25,10 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
+
+import java.util.stream.Collectors;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(Parameterized.class)
 public class RaftReplicationTest {
@@ -59,7 +61,7 @@ public class RaftReplicationTest {
     raftRule.reconnect(follower);
 
     // then
-    assertThat(follower.getContext().getPersistedSnapshotStore().getCurrentSnapshotIndex())
+    assertThat(follower.getContext().getPersistedSnapshotStore().getLatestSnapshot().map(PersistedSnapshot::getIndex).orElse(0L))
         .isNotEqualTo(snapshotIndex);
     raftRule.awaitSameLogSizeOnAllNodes(lastCommitIndex);
   }
@@ -83,7 +85,7 @@ public class RaftReplicationTest {
 
     // then - follower received snapshot
     raftRule.awaitSameLogSizeOnAllNodes(lastCommitIndex);
-    assertThat(follower.getContext().getPersistedSnapshotStore().getCurrentSnapshotIndex())
+    assertThat(follower.getContext().getPersistedSnapshotStore().getLatestSnapshot().map(PersistedSnapshot::getIndex).orElse(0L))
         .isEqualTo(200);
   }
 
@@ -116,7 +118,7 @@ public class RaftReplicationTest {
     // this is ever false and the test must be updated
     assertThat(raftRule.getLeader().orElseThrow().getContext().getLog().getFirstIndex())
         .isLessThan(snapshotIndex);
-    assertThat(follower.getContext().getPersistedSnapshotStore().getCurrentSnapshotIndex())
+    assertThat(follower.getContext().getPersistedSnapshotStore().getLatestSnapshot().map(PersistedSnapshot::getIndex).orElse(0L))
         .isEqualTo(snapshotIndex);
   }
 

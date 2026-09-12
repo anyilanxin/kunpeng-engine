@@ -1,7 +1,7 @@
 /*
  * Copyright 2015-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,23 +23,36 @@ import com.anyilanxin.kunpeng.cluster.cluster.messaging.ManagedMessagingService;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingConfig;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingException;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
+import com.anyilanxin.kunpeng.cluster.utils.TlsConfigUtil;
+import com.anyilanxin.kunpeng.cluster.utils.VisibleForTesting;
 import com.anyilanxin.kunpeng.cluster.utils.concurrent.OrderedFuture;
+import com.anyilanxin.kunpeng.cluster.utils.logging.ThrottledLogger;
 import com.anyilanxin.kunpeng.cluster.utils.net.Address;
+import com.anyilanxin.kunpeng.utils.StringUtil;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.MoreExecutors;
-import io.camunda.zeebe.util.StringUtil;
-import io.camunda.zeebe.util.TlsConfigUtil;
-import io.camunda.zeebe.util.VisibleForTesting;
-import io.camunda.zeebe.util.logging.ThrottledLogger;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.channel.*;
-import io.netty.channel.epoll.*;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.ServerChannel;
+import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.WriteBufferWaterMark;
+import io.netty.channel.epoll.Epoll;
+import io.netty.channel.epoll.EpollDatagramChannel;
+import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollServerSocketChannel;
+import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramChannel;
 import io.netty.channel.socket.SocketChannel;
@@ -65,12 +78,31 @@ import java.io.IOException;
 import java.net.BindException;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
-import java.security.*;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
@@ -113,7 +145,6 @@ public final class NettyMessagingService implements ManagedMessagingService {
   private DnsAddressResolverGroup dnsResolverGroup;
   private final MessagingMetrics messagingMetrics;
   private final MeterRegistry registry;
-  private final String actorSchedulerName;
 
   // flag for passing heartbeats down the pipeline
   private boolean forwardHeartbeats = false;
@@ -125,17 +156,7 @@ public final class NettyMessagingService implements ManagedMessagingService {
       final Address advertisedAddress,
       final MessagingConfig config,
       final MeterRegistry registry) {
-    this(cluster, advertisedAddress, config, ProtocolVersion.latest(), "", registry);
-  }
-
-  public NettyMessagingService(
-      final String cluster,
-      final Address advertisedAddress,
-      final MessagingConfig config,
-      final String actorSchedulerName,
-      final MeterRegistry registry) {
-    this(
-        cluster, advertisedAddress, config, ProtocolVersion.latest(), actorSchedulerName, registry);
+    this(cluster, advertisedAddress, config, ProtocolVersion.latest(), registry);
   }
 
   NettyMessagingService(
@@ -143,7 +164,6 @@ public final class NettyMessagingService implements ManagedMessagingService {
       final Address advertisedAddress,
       final MessagingConfig config,
       final ProtocolVersion protocolVersion,
-      final String actorSchedulerName,
       final MeterRegistry registry) {
     preamble = cluster.hashCode();
     this.advertisedAddress = advertisedAddress;
@@ -151,7 +171,6 @@ public final class NettyMessagingService implements ManagedMessagingService {
     this.config = verifyHeartbeatConfig(config);
     // pool of client connections
     channelPool = new ChannelPool(this::openChannel);
-    this.actorSchedulerName = actorSchedulerName;
     messagingMetrics = new MessagingMetricsImpl(registry);
     this.registry = registry;
 
@@ -172,6 +191,13 @@ public final class NettyMessagingService implements ManagedMessagingService {
     if (config.getHeartbeatInterval().isNegative() || config.getHeartbeatTimeout().isNegative()) {
       throw new IllegalArgumentException(
           "Heartbeat interval and timeout must not be negative. Use 0s to disable heartbeats.");
+    }
+
+    // interval=0 而 timeout>0 会禁用心跳发送但保留超时断连, 连接将被服务端反复关闭重连
+    if (config.getHeartbeatInterval().isZero() || config.getHeartbeatTimeout().isZero()) {
+      throw new IllegalArgumentException(
+          "Heartbeat interval %s and timeout %s must both be positive, or both zero to disable"
+              .formatted(config.getHeartbeatInterval(), config.getHeartbeatTimeout()));
     }
 
     if (config.getHeartbeatInterval().compareTo(config.getHeartbeatTimeout()) >= 0) {
@@ -336,31 +362,40 @@ public final class NettyMessagingService implements ManagedMessagingService {
           final var subject = message.subject();
           final var sender = message.sender();
           final var payload = message.payload();
-          handler
-              .apply(sender, payload)
-              .whenComplete(
-                  (result, error) -> {
-                    byte[] responsePayload = null;
-                    final ProtocolReply.Status status;
+          final CompletableFuture<byte[]> future;
+          try {
+            future = handler.apply(sender, payload);
+          } catch (final Exception e) {
+            // handler 同步抛错也必须回包, 否则请求方只能等超时
+            log.warn("Unexpected error while handling message {} from {}", subject, sender, e);
+            final String exceptionMessage = e.getMessage();
+            connection.reply(
+                id,
+                ProtocolReply.Status.ERROR_HANDLER_EXCEPTION,
+                Optional.ofNullable(
+                    exceptionMessage == null ? null : StringUtil.getBytes(exceptionMessage)));
+            return;
+          }
+          future.whenComplete(
+              (result, error) -> {
+                byte[] responsePayload = null;
+                final ProtocolReply.Status status;
 
-                    if (error == null) {
-                      status = ProtocolReply.Status.OK;
-                      responsePayload = result;
-                    } else {
-                      log.warn(
-                          "Unexpected error while handling message {} from {}",
-                          subject,
-                          sender,
-                          error);
+                if (error == null) {
+                  status = ProtocolReply.Status.OK;
+                  responsePayload = result;
+                } else {
+                  log.warn(
+                      "Unexpected error while handling message {} from {}", subject, sender, error);
 
-                      status = ProtocolReply.Status.ERROR_HANDLER_EXCEPTION;
-                      final String exceptionMessage = error.getMessage();
-                      if (exceptionMessage != null) {
-                        responsePayload = StringUtil.getBytes(error.getMessage());
-                      }
-                    }
-                    connection.reply(id, status, Optional.ofNullable(responsePayload));
-                  });
+                  status = ProtocolReply.Status.ERROR_HANDLER_EXCEPTION;
+                  final String exceptionMessage = error.getMessage();
+                  if (exceptionMessage != null) {
+                    responsePayload = StringUtil.getBytes(error.getMessage());
+                  }
+                }
+                connection.reply(id, status, Optional.ofNullable(responsePayload));
+              });
         });
   }
 
@@ -485,6 +520,12 @@ public final class NettyMessagingService implements ManagedMessagingService {
     return CompletableFuture.completedFuture(null);
   }
 
+  /** 密钥库口令转字符数组；未配置口令返回 null（无口令密钥库）。 */
+  private char[] keyStorePassword() {
+    final var password = config.getKeyStorePassword();
+    return password == null ? null : password.toCharArray();
+  }
+
   private CompletableFuture<Void> loadClientSslContext() {
     try {
 
@@ -492,7 +533,8 @@ public final class NettyMessagingService implements ManagedMessagingService {
 
       if (config.getKeyStore() != null) {
         sslContextBuilder.trustManager(
-            TlsConfigUtil.getCertificateChain(config.getKeyStore(), config.getKeyStorePassword()));
+            TlsConfigUtil.readTrustedCertificates(
+                config.getKeyStore().toPath(), keyStorePassword()));
       } else {
         sslContextBuilder.trustManager(config.getCertificateChain());
       }
@@ -517,12 +559,11 @@ public final class NettyMessagingService implements ManagedMessagingService {
       final SslContextBuilder sslContextBuilder;
 
       if (config.getKeyStore() != null) {
-        final var privateKey =
-            TlsConfigUtil.getPrivateKey(config.getKeyStore(), config.getKeyStorePassword());
-        final var certChain =
-            TlsConfigUtil.getCertificateChain(config.getKeyStore(), config.getKeyStorePassword());
-
-        sslContextBuilder = SslContextBuilder.forServer(privateKey, certChain);
+        final var serverIdentity =
+            TlsConfigUtil.loadServerIdentity(config.getKeyStore().toPath(), keyStorePassword());
+        sslContextBuilder =
+            SslContextBuilder.forServer(
+                serverIdentity.privateKey(), serverIdentity.certificateChain());
       } else {
         sslContextBuilder =
             SslContextBuilder.forServer(config.getCertificateChain(), config.getPrivateKey());
@@ -585,11 +626,9 @@ public final class NettyMessagingService implements ManagedMessagingService {
 
   private void initEpollTransport() {
     clientGroup =
-        new EpollEventLoopGroup(
-            0, namedThreads("netty-messaging-event-epoll-client-%d", log, actorSchedulerName));
+        new EpollEventLoopGroup(0, namedThreads("netty-messaging-event-epoll-client-%d", log));
     serverGroup =
-        new EpollEventLoopGroup(
-            0, namedThreads("netty-messaging-event-epoll-server-%d", log, actorSchedulerName));
+        new EpollEventLoopGroup(0, namedThreads("netty-messaging-event-epoll-server-%d", log));
     serverChannelClass = EpollServerSocketChannel.class;
     clientChannelClass = EpollSocketChannel.class;
     clientDataGramChannelClass = EpollDatagramChannel.class;
@@ -597,11 +636,9 @@ public final class NettyMessagingService implements ManagedMessagingService {
 
   private void initNioTransport() {
     clientGroup =
-        new NioEventLoopGroup(
-            0, namedThreads("netty-messaging-event-nio-client-%d", log, actorSchedulerName));
+        new NioEventLoopGroup(0, namedThreads("netty-messaging-event-nio-client-%d", log));
     serverGroup =
-        new NioEventLoopGroup(
-            0, namedThreads("netty-messaging-event-nio-server-%d", log, actorSchedulerName));
+        new NioEventLoopGroup(0, namedThreads("netty-messaging-event-nio-server-%d", log));
     serverChannelClass = NioServerSocketChannel.class;
     clientChannelClass = NioSocketChannel.class;
     clientDataGramChannelClass = NioDatagramChannel.class;

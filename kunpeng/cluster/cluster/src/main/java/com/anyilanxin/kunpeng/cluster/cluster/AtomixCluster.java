@@ -1,7 +1,7 @@
 /*
  * Copyright 2018-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,9 @@ import com.anyilanxin.kunpeng.cluster.cluster.discovery.NodeDiscoveryConfig;
 import com.anyilanxin.kunpeng.cluster.cluster.discovery.NodeDiscoveryProvider;
 import com.anyilanxin.kunpeng.cluster.cluster.impl.DefaultClusterMembershipService;
 import com.anyilanxin.kunpeng.cluster.cluster.impl.DefaultNodeDiscoveryService;
+import com.anyilanxin.kunpeng.cluster.cluster.leaderfound.ClusterLeaderFoundService;
+import com.anyilanxin.kunpeng.cluster.cluster.leaderfound.DefaultManageClusterLeaderFoundService;
+import com.anyilanxin.kunpeng.cluster.cluster.leaderfound.ManageClusterLeaderFoundService;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.*;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.impl.DefaultClusterCommunicationService;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.impl.DefaultClusterEventService;
@@ -88,6 +91,7 @@ public class AtomixCluster implements BootstrapService, Managed<Void> {
   private static final Logger LOGGER = LoggerFactory.getLogger(AtomixCluster.class);
   protected final ManagedMessagingService messagingService;
   protected final ManagedUnicastService unicastService;
+  protected final ManageClusterLeaderFoundService clusterLeaderFoundService;
   protected final NodeDiscoveryProvider discoveryProvider;
   protected final GroupMembershipProtocol membershipProtocol;
   protected final ManagedClusterMembershipService membershipService;
@@ -99,11 +103,8 @@ public class AtomixCluster implements BootstrapService, Managed<Void> {
   private final AtomicBoolean started = new AtomicBoolean();
 
   public AtomixCluster(
-      final ClusterConfig config,
-      final Version version,
-      final String actorSchedulerName,
-      final MeterRegistry registry) {
-    this(config, version, null, null, actorSchedulerName, registry);
+      final ClusterConfig config, final Version version, final MeterRegistry registry) {
+    this(config, version, null, null, registry);
   }
 
   protected AtomixCluster(
@@ -111,25 +112,20 @@ public class AtomixCluster implements BootstrapService, Managed<Void> {
       final Version version,
       final ManagedMessagingService messagingService,
       final ManagedUnicastService unicastService,
-      final String actorSchedulerName,
       final MeterRegistry registry) {
     this.messagingService =
-        messagingService != null
-            ? messagingService
-            : buildMessagingService(config, actorSchedulerName, registry);
+        messagingService != null ? messagingService : buildMessagingService(config, registry);
     this.unicastService =
-        unicastService != null
-            ? unicastService
-            : buildUnicastService(config, actorSchedulerName, registry);
-
+        unicastService != null ? unicastService : buildUnicastService(config, registry);
     discoveryProvider = buildLocationProvider(config);
-    membershipProtocol = buildMembershipProtocol(config, actorSchedulerName, registry);
+    membershipProtocol = buildMembershipProtocol(config, registry);
     membershipService =
         buildClusterMembershipService(config, this, discoveryProvider, membershipProtocol, version);
     communicationService =
         buildClusterMessagingService(
             getMembershipService(), getMessagingService(), getUnicastService());
     eventService = buildClusterEventService(getMembershipService(), getMessagingService());
+    clusterLeaderFoundService = buildClusterLeaderFoundService(membershipService);
   }
 
   /**
@@ -179,6 +175,11 @@ public class AtomixCluster implements BootstrapService, Managed<Void> {
   @Override
   public UnicastService getUnicastService() {
     return unicastService;
+  }
+
+  @Override
+  public ClusterLeaderFoundService getLeaderFoundService() {
+    return clusterLeaderFoundService;
   }
 
   /**
@@ -254,6 +255,7 @@ public class AtomixCluster implements BootstrapService, Managed<Void> {
         .thenComposeAsync(v -> membershipService.start(), threadContext)
         .thenComposeAsync(v -> communicationService.start(), threadContext)
         .thenComposeAsync(v -> eventService.start(), threadContext)
+        .thenComposeAsync(v -> clusterLeaderFoundService.start(), threadContext)
         .thenApply(v -> null);
   }
 
@@ -268,8 +270,10 @@ public class AtomixCluster implements BootstrapService, Managed<Void> {
   }
 
   protected CompletableFuture<Void> stopServices() {
-    return communicationService
+    return clusterLeaderFoundService
         .stop()
+        .exceptionally(e -> logServiceStopError("clusterLeaderFoundService", e))
+        .thenComposeAsync(v -> communicationService.stop(), threadContext)
         .exceptionally(e -> logServiceStopError("communicationService", e))
         .thenComposeAsync(v -> eventService.stop(), threadContext)
         .exceptionally(e -> logServiceStopError("eventService", e))
@@ -295,27 +299,25 @@ public class AtomixCluster implements BootstrapService, Managed<Void> {
 
   /** Builds a default messaging service. */
   protected static ManagedMessagingService buildMessagingService(
-      final ClusterConfig config, final String actorSchedulerName, final MeterRegistry registry) {
+      final ClusterConfig config, final MeterRegistry registry) {
     return new NettyMessagingService(
         config.getClusterId(),
         config.getNodeConfig().getAddress(),
         config.getMessagingConfig(),
-        actorSchedulerName,
         registry);
   }
 
   /** Builds a default unicast service. */
   protected static ManagedUnicastService buildUnicastService(
-      final ClusterConfig config, final String actorSchedulerName, final MeterRegistry registry) {
+      final ClusterConfig config, final MeterRegistry registry) {
     return new NettyUnicastService(
         config.getClusterId(),
         config.getNodeConfig().getAddress(),
         config.getMessagingConfig(),
-        actorSchedulerName,
         registry);
   }
 
-  /** Builds a member location provider. */
+  /** Builds a node discovery provider. */
   @SuppressWarnings("unchecked")
   protected static NodeDiscoveryProvider buildLocationProvider(final ClusterConfig config) {
     final NodeDiscoveryConfig discoveryProviderConfig = config.getDiscoveryConfig();
@@ -329,11 +331,8 @@ public class AtomixCluster implements BootstrapService, Managed<Void> {
   /** Builds the group membership protocol. */
   @SuppressWarnings("unchecked")
   protected static GroupMembershipProtocol buildMembershipProtocol(
-      final ClusterConfig config, final String actorSchedulerName, final MeterRegistry registry) {
-    return config
-        .getProtocolConfig()
-        .getType()
-        .newProtocol(config.getProtocolConfig(), actorSchedulerName, registry);
+      final ClusterConfig config, final MeterRegistry registry) {
+    return config.getProtocolConfig().getType().newProtocol(config.getProtocolConfig(), registry);
   }
 
   /** Builds a cluster service. */
@@ -369,6 +368,11 @@ public class AtomixCluster implements BootstrapService, Managed<Void> {
       final UnicastService unicastService) {
     return new DefaultClusterCommunicationService(
         membershipService, messagingService, unicastService);
+  }
+
+  protected static ManageClusterLeaderFoundService buildClusterLeaderFoundService(
+      final ClusterMembershipService membershipService) {
+    return new DefaultManageClusterLeaderFoundService(membershipService);
   }
 
   /** Builds a cluster event service. */

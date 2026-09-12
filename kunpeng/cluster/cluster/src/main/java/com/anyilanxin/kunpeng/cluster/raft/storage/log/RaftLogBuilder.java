@@ -1,6 +1,6 @@
 /*
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -119,11 +119,9 @@ public class RaftLogBuilder implements com.anyilanxin.kunpeng.cluster.utils.Buil
   }
 
   /**
-   * Sets whether segment files are pre-allocated at creation. If true, segment files are
-   * pre-allocated to the maximum segment size (see {@link #withMaxSegmentSize(int)}}) at creation
-   * before any writes happen.
+   * Sets the strategy for pre-allocating disk space for new segment files.
    *
-   * @param segmentAllocator to use
+   * @param segmentAllocator the segment allocator to use
    * @return this builder for chaining
    */
   public RaftLogBuilder withSegmentAllocator(final SegmentAllocator segmentAllocator) {

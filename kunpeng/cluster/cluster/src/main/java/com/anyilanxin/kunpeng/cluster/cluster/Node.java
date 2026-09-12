@@ -1,7 +1,7 @@
 /*
  * Copyright 2014-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,9 +41,9 @@ public class Node implements Configured<NodeConfig> {
   }
 
   /**
-   * Returns a new member builder with no ID.
+   * Returns a new node builder.
    *
-   * @return the member builder
+   * @return the node builder
    */
   public static NodeBuilder builder() {
     return new NodeBuilder(new NodeConfig());

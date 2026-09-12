@@ -1,7 +1,7 @@
 /*
  * Copyright 2014-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,80 +35,80 @@ public final class ArraySizeHashPrinter {
   }
 
   /**
-   * Returns ByteArraySizeHashPrinter wrapping given short[].
+   * Returns ArraySizeHashPrinter wrapping given byte[].
    *
    * @param array arrays to wrap around
-   * @return ObjectArraySizeHashPrinter
+   * @return ArraySizeHashPrinter
    */
   public static ArraySizeHashPrinter of(final byte[] array) {
     return new ArraySizeHashPrinter(toObjectArray(array), byte[].class);
   }
 
   /**
-   * Returns ByteArraySizeHashPrinter wrapping given short[].
+   * Returns ArraySizeHashPrinter wrapping given short[].
    *
    * @param array arrays to wrap around
-   * @return ObjectArraySizeHashPrinter
+   * @return ArraySizeHashPrinter
    */
   public static ArraySizeHashPrinter of(final short[] array) {
     return new ArraySizeHashPrinter(toObjectArray(array), short[].class);
   }
 
   /**
-   * Returns ByteArraySizeHashPrinter wrapping given int[].
+   * Returns ArraySizeHashPrinter wrapping given int[].
    *
    * @param array arrays to wrap around
-   * @return ObjectArraySizeHashPrinter
+   * @return ArraySizeHashPrinter
    */
   public static ArraySizeHashPrinter of(final int[] array) {
     return new ArraySizeHashPrinter(toObjectArray(array), int[].class);
   }
 
   /**
-   * Returns ByteArraySizeHashPrinter wrapping given long[].
+   * Returns ArraySizeHashPrinter wrapping given long[].
    *
    * @param array arrays to wrap around
-   * @return ObjectArraySizeHashPrinter
+   * @return ArraySizeHashPrinter
    */
   public static ArraySizeHashPrinter of(final long[] array) {
     return new ArraySizeHashPrinter(toObjectArray(array), long[].class);
   }
 
   /**
-   * Returns ByteArraySizeHashPrinter wrapping given float[].
+   * Returns ArraySizeHashPrinter wrapping given float[].
    *
    * @param array arrays to wrap around
-   * @return ObjectArraySizeHashPrinter
+   * @return ArraySizeHashPrinter
    */
   public static ArraySizeHashPrinter of(final float[] array) {
     return new ArraySizeHashPrinter(toObjectArray(array), float[].class);
   }
 
   /**
-   * Returns ByteArraySizeHashPrinter wrapping given double[].
+   * Returns ArraySizeHashPrinter wrapping given double[].
    *
    * @param array arrays to wrap around
-   * @return ObjectArraySizeHashPrinter
+   * @return ArraySizeHashPrinter
    */
   public static ArraySizeHashPrinter of(final double[] array) {
     return new ArraySizeHashPrinter(toObjectArray(array), double[].class);
   }
 
   /**
-   * Returns ByteArraySizeHashPrinter wrapping given boolean[].
+   * Returns ArraySizeHashPrinter wrapping given boolean[].
    *
    * @param array arrays to wrap around
-   * @return ObjectArraySizeHashPrinter
+   * @return ArraySizeHashPrinter
    */
   public static ArraySizeHashPrinter of(final boolean[] array) {
     return new ArraySizeHashPrinter(toObjectArray(array), boolean[].class);
   }
 
   /**
-   * Returns ByteArraySizeHashPrinter wrapping given Object[].
+   * Returns ArraySizeHashPrinter wrapping given Object[].
    *
    * @param array arrays to wrap around
-   * @return ObjectArraySizeHashPrinter
+   * @return ArraySizeHashPrinter
    */
   public static ArraySizeHashPrinter of(final Object[] array) {
     return new ArraySizeHashPrinter(array, Object[].class);

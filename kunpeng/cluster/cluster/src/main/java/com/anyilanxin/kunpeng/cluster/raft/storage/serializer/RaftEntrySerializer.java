@@ -1,6 +1,6 @@
 /*
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,11 @@
 package com.anyilanxin.kunpeng.cluster.raft.storage.serializer;
 
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ApplicationEntry;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.BusinessMetaEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ConfigurationEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.InitialEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.RaftLogEntry;
-import io.camunda.zeebe.util.buffer.BufferWriter;
+import com.anyilanxin.kunpeng.structpack.buffer.BufferWriter;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 import org.agrona.DirectBuffer;
@@ -87,6 +88,26 @@ public interface RaftEntrySerializer {
       long term, ConfigurationEntry entry, MutableDirectBuffer buffer, int offset);
 
   /**
+   * Determines the length in bytes of a serialized business meta entry.
+   *
+   * @param entry to determine the length in bytes for
+   * @return the length in bytes when the entry gets serialized
+   */
+  int getBusinessMetaEntrySerializedLength(BusinessMetaEntry entry);
+
+  /**
+   * Writes the term and entry into given buffer at the given offset
+   *
+   * @param term the term of the entry
+   * @param entry the BusinessMetaEntry to write
+   * @param buffer the buffer to write to
+   * @param offset the offset in the buffer at which the term and entry will be written
+   * @return the number of bytes written
+   */
+  int writeBusinessMetaEntry(
+      long term, BusinessMetaEntry entry, MutableDirectBuffer buffer, int offset);
+
+  /**
    * Read the raft log entry from the buffer
    *
    * @param buffer to read the raft log entry from
@@ -106,8 +127,8 @@ public interface RaftEntrySerializer {
     }
 
     @Override
-    public int write(final MutableDirectBuffer writeBuffer, final int offset) {
-      return writeFunction.apply(writeBuffer, offset);
+    public void write(final MutableDirectBuffer writeBuffer, final int offset) {
+      writeFunction.apply(writeBuffer, offset);
     }
   }
 }

@@ -1,58 +1,51 @@
 /*
- * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package com.anyilanxin.kunpeng.cluster.raft.roles;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.raft.impl.RaftContext;
-import com.anyilanxin.kunpeng.cluster.raft.metrics.RaftReplicationMetrics;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.AppendRequest;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.AppendResponse;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.PersistedRaftRecord;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.ProtocolVersionHandler;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.ReplicatableJournalRecord;
-import com.anyilanxin.kunpeng.cluster.raft.protocol.VersionedAppendRequest;
-import com.anyilanxin.kunpeng.cluster.raft.storage.RaftStorage;
-import com.anyilanxin.kunpeng.cluster.raft.storage.log.IndexedRaftLogEntry;
-import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLog;
 import com.anyilanxin.kunpeng.cluster.raft.journal.CheckedJournalException;
 import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException;
 import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException.InvalidChecksum;
-import io.camunda.zeebe.snapshots.PersistedSnapshot;
-import io.camunda.zeebe.snapshots.ReceivableSnapshotStore;
-import io.camunda.zeebe.snapshots.ReceivedSnapshot;
+import com.anyilanxin.kunpeng.cluster.raft.metrics.RaftReplicationMetrics;
+import com.anyilanxin.kunpeng.cluster.raft.protocol.*;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.RaftSnapshotStore;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.receive.ReceivedSnapshot;
+import com.anyilanxin.kunpeng.cluster.raft.storage.RaftStorage;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.IndexedRaftLogEntry;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLog;
+import com.anyilanxin.kunpeng.cluster.utils.concurrent.ThreadContext;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import java.io.IOException;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.jupiter.api.AutoClose;
 import org.junit.rules.Timeout;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 public class PassiveRoleTest {
 
@@ -70,11 +63,22 @@ public class PassiveRoleTest {
     when(log.flushesDirectly()).thenReturn(true);
     when(ctx.getLog()).thenReturn(log);
 
+    // 追加路径的 flush+ack 合并任务经 threadContext 排队；stub 为内联执行，保持用例的同步语义
+    final ThreadContext threadContext = mock(ThreadContext.class);
+    doAnswer(
+            invocation -> {
+              ((Runnable) invocation.getArgument(0)).run();
+              return null;
+            })
+        .when(threadContext)
+        .execute(any(Runnable.class));
+    when(ctx.getThreadContext()).thenReturn(threadContext);
+
     final PersistedSnapshot snapshot = mock(PersistedSnapshot.class);
     when(snapshot.getIndex()).thenReturn(1L);
     when(snapshot.getTerm()).thenReturn(1L);
 
-    final ReceivableSnapshotStore store = mock(ReceivableSnapshotStore.class);
+    final RaftSnapshotStore store = mock(RaftSnapshotStore.class);
     when(store.getLatestSnapshot()).thenReturn(Optional.of(snapshot));
 
     final RaftStorage storage = mock(RaftStorage.class);
@@ -139,8 +143,8 @@ public class PassiveRoleTest {
     final AppendResponse response =
         role.handleAppend(ProtocolVersionHandler.transform(request)).join();
 
-    // then
-    verify(log, times(1)).flush();
+    // then：成功追加经合并任务直刷（forceFlush），不再走配置策略的 flush
+    verify(log, times(1)).forceFlush();
     assertThat(response.lastLogIndex()).isEqualTo(2);
   }
 

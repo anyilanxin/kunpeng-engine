@@ -16,10 +16,16 @@
  */
 package com.anyilanxin.kunpeng;
 
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
 /**
  * start
  *
  * @author zxuanhong
  * @since
  */
-public class Application {}
+@SpringBootApplication(proxyBeanMethods = false)
+public class Application {
+
+  static void main() {}
+}

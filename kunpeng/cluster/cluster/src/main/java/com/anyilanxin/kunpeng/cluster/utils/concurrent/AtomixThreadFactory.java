@@ -1,7 +1,7 @@
 /*
  * Copyright 2015-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,33 +18,16 @@
 package com.anyilanxin.kunpeng.cluster.utils.concurrent;
 
 import java.util.concurrent.ThreadFactory;
-import org.slf4j.MDC;
 
 /**
- * Named thread factory.
+ * Thread factory producing {@link AtomixThread} instances.
  *
  * @author <a href="http://github.com/kuujo">Jordan Halterman</a>
  */
 public class AtomixThreadFactory implements ThreadFactory {
 
-  final String actorSchedulerName;
-
-  public AtomixThreadFactory() {
-    actorSchedulerName = "";
-  }
-
-  public AtomixThreadFactory(final String actorSchedulerName) {
-    this.actorSchedulerName = actorSchedulerName;
-  }
-
   @Override
   public Thread newThread(final Runnable r) {
-    return new AtomixThread(
-        () -> {
-          if (actorSchedulerName != null && !actorSchedulerName.isEmpty()) {
-            MDC.put("actor-scheduler", actorSchedulerName);
-          }
-          r.run();
-        });
+    return new AtomixThread(r);
   }
 }

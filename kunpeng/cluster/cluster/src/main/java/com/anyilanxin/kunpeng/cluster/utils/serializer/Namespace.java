@@ -1,106 +1,61 @@
 /*
- * Copyright 2014-present Open Networking Foundation
- * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package com.anyilanxin.kunpeng.cluster.utils.serializer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.Serializer;
-import com.esotericsoftware.kryo.io.ByteBufferOutput;
-import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.util.Pool;
-import com.esotericsoftware.minlog.Log;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
-import java.io.ByteArrayInputStream;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.fory.Fory;
+import org.apache.fory.ThreadSafeFory;
+import org.apache.fory.serializer.Serializer;
 import org.slf4j.Logger;
 
-/** Pool of Kryo instances, with classes pre-registered. */
+/**
+ * 注册块驱动的 Fory 实例容器：构建时创建线程安全的 Fory（native 模式、强制类型注册），并把全部注册块 中的类型/序列化器注册进 Fory 后再对外提供序列化能力。
+ *
+ * <p>非浮动注册块（{@code begin != FLOATING_ID}）内的类型按 {@code begin + index} 显式分配 Fory 类型 id 并写入线格式，
+ * 两端注册顺序不同也能按 id 对齐，类型增删不会漂移其它类型的 id；浮动块内的类型仍由 Fory 按注册顺序自动分配。 构建后不允许再注册。
+ */
 public class Namespace {
 
-  /** ID to use if this KryoNamespace does not define registration id. */
+  /** ID to use if this Namespace does not define registration id. */
   static final int FLOATING_ID = -1;
+
+  /**
+   * 显式注册起始 id：Fory 自带一批 JDK 常用类型的预注册（如 ArrayList 固定占用 id 90），低位段不可用， 与 {@link
+   * Namespaces#BEGIN_USER_CUSTOM_ID} 对齐。
+   */
+  private static final int INITIAL_ID = Namespaces.BEGIN_USER_CUSTOM_ID;
 
   static final String NO_NAME = "(no name)";
   private static final Logger LOGGER = getLogger(Namespace.class);
 
-  /** Default buffer size used for serialization (@see #serialize(Object)). */
-  private static final int DEFAULT_BUFFER_SIZE = 4096;
-
-  private static final int MAX_OUTPUT_BUFFER_SIZE = 768 * 1024;
-
-  private static final int MAX_POOLED_BUFFER_SIZE = 512 * 1024;
-
-  /** Smallest ID free to use for user defined registrations. */
-  private static final int INITIAL_ID = 16;
-
-  static {
-    Log.NONE();
-  }
-
-  private final Pool<Kryo> kryoPool;
-  private final Pool<ByteArrayOutput> outputPool =
-      new Pool<>(true, true) {
-        @Override
-        protected ByteArrayOutput create() {
-          return new ByteArrayOutput(
-              DEFAULT_BUFFER_SIZE,
-              MAX_OUTPUT_BUFFER_SIZE,
-              new BufferAwareByteArrayOutputStream(DEFAULT_BUFFER_SIZE));
-        }
-
-        @Override
-        public void free(final ByteArrayOutput output) {
-          if (output.getByteArrayOutputStream().getBufferSize() < MAX_POOLED_BUFFER_SIZE) {
-            output.getByteArrayOutputStream().reset();
-            output.reset();
-            super.free(output);
-          }
-        }
-      };
-  private final Pool<Input> inputPool =
-      new Pool<>(true, true) {
-        @Override
-        protected Input create() {
-          return new Input(DEFAULT_BUFFER_SIZE);
-        }
-
-        @Override
-        public void free(final Input input) {
-          if (input.getBuffer().length < MAX_POOLED_BUFFER_SIZE) {
-            input.reset();
-            input.setInputStream(null);
-            super.free(input);
-          }
-        }
-      };
-
+  private final ThreadSafeFory fory;
   private final ImmutableList<RegistrationBlock> registeredBlocks;
   private final String friendlyName;
 
   /**
-   * Creates a Kryo instance pool.
+   * Creates a Fory backed namespace.
    *
    * @param registeredTypes types to register
    * @param friendlyName friendly name for the namespace
@@ -109,69 +64,66 @@ public class Namespace {
     registeredBlocks = ImmutableList.copyOf(registeredTypes);
     this.friendlyName = checkNotNull(friendlyName);
 
-    final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-    kryoPool = new CompatibleKryoPool(friendlyName, classLoader, registeredTypes);
-    kryoPool.free(kryoPool.obtain());
+    fory = Fory.builder().withXlang(false).requireClassRegistration(true).buildThreadSafeFory();
+    for (final RegistrationBlock block : registeredBlocks) {
+      final boolean explicitId = block.begin() != FLOATING_ID;
+      int index = 0;
+      for (final Pair<Class<?>[], Class<? extends Serializer<?>>> entry : block.types()) {
+        final Class<? extends Serializer<?>> serializerClass = entry.getRight();
+        final int id = block.begin() + index++;
+        for (final Class<?> type : entry.getLeft()) {
+          if (explicitId) {
+            if (fory.execute(f -> f.getTypeResolver().isRegistered(type))) {
+              // Fory 预注册类型（如 ArrayList 固定 id 90）或本命名空间已注册过的类型：
+              // 现有 id 由 Fory 版本或首次注册固定，同样稳定，静默保留即可
+              LOGGER.debug("Type {} already registered, keep existing id instead of {}", type, id);
+            } else {
+              try {
+                fory.register(type, id);
+              } catch (final IllegalArgumentException e) {
+                // id 被其它类型占用属真实注册配置错误, 吞掉会把故障推迟到运行期序列化爆炸——fail-fast
+                throw new IllegalStateException(
+                    "Failed to register type "
+                        + type.getName()
+                        + " with explicit id "
+                        + id
+                        + " in namespace '"
+                        + friendlyName
+                        + "'",
+                    e);
+              }
+            }
+          } else if (serializerClass == null) {
+            fory.register(type);
+          }
+          if (serializerClass != null) {
+            // Fory 反射实例化序列化器并注入自身上下文（支持 (Config, Class)/(TypeResolver, Class) 等构造器）
+            fory.registerSerializer(type, serializerClass);
+          }
+        }
+      }
+    }
   }
 
   /**
-   * Serializes given object to byte array using Kryo instance in pool.
+   * Serializes given object to byte array.
    *
    * @param obj Object to serialize
    * @return serialized bytes
    */
   public byte[] serialize(final Object obj) {
-    final ByteArrayOutput output = outputPool.obtain();
-    try {
-      final Kryo kryo = kryoPool.obtain();
-      try {
-        kryo.writeClassAndObject(output, obj);
-      } finally {
-        kryoPool.free(kryo);
-      }
-      output.flush();
-      return output.getByteArrayOutputStream().toByteArray();
-    } finally {
-      outputPool.free(output);
-    }
+    return fory.serialize(obj);
   }
 
   /**
-   * Serializes given object to byte buffer using Kryo instance in pool.
-   *
-   * @param obj Object to serialize
-   * @param buffer to write to
-   */
-  public void serialize(final Object obj, final ByteBuffer buffer) {
-    final Kryo kryo = kryoPool.obtain();
-    try (final ByteBufferOutput output = new ByteBufferOutput(buffer)) {
-      kryo.writeClassAndObject(output, obj);
-    } finally {
-      kryoPool.free(kryo);
-    }
-  }
-
-  /**
-   * Deserializes given byte array to Object using Kryo instance in pool.
+   * Deserializes given byte array to Object.
    *
    * @param bytes serialized bytes
    * @param <T> deserialized Object type
    * @return deserialized Object
    */
   public <T> T deserialize(final byte[] bytes) {
-    final Input input = inputPool.obtain();
-    try {
-      final Kryo kryo = kryoPool.obtain();
-
-      try {
-        input.setInputStream(new ByteArrayInputStream(bytes));
-        return (T) kryo.readClassAndObject(input);
-      } finally {
-        kryoPool.free(kryo);
-      }
-    } finally {
-      inputPool.free(input);
-    }
+    return (T) fory.deserialize(bytes);
   }
 
   public ImmutableList<RegistrationBlock> getRegisteredBlocks() {
@@ -192,18 +144,18 @@ public class Namespace {
         .toString();
   }
 
-  /** KryoNamespace builder. */
+  /** Namespace builder. */
   // @NotThreadSafe
   public static final class Builder {
     private int blockHeadId = INITIAL_ID;
-    private List<Pair<Class<?>[], Serializer<?>>> types = new ArrayList<>();
+    private List<Pair<Class<?>[], Class<? extends Serializer<?>>>> types = new ArrayList<>();
     private final List<RegistrationBlock> blocks = new ArrayList<>();
     private String name = NO_NAME;
 
     /**
      * Builds a {@link Namespace} instance.
      *
-     * @return KryoNamespace
+     * @return Namespace
      */
     public Namespace build() {
       if (!types.isEmpty()) {
@@ -222,11 +174,11 @@ public class Namespace {
     }
 
     /**
-     * Sets the next Kryo registration Id for following register entries.
+     * Delimits a registration block for following register entries。块内类型按 {@code begin + index} 显式绑定
+     * Fory 类型 id 并写入线格式，两端按 id 对齐、与注册顺序无关；{@link #FLOATING_ID} 表示浮动块，类型 id 仍由 Fory 自动分配。
      *
-     * @param id Kryo registration Id
+     * @param id block start id
      * @return this
-     * @see Kryo#register(Class, Serializer, int)
      */
     public Builder nextId(final int id) {
       if (!types.isEmpty()) {
@@ -248,7 +200,7 @@ public class Namespace {
     }
 
     /**
-     * Registers classes to be serialized using Kryo default serializer.
+     * Registers classes to be serialized using Fory default serializer.
      *
      * @param expectedTypes list of classes
      * @return this
@@ -261,16 +213,17 @@ public class Namespace {
     }
 
     /**
-     * Registers serializer for the given set of classes.
+     * Registers a Fory serializer class for the given set of classes.
      *
-     * <p>When multiple classes are registered with an explicitly provided serializer, the namespace
-     * guarantees all instances will be serialized with the same type ID.
+     * <p>传序列化器类而非实例：实例化由 Fory 完成（注入其上下文），要求序列化器提供 {@code (Config, Class)} 或 {@code (TypeResolver,
+     * Class)} 构造器。
      *
      * @param classes list of classes to register
-     * @param serializer serializer to use for the class
+     * @param serializer serializer class to use for the classes
      * @return this
      */
-    public Builder register(final Serializer<?> serializer, final Class<?>... classes) {
+    public Builder register(
+        final Class<? extends Serializer<?>> serializer, final Class<?>... classes) {
       for (final Class<?> clazz : classes) {
         types.add(Pair.of(new Class[] {clazz}, checkNotNull(serializer)));
       }
@@ -284,18 +237,16 @@ public class Namespace {
         blocks.add(block);
         nextId(block.begin() + block.types().size());
       } else {
-        // flush pending types
-        final int addedBlockBegin = blockHeadId + types.size();
-        nextId(addedBlockBegin);
-        blocks.add(new RegistrationBlock(addedBlockBegin, block.types()));
-        nextId(addedBlockBegin + block.types().size());
+        // 浮动块保留自动 id 语义直接并入，不重定基到显式 id 段：Fory 预注册类型的 id 由 Fory
+        // 版本固定分配，重定基后会与显式段冲突
+        blocks.add(block);
       }
     }
 
     /**
-     * Registers all the class registered to given KryoNamespace.
+     * Registers all the class registered to given Namespace.
      *
-     * @param ns KryoNamespace
+     * @param ns Namespace
      * @return this
      */
     public Builder register(final Namespace ns) {
@@ -314,9 +265,10 @@ public class Namespace {
 
   static final class RegistrationBlock {
     private final int begin;
-    private final ImmutableList<Pair<Class<?>[], Serializer<?>>> types;
+    private final ImmutableList<Pair<Class<?>[], Class<? extends Serializer<?>>>> types;
 
-    RegistrationBlock(final int begin, final List<Pair<Class<?>[], Serializer<?>>> types) {
+    RegistrationBlock(
+        final int begin, final List<Pair<Class<?>[], Class<? extends Serializer<?>>>> types) {
       this.begin = begin;
       this.types = ImmutableList.copyOf(types);
     }
@@ -325,7 +277,7 @@ public class Namespace {
       return begin;
     }
 
-    public ImmutableList<Pair<Class<?>[], Serializer<?>>> types() {
+    public ImmutableList<Pair<Class<?>[], Class<? extends Serializer<?>>>> types() {
       return types;
     }
 

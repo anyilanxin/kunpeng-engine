@@ -1,7 +1,7 @@
 /*
  * Copyright 2015-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,16 +19,16 @@ package com.anyilanxin.kunpeng.cluster.utils.concurrent;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import io.camunda.zeebe.util.CloseableSilently;
+import com.anyilanxin.kunpeng.utils.CloseableSilently;
 import java.util.concurrent.Executor;
 
 /**
  * Thread context.
  *
- * <p>The thread context is used by Atomix to determine the correct thread on which to execute
- * asynchronous callbacks. All threads created within Catalyst must be instances of {@link
- * AtomixThread}. Once a thread has been created, the context is stored in the thread object via
- * {@link AtomixThread#setContext(ThreadContext)}. This means there is a one-to-one relationship
+ * <p>The thread context is used by the cluster framework to determine the correct thread on which
+ * to execute asynchronous callbacks. All threads created within the framework must be instances of
+ * {@link AtomixThread}. Once a thread has been created, the context is stored in the thread object
+ * via {@link AtomixThread#setContext(ThreadContext)}. This means there is a one-to-one relationship
  * between a context and a thread. That is, a context is representative of a thread and provides an
  * interface for firing events on that thread.
  *
@@ -46,7 +46,7 @@ public interface ThreadContext extends CloseableSilently, Executor, Scheduler {
    */
   static ThreadContext currentContext() {
     final Thread thread = Thread.currentThread();
-    return thread instanceof final AtomixThread atomixThread ? atomixThread.getContext() : null;
+    return thread instanceof AtomixThread atomixThread ? atomixThread.getContext() : null;
   }
 
   /** Checks that the current thread is the correct context thread. */

@@ -1,7 +1,7 @@
 /*
  * Copyright 2018-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.partition;
 
-import com.anyilanxin.kunpeng.cluster.raft.zeebe.EntryValidator;
+import com.anyilanxin.kunpeng.cluster.raft.logentry.EntryValidator;
 import java.time.Duration;
 
 /** Configurations for a single partition. */
@@ -37,6 +37,16 @@ public class RaftPartitionConfig {
   private static final long DEFAULT_REBALANCE_REPLICATION_LAG_THRESHOLD = 8L * 1024 * 1024;
   private static final Duration DEFAULT_REBALANCE_REPLICATION_TIMEOUT = Duration.ofSeconds(10);
   private static final int DEFAULT_REBALANCE_MAX_TRANSFER_ATTEMPTS = 3;
+  private static final Duration DEFAULT_SNAPSHOT_INTERVAL = Duration.ofMinutes(5);
+  private static final int DEFAULT_MAX_SNAPSHOT_COUNT = 1;
+
+  /**
+   * 优先级选举 target 的最小衰减步长。实际衰减取 max(此值, target/5)：小优先级范围（本项目
+   * 常用的 1~5）下保持近线性的逐级放权；大范围（如 1~100）下按比例指数收敛，避免低优先级
+   * 节点等待 O(N) 个选举超时。jraft 的 decayPriorityGap 默认 10 且下限钳到 10，因其典型
+   * 优先级范围达上百；此处默认 1 以保持小范围下的既有节奏。
+   */
+  private static final int DEFAULT_PRIORITY_DECAY_GAP = 1;
 
   private Duration electionTimeout = DEFAULT_ELECTION_TIMEOUT;
   private Duration heartbeatInterval = DEFAULT_HEARTBEAT_INTERVAL;
@@ -51,11 +61,27 @@ public class RaftPartitionConfig {
   private long rebalanceReplicationLagThreshold = DEFAULT_REBALANCE_REPLICATION_LAG_THRESHOLD;
   private Duration rebalanceReplicationTimeout = DEFAULT_REBALANCE_REPLICATION_TIMEOUT;
   private int rebalanceMaxTransferAttempts = DEFAULT_REBALANCE_MAX_TRANSFER_ATTEMPTS;
-  private RaftStorageConfig storageConfig;
+  private RaftStorageConfig storageConfig = new RaftStorageConfig();
   private EntryValidator entryValidator;
   private Duration configurationChangeTimeout = DEFAULT_CONFIGURATION_CHANGE_TIMEOUT;
   private int snapshotChunkSize;
+
+  /** 快照跨分区传输的批量分片累计字节上限（一批多片，单文件不限大小可跨批）。 */
+  private int snapshotTransferMaxBatchSize = DEFAULT_SNAPSHOT_TRANSFER_MAX_BATCH_SIZE;
+
   private boolean receiveOnLegacySubject = DEFAULT_RECEIVE_ON_LEGACY_SUBJECT;
+
+  /** 快照周期拍摄间隔。 */
+  private Duration snapshotInterval = DEFAULT_SNAPSHOT_INTERVAL;
+
+  /** 常规快照最大保留数量。 */
+  private int maxSnapshotCount = DEFAULT_MAX_SNAPSHOT_COUNT;
+
+  /** 优先级选举 target 每次衰减的最小步长，实际衰减为 max(此值, target/5)。 */
+  private int priorityDecayGap = DEFAULT_PRIORITY_DECAY_GAP;
+
+  /** 快照跨分区传输批量的缺省累计字节上限（4 MiB）。 */
+  private static final int DEFAULT_SNAPSHOT_TRANSFER_MAX_BATCH_SIZE = 4 * 1024 * 1024;
 
   /**
    * Returns the Raft leader election timeout.
@@ -113,6 +139,16 @@ public class RaftPartitionConfig {
     this.maxAppendBatchSize = maxAppendBatchSize;
   }
 
+  /** 优先级选举 target 每次衰减的最小步长（实际衰减 max(此值, target/5)），默认 1。 */
+  public int getPriorityDecayGap() {
+    return priorityDecayGap;
+  }
+
+  public RaftPartitionConfig setPriorityDecayGap(final int priorityDecayGap) {
+    this.priorityDecayGap = priorityDecayGap;
+    return this;
+  }
+
   public boolean isPriorityElectionEnabled() {
     return priorityElectionEnabled;
   }
@@ -153,6 +189,14 @@ public class RaftPartitionConfig {
 
   public void setSnapshotChunkSize(final int snapshotChunkSize) {
     this.snapshotChunkSize = snapshotChunkSize;
+  }
+
+  public int getSnapshotTransferMaxBatchSize() {
+    return snapshotTransferMaxBatchSize;
+  }
+
+  public void setSnapshotTransferMaxBatchSize(final int snapshotTransferMaxBatchSize) {
+    this.snapshotTransferMaxBatchSize = snapshotTransferMaxBatchSize;
   }
 
   public Duration getConfigurationChangeTimeout() {
@@ -207,7 +251,7 @@ public class RaftPartitionConfig {
   /**
    * The maximum replication lag, in bytes, that the desired leader may have for the current leader
    * to attempt a coordinated leadership transfer. Above it the partition is skipped with {@code
-   * LAG_TOO_HIGH}. Maps to {@code camunda.cluster.raft.rebalance.replicationLagThreshold}.
+   * LAG_TOO_HIGH}.
    *
    * <p>Operators can override this value for each rebalance request - this is a default value that
    * applies when no override is specified.
@@ -223,7 +267,7 @@ public class RaftPartitionConfig {
   /**
    * How long the current leader waits (paused, declining writes) for the desired leader to finish
    * replicating during a coordinated leadership transfer before cancelling with {@code
-   * REPLICATION_TIMED_OUT}. Maps to {@code camunda.cluster.raft.rebalance.replicationTimeout}.
+   * REPLICATION_TIMED_OUT}.
    *
    * <p>Operators can override this value for each rebalance request - this is a default value that
    * applies when no override is specified.
@@ -238,8 +282,7 @@ public class RaftPartitionConfig {
 
   /**
    * The maximum number of TimeoutNow requests the current leader sends (including the initial
-   * request) before reporting {@code TIMEOUT_NOW_EXHAUSTED} during a leadership transfer. Maps to
-   * {@code camunda.cluster.raft.rebalance.maxTransferAttempts}.
+   * request) before reporting {@code TIMEOUT_NOW_EXHAUSTED} during a leadership transfer.
    *
    * <p>Operators can override this value for each rebalance request - this is a default value that
    * applies when no override is specified.
@@ -274,6 +317,26 @@ public class RaftPartitionConfig {
 
   public void setReceiveOnLegacySubject(final boolean receiveOnLegacySubject) {
     this.receiveOnLegacySubject = receiveOnLegacySubject;
+  }
+
+  /** 快照周期拍摄间隔。 */
+  public Duration getSnapshotInterval() {
+    return snapshotInterval;
+  }
+
+  public RaftPartitionConfig setSnapshotInterval(final Duration snapshotInterval) {
+    this.snapshotInterval = snapshotInterval;
+    return this;
+  }
+
+  /** 常规快照最大保留数量。 */
+  public int getMaxSnapshotCount() {
+    return maxSnapshotCount;
+  }
+
+  public RaftPartitionConfig setMaxSnapshotCount(final int maxSnapshotCount) {
+    this.maxSnapshotCount = maxSnapshotCount;
+    return this;
   }
 
   @Override
@@ -311,6 +374,12 @@ public class RaftPartitionConfig {
         + rebalanceMaxTransferAttempts
         + ", receiveOnLegacySubject="
         + receiveOnLegacySubject
+        + ", snapshotInterval="
+        + snapshotInterval
+        + ", maxSnapshotCount="
+        + maxSnapshotCount
+        + ", priorityDecayGap="
+        + priorityDecayGap
         + '}';
   }
 }

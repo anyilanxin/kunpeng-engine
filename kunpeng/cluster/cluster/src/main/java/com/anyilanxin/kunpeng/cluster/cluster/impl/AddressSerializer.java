@@ -1,7 +1,7 @@
 /*
  * Copyright 2018-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,22 +18,29 @@
 package com.anyilanxin.kunpeng.cluster.cluster.impl;
 
 import com.anyilanxin.kunpeng.cluster.utils.net.Address;
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.io.Output;
+import org.apache.fory.config.Config;
+import org.apache.fory.context.ReadContext;
+import org.apache.fory.context.WriteContext;
+import org.apache.fory.serializer.Serializer;
 
-/** Address serializer. */
-public class AddressSerializer extends com.esotericsoftware.kryo.Serializer<Address> {
-  @Override
-  public void write(final Kryo kryo, final Output output, final Address address) {
-    output.writeString(address.host());
-    output.writeInt(address.port());
+/** Address 序列化器：host 字符串 + port 整数顺序读写。 */
+public class AddressSerializer extends Serializer<Address> {
+
+  /** 创建 {@link Address} 序列化器实例。 */
+  public AddressSerializer(final Config config) {
+    super(config, Address.class);
   }
 
   @Override
-  public Address read(final Kryo kryo, final Input input, final Class<? extends Address> type) {
-    final String host = input.readString();
-    final int port = input.readInt();
+  public void write(final WriteContext writeContext, final Address address) {
+    writeContext.writeString(address.host());
+    writeContext.writeInt32(address.port());
+  }
+
+  @Override
+  public Address read(final ReadContext readContext) {
+    final String host = readContext.readString();
+    final int port = readContext.readInt32();
     return Address.from(host, port);
   }
 }

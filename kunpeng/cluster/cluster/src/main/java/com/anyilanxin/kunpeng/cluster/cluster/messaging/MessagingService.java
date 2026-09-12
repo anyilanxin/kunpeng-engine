@@ -1,7 +1,7 @@
 /*
  * Copyright 2015-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -148,7 +148,7 @@ public interface MessagingService {
       Address address, String type, byte[] payload, boolean keepAlive);
 
   /**
-   * Sends a message synchronously and expects a response on a pooled connection.
+   * Sends a message asynchronously and receives a response on a pooled connection.
    *
    * <p>The future may be completed exceptionally with one of:
    *
@@ -182,7 +182,7 @@ public interface MessagingService {
   }
 
   /**
-   * Sends a message synchronously and expects a response.
+   * Sends a message asynchronously and receives a response.
    *
    * <p>If {@code keepAlive} is false, a new, transient connection is set up and created. If true,
    * it will reuse an existing connection (if any), or create a new one that will be kept in a pool
@@ -290,7 +290,7 @@ public interface MessagingService {
       Address address, String type, byte[] payload, boolean keepAlive, Duration timeout);
 
   /**
-   * Sends a message synchronously and expects a response.
+   * Sends a message asynchronously and receives a response.
    *
    * <p>If {@code keepAlive} is false, a new, transient connection is set up and created. If true,
    * it will reuse an existing connection (if any), or create a new one that will be kept in a pool

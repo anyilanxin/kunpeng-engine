@@ -1,7 +1,7 @@
 /*
  * Copyright 2015-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,11 +21,11 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.transfer.SnapshotChunkBatcher;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.IndexedRaftLogEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLog;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLogReader;
-import io.camunda.zeebe.snapshots.PersistedSnapshot;
-import io.camunda.zeebe.snapshots.SnapshotChunkReader;
 import java.nio.ByteBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,8 +52,15 @@ public final class RaftMemberContext {
   private boolean installing;
   private int failures;
   private long failureTime;
+
+  /** 被动成员追平后的自动晋升是否已发起（防重复触发重配置）。 */
+  private boolean promotionTriggered;
+
+  /** 因重配置从 ACTIVE 显式降为被动：被动身份是管理面决定，追平后不做自动晋升。 */
+  private boolean demotedFromVoting;
+
   private volatile RaftLogReader reader;
-  private SnapshotChunkReader snapshotChunkReader;
+  private SnapshotChunkBatcher snapshotChunkBatcher;
   private IndexedRaftLogEntry currentEntry;
 
   // Number of bytes remaining to replicate for this member for any pending/in-flight snapshot
@@ -102,6 +109,7 @@ public final class RaftMemberContext {
     snapshotReplicationLag = 0;
     snapshotChunkBytesInFlight = 0;
     logReplicationLag = 0;
+    promotionTriggered = false;
     acknowledgedAppendWatermark = sentAppendWatermark;
 
     if (reader != null) {
@@ -114,9 +122,9 @@ public final class RaftMemberContext {
     open = false;
     member.close();
     closeReader();
-    if (snapshotChunkReader != null) {
-      snapshotChunkReader.close();
-      snapshotChunkReader = null;
+    if (snapshotChunkBatcher != null) {
+      snapshotChunkBatcher.close();
+      snapshotChunkBatcher = null;
     }
   }
 
@@ -224,7 +232,11 @@ public final class RaftMemberContext {
 
   /** Completes an append request to the member. */
   public void completeAppend() {
-    inFlightAppendCount--;
+    // resetState 可能在追加在途时清零计数（成员类型变更），迟到响应不得把计数推到负数，
+    // 否则 canAppend/canHeartbeat 永久为 false，领导者将静默停止向该成员复制日志
+    if (inFlightAppendCount > 0) {
+      inFlightAppendCount--;
+    }
   }
 
   /**
@@ -268,7 +280,7 @@ public final class RaftMemberContext {
   /**
    * Increments the member failure count.
    *
-   * @return The member state.
+   * @return The updated failure count.
    */
   public int incrementFailureCount() {
     if (failures++ == 0) {
@@ -385,6 +397,26 @@ public final class RaftMemberContext {
     return matchIndex;
   }
 
+  /** 被动成员的自动晋升是否已发起。 */
+  public boolean isPromotionTriggered() {
+    return promotionTriggered;
+  }
+
+  /** 标记被动成员的自动晋升已发起。 */
+  public void markPromotionTriggered() {
+    promotionTriggered = true;
+  }
+
+  /** 该成员是否经重配置从 ACTIVE 降级而来（区别于以 PASSIVE 身份加入的成员）。 */
+  public boolean isDemotedFromVoting() {
+    return demotedFromVoting;
+  }
+
+  /** 标记该成员由 ACTIVE 经重配置降级为被动，追平后不再自动晋升。 */
+  public void markDemotedFromVoting() {
+    demotedFromVoting = true;
+  }
+
   /**
    * Sets the member's match index.
    *
@@ -476,12 +508,12 @@ public final class RaftMemberContext {
     this.snapshotIndex = snapshotIndex;
   }
 
-  public SnapshotChunkReader getSnapshotChunkReader() {
-    return snapshotChunkReader;
+  public SnapshotChunkBatcher getSnapshotChunkBatcher() {
+    return snapshotChunkBatcher;
   }
 
-  public void setSnapshotChunkReader(final SnapshotChunkReader snapshotChunkReader) {
-    this.snapshotChunkReader = snapshotChunkReader;
+  public void setSnapshotChunkBatcher(final SnapshotChunkBatcher snapshotChunkBatcher) {
+    this.snapshotChunkBatcher = snapshotChunkBatcher;
   }
 
   /** Decrements the snapshot replication lag by {@code bytes}, floored at 0. */

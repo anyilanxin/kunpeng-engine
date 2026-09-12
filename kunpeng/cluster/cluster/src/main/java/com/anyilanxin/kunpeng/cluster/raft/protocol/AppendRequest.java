@@ -1,7 +1,7 @@
 /*
  * Copyright 2015-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -85,7 +85,7 @@ public class AppendRequest extends AbstractRaftRequest {
   /**
    * Returns the term of the log entry preceding the new entry.
    *
-   * @return The index of the term preceding the new entry.
+   * @return The term of the log entry immediately preceding the new entries.
    */
   public long prevLogTerm() {
     return prevLogTerm;

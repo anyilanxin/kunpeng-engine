@@ -1,39 +1,40 @@
 /*
- * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package com.anyilanxin.kunpeng.cluster.raft;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
 
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.InstallRequest;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.TestRaftServerProtocol;
-import io.camunda.zeebe.snapshots.PersistedSnapshot;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+
 import java.time.Duration;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 public class RaftReplicationLagTest {
 
@@ -52,7 +53,8 @@ public class RaftReplicationLagTest {
   public void shouldSeedThenDrainSnapshotReplicationLagWhileInstalling() throws Throwable {
     // given
     final int numberOfChunks = 10;
-    final var snapshot = disconnectFollowerAndTakeSnapshot(numberOfChunks);
+    // 每分片 1MiB、共 10MiB，跨 3 个传输批，便于观察滞后逐批递减
+    final var snapshot = disconnectFollowerAndTakeSnapshot(numberOfChunks, 1024 * 1024);
     final long totalSnapshotSize = snapshot.getTotalSizeInBytes();
     final var followerId = MemberId.from(follower.name());
 
@@ -78,7 +80,7 @@ public class RaftReplicationLagTest {
         .describedAs("lag only ever decreases while the install progresses")
         .isSortedAccordingTo(Comparator.reverseOrder());
     assertThat(observedLag.stream().distinct().count())
-        .describedAs("lag drains incrementally, one acknowledged chunk at a time")
+            .describedAs("lag drains incrementally, one acknowledged batch at a time")
         .isGreaterThan(2);
     await()
         .atMost(Duration.ofSeconds(30))
@@ -255,7 +257,7 @@ public class RaftReplicationLagTest {
 
   private Gauge replicationLagGauge(final MeterRegistry registry, final MemberId followerId) {
     return registry
-        .find("zeebe.raft.replication.lag.bytes")
+        .find("zeebe_raft_replication_lag_bytes")
         .tag("follower", followerId.id())
         .gauge();
   }
@@ -289,6 +291,20 @@ public class RaftReplicationLagTest {
 
     final var snapshot =
         raftRule.takeSnapshot(leader, commitIndex, numberOfChunks, true).orElseThrow();
+    raftRule.appendEntry();
+    return snapshot;
+  }
+
+  private PersistedSnapshot disconnectFollowerAndTakeSnapshot(
+          final int numberOfChunks, final int chunkSize) throws Exception {
+    follower = raftRule.getFollower().orElseThrow();
+    raftRule.partition(follower);
+
+    leader.getContext().setPreferSnapshotReplicationThreshold(1);
+    final var commitIndex = raftRule.appendEntries(2);
+
+    final var snapshot =
+            raftRule.takeSnapshot(leader, commitIndex, numberOfChunks, chunkSize).orElseThrow();
     raftRule.appendEntry();
     return snapshot;
   }

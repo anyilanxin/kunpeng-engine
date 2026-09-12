@@ -1,39 +1,35 @@
 /*
- * Copyright 2018-present Open Networking Foundation
- * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package com.anyilanxin.kunpeng.cluster.cluster;
 
-import io.camunda.zeebe.scheduler.future.ActorFuture;
-import io.camunda.zeebe.scheduler.future.CompletableActorFuture;
-import io.camunda.zeebe.snapshots.PersistedSnapshot;
-import io.camunda.zeebe.snapshots.PersistedSnapshotListener;
-import io.camunda.zeebe.snapshots.ReceivableSnapshotStore;
-import io.camunda.zeebe.snapshots.ReceivedSnapshot;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshotListener;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.RaftSnapshotStore;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotException;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.ConstructableSnapshot;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.receive.ReceivedSnapshot;
+import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
+import com.anyilanxin.kunpeng.scheduler.future.CompletableActorFuture;
+
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.Set;
-import java.util.function.BiConsumer;
 
-public class NoopSnapshotStore implements ReceivableSnapshotStore {
-
-  @Override
-  public boolean hasSnapshotId(final String id) {
-    return false;
-  }
+/** A no-op snapshot store which never holds any snapshots. */
+public class NoopSnapshotStore implements RaftSnapshotStore {
 
   @Override
   public Optional<PersistedSnapshot> getLatestSnapshot() {
@@ -41,28 +37,44 @@ public class NoopSnapshotStore implements ReceivableSnapshotStore {
   }
 
   @Override
-  public ActorFuture<Set<PersistedSnapshot>> getAvailableSnapshots() {
-    return null;
+  public ActorFuture<Long> getCompactionBound() {
+    return CompletableActorFuture.completed(0L);
   }
 
   @Override
-  public ActorFuture<Long> getCompactionBound() {
-    return null;
+  public int getMaxSnapshotCount() {
+    return 0;
   }
 
   @Override
   public ActorFuture<Void> abortPendingSnapshots() {
-    return null;
+    return CompletableActorFuture.completed();
+  }
+
+  @Override
+  public void start() {
+  }
+
+  @Override
+  public ActorFuture<ConstructableSnapshot> newTransientSnapshot(final long index, final long term) {
+    return CompletableActorFuture.completedExceptionally(
+        new SnapshotException("NoopSnapshotStore cannot take snapshots"));
+  }
+
+  @Override
+  public ActorFuture<ReceivedSnapshot> newReceivedSnapshot(final String snapshotId) {
+    return CompletableActorFuture.completedExceptionally(
+            new UnsupportedOperationException("NoopSnapshotStore cannot receive snapshots"));
   }
 
   @Override
   public ActorFuture<Boolean> addSnapshotListener(final PersistedSnapshotListener listener) {
-    return null;
+    return CompletableActorFuture.completed(true);
   }
 
   @Override
   public ActorFuture<Boolean> removeSnapshotListener(final PersistedSnapshotListener listener) {
-    return null;
+    return CompletableActorFuture.completed(true);
   }
 
   @Override
@@ -72,35 +84,11 @@ public class NoopSnapshotStore implements ReceivableSnapshotStore {
 
   @Override
   public ActorFuture<Void> delete() {
-    return null;
+    return CompletableActorFuture.completed();
   }
 
   @Override
   public Path getPath() {
     return null;
-  }
-
-  @Override
-  public ActorFuture<ReceivedSnapshot> newReceivedSnapshot(final String snapshotId) {
-    return null;
-  }
-
-  @Override
-  public void close() {}
-
-  @Override
-  public Optional<PersistedSnapshot> getBootstrapSnapshot() {
-    return Optional.empty();
-  }
-
-  @Override
-  public ActorFuture<PersistedSnapshot> copyForBootstrap(
-      final PersistedSnapshot persistedSnapshot, final BiConsumer<Path, Path> copySnapshot) {
-    return CompletableActorFuture.completed(null);
-  }
-
-  @Override
-  public ActorFuture<Void> deleteBootstrapSnapshots() {
-    return CompletableActorFuture.completed();
   }
 }

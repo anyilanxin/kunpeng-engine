@@ -1,7 +1,7 @@
 /*
  * Copyright 2017-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,9 +26,8 @@ import com.anyilanxin.kunpeng.cluster.raft.journal.JournalMetaStore;
 import com.anyilanxin.kunpeng.cluster.raft.journal.JournalReader;
 import com.anyilanxin.kunpeng.cluster.raft.journal.JournalRecord;
 import com.anyilanxin.kunpeng.cluster.raft.journal.SegmentInfo;
+import com.anyilanxin.kunpeng.structpack.buffer.BufferWriter;
 import com.google.common.collect.Sets;
-import io.camunda.zeebe.util.VisibleForTesting;
-import io.camunda.zeebe.util.buffer.BufferWriter;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.util.Collection;
 import java.util.Objects;
@@ -337,8 +336,8 @@ public final class SegmentedJournal implements Journal {
     rwlock.unlockRead(stamp);
   }
 
-  @VisibleForTesting(
-      "The simplest way to guarantee certain methods acquire/release the write lock is to access directly")
+  // exposed for tests: the simplest way to guarantee certain methods acquire/release the write
+  // lock is to access the lock directly
   StampedLock rwlock() {
     return rwlock;
   }

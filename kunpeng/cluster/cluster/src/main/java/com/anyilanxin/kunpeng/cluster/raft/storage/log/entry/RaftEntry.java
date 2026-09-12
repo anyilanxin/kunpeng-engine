@@ -1,6 +1,6 @@
 /*
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 package com.anyilanxin.kunpeng.cluster.raft.storage.log.entry;
 
 import com.anyilanxin.kunpeng.cluster.raft.storage.serializer.RaftEntrySerializer;
-import io.camunda.zeebe.util.buffer.BufferWriter;
+import com.anyilanxin.kunpeng.structpack.buffer.BufferWriter;
 
 public interface RaftEntry {
   BufferWriter toSerializable(long term, RaftEntrySerializer serializer);

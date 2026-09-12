@@ -1,7 +1,7 @@
 /*
  * Copyright 2015-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,30 +22,25 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
+import com.anyilanxin.kunpeng.cluster.cluster.PhysicalTenantIds;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftCluster;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember.Type;
 import com.anyilanxin.kunpeng.cluster.raft.impl.DefaultRaftServer;
 import com.anyilanxin.kunpeng.cluster.raft.impl.RaftContext;
+import com.anyilanxin.kunpeng.cluster.raft.logentry.EntryValidator;
+import com.anyilanxin.kunpeng.cluster.raft.logentry.EntryValidator.NoopEntryValidator;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftElectionConfig;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartitionConfig;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.RaftServerProtocol;
 import com.anyilanxin.kunpeng.cluster.raft.storage.RaftStorage;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLog;
-import com.anyilanxin.kunpeng.cluster.raft.zeebe.EntryValidator;
-import com.anyilanxin.kunpeng.cluster.raft.zeebe.EntryValidator.NoopEntryValidator;
-import com.anyilanxin.kunpeng.cluster.utils.Builder;
-import io.camunda.cluster.PartitionId;
-import io.camunda.cluster.PhysicalTenantIds;
-import io.camunda.zeebe.util.health.FailureListener;
+import com.anyilanxin.kunpeng.cluster.utils.health.FailureListener;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
@@ -65,11 +60,8 @@ import java.util.function.Supplier;
  * stateless states.
  *
  * <pre>{@code
- * Address address = new Address("123.456.789.0", 5000);
- * Collection<Address> members = Arrays.asList(new Address("123.456.789.1", 5000), new Address("123.456.789.2", 5000));
- *
- * RaftServer server = RaftServer.builder(address)
- *   .withStateMachine(MyStateMachine::new)
+ * MemberId localMemberId = MemberId.from("local-host");
+ * RaftServer server = RaftServer.builder(localMemberId)
  *   .build();
  *
  * }</pre>
@@ -85,9 +77,8 @@ import java.util.function.Supplier;
  * configuration via {@link RaftServer.Builder#withStorage(RaftStorage)}.
  *
  * <pre>{@code
- * RaftServer server = RaftServer.builder(address)
- *   .withStateMachine(MyStateMachine::new)
- *   .withStorage(Storage.builder()
+ * RaftServer server = RaftServer.builder(localMemberId)
+ *   .withStorage(RaftStorage.builder(meterRegistry)
  *     .withDirectory(new File("logs"))
  *     .build())
  *   .build();
@@ -132,9 +123,9 @@ import java.util.function.Supplier;
 public interface RaftServer {
 
   /**
-   * Returns a new Raft server builder using the default host:port.
+   * Returns a new Raft server builder using the default local member id.
    *
-   * <p>The server will be constructed at 0.0.0.0:8700.
+   * <p>The server will be constructed with a member id derived from the local host name.
    *
    * @return The server builder.
    */
@@ -197,6 +188,26 @@ public interface RaftServer {
    * @param listener The role change listener to remove.
    */
   void removeRoleChangeListener(RaftRoleChangeListener listener);
+
+  /**
+   * 注册业务三态状态监听器（角色变更与快照复制事件聚合为 LEADER/FOLLOWER/INACTIVE 视图）， 注册后立即回调一次当前状态。
+   *
+   * @param listener 业务状态监听器
+   */
+  void addRoleStateListener(RaftRoleStateListener listener);
+
+  /** 注销业务三态状态监听器。 */
+  void removeRoleStateListener(RaftRoleStateListener listener);
+
+  /**
+   * 注册业务元数据（busimeta）变更监听器（onStarted/onCompleted 成对触发，携带当时角色与 term）， 仅在实际状态推进时回调，注册时不补发。
+   *
+   * @param listener 业务元数据变更监听器
+   */
+  void addBusinessMetaListener(RaftBusinessMetaListener listener);
+
+  /** 注销业务元数据变更监听器。 */
+  void removeBusinessMetaListener(RaftBusinessMetaListener listener);
 
   /** Adds a failure listener */
   void addFailureListener(FailureListener listener);
@@ -356,6 +367,16 @@ public interface RaftServer {
   CompletableFuture<Void> reconfigurePriority(int newPriority);
 
   /**
+   * Transfers leadership to the given member (jraft's {@code transferLeadershipTo} equivalent). The
+   * leader pauses writes, catches the target up to the frozen log head and promotes it with
+   * TimeoutNow. The future completes once the target is observed as leader.
+   *
+   * @param newLeader the member that should take over leadership
+   * @return a future to be completed once the leadership has been transferred
+   */
+  CompletableFuture<Void> transferLeadership(MemberId newLeader);
+
+  /**
    * Ensures that all records written to the log are flushed to disk
    *
    * @return a future which will be completed after the log is flushed to disk
@@ -434,7 +455,7 @@ public interface RaftServer {
    * builder, use one of the {@link RaftServer#builder(MemberId) server builder factory} methods.
    *
    * <pre>{@code
-   * RaftServer.Builder builder = RaftServer.builder(address);
+   * RaftServer.Builder builder = RaftServer.builder(localMemberId);
    *
    * }</pre>
    *
@@ -442,20 +463,19 @@ public interface RaftServer {
    * instance:
    *
    * <pre>{@code
-   * RaftServer server = RaftServer.builder(address)
+   * RaftServer server = RaftServer.builder(localMemberId)
    *   ...
    *   .build();
    *
    * }</pre>
    *
-   * The state machine is the component of the server that stores state and reacts to commands and
-   * queries submitted by clients to the cluster. State machines are provided to the server in the
-   * form of a state machine {@link Supplier factory} to allow the server to reconstruct its state
-   * when necessary.
+   * Before the server can be built, it must be wired to its environment with a {@link
+   * RaftServerProtocol protocol} and a {@link RaftStorage storage}:
    *
    * <pre>{@code
-   * RaftServer server = RaftServer.builder(address)
-   *   .withStateMachine(MyStateMachine::new)
+   * RaftServer server = RaftServer.builder(localMemberId)
+   *   .withProtocol(protocol)
+   *   .withStorage(storage)
    *   .build();
    *
    * }</pre>
@@ -483,7 +503,8 @@ public interface RaftServer {
     /**
      * Sets the server name.
      *
-     * <p>The server name is used to
+     * <p>The server name is used internally to manage the server's on-disk state. Log, snapshot,
+     * and configuration files stored on disk use the server name as the prefix.
      *
      * @param name The server name.
      * @return The server builder.

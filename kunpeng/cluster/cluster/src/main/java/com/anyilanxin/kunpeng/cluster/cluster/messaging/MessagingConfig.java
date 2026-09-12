@@ -1,7 +1,7 @@
 /*
  * Copyright 2018-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -98,7 +98,7 @@ public class MessagingConfig implements Config {
 
   /**
    * Sets the shutdown quiet period. This is mostly useful to set a small value when testing,
-   * otherwise every tests takes an additional 2 second just to shutdown the executor.
+   * otherwise every shutdown waits for the quiet period before shutting down the executor.
    *
    * @param shutdownQuietPeriod the quiet period on shutdown
    * @return this config for chaining
@@ -276,14 +276,15 @@ public class MessagingConfig implements Config {
   }
 
   /**
-   * @return the configured size in bytes for SO_SNDBUF or `-1` if not configured.
+   * @return the configured size in bytes for SO_SNDBUF or {@code AUTO_SOCKET_SIZE} if not
+   *     configured.
    */
   public int getSocketSendBuffer() {
     return socketSendBuffer;
   }
 
   /**
-   * Sets the size of SO_SNDBUF.GatewayCfgT
+   * Sets the size of SO_SNDBUF.
    *
    * @param socketSendBuffer the data size in bytes to use for SO_SNDBUF
    * @return this config for chaining
@@ -294,7 +295,8 @@ public class MessagingConfig implements Config {
   }
 
   /**
-   * @return the configured size in bytes for SO_RCVBUF or `-1` if not configured.
+   * @return the configured size in bytes for SO_RCVBUF or {@code AUTO_SOCKET_SIZE} if not
+   *     configured.
    */
   public int getSocketReceiveBuffer() {
     return socketReceiveBuffer;

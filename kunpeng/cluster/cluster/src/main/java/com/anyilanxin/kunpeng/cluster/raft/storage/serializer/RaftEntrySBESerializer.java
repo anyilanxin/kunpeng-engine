@@ -1,6 +1,6 @@
 /*
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,16 +24,21 @@ import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.impl.DefaultRaftMember;
 import com.anyilanxin.kunpeng.cluster.raft.journal.file.RecordDataEncoder;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ApplicationEntry;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.BusinessMetaEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ConfigurationEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.InitialEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.RaftLogEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.SerializedApplicationEntry;
+import com.anyilanxin.kunpeng.cluster.raft.storage.serializer.BusinessMetaEntryDecoder.ItemsDecoder;
 import com.anyilanxin.kunpeng.cluster.raft.storage.serializer.ConfigurationEntryDecoder.NewMembersDecoder;
 import com.anyilanxin.kunpeng.cluster.raft.storage.serializer.ConfigurationEntryDecoder.OldMembersDecoder;
-import io.camunda.zeebe.util.SbeUtil;
+import com.anyilanxin.kunpeng.cluster.utils.sbe.SbeUtil;
 import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import org.agrona.DirectBuffer;
 import org.agrona.MutableDirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
@@ -47,6 +52,8 @@ public class RaftEntrySBESerializer implements RaftEntrySerializer {
   final RaftLogEntryDecoder raftLogEntryDecoder = new RaftLogEntryDecoder();
   final ApplicationEntryDecoder applicationEntryDecoder = new ApplicationEntryDecoder();
   final ConfigurationEntryDecoder configurationEntryDecoder = new ConfigurationEntryDecoder();
+  final BusinessMetaEntryEncoder businessMetaEntryEncoder = new BusinessMetaEntryEncoder();
+  final BusinessMetaEntryDecoder businessMetaEntryDecoder = new BusinessMetaEntryDecoder();
 
   @Override
   public int getApplicationEntrySerializedLength(final ApplicationEntry entry) {
@@ -85,6 +92,28 @@ public class RaftEntrySBESerializer implements RaftEntrySerializer {
   }
 
   @Override
+  public int getBusinessMetaEntrySerializedLength(final BusinessMetaEntry entry) {
+    // raft frame length
+    return headerEncoder.encodedLength()
+        + raftLogEntryEncoder.sbeBlockLength()
+        // business meta entry length
+        + headerEncoder.encodedLength()
+        + businessMetaEntryEncoder.sbeBlockLength()
+        // items header
+        + ItemsDecoder.sbeHeaderSize()
+        // item entries
+        + entry.entries().entrySet().stream().mapToInt(this::getBusinessMetaItemLength).sum();
+  }
+
+  private int getBusinessMetaItemLength(final Map.Entry<String, String> item) {
+    return ItemsDecoder.sbeBlockLength()
+        + ItemsDecoder.keyHeaderLength()
+        + item.getKey().getBytes(StandardCharsets.UTF_8).length
+        + ItemsDecoder.valueHeaderLength()
+        + item.getValue().getBytes(StandardCharsets.UTF_8).length;
+  }
+
+  @Override
   public int writeApplicationEntry(
       final long term,
       final ApplicationEntry entry,
@@ -101,11 +130,14 @@ public class RaftEntrySBESerializer implements RaftEntrySerializer {
         .version(applicationEntryEncoder.sbeSchemaVersion());
     applicationEntryEncoder.wrap(buffer, offset + entryOffset + headerEncoder.encodedLength());
     applicationEntryEncoder.lowestAsqn(entry.lowestPosition()).highestAsqn(entry.highestPosition());
-    SbeUtil.writeNested(
-        entry.dataWriter(),
-        ApplicationEntryEncoder.applicationDataHeaderLength(),
-        applicationEntryEncoder,
-        ByteOrder.LITTLE_ENDIAN);
+    final int newLimit =
+        SbeUtil.writeNested(
+            entry.dataWriter(),
+            ApplicationEntryEncoder.applicationDataHeaderLength(),
+            buffer,
+            applicationEntryEncoder.limit(),
+            ByteOrder.LITTLE_ENDIAN);
+    applicationEntryEncoder.limit(newLimit);
 
     return entryOffset + headerEncoder.encodedLength() + applicationEntryEncoder.encodedLength();
   }
@@ -145,7 +177,7 @@ public class RaftEntrySBESerializer implements RaftEntrySerializer {
       final var memberId = member.memberId().id();
       newMembersEncoder
           .next()
-          .type(getSBEType(member.getType()))
+          .memberType(getSBEType(member.getType()))
           .updated(member.getLastUpdated().toEpochMilli())
           .memberId(memberId);
     }
@@ -156,12 +188,38 @@ public class RaftEntrySBESerializer implements RaftEntrySerializer {
       final var memberId = member.memberId().id();
       oldMembersEncoder
           .next()
-          .type(getSBEType(member.getType()))
+          .memberType(getSBEType(member.getType()))
           .updated(member.getLastUpdated().toEpochMilli())
           .memberId(memberId);
     }
 
     return entryOffset + headerEncoder.encodedLength() + configurationEntryEncoder.encodedLength();
+  }
+
+  @Override
+  public int writeBusinessMetaEntry(
+      final long term,
+      final BusinessMetaEntry entry,
+      final MutableDirectBuffer buffer,
+      final int offset) {
+    final int entryOffset = writeRaftFrame(term, EntryType.BusinessMetaEntry, buffer, offset);
+
+    headerEncoder
+        .wrap(buffer, offset + entryOffset)
+        .blockLength(businessMetaEntryEncoder.sbeBlockLength())
+        .templateId(businessMetaEntryEncoder.sbeTemplateId())
+        .schemaId(businessMetaEntryEncoder.sbeSchemaId())
+        .version(businessMetaEntryEncoder.sbeSchemaVersion());
+    businessMetaEntryEncoder.wrap(buffer, offset + entryOffset + headerEncoder.encodedLength());
+
+    final var itemsEncoder = businessMetaEntryEncoder.itemsCount(entry.entries().size());
+    for (final var item : entry.entries().entrySet()) {
+      final byte[] key = item.getKey().getBytes(StandardCharsets.UTF_8);
+      final byte[] value = item.getValue().getBytes(StandardCharsets.UTF_8);
+      itemsEncoder.next().putKey(key, 0, key.length).putValue(value, 0, value.length);
+    }
+
+    return entryOffset + headerEncoder.encodedLength() + businessMetaEntryEncoder.encodedLength();
   }
 
   @Override
@@ -173,7 +231,7 @@ public class RaftEntrySBESerializer implements RaftEntrySerializer {
         headerDecoder.blockLength(),
         headerDecoder.version());
     final long term = raftLogEntryDecoder.term();
-    final EntryType type = raftLogEntryDecoder.type();
+    final EntryType type = raftLogEntryDecoder.entryType();
 
     final int entryOffset = headerDecoder.encodedLength() + raftLogEntryDecoder.encodedLength();
 
@@ -186,6 +244,10 @@ public class RaftEntrySBESerializer implements RaftEntrySerializer {
           case ConfigurationEntry -> {
             headerDecoder.wrap(buffer, entryOffset);
             yield readConfigurationEntry(buffer, entryOffset);
+          }
+          case BusinessMetaEntry -> {
+            headerDecoder.wrap(buffer, entryOffset);
+            yield readBusinessMetaEntry(buffer, entryOffset);
           }
           case InitialEntry -> new InitialEntry();
           default -> throw new IllegalStateException("Unexpected entry type " + type);
@@ -221,7 +283,7 @@ public class RaftEntrySBESerializer implements RaftEntrySerializer {
         .version(raftLogEntryEncoder.sbeSchemaVersion());
     raftLogEntryEncoder.wrap(buffer, offset + headerEncoder.encodedLength());
     raftLogEntryEncoder.term(term);
-    raftLogEntryEncoder.type(entryType);
+    raftLogEntryEncoder.entryType(entryType);
 
     return headerEncoder.encodedLength() + raftLogEntryEncoder.encodedLength();
   }
@@ -254,7 +316,7 @@ public class RaftEntrySBESerializer implements RaftEntrySerializer {
     final NewMembersDecoder newMembersDecoder = configurationEntryDecoder.newMembers();
     final ArrayList<RaftMember> newMembers = new ArrayList<>(newMembersDecoder.count());
     for (final NewMembersDecoder member : newMembersDecoder) {
-      final RaftMember.Type type = getRaftMemberType(member.type());
+      final RaftMember.Type type = getRaftMemberType(member.memberType());
       final Instant updated = Instant.ofEpochMilli(member.updated());
       final var memberId = member.memberId();
       newMembers.add(new DefaultRaftMember(MemberId.from(memberId), type, updated));
@@ -263,12 +325,34 @@ public class RaftEntrySBESerializer implements RaftEntrySerializer {
     final OldMembersDecoder oldMembersDecoder = configurationEntryDecoder.oldMembers();
     final ArrayList<RaftMember> oldMembers = new ArrayList<>(oldMembersDecoder.count());
     for (final OldMembersDecoder member : oldMembersDecoder) {
-      final RaftMember.Type type = getRaftMemberType(member.type());
+      final RaftMember.Type type = getRaftMemberType(member.memberType());
       final Instant updated = Instant.ofEpochMilli(member.updated());
       final var memberId = member.memberId();
       oldMembers.add(new DefaultRaftMember(MemberId.from(memberId), type, updated));
     }
 
     return new ConfigurationEntry(timestamp, newMembers, oldMembers);
+  }
+
+  private BusinessMetaEntry readBusinessMetaEntry(
+      final DirectBuffer buffer, final int entryOffset) {
+    businessMetaEntryDecoder.wrap(
+        buffer,
+        entryOffset + headerDecoder.encodedLength(),
+        headerDecoder.blockLength(),
+        headerDecoder.version());
+
+    final ItemsDecoder itemsDecoder = businessMetaEntryDecoder.items();
+    final Map<String, String> entries = new HashMap<>(itemsDecoder.count());
+    for (final ItemsDecoder item : itemsDecoder) {
+      final byte[] key = new byte[item.keyLength()];
+      item.getKey(key, 0, key.length);
+      final byte[] value = new byte[item.valueLength()];
+      item.getValue(value, 0, value.length);
+      entries.put(
+          new String(key, StandardCharsets.UTF_8), new String(value, StandardCharsets.UTF_8));
+    }
+
+    return new BusinessMetaEntry(entries);
   }
 }

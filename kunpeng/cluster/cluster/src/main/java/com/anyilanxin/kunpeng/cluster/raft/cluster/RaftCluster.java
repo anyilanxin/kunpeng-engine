@@ -1,7 +1,7 @@
 /*
  * Copyright 2016-present Open Networking Foundation
  * Copyright © 2020 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,19 +29,10 @@ import java.util.concurrent.CompletableFuture;
  * <p>This class provides the view of the Raft cluster from the perspective of a single server. When
  * a {@link RaftServer RaftServer} is started, the server will form a cluster with other servers.
  * Each Raft cluster consists of some set of {@link #getMembers() members}, and each {@link
- * RaftMember} represents a single server in the cluster. Users can use the {@code Cluster} to react
- * to state changes in the underlying Raft algorithm via the various listeners.
+ * RaftMember} represents a single server in the cluster. Members can be looked up via {@link
+ * #getMember(MemberId)} and iterated via {@link #getMembers()}.
  *
- * <p>
- *
- * <pre>{@code
- * server.cluster().onJoin(member -> {
- *   System.out.println(member.address() + " joined the cluster!");
- * });
- *
- * }</pre>
- *
- * Membership exposed via this interface is provided from the perspective of the local server and
+ * <p>Membership exposed via this interface is provided from the perspective of the local server and
  * may not necessarily be consistent with cluster membership from the perspective of other nodes.
  * The only consistent membership list is on the leader node.
  *
@@ -50,19 +41,11 @@ import java.util.concurrent.CompletableFuture;
  * Users can use the {@code Cluster} to manage the Raft cluster membership. Typically, servers join
  * the cluster by calling {@link RaftServer#bootstrap(MemberId...)}.
  *
- * <p>
- *
- * <pre>{@code
- * server.cluster().onJoin(member -> {
- *   member.remove().thenRun(() -> System.out.println("Removed " + member.address() + " from the cluster!"));
- * });
- *
- * }</pre>
- *
- * When a member is removed from the cluster, the configuration change removing the member will be
- * replicated to all the servers in the cluster and persisted to disk. Once a member has been
- * removed, for that member to rejoin the cluster it must fully restart and request to rejoin the
- * cluster. Cluster configurations are stored on disk.
+ * <p>Members of the cluster can be removed by calling {@link RaftMember#remove()}. When a member is
+ * removed from the cluster, the configuration change removing the member will be replicated to all
+ * the servers in the cluster and persisted to disk. Once a member has been removed, for that member
+ * to rejoin the cluster it must fully restart and request to rejoin the cluster. Cluster
+ * configurations are stored on disk.
  *
  * <p>Additionally, members can be {@link RaftMember#promote() promoted} and {@link
  * RaftMember#demote() demoted} by any other member of the cluster. When a member state is changed,

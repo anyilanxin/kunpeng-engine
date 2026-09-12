@@ -1,6 +1,6 @@
 /*
  * Copyright © 2017 camunda services GmbH (info@camunda.com)
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ package com.anyilanxin.kunpeng.cluster.raft.journal;
 import com.anyilanxin.kunpeng.cluster.raft.journal.CheckedJournalException.FlushException;
 import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException.InvalidChecksum;
 import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException.InvalidIndex;
-import io.camunda.zeebe.util.buffer.BufferWriter;
+import com.anyilanxin.kunpeng.structpack.buffer.BufferWriter;
 
 public interface Journal extends AutoCloseable {
 
@@ -50,7 +50,7 @@ public interface Journal extends AutoCloseable {
    * append will fail.
    *
    * @deprecated This method was used to append entries received via replication. {@link
-   *     Journal#append(long, long, byte[])} must be used instead.
+   *     Journal#append(long, byte[])} must be used instead.
    * @param record the record to be appended
    * @exception InvalidIndex if the index of record is not the next expected index
    * @exception InvalidChecksum if the checksum in record does not match the checksum of the data
