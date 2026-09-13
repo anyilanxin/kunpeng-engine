@@ -51,6 +51,7 @@ import com.anyilanxin.kunpeng.cluster.raft.storage.RaftStorage;
 import com.anyilanxin.kunpeng.cluster.raft.storage.StorageException;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLog;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.BusinessMetaEntry;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.MergeRecordEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.system.BusinessMetaStore;
 import com.anyilanxin.kunpeng.cluster.raft.storage.system.Configuration;
 import com.anyilanxin.kunpeng.cluster.raft.storage.system.MetaStore;
@@ -620,6 +621,56 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
                         future.complete(index);
                       }
                     });
+          } else {
+            future.completeExceptionally(
+                new RaftException.NoLeader("Local role is not the leader"));
+          }
+        });
+    return future;
+  }
+
+  /** 合并记录追加入口：任意线程可调，切到 raft 线程后由 leader 角色追加 {@link MergeRecordEntry} 并等待多数派提交， future 以提交条目 index 完成；本机非 leader（含易主切换瞬间）以 {@link RaftException.NoLeader} 异常完成。 */
+  public CompletableFuture<Long> appendMergeRecord(final PartitionId sourcePartition) {
+    final CompletableFuture<Long> future = new CompletableFuture<>();
+    threadContext.execute(
+        () -> {
+          if (role instanceof final LeaderRole leaderRole) {
+            leaderRole
+                .appendMergeRecordEntry(new MergeRecordEntry(sourcePartition))
+                .whenComplete(
+                    (index, error) -> {
+                      if (error != null) {
+                        future.completeExceptionally(error);
+                      } else {
+                        future.complete(index);
+                      }
+                    });
+          } else {
+            future.completeExceptionally(
+                new RaftException.NoLeader("Local role is not the leader"));
+          }
+        });
+    return future;
+  }
+
+  /**
+   * 手动镜像安装收尾入口（任意线程可调，合并收尾使用）：raft 线程上刷新 currentSnapshot 后， 由 leader
+   * 对全部复制目标强制走一次标准快照安装分发（InstallRequest，绕过滞后阈值判定， 已具备同水位镜像的成员仍会跳过）， future
+   * 以分发的快照 index 完成；本机非 leader（含易主切换瞬间）以 {@link RaftException.NoLeader} 异常完成。
+   */
+  public CompletableFuture<Long> forceSnapshotReplication() {
+    final CompletableFuture<Long> future = new CompletableFuture<>();
+    threadContext.execute(
+        () -> {
+          if (role instanceof final LeaderRole leaderRole) {
+            try {
+              // 先刷新 currentSnapshot，确保读到刚拍摄的最新快照
+              updateCurrentSnapshot();
+              leaderRole.replicateSnapshotToAll();
+              future.complete(getCurrentSnapshotIndex());
+            } catch (final Exception error) {
+              future.completeExceptionally(error);
+            }
           } else {
             future.completeExceptionally(
                 new RaftException.NoLeader("Local role is not the leader"));

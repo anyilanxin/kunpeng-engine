@@ -20,6 +20,7 @@ import static com.anyilanxin.kunpeng.cluster.raft.storage.serializer.SerializerU
 import static com.anyilanxin.kunpeng.cluster.raft.storage.serializer.SerializerUtil.getSBEType;
 
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember;
 import com.anyilanxin.kunpeng.cluster.raft.cluster.impl.DefaultRaftMember;
 import com.anyilanxin.kunpeng.cluster.raft.journal.file.RecordDataEncoder;
@@ -27,6 +28,7 @@ import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ApplicationEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.BusinessMetaEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ConfigurationEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.InitialEntry;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.MergeRecordEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.RaftLogEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.SerializedApplicationEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.serializer.BusinessMetaEntryDecoder.ItemsDecoder;
@@ -54,6 +56,8 @@ public class RaftEntrySBESerializer implements RaftEntrySerializer {
   final ConfigurationEntryDecoder configurationEntryDecoder = new ConfigurationEntryDecoder();
   final BusinessMetaEntryEncoder businessMetaEntryEncoder = new BusinessMetaEntryEncoder();
   final BusinessMetaEntryDecoder businessMetaEntryDecoder = new BusinessMetaEntryDecoder();
+  final MergeRecordEntryEncoder mergeRecordEntryEncoder = new MergeRecordEntryEncoder();
+  final MergeRecordEntryDecoder mergeRecordEntryDecoder = new MergeRecordEntryDecoder();
 
   @Override
   public int getApplicationEntrySerializedLength(final ApplicationEntry entry) {
@@ -70,6 +74,37 @@ public class RaftEntrySBESerializer implements RaftEntrySerializer {
   @Override
   public int getInitialEntrySerializedLength() {
     return headerEncoder.encodedLength() + raftLogEntryEncoder.sbeBlockLength();
+  }
+
+  @Override
+  public int getMergeRecordEntrySerializedLength(final MergeRecordEntry entry) {
+    // raft frame length
+    return headerEncoder.encodedLength()
+        + raftLogEntryEncoder.sbeBlockLength()
+        // merge record entry length
+        + headerEncoder.encodedLength()
+        + mergeRecordEntryEncoder.sbeBlockLength()
+        + MergeRecordEntryDecoder.sourcePartitionGroupHeaderLength()
+        + entry.sourcePartition().group().getBytes(StandardCharsets.UTF_8).length;
+  }
+
+  @Override
+  public int writeMergeRecordEntry(
+      final long term, final MergeRecordEntry entry, final MutableDirectBuffer buffer, final int offset) {
+    final int entryOffset = writeRaftFrame(term, EntryType.MergeRecordEntry, buffer, offset);
+
+    headerEncoder
+        .wrap(buffer, offset + entryOffset)
+        .blockLength(mergeRecordEntryEncoder.sbeBlockLength())
+        .templateId(mergeRecordEntryEncoder.sbeTemplateId())
+        .schemaId(mergeRecordEntryEncoder.sbeSchemaId())
+        .version(mergeRecordEntryEncoder.sbeSchemaVersion());
+    mergeRecordEntryEncoder.wrap(buffer, offset + entryOffset + headerEncoder.encodedLength());
+    mergeRecordEntryEncoder
+        .sourcePartitionId(entry.sourcePartition().id())
+        .sourcePartitionGroup(entry.sourcePartition().group());
+
+    return entryOffset + headerEncoder.encodedLength() + mergeRecordEntryEncoder.encodedLength();
   }
 
   @Override
@@ -250,6 +285,10 @@ public class RaftEntrySBESerializer implements RaftEntrySerializer {
             yield readBusinessMetaEntry(buffer, entryOffset);
           }
           case InitialEntry -> new InitialEntry();
+          case MergeRecordEntry -> {
+            headerDecoder.wrap(buffer, entryOffset);
+            yield readMergeRecordEntry(buffer, entryOffset);
+          }
           default -> throw new IllegalStateException("Unexpected entry type " + type);
         };
 
@@ -354,5 +393,18 @@ public class RaftEntrySBESerializer implements RaftEntrySerializer {
     }
 
     return new BusinessMetaEntry(entries);
+  }
+
+  private MergeRecordEntry readMergeRecordEntry(final DirectBuffer buffer, final int entryOffset) {
+    mergeRecordEntryDecoder.wrap(
+        buffer,
+        entryOffset + headerDecoder.encodedLength(),
+        headerDecoder.blockLength(),
+        headerDecoder.version());
+
+    return new MergeRecordEntry(
+        PartitionId.from(
+            mergeRecordEntryDecoder.sourcePartitionGroup(),
+            (int) mergeRecordEntryDecoder.sourcePartitionId()));
   }
 }

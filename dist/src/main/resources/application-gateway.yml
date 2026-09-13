@@ -1,0 +1,4 @@
+spring:
+  application:
+    name: kunpeng-gateway
+    version: #@version@#

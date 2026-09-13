@@ -972,6 +972,29 @@ final class LeaderAppender {
         .ifPresent(installRequest -> sendInstallRequest(member, installRequest));
   }
 
+  /**
+   * 手动收尾入口（raft 线程）：对全部复制目标强制走一次标准快照安装分发。 与 {@link #shouldReplicateSnapshot}
+   * 的常规判定不同——合并收尾时 follower 日志已被合并记录条目推齐（无滞后、无缺口），常规判定不会触发， 这里绕过滞后/缺口判定； "成员已具备同水位镜像则跳过"的幂等守卫保留，正在安装中的成员由既有重试机制推进。
+   */
+  public void replicateSnapshotToAll() {
+    raft.checkThread();
+    final var persistedSnapshot = raft.getCurrentSnapshot();
+    if (persistedSnapshot == null) {
+      return;
+    }
+    for (final RaftMemberContext member : raft.getCluster().getReplicationTargets()) {
+      if (member.getSnapshotIndex() >= persistedSnapshot.getIndex()) {
+        // 已具备同水位镜像，重复分发无益（同 shouldReplicateSnapshot 的 load-bearing 守卫）
+        continue;
+      }
+      if (!member.canInstall()) {
+        // 正在安装中（可能是此前触发的分发），由既有分片重试机制推进
+        continue;
+      }
+      replicateSnapshot(member);
+    }
+  }
+
   private void replicateEvents(final RaftMemberContext member) {
     sendAppendRequest(member, buildAppendRequest(member, -1));
   }

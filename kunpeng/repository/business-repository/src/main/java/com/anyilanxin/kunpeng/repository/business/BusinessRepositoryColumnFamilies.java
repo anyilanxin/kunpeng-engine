@@ -1,0 +1,132 @@
+/*
+ * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package com.anyilanxin.kunpeng.repository.business;
+
+import static com.anyilanxin.kunpeng.kvstore.PredefinedColumnFamily.*;
+
+import com.anyilanxin.kunpeng.kvstore.ColumnFamilies;
+import com.anyilanxin.kunpeng.kvstore.PredefinedColumnFamily;
+
+/**
+ * 数据列族
+ *
+ * @author zxuanhong
+ */
+public enum BusinessRepositoryColumnFamilies implements ColumnFamilies {
+  // 本地数据,集群变更不进行数据迁移(仅在本分区存在)
+  DEFAULT(DEFAULT_COLUMN_FAMILY, 0),
+  DISTRIBUTE_PARALLEL(DEFAULT_COLUMN_FAMILY, 1),
+  DISTRIBUTE_PARALLEL_INDEX(DEFAULT_COLUMN_FAMILY, 2),
+  BUSINESS_VALUE_ROUTE(DEFAULT_COLUMN_FAMILY, 3),
+  BUSINESS_VALUE_ROUTE_MESSAGE_CORRELATION(DEFAULT_COLUMN_FAMILY, 4),
+  BUSINESS_VALUE_ROUTE_SIGN_CORRELATION(DEFAULT_COLUMN_FAMILY, 5),
+  BUSINESS_VALUE_ROUTE_LOCK(DEFAULT_COLUMN_FAMILY, 6),
+  EXPORTER(DEFAULT_COLUMN_FAMILY, 7),
+
+  // 全局数据，引导新分区时迁移(全局分区存在)
+  RESOURCE_DEFINITION(GLOBAL_COLUMN_FAMILY, 40),
+  DEPLOYMENT(GLOBAL_COLUMN_FAMILY, 41),
+  PROCESS_DEFINITION(GLOBAL_COLUMN_FAMILY, 42),
+  PROCESS_DEFINITION_KEY_VERSION(GLOBAL_COLUMN_FAMILY, 43),
+  PROCESS_DEFINITION_KEY_VERSION_ID(GLOBAL_COLUMN_FAMILY, 44),
+  DEPLOYMENT_AND_DEFINITION(GLOBAL_COLUMN_FAMILY, 45),
+  PROCESS_DEFINITION_KEY_LASTER_VERSION(GLOBAL_COLUMN_FAMILY, 46),
+  START_EVENT_MESSAGE_SUBSCRIPTION(GLOBAL_COLUMN_FAMILY, 47),
+  START_EVENT_MESSAGE_SUBSCRIPTION_CORRELATION(GLOBAL_COLUMN_FAMILY, 48),
+  START_EVENT_MESSAGE_SUBSCRIPTION_PROCESS_DEFINITION_KEY_CORRELATION(GLOBAL_COLUMN_FAMILY, 49),
+  START_EVENT_SIGNAL_SUBSCRIPTION(GLOBAL_COLUMN_FAMILY, 50),
+  START_EVENT_SIGNAL_SUBSCRIPTION_CORRELATION(GLOBAL_COLUMN_FAMILY, 51),
+  START_EVENT_SIGNAL_SUBSCRIPTION_PROCESS_DEFINITION_KEY_CORRELATION(GLOBAL_COLUMN_FAMILY, 52),
+
+  // 本地业务数据，需要进行迁移，如果集群变更(跟随 分区 resource id 变动)
+  KEY(LOCAL_COLUMN_FAMILY, 80),
+  PROCESS_POSITION(LOCAL_COLUMN_FAMILY, 81),
+  RESOURCE_MAX(LOCAL_COLUMN_FAMILY, 82),
+  RESOURCE(LOCAL_COLUMN_FAMILY, 83),
+  RESOURCE_ALL(LOCAL_COLUMN_FAMILY, 84),
+  EXECUTION_INSTANCE(LOCAL_COLUMN_FAMILY, 85),
+  EXECUTION_PARENT_INSTANCE(LOCAL_COLUMN_FAMILY, 86),
+  EXECUTION_INSTANCE_SEQUENCE_COUNTER(LOCAL_COLUMN_FAMILY, 87),
+  PROCESS_INSTANCE(LOCAL_COLUMN_FAMILY, 88),
+  VARIABLE(LOCAL_COLUMN_FAMILY, 89),
+  USER_TASK(LOCAL_COLUMN_FAMILY, 91),
+  INCIDENT(LOCAL_COLUMN_FAMILY, 92),
+  INCIDENT_TYPE_MAPPING(LOCAL_COLUMN_FAMILY, 93),
+  ASYNC_REQUEST(LOCAL_COLUMN_FAMILY, 94),
+
+  PROCESS_INSTANCE_CHILDREN(LOCAL_COLUMN_FAMILY, 95),
+
+  BATCH(LOCAL_COLUMN_FAMILY, 96),
+  JOB(LOCAL_COLUMN_FAMILY, 97),
+  TIMER(LOCAL_COLUMN_FAMILY, 98),
+  TIMER_START_EVENT(LOCAL_COLUMN_FAMILY, 99),
+  TIMER_ACTIVITY(LOCAL_COLUMN_FAMILY, 100),
+  TIMER_DUE_DATE(LOCAL_COLUMN_FAMILY, 101),
+  DELAY_EVENT_COMMAND(LOCAL_COLUMN_FAMILY, 102),
+  HISTORY_CLEANUP(LOCAL_COLUMN_FAMILY, 103),
+  HISTORY_CLEANUP_DUE_DATE(LOCAL_COLUMN_FAMILY, 104),
+  MESSAGE_SUBSCRIPTION(LOCAL_COLUMN_FAMILY, 105),
+  MESSAGE_SUBSCRIPTION_CORRELATION(LOCAL_COLUMN_FAMILY, 106),
+  MESSAGE_SUBSCRIPTION_ACTIVITY_INSTANCE_CORRELATION(LOCAL_COLUMN_FAMILY, 107),
+  MESSAGE_CORRELATION(LOCAL_COLUMN_FAMILY, 108),
+
+  BATCH_AFTER_RECORD(LOCAL_COLUMN_FAMILY, 109),
+
+  JOB_ACTIVITY(LOCAL_COLUMN_FAMILY, 110),
+  JOB_UNACTIVITY(LOCAL_COLUMN_FAMILY, 111),
+  SIGNAL_SUBSCRIPTION(LOCAL_COLUMN_FAMILY, 112),
+  SIGNAL_SUBSCRIPTION_CORRELATION(LOCAL_COLUMN_FAMILY, 113),
+  SIGNAL_SUBSCRIPTION_ACTIVITY_INSTANCE_CORRELATION(LOCAL_COLUMN_FAMILY, 114),
+  SIGNAL_CORRELATION(LOCAL_COLUMN_FAMILY, 115),
+  SIGNAL_CORRELATION_DETAIL(LOCAL_COLUMN_FAMILY, 116),
+
+  DISTRIBUTE_SERIAL(LOCAL_COLUMN_FAMILY, 130),
+  DISTRIBUTE_SERIAL_INDEX(LOCAL_COLUMN_FAMILY, 131),
+  ;
+  private final PredefinedColumnFamily family;
+  private final int virtualFamily;
+
+  BusinessRepositoryColumnFamilies(final PredefinedColumnFamily family, final int virtualFamily) {
+    this.family = family;
+    this.virtualFamily = virtualFamily;
+  }
+
+  @Override
+  public int entityFamily() {
+    return family.getFamily();
+  }
+
+  @Override
+  public byte[] entityFamilyName() {
+    return family.getColumnFamilyName();
+  }
+
+  @Override
+  public boolean enableTransfer() {
+    return family.isEnableTransfer();
+  }
+
+  @Override
+  public int virtualFamily() {
+    return virtualFamily;
+  }
+
+  @Override
+  public PredefinedColumnFamily[] allFamily() {
+    return PredefinedColumnFamily.values();
+  }
+}

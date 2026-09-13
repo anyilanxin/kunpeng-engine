@@ -19,11 +19,12 @@ package com.anyilanxin.kunpeng.rocksdb.util;
 import static com.anyilanxin.kunpeng.kvstore.PredefinedColumnFamily.fromColumnFamilyName;
 
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotFileInfo;
+import com.anyilanxin.kunpeng.configuration.broker.rocksdb.RocksdbConfiguration;
 import com.anyilanxin.kunpeng.kvstore.ColumnCopyType;
 import com.anyilanxin.kunpeng.kvstore.ColumnFamilies;
 import com.anyilanxin.kunpeng.kvstore.PredefinedColumnFamily;
 import com.anyilanxin.kunpeng.rocksdb.*;
-import com.anyilanxin.kunpeng.rocksdb.RocksdbConfiguration;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Path;
@@ -108,7 +109,7 @@ public final class RocksdbUtil {
     try (final RocksdbTransactionDb<ColumnFamilyType> newRocksdbDb =
             factory.createDb(
                 toPath.toString(), null, 0, new RocksdbConfiguration(), columnFamilies);
-        final RocksdbReadOnlyDb<ColumnFamilyType> oldRocksdbDb =
+         final RocksdbReadOnlyDb<ColumnFamilyType> oldRocksdbDb =
             factory.createReadOnlyDb(fromPath.toString(), columnFamilies)) {
       final RocksdbRepositoryTransaction currentTransaction =
           beginRepositoryTransaction(newRocksdbDb);

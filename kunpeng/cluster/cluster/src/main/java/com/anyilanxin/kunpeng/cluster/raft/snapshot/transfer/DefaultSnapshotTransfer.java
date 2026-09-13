@@ -29,6 +29,7 @@ import com.anyilanxin.kunpeng.scheduler.Actor;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 import com.anyilanxin.kunpeng.scheduler.future.CompletableActorFuture;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
@@ -272,7 +273,9 @@ public class DefaultSnapshotTransfer extends Actor implements SnapshotTransfer {
 
   @Override
   public ActorFuture<Void> pushSnapshot(
-      final PersistedSnapshot snapshot, final PartitionId targetPartitionId) {
+      final PersistedSnapshot snapshot,
+      final PartitionId sourcePartitionId,
+      final PartitionId targetPartitionId) {
     final CompletableActorFuture<Void> future = new CompletableActorFuture<>();
     actor.run(
         () -> {
@@ -288,6 +291,7 @@ public class DefaultSnapshotTransfer extends Actor implements SnapshotTransfer {
           pushTo(
               future,
               snapshot,
+              sourcePartitionId,
               SnapshotPushServer.subjectOf(
                   RaftPartitionTopology.partitionNameOf(targetPartitionId)),
               leader.get());
@@ -298,6 +302,7 @@ public class DefaultSnapshotTransfer extends Actor implements SnapshotTransfer {
   @Override
   public ActorFuture<Void> pushSnapshot(
       final PersistedSnapshot snapshot,
+      final PartitionId sourcePartitionId,
       final PartitionId targetPartitionId,
       final MemberId targetMember) {
     final CompletableActorFuture<Void> future = new CompletableActorFuture<>();
@@ -306,6 +311,7 @@ public class DefaultSnapshotTransfer extends Actor implements SnapshotTransfer {
             pushTo(
                 future,
                 snapshot,
+                sourcePartitionId,
                 SnapshotPushServer.subjectOf(
                     RaftPartitionTopology.partitionNameOf(targetPartitionId)),
                 targetMember));
@@ -315,12 +321,19 @@ public class DefaultSnapshotTransfer extends Actor implements SnapshotTransfer {
   private void pushTo(
       final CompletableActorFuture<Void> future,
       final PersistedSnapshot snapshot,
+      final PartitionId sourcePartitionId,
       final String subject,
       final MemberId target) {
     final var batcher = new SnapshotChunkBatcher(snapshot.newChunkReader(UUID.randomUUID()));
-    // 先发信息分片：chunkName 承载镜像 id，content 为空
+    // 先发信息分片：chunkName 承载镜像 id，content 承载源分区标识（目标端据此记录合并来源）
     final var info =
-        new SnapshotChunkImpl(snapshot.snapshotId().asString(), 0, 0, 0, ByteBuffer.allocate(0), 0);
+        new SnapshotChunkImpl(
+            snapshot.snapshotId().asString(),
+            0,
+            0,
+            0,
+            ByteBuffer.wrap(sourcePartitionId.toString().getBytes(StandardCharsets.UTF_8)),
+            0);
     final var infoBatch = new SnapshotChunkBatch(TransferKind.FILE_CHUNKS, List.of(info), true);
     communicator
         .send(

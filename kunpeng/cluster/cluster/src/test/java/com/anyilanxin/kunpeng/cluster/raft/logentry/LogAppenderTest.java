@@ -16,6 +16,7 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.logentry;
 
+import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
 import com.anyilanxin.kunpeng.cluster.raft.logentry.util.TestAppender;
 import com.anyilanxin.kunpeng.cluster.raft.logentry.util.ZeebeTestHelper;
 import com.anyilanxin.kunpeng.cluster.raft.logentry.util.ZeebeTestNode;
@@ -121,6 +122,33 @@ public class LogAppenderTest {
     // then - 单成员集群多数派提交后返回成功与提交条目 index
     assertThat(response.success()).isTrue();
     assertThat(response.index()).isGreaterThan(0);
+  }
+
+  @Test
+  public void shouldAppendMergeRecordEntry() {
+    // given - 记录追加前提交水位
+    final RaftPartitionServer server = helper.awaitLeaderServer(1);
+    final long commitIndexBefore = server.getCommitIndex();
+
+    // when - 合并记录经 RaftContext 内部入口追加（任意线程调用，内部切 raft 线程），携带源分区身份
+    final long committedIndex =
+        server.appendMergeRecord(PartitionId.from("business", 3)).join();
+
+    // then - 多数派提交后以提交条目 index 完成，且日志水位真实推进（离线副本重上线后据此触发镜像安装追赶）
+    assertThat(committedIndex).isGreaterThan(commitIndexBefore);
+    assertThat(server.getCommitIndex()).isGreaterThanOrEqualTo(committedIndex);
+  }
+
+  @Test
+  public void shouldForceSnapshotReplicationOnDemand() {
+    // given - leader 手动拍摄后强制分发（单成员集群无远程复制目标，分发应为安全空操作）
+    final RaftPartitionServer server = helper.awaitLeaderServer(1);
+
+    // when
+    final long snapshotIndex = server.replicateSnapshotToAll().join();
+
+    // then - 以分发的快照 index 完成（未拍摄过镜像时为 0）
+    assertThat(snapshotIndex).isGreaterThanOrEqualTo(0);
   }
 
   private void append() {

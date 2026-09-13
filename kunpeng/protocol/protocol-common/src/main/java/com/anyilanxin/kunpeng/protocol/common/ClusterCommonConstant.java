@@ -18,7 +18,28 @@ package com.anyilanxin.kunpeng.protocol.common;
 
 /**
  * @author zxuanhong
+ * @since
  */
 public interface ClusterCommonConstant {
+  String ADMIN_RAFT_GROUP = "admin-partition";
+  String BUSINESS_RAFT_GROUP = "raft-partition";
   String RUNTIME_DIRECTORY = "runtime";
+  String PARTITIONS_DIRECTORY = "partitions";
+  String CLUSTER_DISPATCH_TOPIC_ACK = "CLUSTER_DISPATCH_ACK";
+  String CLUSTER_NODE_SOURCE_TOPIC = "CLUSTER_NODE_SOURCE";
+  String TOPOLOGY_PROPERTY_KEY = "cluster.topology.partitions";
+  String NODE_SOURCE_PROPERTY_KEY = "cluster.topology.nodesource";
+
+  int INITIAL_NODE_SOURCE = 0;
+  int INITIAL_PARTITION_SOURCE = 0;
+  String MANAGE_RAFT = ADMIN_RAFT_GROUP + "-1";
+  String BUSINESS_PARTITION_ONE_RAFT = BUSINESS_RAFT_GROUP + "-1";
+
+  int ADMIN_PARTITION_SOURCE = 1;
+  int BUSINESS_RAFT_ONE_SOURCE = INITIAL_PARTITION_SOURCE + 2;
+
+  String NODE_SOURCE_TOPIC = "NODE-SOURCE";
+
+  String PARTITION_SOURCE_KEY = "SOURCE_ID";
+  String PARTITION_AGENT_SOURCE_KEY = "AGENT_SOURCE_IDS";
 }

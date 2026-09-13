@@ -63,11 +63,11 @@ public final class StartupProcess<CONTEXT> {
       final CompletableActorFuture<CONTEXT> result) {
     if (shutdownRequested.get()) {
       // 与 failWith 同一语义: 逆序关闭已启动步骤再异常完成, 否则已启动步骤的资源会泄漏
-      final var shutdownError = new StartupProcessShutdownException("启动流程被中断");
+      final var shutdownError = new StartupProcessShutdownException("startup interrupted by shutdown");
       shutdownStarted(control, context, index)
           .onComplete(
               (ignored, closeError) -> {
-                final var aggregate = new StartupProcessException("启动流程被中断");
+                final var aggregate = new StartupProcessException("startup interrupted by shutdown");
                 aggregate.addSuppressed(shutdownError);
                 if (closeError != null) {
                   aggregate.addSuppressed(closeError);
@@ -77,13 +77,13 @@ public final class StartupProcess<CONTEXT> {
       return;
     }
     if (index >= steps.size()) {
-      logger.info("启动流程完成");
+      logger.info("Startup process completed");
       result.complete(context);
       return;
     }
     final StartupStep<CONTEXT> step = steps.get(index);
     final String stepLabel = stepLabel(index);
-    logger.info("启动步骤 {}: {}", stepLabel, step.getName());
+    logger.info("Startup step {}: {}", stepLabel, step.getName());
     final ActorFuture<CONTEXT> stepFuture;
     try {
       stepFuture = step.startup(context);
@@ -97,10 +97,10 @@ public final class StartupProcess<CONTEXT> {
         (ctx, error) -> {
           cancelWatch(stallWatch);
           if (error != null) {
-            logger.info("启动步骤 {}: {} 失败", stepLabel, step.getName(), error);
+            logger.info("Startup step {}: {} failed", stepLabel, step.getName(), error);
             failWith(control, context, index, error, result);
           } else {
-            logger.info("启动步骤 {}: {} 完成", stepLabel, step.getName());
+            logger.info("Startup step {}: {} completed", stepLabel, step.getName());
             proceed(control, ctx, index + 1, result);
           }
         });
@@ -119,7 +119,7 @@ public final class StartupProcess<CONTEXT> {
           STEP_STALL_WARN_AFTER,
           () ->
               logger.warn(
-                  "启动步骤 {}: {} 已运行 {}s 仍未完成",
+                  "Startup step {}: {} still running after {}s",
                   stepLabel,
                   step.getName(),
                   STEP_STALL_WARN_AFTER.toSeconds()));
@@ -146,13 +146,13 @@ public final class StartupProcess<CONTEXT> {
       final Throwable error,
       final CompletableActorFuture<CONTEXT> result) {
     final var failedName = steps.get(failedIndex).getName();
-    logger.warn("启动步骤 {} 执行异常，中止启动流程: {}", stepLabel(failedIndex), failedName, error);
+    logger.warn("Startup step {} failed with exception, aborting startup process: {}", stepLabel(failedIndex), failedName, error);
     final var stepException = new StartupProcessStepException(failedName, error);
     // 逆序关闭已启动步骤
     shutdownStarted(control, context, failedIndex)
         .onComplete(
             (ignored, closeError) -> {
-              final var aggregate = new StartupProcessException("启动流程失败");
+              final var aggregate = new StartupProcessException("startup process failed");
               aggregate.addSuppressed(stepException);
               if (closeError != null) {
                 aggregate.addSuppressed(closeError);
@@ -184,7 +184,7 @@ public final class StartupProcess<CONTEXT> {
       if (errors.isEmpty()) {
         result.complete(null);
       } else {
-        final var aggregate = new StartupProcessException("关闭流程失败");
+        final var aggregate = new StartupProcessException("shutdown process failed");
         errors.forEach(aggregate::addSuppressed);
         result.completeExceptionally(aggregate);
       }
@@ -192,12 +192,12 @@ public final class StartupProcess<CONTEXT> {
     }
     final StartupStep<CONTEXT> step = steps.get(index);
     final String stepLabel = stepLabel(index);
-    logger.info("关闭步骤 {}: {}", stepLabel, step.getName());
+    logger.info("Shutdown step {}: {}", stepLabel, step.getName());
     final ActorFuture<CONTEXT> stepFuture;
     try {
       stepFuture = step.shutdown(context);
     } catch (final Exception e) {
-      logger.error("关闭步骤 {}: {} 失败", stepLabel, step.getName(), e);
+      logger.error("Shutdown step {}: {} failed", stepLabel, step.getName(), e);
       errors.add(e);
       shutdownReverse(control, context, index - 1, errors, result);
       return;
@@ -206,7 +206,7 @@ public final class StartupProcess<CONTEXT> {
         stepFuture,
         (ctx, error) -> {
           if (error != null) {
-            logger.error("关闭步骤 {}: {} 失败", stepLabel, step.getName(), error);
+            logger.error("Shutdown step {}: {} failed", stepLabel, step.getName(), error);
             errors.add(error);
           }
           shutdownReverse(control, context, index - 1, errors, result);

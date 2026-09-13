@@ -20,6 +20,7 @@ import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ApplicationEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.BusinessMetaEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ConfigurationEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.InitialEntry;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.MergeRecordEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.RaftLogEntry;
 import com.anyilanxin.kunpeng.structpack.buffer.BufferWriter;
 import java.util.function.BiFunction;
@@ -106,6 +107,26 @@ public interface RaftEntrySerializer {
    */
   int writeBusinessMetaEntry(
       long term, BusinessMetaEntry entry, MutableDirectBuffer buffer, int offset);
+
+  /**
+   * Determines the length in bytes of a serialized merge record entry.
+   *
+   * @param entry to determine the length in bytes for
+   * @return the length in bytes when the entry gets serialized
+   */
+  int getMergeRecordEntrySerializedLength(MergeRecordEntry entry);
+
+  /**
+   * Writes the term and entry into given buffer at the given offset.
+   *
+   * @param term the term of the entry
+   * @param entry the MergeRecordEntry to write
+   * @param buffer the buffer to write to
+   * @param offset the offset in the buffer at which the term and entry will be written
+   * @return the number of bytes written
+   */
+  int writeMergeRecordEntry(
+      long term, MergeRecordEntry entry, MutableDirectBuffer buffer, int offset);
 
   /**
    * Read the raft log entry from the buffer

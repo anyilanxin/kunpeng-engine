@@ -34,6 +34,21 @@ public final class PartitionId {
   }
 
   /**
+   * 从 {@link #toString()} 格式（{@code group-number}）解析分区标识。
+   *
+   * @throws IllegalArgumentException 格式非法时抛出
+   */
+  public static PartitionId parse(final String value) {
+    // 分组名可能含 '-'，按最后一个分隔符切分
+    final int separator = value.lastIndexOf('-');
+    if (separator <= 0 || separator == value.length() - 1) {
+      throw new IllegalArgumentException("Invalid partition id: " + value);
+    }
+    return new PartitionId(
+        value.substring(0, separator), Integer.parseInt(value.substring(separator + 1)));
+  }
+
+  /**
    * @return the partition group (physical tenant) name
    */
   public String group() {

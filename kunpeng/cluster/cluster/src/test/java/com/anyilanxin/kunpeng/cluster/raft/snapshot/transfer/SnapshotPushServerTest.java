@@ -67,6 +67,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 final class SnapshotPushServerTest {
 
   private static final String PARTITION_NAME = "core-group-partition-1";
+  private static final com.anyilanxin.kunpeng.cluster.cluster.PartitionId SOURCE_PARTITION =
+      com.anyilanxin.kunpeng.cluster.cluster.PartitionId.from("business", 3);
 
   @Mock private ClusterCommunicationService communicator;
 
@@ -81,6 +83,7 @@ final class SnapshotPushServerTest {
   /** 合并流回调捕获：返回的 future 由测试控制完成时机。 */
   private final AtomicReference<CompletableFuture<Void>> mergeFlowFuture = new AtomicReference<>();
   private PersistedSnapshot mergeReceived;
+  private com.anyilanxin.kunpeng.cluster.cluster.PartitionId mergeSourcePartition;
 
   @BeforeEach
   void setUp(@TempDir final Path dir) throws Exception {
@@ -121,8 +124,9 @@ final class SnapshotPushServerTest {
             communicator,
             PARTITION_NAME,
             mergeStore,
-            received -> {
+            (received, sourcePartition) -> {
               mergeReceived = received;
+              mergeSourcePartition = sourcePartition;
               final var future = new CompletableFuture<Void>();
               mergeFlowFuture.set(future);
               return future;
@@ -163,10 +167,11 @@ final class SnapshotPushServerTest {
   void receivesMergeSnapshotIntoMergeStoreAndTriggersMergeFlow() throws Exception {
     pushAllBatches();
 
-    // 接收完成：镜像落地 merge 目录且 id 一致，合并流被触发
+    // 接收完成：镜像落地 merge 目录且 id 一致，合并流被触发并携带源分区身份
     assertThat(mergeFlowFuture.get()).isNotNull();
     assertThat(mergeReceived).isNotNull();
     assertThat(mergeReceived.snapshotId()).isEqualTo(sourceSnapshot.snapshotId());
+    assertThat(mergeSourcePartition).isEqualTo(SOURCE_PARTITION);
     assertThat(Files.readString(mergeReceived.getPath().resolve("data.txt")))
         .isEqualTo("merge-content");
     assertThat(mergeStore.getLatestSnapshot()).isPresent();
@@ -200,10 +205,15 @@ final class SnapshotPushServerTest {
     final var pushHandler = handlers.get(SnapshotPushServer.subjectOf(PARTITION_NAME));
     assertThat(pushHandler).isNotNull();
 
-    // info 批：chunkName 承载镜像 id、content 为空
+    // info 批：chunkName 承载镜像 id、content 承载源分区标识
     final var info =
         new SnapshotChunkImpl(
-            sourceSnapshot.snapshotId().asString(), 0, 0, 0, ByteBuffer.allocate(0), 0);
+            sourceSnapshot.snapshotId().asString(),
+            0,
+            0,
+            0,
+            ByteBuffer.wrap(SOURCE_PARTITION.toString().getBytes(StandardCharsets.UTF_8)),
+            0);
     pushHandler
         .apply(
             SnapshotTransferCodec.encodeChunkBatch(

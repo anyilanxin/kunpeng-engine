@@ -46,15 +46,24 @@ public interface SnapshotTransfer {
   ActorFuture<@Nullable PersistedSnapshot> getBootstrapSnapshot(
       final PartitionId sourcePartitionId, final MemberId sourceMember);
 
-  /** 把给定镜像逐批推送到目标分区的 leader（合并转移入口，目标经拓扑解析 leader）。 */
-  ActorFuture<Void> pushSnapshot(
-      final PersistedSnapshot snapshot, final PartitionId targetPartitionId);
-
   /**
-   * 把给定镜像逐批推送到目标分区的指定成员（合并转移入口，目标成员由调用方给定——分区删除迁移时 目标 leader 地址已知）。
+   * 把给定镜像逐批推送到目标分区的 leader（合并转移入口，目标经拓扑解析 leader）。
+   *
+   * @param sourcePartitionId 合并镜像的源分区（随信息批带给目标端记录合并来源）
    */
   ActorFuture<Void> pushSnapshot(
       final PersistedSnapshot snapshot,
+      final PartitionId sourcePartitionId,
+      final PartitionId targetPartitionId);
+
+  /**
+   * 把给定镜像逐批推送到目标分区的指定成员（合并转移入口，目标成员由调用方给定——分区删除迁移时 目标 leader 地址已知）。
+   *
+   * @param sourcePartitionId 合并镜像的源分区（随信息批带给目标端记录合并来源）
+   */
+  ActorFuture<Void> pushSnapshot(
+      final PersistedSnapshot snapshot,
+      final PartitionId sourcePartitionId,
       final PartitionId targetPartitionId,
       final MemberId targetMember);
 }

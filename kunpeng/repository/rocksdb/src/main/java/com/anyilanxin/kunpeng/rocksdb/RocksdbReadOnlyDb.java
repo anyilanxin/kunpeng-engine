@@ -16,13 +16,14 @@
  */
 package com.anyilanxin.kunpeng.rocksdb;
 
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotFileInfo;
+import com.anyilanxin.kunpeng.configuration.broker.rocksdb.RocksdbConfiguration;
 import com.anyilanxin.kunpeng.kvstore.ColumnCopyType;
 import com.anyilanxin.kunpeng.kvstore.ColumnFamilies;
 import com.anyilanxin.kunpeng.kvstore.ColumnFamily;
 import com.anyilanxin.kunpeng.kvstore.KvStore;
 import com.anyilanxin.kunpeng.kvstore.PredefinedColumnFamily;
 import com.anyilanxin.kunpeng.kvstore.TransactionContext;
-import com.anyilanxin.kunpeng.kvstore.snapshot.SnapshotFileInfo;
 import com.anyilanxin.kunpeng.rocksdb.util.RocksdbOptionsUtil;
 import com.anyilanxin.kunpeng.rocksdb.util.RocksdbUtil;
 import java.io.File;

@@ -21,6 +21,7 @@ import static com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartition.PARTIT
 
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
 import com.anyilanxin.kunpeng.cluster.cluster.PhysicalTenantIds;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationService;
 import com.anyilanxin.kunpeng.cluster.raft.*;
@@ -67,10 +68,6 @@ import org.slf4j.LoggerFactory;
 /** {@link Partition} server. */
 public class RaftPartitionServer implements HealthMonitorable {
   private static final Logger LOGGER = LoggerFactory.getLogger(RaftPartitionServer.class);
-
-  /** follower 安装通知主题前缀：{@value #SNAPSHOT_INSTALL_NOTIFY_SUBJECT_PREFIX}{分区名}，leader 合并后通知 follower 拉取安装。 */
-  public static final String SNAPSHOT_INSTALL_NOTIFY_SUBJECT_PREFIX =
-      "snapshot-install-notify-";
 
   private final MemberId localMemberId;
   private final RaftPartition partition;
@@ -178,12 +175,6 @@ public class RaftPartitionServer implements HealthMonitorable {
     businessMetaSync =
         new BusinessMetaSync(clusterCommunicator, this, partition.name(), requestTimeout);
     server.getContext().setBusinessMetaSyncHook(businessMetaSync::requestSyncFromLeader);
-    // follower 安装通知：server 存续期间常驻注册（仅 leader 触发），收到后从 leader 拉取最新镜像并两阶段安装
-    clusterCommunicator.consume(
-        SNAPSHOT_INSTALL_NOTIFY_SUBJECT_PREFIX + partition.name(),
-        Function.identity(),
-        (sender, payload) -> partition.requestLeaderSnapshotInstall(),
-        Runnable::run);
     // 角色变更时：把分区角色写入本节点成员属性广播集群；成为 leader 才注册快照传输服务，离开即卸载
     server.addRoleChangeListener(this::onPartitionRoleChanged);
   }
@@ -281,7 +272,6 @@ public class RaftPartitionServer implements HealthMonitorable {
       bootstrapSnapshotServer.unregister();
     }
     businessMetaServer.unregister();
-    clusterCommunicator.unsubscribe(SNAPSHOT_INSTALL_NOTIFY_SUBJECT_PREFIX + partition.name());
     return server != null ? server.shutdown() : CompletableFuture.completedFuture(null);
   }
 
@@ -494,6 +484,23 @@ public class RaftPartitionServer implements HealthMonitorable {
         BusinessMetaTransfer::decodeResponse,
         leaderId,
         requestTimeout);
+  }
+
+  /**
+   * 追加内部合并记录条目（仅 leader 可成功，多数派提交后以提交条目 index 完成）： 记录"哪个分区的数据合并进了本分区"并推进日志水位，合并流收尾使用；非
+   * leader 以 {@link RaftException.NoLeader} 异常完成，由调用方决定失败处理。
+   */
+  public CompletableFuture<Long> appendMergeRecord(final PartitionId sourcePartition) {
+    return server.getContext().appendMergeRecord(sourcePartition);
+  }
+
+  /**
+   * 对全部复制目标强制走一次标准快照安装分发（仅 leader 可成功，以分发的快照 index 完成）： 手动收尾使用——刷新 leader
+   * currentSnapshot 后逐成员分发 InstallRequest（已具备同水位镜像的成员跳过）； 非 leader 以 {@link
+   * RaftException.NoLeader} 异常完成。
+   */
+  public CompletableFuture<Long> replicateSnapshotToAll() {
+    return server.getContext().forceSnapshotReplication();
   }
 
   /**

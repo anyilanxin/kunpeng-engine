@@ -21,7 +21,7 @@ public final class StartupProcessStepException extends Exception {
   private final String stepName;
 
   public StartupProcessStepException(final String stepName, final Throwable cause) {
-    super(stepName + " 步骤失败", cause);
+    super("Startup step " + stepName + " failed", cause);
     this.stepName = stepName;
   }
 

@@ -61,6 +61,7 @@
       <validValue name="ConfigurationEntry">1</validValue>
       <validValue name="InitialEntry">2</validValue>
       <validValue name="BusinessMetaEntry">3</validValue>
+      <validValue name="MergeRecordEntry">4</validValue>
     </enum>
   </types>
 
@@ -130,6 +131,12 @@
       <data name="key" id="1" type="blob"/>
       <data name="value" id="2" type="blob"/>
     </group>
+  </sbe:message>
+
+  <!-- MergeRecord：跨分区合并记录（源分区身份） -->
+  <sbe:message name="MergeRecordEntry" id="9">
+    <field name="sourcePartitionId" id="0" type="uint32"/>
+    <data name="sourcePartitionGroup" id="1" type="varDataEncoding"/>
   </sbe:message>
 
   <!-- 文件投影与快照内嵌用：携带已提交条目 index/term（对偶于 ConfigurationEntry vs Configuration） -->

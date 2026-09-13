@@ -23,6 +23,21 @@ plugins {
 }
 
 dependencies {
+    implementation project(':kunpeng:cluster:cluster')
+    implementation project(':kunpeng:cluster:cluster-config')
+    implementation project(':kunpeng:broker:broker')
+    implementation project(':kunpeng:broker:broker-client')
+    implementation project(':kunpeng:broker:broker-admin-client')
+    implementation project(':kunpeng:protocol:protocol-common')
+    implementation project(':kunpeng:protocol:protocol-admin')
+    implementation project(':kunpeng:protocol:protocol-admin-impl')
+    implementation project(':kunpeng:configuration')
+    implementation project(':kunpeng:scheduler')
+    implementation project(':kunpeng:utils')
+    implementation project(':kunpeng:gateway:gateway')
+    implementation project(':kunpeng:scheduler')
+    implementation project(':kunpeng:structpack')
+
     implementation 'org.agrona:agrona'
     implementation 'io.netty:netty-transport-native-unix-common'
     implementation 'io.netty:netty-buffer'
@@ -64,6 +79,58 @@ processResources {
 configurations.configureEach {
     exclude group: 'ch.qos.logback', module: 'logback-classic'
     exclude group: 'org.apache.logging.log4j', module: 'log4j-to-slf4j'
+}
+
+
+tasks.register('createStart', CreateStartScripts) {
+    mainClass = 'com.anyilanxin.Application'
+    applicationName = "kunpeng"
+    classpath = files('lib/*')
+    outputDir = startScripts.outputDir
+    defaultJvmOpts = ['-XX:+ExitOnOutOfMemoryError',
+                      '-Dfile.encoding=UTF-8',
+                      '-Xms1024m',
+                      '--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED',
+                      '-Xshare:auto']
+    optsEnvironmentVar('-Dbasedir=KP_APP_HOME -Dapp.pid="$$" -Dapp.name=kunpeng -Dapp.home=KP_APP_HOME')
+    doLast {
+        unixScript.text = unixScript.text
+                .replace('$-Dbasedir', '-Dbasedir')
+                .replace('KP_APP_HOME', '$APP_HOME')
+                .replace('CLASSPATH=$APP_HOME/lib/*', 'CLASSPATH="$APP_HOME"/config:"$APP_HOME"/lib/*')
+        windowsScript.text = windowsScript.text
+                .replaceAll('%-Dbasedir', '-Dbasedir')
+                .replace('KP_APP_HOME', '%APP_HOME%')
+                .replace('set CLASSPATH=%APP_HOME%\\lib\\*', 'set CLASSPATH=%APP_HOME%\\config;%APP_HOME%\\lib\\*')
+                .replace('-Dapp.pid="$$"', '')
+                .replace('%APP_HOME%%', '%APP_HOME%')
+    }
+}
+
+
+distributions {
+    main {
+        distributionBaseName = 'kunpeng'
+        contents {
+            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+            from("src/main/config") {
+                into 'config'
+                filter(ReplaceTokens,
+                        "tokens": [version: version, name: project.name],
+                        "beginToken": "#@",
+                        "endToken": "@#")
+            }
+            from(createStart) {
+                into 'bin'
+                filePermissions {
+                    user {
+                        read = true
+                        execute = true
+                    }
+                }
+            }
+        }
+    }
 }
 
 

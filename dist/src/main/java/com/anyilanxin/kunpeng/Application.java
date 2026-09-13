@@ -16,6 +16,7 @@
  */
 package com.anyilanxin.kunpeng;
 
+import com.anyilanxin.kunpeng.modules.StartHelp;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
@@ -26,6 +27,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  */
 @SpringBootApplication(proxyBeanMethods = false)
 public class Application {
-
-  static void main() {}
+  static void main(final String[] args) {
+    StartHelp.builder(args).run();
+  }
 }

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+  ~ Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<sbe:messageSchema xmlns:sbe="http://fixprotocol.io/2016/sbe"
+  xmlns:xi="http://www.w3.org/2001/XInclude" package="com.anyilanxin.kunpeng.protocol.admin.record"
+  id="0" version="@protocol.version@" semanticVersion="@protocol.version@"
+  description="Kunpeng Admin Protocol" byteOrder="littleEndian">
+
+  <types>
+    <composite name="messageHeader" description="Message identifiers and length of message root">
+      <type name="blockLength" primitiveType="uint16"/>
+      <type name="templateId" primitiveType="uint16"/>
+      <type name="schemaId" primitiveType="uint16"/>
+      <type name="version" primitiveType="uint16"/>
+    </composite>
+    <composite name="blob">
+      <type name="length" primitiveType="uint32" maxValue="2147483647"/>
+      <type name="varData" primitiveType="uint8" length="0"/>
+    </composite>
+    <composite name="Version" description="Version information">
+      <type name="majorVersion" primitiveType="int32"/>
+      <type name="minorVersion" primitiveType="int32"/>
+      <type name="patchVersion" primitiveType="int32"/>
+    </composite>
+
+    <composite name="varDataEncoding">
+      <type name="length" primitiveType="uint32" maxValue="2147483647"/>
+      <type name="varData" primitiveType="uint8" length="0" characterEncoding="UTF-8"/>
+    </composite>
+    <composite name="groupSizeEncoding" description="Repeating group dimensions">
+      <type name="blockLength" primitiveType="uint16"/>
+      <type name="numInGroup" primitiveType="uint8" semanticType="NumInGroup"/>
+    </composite>
+    <enum name="BooleanType" encodingType="uint8" semanticType="Boolean">
+      <validValue name="FALSE">0</validValue>
+      <validValue name="TRUE">1</validValue>
+    </enum>
+    <enum name="RecordType" encodingType="uint8">
+      <validValue name="EVENT">0</validValue>
+      <validValue name="COMMAND">1</validValue>
+      <validValue name="COMMAND_API">2</validValue>
+      <validValue name="COMMAND_REJECTION">4</validValue>
+    </enum>
+  </types>
+
+
+  <sbe:message name="AdminRecordMetadata" id="1" description="Descriptor for Record Metadata">
+    <field name="requestId" id="1" type="uint64"/>
+    <field name="protocolVersion" id="2" type="uint16"/>
+    <field name="recordType" id="3" type="RecordType"/>
+    <field name="valueType" id="4" type="uint8"/>
+    <field name="valueLifeCycle" id="5" type="uint8"/>
+    <field name="brokerVersion" id="6" type="Version" sinceVersion="2" presence="optional"/>
+    <field name="recordVersion" id="7" type="uint16" sinceVersion="3" presence="optional"/>
+    <field name="operationReference" id="8" type="uint64" presence="optional" sinceVersion="5"/>
+    <data name="rejectionType" id="9" type="varDataEncoding"/>
+    <data name="rejectionReason" id="10" type="varDataEncoding"/>
+  </sbe:message>
+
+
+  <sbe:message name="AdminApiRequest" id="2" description="Descriptor for Admin Api Request">
+    <field name="key" id="1" type="uint64"/>
+    <field name="valueType" id="2" type="uint8"/>
+    <field name="valueLifeCycle" id="3" type="uint8"/>
+    <field name="resourceId" id="4" type="int32"/>
+    <field name="hasData" id="5" type="BooleanType"/>
+    <field name="requestTime" id="6" type="uint64"/>
+    <data name="data" id="7" type="blob"/>
+  </sbe:message>
+
+
+  <sbe:message name="AdminApiResponse" id="3" description="Descriptor for Admin Api Response">
+    <field name="code" id="1" type="int32"/>
+    <field name="success" id="2" type="BooleanType"/>
+    <field name="valueType" id="3" type="uint8"/>
+    <field name="valueLifeCycle" id="4" type="uint8"/>
+    <field name="hasData" id="5" type="BooleanType"/>
+    <data name="message" id="6" type="varDataEncoding" semanticType="string"/>
+    <data name="data" id="7" type="blob"/>
+  </sbe:message>
+</sbe:messageSchema>

@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: kunpeng-broker
+    version: #@version@#
+
+kunpeng:
+  cluster:
+    node-id: node01
+    seed-nodes:
+      - 127.0.0.1:2026
+    network:
+      advance-host: 127.0.0.1
+  broker:
+    raft:
+      partitioning:
+        partitions-count: 4
+        replication-factor: 1
+    manage:
+      init-broker-id: node01
+      replication-factor: 1
+    threads:
+      cpu-thread-count: 2
+      io-thread-count: 2
+    gateway:
+      network:
+        host: 127.0.0.1
+        port: 2024

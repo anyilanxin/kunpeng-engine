@@ -41,6 +41,7 @@ import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.DefaultSimpleFileVerifi
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.DefaultSnapshotFileInfoProvider;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.transfer.DefaultSnapshotTransfer;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.transfer.SnapshotPushServer;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.MergeRecordEntry;
 import com.anyilanxin.kunpeng.cluster.utils.health.FailureListener;
 import com.anyilanxin.kunpeng.cluster.utils.health.HealthMonitorable;
 import com.anyilanxin.kunpeng.cluster.utils.health.HealthReport;
@@ -393,8 +394,9 @@ public final class RaftPartition implements Partition, HealthMonitorable {
    *
    * <p>流程：本分区（须为 leader 且已配置 TransferSnapshotProvider）以当前 commit 位点拍摄合并镜像
    * （{@code snapshots/merge}，经 {@link TransferSnapshotProvider#takeMergeSnapshot}）→ 逐批推送到目标分区
-   * leader → 发送合并完成等待请求，目标分区完成整个合并流（接收→两阶段安装合并→重拍 raft 镜像→通知 其 follower
-   * 安装）后应答 → 删除本地合并镜像。失败可重试：同位点重试复用上次拍摄残留，位点推进则重拍（保留策略自动清旧）。
+   * leader → 发送合并完成等待请求，目标分区完成整个合并流（接收→两阶段安装合并→追加合并记录条目并提交， 不触发 follower
+   * 安装——由调度侧在全部合并完成后经 {@link #triggerFollowerSnapshotInstall()} 统一收尾）后应答 → 删除本地合并镜像。
+   * 失败可重试：同位点重试复用上次拍摄残留，位点推进则重拍（保留策略自动清旧）。
    *
    * @param targetPartitionId 数据迁入的目标分区
    * @param targetAddress 目标分区 leader 所在成员地址
@@ -486,7 +488,7 @@ public final class RaftPartition implements Partition, HealthMonitorable {
             config.getSnapshotTransferMaxBatchSize());
     actorSchedulingService.submitActor(transfer);
     return transfer
-        .pushSnapshot(snapshot, targetPartitionId, targetMember)
+        .pushSnapshot(snapshot, partitionId, targetPartitionId, targetMember)
         .toCompletableFuture()
         .whenComplete(
             (v, error) ->
@@ -523,13 +525,19 @@ public final class RaftPartition implements Partition, HealthMonitorable {
 
   /**
    * 目标端合并流（目标分区 leader 收完合并镜像后触发，见 {@code SnapshotPushServer}）： 两阶段镜像安装包裹业务合并——
-   * 开始安装通知（业务关闭消费者）→ {@link RaftSnapshotProvider#mergeSnapshot} 合并 → 完成安装通知（业务恢复）→ 强制
-   * 重拍 raft 镜像（承载合并后状态）→ 通知所有 follower 安装 leader 合并后的镜像。
+   * 开始安装通知（业务关闭消费者）→ {@link RaftSnapshotProvider#mergeSnapshot} 合并 → 完成安装通知（业务恢复）→ 追加一条内部合并记录条目
+   * （{@link MergeRecordEntry}，记录源分区身份）并等待多数派提交。
+   *
+   * <p>合并记录条目推进日志水位但<b>不触发 follower 安装</b>：分区删减常为多个分区依次合并到同一保留分区， 逐次安装会放大整体耗时——follower
+   * 安装统一由调度侧在最后一个合并完成后经 {@link #triggerFollowerSnapshotInstall()} 收尾一次。 记录条目保证每次合并后
+   * leader 日志水位真实推进：在线 follower 经正常复制跟上；离线副本无法通知，重新上线后发现日志偏离过远， 走 raft 标准的镜像安装追赶，整体闭环。
    *
    * @param received 接收完成的合并镜像（位于本分区 snapshots/merge）
-   * @return 合并流完成 future（异常完成即本次合并失败，源分区会整体重推）
+   * @param sourcePartition 源分区（数据从该分区合并进本分区，随合并记录条目留痕）
+   * @return 合并流完成 future（合并记录条目已提交；异常完成即本次合并失败，源分区会整体重推）
    */
-  public CompletableFuture<Void> mergeReceivedSnapshot(final PersistedSnapshot received) {
+  public CompletableFuture<Void> mergeReceivedSnapshot(
+      final PersistedSnapshot received, final PartitionId sourcePartition) {
     final RaftPartitionServer current = server;
     if (current == null) {
       return CompletableFuture.failedFuture(
@@ -542,83 +550,35 @@ public final class RaftPartition implements Partition, HealthMonitorable {
         .mergeSnapshot(received.getPath())
         .toCompletableFuture()
         .thenRun(context::notifySnapshotReplicationCompleted)
-        // 阶段二完成后：强制重拍 raft 镜像，把合并后的业务状态固化为可复制/可压缩的 raft 镜像
-        .thenCompose(v -> takeSnapshotInternal(true))
-        // 通知所有 follower 安装 leader 合并后的最新镜像（各自拉取 + 两阶段安装）
-        .thenRun(this::notifyFollowersToInstallSnapshot);
+        // 阶段二完成后：追加合并记录条目（源分区身份）并等待多数派提交，推进日志水位（不触发 follower 安装）
+        .thenCompose(v -> current.appendMergeRecord(sourcePartition))
+        .thenApply(ignored -> null);
   }
 
   /**
-   * follower 侧安装入口（收到 leader 的安装通知后触发，见 RaftPartitionServer）： 从本分区 leader 拉取最新 raft 镜像落地到
-   * {@code snapshots/snapshot}，再走两阶段安装对齐本地状态。 已有同水位镜像（SnapshotAlreadyExists）时直接安装现有镜像。
+   * 手动触发 follower 镜像安装（合并收尾专用，仅 leader 可调）： 强制重拍 raft 镜像（承载全部合并后的业务状态，水位未推进时同 id
+   * 重拍覆盖）→ 对全部复制目标强制走一次标准快照安装分发（InstallRequest， follower 接收后两阶段安装；已具备同水位镜像的成员跳过）。
+   *
+   * <p>多个分区合并到同一保留分区时，应在最后一个合并完成后调用一次本方法统一收尾； 离线副本不在此路径处理——重新上线后由 raft
+   * 标准追赶（日志落后触发镜像安装）对齐。
+   *
+   * @return 收尾 future（拍摄完成、分发已发起即完成，以分发的快照 index 完成； 各 follower 安装由 InstallRequest
+   *     协议自行推进/重试，失败由协议既有机制处理）
    */
-  public void requestLeaderSnapshotInstall() {
+  public CompletableFuture<Long> triggerFollowerSnapshotInstall() {
     final RaftPartitionServer current = server;
     if (current == null) {
-      return;
+      return CompletableFuture.failedFuture(
+          new IllegalStateException("partition " + partitionId + " is not started"));
     }
-    final var transfer =
-        new DefaultSnapshotTransfer(
-            managementService.getMembershipService(),
-            managementService.getCommunicationService(),
-            snapshotStore,
-            config.getSnapshotRequestTimeout(),
-            config.getSnapshotTransferMaxBatchSize());
-    actorSchedulingService.submitActor(transfer);
-    transfer
-        .getLatestSnapshot(partitionId)
-        .toCompletableFuture()
-        .handle(
-            (persisted, error) -> {
-              if (error != null) {
-                final var cause = error.getCause() != null ? error.getCause() : error;
-                if (!(cause instanceof SnapshotAlreadyExistsException)) {
-                  LOG.warn(
-                      "Failed to pull merged snapshot of partition {} from leader", partitionId, error);
-                  transfer
-                      .closeAsync()
-                      .toCompletableFuture()
-                      .exceptionally(ignore -> null);
-                  return null;
-                }
-                // 已具备同水位镜像（可能为本机周期拍摄）：直接进入安装
-                LOG.info(
-                    "Snapshot of partition {} at same watermark already exists, installing it",
-                    partitionId);
-              }
-              current
-                  .installSnapshot()
-                  .whenComplete(
-                      (v, installError) -> {
-                        if (installError != null) {
-                          LOG.warn(
-                              "Failed to install merged snapshot of partition {}", partitionId, installError);
-                        }
-                      });
-              transfer.closeAsync().toCompletableFuture().exceptionally(ignore -> null);
-              return null;
-            });
-  }
-
-  /** 通知本分区所有 follower（除本节点）从 leader 拉取并安装最新镜像（合并流收尾，fire-and-forget）。 */
-  private void notifyFollowersToInstallSnapshot() {
-    final RaftPartitionServer current = server;
-    if (current == null) {
-      return;
+    if (getRole() != Role.LEADER) {
+      return CompletableFuture.failedFuture(
+          new IllegalStateException(
+              "partition " + partitionId + " is not led by this member; trigger from leader only"));
     }
-    final var localMemberId = managementService.getMembershipService().getLocalMember().id();
-    final var communicator = managementService.getCommunicationService();
-    current.getMembers().stream()
-        .map(RaftMember::memberId)
-        .filter(memberId -> !memberId.equals(localMemberId))
-        .forEach(
-            follower ->
-                communicator.unicast(
-                    RaftPartitionServer.SNAPSHOT_INSTALL_NOTIFY_SUBJECT_PREFIX + name(),
-                    new byte[0],
-                    Function.identity(),
-                    follower,
-                    true));
+    // 拍摄（强制重拍，纳入全部已合并状态）→ 对全部复制目标强制分发标准快照安装
+    return takeSnapshotInternal(true)
+        .thenCompose(v -> current.replicateSnapshotToAll().toCompletableFuture());
   }
 
   /** 按地址解析远程成员（排除本节点）。 */

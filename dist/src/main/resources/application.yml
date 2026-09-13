@@ -1,0 +1,42 @@
+logging:
+  register-shutdown-hook: true
+  level:
+    root: info
+  config: classpath:log4j2-spring.xml
+
+management:
+  server.port: 9600
+  health.defaults.enabled: true
+  endpoint:
+    info.access: unrestricted
+    loggers.access: unrestricted
+    prometheus.access: unrestricted
+    configprops:
+      access: unrestricted
+      show-values: always
+    health:
+      access: unrestricted
+      show-details: always
+    metrics.access: unrestricted
+  endpoints:
+    access.default: unrestricted
+    web.exposure.include: "*"
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+        step: 30s
+
+spring:
+  lifecycle.timeout-per-shutdown-phase: 30s
+  web.resources.add-mappings: false
+  autoconfigure:
+    exclude:
+      org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration,
+      org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration,
+      org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration,
+      org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchClientAutoConfiguration
+
+server:
+  port: 2020
+  shutdown: graceful

@@ -28,5 +28,6 @@ configure(jarInfo) {
 
 dependencies {
     implementation project(':kunpeng:structpack')
+    implementation project(':kunpeng:cluster:cluster')
     implementation 'org.agrona:agrona'
 }

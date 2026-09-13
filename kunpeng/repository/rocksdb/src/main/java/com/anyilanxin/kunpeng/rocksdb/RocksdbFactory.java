@@ -16,6 +16,7 @@
  */
 package com.anyilanxin.kunpeng.rocksdb;
 
+import com.anyilanxin.kunpeng.configuration.broker.rocksdb.RocksdbConfiguration;
 import com.anyilanxin.kunpeng.kvstore.ColumnFamilies;
 import com.anyilanxin.kunpeng.kvstore.KvStore;
 import io.micrometer.core.instrument.MeterRegistry;
