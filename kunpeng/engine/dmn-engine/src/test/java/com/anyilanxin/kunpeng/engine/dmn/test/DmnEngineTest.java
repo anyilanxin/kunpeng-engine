@@ -1,0 +1,106 @@
+/*
+ * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+ * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.anyilanxin.kunpeng.engine.dmn.test;
+
+import static com.anyilanxin.kunpeng.engine.dmn.test.asserts.DmnEngineTestAssertions.assertThat;
+
+import java.io.InputStream;
+import java.util.List;
+
+import com.anyilanxin.kunpeng.engine.dmn.DmnDecision;
+import com.anyilanxin.kunpeng.engine.dmn.DmnDecisionResult;
+import com.anyilanxin.kunpeng.engine.dmn.DmnDecisionTableResult;
+import com.anyilanxin.kunpeng.engine.dmn.DmnEngine;
+import com.anyilanxin.kunpeng.engine.dmn.DmnEngineConfiguration;
+import com.anyilanxin.kunpeng.engine.dmn.test.asserts.DmnDecisionTableResultAssert;
+import org.camunda.bpm.engine.variable.VariableMap;
+import org.camunda.bpm.engine.variable.Variables;
+import org.camunda.commons.utils.IoUtil;
+import org.junit.Before;
+import org.junit.Rule;
+
+public abstract class DmnEngineTest {
+
+  @Rule
+  public DmnEngineTestRule dmnEngineRule = new DmnEngineTestRule(getDmnEngineConfiguration());
+
+  public DmnEngine dmnEngine;
+  public DmnDecision decision;
+  public VariableMap variables;
+
+  public DmnEngineConfiguration getDmnEngineConfiguration() {
+    return null;
+  }
+
+  @Before
+  public void initDmnEngine() {
+    dmnEngine = dmnEngineRule.getDmnEngine();
+  }
+
+  @Before
+  public void initDecision() {
+    decision = dmnEngineRule.getDecision();
+  }
+
+  @Before
+  public void initVariables() {
+    variables = Variables.createVariables();
+  }
+
+  public VariableMap getVariables() {
+    return variables;
+  }
+
+  // parsing //////////////////////////////////////////////////////////////////
+
+  public List<DmnDecision> parseDecisionsFromFile(String filename) {
+    InputStream inputStream = IoUtil.fileAsStream(filename);
+    return dmnEngine.parseDecisions(inputStream);
+  }
+
+  public DmnDecision parseDecisionFromFile(String decisionKey, String filename) {
+    InputStream inputStream = IoUtil.fileAsStream(filename);
+    return dmnEngine.parseDecision(decisionKey, inputStream);
+  }
+
+  // evaluations //////////////////////////////////////////////////////////////
+
+  public DmnDecisionTableResult evaluateDecisionTable() {
+    return dmnEngine.evaluateDecisionTable(decision, variables);
+  }
+
+  public DmnDecisionTableResult evaluateDecisionTable(DmnEngine engine) {
+    return engine.evaluateDecisionTable(decision, variables);
+  }
+
+  public DmnDecisionResult evaluateDecision() {
+    return dmnEngine.evaluateDecision(decision, variables);
+  }
+
+  // assertions ///////////////////////////////////////////////////////////////
+
+  public DmnDecisionTableResultAssert assertThatDecisionTableResult() {
+    DmnDecisionTableResult results = evaluateDecisionTable(dmnEngine);
+    return assertThat(results);
+  }
+
+  public DmnDecisionTableResultAssert assertThatDecisionTableResult(DmnEngine engine) {
+    DmnDecisionTableResult results = evaluateDecisionTable(engine);
+    return assertThat(results);
+  }
+
+}

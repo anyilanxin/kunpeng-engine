@@ -1,0 +1,49 @@
+/*
+ * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+ * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.anyilanxin.kunpeng.engine.dmn.impl.hitpolicy;
+
+import java.util.Collections;
+import com.anyilanxin.kunpeng.engine.dmn.delegate.DmnDecisionTableEvaluationEvent;
+import com.anyilanxin.kunpeng.engine.dmn.delegate.DmnEvaluatedDecisionRule;
+import com.anyilanxin.kunpeng.engine.dmn.impl.delegate.DmnDecisionTableEvaluationEventImpl;
+import com.anyilanxin.kunpeng.engine.dmn.impl.spi.hitpolicy.DmnHitPolicyHandler;
+import com.anyilanxin.kunpeng.bpm.model.dmn.HitPolicy;
+
+public class FirstHitPolicyHandler implements DmnHitPolicyHandler {
+  protected static final HitPolicyEntry HIT_POLICY = new HitPolicyEntry(HitPolicy.FIRST, null);
+
+  public DmnDecisionTableEvaluationEvent apply(
+    final DmnDecisionTableEvaluationEvent decisionTableEvaluationEvent) {
+    if (!decisionTableEvaluationEvent.getMatchingRules().isEmpty()) {
+      final DmnEvaluatedDecisionRule firstMatchedRule =
+          decisionTableEvaluationEvent.getMatchingRules().get(0);
+      ((DmnDecisionTableEvaluationEventImpl) decisionTableEvaluationEvent)
+          .setMatchingRules(Collections.singletonList(firstMatchedRule));
+    }
+    return decisionTableEvaluationEvent;
+  }
+
+  @Override
+  public HitPolicyEntry getHitPolicyEntry() {
+    return HIT_POLICY;
+  }
+
+  @Override
+  public String toString() {
+    return "FirstHitPolicyHandler{}";
+  }
+}

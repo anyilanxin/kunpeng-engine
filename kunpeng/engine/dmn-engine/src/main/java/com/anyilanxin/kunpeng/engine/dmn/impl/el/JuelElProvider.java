@@ -1,0 +1,87 @@
+/*
+ * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+ * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.anyilanxin.kunpeng.engine.dmn.impl.el;
+
+import com.anyilanxin.kunpeng.engine.dmn.impl.spi.el.ElExpression;
+import com.anyilanxin.kunpeng.engine.dmn.impl.spi.el.ElProvider;
+import org.camunda.bpm.impl.juel.ExpressionFactoryImpl;
+import org.camunda.bpm.impl.juel.SimpleContext;
+import org.camunda.bpm.impl.juel.TreeValueExpression;
+import org.camunda.bpm.impl.juel.jakarta.el.ArrayELResolver;
+import org.camunda.bpm.impl.juel.jakarta.el.BeanELResolver;
+import org.camunda.bpm.impl.juel.jakarta.el.CompositeELResolver;
+import org.camunda.bpm.impl.juel.jakarta.el.ELContext;
+import org.camunda.bpm.impl.juel.jakarta.el.ELResolver;
+import org.camunda.bpm.impl.juel.jakarta.el.ListELResolver;
+import org.camunda.bpm.impl.juel.jakarta.el.MapELResolver;
+import org.camunda.bpm.impl.juel.jakarta.el.ResourceBundleELResolver;
+
+/**
+ * A simple implementation of {@link ElProvider} using Juel.
+ *
+ * @author Daniel Meyer
+ */
+public class JuelElProvider implements ElProvider {
+
+  protected final ExpressionFactoryImpl factory;
+  protected final JuelElContextFactory elContextFactory;
+  protected final ELContext parsingElContext;
+
+  public JuelElProvider() {
+    this(new ExpressionFactoryImpl(), new JuelElContextFactory(createDefaultResolver()));
+  }
+
+  public JuelElProvider(
+      ExpressionFactoryImpl expressionFactory, JuelElContextFactory elContextFactory) {
+    this.factory = expressionFactory;
+    this.elContextFactory = elContextFactory;
+    this.parsingElContext = createDefaultParsingElContext();
+  }
+
+  protected SimpleContext createDefaultParsingElContext() {
+    return new SimpleContext();
+  }
+
+  public ElExpression createExpression(String expression) {
+    TreeValueExpression juelExpr =
+        factory.createValueExpression(parsingElContext, expression, Object.class);
+    return new JuelExpression(juelExpr, elContextFactory);
+  }
+
+  public ExpressionFactoryImpl getFactory() {
+    return factory;
+  }
+
+  public JuelElContextFactory getElContextFactory() {
+    return elContextFactory;
+  }
+
+  public ELContext getParsingElContext() {
+    return parsingElContext;
+  }
+
+  protected static ELResolver createDefaultResolver() {
+    CompositeELResolver resolver = new CompositeELResolver();
+    resolver.add(new VariableContextElResolver());
+    resolver.add(new ArrayELResolver(true));
+    resolver.add(new ListELResolver(true));
+    resolver.add(new MapELResolver(true));
+    resolver.add(new ResourceBundleELResolver());
+    resolver.add(new BeanELResolver());
+    return resolver;
+  }
+}

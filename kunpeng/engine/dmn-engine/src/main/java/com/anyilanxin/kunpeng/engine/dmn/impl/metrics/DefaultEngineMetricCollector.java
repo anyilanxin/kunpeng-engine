@@ -1,0 +1,61 @@
+/*
+ * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
+ * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.anyilanxin.kunpeng.engine.dmn.impl.metrics;
+
+import java.util.concurrent.atomic.AtomicLong;
+import com.anyilanxin.kunpeng.engine.dmn.delegate.DmnDecisionEvaluationEvent;
+import com.anyilanxin.kunpeng.engine.dmn.delegate.DmnDecisionEvaluationListener;
+import com.anyilanxin.kunpeng.engine.dmn.delegate.DmnDecisionTableEvaluationEvent;
+import com.anyilanxin.kunpeng.engine.dmn.spi.DmnEngineMetricCollector;
+
+public class DefaultEngineMetricCollector
+    implements DmnEngineMetricCollector, DmnDecisionEvaluationListener {
+
+  protected AtomicLong executedDecisionInstances = new AtomicLong();
+  protected AtomicLong executedDecisionElements = new AtomicLong();
+
+  public void notify(DmnDecisionTableEvaluationEvent evaluationEvent) {
+    // collector is registered as decision evaluation listener
+  }
+
+  public void notify(DmnDecisionEvaluationEvent evaluationEvent) {
+    long executedDecisionInstances = evaluationEvent.getExecutedDecisionInstances();
+    long executedDecisionElements = evaluationEvent.getExecutedDecisionElements();
+    this.executedDecisionInstances.getAndAdd(executedDecisionInstances);
+    this.executedDecisionElements.getAndAdd(executedDecisionElements);
+  }
+
+  @Override
+  public long getExecutedDecisionInstances() {
+    return executedDecisionInstances.get();
+  }
+
+  @Override
+  public long getExecutedDecisionElements() {
+    return executedDecisionElements.get();
+  }
+
+  @Override
+  public long clearExecutedDecisionInstances() {
+    return executedDecisionInstances.getAndSet(0);
+  }
+
+  @Override
+  public long clearExecutedDecisionElements() {
+    return executedDecisionElements.getAndSet(0);
+  }
+}
