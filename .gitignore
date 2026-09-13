@@ -23,11 +23,12 @@
 .gradle/
 
 ### Project ###
+**/.v2c/
+**/.mimosa/
 /data
 /logs
 **/build/
 *.iml
 *.ipr
 *.iws
-/kunpeng/cluster/.jqwik-database
-/kunpeng/cluster/data/
+.jqwik-database

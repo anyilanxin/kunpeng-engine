@@ -40,6 +40,8 @@ import com.anyilanxin.kunpeng.cluster.raft.metrics.RaftStartupMetrics;
 import com.anyilanxin.kunpeng.cluster.raft.partition.*;
 import com.anyilanxin.kunpeng.cluster.raft.roles.RaftRole;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.RaftSnapshotStore;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.bootstrap.BootstrapSnapshotServer;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.bootstrap.BootstrapSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.transfer.SnapshotPushServer;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.transfer.SnapshotTransferServer;
 import com.anyilanxin.kunpeng.cluster.raft.storage.RaftStorage;
@@ -66,6 +68,10 @@ import org.slf4j.LoggerFactory;
 public class RaftPartitionServer implements HealthMonitorable {
   private static final Logger LOGGER = LoggerFactory.getLogger(RaftPartitionServer.class);
 
+  /** follower 安装通知主题前缀：{@value #SNAPSHOT_INSTALL_NOTIFY_SUBJECT_PREFIX}{分区名}，leader 合并后通知 follower 拉取安装。 */
+  public static final String SNAPSHOT_INSTALL_NOTIFY_SUBJECT_PREFIX =
+      "snapshot-install-notify-";
+
   private final MemberId localMemberId;
   private final RaftPartition partition;
   private final RaftPartitionConfig config;
@@ -81,8 +87,16 @@ public class RaftPartitionServer implements HealthMonitorable {
   private final MeterRegistry meterRegistry;
   private final SnapshotTransferServer snapshotTransferServer;
 
-  /** 合并快照推送接收端：目标分区 leader 角色时注册，接收源分区 leader 推来的分片。 */
+  /**
+   * 合并快照接收端（可空）：配置了 TransferSnapshotProvider 的分区才有——目标分区 leader 角色时注册，
+   * 接收源分区 leader 推来的合并镜像并触发合并流。
+   */
   private final SnapshotPushServer mergePushServer;
+
+  /**
+   * 引导镜像拍摄端（可空）：配置了 TransferSnapshotProvider 的分区才有——leader 角色时注册， 接收新分区引导节点的跨分区引导请求。
+   */
+  private final BootstrapSnapshotServer bootstrapSnapshotServer;
 
   /** 业务元数据修改请求接收端：server 存续期间常驻注册（非 leader 负责转发/拒绝）。 */
   private final BusinessMetaServer businessMetaServer;
@@ -99,6 +113,30 @@ public class RaftPartitionServer implements HealthMonitorable {
       final RaftSnapshotStore persistedSnapshotStore,
       final PartitionMetadata partitionMetadata,
       final MeterRegistry meterRegistry) {
+    this(
+        partition,
+        config,
+        localMemberId,
+        membershipService,
+        clusterCommunicator,
+        persistedSnapshotStore,
+        partitionMetadata,
+        meterRegistry,
+        null,
+        null);
+  }
+
+  public RaftPartitionServer(
+      final RaftPartition partition,
+      final RaftPartitionConfig config,
+      final MemberId localMemberId,
+      final ClusterMembershipService membershipService,
+      final ClusterCommunicationService clusterCommunicator,
+      final RaftSnapshotStore persistedSnapshotStore,
+      final PartitionMetadata partitionMetadata,
+      final MeterRegistry meterRegistry,
+      final BootstrapSnapshotStore bootstrapSnapshotStore,
+      final RaftSnapshotStore mergeSnapshotStore) {
     this.partition = partition;
     this.config = config;
     this.localMemberId = localMemberId;
@@ -112,14 +150,40 @@ public class RaftPartitionServer implements HealthMonitorable {
     configurationChangeTimeout = config.getConfigurationChangeTimeout();
     server = buildServer(meterRegistry);
     mergePushServer =
-        new SnapshotPushServer(clusterCommunicator, partition.name(), persistedSnapshotStore);
+        mergeSnapshotStore == null
+            ? null
+            : new SnapshotPushServer(
+                clusterCommunicator,
+                partition.name(),
+                mergeSnapshotStore,
+                partition::mergeReceivedSnapshot);
     snapshotTransferServer =
-        new SnapshotTransferServer(clusterCommunicator, partition.name(), persistedSnapshotStore);
+        new SnapshotTransferServer(
+            clusterCommunicator,
+            partition.name(),
+            persistedSnapshotStore,
+            config.getSnapshotTransferMaxBatchSize());
+    bootstrapSnapshotServer =
+        bootstrapSnapshotStore == null
+            ? null
+            : new BootstrapSnapshotServer(
+                clusterCommunicator,
+                partition.name(),
+                bootstrapSnapshotStore,
+                this::getCommitIndex,
+                this::getTerm,
+                config.getSnapshotTransferMaxBatchSize());
     businessMetaServer = new BusinessMetaServer(clusterCommunicator, this, partition.name());
     businessMetaServer.register();
     businessMetaSync =
         new BusinessMetaSync(clusterCommunicator, this, partition.name(), requestTimeout);
     server.getContext().setBusinessMetaSyncHook(businessMetaSync::requestSyncFromLeader);
+    // follower 安装通知：server 存续期间常驻注册（仅 leader 触发），收到后从 leader 拉取最新镜像并两阶段安装
+    clusterCommunicator.consume(
+        SNAPSHOT_INSTALL_NOTIFY_SUBJECT_PREFIX + partition.name(),
+        Function.identity(),
+        (sender, payload) -> partition.requestLeaderSnapshotInstall(),
+        Runnable::run);
     // 角色变更时：把分区角色写入本节点成员属性广播集群；成为 leader 才注册快照传输服务，离开即卸载
     server.addRoleChangeListener(this::onPartitionRoleChanged);
   }
@@ -128,11 +192,21 @@ public class RaftPartitionServer implements HealthMonitorable {
     publishPartitionRole(newRole);
     if (newRole == RaftServer.Role.LEADER) {
       snapshotTransferServer.register();
-      mergePushServer.register();
+      if (mergePushServer != null) {
+        mergePushServer.register();
+      }
+      if (bootstrapSnapshotServer != null) {
+        bootstrapSnapshotServer.register();
+      }
       LOGGER.info("Leader registered snapshot transfer handler for partition {}", partition.id());
     } else {
       snapshotTransferServer.unregister();
-      mergePushServer.unregister();
+      if (mergePushServer != null) {
+        mergePushServer.unregister();
+      }
+      if (bootstrapSnapshotServer != null) {
+        bootstrapSnapshotServer.unregister();
+      }
     }
   }
 
@@ -200,9 +274,23 @@ public class RaftPartitionServer implements HealthMonitorable {
 
   public CompletableFuture<Void> stop() {
     snapshotTransferServer.unregister();
-    mergePushServer.unregister();
+    if (mergePushServer != null) {
+      mergePushServer.unregister();
+    }
+    if (bootstrapSnapshotServer != null) {
+      bootstrapSnapshotServer.unregister();
+    }
     businessMetaServer.unregister();
+    clusterCommunicator.unsubscribe(SNAPSHOT_INSTALL_NOTIFY_SUBJECT_PREFIX + partition.name());
     return server != null ? server.shutdown() : CompletableFuture.completedFuture(null);
+  }
+
+  /**
+   * 把存储内已落地的最新镜像安装为本节点状态（两阶段复制通知 + 日志对齐），详见 {@link
+   * RaftContext#installSnapshot()}；引导新分区与 follower 安装合并镜像共用。
+   */
+  public CompletableFuture<Void> installSnapshot() {
+    return server.getContext().installSnapshot();
   }
 
   public CompletableFuture<Void> reconfigurePriority(final int newPriority) {

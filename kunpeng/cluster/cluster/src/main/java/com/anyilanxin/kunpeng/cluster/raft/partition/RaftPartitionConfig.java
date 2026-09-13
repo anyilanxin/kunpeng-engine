@@ -39,6 +39,8 @@ public class RaftPartitionConfig {
   private static final int DEFAULT_REBALANCE_MAX_TRANSFER_ATTEMPTS = 3;
   private static final Duration DEFAULT_SNAPSHOT_INTERVAL = Duration.ofMinutes(5);
   private static final int DEFAULT_MAX_SNAPSHOT_COUNT = 1;
+  private static final int DEFAULT_SNAPSHOT_ENTRY_TRIGGER_THRESHOLD = 100_000;
+  private static final Duration DEFAULT_SNAPSHOT_MERGE_AWAIT_TIMEOUT = Duration.ofMinutes(5);
 
   /**
    * 优先级选举 target 的最小衰减步长。实际衰减取 max(此值, target/5)：小优先级范围（本项目
@@ -76,6 +78,16 @@ public class RaftPartitionConfig {
 
   /** 常规快照最大保留数量。 */
   private int maxSnapshotCount = DEFAULT_MAX_SNAPSHOT_COUNT;
+
+  /**
+   * 自上次快照水位起 commit index 推进达到该阈值时额外触发一次快照（与 {@link
+   * #snapshotInterval} 周期触发互补：高写入速率下按条数及时截断日志，低速率下靠周期兜底）；
+   * 0 表示禁用，仅保留周期触发。
+   */
+  private int snapshotEntryTriggerThreshold = DEFAULT_SNAPSHOT_ENTRY_TRIGGER_THRESHOLD;
+
+  /** 合并快照完成等待超时：源分区推送后等待目标分区确认合并完成的最长时间。 */
+  private Duration snapshotMergeAwaitTimeout = DEFAULT_SNAPSHOT_MERGE_AWAIT_TIMEOUT;
 
   /** 优先级选举 target 每次衰减的最小步长，实际衰减为 max(此值, target/5)。 */
   private int priorityDecayGap = DEFAULT_PRIORITY_DECAY_GAP;
@@ -339,6 +351,30 @@ public class RaftPartitionConfig {
     return this;
   }
 
+  /** 条数触发快照的 commit index 推进阈值，0 表示禁用（默认 {@value
+   * #DEFAULT_SNAPSHOT_ENTRY_TRIGGER_THRESHOLD}）。 */
+  public int getSnapshotEntryTriggerThreshold() {
+    return snapshotEntryTriggerThreshold;
+  }
+
+  public RaftPartitionConfig setSnapshotEntryTriggerThreshold(
+      final int snapshotEntryTriggerThreshold) {
+    this.snapshotEntryTriggerThreshold = snapshotEntryTriggerThreshold;
+    return this;
+  }
+
+  /** 合并快照完成等待超时：源分区推送后等待目标分区确认合并完成的最长时间（默认 {@value
+   * #DEFAULT_SNAPSHOT_MERGE_AWAIT_TIMEOUT}）。 */
+  public Duration getSnapshotMergeAwaitTimeout() {
+    return snapshotMergeAwaitTimeout;
+  }
+
+  public RaftPartitionConfig setSnapshotMergeAwaitTimeout(
+      final Duration snapshotMergeAwaitTimeout) {
+    this.snapshotMergeAwaitTimeout = snapshotMergeAwaitTimeout;
+    return this;
+  }
+
   @Override
   public String toString() {
     return "RaftPartitionConfig{"
@@ -378,6 +414,10 @@ public class RaftPartitionConfig {
         + snapshotInterval
         + ", maxSnapshotCount="
         + maxSnapshotCount
+        + ", snapshotEntryTriggerThreshold="
+        + snapshotEntryTriggerThreshold
+        + ", snapshotMergeAwaitTimeout="
+        + snapshotMergeAwaitTimeout
         + ", priorityDecayGap="
         + priorityDecayGap
         + '}';

@@ -16,8 +16,8 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.snapshot.impl;
 
-import com.anyilanxin.kunpeng.kvstore.snapshot.SnapshotFileInfo;
-import com.anyilanxin.kunpeng.kvstore.snapshot.SnapshotFileInfoProvider;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotFileInfo;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotFileInfoProvider;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;

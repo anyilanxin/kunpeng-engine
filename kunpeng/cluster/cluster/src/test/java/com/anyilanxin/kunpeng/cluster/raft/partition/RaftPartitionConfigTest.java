@@ -28,6 +28,8 @@ final class RaftPartitionConfigTest {
     final var config = new RaftPartitionConfig();
     assertThat(config.getSnapshotInterval()).isEqualTo(Duration.ofMinutes(5));
     assertThat(config.getMaxSnapshotCount()).isEqualTo(1);
+    assertThat(config.getSnapshotEntryTriggerThreshold()).isEqualTo(100_000);
+    assertThat(config.getSnapshotTransferMaxBatchSize()).isEqualTo(4 * 1024 * 1024);
   }
 
   @Test
@@ -35,8 +37,20 @@ final class RaftPartitionConfigTest {
     final var config = new RaftPartitionConfig();
     config.setSnapshotInterval(Duration.ofSeconds(30));
     config.setMaxSnapshotCount(1);
+    config.setSnapshotEntryTriggerThreshold(50_000);
+    config.setSnapshotTransferMaxBatchSize(1024 * 1024);
     assertThat(config.getSnapshotInterval()).isEqualTo(Duration.ofSeconds(30));
     assertThat(config.getMaxSnapshotCount()).isEqualTo(1);
+    assertThat(config.getSnapshotEntryTriggerThreshold()).isEqualTo(50_000);
+    assertThat(config.getSnapshotTransferMaxBatchSize()).isEqualTo(1024 * 1024);
+  }
+
+  /** 0 是合法取值：禁用条数触发，仅保留周期触发。 */
+  @Test
+  void allowsDisablingSnapshotEntryTrigger() {
+    final var config = new RaftPartitionConfig();
+    config.setSnapshotEntryTriggerThreshold(0);
+    assertThat(config.getSnapshotEntryTriggerThreshold()).isZero();
   }
 
   @Test

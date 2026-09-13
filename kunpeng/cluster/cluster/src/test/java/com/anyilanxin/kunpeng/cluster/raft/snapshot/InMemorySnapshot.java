@@ -18,7 +18,6 @@ package com.anyilanxin.kunpeng.cluster.raft.snapshot;
 
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.ConstructableSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.receive.ReceivedSnapshot;
-import com.anyilanxin.kunpeng.kvstore.snapshot.SnapshotFileInfo;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 import com.anyilanxin.kunpeng.scheduler.future.CompletableActorFuture;
 
@@ -259,7 +258,16 @@ public final class InMemorySnapshot
       return false;
     }
     final InMemorySnapshot that = (InMemorySnapshot) o;
-    return snapshotId.equals(that.snapshotId) && chunks.equals(that.chunks);
+    if (!snapshotId.equals(that.snapshotId) || !chunks.keySet().equals(that.chunks.keySet())) {
+      return false;
+    }
+    // TreeMap.equals 对 byte[] 值按引用比较，必须逐片按内容比较
+    for (final var entry : chunks.entrySet()) {
+      if (!Arrays.equals(entry.getValue(), that.chunks.get(entry.getKey()))) {
+        return false;
+      }
+    }
+    return true;
   }
 
   @Override

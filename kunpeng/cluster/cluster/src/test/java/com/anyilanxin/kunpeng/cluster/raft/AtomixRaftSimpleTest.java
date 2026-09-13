@@ -25,7 +25,7 @@ import com.anyilanxin.kunpeng.cluster.raft.partition.PartitionMetadata;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartition;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartitionConfig;
 import com.anyilanxin.kunpeng.cluster.raft.partition.impl.DefaultPartitionManagementService;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.SnapshotProvider;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.RaftSnapshotProvider;
 import com.anyilanxin.kunpeng.cluster.utils.Version;
 import com.anyilanxin.kunpeng.cluster.utils.concurrent.SingleThreadContext;
 import com.anyilanxin.kunpeng.cluster.utils.concurrent.ThreadContext;

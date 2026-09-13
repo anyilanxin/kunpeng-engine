@@ -12,7 +12,7 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable;
 
@@ -23,12 +23,13 @@ import java.nio.file.Path;
 import java.util.Map;
 
 /**
- * 镜像内容拍摄 SPI：具体"拍什么、怎么拍"由业务系统实现，在 {@link ConstructableSnapshotStore} 构造时传入——一个 store 对应一种拍法。
+ * raft 常规镜像内容拍摄/合并 SPI：具体"拍什么、怎么拍、怎么合并"由业务系统实现，在 {@link
+ * ConstructableSnapshotStore} 构造时传入——一个 store 对应一种拍法。
  *
  * @author zxuanhong
  * @since 1.0.0
  */
-public interface SnapshotProvider<T> extends CloseableSilently {
+public interface RaftSnapshotProvider<T> extends CloseableSilently {
 
   /**
    * 拍摄镜像内容：把任意数量的内容文件写入 {@code snapshotDirectory}。
@@ -40,6 +41,18 @@ public interface SnapshotProvider<T> extends CloseableSilently {
    *     String.valueOf}）
    */
   Map<String, Object> takeSnapshot(Path snapshotDirectory);
+
+  /**
+   * 合并镜像：把接收到的跨分区合并镜像内容（{@code snapshotDirectory} 下的文件）合并进本分区业务状态。
+   *
+   * <p>分区删除迁移时由源分区推送、本分区（目标分区 leader）接收完成后触发；合并发生在两阶段镜像安装
+   * 之间——开始合并对应安装开始（业务消费者已关闭），合并完成对应安装完成（业务可恢复）。应实现为幂等或
+   * 崩溃安全：合并中途失败后源分区会整体重推。
+   *
+   * @param snapshotDirectory 接收到的合并镜像目录
+   * @return 合并完成 future；异常完成即本次合并失败
+   */
+  ActorFuture<Void> mergeSnapshot(Path snapshotDirectory);
 
   void setPartitionDirectory(Path partitionDirectory);
 

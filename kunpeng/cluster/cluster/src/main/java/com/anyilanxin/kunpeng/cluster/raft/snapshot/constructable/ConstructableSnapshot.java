@@ -19,8 +19,8 @@ package com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistableSnapshot;
 
 /**
- * 拍摄式 pending 镜像：由 {@link ConstructableSnapshotStore#newTransientSnapshot} 创建， 创建过程已用构造 store 时传入的
- * {@link SnapshotProvider} 完成内容拍摄。 标记接口——区分"拍摄产生"的 pending 镜像与其他来源（如接收），无自有方法。
+ * 拍摄式 pending 镜像：由 {@link ConstructableSnapshotStore#newTransientSnapshot} 创建， 创建过程已按次传入的
+ * {@link SnapshotContentWriter} 完成内容拍摄。 标记接口——区分"拍摄产生"的 pending 镜像与其他来源（如接收），无自有方法。
  *
  * @author zxuanhong
  * @since 1.0.0

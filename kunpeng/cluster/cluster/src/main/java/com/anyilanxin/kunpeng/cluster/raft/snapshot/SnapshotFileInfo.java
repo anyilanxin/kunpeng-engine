@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.anyilanxin.kunpeng.kvstore.snapshot;
+package com.anyilanxin.kunpeng.cluster.raft.snapshot;
 
 /**
  * 快照文件信息：文件校验和与大小

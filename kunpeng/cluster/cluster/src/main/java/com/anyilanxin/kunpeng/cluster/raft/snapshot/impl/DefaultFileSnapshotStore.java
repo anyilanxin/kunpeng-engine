@@ -18,8 +18,8 @@ package com.anyilanxin.kunpeng.cluster.raft.snapshot.impl;
 
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.*;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotException.SnapshotAlreadyExistsException;
-import com.anyilanxin.kunpeng.kvstore.snapshot.SnapshotFileInfo;
-import com.anyilanxin.kunpeng.kvstore.snapshot.SnapshotFileInfoProvider;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotFileInfo;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotFileInfoProvider;
 import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 import com.anyilanxin.kunpeng.scheduler.future.CompletableActorFuture;
@@ -149,6 +149,8 @@ public final class DefaultFileSnapshotStore implements FileSnapshotStore {
 
     final var persisted =
         new FilePersistedSnapshot(destination, verificationInfo, snapshotId, metadata);
+    // 同 id 强制重拍覆盖提交：先移除旧登记，避免保留策略按相等的 id 任意排序时误删新镜像
+    availableSnapshots.removeIf(existing -> existing.snapshotId().equals(snapshotId));
     currentSnapshot.set(persisted);
     availableSnapshots.add(persisted);
     enforceRetention();
@@ -313,6 +315,39 @@ public final class DefaultFileSnapshotStore implements FileSnapshotStore {
           availableSnapshots.clear();
           pendingSnapshots.clear();
           FilePersistedSnapshot.deleteRecursively(snapshotPath);
+          return null;
+        });
+  }
+
+  /**
+   * 删除指定镜像（磁盘目录与 .sfc，含内存登记）；被删除的是当前最新镜像时，currentSnapshot 回退到 剩余最新者（无剩余则为
+   * null）。供外部管控生命周期的镜像（如 bootstrap）按需删除。
+   */
+  public ActorFuture<Void> deleteSnapshot(final SnapshotId snapshotId) {
+    return actor.call(
+        () -> {
+          availableSnapshots.stream()
+              .filter(snapshot -> snapshot.snapshotId().equals(snapshotId))
+              .toList()
+              .forEach(this::deleteSnapshot);
+          currentSnapshot.set(
+              availableSnapshots.stream()
+                  .max(Comparator.comparing(FilePersistedSnapshot::snapshotId))
+                  .orElse(null));
+          return null;
+        });
+  }
+
+  /** 删除本存储内全部已提交镜像（磁盘与内存），保留根目录本身；引导镜像不跨重启存活时用于启动清理。 */
+  public ActorFuture<Void> deleteAllSnapshots() {
+    return actor.call(
+        () -> {
+          availableSnapshots.forEach(
+              snapshot -> FilePersistedSnapshot.deleteRecursively(snapshot.getPath()));
+          availableSnapshots.forEach(
+              snapshot -> simpleFileVerificationStore.delete(snapshot.getPath()));
+          availableSnapshots.clear();
+          currentSnapshot.set(null);
           return null;
         });
   }

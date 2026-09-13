@@ -61,6 +61,12 @@ final class SegmentReader implements Iterator<JournalRecord> {
     if (!owningSegment.isOpen()) {
       return false;
     }
+    // 写侧截断（truncate/deleteAfter）后，本读侧游标可能停留在已被作废的陈旧字节上：
+    // 截断只在截断点打一个无效帧标记，重追加的记录若比旧记录短，旧记录尾部字节仍留在
+    // 映射里且可能恰好满足帧版本启发式。必须以写侧 lastIndex 为权威上界拦截这类幻影读。
+    if (getNextIndex() > owningSegment.lastIndex()) {
+      return false;
+    }
     // 下一条记录存在时，其帧版本字段必然非零
     return FrameUtil.hasValidVersion(mappedBytes);
   }

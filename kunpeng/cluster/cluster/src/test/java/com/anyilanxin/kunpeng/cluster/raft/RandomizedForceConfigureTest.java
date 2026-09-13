@@ -39,12 +39,14 @@ import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 import net.jqwik.api.Provide;
 import net.jqwik.api.ShrinkingMode;
+import net.jqwik.api.Tag;
 import net.jqwik.api.lifecycle.AfterTry;
 import net.jqwik.api.lifecycle.BeforeProperty;
-import org.junit.jupiter.api.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// 标签必须用 jqwik 的 @Tag（jqwik 引擎不上报 Jupiter 的 @Tag，否则 build.gradle 的默认排除失效，
+// 默认套件会执行本类）
 @Tag("randomized")
 public final class RandomizedForceConfigureTest {
 

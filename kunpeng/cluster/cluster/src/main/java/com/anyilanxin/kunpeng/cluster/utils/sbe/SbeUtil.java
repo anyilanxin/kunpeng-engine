@@ -26,8 +26,9 @@ public final class SbeUtil {
   private SbeUtil() {}
 
   /**
-   * Writes a variable-length payload at the given buffer position: the length header is written as
-   * an unsigned short in the given byte order, followed by the payload itself.
+   * Writes a variable-length payload at the given buffer position: the length header is written at
+   * the full {@code headerLength} width (SBE blob 字段为 4 字节 int), followed by the payload
+   * itself.
    *
    * @param writer the payload to write
    * @param headerLength the size in bytes of the length header
@@ -49,7 +50,13 @@ public final class SbeUtil {
               .formatted(dataLength, 0xFFFF));
     }
 
-    buffer.putShort(offset, (short) dataLength, byteOrder);
+    // 长度头宽度必须与生成解码器的读取宽度一致；只写低 2 字节会留下未清零的高位字节，
+    // 目标缓冲若是 journal 映射上的脏区域（就地截断后重写），残留字节会被解码成垃圾长度
+    if (headerLength == Integer.BYTES) {
+      buffer.putInt(offset, dataLength, byteOrder);
+    } else {
+      buffer.putShort(offset, (short) dataLength, byteOrder);
+    }
     writer.write(buffer, offset + headerLength);
     return offset + headerLength + dataLength;
   }

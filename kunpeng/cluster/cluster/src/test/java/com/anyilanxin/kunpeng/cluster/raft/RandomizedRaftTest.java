@@ -38,11 +38,16 @@ import net.jqwik.api.Provide;
 import net.jqwik.api.ShrinkingMode;
 import net.jqwik.api.lifecycle.AfterTry;
 import net.jqwik.api.lifecycle.BeforeProperty;
-import org.junit.jupiter.api.Tag;
+import net.jqwik.api.Tag;
+import net.jqwik.api.lifecycle.AfterTry;
+import net.jqwik.api.lifecycle.BeforeProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+// 必须用 jqwik 的 @Tag 而非 Jupiter 的：build.gradle 的 excludeTags 经 JUnit Platform 发现过滤，
+// 而 jqwik 引擎只上报 net.jqwik.api.Tag（Jupiter 的 @Tag 在 jqwik 引擎下不可见，曾导致默认套件
+// 仍然执行本类、整体测试被 20+ 分钟的 fsync 密集模拟拖死）
 @Tag("randomized")
 @PropertyDefaults(tries = 10, shrinking = ShrinkingMode.OFF, edgeCases = EdgeCasesMode.NONE)
 public class RandomizedRaftTest {

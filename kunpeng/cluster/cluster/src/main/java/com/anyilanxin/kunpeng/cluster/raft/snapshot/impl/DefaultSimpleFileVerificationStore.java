@@ -19,7 +19,7 @@ package com.anyilanxin.kunpeng.cluster.raft.snapshot.impl;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SimpleFileVerificationInfo;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SimpleFileVerificationStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotException;
-import com.anyilanxin.kunpeng.kvstore.snapshot.SnapshotFileInfo;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotFileInfo;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;

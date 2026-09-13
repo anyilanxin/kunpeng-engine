@@ -36,15 +36,17 @@ import net.jqwik.api.Property;
 import net.jqwik.api.PropertyDefaults;
 import net.jqwik.api.Provide;
 import net.jqwik.api.ShrinkingMode;
+import net.jqwik.api.Tag;
 import net.jqwik.api.lifecycle.AfterTry;
 import net.jqwik.api.lifecycle.BeforeProperty;
-import org.junit.jupiter.api.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * 基于属性的随机化测试：在随机注入消息丢失/重启故障的过程中不断发起 join，
  * 故障停止后 join 必须最终完成，且每轮都满足“每个成员每个任期至多投一票”的安全性不变量。
+ *
+ * <p>标签必须用 jqwik 的 {@link Tag}（jqwik 引擎不上报 Jupiter 的 @Tag，否则 build.gradle 的默认排除失效）。
  */
 @Tag("randomized")
 @PropertyDefaults(tries = 10, shrinking = ShrinkingMode.OFF, edgeCases = EdgeCasesMode.NONE)

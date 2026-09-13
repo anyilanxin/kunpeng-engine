@@ -16,8 +16,8 @@
  */
 package com.anyilanxin.kunpeng.rocksdb;
 
-import com.anyilanxin.kunpeng.kvstore.snapshot.SnapshotFileInfo;
-import com.anyilanxin.kunpeng.kvstore.snapshot.SnapshotFileInfoProvider;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotFileInfo;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotFileInfoProvider;
 import com.anyilanxin.kunpeng.rocksdb.util.RocksdbUtil;
 import java.nio.file.Path;
 import java.util.Map;

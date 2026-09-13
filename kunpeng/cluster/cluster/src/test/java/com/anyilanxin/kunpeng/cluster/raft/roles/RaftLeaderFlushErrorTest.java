@@ -106,7 +106,26 @@ public class RaftLeaderFlushErrorTest {
 
     // 验证：集群选出新领导者，且新条目可正常复制到所有节点
     raftRule.awaitNewLeader();
-    final var lastIndex = raftRule.appendEntry();
+    final var lastIndex = appendUntilCommitted();
     raftRule.awaitSameLogSizeOnAllNodes(lastIndex);
+  }
+
+  /**
+   * 数据丢失变体下，故障节点的日志被就地截断而进程未重启，其内存 lastIndex 与磁盘不一致， 可能再次当选后读取幻影条目导致 raft 线程终止（等同宕机）。因此追加需在健康的新任
+   * leader 上有界重试，而不是假设 awaitNewLeader 拿到的第一任 leader 一定可用。
+   */
+  private long appendUntilCommitted() throws Exception {
+    for (int attempt = 0; attempt < 6; attempt++) {
+      if (raftRule.getLeader().isPresent()) {
+        try {
+          final var pending = raftRule.appendEntryAsync();
+          return pending.awaitCommit(Duration.ofSeconds(5));
+        } catch (final Exception appendFailure) {
+          // 该 leader 不可用（可能已宕机/退位/非 LeaderRole），等待下一任 leader 重试
+        }
+      }
+      raftRule.awaitNewLeader();
+    }
+    throw new AssertionError("no healthy leader accepted appends within retries");
   }
 }

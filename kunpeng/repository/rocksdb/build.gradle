@@ -28,6 +28,7 @@ configure(jarInfo) {
 dependencies {
     implementation project(':kunpeng:utils')
     implementation project(':kunpeng:repository:kvstore')
+    implementation project(':kunpeng:cluster:cluster')
     implementation  project(':kunpeng:scheduler')
     implementation project(':kunpeng:structpack')
     implementation ('org.rocksdb:rocksdbjni'){

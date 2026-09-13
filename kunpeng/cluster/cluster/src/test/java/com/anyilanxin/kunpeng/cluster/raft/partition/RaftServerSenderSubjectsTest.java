@@ -27,6 +27,7 @@ import com.anyilanxin.kunpeng.cluster.raft.protocol.*;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.RaftSnapshotStore;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.AutoClose;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
@@ -37,6 +38,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -69,6 +71,12 @@ public class RaftServerSenderSubjectsTest {
   private RaftSnapshotStore snapshotStore;
   @AutoClose private MeterRegistry registry = new SimpleMeterRegistry();
 
+  /**
+   * 构造即持有资源（RaftContext 线程、存储锁、meta 文件句柄），必须逐个 stop，
+   * 否则非守护线程泄漏会挂死整个测试 worker 的收尾。
+   */
+  private final List<RaftPartitionServer> servers = new ArrayList<>();
+
   /** 场景描述：subject 后缀 + 触发发送的动作。 */
   private record Scenario(String actionSubject, Consumer<RaftServerProtocol> trigger) {}
 
@@ -88,7 +96,14 @@ public class RaftServerSenderSubjectsTest {
             snapshotStore,
             META,
             registry);
+    servers.add(server);
     return server.getServer().getContext().getProtocol();
+  }
+
+  @AfterEach
+  void stopServers() {
+    servers.forEach(server -> server.stop().join());
+    servers.clear();
   }
 
   @ParameterizedTest(name = "{0}")

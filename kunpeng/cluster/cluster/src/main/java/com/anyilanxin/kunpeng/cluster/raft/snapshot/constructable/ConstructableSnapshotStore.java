@@ -20,7 +20,8 @@ import com.anyilanxin.kunpeng.cluster.raft.snapshot.FileSnapshotStore;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 
 /**
- * 拍摄式镜像存储入口：创建的 pending 镜像已由构造时传入的 {@link SnapshotProvider} 完成内容拍摄，业务信息键值清单由拍摄返回值提供。
+ * 拍摄式镜像存储入口（门面契约）：实现方持有拍摄来源（如业务 {@link RaftSnapshotProvider}）， 创建的 pending 镜像在 {@link
+ * #newTransientSnapshot} 返回前已完成内容拍摄。
  *
  * @author zxuanhong
  * @since 1.0.0

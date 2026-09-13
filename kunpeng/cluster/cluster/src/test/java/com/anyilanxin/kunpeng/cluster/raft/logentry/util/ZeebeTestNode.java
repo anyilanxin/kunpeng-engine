@@ -24,7 +24,7 @@ import com.anyilanxin.kunpeng.cluster.raft.logentry.EntryValidator.NoopEntryVali
 import com.anyilanxin.kunpeng.cluster.raft.partition.*;
 import com.anyilanxin.kunpeng.cluster.raft.partition.impl.DefaultPartitionManagementService;
 import com.anyilanxin.kunpeng.cluster.raft.partition.impl.RaftPartitionServer;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.SnapshotProvider;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.RaftSnapshotProvider;
 import com.anyilanxin.kunpeng.scheduler.ActorScheduler;
 import io.micrometer.core.instrument.MeterRegistry;
 
@@ -42,18 +42,19 @@ public class ZeebeTestNode {
 
   public static final String CLUSTER_ID = "zeebe";
   private static final String HOST = "localhost";
-  private static final int BASE_PORT = 10_000;
+  // 避开 10000 等常见被本机常驻进程(如网盘助手)占用的端口
+  private static final int BASE_PORT = 28_000;
   private final Member member;
   private final Node node;
   private final File directory;
   private AtomixCluster cluster;
   private List<RaftPartition> partitions;
   private final MeterRegistry meterRegistry;
-  private final ActorScheduler actorScheduler;
+  // 每次 start() 重建: ActorScheduler 关闭后不支持重启, 复用会抛 IllegalThreadStateException
+  private ActorScheduler actorScheduler;
 
   public ZeebeTestNode(final int id, final File directory, final MeterRegistry meterRegistry) {
     this.meterRegistry = meterRegistry;
-    actorScheduler = ActorScheduler.newDefaultActorScheduler();
     final String textualId = String.valueOf(id);
 
     this.directory = directory;
@@ -69,7 +70,7 @@ public class ZeebeTestNode {
     return partitions.stream().filter(p -> p.id().id() == id).findFirst().orElse(null);
   }
 
-  private static SnapshotProvider<Void> snapshotProvider() {
+  private static RaftSnapshotProvider<Void> snapshotProvider() {
     return new TestSnapshotProvider(
         dir -> {
           java.nio.file.Files.write(dir.resolve("data"), new byte[] {1});
@@ -78,6 +79,7 @@ public class ZeebeTestNode {
   }
 
   public CompletableFuture<Void> start(final Collection<ZeebeTestNode> nodes) {
+    actorScheduler = ActorScheduler.newDefaultActorScheduler();
     actorScheduler.start();
     cluster = buildCluster(nodes);
     final Set<MemberId> members =
@@ -168,7 +170,13 @@ public class ZeebeTestNode {
     return CompletableFuture.allOf(
             partitions.stream().map(RaftPartition::close).toArray(CompletableFuture[]::new))
         .thenCompose(ignored -> cluster.stop())
-        .thenRun(actorScheduler::close);
+        .thenRun(
+            () -> {
+              if (actorScheduler != null) {
+                actorScheduler.close();
+                actorScheduler = null;
+              }
+            });
   }
 
   public AtomixCluster getCluster() {

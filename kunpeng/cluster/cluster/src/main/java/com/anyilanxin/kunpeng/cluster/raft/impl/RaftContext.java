@@ -46,6 +46,7 @@ import com.anyilanxin.kunpeng.cluster.raft.protocol.RaftResponse.Status;
 import com.anyilanxin.kunpeng.cluster.raft.roles.*;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.RaftSnapshotStore;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotException;
 import com.anyilanxin.kunpeng.cluster.raft.storage.RaftStorage;
 import com.anyilanxin.kunpeng.cluster.raft.storage.StorageException;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLog;
@@ -902,20 +903,62 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
   }
 
   public void notifySnapshotReplicationStarted() {
-    threadContext.execute(
-        () -> {
-          missedSnapshotReplicationEvents = MissedSnapshotReplicationEvents.STARTED;
-          snapshotReplicationListeners.forEach(
-              SnapshotReplicationListener::onSnapshotReplicationStarted);
-        });
+    threadContext.execute(this::snapshotReplicationStarted);
   }
 
   public void notifySnapshotReplicationCompleted() {
+    threadContext.execute(this::snapshotReplicationCompleted);
+  }
+
+  /** 复制开始事件分发（须在 raft 线程）：错过的注册者补发标记 + 通知全部监听器。 */
+  private void snapshotReplicationStarted() {
+    missedSnapshotReplicationEvents = MissedSnapshotReplicationEvents.STARTED;
+    snapshotReplicationListeners.forEach(
+        SnapshotReplicationListener::onSnapshotReplicationStarted);
+  }
+
+  /** 复制完成事件分发（须在 raft 线程）：通知全部监听器 + 错过的注册者补发标记。 */
+  private void snapshotReplicationCompleted() {
+    snapshotReplicationListeners.forEach(l -> l.onSnapshotReplicationCompleted(term));
+    missedSnapshotReplicationEvents = MissedSnapshotReplicationEvents.COMPLETED;
+  }
+
+  /**
+   * 把存储内已落地的最新镜像安装为本节点状态（两阶段通知 + 日志对齐），在 raft 线程串行执行—— 阶段一通知复制开始（业务关闭日志消费者，三态视图
+   * INACTIVE），随后把日志重置到 镜像 index+1（与 follower install 快照一致），对齐当前镜像引用，阶段二通知复制完成（业务可从镜像恢复）。
+   *
+   * <p>两类调用方：跨分区引导新分区（镜像已落地、raft 尚未 bootstrap，安装后单节点 bootstrap 当选 leader， 完成 onInactive
+   * → onLeader 闭环）；follower 安装 leader 合并后的镜像（拉取落地后对齐本地状态）。
+   *
+   * @return 安装完成 future；无可用镜像时异常完成
+   */
+  public CompletableFuture<Void> installSnapshot() {
+    final CompletableFuture<Void> future = new CompletableFuture<>();
     threadContext.execute(
         () -> {
-          snapshotReplicationListeners.forEach(l -> l.onSnapshotReplicationCompleted(term));
-          missedSnapshotReplicationEvents = MissedSnapshotReplicationEvents.COMPLETED;
+          try {
+            final long snapshotIndex = getCurrentSnapshotIndex();
+            if (snapshotIndex <= 0) {
+              future.completeExceptionally(
+                  new SnapshotException(
+                      "No snapshot to install for partition "
+                          + partitionId.id()
+                          + "; expected one landed in the snapshot store"));
+              return;
+            }
+            LOGGER.info(
+                "Installing snapshot at index {} for partition {}", snapshotIndex, partitionId.id());
+            snapshotReplicationStarted();
+            // 日志重置到镜像 index+1：新分区从此起点开始追加自己的条目
+            raftLog.reset(snapshotIndex + 1);
+            updateCurrentSnapshot();
+            snapshotReplicationCompleted();
+            future.complete(null);
+          } catch (final Exception e) {
+            future.completeExceptionally(e);
+          }
         });
+    return future;
   }
 
   /**

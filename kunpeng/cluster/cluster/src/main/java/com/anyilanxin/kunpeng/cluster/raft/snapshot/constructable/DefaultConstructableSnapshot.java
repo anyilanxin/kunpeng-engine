@@ -21,8 +21,8 @@ import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotException.SnapshotNo
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.DefaultFileSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.DefaultSnapshotFileInfoProvider;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.FilePersistedSnapshot;
-import com.anyilanxin.kunpeng.kvstore.snapshot.SnapshotFileInfo;
-import com.anyilanxin.kunpeng.kvstore.snapshot.SnapshotFileInfoProvider;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotFileInfo;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotFileInfoProvider;
 import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 import com.anyilanxin.kunpeng.scheduler.future.CompletableActorFuture;
@@ -74,14 +74,14 @@ final class DefaultConstructableSnapshot implements ConstructableSnapshot {
   }
 
   /** 拍摄入口：由 store 在创建时驱动，返回的 future 完成即内容已写好、校验集已算好。 */
-  ActorFuture<Void> take(final SnapshotProvider provider) {
-    actor.run(() -> takeInternal(provider));
+  ActorFuture<Void> take(final SnapshotContentWriter contentWriter) {
+    actor.run(() -> takeInternal(contentWriter));
     return takenFuture;
   }
 
-  private void takeInternal(final SnapshotProvider provider) {
+  private void takeInternal(final SnapshotContentWriter contentWriter) {
     try {
-      final Map<String, Object> takenMetaInfo = provider.takeSnapshot(directory);
+      final Map<String, Object> takenMetaInfo = contentWriter.writeTo(directory);
       metaInfo = takenMetaInfo == null ? Map.of() : Map.copyOf(takenMetaInfo);
       // 业务未写入内容也是合法拍摄：persist 时写入的元数据文件保证镜像非空（仅含元数据的空镜像）
       fileInfos =

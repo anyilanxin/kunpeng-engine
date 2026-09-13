@@ -19,8 +19,8 @@ package com.anyilanxin.kunpeng.cluster.raft.snapshotv2;
 import com.anyilanxin.kunpeng.cluster.raft.TestSnapshotProvider;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.*;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.DefaultRaftSnapshotStore;
-import com.anyilanxin.kunpeng.kvstore.snapshot.SnapshotFileInfo;
-import com.anyilanxin.kunpeng.kvstore.snapshot.SnapshotFileInfoProvider;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotFileInfo;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotFileInfoProvider;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.DefaultSimpleFileVerificationStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.DefaultSnapshotFileInfoProvider;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.SnapshotChunkImpl;
@@ -37,6 +37,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.CRC32;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -231,6 +232,41 @@ final class DefaultRaftSnapshotStoreTest {
     assertThat(store.newTransientSnapshot(10, 1).join()).isNull();
     assertThat(takeCount.get()).isEqualTo(1);
     assertThat(store.getCurrentSnapshotIndex()).isEqualTo(10);
+  }
+
+  /** 合并后同水位重拍：force 跳过同 id 前置跳过，重拍覆盖旧目录且保留策略不误删新镜像。 */
+  @Test
+  void shouldRetakeSameIdWhenForced() throws IOException {
+    final AtomicInteger takeCount = new AtomicInteger();
+    final var content = new AtomicReference<>("old-content");
+    final var store =
+        newStore(
+            "node-1",
+            1,
+            dir -> {
+              writeDataFile(dir, "data-" + takeCount.incrementAndGet());
+              Files.writeString(dir.resolve("data.txt"), content.get());
+            });
+    store.start();
+    store.newTransientSnapshot(10, 1).join().persist().join();
+    assertThat(takeCount.get()).isEqualTo(1);
+    assertThat(Files.readString(store.getLatestSnapshot().get().getPath().resolve("data.txt")))
+        .isEqualTo("old-content");
+
+    // 非常规拍摄仍被跳过，force 拍摄触发重拍并以新内容覆盖同 id 目录
+    assertThat(store.newTransientSnapshot(10, 1).join()).isNull();
+    content.set("merged-content");
+    final var pending = store.newTransientSnapshot(10, 1, true).join();
+    assertThat(pending).isNotNull();
+    pending.persist().join();
+
+    assertThat(takeCount.get()).isEqualTo(2);
+    assertThat(store.getCurrentSnapshotIndex()).isEqualTo(10);
+    assertThat(Files.readString(store.getLatestSnapshot().get().getPath().resolve("data.txt")))
+        .isEqualTo("merged-content");
+    // 保留策略保留的是新镜像：目录下仅一个同 id 目录且为新内容
+    assertThat(store.getLatestSnapshot().get().getPath().resolve("data-1")).doesNotExist();
+    assertThat(store.getLatestSnapshot().get().getPath().resolve("data-2")).exists();
   }
 
   @Test

@@ -19,8 +19,9 @@ package com.anyilanxin.kunpeng.cluster.raft.snapshot;
 /**
  * 快照类型：每种类型对应快照根目录（raft 根目录/snapshots）下的一个独立子目录。
  *
- * <p>本阶段仅 {@link #RAFT} 被实际实例化使用；{@link #BOOTSTRAP} 与 {@link #MERGE} 为跨分区 引导/合并预留，后续接入时同样在 raft
- * 启动前完成磁盘初始化。
+ * <p>{@link #RAFT} 为常规 raft 镜像（拍摄 + install/传输接收共用）；{@link #BOOTSTRAP} 为引导镜像（源分区
+ * leader 拍摄、新分区引导节点拉取）；{@link #MERGE} 为合并镜像（分区删除迁移：源分区拍摄并推送，目标分区 接收后经业务
+ * merge 合并）。后两者不参与常规保留策略，生命周期由引导引用计数/合并流程与节点关闭清理管控。
  *
  * @author zxuanhong
  * @since 1.0.0

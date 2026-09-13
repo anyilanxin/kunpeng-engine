@@ -75,12 +75,15 @@ public class RaftFailOverIT {
   @Test
   public void onFollowerRestartItBecomesReady() throws Exception {
     Awaitility.await("Leader is up").until(() -> raftRule.getLeader().isPresent());
-    assertThat(
-            raftRule.getServers().stream()
-                .map(s -> s.getContext().getCommitIndex())
-                .distinct()
-                .count())
-        .isEqualTo(1L);
+    // 选举刚完成时 leader 的 commitIndex 先推进，需等提交水位在全部节点收敛后再断言一致
+    Awaitility.await("Commit indexes converge")
+        .until(
+            () ->
+                raftRule.getServers().stream()
+                    .map(s -> s.getContext().getCommitIndex())
+                    .distinct()
+                    .count()
+                    == 1L);
 
     final var follower = raftRule.shutdownFollower();
     raftRule.joinCluster(follower);
@@ -93,12 +96,15 @@ public class RaftFailOverIT {
   @Test
   public void onFollowerRestartItBecomesReadyOnlyAfterCatchingUp() throws Exception {
     Awaitility.await("Leader is up").until(() -> raftRule.getLeader().isPresent());
-    assertThat(
-            raftRule.getServers().stream()
-                .map(s -> s.getContext().getCommitIndex())
-                .distinct()
-                .count())
-        .isEqualTo(1L);
+    // 选举刚完成时 leader 的 commitIndex 先推进，需等提交水位在全部节点收敛后再断言一致
+    Awaitility.await("Commit indexes converge")
+        .until(
+            () ->
+                raftRule.getServers().stream()
+                    .map(s -> s.getContext().getCommitIndex())
+                    .distinct()
+                    .count()
+                    == 1L);
 
     final var follower = raftRule.shutdownFollower();
 

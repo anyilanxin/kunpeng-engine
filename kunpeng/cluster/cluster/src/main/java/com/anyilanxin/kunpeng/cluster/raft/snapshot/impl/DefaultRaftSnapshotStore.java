@@ -19,10 +19,11 @@ package com.anyilanxin.kunpeng.cluster.raft.snapshot.impl;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.*;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.ConstructableSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.DefaultConstructableSnapshotStore;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.SnapshotProvider;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.RaftSnapshotProvider;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.SnapshotContentWriter;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.receive.DefaultReceiveSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.receive.ReceivedSnapshot;
-import com.anyilanxin.kunpeng.kvstore.snapshot.SnapshotFileInfoProvider;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotFileInfoProvider;
 import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 import java.nio.file.Path;
@@ -40,6 +41,7 @@ public final class DefaultRaftSnapshotStore implements RaftSnapshotStore {
   private final DefaultFileSnapshotStore store;
   private final DefaultConstructableSnapshotStore constructable;
   private final DefaultReceiveSnapshotStore receive;
+  private final SnapshotContentWriter contentWriter;
 
   public DefaultRaftSnapshotStore(
       final String nodeId,
@@ -47,7 +49,28 @@ public final class DefaultRaftSnapshotStore implements RaftSnapshotStore {
       final int maxSnapshotCount,
       final SimpleFileVerificationStore simpleFileVerificationStore,
       final SnapshotFileInfoProvider snapshotFileInfoProvider,
-      final SnapshotProvider snapshotProvider,
+      final RaftSnapshotProvider snapshotProvider,
+      final ConcurrencyControl actor) {
+    this(
+        nodeId,
+        snapshotPath,
+        maxSnapshotCount,
+        simpleFileVerificationStore,
+        snapshotFileInfoProvider,
+      snapshotProvider::takeSnapshot,
+        actor);
+  }
+
+  /**
+   * 内容写入器构造：供不走业务 SPI 的存储（如合并镜像存储）直接给定拍法， 免去整接口适配。
+   */
+  public DefaultRaftSnapshotStore(
+      final String nodeId,
+      final Path snapshotPath,
+      final int maxSnapshotCount,
+      final SimpleFileVerificationStore simpleFileVerificationStore,
+      final SnapshotFileInfoProvider snapshotFileInfoProvider,
+      final SnapshotContentWriter contentWriter,
       final ConcurrencyControl actor) {
     store =
         new DefaultFileSnapshotStore(
@@ -57,16 +80,26 @@ public final class DefaultRaftSnapshotStore implements RaftSnapshotStore {
             simpleFileVerificationStore,
             snapshotFileInfoProvider,
             actor);
+    this.contentWriter = contentWriter;
     constructable =
-        new DefaultConstructableSnapshotStore(
-            store, snapshotProvider, snapshotFileInfoProvider, actor);
+        new DefaultConstructableSnapshotStore(store, snapshotFileInfoProvider, actor);
     receive = new DefaultReceiveSnapshotStore(store, actor);
   }
 
   @Override
   public ActorFuture<ConstructableSnapshot> newTransientSnapshot(
       final long index, final long term) {
-    return constructable.newTransientSnapshot(index, term);
+    return constructable.newTransientSnapshot(index, term, false, contentWriter);
+  }
+
+  /**
+   * 拍摄入口（可强制）：{@code force=true} 时允许与当前最新镜像同 id 重拍覆盖（见 {@link
+   * DefaultConstructableSnapshotStore#newTransientSnapshot(long, long, boolean,
+   * SnapshotContentWriter)}）， 供合并后同水位重拍 raft 镜像使用。
+   */
+  public ActorFuture<ConstructableSnapshot> newTransientSnapshot(
+      final long index, final long term, final boolean force) {
+    return constructable.newTransientSnapshot(index, term, force, contentWriter);
   }
 
   @Override
@@ -117,6 +150,11 @@ public final class DefaultRaftSnapshotStore implements RaftSnapshotStore {
   @Override
   public ActorFuture<Void> delete() {
     return store.delete();
+  }
+
+  /** 删除本存储内全部已提交镜像（磁盘与内存），保留根目录；引导/合并等外部生命周期镜像的清理入口。 */
+  public ActorFuture<Void> deleteAllSnapshots() {
+    return store.deleteAllSnapshots();
   }
 
   @Override

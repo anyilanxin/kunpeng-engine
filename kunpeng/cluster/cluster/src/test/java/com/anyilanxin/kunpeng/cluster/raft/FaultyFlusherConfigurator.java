@@ -58,6 +58,13 @@ public record FaultyFlusherConfigurator(
     return journalSupplier ->
         new RaftLogFlusher() {
           @Override
+          public boolean isDirect() {
+            // 本 flusher 直刷(未命中故障时同步 journal.flush)；声明为 direct 才不会被
+            // RaftLog.forceFlush 在提交路径上绕过，故障注入才能被观测到
+            return true;
+          }
+
+          @Override
           public void flush(final Journal journal) throws FlushException {
             if (!faultyWhen.get()) {
               journal.flush();

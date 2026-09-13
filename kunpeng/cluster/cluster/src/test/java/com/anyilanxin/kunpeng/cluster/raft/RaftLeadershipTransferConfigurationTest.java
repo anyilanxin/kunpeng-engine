@@ -104,7 +104,10 @@ public class RaftLeadershipTransferConfigurationTest {
   @Test
   public void shouldSendExactlyMaxTransferAttemptsThenGiveUp() throws Exception {
     // given
-    raftRule.appendEntries(10);
+    final var lastIndex = raftRule.appendEntries(10);
+    // 发起前等全部 follower 追平: appendEntries 只等到 quorum 提交, 慢 follower 残留的字节滞后
+    // 会被 admission 的即时滞后采样判为 LAG_TOO_HIGH 拒绝
+    raftRule.awaitSameLogSizeOnAllNodes(lastIndex);
     final var leader = raftRule.getLeader().orElseThrow();
     final var driver = new CoordinatedTransferDriver(raftRule, leader);
     final var target = driver.followerOutsideCoordinator();
@@ -131,7 +134,9 @@ public class RaftLeadershipTransferConfigurationTest {
     assertThat(HEARTBEAT_INTERVAL.multipliedBy(MAX_TRANSFER_ATTEMPTS))
         .as("promotion alone lasts longer than the replication timeout")
         .isGreaterThan(REPLICATION_TIMEOUT);
-    raftRule.appendEntries(10);
+    final var lastIndex = raftRule.appendEntries(10);
+    // 同上: 发起前等全部 follower 追平, 避免滞后采样把合法转移拒成 LAG_TOO_HIGH
+    raftRule.awaitSameLogSizeOnAllNodes(lastIndex);
     final var leader = raftRule.getLeader().orElseThrow();
     final var driver = new CoordinatedTransferDriver(raftRule, leader);
     final var target = driver.followerOutsideCoordinator();

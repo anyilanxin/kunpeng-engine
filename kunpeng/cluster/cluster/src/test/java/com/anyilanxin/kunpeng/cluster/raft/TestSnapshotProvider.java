@@ -17,16 +17,16 @@
 package com.anyilanxin.kunpeng.cluster.raft;
 
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotStore;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.SnapshotProvider;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.RaftSnapshotProvider;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 import com.anyilanxin.kunpeng.scheduler.future.CompletableActorFuture;
 import java.nio.file.Path;
 import java.util.Map;
 
 /**
- * 测试用镜像拍摄 SPI 实现：拍摄动作委托给构造时传入的内容写入函数， recover 为空完成，目录/store 访问器仅做赋值。
+ * 测试用镜像拍摄 SPI 实现：拍摄动作委托给构造时传入的内容写入函数， recover/合并为空完成，目录/store 访问器仅做赋值。
  */
-public final class TestSnapshotProvider implements SnapshotProvider<Void> {
+public final class TestSnapshotProvider implements RaftSnapshotProvider<Void> {
 
   /** 内容写入函数：向拍摄目录写文件并返回业务信息键值清单。 */
   @FunctionalInterface
@@ -55,6 +55,12 @@ public final class TestSnapshotProvider implements SnapshotProvider<Void> {
   /** 测试无恢复语义，直接空完成。 */
   @Override
   public ActorFuture<Void> recover() {
+    return CompletableActorFuture.completed(null);
+  }
+
+  /** 测试无合并语义，直接空完成。 */
+  @Override
+  public ActorFuture<Void> mergeSnapshot(final Path snapshotDirectory) {
     return CompletableActorFuture.completed(null);
   }
 

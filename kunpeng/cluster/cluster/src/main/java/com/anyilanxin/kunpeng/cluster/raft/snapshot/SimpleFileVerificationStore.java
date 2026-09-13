@@ -16,7 +16,6 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.snapshot;
 
-import com.anyilanxin.kunpeng.kvstore.snapshot.SnapshotFileInfo;
 import java.nio.file.Path;
 import java.util.Map;
 

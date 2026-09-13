@@ -766,9 +766,13 @@ public final class RaftRule extends ExternalResource {
       final RaftEntry copiedEntry;
 
       if (entry.entry() instanceof final SerializedApplicationEntry app) {
+        // 零拷贝 record 可能不基于堆数组(byteArray 为 null)，需经 getBytes 兜底复制
+        final var data = app.data();
+        final byte[] copy = new byte[data.capacity()];
+        data.getBytes(0, copy, 0, data.capacity());
         copiedEntry =
             new SerializedApplicationEntry(
-                app.lowestPosition(), app.highestPosition(), new org.agrona.concurrent.UnsafeBuffer(java.util.Arrays.copyOf(app.data().byteArray(), app.data().capacity())));
+                app.lowestPosition(), app.highestPosition(), new org.agrona.concurrent.UnsafeBuffer(copy));
       } else {
         copiedEntry = entry.entry();
       }

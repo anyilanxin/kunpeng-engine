@@ -27,11 +27,14 @@ configure(jarInfo) {
 
 tasks.withType(Test).configureEach {
     // 悬挂防护: 无界 join/latch 曾把整套模块测试卡住数十分钟; 单测超 3 分钟强制失败,
-    // separate_thread 保证连不可中断的等待也能被放弃, 套件继续往下跑
+    // separate_thread 保证连不可中断的等待也能被放弃, 套件继续往下跑。
+    // 注意: 该超时只对 Jupiter 引擎生效, jqwik 属性测试(下方的 randomized)不受它保护。
     systemProperty 'junit.jupiter.execution.timeout.default', '3m'
     systemProperty 'junit.jupiter.execution.timeout.thread.mode.default', 'separate_thread'
     // 随机化属性测试(每 try 上万操作×大量 fsync)在本机一跑就是十几分钟,
-    // 默认排除, 需要时 -Prandomized 显式运行
+    // 默认排除, 需要时 -Prandomized 显式运行。
+    // 坑: jqwik 引擎只上报 net.jqwik.api.Tag, 标注 Jupiter 的 @Tag 时 excludeTags 不生效,
+    // 默认套件会照跑 randomized 类(表现为整体测试"卡住"数十分钟)——打标签必须用 jqwik 的 @Tag。
     useJUnitPlatform {
         if (!project.hasProperty('randomized')) {
             excludeTags 'randomized'
@@ -40,7 +43,6 @@ tasks.withType(Test).configureEach {
 }
 dependencies {
     implementation project(':kunpeng:protocol:protocol-common')
-    implementation project(':kunpeng:repository:kvstore')
     implementation project(':kunpeng:utils')
     implementation project(':kunpeng:scheduler')
     implementation project(':kunpeng:structpack')

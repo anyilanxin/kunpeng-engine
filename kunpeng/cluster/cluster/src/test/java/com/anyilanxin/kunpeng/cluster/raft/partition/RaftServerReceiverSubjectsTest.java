@@ -25,6 +25,7 @@ import com.anyilanxin.kunpeng.cluster.raft.partition.impl.RaftPartitionServer;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.RaftSnapshotStore;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.AutoClose;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
@@ -35,6 +36,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -81,6 +83,12 @@ public class RaftServerReceiverSubjectsTest {
   @AutoClose
   private final MeterRegistry registry = new SimpleMeterRegistry();
 
+  /**
+   * 构造即持有资源（RaftContext 线程、存储锁、meta 文件句柄），必须逐个 stop，
+   * 否则非守护线程泄漏会挂死整个测试 worker 的收尾。
+   */
+  private final List<RaftPartitionServer> servers = new ArrayList<>();
+
   private RaftPartitionServer startServer(final String group, final boolean legacy, final Path dir) {
     final var cfg = new RaftPartitionConfig();
     cfg.setStorageConfig(new RaftStorageConfig());
@@ -90,15 +98,25 @@ public class RaftServerReceiverSubjectsTest {
             new PartitionId(group, PARTITION_NO), Set.of(), Map.of(), 1, NODE);
     final var partition =
             new RaftPartition(meta, cfg, dir, dir.resolve(RUNTIME_DIRECTORY), registry, null, null, null);
-    return new RaftPartitionServer(
-        partition,
-        cfg,
-        NODE,
-        membershipService,
-        communicationService,
-        snapshotStore,
-        meta,
-        registry);
+    final var server =
+        new RaftPartitionServer(
+            partition,
+            cfg,
+            NODE,
+            membershipService,
+            communicationService,
+            snapshotStore,
+            meta,
+            registry);
+    servers.add(server);
+    return server;
+  }
+
+  @AfterEach
+  void stopServers() {
+    // stop 幂等（DefaultRaftServer.shutdown 有 stopped 守卫），重复 stop 无副作用
+    servers.forEach(server -> server.stop().join());
+    servers.clear();
   }
 
   @ParameterizedTest(name = "group={0}, legacy={1}")

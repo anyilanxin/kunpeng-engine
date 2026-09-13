@@ -18,10 +18,10 @@ package com.anyilanxin.kunpeng.rocksdb.util;
 
 import static com.anyilanxin.kunpeng.kvstore.PredefinedColumnFamily.fromColumnFamilyName;
 
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotFileInfo;
 import com.anyilanxin.kunpeng.kvstore.ColumnCopyType;
 import com.anyilanxin.kunpeng.kvstore.ColumnFamilies;
 import com.anyilanxin.kunpeng.kvstore.PredefinedColumnFamily;
-import com.anyilanxin.kunpeng.kvstore.snapshot.SnapshotFileInfo;
 import com.anyilanxin.kunpeng.rocksdb.*;
 import com.anyilanxin.kunpeng.rocksdb.RocksdbConfiguration;
 import java.nio.ByteBuffer;

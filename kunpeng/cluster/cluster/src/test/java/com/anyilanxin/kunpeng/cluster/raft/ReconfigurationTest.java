@@ -174,6 +174,8 @@ final class ReconfigurationTest {
   private static LeaderRole awaitLeader(final RaftServer... candidates) {
     //noinspection OptionalGetWithoutIsPresent
     return Awaitility.await()
+        // 整套件并发 fsync 负载下，含故障成员的选举收敛可能超过 Awaitility 缺省 10s
+        .atMost(Duration.ofSeconds(30))
         .until(() -> leaderRoleOf(candidates), Optional::isPresent)
         .get();
   }
@@ -452,6 +454,21 @@ final class ReconfigurationTest {
           .join();
       d.join(N1, N2, N3).join();
       e.join(N1, N2, N3).join();
+      // join 完成不等于最终配置已提交：若 b/c 仍停留在旧 3 成员配置，停掉 a/d/e 后 b+c 即 2/3
+      // 多数派可选出 leader，反向断言必失败。必须先等全部节点收敛到 5 成员最终配置
+      awaitConfigurationOn(List.of(a, b, c, d, e), activeMembers(N1, N2, N3, N4, N5));
+      Awaitility.await()
+          .untilAsserted(
+              () ->
+                  assertThat(List.of(a, b, c, d, e))
+                      .allSatisfy(
+                          node ->
+                              assertThat(
+                                      node.getContext()
+                                          .getCluster()
+                                          .getConfiguration()
+                                          .requiresJointConsensus())
+                                  .isFalse()));
 
       // 执行：若领导者落在旧成员上，强制换到含新成员的一侧，然后停掉三台
       forceLeaderInto(List.of(a, b, c, d, e), a, d, e);

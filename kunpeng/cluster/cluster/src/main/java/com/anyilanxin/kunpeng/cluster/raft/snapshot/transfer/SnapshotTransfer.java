@@ -16,6 +16,7 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.snapshot.transfer;
 
+import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
@@ -34,7 +35,26 @@ public interface SnapshotTransfer {
    */
   ActorFuture<@Nullable PersistedSnapshot> getLatestSnapshot(final PartitionId partitionId);
 
-  /** 把给定镜像逐批推送到目标分区的 leader（合并转移入口）。 */
+  /**
+   * 跨分区引导拉取：请求源分区指定成员（其 leader）拍摄引导镜像，返回信息分片后逐批拉取到本地 接收 store 持久化；成功/放弃都会通知拍摄端释放
+   * transferId 引用（引用归零时拍摄端删除引导镜像）。
+   *
+   * @param sourcePartitionId 引导镜像的源分区
+   * @param sourceMember 源分区 leader 所在成员
+   * @return 持久化完成的引导镜像
+   */
+  ActorFuture<@Nullable PersistedSnapshot> getBootstrapSnapshot(
+      final PartitionId sourcePartitionId, final MemberId sourceMember);
+
+  /** 把给定镜像逐批推送到目标分区的 leader（合并转移入口，目标经拓扑解析 leader）。 */
   ActorFuture<Void> pushSnapshot(
       final PersistedSnapshot snapshot, final PartitionId targetPartitionId);
+
+  /**
+   * 把给定镜像逐批推送到目标分区的指定成员（合并转移入口，目标成员由调用方给定——分区删除迁移时 目标 leader 地址已知）。
+   */
+  ActorFuture<Void> pushSnapshot(
+      final PersistedSnapshot snapshot,
+      final PartitionId targetPartitionId,
+      final MemberId targetMember);
 }
