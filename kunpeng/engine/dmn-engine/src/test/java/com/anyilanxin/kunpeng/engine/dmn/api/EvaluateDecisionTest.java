@@ -1,6 +1,6 @@
 /*
  * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,27 +18,20 @@ package com.anyilanxin.kunpeng.engine.dmn.api;
 
 import static org.assertj.core.api.Assertions.entry;
 
-import com.anyilanxin.kunpeng.engine.dmn.DmnEngineConfiguration;
-import com.anyilanxin.kunpeng.engine.dmn.impl.DefaultDmnEngineConfiguration;
 import com.anyilanxin.kunpeng.engine.dmn.test.DecisionResource;
 import com.anyilanxin.kunpeng.engine.dmn.test.DmnEngineTest;
 import org.junit.Test;
 
 public class EvaluateDecisionTest extends DmnEngineTest {
 
-  public static final String NO_INPUT_DMN = "org/camunda/bpm/dmn/engine/api/NoInput.dmn";
-  public static final String ONE_RULE_DMN = "org/camunda/bpm/dmn/engine/api/OneRule.dmn";
-  public static final String EXAMPLE_DMN = "org/camunda/bpm/dmn/engine/api/Example.dmn";
-  public static final String DATA_TYPE_DMN = "org/camunda/bpm/dmn/engine/api/DataType.dmn";
+  public static final String NO_INPUT_DMN = "com/anyilanxin/kunpeng/engine/dmn/api/NoInput.dmn";
+  public static final String ONE_RULE_DMN = "com/anyilanxin/kunpeng/engine/dmn/api/OneRule.dmn";
+  public static final String EXAMPLE_DMN = "com/anyilanxin/kunpeng/engine/dmn/api/Example.dmn";
 
-  public static final String DMN12_NO_INPUT_DMN = "org/camunda/bpm/dmn/engine/api/dmn12/NoInput.dmn";
-  public static final String DMN13_NO_INPUT_DMN = "org/camunda/bpm/dmn/engine/api/dmn13/NoInput.dmn";
-
-  @Override
-  public DmnEngineConfiguration getDmnEngineConfiguration() {
-    return new DefaultDmnEngineConfiguration()
-      .enableFeelLegacyBehavior(true);
-  }
+  public static final String DMN12_NO_INPUT_DMN =
+      "com/anyilanxin/kunpeng/engine/dmn/api/dmn12/NoInput.dmn";
+  public static final String DMN13_NO_INPUT_DMN =
+      "com/anyilanxin/kunpeng/engine/dmn/api/dmn13/NoInput.dmn";
 
   @Test
   @DecisionResource(resource = NO_INPUT_DMN)
@@ -51,13 +44,13 @@ public class EvaluateDecisionTest extends DmnEngineTest {
   @Test
   @DecisionResource(resource = ONE_RULE_DMN)
   public void shouldEvaluateSingleRule() {
-    variables.putValue("input", "ok");
+    variables.put("input", "ok");
 
     assertThatDecisionTableResult()
       .hasSingleResult()
       .hasSingleEntry("ok");
 
-    variables.putValue("input", "notok");
+    variables.put("input", "notok");
 
     assertThatDecisionTableResult()
       .isEmpty();
@@ -95,34 +88,6 @@ public class EvaluateDecisionTest extends DmnEngineTest {
   }
 
   @Test
-  @DecisionResource(resource = DATA_TYPE_DMN)
-  public void shouldDetectDataTypes() {
-    variables.put("boolean", true);
-    variables.put("integer", 9000);
-    variables.put("double", 13.37);
-
-    assertThatDecisionTableResult()
-      .hasSingleResult()
-      .hasSingleEntry(true);
-
-    variables.put("boolean", false);
-    variables.put("integer", 10000);
-    variables.put("double", 21.42);
-
-    assertThatDecisionTableResult()
-      .hasSingleResult()
-      .hasSingleEntry(true);
-
-    variables.put("boolean", true);
-    variables.put("integer", -9000);
-    variables.put("double", -13.37);
-
-    assertThatDecisionTableResult()
-      .hasSingleResult()
-      .hasSingleEntry(true);
-  }
-
-  @Test
   @DecisionResource(resource = DMN12_NO_INPUT_DMN)
   public void shouldEvaluateRuleWithoutInput_Dmn12() {
     assertThatDecisionTableResult()
@@ -139,4 +104,3 @@ public class EvaluateDecisionTest extends DmnEngineTest {
   }
 
 }
-

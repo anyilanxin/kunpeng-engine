@@ -22,9 +22,13 @@ configure(jarInfo) {
 
 
 dependencies {
+    implementation project(':kunpeng:engine:script-engine')
+    implementation project(':kunpeng:bpm-model:model-parse')
     implementation project(':kunpeng:utils')
     implementation 'org.apache.commons:commons-lang3'
     implementation 'org.springframework:spring-beans'
     implementation 'io.micrometer:micrometer-core'
     implementation 'io.micrometer:micrometer-commons'
+    // 测试为 JUnit4（@Rule 驱动的 DmnEngineTestRule），平台执行需 vintage 引擎
+    testImplementation 'org.junit.vintage:junit-vintage-engine'
 }

@@ -1,6 +1,6 @@
 /*
  * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,21 +18,17 @@ package com.anyilanxin.kunpeng.engine.dmn.test;
 
 import static com.anyilanxin.kunpeng.engine.dmn.test.asserts.DmnEngineTestAssertions.assertThat;
 
-import java.io.InputStream;
-import java.util.List;
-
-import com.anyilanxin.kunpeng.engine.dmn.DmnDecision;
+import com.anyilanxin.kunpeng.bpm.parse.dmn.element.DmnDecision;
 import com.anyilanxin.kunpeng.engine.dmn.DmnDecisionResult;
-import com.anyilanxin.kunpeng.engine.dmn.DmnDecisionTableResult;
 import com.anyilanxin.kunpeng.engine.dmn.DmnEngine;
-import com.anyilanxin.kunpeng.engine.dmn.DmnEngineConfiguration;
-import com.anyilanxin.kunpeng.engine.dmn.test.asserts.DmnDecisionTableResultAssert;
-import org.camunda.bpm.engine.variable.VariableMap;
-import org.camunda.bpm.engine.variable.Variables;
-import org.camunda.commons.utils.IoUtil;
+import com.anyilanxin.kunpeng.engine.dmn.DmnEngineFactory;
+import com.anyilanxin.kunpeng.engine.dmn.test.asserts.DmnDecisionResultAssert;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Rule;
 
+/** 内部单元测试基类：经 {@link DmnEngineTestRule} 加载决策，变量以普通 Map 承载（ScriptContext 直接映射）。 */
 public abstract class DmnEngineTest {
 
   @Rule
@@ -40,9 +36,9 @@ public abstract class DmnEngineTest {
 
   public DmnEngine dmnEngine;
   public DmnDecision decision;
-  public VariableMap variables;
+  public Map<String, Object> variables;
 
-  public DmnEngineConfiguration getDmnEngineConfiguration() {
+  public DmnEngineFactory getDmnEngineConfiguration() {
     return null;
   }
 
@@ -58,49 +54,32 @@ public abstract class DmnEngineTest {
 
   @Before
   public void initVariables() {
-    variables = Variables.createVariables();
+    variables = new HashMap<>();
   }
 
-  public VariableMap getVariables() {
+  public Map<String, Object> getVariables() {
     return variables;
-  }
-
-  // parsing //////////////////////////////////////////////////////////////////
-
-  public List<DmnDecision> parseDecisionsFromFile(String filename) {
-    InputStream inputStream = IoUtil.fileAsStream(filename);
-    return dmnEngine.parseDecisions(inputStream);
-  }
-
-  public DmnDecision parseDecisionFromFile(String decisionKey, String filename) {
-    InputStream inputStream = IoUtil.fileAsStream(filename);
-    return dmnEngine.parseDecision(decisionKey, inputStream);
   }
 
   // evaluations //////////////////////////////////////////////////////////////
 
-  public DmnDecisionTableResult evaluateDecisionTable() {
-    return dmnEngine.evaluateDecisionTable(decision, variables);
-  }
-
-  public DmnDecisionTableResult evaluateDecisionTable(DmnEngine engine) {
-    return engine.evaluateDecisionTable(decision, variables);
-  }
-
+  /** 以 {@link #variables} 求值当前加载的决策。 */
   public DmnDecisionResult evaluateDecision() {
-    return dmnEngine.evaluateDecision(decision, variables);
+    return dmnEngine.evaluateDecision(dmnEngineRule.getDrg(), decision.getKey(), () -> variables);
+  }
+
+  /** 以 {@link #variables} 在指定引擎上求值当前加载的决策。 */
+  public DmnDecisionResult evaluateDecision(final DmnEngine engine) {
+    return engine.evaluateDecision(dmnEngineRule.getDrg(), decision.getKey(), () -> variables);
   }
 
   // assertions ///////////////////////////////////////////////////////////////
 
-  public DmnDecisionTableResultAssert assertThatDecisionTableResult() {
-    DmnDecisionTableResult results = evaluateDecisionTable(dmnEngine);
-    return assertThat(results);
+  public DmnDecisionResultAssert assertThatDecisionTableResult() {
+    return assertThat(evaluateDecision());
   }
 
-  public DmnDecisionTableResultAssert assertThatDecisionTableResult(DmnEngine engine) {
-    DmnDecisionTableResult results = evaluateDecisionTable(engine);
-    return assertThat(results);
+  public DmnDecisionResultAssert assertThatDecisionTableResult(final DmnEngine engine) {
+    return assertThat(evaluateDecision(engine));
   }
-
 }

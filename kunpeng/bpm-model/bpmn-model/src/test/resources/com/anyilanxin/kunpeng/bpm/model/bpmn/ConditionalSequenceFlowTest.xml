@@ -2,7 +2,7 @@
 <definitions
   xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xmlns:camunda="https://anyilanxin.com/schema/1.0/bpmn"
+  xmlns:kunpeng="http://anyilanxin.com/schema/kunpeng/1.0"
   targetNamespace="https://anyilanxin.com/test">
 
   <process id="process">
@@ -19,7 +19,7 @@
     </sequenceFlow>
 
     <sequenceFlow id="flow3" sourceRef="start" targetRef="end">
-      <conditionExpression xsi:type="tFormalExpression" language="groovy" camunda:resource="test.groovy" />
+      <conditionExpression xsi:type="tFormalExpression" language="groovy" kunpeng:resource="test.groovy" />
     </sequenceFlow>
   </process>
 

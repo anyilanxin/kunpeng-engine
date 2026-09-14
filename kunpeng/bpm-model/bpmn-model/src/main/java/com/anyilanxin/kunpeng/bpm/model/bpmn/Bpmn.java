@@ -496,7 +496,8 @@ public class Bpmn {
     definitions.setTargetNamespace(BPMN20_NS);
     definitions.setAttributeValueNs(
         MODELER_NS, "modeler:executionPlatform", BPMN_EXECUTION_PLATFORM);
-    definitions.setAttributeValueNs(MODELER_NS, "modeler:executionPlatformVersion", MODELER_NS);
+    definitions.setAttributeValueNs(
+        MODELER_NS, "modeler:executionPlatformVersion", KUNPENG_VERSION);
     definitions.getDomElement().registerNamespace("kunpeng", KUNPENG_NS);
     return definitions;
   }

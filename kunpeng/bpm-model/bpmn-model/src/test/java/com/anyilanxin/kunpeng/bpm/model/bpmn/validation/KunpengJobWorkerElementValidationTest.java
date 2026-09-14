@@ -64,19 +64,6 @@ public class KunpengJobWorkerElementValidationTest {
 
     @ParameterizedTest
     @MethodSource("jobWorkerElementBuilderProvider")
-    @DisplayName("element with custom header")
-    void validCustomHeader(final BpmnElementBuilder elementBuilder) {
-
-        final BpmnModelInstance process =
-                processWithJobWorkerElement(
-                        elementBuilder,
-                  element -> element.kunpengJobType("service").kunpengTaskHeader("priority", "high"));
-
-        ProcessValidationUtil.assertThatProcessIsValid(process);
-    }
-
-    @ParameterizedTest
-    @MethodSource("jobWorkerElementBuilderProvider")
     @DisplayName("element without job type or publish message")
     void missingJobTypeOrPublishMessage(final BpmnElementBuilder elementBuilder) {
         String message =

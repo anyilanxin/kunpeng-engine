@@ -31,54 +31,6 @@ import static org.assertj.core.api.Assertions.tuple;
 public class EndEventBuilderTest {
 
     @Test
-    void shouldSetMessageId() {
-        // when
-        final BpmnModelInstance instance =
-                Bpmn.createExecutableProcess("process")
-                        .startEvent()
-                        .endEvent("message")
-                        .message(b -> b.name("message").kunpengMessageId("message-id-1"))
-                        .done();
-
-        // then
-        final EndEvent event = instance.getModelElementById("message");
-        final MessageEventDefinition messageEventDefinition = getEventDefinition(event);
-
-        final ExtensionElements extensionElements =
-                (ExtensionElements)
-                        messageEventDefinition.getUniqueChildElementByType(ExtensionElements.class);
-
-        assertThat(extensionElements.getChildElementsByType(KunpengPublishMessage.class))
-                .hasSize(1)
-                .extracting(KunpengPublishMessage::getMessageId)
-                .containsExactly("message-id-1");
-    }
-
-    @Test
-    void shouldSetMessageIdExpression() {
-        // when
-        final BpmnModelInstance instance =
-                Bpmn.createExecutableProcess("process")
-                        .startEvent()
-                        .endEvent("message")
-                        .message(b -> b.name("message").kunpengMessageIdExpression("messageIdExpr"))
-                        .done();
-
-        // then
-        final EndEvent event = instance.getModelElementById("message");
-        final MessageEventDefinition messageEventDefinition = getEventDefinition(event);
-
-        final ExtensionElements extensionElements =
-                (ExtensionElements)
-                        messageEventDefinition.getUniqueChildElementByType(ExtensionElements.class);
-
-        assertThat(extensionElements.getChildElementsByType(KunpengPublishMessage.class))
-                .hasSize(1)
-                .extracting(KunpengPublishMessage::getMessageId)
-                .containsExactly("=messageIdExpr");
-    }
-
-    @Test
     void shouldSetCorrelationKey() {
         // when
         final BpmnModelInstance instance =
@@ -171,7 +123,7 @@ public class EndEventBuilderTest {
     }
 
     @Test
-    void shouldSetMessageIdAndCorrelationKeyAndTimeToLive() {
+    void shouldSetCorrelationKeyAndTimeToLive() {
         // when
         final BpmnModelInstance instance =
                 Bpmn.createExecutableProcess("process")
@@ -179,8 +131,7 @@ public class EndEventBuilderTest {
                         .endEvent("message")
                         .message(
                                 m ->
-                                        m.kunpengMessageId("message-id")
-                                                .kunpengCorrelationKey("correlation-key")
+                                        m.kunpengCorrelationKey("correlation-key")
                                                 .kunpengTimeToLive("PT10S"))
                         .done();
 
@@ -194,10 +145,9 @@ public class EndEventBuilderTest {
         assertThat(extensionElements.getChildElementsByType(KunpengPublishMessage.class))
                 .hasSize(1)
                 .extracting(
-                        KunpengPublishMessage::getMessageId,
                         KunpengPublishMessage::getCorrelationKey,
                         KunpengPublishMessage::getTimeToLive)
-                .containsExactly(tuple("message-id", "correlation-key", "PT10S"));
+                .containsExactly(tuple("correlation-key", "PT10S"));
     }
 
     private MessageEventDefinition getEventDefinition(final EndEvent event) {

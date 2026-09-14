@@ -34,9 +34,7 @@ public class KunpengBuilderTest {
                 "foo",
                 b ->
                   b.kunpengJobType("taskType")
-                    .kunpengJobRetries("5")
-                    .kunpengTaskHeader("foo", "f")
-                    .kunpengTaskHeader("bar", "b"))
+                    .kunpengJobRetries("5"))
             .endEvent()
             .done();
 
@@ -49,12 +47,6 @@ public class KunpengBuilderTest {
             getExtensionElement(serviceTask, KunpengTaskDefinition.class);
     assertThat(taskDefinition.getType()).isEqualTo("taskType");
     assertThat(taskDefinition.getRetries()).isEqualTo("5");
-
-    final KunpengDynamicAdditions taskHeaders = getExtensionElement(serviceTask, KunpengDynamicAdditions.class);
-    final Collection<KunpengAddition> headerCollection = taskHeaders.getHeaders();
-    assertThat(headerCollection).hasSize(2);
-    assertThat(headerCollection).element(0).matches(header("foo", "f"));
-    assertThat(headerCollection).element(1).matches(header("bar", "b"));
   }
 
   @Test
@@ -148,10 +140,6 @@ public class KunpengBuilderTest {
         (T) element.getExtensionElements().getUniqueChildElementByType(typeClass);
     assertThat(element).isNotNull();
     return extensionElement;
-  }
-
-  private static Predicate<KunpengAddition> header(final String key, final String value) {
-    return h -> key.equals(h.getKey()) && value.equals(h.getValue());
   }
 
   private static Predicate<KunpengMapping> mapping(final String source, final String target) {

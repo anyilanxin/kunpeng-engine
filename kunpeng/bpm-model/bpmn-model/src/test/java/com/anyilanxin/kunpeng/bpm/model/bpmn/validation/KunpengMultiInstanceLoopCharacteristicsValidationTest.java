@@ -22,7 +22,7 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengLoopCharact
 import org.junit.runners.Parameterized.Parameters;
 
 import static com.anyilanxin.kunpeng.bpm.model.bpmn.validation.ExpectedValidationResult.expect;
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 
 public class KunpengMultiInstanceLoopCharacteristicsValidationTest
   extends AbstractKunpengValidationTest {
@@ -30,16 +30,18 @@ public class KunpengMultiInstanceLoopCharacteristicsValidationTest
     @Parameters(name = "{index}: {1}")
     public static Object[][] parameters() {
         return new Object[][]{
+                // neither loop cardinality nor collection is set
                 {
                         Bpmn.createExecutableProcess("process")
                                 .startEvent()
                           .serviceTask("task", t -> t.kunpengJobType("test").multiInstance())
                                 .done(),
-                        singletonList(
+                        asList(
                                 expect(
                                         MultiInstanceLoopCharacteristics.class,
-                                  "Must have exactly one 'kunpeng:loopCharacteristics' extension element"))
+                                        "Must have Loop cardinality or Collection"))
                 },
+                // element variable is set but the collection is empty
                 {
                         Bpmn.createExecutableProcess("process")
                                 .startEvent()
@@ -47,13 +49,17 @@ public class KunpengMultiInstanceLoopCharacteristicsValidationTest
                                         "task",
                                         t ->
                                           t.kunpengJobType("test")
-                                            .multiInstance(b -> b.kunpengInputCollectionExpression(null)))
+                                            .multiInstance(b -> b.elementVariable("item")))
                                 .done(),
-                        singletonList(
+                        asList(
+                                expect(
+                                        MultiInstanceLoopCharacteristics.class,
+                                        "Must have Loop cardinality or Collection"),
                                 expect(
                                   KunpengLoopCharacteristics.class,
                                         "Attribute 'inputCollection' must be present and not empty"))
                 },
+                // collection is set only
                 {
                         Bpmn.createExecutableProcess("process")
                                 .startEvent()
@@ -61,15 +67,11 @@ public class KunpengMultiInstanceLoopCharacteristicsValidationTest
                                         "task",
                                         t ->
                                           t.kunpengJobType("test")
-                                                        .multiInstance(
-                                                                b ->
-                                                                  b.kunpengInputCollectionExpression("xs").kunpengOutputCollection("ys")))
+                                            .multiInstance(b -> b.collection("items")))
                                 .done(),
-                        singletonList(
-                                expect(
-                                  KunpengLoopCharacteristics.class,
-                                        "Attribute 'outputElement' must be present if the attribute 'outputCollection' is set"))
+                        valid()
                 },
+                // collection and element variable are set
                 {
                         Bpmn.createExecutableProcess("process")
                                 .startEvent()
@@ -77,15 +79,12 @@ public class KunpengMultiInstanceLoopCharacteristicsValidationTest
                                         "task",
                                         t ->
                                           t.kunpengJobType("test")
-                                                        .multiInstance(
+                                            .multiInstance(
                                                                 b ->
-                                                                  b.kunpengInputCollectionExpression("xs")
-                                                                    .kunpengOutputElementExpression("y")))
+                                                                  b.collection("items")
+                                                                    .elementVariable("item")))
                                 .done(),
-                        singletonList(
-                                expect(
-                                  KunpengLoopCharacteristics.class,
-                                        "Attribute 'outputCollection' must be present if the attribute 'outputElement' is set"))
+                        valid()
                 },
         };
     }

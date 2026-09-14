@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/2.0" xmlns:modeler="https://anyilanxin.com/schema/modeler/1.0" id="Definitions_0i9j57i" name="DRD" namespace="https://anyilanxin.com/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="5.48.0">
+  <decision id="Decision_064sjzk" name="商品折扣规则">
+    <decisionTable id="DecisionTable_0e5lwo0" hitPolicy="COLLECT" aggregation="SUM">
+      <input id="Input_1" biodi:width="192">
+        <inputExpression id="InputExpression_1" typeRef="string">
+          <text>productName</text>
+        </inputExpression>
+      </input>
+      <input id="InputClause_14zuctk">
+        <inputExpression id="LiteralExpression_1srakbv" typeRef="number">
+          <text>productPrice</text>
+        </inputExpression>
+      </input>
+      <output id="Output_1" name="productDiscoount" typeRef="number" />
+      <output id="OutputClause_1ask9qt" name="productDiscoountPrice" typeRef="number" />
+      <rule id="DecisionRule_1lo4pr9">
+        <description>8折</description>
+        <inputEntry id="UnaryTests_0i3mgvz">
+          <text>"sdfsf","sdfsdf"</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1bu7n96">
+          <text>&gt;2000</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_108lvk6">
+          <text>0.8</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1nt9tv7">
+          <text>productPrice*0.8</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_18ufjx3">
+        <description>9折</description>
+        <inputEntry id="UnaryTests_1xrilud">
+          <text></text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_0n0k6sp">
+          <text>&gt;3000</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0jckq1u">
+          <text>0.9</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0p07eo6">
+          <text>productPrice*0.9</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram>
+      <dmndi:DMNShape id="Decision_064sjzk_di" dmnElementRef="Decision_064sjzk">
+        <dc:Bounds height="80" width="180" x="160" y="100" />
+      </dmndi:DMNShape>
+    </dmndi:DMNDiagram>
+  </dmndi:DMNDI>
+</definitions>

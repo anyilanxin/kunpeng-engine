@@ -1,0 +1,50 @@
+/*
+ * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package com.anyilanxin.kunpeng.bpm.parse.dmn.type;
+
+/**
+ * （已移除的）Camunda {@code ValueType} 常量的替代实现。各常量为单例，按同一性（identity）比较。
+ */
+public final class ValueType {
+  public static final ValueType BOOLEAN = new ValueType("boolean");
+  public static final ValueType DATE = new ValueType("date");
+  public static final ValueType DOUBLE = new ValueType("double");
+  public static final ValueType INTEGER = new ValueType("integer");
+  public static final ValueType LONG = new ValueType("long");
+  public static final ValueType STRING = new ValueType("string");
+  public static final ValueType NULL = new ValueType("null");
+  public static final ValueType OBJECT = new ValueType("object");
+
+  private final String name;
+
+  private ValueType(final String name) {
+    this.name = name;
+  }
+
+  /**
+   * @return 类型名称，如 {@code boolean}、{@code string}
+   */
+  public String getName() {
+    return name;
+  }
+
+  @Override
+  public String toString() {
+    return "ValueType:" + name;
+  }
+}

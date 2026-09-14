@@ -18,8 +18,8 @@ package com.anyilanxin.kunpeng.cluster.raft.logentry;
 
 import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
 import com.anyilanxin.kunpeng.cluster.raft.logentry.util.TestAppender;
-import com.anyilanxin.kunpeng.cluster.raft.logentry.util.ZeebeTestHelper;
-import com.anyilanxin.kunpeng.cluster.raft.logentry.util.ZeebeTestNode;
+import com.anyilanxin.kunpeng.cluster.raft.logentry.util.KunpengTestHelper;
+import com.anyilanxin.kunpeng.cluster.raft.logentry.util.KunpengTestNode;
 import com.anyilanxin.kunpeng.cluster.raft.partition.impl.RaftPartitionServer;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.IndexedRaftLogEntry;
 import com.google.common.base.Stopwatch;
@@ -52,15 +52,15 @@ public class LogAppenderTest {
   private final Stopwatch stopwatch = Stopwatch.createUnstarted();
   private final TestAppender appenderListener = new TestAppender();
 
-  private ZeebeTestNode node;
-  private ZeebeTestHelper helper;
+  private KunpengTestNode node;
+  private KunpengTestHelper helper;
 
   @Before
   public void setUp() throws Exception {
-    node = new ZeebeTestNode(0, temporaryFolder.newFolder("0"), meterRegistry);
+    node = new KunpengTestNode(0, temporaryFolder.newFolder("0"), meterRegistry);
 
-    final Set<ZeebeTestNode> nodes = Collections.singleton(node);
-    helper = new ZeebeTestHelper(nodes);
+    final Set<KunpengTestNode> nodes = Collections.singleton(node);
+    helper = new KunpengTestHelper(nodes);
 
     node.start(nodes).join();
     stopwatch.start();

@@ -34,9 +34,7 @@ public class KunpengLoopCharacteristicsTest extends BpmnModelElementInstanceTest
     @Override
     public Collection<AttributeAssumption> getAttributesAssumptions() {
         return Arrays.asList(
-          new AttributeAssumption(BpmnModelConstants.KUNPENG_NS, "inputCollection", false, true),
-          new AttributeAssumption(BpmnModelConstants.KUNPENG_NS, "inputElement", false, false),
-          new AttributeAssumption(BpmnModelConstants.KUNPENG_NS, "outputCollection", false, false),
-          new AttributeAssumption(BpmnModelConstants.KUNPENG_NS, "outputElement", false, false));
+          new AttributeAssumption(BpmnModelConstants.KUNPENG_NS, "collection", false, true),
+          new AttributeAssumption(BpmnModelConstants.KUNPENG_NS, "elementVariable", false, false));
     }
 }

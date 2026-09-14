@@ -1,6 +1,6 @@
 /*
  * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,12 @@
  */
 package com.anyilanxin.kunpeng.engine.dmn.test.asserts;
 
+import com.anyilanxin.kunpeng.engine.dmn.DmnDecisionResult;
 import org.assertj.core.api.Assertions;
-import com.anyilanxin.kunpeng.engine.dmn.DmnDecisionTableResult;
 
 public class DmnEngineTestAssertions extends Assertions {
 
-  public static DmnDecisionTableResultAssert assertThat(DmnDecisionTableResult dmnDecisionTableResult) {
-    return new DmnDecisionTableResultAssert(dmnDecisionTableResult);
+  public static DmnDecisionResultAssert assertThat(final DmnDecisionResult actual) {
+    return new DmnDecisionResultAssert(actual);
   }
-
 }

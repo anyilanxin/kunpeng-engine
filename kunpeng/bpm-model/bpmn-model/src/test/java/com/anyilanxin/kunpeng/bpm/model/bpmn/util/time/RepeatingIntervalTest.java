@@ -75,7 +75,7 @@ public class RepeatingIntervalTest {
         final String text = "R/PT05S";
         final RepeatingInterval expected =
                 new RepeatingInterval(
-                        RepeatingInterval.INFINITE, new Interval(Period.ZERO, Duration.ofSeconds(5)));
+                        text, RepeatingInterval.INFINITE, new Interval(Period.ZERO, Duration.ofSeconds(5)));
 
         // when
         final RepeatingInterval parsed = RepeatingInterval.parse(text);
@@ -89,7 +89,8 @@ public class RepeatingIntervalTest {
         // given
         final String text = "R5/PT05S";
         final RepeatingInterval expected =
-                new RepeatingInterval(5, new Interval(Period.ZERO, Duration.ofSeconds(5)));
+                new RepeatingInterval(
+                        text, 5, new Interval(Period.ZERO, Duration.ofSeconds(5)));
 
         // when
         final RepeatingInterval parsed = RepeatingInterval.parse(text);
@@ -139,6 +140,7 @@ public class RepeatingIntervalTest {
         final String text = "R/2022-05-20T08:09:40+02:00[Europe/Berlin]/PT10S";
         final RepeatingInterval expected =
                 new RepeatingInterval(
+                        text,
                         -1,
                         new Interval(
                                 Optional.ofNullable(
@@ -159,6 +161,7 @@ public class RepeatingIntervalTest {
         final String text = "R/2022-05-20T08:09:40Z/PT10S";
         final RepeatingInterval expected =
                 new RepeatingInterval(
+                        text,
                         -1,
                         new Interval(
                                 Optional.ofNullable(ZonedDateTime.parse("2022-05-20T08:09:40Z")),
@@ -177,7 +180,8 @@ public class RepeatingIntervalTest {
         // given
         final String text = "R//PT10S";
         final RepeatingInterval expected =
-                new RepeatingInterval(-1, new Interval(Period.ZERO, Duration.ofSeconds(10)));
+                new RepeatingInterval(
+                        text, -1, new Interval(Period.ZERO, Duration.ofSeconds(10)));
 
         // when
         final RepeatingInterval parsed = RepeatingInterval.parse(text);

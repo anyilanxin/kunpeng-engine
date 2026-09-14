@@ -42,4 +42,7 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-annotations'
 
     testImplementation 'net.jqwik:jqwik-api'
+    // 功能测试：以真实 RocksDB 实现驱动仓库读写
+    testImplementation project(':kunpeng:repository:rocksdb')
+    testImplementation project(':kunpeng:configuration')
 }

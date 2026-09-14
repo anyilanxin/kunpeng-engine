@@ -17,8 +17,8 @@
 package com.anyilanxin.kunpeng.cluster.raft.logentry;
 
 import com.anyilanxin.kunpeng.cluster.raft.logentry.util.TestAppender;
-import com.anyilanxin.kunpeng.cluster.raft.logentry.util.ZeebeTestHelper;
-import com.anyilanxin.kunpeng.cluster.raft.logentry.util.ZeebeTestNode;
+import com.anyilanxin.kunpeng.cluster.raft.logentry.util.KunpengTestHelper;
+import com.anyilanxin.kunpeng.cluster.raft.logentry.util.KunpengTestNode;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.After;
@@ -40,14 +40,14 @@ public class RaftPartitionSnapshotIntegrationTest {
 
   @AutoClose MeterRegistry meterRegistry = new SimpleMeterRegistry();
 
-  private ZeebeTestNode node;
-  private ZeebeTestHelper helper;
+  private KunpengTestNode node;
+  private KunpengTestHelper helper;
   private final TestAppender appenderListener = new TestAppender();
 
   @Before
   public void setUp() throws Exception {
-    node = new ZeebeTestNode(0, temporaryFolder.newFolder("0"), meterRegistry);
-    helper = new ZeebeTestHelper(Collections.singleton(node));
+    node = new KunpengTestNode(0, temporaryFolder.newFolder("0"), meterRegistry);
+    helper = new KunpengTestHelper(Collections.singleton(node));
     node.start(Collections.singleton(node)).join();
   }
 

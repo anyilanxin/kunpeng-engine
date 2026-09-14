@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/DMN/20151101/dmn.xsd"
+             id="drg-definitions"
+             name="drg-example"
+             namespace="http://kunpeng.anyilanxin.com/schema/dmn">
+
+  <!-- 字面表达式决策：被下方决策表依赖 -->
+  <decision id="season-decision" name="Season">
+    <variable id="season-variable" name="season" />
+    <literalExpression id="season-literal-expression">
+      <text>"summer"</text>
+    </literalExpression>
+  </decision>
+
+  <!-- 决策表决策：经 informationRequirement 依赖 season-decision -->
+  <decision id="dish-decision" name="Dish">
+    <informationRequirement>
+      <requiredDecision href="#season-decision" />
+    </informationRequirement>
+    <decisionTable id="dish-table" hitPolicy="FIRST">
+      <input id="dish-input" label="Season">
+        <inputExpression id="dish-input-expression" typeRef="string">
+          <text>season</text>
+        </inputExpression>
+      </input>
+      <output id="dish-output" label="Dish" name="dish" typeRef="string" />
+      <rule id="dish-rule-1">
+        <inputEntry id="dish-input-entry-1">
+          <text>"summer"</text>
+        </inputEntry>
+        <outputEntry id="dish-output-entry-1">
+          <text>"Salad"</text>
+        </outputEntry>
+      </rule>
+      <rule id="dish-rule-2">
+        <inputEntry id="dish-input-entry-2">
+          <text>"winter"</text>
+        </inputEntry>
+        <outputEntry id="dish-output-entry-2">
+          <text>"Steak"</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+</definitions>

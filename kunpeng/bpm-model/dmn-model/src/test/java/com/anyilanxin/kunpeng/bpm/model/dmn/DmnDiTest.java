@@ -21,9 +21,9 @@ import org.junit.Test;
 public class DmnDiTest {
 
   @Test
-  public void validateDmnWithCamundaDi() {
+  public void validateDmnWithKunpengDi() {
 
-    final DmnModelInstance modelInstance = Dmn.readModelFromStream(DmnDiTest.class.getResourceAsStream("ExampleWithCamundaDI.dmn"));
+    final DmnModelInstance modelInstance = Dmn.readModelFromStream(DmnDiTest.class.getResourceAsStream("ExampleWithKunpengDI.dmn"));
 
     Dmn.validateModel(modelInstance);
   }

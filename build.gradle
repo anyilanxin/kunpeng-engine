@@ -150,6 +150,8 @@ subprojects {
 			testImplementation 'org.junit.jupiter:junit-jupiter-api'
 			testImplementation 'org.junit.jupiter:junit-jupiter-engine'
 			testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+			// 兼容 JUnit4 测试用例（bpm-model 等模块存量测试基于 junit4）
+			testRuntimeOnly 'org.junit.vintage:junit-vintage-engine'
 			testImplementation 'org.assertj:assertj-core'
 			testImplementation 'org.mockito:mockito-core'
 		}

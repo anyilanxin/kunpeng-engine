@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/2.0" xmlns:di="http://www.omg.org/spec/DMN/20180521/DI/" xmlns:modeler="https://anyilanxin.com/schema/modeler/1.0" id="Definitions_0i9j57i" name="DRD" namespace="https://anyilanxin.com/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="5.48.0">
+  <decision id="Decision_1" name="username">
+    <variable id="InformationItem_0y2ntll" name="username" typeRef="string" />
+    <knowledgeRequirement id="KnowledgeRequirement_1ttooj7">
+      <requiredKnowledge href="#busi_3" />
+    </knowledgeRequirement>
+    <decisionTable id="DecisionTable_0e5lwo0" hitPolicy="FIRST">
+      <input id="Input_1" biodi:width="192">
+        <inputExpression id="InputExpression_1" typeRef="string">
+          <text>productName</text>
+        </inputExpression>
+      </input>
+      <input id="InputClause_14zuctk">
+        <inputExpression id="LiteralExpression_1srakbv" typeRef="number">
+          <text>productPrice</text>
+        </inputExpression>
+      </input>
+      <output id="Output_1" name="productDiscoount" typeRef="number" />
+      <output id="OutputClause_1ask9qt" name="productDiscoountPrice" typeRef="number" />
+      <rule id="DecisionRule_1lo4pr9">
+        <description>8折</description>
+        <inputEntry id="UnaryTests_0i3mgvz">
+          <text>not("sdfsf","sdfsdf")</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1bu7n96">
+          <text>&gt;2000</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_108lvk6">
+          <text>0.8</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1nt9tv7">
+          <text>productPrice*0.8</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_18jp8fj">
+        <description>75折</description>
+        <inputEntry id="UnaryTests_1lzqpwg">
+          <text>"全单吉他"</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_07gxafc">
+          <text>&gt;5000*10</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1bisgtu">
+          <text>0.75</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_0cun2e0">
+          <text>productPrice*0.75</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0wtl7yp">
+        <description>9折</description>
+        <inputEntry id="UnaryTests_02qbep1">
+          <text>"碳纤维吉他"</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1cjabas">
+          <text>&gt;6000*10</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1f02szq">
+          <text>0.9</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1834csc">
+          <text>productPrice*0.9</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_17h3af2">
+        <description>原价</description>
+        <inputEntry id="UnaryTests_1c1s5im">
+          <text></text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1dm51lw">
+          <text></text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0j0dnk5">
+          <text>1</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_10n59m8">
+          <text>productPrice</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+  <businessKnowledgeModel id="busi_3" name="productName">
+    <variable id="InformationItem_09f7lr5" name="productName" typeRef="string" />
+    <encapsulatedLogic id="FunctionDefinition_17tjoot">
+      <formalParameter name="userName" typeRef="string" />
+      <formalParameter name="productName2" typeRef="string" />
+      <literalExpression id="LiteralExpression_1drm7yr">
+        <text>uuid()+userName+productName2</text>
+      </literalExpression>
+    </encapsulatedLogic>
+    <knowledgeRequirement id="KnowledgeRequirement_1reh6c1">
+      <requiredKnowledge href="#busi_2" />
+    </knowledgeRequirement>
+  </businessKnowledgeModel>
+  <businessKnowledgeModel id="busi_1" name="productName1">
+    <variable id="InformationItem_103026h" name="productName1" typeRef="string" />
+    <encapsulatedLogic id="FunctionDefinition_1by6yu2">
+      <literalExpression id="LiteralExpression_15vfxzl">
+        <text>uuid()</text>
+      </literalExpression>
+    </encapsulatedLogic>
+  </businessKnowledgeModel>
+  <businessKnowledgeModel id="busi_2" name="productName2">
+    <variable id="InformationItem_0bwa61f" name="productName2" typeRef="string" />
+    <encapsulatedLogic id="FunctionDefinition_1o8ylld">
+      <formalParameter name="productName1" typeRef="string" />
+      <literalExpression id="LiteralExpression_0na80pg">
+        <text>uuid()+productName1</text>
+      </literalExpression>
+    </encapsulatedLogic>
+    <knowledgeRequirement id="KnowledgeRequirement_0nd9sgj">
+      <requiredKnowledge href="#busi_1" />
+    </knowledgeRequirement>
+  </businessKnowledgeModel>
+  <decision id="Decision_13lnrm1">
+    <variable id="InformationItem_1ou71lt" />
+    <literalExpression id="LiteralExpression_1nes54c" />
+  </decision>
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram>
+      <dmndi:DMNShape id="Decision_064sjzk_di" dmnElementRef="Decision_1">
+        <dc:Bounds height="80" width="180" x="160" y="100" />
+      </dmndi:DMNShape>
+      <dmndi:DMNEdge id="DMNEdge_1v7g53z" dmnElementRef="KnowledgeRequirement_1ttooj7">
+        <di:waypoint x="250" y="297" />
+        <di:waypoint x="242" y="180" />
+      </dmndi:DMNEdge>
+      <dmndi:DMNShape id="DMNShape_1jhlrdu" dmnElementRef="busi_3">
+        <dc:Bounds height="46" width="135" x="183" y="297" />
+      </dmndi:DMNShape>
+      <dmndi:DMNEdge id="DMNEdge_0arn17j" dmnElementRef="KnowledgeRequirement_0nd9sgj">
+        <di:waypoint x="244" y="607" />
+        <di:waypoint x="258" y="513" />
+      </dmndi:DMNEdge>
+      <dmndi:DMNEdge id="DMNEdge_1jpv71f" dmnElementRef="KnowledgeRequirement_1reh6c1">
+        <di:waypoint x="252" y="467" />
+        <di:waypoint x="259" y="343" />
+      </dmndi:DMNEdge>
+      <dmndi:DMNShape id="DMNShape_06e62ah" dmnElementRef="busi_1">
+        <dc:Bounds height="46" width="135" x="173" y="607" />
+      </dmndi:DMNShape>
+      <dmndi:DMNShape id="DMNShape_1bivumn" dmnElementRef="busi_2">
+        <dc:Bounds height="46" width="135" x="183" y="467" />
+      </dmndi:DMNShape>
+      <dmndi:DMNShape id="DMNShape_0o8nspb" dmnElementRef="Decision_13lnrm1">
+        <dc:Bounds height="80" width="180" x="480" y="130" />
+      </dmndi:DMNShape>
+    </dmndi:DMNDiagram>
+  </dmndi:DMNDI>
+</definitions>

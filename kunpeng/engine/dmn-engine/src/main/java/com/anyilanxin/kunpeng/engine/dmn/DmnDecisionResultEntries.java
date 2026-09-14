@@ -14,11 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.anyilanxin.kunpeng.engine.dmn;
 
+import com.anyilanxin.kunpeng.bpm.parse.dmn.type.TypedValue;
+import com.anyilanxin.kunpeng.engine.dmn.exception.DmnEngineException;
 import java.io.Serializable;
 import java.util.Map;
-import org.camunda.bpm.engine.variable.value.TypedValue;
 
 /**
  * Represents the output entries (i.e., pairs of output name and value).

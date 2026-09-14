@@ -1,6 +1,6 @@
 /*
  * Copyright Camunda Services GmbH and/or licensed to Camunda Services GmbH
- * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,32 +16,25 @@
  */
 package com.anyilanxin.kunpeng.engine.dmn.api;
 
+import static org.assertj.core.api.Assertions.entry;
+
 import com.anyilanxin.kunpeng.engine.dmn.DmnDecisionResult;
-import com.anyilanxin.kunpeng.engine.dmn.impl.DefaultDmnEngineConfiguration;
+import com.anyilanxin.kunpeng.engine.dmn.DmnEngineFactory;
 import com.anyilanxin.kunpeng.engine.dmn.test.DecisionResource;
 import com.anyilanxin.kunpeng.engine.dmn.test.DmnEngineTest;
-import org.camunda.bpm.engine.variable.Variables;
-import org.junit.After;
-import org.junit.Before;
+import java.util.Map;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
 
+/** 引擎构建期开启 returnBlankTableOutputAsNull（新引擎无运行时改配置入口，旗标经工厂传入）。 */
 public class ReturnBlankTableOutputAsNullTest extends DmnEngineTest {
 
   public static final String RESULT_TEST_DMN = "ReturnBlankTableOutputAsNull.dmn";
 
-  @Before
-  public void configure() {
-    DefaultDmnEngineConfiguration configuration = (DefaultDmnEngineConfiguration) dmnEngine.getConfiguration();
-    configuration.setReturnBlankTableOutputAsNull(true);
-  }
-
-  @After
-  public void reset() {
-    DefaultDmnEngineConfiguration configuration = (DefaultDmnEngineConfiguration) dmnEngine.getConfiguration();
-    configuration.setReturnBlankTableOutputAsNull(false);
+  @Override
+  public DmnEngineFactory getDmnEngineConfiguration() {
+    return new DmnEngineFactory().returnBlankTableOutputAsNull(true);
   }
 
   @Test
@@ -50,7 +43,7 @@ public class ReturnBlankTableOutputAsNullTest extends DmnEngineTest {
     // given
 
     // when
-    DmnDecisionResult decisionResult = dmnEngine.evaluateDecision(decision, Variables.putValue("name", "A"));
+    final DmnDecisionResult decisionResult = evaluateWithName("A");
 
     // then
     assertThat(decisionResult).hasSize(1);
@@ -64,7 +57,7 @@ public class ReturnBlankTableOutputAsNullTest extends DmnEngineTest {
     // given
 
     // when
-    DmnDecisionResult decisionResult = dmnEngine.evaluateDecision(decision, Variables.putValue("name", "B"));
+    final DmnDecisionResult decisionResult = evaluateWithName("B");
 
     // then
     assertThat(decisionResult).hasSize(1);
@@ -78,7 +71,7 @@ public class ReturnBlankTableOutputAsNullTest extends DmnEngineTest {
     // given
 
     // when
-    DmnDecisionResult decisionResult = dmnEngine.evaluateDecision(decision, Variables.putValue("name", "C"));
+    final DmnDecisionResult decisionResult = evaluateWithName("C");
 
     // then
     assertThat(decisionResult).hasSize(1);
@@ -92,7 +85,7 @@ public class ReturnBlankTableOutputAsNullTest extends DmnEngineTest {
     // given
 
     // when
-    DmnDecisionResult decisionResult = dmnEngine.evaluateDecision(decision, Variables.putValue("name", "D"));
+    final DmnDecisionResult decisionResult = evaluateWithName("D");
 
     // then
     assertThat(decisionResult).hasSize(1);
@@ -100,4 +93,8 @@ public class ReturnBlankTableOutputAsNullTest extends DmnEngineTest {
       .containsOnly(entry("output", null));
   }
 
+  private DmnDecisionResult evaluateWithName(final String name) {
+    return dmnEngine.evaluateDecision(
+        dmnEngineRule.getDrg(), decision.getKey(), () -> Map.of("name", name));
+  }
 }
