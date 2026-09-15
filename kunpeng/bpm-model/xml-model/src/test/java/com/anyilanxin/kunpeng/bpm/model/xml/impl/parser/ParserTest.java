@@ -64,11 +64,13 @@ public class ParserTest {
       InputStream testXmlAsStream = this.getClass().getClassLoader().getResourceAsStream(testXml);
 
       // then
-      exception.expect(ModelParseException.class);
-      exception.expectMessage("SAXException while parsing input stream");
-
+      // 解析阶段不执行 schema 处理（XSD 校验由 validateModel 单独执行），引用外部 schema 的
+      // XML 不会触发任何外部访问，即使外部访问被系统属性禁止也能正常完成解析
       // when
-      modelParser.parseModelFromStream(testXmlAsStream);
+      final ModelInstance modelInstance = modelParser.parseModelFromStream(testXmlAsStream);
+      assertThat(modelInstance.getDocumentElement()).isNotNull();
+      assertThat(modelInstance.getDocumentElement().getElementType().getTypeName())
+          .isEqualTo("animals");
     } finally {
       System.clearProperty(ACCESS_EXTERNAL_SCHEMA_PROP);
     }

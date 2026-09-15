@@ -13,9 +13,9 @@
 
 package com.anyilanxin.kunpeng.engine.dmn.evaluation.event;
 
+import com.anyilanxin.kunpeng.bpm.model.dmn.HitPolicy;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.DmnDecision;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.type.TypedValue;
-import com.anyilanxin.kunpeng.bpm.model.dmn.HitPolicy;
 import java.util.List;
 
 /** Event which represents the evaluation of a decision table */

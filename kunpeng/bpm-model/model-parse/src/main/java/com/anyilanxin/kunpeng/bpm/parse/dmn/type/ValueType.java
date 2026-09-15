@@ -17,9 +17,7 @@
 
 package com.anyilanxin.kunpeng.bpm.parse.dmn.type;
 
-/**
- * （已移除的）Camunda {@code ValueType} 常量的替代实现。各常量为单例，按同一性（identity）比较。
- */
+/** （已移除的）Camunda {@code ValueType} 常量的替代实现。各常量为单例，按同一性（identity）比较。 */
 public final class ValueType {
   public static final ValueType BOOLEAN = new ValueType("boolean");
   public static final ValueType DATE = new ValueType("date");

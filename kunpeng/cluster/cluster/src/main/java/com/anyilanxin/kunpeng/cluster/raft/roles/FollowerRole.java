@@ -221,11 +221,9 @@ public final class FollowerRole extends ActiveRole {
   }
 
   /**
-   * pre-vote 租约检查（etcd/jraft 的 pre-vote 同源）：选举超时窗口内仍从 leader 收到心跳的
-   * follower 拒绝 poll。否则空闲集群里短暂失联但日志不落后的节点仍可拿到多数派许可、任期+1
-   * 并冲击健康 leader。拒绝时携带本地任期，发起方可据此发现更高任期（handlePollResponse 会采纳）。
-   * 仅 follower 角色做此检查：{@code lastHeartbeat} 只在 follower 接收 leader 心跳时更新，
-   * 其他角色的该字段无租约语义。
+   * pre-vote 租约检查（etcd/jraft 的 pre-vote 同源）：选举超时窗口内仍从 leader 收到心跳的 follower 拒绝
+   * poll。否则空闲集群里短暂失联但日志不落后的节点仍可拿到多数派许可、任期+1 并冲击健康 leader。拒绝时携带本地任期，发起方可据此发现更高任期（handlePollResponse
+   * 会采纳）。 仅 follower 角色做此检查：{@code lastHeartbeat} 只在 follower 接收 leader 心跳时更新， 其他角色的该字段无租约语义。
    */
   @Override
   protected PollResponse handlePoll(final PollRequest request) {

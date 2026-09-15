@@ -19,14 +19,14 @@ package com.anyilanxin.kunpeng.bpm.parse.dmn.transformer;
 import static com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.TransformHelper.getExpressionLanguage;
 import static com.anyilanxin.kunpeng.bpm.parse.dmn.type.TypeHelper.getExpression;
 
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.InputEntry;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.common.DmnExpressionImpl;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.ModelElementTransformer;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.TransformContext;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.InputEntry;
 
 /**
- * 将 DMN InputEntry（决策表条件单元格）转换为运行时 DmnExpression 条件表达式：提取标签、表达式语言与 FEEL 文本；
- * 脚本编译统一由 DecisionTableTransformer 完成。
+ * 将 DMN InputEntry（决策表条件单元格）转换为运行时 DmnExpression 条件表达式：提取标签、表达式语言与 FEEL 文本； 脚本编译统一由
+ * DecisionTableTransformer 完成。
  */
 public final class InputEntryTransformer implements ModelElementTransformer<InputEntry> {
   /** 返回本转换器处理的 DMN 模型元素类型。 */

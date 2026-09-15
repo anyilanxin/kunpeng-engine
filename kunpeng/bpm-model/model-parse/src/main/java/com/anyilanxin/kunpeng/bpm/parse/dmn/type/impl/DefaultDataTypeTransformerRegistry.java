@@ -17,12 +17,10 @@
 
 package com.anyilanxin.kunpeng.bpm.parse.dmn.type.impl;
 
-import com.anyilanxin.kunpeng.bpm.parse.dmn.DmnLogger;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.type.DmnDataTypeTransformer;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.type.DmnDataTypeTransformerRegistry;
 import java.util.HashMap;
 import java.util.Map;
-import org.slf4j.Logger;
 
 /**
  * 面向内置 {@link DmnDataTypeTransformer} 的 {@link DmnDataTypeTransformerRegistry} 实现。
@@ -30,8 +28,6 @@ import org.slf4j.Logger;
  * @author Philipp Ossler
  */
 public class DefaultDataTypeTransformerRegistry implements DmnDataTypeTransformerRegistry {
-
-  protected static final Logger LOG = DmnLogger.ENGINE_LOGGER;
 
   protected static final Map<String, DmnDataTypeTransformer> transformers =
       getDefaultTransformers();
@@ -58,8 +54,6 @@ public class DefaultDataTypeTransformerRegistry implements DmnDataTypeTransforme
   public DmnDataTypeTransformer getTransformer(final String typeName) {
     if (typeName != null && transformers.containsKey(typeName.toLowerCase())) {
       return transformers.get(typeName.toLowerCase());
-    } else {
-      //      LOG.unsupportedTypeDefinitionForClause(typeName);
     }
     return new IdentityDataTypeTransformer();
   }

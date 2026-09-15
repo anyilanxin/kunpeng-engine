@@ -34,22 +34,21 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 /**
- * 合并快照接收端：目标分区 leader 注册本处理器，接收源分区 leader 推来的合并镜像分片， 落地到目标分区 {@code
- * snapshots/merge} 后触发合并流，并应答源分区的合并完成等待请求。
+ * 合并快照接收端：目标分区 leader 注册本处理器，接收源分区 leader 推来的合并镜像分片， 落地到目标分区 {@code snapshots/merge}
+ * 后触发合并流，并应答源分区的合并完成等待请求。
  *
  * <p>推送协议（纯 {@link SnapshotChunkBatch}，与 {@link DefaultSnapshotTransfer#pushSnapshot} 对应）：
  *
  * <ul>
- *   <li>首条消息为信息批：单个分片，chunkName 承载镜像 id、content 承载源分区标识（{@link
- *       PartitionId#toString()} 格式，目标端据此记录"哪个分区合并进了本分区"）； 据此经 {@link
- *       ReceiveSnapshotStore#newReceivedSnapshot} 建接收 pending；
+ *   <li>首条消息为信息批：单个分片，chunkName 承载镜像 id、content 承载源分区标识（{@link PartitionId#toString()}
+ *       格式，目标端据此记录"哪个分区合并进了本分区"）； 据此经 {@link ReceiveSnapshotStore#newReceivedSnapshot} 建接收 pending；
  *   <li>后续消息为内容批，逐批 {@code write}；
- *   <li>{@code hasMore=false} 的末批写完即 {@code persist} 提交，随后异步触发 {@link MergeFlowRunner}
- *       合并流（两阶段安装 → 业务合并 → 追加合并记录条目，不触发 follower 安装——由调度侧全部合并完成后统一收尾）。
+ *   <li>{@code hasMore=false} 的末批写完即 {@code persist} 提交，随后异步触发 {@link MergeFlowRunner} 合并流（两阶段安装 →
+ *       业务合并 → 追加合并记录条目，不触发 follower 安装——由调度侧全部合并完成后统一收尾）。
  * </ul>
  *
- * <p>完成等待协议（{@code snapshot-merge-await-}{分区名}，一问一答）：payload 为镜像 id（UTF-8）， 目标端对应合并流完成后应答；
- * 未知镜像 id（重启清理后）异常应答，源分区整体重推。
+ * <p>完成等待协议（{@code snapshot-merge-await-}{分区名}，一问一答）：payload 为镜像 id（UTF-8）， 目标端对应合并流完成后应答； 未知镜像
+ * id（重启清理后）异常应答，源分区整体重推。
  *
  * <p>合并推送一次只进行一个会话（单会话覆盖旧会话，支持整体重推）。
  *
@@ -143,7 +142,9 @@ public final class SnapshotPushServer {
     final SnapshotChunk first = batch.chunks().get(0);
     // 信息批判定：单分片 + totalLength=0 + chunkName 为合法镜像 id（内容分片名含 '@' 被排除）
     final boolean infoBatch =
-        batch.chunks().size() == 1 && first.getTotalLength() == 0 && isInfoChunkName(first.getChunkName());
+        batch.chunks().size() == 1
+            && first.getTotalLength() == 0
+            && isInfoChunkName(first.getChunkName());
     try {
       if (infoBatch) {
         final String snapshotId = first.getChunkName();
@@ -184,7 +185,8 @@ public final class SnapshotPushServer {
   }
 
   /** 末批提交后触发合并流：登记 pending future 再异步执行，完成等待请求据此应答。 */
-  private void triggerMergeFlow(final PersistedSnapshot persisted, final PartitionId sourcePartition) {
+  private void triggerMergeFlow(
+      final PersistedSnapshot persisted, final PartitionId sourcePartition) {
     final var mergeFuture = new CompletableFuture<Void>();
     pendingMerges.put(persisted.snapshotId().asString(), mergeFuture);
     mergeFlowRunner

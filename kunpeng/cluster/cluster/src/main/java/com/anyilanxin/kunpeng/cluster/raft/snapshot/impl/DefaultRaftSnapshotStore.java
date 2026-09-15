@@ -17,13 +17,13 @@
 package com.anyilanxin.kunpeng.cluster.raft.snapshot.impl;
 
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.*;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotFileInfoProvider;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.ConstructableSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.DefaultConstructableSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.RaftSnapshotProvider;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.SnapshotContentWriter;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.receive.DefaultReceiveSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.receive.ReceivedSnapshot;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotFileInfoProvider;
 import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 import java.nio.file.Path;
@@ -57,13 +57,11 @@ public final class DefaultRaftSnapshotStore implements RaftSnapshotStore {
         maxSnapshotCount,
         simpleFileVerificationStore,
         snapshotFileInfoProvider,
-      snapshotProvider::takeSnapshot,
+        snapshotProvider::takeSnapshot,
         actor);
   }
 
-  /**
-   * 内容写入器构造：供不走业务 SPI 的存储（如合并镜像存储）直接给定拍法， 免去整接口适配。
-   */
+  /** 内容写入器构造：供不走业务 SPI 的存储（如合并镜像存储）直接给定拍法， 免去整接口适配。 */
   public DefaultRaftSnapshotStore(
       final String nodeId,
       final Path snapshotPath,
@@ -81,8 +79,7 @@ public final class DefaultRaftSnapshotStore implements RaftSnapshotStore {
             snapshotFileInfoProvider,
             actor);
     this.contentWriter = contentWriter;
-    constructable =
-        new DefaultConstructableSnapshotStore(store, snapshotFileInfoProvider, actor);
+    constructable = new DefaultConstructableSnapshotStore(store, snapshotFileInfoProvider, actor);
     receive = new DefaultReceiveSnapshotStore(store, actor);
   }
 

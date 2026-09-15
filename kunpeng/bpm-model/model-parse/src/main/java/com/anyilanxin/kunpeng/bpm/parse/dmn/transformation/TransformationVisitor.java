@@ -22,13 +22,11 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementType;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * DMN 模型转换访问器：随模型遍历（ModelWalker）访问每个元素，按元素类型分发到已注册的 {@link
- * ModelElementTransformer} 执行转换。
- */
+/** DMN 模型转换访问器：随模型遍历（ModelWalker）访问每个元素，按元素类型分发到已注册的 {@link ModelElementTransformer} 执行转换。 */
 public final class TransformationVisitor extends TypeHierarchyVisitor {
   /** 已注册的元素转换器（以其处理的元素类型为键） */
   private final Map<Class<?>, ModelElementTransformer<?>> transformHandlers = new HashMap<>();
+
   private TransformContext context;
 
   /** 获取当前转换上下文。 */

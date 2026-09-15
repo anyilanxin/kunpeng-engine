@@ -25,7 +25,6 @@ import com.anyilanxin.kunpeng.protocol.admin.record.RecordType;
 import com.anyilanxin.kunpeng.protocol.admin.record.RecordValueMapper;
 import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 import com.anyilanxin.kunpeng.utils.Either;
-
 import java.util.List;
 
 /**

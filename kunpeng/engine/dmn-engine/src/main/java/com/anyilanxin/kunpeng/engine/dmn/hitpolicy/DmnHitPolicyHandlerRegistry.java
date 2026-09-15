@@ -13,9 +13,9 @@
 
 package com.anyilanxin.kunpeng.engine.dmn.hitpolicy;
 
-import com.anyilanxin.kunpeng.bpm.parse.dmn.element.HitPolicyType;
 import com.anyilanxin.kunpeng.bpm.model.dmn.BuiltinAggregator;
 import com.anyilanxin.kunpeng.bpm.model.dmn.HitPolicy;
+import com.anyilanxin.kunpeng.bpm.parse.dmn.element.HitPolicyType;
 
 /** Registry of hit policy handlers */
 public interface DmnHitPolicyHandlerRegistry {

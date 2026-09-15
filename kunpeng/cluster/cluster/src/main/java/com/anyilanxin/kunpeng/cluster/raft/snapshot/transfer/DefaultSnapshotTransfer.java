@@ -36,6 +36,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 import org.jspecify.annotations.Nullable;
+
 /**
  * 默认镜像传输服务（Actor）：跨分区拉取与推送。
  *
@@ -83,7 +84,11 @@ public class DefaultSnapshotTransfer extends Actor implements SnapshotTransfer {
       final ReceiveSnapshotStore receiveSnapshotStore,
       final Duration chunkTimeout) {
     this(
-        membershipService, communicator, receiveSnapshotStore, chunkTimeout, DEFAULT_MAX_BATCH_SIZE);
+        membershipService,
+        communicator,
+        receiveSnapshotStore,
+        chunkTimeout,
+        DEFAULT_MAX_BATCH_SIZE);
   }
 
   public DefaultSnapshotTransfer(
@@ -228,7 +233,12 @@ public class DefaultSnapshotTransfer extends Actor implements SnapshotTransfer {
                       (ignored, writeError) -> {
                         if (writeError != null) {
                           abortAndFail(
-                              future, pending, target, subject, transferId, doneCommand,
+                              future,
+                              pending,
+                              target,
+                              subject,
+                              transferId,
+                              doneCommand,
                               writeError);
                           return;
                         }
@@ -238,8 +248,7 @@ public class DefaultSnapshotTransfer extends Actor implements SnapshotTransfer {
                                   pullNext(
                                       future, pending, target, subject, transferId, doneCommand));
                         } else {
-                          persistPending(
-                              future, pending, target, subject, transferId, doneCommand);
+                          persistPending(future, pending, target, subject, transferId, doneCommand);
                         }
                       });
             });
@@ -390,7 +399,8 @@ public class DefaultSnapshotTransfer extends Actor implements SnapshotTransfer {
   }
 
   /**
-   * 放弃本次传输：abort pending 并以异常完成 future；引导传输（doneCommand 为 RELEASE）时尽力 通知拍摄端释放引用，失败仅记录——引用泄漏由拍摄端重启清理兜底。
+   * 放弃本次传输：abort pending 并以异常完成 future；引导传输（doneCommand 为 RELEASE）时尽力
+   * 通知拍摄端释放引用，失败仅记录——引用泄漏由拍摄端重启清理兜底。
    */
   private void abortAndFail(
       final CompletableActorFuture<PersistedSnapshot> future,

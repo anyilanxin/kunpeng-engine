@@ -26,8 +26,10 @@ public class DmnDecisionTableOutputImpl implements DmnElement {
 
   protected String id;
   protected String name;
+
   /** 输出结果的变量名（用于组合输出时引用） */
   protected String outputName;
+
   /** 输出结果的类型定义 */
   protected DmnTypeDefinition typeDefinition;
 

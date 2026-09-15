@@ -63,11 +63,13 @@ public final class StartupProcess<CONTEXT> {
       final CompletableActorFuture<CONTEXT> result) {
     if (shutdownRequested.get()) {
       // 与 failWith 同一语义: 逆序关闭已启动步骤再异常完成, 否则已启动步骤的资源会泄漏
-      final var shutdownError = new StartupProcessShutdownException("startup interrupted by shutdown");
+      final var shutdownError =
+          new StartupProcessShutdownException("startup interrupted by shutdown");
       shutdownStarted(control, context, index)
           .onComplete(
               (ignored, closeError) -> {
-                final var aggregate = new StartupProcessException("startup interrupted by shutdown");
+                final var aggregate =
+                    new StartupProcessException("startup interrupted by shutdown");
                 aggregate.addSuppressed(shutdownError);
                 if (closeError != null) {
                   aggregate.addSuppressed(closeError);
@@ -146,7 +148,11 @@ public final class StartupProcess<CONTEXT> {
       final Throwable error,
       final CompletableActorFuture<CONTEXT> result) {
     final var failedName = steps.get(failedIndex).getName();
-    logger.warn("Startup step {} failed with exception, aborting startup process: {}", stepLabel(failedIndex), failedName, error);
+    logger.warn(
+        "Startup step {} failed with exception, aborting startup process: {}",
+        stepLabel(failedIndex),
+        failedName,
+        error);
     final var stepException = new StartupProcessStepException(failedName, error);
     // 逆序关闭已启动步骤
     shutdownStarted(control, context, failedIndex)

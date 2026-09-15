@@ -17,13 +17,13 @@
 package com.anyilanxin.kunpeng.cluster.raft.snapshot.bootstrap;
 
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotFileInfoProvider;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotId;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotType;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.DefaultConstructableSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.TransferSnapshotProvider;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.DefaultFileSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.DefaultSimpleFileVerificationStore;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotFileInfoProvider;
 import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 import com.anyilanxin.kunpeng.scheduler.future.CompletableActorFuture;
@@ -32,11 +32,11 @@ import java.util.Map;
 import org.jspecify.annotations.Nullable;
 
 /**
- * 引导镜像拍摄端存储：内容位于 raft 根目录 {@code snapshots/} {@link SnapshotType#BOOTSTRAP} 子目录，
- * 与常规镜像（{@link SnapshotType#RAFT}）互不影响。
+ * 引导镜像拍摄端存储：内容位于 raft 根目录 {@code snapshots/} {@link SnapshotType#BOOTSTRAP} 子目录， 与常规镜像（{@link
+ * SnapshotType#RAFT}）互不影响。
  *
- * <p>拍摄复用语义：同一时段多个新分区可能请求引导镜像且内容一致，因此已有引导镜像时直接 复用、不重拍——直到引用归零被删除后，下一个请求才重新拍摄。
- * 生命周期由外部流程管控（{@link BootstrapSnapshotServer} 的 transferId 引用计数 与节点关闭清理），不参与常规镜像保留策略。
+ * <p>拍摄复用语义：同一时段多个新分区可能请求引导镜像且内容一致，因此已有引导镜像时直接 复用、不重拍——直到引用归零被删除后，下一个请求才重新拍摄。 生命周期由外部流程管控（{@link
+ * BootstrapSnapshotServer} 的 transferId 引用计数 与节点关闭清理），不参与常规镜像保留策略。
  *
  * <p>引导镜像不跨重启存活：{@link #start()} 加载后即清空残留——引用状态只在内存，重启后无人 再发 RELEASE，残留只会泄漏磁盘。
  *
@@ -69,13 +69,10 @@ public final class BootstrapSnapshotStore {
             new DefaultSimpleFileVerificationStore(),
             snapshotFileInfoProvider,
             actor);
-    constructable =
-        new DefaultConstructableSnapshotStore(store, snapshotFileInfoProvider, actor);
+    constructable = new DefaultConstructableSnapshotStore(store, snapshotFileInfoProvider, actor);
   }
 
-  /**
-   * 启动：加载磁盘既有镜像后立即清空——引导镜像的引用计数只在内存，重启后无法推进删除， 残留直接清理，避免泄漏磁盘。
-   */
+  /** 启动：加载磁盘既有镜像后立即清空——引导镜像的引用计数只在内存，重启后无法推进删除， 残留直接清理，避免泄漏磁盘。 */
   public void start() {
     store.start();
     store.deleteAllSnapshots();

@@ -17,12 +17,12 @@
 
 package com.anyilanxin.kunpeng.bpm.parse.dmn.type;
 
-import com.anyilanxin.kunpeng.bpm.parse.dmn.type.impl.DefaultDataTypeTransformerRegistry;
-import com.anyilanxin.kunpeng.bpm.parse.dmn.type.impl.DefaultTypeDefinition;
-import com.anyilanxin.kunpeng.bpm.parse.dmn.type.impl.DmnTypeDefinitionImpl;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.LiteralExpression;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Text;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.UnaryTests;
+import com.anyilanxin.kunpeng.bpm.parse.dmn.type.impl.DefaultDataTypeTransformerRegistry;
+import com.anyilanxin.kunpeng.bpm.parse.dmn.type.impl.DefaultTypeDefinition;
+import com.anyilanxin.kunpeng.bpm.parse.dmn.type.impl.DmnTypeDefinitionImpl;
 
 /** DMN 类型系统的工具类：根据类型引用（typeRef）创建类型定义，并从 DMN 表达式中提取文本内容。 */
 public class TypeHelper {

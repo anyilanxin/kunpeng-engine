@@ -16,6 +16,9 @@
  */
 package com.anyilanxin.kunpeng.bpm.parse.dmn.transformer;
 
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.BusinessKnowledgeModel;
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.EncapsulatedLogic;
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Variable;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.DmnDecisionRequirementsGraphImpl;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.ElementType;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.businessknowledge.DmnBusinessKnowledgeFunctionImpl;
@@ -24,9 +27,6 @@ import com.anyilanxin.kunpeng.bpm.parse.dmn.element.businessknowledge.DmnBusines
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.common.DmnVariableImpl;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.ModelElementTransformer;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.TransformContext;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.BusinessKnowledgeModel;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.EncapsulatedLogic;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Variable;
 
 /**
  * 将 DMN BusinessKnowledgeModel（业务知识模型）转换为运行时 DmnBusinessKnowledge 元素：组装 Variable 信息项与

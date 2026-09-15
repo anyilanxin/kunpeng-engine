@@ -17,21 +17,14 @@
 
 package com.anyilanxin.kunpeng.bpm.parse.dmn.type.impl;
 
-import static com.anyilanxin.kunpeng.bpm.parse.dmn.util.EnsureUtil.ensureNotNull;
-
-import com.anyilanxin.kunpeng.bpm.parse.dmn.DmnLogger;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.type.DmnDataTypeTransformer;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.type.DmnTypeDefinition;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.type.TypedValue;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.type.Variables;
-import org.slf4j.Logger;
+import com.anyilanxin.kunpeng.bpm.parse.exception.DmnParseException;
 
-/**
- * {@link DmnTypeDefinition} 的默认实现：持有类型名称，并委托 {@link DmnDataTypeTransformer} 完成值的类型转换。
- */
+/** {@link DmnTypeDefinition} 的默认实现：持有类型名称，并委托 {@link DmnDataTypeTransformer} 完成值的类型转换。 */
 public class DmnTypeDefinitionImpl implements DmnTypeDefinition {
-
-  protected static final Logger LOG = DmnLogger.ENGINE_LOGGER;
 
   protected String typeName;
   protected DmnDataTypeTransformer transformer;
@@ -63,22 +56,24 @@ public class DmnTypeDefinitionImpl implements DmnTypeDefinition {
   }
 
   /**
-   * 转换非 null 值；转换器缺失时抛出异常，转换失败时将 {@link IllegalArgumentException} 包装为
-   * {@link RuntimeException} 抛出。
+   * 转换非 null 值；转换器缺失时抛出 {@link IllegalArgumentException}，转换失败时将 {@link IllegalArgumentException}
+   * 包装为 {@link DmnParseException} 抛出。
    *
    * @param value 待转换的非 null 值
    * @return 转换后的类型值
    */
   protected TypedValue transformNotNullValue(final Object value) {
-    ensureNotNull("transformer", transformer);
+    if (transformer == null) {
+      throw new IllegalArgumentException("Transformer for type '" + typeName + "' is null");
+    }
 
     try {
 
       return transformer.transform(value);
 
     } catch (final IllegalArgumentException e) {
-      //      throw LOG.invalidValueForTypeDefinition(typeName, value);
-      throw new RuntimeException("transformer error", e);
+      throw new DmnParseException(
+          "Unable to transform value '" + value + "' to type '" + typeName + "'", e);
     }
   }
 

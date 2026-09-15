@@ -16,14 +16,12 @@
  */
 package com.anyilanxin.kunpeng.bpm.parse.dmn.transformer;
 
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Definitions;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.DmnDecisionRequirementsGraphImpl;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.ModelElementTransformer;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.TransformContext;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Definitions;
 
-/**
- * 将 DMN Definitions（根定义）转换为运行时决策需求图 DmnDecisionRequirementsGraph，并记录全局表达式语言。
- */
+/** 将 DMN Definitions（根定义）转换为运行时决策需求图 DmnDecisionRequirementsGraph，并记录全局表达式语言。 */
 public final class DefinitionsTransformer implements ModelElementTransformer<Definitions> {
   /** 返回本转换器处理的 DMN 模型元素类型。 */
   @Override

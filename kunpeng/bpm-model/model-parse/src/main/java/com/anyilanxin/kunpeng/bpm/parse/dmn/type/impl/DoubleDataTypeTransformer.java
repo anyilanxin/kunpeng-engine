@@ -39,7 +39,8 @@ public class DoubleDataTypeTransformer implements DmnDataTypeTransformer {
       return Variables.doubleValue(doubleValue);
 
     } else {
-      throw new IllegalArgumentException();
+      throw new IllegalArgumentException(
+          "Unable to transform value of type '" + value.getClass().getName() + "' to double");
     }
   }
 

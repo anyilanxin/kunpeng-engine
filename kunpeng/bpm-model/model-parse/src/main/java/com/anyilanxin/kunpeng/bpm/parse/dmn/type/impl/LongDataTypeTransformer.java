@@ -39,7 +39,8 @@ public class LongDataTypeTransformer implements DmnDataTypeTransformer {
       return Variables.longValue(longValue);
 
     } else {
-      throw new IllegalArgumentException();
+      throw new IllegalArgumentException(
+          "Unable to transform value of type '" + value.getClass().getName() + "' to long");
     }
   }
 
@@ -47,7 +48,8 @@ public class LongDataTypeTransformer implements DmnDataTypeTransformer {
     if (isLong(value)) {
       return value.longValue();
     } else {
-      throw new IllegalArgumentException();
+      throw new IllegalArgumentException(
+          "Unable to transform number '" + value + "' to long: not an integral number");
     }
   }
 

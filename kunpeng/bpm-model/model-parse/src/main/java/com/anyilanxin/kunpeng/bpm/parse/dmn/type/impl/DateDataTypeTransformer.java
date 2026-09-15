@@ -17,18 +17,18 @@
 
 package com.anyilanxin.kunpeng.bpm.parse.dmn.type.impl;
 
-import com.anyilanxin.kunpeng.bpm.parse.dmn.exception.DmnEngineException;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.type.DmnDataTypeTransformer;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.type.TypedValue;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.type.Variables;
+import com.anyilanxin.kunpeng.bpm.parse.exception.DmnParseException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.*;
 import java.util.Date;
 
 /**
- * 将 {@link Date} 和 {@link String} 类型的值转换为包含日期和时间的 {@link DateValue}。字符串应采用
- * {@code yyyy-MM-dd'T'HH:mm:ss} 格式。
+ * 将 {@link Date} 和 {@link String} 类型的值转换为包含日期和时间的 {@link DateValue}。字符串应采用 {@code
+ * yyyy-MM-dd'T'HH:mm:ss} 格式。
  *
  * @author Philipp Ossler
  */
@@ -72,7 +72,8 @@ public class DateDataTypeTransformer implements DmnDataTypeTransformer {
       throw unsupportedType(value);
 
     } else {
-      throw new IllegalArgumentException();
+      throw new IllegalArgumentException(
+          "Unable to transform value of type '" + value.getClass().getName() + "' to date");
     }
   }
 
@@ -80,13 +81,19 @@ public class DateDataTypeTransformer implements DmnDataTypeTransformer {
     try {
       return new SimpleDateFormat(formatPattern).parse(value);
     } catch (final ParseException e) {
-      throw new IllegalArgumentException(e);
+      throw new IllegalArgumentException(
+          "Unable to parse date from string '"
+              + value
+              + "', expected format '"
+              + formatPattern
+              + "'",
+          e);
     }
   }
 
-  protected DmnEngineException unsupportedType(final Object value) {
+  protected DmnParseException unsupportedType(final Object value) {
     final String className = value.getClass().getName();
-    return new DmnEngineException(
+    return new DmnParseException(
         "Unsupported type: '" + className + "' cannot be converted to 'java.util.Date'");
   }
 }

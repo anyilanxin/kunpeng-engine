@@ -15,15 +15,16 @@ plugins {
     id 'kunpeng.build-publish'
 }
 
-description = "Kunpeng Dmn Model Parse"
+description = "Kunpeng Bpm Model Parse"
 
 configure(jarInfo) {
-    archiveName = "kunpeng-dmn-model-parse"
+    archiveName = "kunpeng-bpm-model-parse"
 }
 
 
 dependencies {
     api project(':kunpeng:bpm-model:dmn-model')
+    api project(':kunpeng:bpm-model:bpmn-model')
 
     implementation project(':kunpeng:structpack')
     implementation project(':kunpeng:utils')

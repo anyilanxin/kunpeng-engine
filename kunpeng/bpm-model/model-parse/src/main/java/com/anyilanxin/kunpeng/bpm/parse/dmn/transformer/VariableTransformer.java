@@ -18,15 +18,13 @@ package com.anyilanxin.kunpeng.bpm.parse.dmn.transformer;
 
 import static com.anyilanxin.kunpeng.bpm.parse.dmn.type.TypeHelper.createTypeDefinition;
 
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Variable;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.common.DmnVariableImpl;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.ModelElementTransformer;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.TransformContext;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.type.DmnTypeDefinition;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Variable;
 
-/**
- * 将 DMN Variable（信息项变量）转换为运行时 DmnVariable 元素：设置名称并按 typeRef 解析类型定义。
- */
+/** 将 DMN Variable（信息项变量）转换为运行时 DmnVariable 元素：设置名称并按 typeRef 解析类型定义。 */
 public final class VariableTransformer implements ModelElementTransformer<Variable> {
   /** 返回本转换器处理的 DMN 模型元素类型。 */
   @Override

@@ -21,11 +21,16 @@ import com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelInstanceImpl;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Definitions;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DmnModelElementInstance;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.util.ModelUtil;
+import com.anyilanxin.kunpeng.bpm.model.xml.instance.DomElement;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementType;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,6 +58,9 @@ public class ModelWalker {
   private final DmnModelInstanceImpl modelInstance;
   private final Deque<DmnModelElementInstance> elementsToVisit = new LinkedList<>();
 
+  /** 子元素列表缓存（DOM 元素 -> 已过滤的 DMN 子元素），同一 walker 的多次遍历间复用 */
+  private final Map<DomElement, List<DmnModelElementInstance>> childrenCache = new HashMap<>();
+
   public ModelWalker(final DmnModelInstance modelInstance) {
     this.modelInstance = (DmnModelInstanceImpl) modelInstance;
   }
@@ -65,24 +73,35 @@ public class ModelWalker {
     DmnModelElementInstance currentElement;
     while ((currentElement = elementsToVisit.poll()) != null) {
       visitor.visit(currentElement);
-      final Collection<ModelElementInstance> children = getChildElements(currentElement);
-      children.forEach(
-          c -> {
-            if (c instanceof DmnModelElementInstance) {
-              elementsToVisit.addFirst((DmnModelElementInstance) c);
-            } else {
-              final ModelElementType elementType = c.getElementType();
-              LOG.debug(
-                  "Ignoring unknown BPMN element '{}:{}'",
-                  elementType.getTypeNamespace(),
-                  elementType.getTypeName());
-            }
-          }); // depth-first
+      // depth-first
+      for (final DmnModelElementInstance child : childrenOf(currentElement)) {
+        elementsToVisit.addFirst(child);
+      }
     }
   }
 
-  private Collection<ModelElementInstance> getChildElements(final DmnModelElementInstance element) {
-    return ModelUtil.getModelElementCollection(
-        element.getDomElement().getChildElements(), modelInstance);
+  /** 获取元素的 DMN 子元素列表（非 DMN 命名空间的子元素忽略并记日志）；结果在本 walker 实例内缓存， 多阶段转换的重复遍历不再重复物化集合与包装查找。 */
+  private List<DmnModelElementInstance> childrenOf(final DmnModelElementInstance element) {
+    final DomElement domElement = element.getDomElement();
+    final List<DmnModelElementInstance> cached = childrenCache.get(domElement);
+    if (cached != null) {
+      return cached;
+    }
+    final Collection<ModelElementInstance> children =
+        ModelUtil.getModelElementCollection(domElement.getChildElements(), modelInstance);
+    final List<DmnModelElementInstance> filtered = new ArrayList<>(children.size());
+    for (final ModelElementInstance child : children) {
+      if (child instanceof DmnModelElementInstance) {
+        filtered.add((DmnModelElementInstance) child);
+      } else {
+        final ModelElementType elementType = child.getElementType();
+        LOG.debug(
+            "Ignoring unknown DMN element '{}:{}'",
+            elementType.getTypeNamespace(),
+            elementType.getTypeName());
+      }
+    }
+    childrenCache.put(domElement, filtered);
+    return filtered;
   }
 }

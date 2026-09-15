@@ -23,7 +23,6 @@ import static com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants.BPMN
 import com.anyilanxin.kunpeng.bpm.model.bpmn.Bpmn;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.ModelImpl;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.parser.AbstractModelParser;
-import com.anyilanxin.kunpeng.bpm.model.xml.impl.util.ReflectUtil;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.DomDocument;
 import java.io.InputStream;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -36,11 +35,6 @@ import javax.xml.validation.SchemaFactory;
  */
 public class BpmnParser extends AbstractModelParser {
 
-  private static final String JAXP_SCHEMA_SOURCE =
-      "http://java.sun.com/xml/jaxp/properties/schemaSource";
-  private static final String JAXP_SCHEMA_LANGUAGE =
-      "http://java.sun.com/xml/jaxp/properties/schemaLanguage";
-
   private static final String W3C_XML_SCHEMA = "http://www.w3.org/2001/XMLSchema";
 
   public BpmnParser() {
@@ -50,11 +44,8 @@ public class BpmnParser extends AbstractModelParser {
 
   @Override
   protected void configureFactory(final DocumentBuilderFactory dbf) {
-    dbf.setAttribute(JAXP_SCHEMA_LANGUAGE, W3C_XML_SCHEMA);
-    dbf.setAttribute(
-        JAXP_SCHEMA_SOURCE,
-        ReflectUtil.getResource(BPMN_20_SCHEMA_LOCATION, BpmnParser.class.getClassLoader())
-            .toString());
+    // XSD 校验统一由基类的 validateModel（schema 构造期编译一次）执行；
+    // 不在 factory 上挂 schema 源，否则每次解析都会重新装载编译 XSD（约 19 倍解析耗时）
     super.configureFactory(dbf);
   }
 

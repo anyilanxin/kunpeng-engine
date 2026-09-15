@@ -24,7 +24,6 @@ import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 import com.anyilanxin.kunpeng.scheduler.future.CompletableActorFuture;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Optional;
 
 /**
  * 拍摄式镜像存储：组合公共存储实现 {@link DefaultFileSnapshotStore}（构造时创建）， 只实现拍摄入口 {@link
@@ -51,12 +50,14 @@ public class DefaultConstructableSnapshotStore {
   }
 
   /**
-   * 拍摄入口（可强制）：{@code force=true} 时允许与当前最新镜像同 id 重拍——persist 阶段会原子覆盖同 id 旧目录，
-   * 供"同水位但内容已变"的场景（如合并后重拍 raft 镜像）使用；{@code force=false} 时同 id 前置跳过（future 以
-   * null 完成）。内容由 {@code contentWriter} 写入临时目录。
+   * 拍摄入口（可强制）：{@code force=true} 时允许与当前最新镜像同 id 重拍——persist 阶段会原子覆盖同 id 旧目录， 供"同水位但内容已变"的场景（如合并后重拍
+   * raft 镜像）使用；{@code force=false} 时同 id 前置跳过（future 以 null 完成）。内容由 {@code contentWriter} 写入临时目录。
    */
   public ActorFuture<ConstructableSnapshot> newTransientSnapshot(
-      final long index, final long term, final boolean force, final SnapshotContentWriter contentWriter) {
+      final long index,
+      final long term,
+      final boolean force,
+      final SnapshotContentWriter contentWriter) {
     final CompletableActorFuture<ConstructableSnapshot> future = new CompletableActorFuture<>();
     actor.run(
         () -> {

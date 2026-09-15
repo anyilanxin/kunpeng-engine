@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:kunpeng="http://anyilanxin.com/schema/kunpeng/1.0"
+                  id="Definitions_simple"
+                  targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:message id="Message_order" name="order-message">
+    <bpmn:extensionElements>
+      <kunpeng:subscription correlationKey="=orderId" />
+    </bpmn:extensionElements>
+  </bpmn:message>
+  <bpmn:signal id="Signal_alert" name="alert-signal" />
+  <bpmn:error id="Error_payment" name="payment-failed" errorCode="PAY-500" />
+  <bpmn:escalation id="Escalation_urgent" name="urgent" escalationCode="URGENT-1" />
+  <bpmn:process id="Process_simple" isExecutable="true">
+    <bpmn:extensionElements>
+      <kunpeng:executionListeners>
+        <kunpeng:executionListener eventType="start" type="process-start-listener" retries="5" />
+        <kunpeng:executionListener eventType="end" type="process-end-listener" retries="3" />
+      </kunpeng:executionListeners>
+    </bpmn:extensionElements>
+    <bpmn:startEvent id="Start_1" name="开始">
+      <bpmn:outgoing>Flow_start_service</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Task_service" name="服务任务">
+      <bpmn:extensionElements>
+        <kunpeng:taskDefinition type="service-job" retries="3" />
+        <kunpeng:dynamicAdditions>
+          <kunpeng:addition key="priority" value="high" />
+        </kunpeng:dynamicAdditions>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_start_service</bpmn:incoming>
+      <bpmn:outgoing>Flow_service_gateway</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_check" name="金额检查" default="Flow_gateway_end">
+      <bpmn:incoming>Flow_service_gateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_gateway_script</bpmn:outgoing>
+      <bpmn:outgoing>Flow_gateway_end</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_gateway_script" sourceRef="Gateway_check" targetRef="Task_script">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression"
+                                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">=amount &gt; 100</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:scriptTask id="Task_script" name="脚本任务">
+      <bpmn:extensionElements>
+        <kunpeng:executionListeners>
+          <kunpeng:executionListener eventType="start" type="script-listener" retries="2" />
+        </kunpeng:executionListeners>
+        <kunpeng:script expression="=amount * 2" resultVariable="doubled" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_gateway_script</bpmn:incoming>
+      <bpmn:outgoing>Flow_script_user</bpmn:outgoing>
+    </bpmn:scriptTask>
+    <bpmn:userTask id="Task_user" name="用户任务">
+      <bpmn:extensionElements>
+        <kunpeng:assignmentDefinition assignee="alice" candidateGroups="managers" candidateUsers="bob,carol" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_script_user</bpmn:incoming>
+      <bpmn:outgoing>Flow_user_end</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="End_1" name="结束">
+      <bpmn:incoming>Flow_user_end</bpmn:incoming>
+      <bpmn:incoming>Flow_gateway_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_start_service" sourceRef="Start_1" targetRef="Task_service" />
+    <bpmn:sequenceFlow id="Flow_service_gateway" sourceRef="Task_service" targetRef="Gateway_check" />
+    <bpmn:sequenceFlow id="Flow_gateway_end" sourceRef="Gateway_check" targetRef="End_1" />
+    <bpmn:sequenceFlow id="Flow_script_user" sourceRef="Task_script" targetRef="Task_user" />
+    <bpmn:sequenceFlow id="Flow_user_end" sourceRef="Task_user" targetRef="End_1" />
+  </bpmn:process>
+</bpmn:definitions>

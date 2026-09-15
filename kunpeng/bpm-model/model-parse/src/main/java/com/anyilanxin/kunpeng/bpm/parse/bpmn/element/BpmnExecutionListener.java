@@ -1,0 +1,46 @@
+/*
+ * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package com.anyilanxin.kunpeng.bpm.parse.bpmn.element;
+
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengExecutionListenerEventType;
+import com.anyilanxin.kunpeng.engine.script.ScriptExpression;
+
+/**
+ * 执行监听器的运行时模型：在指定时机（start/take/end）以任务方式回调外部监听逻辑。
+ *
+ * @param eventType 监听时机
+ * @param type 任务类型表达式
+ * @param retries 重试次数表达式
+ */
+public record BpmnExecutionListener(
+    KunpengExecutionListenerEventType eventType, ScriptExpression type, ScriptExpression retries) {
+
+  /** 获取监听时机。 */
+  public KunpengExecutionListenerEventType getEventType() {
+    return eventType;
+  }
+
+  /** 获取任务类型表达式。 */
+  public ScriptExpression getType() {
+    return type;
+  }
+
+  /** 获取重试次数表达式。 */
+  public ScriptExpression getRetries() {
+    return retries;
+  }
+}

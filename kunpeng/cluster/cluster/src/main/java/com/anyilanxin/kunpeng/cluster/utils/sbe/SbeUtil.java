@@ -27,8 +27,7 @@ public final class SbeUtil {
 
   /**
    * Writes a variable-length payload at the given buffer position: the length header is written at
-   * the full {@code headerLength} width (SBE blob 字段为 4 字节 int), followed by the payload
-   * itself.
+   * the full {@code headerLength} width (SBE blob 字段为 4 字节 int), followed by the payload itself.
    *
    * @param writer the payload to write
    * @param headerLength the size in bytes of the length header

@@ -36,8 +36,8 @@ public interface SnapshotTransfer {
   ActorFuture<@Nullable PersistedSnapshot> getLatestSnapshot(final PartitionId partitionId);
 
   /**
-   * 跨分区引导拉取：请求源分区指定成员（其 leader）拍摄引导镜像，返回信息分片后逐批拉取到本地 接收 store 持久化；成功/放弃都会通知拍摄端释放
-   * transferId 引用（引用归零时拍摄端删除引导镜像）。
+   * 跨分区引导拉取：请求源分区指定成员（其 leader）拍摄引导镜像，返回信息分片后逐批拉取到本地 接收 store 持久化；成功/放弃都会通知拍摄端释放 transferId
+   * 引用（引用归零时拍摄端删除引导镜像）。
    *
    * @param sourcePartitionId 引导镜像的源分区
    * @param sourceMember 源分区 leader 所在成员

@@ -24,9 +24,7 @@ import com.anyilanxin.kunpeng.engine.script.ScriptExpression;
 import lombok.Getter;
 import lombok.Setter;
 
-/**
- * DMN 表达式（Expression）的内存模型，持有表达式语言、表达式文本以及由解析得到的脚本表达式对象。
- */
+/** DMN 表达式（Expression）的内存模型，持有表达式语言、表达式文本以及由解析得到的脚本表达式对象。 */
 @Getter
 @Setter
 public class DmnExpressionImpl implements DmnElement {
@@ -36,10 +34,13 @@ public class DmnExpressionImpl implements DmnElement {
 
   /** 表达式结果的类型定义 */
   protected DmnTypeDefinition typeDefinition;
+
   /** 表达式语言（如 feel、juel） */
   protected String expressionLanguage;
+
   /** 表达式文本 */
   protected String expression;
+
   /** 由表达式文本解析出的脚本表达式对象 */
   protected ScriptExpression scriptExpression;
 

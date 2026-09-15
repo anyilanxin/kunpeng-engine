@@ -23,15 +23,14 @@ import com.anyilanxin.kunpeng.structpack.buffer.BufferWriter;
 import java.util.Objects;
 
 /**
- * 合并记录条目：内核专用条目（与 {@link BusinessMetaEntry} 同类）， 记录"哪个分区的数据合并进了本分区"——目标分区 leader
- * 每完成一次跨分区合并（{@code RaftPartition#mergeReceivedSnapshot}）追加一条。
+ * 合并记录条目：内核专用条目（与 {@link BusinessMetaEntry} 同类）， 记录"哪个分区的数据合并进了本分区"——目标分区 leader 每完成一次跨分区合并（{@code
+ * RaftPartition#mergeReceivedSnapshot}）追加一条。
  *
  * <p>双重目的：
  *
  * <ul>
- *   <li>推进日志水位：合并状态经镜像通道落地（不走日志复制），若不追加条目， leader 的日志 index 停留在合并前水位，易主后可能选出日志
- *       "看似不落后"、实际未经历合并的 follower 当 leader；在线 follower 经正常复制跟上水位， 离线副本重新上线后发现日志偏离过远，走
- *       raft 标准的镜像安装追赶；
+ *   <li>推进日志水位：合并状态经镜像通道落地（不走日志复制），若不追加条目， leader 的日志 index 停留在合并前水位，易主后可能选出日志 "看似不落后"、实际未经历合并的
+ *       follower 当 leader；在线 follower 经正常复制跟上水位， 离线副本重新上线后发现日志偏离过远，走 raft 标准的镜像安装追赶；
  *   <li>留痕：条目内容即合并审计记录（源分区身份），follower 侧无需反应。
  * </ul>
  *

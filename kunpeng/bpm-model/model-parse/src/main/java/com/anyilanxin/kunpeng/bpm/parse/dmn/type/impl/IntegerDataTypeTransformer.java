@@ -39,7 +39,8 @@ public class IntegerDataTypeTransformer implements DmnDataTypeTransformer {
       return Variables.integerValue(intValue);
 
     } else {
-      throw new IllegalArgumentException();
+      throw new IllegalArgumentException(
+          "Unable to transform value of type '" + value.getClass().getName() + "' to integer");
     }
   }
 
@@ -47,7 +48,8 @@ public class IntegerDataTypeTransformer implements DmnDataTypeTransformer {
     if (isInteger(value)) {
       return value.intValue();
     } else {
-      throw new IllegalArgumentException();
+      throw new IllegalArgumentException(
+          "Unable to transform number '" + value + "' to integer: not an integral number");
     }
   }
 

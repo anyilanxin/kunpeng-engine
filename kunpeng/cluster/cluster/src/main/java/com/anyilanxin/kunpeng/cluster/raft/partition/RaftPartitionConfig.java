@@ -43,9 +43,8 @@ public class RaftPartitionConfig {
   private static final Duration DEFAULT_SNAPSHOT_MERGE_AWAIT_TIMEOUT = Duration.ofMinutes(5);
 
   /**
-   * 优先级选举 target 的最小衰减步长。实际衰减取 max(此值, target/5)：小优先级范围（本项目
-   * 常用的 1~5）下保持近线性的逐级放权；大范围（如 1~100）下按比例指数收敛，避免低优先级
-   * 节点等待 O(N) 个选举超时。jraft 的 decayPriorityGap 默认 10 且下限钳到 10，因其典型
+   * 优先级选举 target 的最小衰减步长。实际衰减取 max(此值, target/5)：小优先级范围（本项目 常用的 1~5）下保持近线性的逐级放权；大范围（如
+   * 1~100）下按比例指数收敛，避免低优先级 节点等待 O(N) 个选举超时。jraft 的 decayPriorityGap 默认 10 且下限钳到 10，因其典型
    * 优先级范围达上百；此处默认 1 以保持小范围下的既有节奏。
    */
   private static final int DEFAULT_PRIORITY_DECAY_GAP = 1;
@@ -80,9 +79,8 @@ public class RaftPartitionConfig {
   private int maxSnapshotCount = DEFAULT_MAX_SNAPSHOT_COUNT;
 
   /**
-   * 自上次快照水位起 commit index 推进达到该阈值时额外触发一次快照（与 {@link
-   * #snapshotInterval} 周期触发互补：高写入速率下按条数及时截断日志，低速率下靠周期兜底）；
-   * 0 表示禁用，仅保留周期触发。
+   * 自上次快照水位起 commit index 推进达到该阈值时额外触发一次快照（与 {@link #snapshotInterval}
+   * 周期触发互补：高写入速率下按条数及时截断日志，低速率下靠周期兜底）； 0 表示禁用，仅保留周期触发。
    */
   private int snapshotEntryTriggerThreshold = DEFAULT_SNAPSHOT_ENTRY_TRIGGER_THRESHOLD;
 
@@ -351,8 +349,7 @@ public class RaftPartitionConfig {
     return this;
   }
 
-  /** 条数触发快照的 commit index 推进阈值，0 表示禁用（默认 {@value
-   * #DEFAULT_SNAPSHOT_ENTRY_TRIGGER_THRESHOLD}）。 */
+  /** 条数触发快照的 commit index 推进阈值，0 表示禁用（默认 {@value #DEFAULT_SNAPSHOT_ENTRY_TRIGGER_THRESHOLD}）。 */
   public int getSnapshotEntryTriggerThreshold() {
     return snapshotEntryTriggerThreshold;
   }
@@ -363,8 +360,7 @@ public class RaftPartitionConfig {
     return this;
   }
 
-  /** 合并快照完成等待超时：源分区推送后等待目标分区确认合并完成的最长时间（默认 {@value
-   * #DEFAULT_SNAPSHOT_MERGE_AWAIT_TIMEOUT}）。 */
+  /** 合并快照完成等待超时：源分区推送后等待目标分区确认合并完成的最长时间（默认 {@value #DEFAULT_SNAPSHOT_MERGE_AWAIT_TIMEOUT}）。 */
   public Duration getSnapshotMergeAwaitTimeout() {
     return snapshotMergeAwaitTimeout;
   }

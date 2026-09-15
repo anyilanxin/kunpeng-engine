@@ -65,7 +65,8 @@ public class RepositoryBusiness implements MutableRepositoryBusiness {
   private final BusinessDispatchPlanExecutionEntity dispatchPlanExecutionValueType;
   private final BusinessDispatchPlanExecutionRecord dispatchPlanExecutionBuffer;
   private final CompositeKeyType<LongType, LongType> dispatchPlanExecutionCompositeKey;
-  private final ColumnFamily<CompositeKeyType<LongType, LongType>, BusinessDispatchPlanExecutionEntity>
+  private final ColumnFamily<
+          CompositeKeyType<LongType, LongType>, BusinessDispatchPlanExecutionEntity>
       dispatchPlanExecutionColumnFamily;
 
   private final IntType dispatchPlanExecutionOrderDbKey;
@@ -280,7 +281,8 @@ public class RepositoryBusiness implements MutableRepositoryBusiness {
   public BusinessDispatchPlanRecord getDispatchPlan(final long dispatchPlanId) {
     dispatchPlanIdDbKey.wrapLong(dispatchPlanId);
     if (dispatchPlanColumnFamily.get(dispatchPlanIdDbKey) != null) {
-      final BusinessDispatchPlanRecord planRecord = dispatchPlanValueType.unwrap(dispatchPlanBuffer);
+      final BusinessDispatchPlanRecord planRecord =
+          dispatchPlanValueType.unwrap(dispatchPlanBuffer);
       dispatchPlanExecutionColumnFamily.whileEqualPrefix(
           dispatchPlanIdDbKey,
           (_, _) -> {

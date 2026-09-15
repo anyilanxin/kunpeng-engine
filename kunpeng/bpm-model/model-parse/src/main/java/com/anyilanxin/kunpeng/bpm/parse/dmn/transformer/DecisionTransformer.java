@@ -16,6 +16,7 @@
  */
 package com.anyilanxin.kunpeng.bpm.parse.dmn.transformer;
 
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.*;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.DmnDecisionRequirementsGraphImpl;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.ElementType;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.common.DmnExpressionImpl;
@@ -25,7 +26,7 @@ import com.anyilanxin.kunpeng.bpm.parse.dmn.element.decision.decisionliteral.Dmn
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.decision.decisiontable.DmnDecisionTableImpl;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.ModelElementTransformer;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.TransformContext;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.*;
+import com.anyilanxin.kunpeng.bpm.parse.exception.DmnParseException;
 
 /**
  * 将 DMN Decision（决策）转换为运行时 DmnDecision 元素：按决策逻辑类型装配 DecisionTable 或 LiteralExpression
@@ -45,7 +46,7 @@ public final class DecisionTransformer implements ModelElementTransformer<Decisi
    *
    * @param element 待转换的 Decision 模型元素
    * @param context 转换上下文
-   * @throws RuntimeException 决策逻辑为字面表达式但缺少 Variable 时抛出
+   * @throws DmnParseException 决策逻辑为字面表达式但缺少 Variable 时抛出
    */
   @Override
   public void transform(final Decision element, final TransformContext context) {
@@ -65,7 +66,8 @@ public final class DecisionTransformer implements ModelElementTransformer<Decisi
           new DmnDecisionLiteralExpressionImpl();
       final Variable variable = element.getVariable();
       if (variable == null) {
-        throw new RuntimeException("variable is null");
+        throw new DmnParseException(
+            "Variable of decision '" + element.getId() + "' literal expression is null");
       }
       final DmnVariableImpl dmnVariable =
           context.getElement(ElementType.VARIABLE, variable.getId());

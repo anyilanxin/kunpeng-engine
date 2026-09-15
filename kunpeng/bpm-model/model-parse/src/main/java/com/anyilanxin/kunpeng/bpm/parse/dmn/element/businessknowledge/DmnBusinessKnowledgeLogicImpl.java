@@ -23,15 +23,14 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-/**
- * {@link DmnBusinessKnowledgeLogic} 的默认实现，封装业务知识逻辑的输出变量与业务知识函数。
- */
+/** {@link DmnBusinessKnowledgeLogic} 的默认实现，封装业务知识逻辑的输出变量与业务知识函数。 */
 @Getter
 @Setter
 @ToString
 public class DmnBusinessKnowledgeLogicImpl implements DmnBusinessKnowledgeLogic {
   /** 业务知识逻辑的输出变量 */
   protected DmnVariableImpl variable;
+
   /** 封装的业务知识函数 */
   protected DmnBusinessKnowledgeFunctionImpl knowledgeFunction;
 }

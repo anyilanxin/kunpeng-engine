@@ -32,6 +32,7 @@ import com.anyilanxin.kunpeng.cluster.raft.partition.impl.RaftPartitionServer;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.RaftSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotException.SnapshotAlreadyExistsException;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotFileInfoProvider;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotType;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.bootstrap.BootstrapSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.RaftSnapshotProvider;
@@ -46,7 +47,6 @@ import com.anyilanxin.kunpeng.cluster.utils.health.FailureListener;
 import com.anyilanxin.kunpeng.cluster.utils.health.HealthMonitorable;
 import com.anyilanxin.kunpeng.cluster.utils.health.HealthReport;
 import com.anyilanxin.kunpeng.cluster.utils.net.Address;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotFileInfoProvider;
 import com.anyilanxin.kunpeng.scheduler.Actor;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -109,18 +109,15 @@ public final class RaftPartition implements Partition, HealthMonitorable {
   private BootstrapSnapshotStore bootstrapSnapshotStore;
 
   /**
-   * 合并镜像存储（{@code snapshots/merge}，transferSnapshotProvider 为空时不创建）： 源分区侧经 {@link
-   * #transferData} 拍摄合并镜像，目标分区侧接收源分区推送的合并镜像，两端共用同一类型目录。
+   * 合并镜像存储（{@code snapshots/merge}，transferSnapshotProvider 为空时不创建）： 源分区侧经 {@link #transferData}
+   * 拍摄合并镜像，目标分区侧接收源分区推送的合并镜像，两端共用同一类型目录。
    */
   private DefaultRaftSnapshotStore mergeSnapshotStore;
 
   /** 本分区的快照 actor，承载 store 状态串行与周期拍摄。 */
   private Actor snapshotActor;
 
-  /**
-   * 条数触发快照的水位判定（快照 actor 加载磁盘镜像后种子，raft 线程经提交监听器访问；
-   * 阈值 0 时 tryFire 恒 false，即禁用条数触发）。
-   */
+  /** 条数触发快照的水位判定（快照 actor 加载磁盘镜像后种子，raft 线程经提交监听器访问； 阈值 0 时 tryFire 恒 false，即禁用条数触发）。 */
   private SnapshotEntryTrigger snapshotEntryTrigger;
 
   private volatile RaftPartitionServer server;
@@ -150,9 +147,8 @@ public final class RaftPartition implements Partition, HealthMonitorable {
   }
 
   /**
-   * 完整构造：额外携带跨分区转移镜像拍摄 SPI（可空）——非空时本分区 leader 可为其他新分区提供跨分区 引导镜像（见 {@link
-   * #bootstrap(PartitionId, Address)} 的对端角色），本分区也可作为合并源执行 {@link
-   * #transferData(PartitionId, Address)}。
+   * 完整构造：额外携带跨分区转移镜像拍摄 SPI（可空）——非空时本分区 leader 可为其他新分区提供跨分区 引导镜像（见 {@link #bootstrap(PartitionId,
+   * Address)} 的对端角色），本分区也可作为合并源执行 {@link #transferData(PartitionId, Address)}。
    */
   public RaftPartition(
       final PartitionMetadata partitionMetadata,
@@ -279,13 +275,12 @@ public final class RaftPartition implements Partition, HealthMonitorable {
   /**
    * 跨分区引导新分区：从源分区拉取引导镜像落地为本分区首个快照，再触发两阶段镜像安装并 单节点 bootstrap。
    *
-   * <p>流程：请求源分区指定成员（其 leader）拍摄引导镜像 → 逐批拉取落地到本分区快照存储
-   * （{@code snapshots/snapshot}，与 follower 接收镜像同路）→ 两阶段安装（复制开始通知 → 日志对齐 镜像 index →
-   * 复制完成通知）→ 单节点 bootstrap 当选 leader。成功返回后由调用方再逐个 join 其余副本。
+   * <p>流程：请求源分区指定成员（其 leader）拍摄引导镜像 → 逐批拉取落地到本分区快照存储 （{@code snapshots/snapshot}，与 follower
+   * 接收镜像同路）→ 两阶段安装（复制开始通知 → 日志对齐 镜像 index → 复制完成通知）→ 单节点 bootstrap 当选 leader。成功返回后由调用方再逐个 join
+   * 其余副本。
    *
-   * <p>约束：仅用于新分区首个节点（本节点须是分区成员且本地无既有状态）；引导节点收到/放弃镜像后 都会通知拍摄端释放
-   * transferId 引用（引用归零时拍摄端删除引导镜像）。中途失败重试本方法：已落地的镜像 以 {@link
-   * SnapshotAlreadyExistsException} 暴露，视为已落地直接进入安装。
+   * <p>约束：仅用于新分区首个节点（本节点须是分区成员且本地无既有状态）；引导节点收到/放弃镜像后 都会通知拍摄端释放 transferId
+   * 引用（引用归零时拍摄端删除引导镜像）。中途失败重试本方法：已落地的镜像 以 {@link SnapshotAlreadyExistsException} 暴露，视为已落地直接进入安装。
    *
    * @param sourcePartitionId 引导镜像的源分区
    * @param sourceAddress 源分区 leader 所在成员地址
@@ -389,14 +384,13 @@ public final class RaftPartition implements Partition, HealthMonitorable {
   }
 
   /**
-   * 分区删除前的数据迁移（合并快照源端）：把本分区全部数据经合并镜像转移到目标分区， 目标分区确认合并完成后 future
-   * 完成，调用方随后执行 leave()/delete() 关停并删除本分区。
+   * 分区删除前的数据迁移（合并快照源端）：把本分区全部数据经合并镜像转移到目标分区， 目标分区确认合并完成后 future 完成，调用方随后执行 leave()/delete()
+   * 关停并删除本分区。
    *
-   * <p>流程：本分区（须为 leader 且已配置 TransferSnapshotProvider）以当前 commit 位点拍摄合并镜像
-   * （{@code snapshots/merge}，经 {@link TransferSnapshotProvider#takeMergeSnapshot}）→ 逐批推送到目标分区
-   * leader → 发送合并完成等待请求，目标分区完成整个合并流（接收→两阶段安装合并→追加合并记录条目并提交， 不触发 follower
-   * 安装——由调度侧在全部合并完成后经 {@link #triggerFollowerSnapshotInstall()} 统一收尾）后应答 → 删除本地合并镜像。
-   * 失败可重试：同位点重试复用上次拍摄残留，位点推进则重拍（保留策略自动清旧）。
+   * <p>流程：本分区（须为 leader 且已配置 TransferSnapshotProvider）以当前 commit 位点拍摄合并镜像 （{@code
+   * snapshots/merge}，经 {@link TransferSnapshotProvider#takeMergeSnapshot}）→ 逐批推送到目标分区 leader →
+   * 发送合并完成等待请求，目标分区完成整个合并流（接收→两阶段安装合并→追加合并记录条目并提交， 不触发 follower 安装——由调度侧在全部合并完成后经 {@link
+   * #triggerFollowerSnapshotInstall()} 统一收尾）后应答 → 删除本地合并镜像。 失败可重试：同位点重试复用上次拍摄残留，位点推进则重拍（保留策略自动清旧）。
    *
    * @param targetPartitionId 数据迁入的目标分区
    * @param targetAddress 目标分区 leader 所在成员地址
@@ -417,7 +411,9 @@ public final class RaftPartition implements Partition, HealthMonitorable {
     if (getRole() != Role.LEADER) {
       return CompletableFuture.failedFuture(
           new IllegalStateException(
-              "partition " + partitionId + " is not led by this member; transfer from leader only"));
+              "partition "
+                  + partitionId
+                  + " is not led by this member; transfer from leader only"));
     }
     final var targetMember = resolveRemoteMember(targetAddress);
     if (targetMember.isEmpty()) {
@@ -524,13 +520,13 @@ public final class RaftPartition implements Partition, HealthMonitorable {
   }
 
   /**
-   * 目标端合并流（目标分区 leader 收完合并镜像后触发，见 {@code SnapshotPushServer}）： 两阶段镜像安装包裹业务合并——
-   * 开始安装通知（业务关闭消费者）→ {@link RaftSnapshotProvider#mergeSnapshot} 合并 → 完成安装通知（业务恢复）→ 追加一条内部合并记录条目
-   * （{@link MergeRecordEntry}，记录源分区身份）并等待多数派提交。
+   * 目标端合并流（目标分区 leader 收完合并镜像后触发，见 {@code SnapshotPushServer}）： 两阶段镜像安装包裹业务合并—— 开始安装通知（业务关闭消费者）→
+   * {@link RaftSnapshotProvider#mergeSnapshot} 合并 → 完成安装通知（业务恢复）→ 追加一条内部合并记录条目 （{@link
+   * MergeRecordEntry}，记录源分区身份）并等待多数派提交。
    *
    * <p>合并记录条目推进日志水位但<b>不触发 follower 安装</b>：分区删减常为多个分区依次合并到同一保留分区， 逐次安装会放大整体耗时——follower
-   * 安装统一由调度侧在最后一个合并完成后经 {@link #triggerFollowerSnapshotInstall()} 收尾一次。 记录条目保证每次合并后
-   * leader 日志水位真实推进：在线 follower 经正常复制跟上；离线副本无法通知，重新上线后发现日志偏离过远， 走 raft 标准的镜像安装追赶，整体闭环。
+   * 安装统一由调度侧在最后一个合并完成后经 {@link #triggerFollowerSnapshotInstall()} 收尾一次。 记录条目保证每次合并后 leader
+   * 日志水位真实推进：在线 follower 经正常复制跟上；离线副本无法通知，重新上线后发现日志偏离过远， 走 raft 标准的镜像安装追赶，整体闭环。
    *
    * @param received 接收完成的合并镜像（位于本分区 snapshots/merge）
    * @param sourcePartition 源分区（数据从该分区合并进本分区，随合并记录条目留痕）
@@ -556,11 +552,10 @@ public final class RaftPartition implements Partition, HealthMonitorable {
   }
 
   /**
-   * 手动触发 follower 镜像安装（合并收尾专用，仅 leader 可调）： 强制重拍 raft 镜像（承载全部合并后的业务状态，水位未推进时同 id
-   * 重拍覆盖）→ 对全部复制目标强制走一次标准快照安装分发（InstallRequest， follower 接收后两阶段安装；已具备同水位镜像的成员跳过）。
+   * 手动触发 follower 镜像安装（合并收尾专用，仅 leader 可调）： 强制重拍 raft 镜像（承载全部合并后的业务状态，水位未推进时同 id 重拍覆盖）→
+   * 对全部复制目标强制走一次标准快照安装分发（InstallRequest， follower 接收后两阶段安装；已具备同水位镜像的成员跳过）。
    *
-   * <p>多个分区合并到同一保留分区时，应在最后一个合并完成后调用一次本方法统一收尾； 离线副本不在此路径处理——重新上线后由 raft
-   * 标准追赶（日志落后触发镜像安装）对齐。
+   * <p>多个分区合并到同一保留分区时，应在最后一个合并完成后调用一次本方法统一收尾； 离线副本不在此路径处理——重新上线后由 raft 标准追赶（日志落后触发镜像安装）对齐。
    *
    * @return 收尾 future（拍摄完成、分发已发起即完成，以分发的快照 index 完成； 各 follower 安装由 InstallRequest
    *     协议自行推进/重试，失败由协议既有机制处理）
@@ -717,8 +712,8 @@ public final class RaftPartition implements Partition, HealthMonitorable {
   }
 
   /**
-   * 启动快照存储：在快照 actor 上加载磁盘既有镜像，必须先于 raft 启动完成；引导/合并镜像存储（如有） 同步启动并清空上次残留——两者的
-   * 跨节点会话状态只在内存（transferId 引用/合并 pending），重启后无人推进清理，残留只会泄漏磁盘。
+   * 启动快照存储：在快照 actor 上加载磁盘既有镜像，必须先于 raft 启动完成；引导/合并镜像存储（如有） 同步启动并清空上次残留——两者的 跨节点会话状态只在内存（transferId
+   * 引用/合并 pending），重启后无人推进清理，残留只会泄漏磁盘。
    */
   private CompletableFuture<Void> startSnapshotStore() {
     final java.util.concurrent.Callable<Void> load =
@@ -747,9 +742,8 @@ public final class RaftPartition implements Partition, HealthMonitorable {
   }
 
   /**
-   * 拍摄 raft 镜像（可在同水位强制重拍）：{@code force=true} 时即使与当前最新镜像同 id 也重拍覆盖 —— 合并流在
-   * {@link RaftSnapshotProvider#mergeSnapshot} 后调用，保证合并后的业务状态进入 raft 镜像（水位未推进时 常规拍摄会被同
-   * id 跳过）。
+   * 拍摄 raft 镜像（可在同水位强制重拍）：{@code force=true} 时即使与当前最新镜像同 id 也重拍覆盖 —— 合并流在 {@link
+   * RaftSnapshotProvider#mergeSnapshot} 后调用，保证合并后的业务状态进入 raft 镜像（水位未推进时 常规拍摄会被同 id 跳过）。
    */
   private CompletableFuture<Void> takeSnapshotInternal(final boolean force) {
     final RaftPartitionServer current = server;
@@ -791,8 +785,7 @@ public final class RaftPartition implements Partition, HealthMonitorable {
   }
 
   /**
-   * 条数触发入口（raft 线程回调）：commit 增量达阈值时转投快照 actor 拍摄。失败仅记录日志，
-   * 由周期触发兜底；无需在途去重——触发本身即按水位重武装，重入频率被阈值约束。
+   * 条数触发入口（raft 线程回调）：commit 增量达阈值时转投快照 actor 拍摄。失败仅记录日志， 由周期触发兜底；无需在途去重——触发本身即按水位重武装，重入频率被阈值约束。
    */
   private void onCommitAdvanced(final long commitIndex) {
     if (snapshotEntryTrigger.tryFire(commitIndex)) {
@@ -878,10 +871,7 @@ public final class RaftPartition implements Partition, HealthMonitorable {
             });
   }
 
-  /**
-   * 关闭前主动删除引导镜像（best-effort）：正常流程镜像在最后一个引用 RELEASE 时已删除， 这里兜底清理因引导方中途死亡而残留的镜像；
-   * 失败仅记录日志，不阻断关闭。
-   */
+  /** 关闭前主动删除引导镜像（best-effort）：正常流程镜像在最后一个引用 RELEASE 时已删除， 这里兜底清理因引导方中途死亡而残留的镜像； 失败仅记录日志，不阻断关闭。 */
   private CompletableFuture<Void> deleteBootstrapSnapshotsBeforeClose() {
     if (bootstrapSnapshotStore == null) {
       return CompletableFuture.completedFuture(null);

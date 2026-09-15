@@ -19,8 +19,8 @@ package com.anyilanxin.kunpeng.bpm.parse.dmn.transformation;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DmnModelElementInstance;
 
 /**
- * DMN 模型元素转换器接口：每种实现负责一种 DMN 元素（见 {@link #getType()}），由 {@link
- * TransformationVisitor} 按元素类型分发调用，将 bpm-model 的 XML 模型实例转换为 dmn/element 包的运行时元素。
+ * DMN 模型元素转换器接口：每种实现负责一种 DMN 元素（见 {@link #getType()}），由 {@link TransformationVisitor} 按元素类型分发调用，将
+ * bpm-model 的 XML 模型实例转换为 dmn/element 包的运行时元素。
  *
  * @param <T> 本转换器处理的 DMN 模型元素类型
  */

@@ -25,17 +25,16 @@ import java.util.Collection;
 import lombok.Setter;
 import lombok.ToString;
 
-/**
- * {@link DmnBusinessKnowledge} 的默认实现，持有业务知识的知识逻辑（BusinessKnowledgeLogic）及其依赖的
- * 其他业务知识。
- */
+/** {@link DmnBusinessKnowledge} 的默认实现，持有业务知识的知识逻辑（BusinessKnowledgeLogic）及其依赖的 其他业务知识。 */
 @Setter
 @ToString
 public class DmnBusinessKnowledgeImpl implements DmnBusinessKnowledge {
   protected String key;
   protected String name;
+
   /** 该业务知识依赖（KnowledgeRequirement）的其他业务知识 */
   protected Collection<DmnBusinessKnowledge> requiredBusinessKnowledge = new ArrayList<>();
+
   /** 所包含的知识逻辑 */
   protected DmnBusinessKnowledgeLogic businessKnowledgeLogic;
 

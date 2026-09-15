@@ -73,7 +73,7 @@ public class DefinitionsTest extends BpmnModelTest {
                             .getResourceAsStream("DefinitionsTest.shouldNotImportWrongOrderedSequence.bpmn"));
             Assert.fail("Model is invalid and should not pass the validation");
         } catch (final Exception e) {
-            assertThat(e).isInstanceOf(ModelParseException.class);
+            assertThat(e).isInstanceOf(ModelValidationException.class);
         }
     }
 

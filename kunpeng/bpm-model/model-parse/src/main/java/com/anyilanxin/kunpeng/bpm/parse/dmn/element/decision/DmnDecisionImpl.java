@@ -28,8 +28,8 @@ import lombok.Setter;
 import lombok.ToString;
 
 /**
- * {@link DmnDecision} 的默认实现，持有决策逻辑以及通过 InformationRequirement / KnowledgeRequirement
- * 依赖的其他 Decision 与业务知识。
+ * {@link DmnDecision} 的默认实现，持有决策逻辑以及通过 InformationRequirement / KnowledgeRequirement 依赖的其他 Decision
+ * 与业务知识。
  */
 @Setter
 @ToString

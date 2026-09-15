@@ -30,9 +30,9 @@ import java.util.Set;
 /**
  * 分区拓扑 diff 工具：对比当前拓扑与目标拓扑，统一推导 BOOTSTRAP/JOIN/LEAVE 操作序列。
  *
- * <p>对齐 zeebe 的「状态对比推导」方式：各调度策略只负责计算目标拓扑， 操作序列由本工具按新旧差异统一翻译， 避免各策略手写各自的推导规则。
- * 业务面（{@code AbstractDispatchPlanGenerator#appendDiff}）与管理面（{@code
- * AdminDispatchPlanMaker#appendDiff}） 将操作翻译为对应分区类型（BUSINESS/ADMIN）的执行明细负载，管理面不产生引导操作。
+ * <p>对齐 zeebe 的「状态对比推导」方式：各调度策略只负责计算目标拓扑， 操作序列由本工具按新旧差异统一翻译， 避免各策略手写各自的推导规则。 业务面（{@code
+ * AbstractDispatchPlanGenerator#appendDiff}）与管理面（{@code AdminDispatchPlanMaker#appendDiff}）
+ * 将操作翻译为对应分区类型（BUSINESS/ADMIN）的执行明细负载，管理面不产生引导操作。
  *
  * <p>整体推导规则（当前拓扑取自计划记录 oldMeta，目标拓扑由各生成器计算）：
  *
@@ -47,10 +47,9 @@ import java.util.Set;
  * <p>操作输出顺序：先输出分区删除的 LEAVE，再按分区 ID 升序处理目标分区——新分区 BOOTSTRAP+JOIN、 已有分区先 JOIN 后 LEAVE（先扩后缩），
  * 成员操作一律按成员 ID 升序，保证计划确定性。
  *
- * <p>分区删除若涉及数据搬迁（CHANGE_PARTITION 缩容），由生成器多阶段编排，不直接依赖本工具的删除推导： 被缩容分区非 Leader 成员离开（分区收敛为
- * Leader 单副本）→ 数据合并至保留分区 → Leader 停止销毁分区 → 来源标识转移至保留分区； 保留分区全程保持完整副本，无需缩成单副本再扩容——合并后其
- * follower 的镜像安装由 raft 侧完成（leader 合并收尾即通知 follower 拉取安装最新镜像）； 已是单副本的分区无非 Leader 离开步骤，仅数据合并、来源标识转移后由
- * Leader 停止销毁。
+ * <p>分区删除若涉及数据搬迁（CHANGE_PARTITION 缩容），由生成器多阶段编排，不直接依赖本工具的删除推导： 被缩容分区非 Leader 成员离开（分区收敛为 Leader
+ * 单副本）→ 数据合并至保留分区 → Leader 停止销毁分区 → 来源标识转移至保留分区； 保留分区全程保持完整副本，无需缩成单副本再扩容——合并后其 follower 的镜像安装由 raft
+ * 侧完成（leader 合并收尾即通知 follower 拉取安装最新镜像）； 已是单副本的分区无非 Leader 离开步骤，仅数据合并、来源标识转移后由 Leader 停止销毁。
  *
  * <p>BOOTSTRAP 负载携带 bootstrapSnapshot 标识：当前拓扑为空（全量初始化，无既有数据）时为 false， 否则（扩容新增分区）为 true，
  * 执行端据此决定是否从既有分区引导数据；该标识仅对分区增加的引导操作有意义。

@@ -16,19 +16,19 @@
  */
 package com.anyilanxin.kunpeng.bpm.parse.dmn.transformer;
 
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.BusinessKnowledgeModel;
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Decision;
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.KnowledgeRequirement;
+import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.DmnBusinessKnowledge;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.businessknowledge.DmnBusinessKnowledgeImpl;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.decision.DmnDecisionImpl;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.ModelElementTransformer;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.TransformContext;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.BusinessKnowledgeModel;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Decision;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.KnowledgeRequirement;
-import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 
 /**
- * 将 DMN KnowledgeRequirement（知识依赖）装配到运行时模型：按父元素类型把被引用的业务知识挂到发起依赖的 Decision
- * 或 BusinessKnowledgeModel 上。
+ * 将 DMN KnowledgeRequirement（知识依赖）装配到运行时模型：按父元素类型把被引用的业务知识挂到发起依赖的 Decision 或 BusinessKnowledgeModel
+ * 上。
  */
 public final class KnowledgeRequirementTransformer
     implements ModelElementTransformer<KnowledgeRequirement> {

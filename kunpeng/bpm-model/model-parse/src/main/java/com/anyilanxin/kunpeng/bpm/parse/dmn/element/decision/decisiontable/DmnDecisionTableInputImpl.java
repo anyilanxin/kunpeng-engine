@@ -29,8 +29,10 @@ public class DmnDecisionTableInputImpl implements DmnElement {
 
   public String id;
   public String name;
+
   /** 输入列的表达式 */
   protected DmnExpressionImpl expression;
+
   /** 输入变量名，未设置时使用 {@link #DEFAULT_INPUT_VARIABLE_NAME} */
   protected String inputVariable;
 

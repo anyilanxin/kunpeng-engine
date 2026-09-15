@@ -20,8 +20,7 @@ import com.anyilanxin.kunpeng.bpm.model.dmn.BuiltinAggregator;
 import com.anyilanxin.kunpeng.bpm.model.dmn.HitPolicy;
 
 /**
- * 决策表命中策略（HitPolicy）类型枚举，将 DMN 模型中的 HitPolicy 与可选的内置聚合器
- * （BuiltinAggregator）组合映射为运行时使用的命中策略类型。
+ * 决策表命中策略（HitPolicy）类型枚举，将 DMN 模型中的 HitPolicy 与可选的内置聚合器 （BuiltinAggregator）组合映射为运行时使用的命中策略类型。
  *
  * @author zxuanhong
  * @since
@@ -50,8 +49,10 @@ public enum HitPolicyType {
   /** 收集并取最大（Collect Max） */
   COLLECT_MAX(HitPolicy.COLLECT, BuiltinAggregator.MAX),
   ;
+
   /** 对应的 DMN 模型命中策略 */
   private final HitPolicy hitPolicy;
+
   /** 内置聚合器，仅 Collect 类命中策略使用，其余为 null */
   private final BuiltinAggregator aggregator;
 

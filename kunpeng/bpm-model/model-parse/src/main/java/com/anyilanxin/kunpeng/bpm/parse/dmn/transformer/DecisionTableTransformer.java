@@ -16,32 +16,32 @@
  */
 package com.anyilanxin.kunpeng.bpm.parse.dmn.transformer;
 
+import static com.anyilanxin.kunpeng.bpm.parse.dmn.TransformUtil.isNonEmptyExpression;
 import static com.anyilanxin.kunpeng.bpm.parse.dmn.element.HitPolicyType.getHitPolicyType;
-import static com.anyilanxin.kunpeng.bpm.parse.dmn.util.TransformUtil.isNonEmptyExpression;
 
-import com.anyilanxin.kunpeng.bpm.parse.dmn.element.ElementType;
-import com.anyilanxin.kunpeng.bpm.parse.dmn.element.common.DmnExpressionImpl;
-import com.anyilanxin.kunpeng.bpm.parse.dmn.element.decision.decisiontable.DmnDecisionTableImpl;
-import com.anyilanxin.kunpeng.bpm.parse.dmn.element.decision.decisiontable.DmnDecisionTableInputImpl;
-import com.anyilanxin.kunpeng.bpm.parse.dmn.element.decision.decisiontable.DmnDecisionTableOutputImpl;
-import com.anyilanxin.kunpeng.bpm.parse.dmn.element.decision.decisiontable.DmnDecisionTableRuleImpl;
-import com.anyilanxin.kunpeng.bpm.parse.dmn.qladapter.DefaultSimpleUnaryTestsTransform;
-import com.anyilanxin.kunpeng.bpm.parse.dmn.qladapter.SimpleUnaryTestsTransform;
-import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.ModelElementTransformer;
-import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.TransformContext;
 import com.anyilanxin.kunpeng.bpm.model.dmn.BuiltinAggregator;
 import com.anyilanxin.kunpeng.bpm.model.dmn.HitPolicy;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DecisionTable;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Input;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Output;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Rule;
+import com.anyilanxin.kunpeng.bpm.parse.dmn.element.ElementType;
+import com.anyilanxin.kunpeng.bpm.parse.dmn.element.common.DmnExpressionImpl;
+import com.anyilanxin.kunpeng.bpm.parse.dmn.element.decision.decisiontable.DmnDecisionTableImpl;
+import com.anyilanxin.kunpeng.bpm.parse.dmn.element.decision.decisiontable.DmnDecisionTableInputImpl;
+import com.anyilanxin.kunpeng.bpm.parse.dmn.element.decision.decisiontable.DmnDecisionTableOutputImpl;
+import com.anyilanxin.kunpeng.bpm.parse.dmn.element.decision.decisiontable.DmnDecisionTableRuleImpl;
+import com.anyilanxin.kunpeng.bpm.parse.dmn.expression.DefaultSimpleUnaryTestsTransform;
+import com.anyilanxin.kunpeng.bpm.parse.dmn.expression.SimpleUnaryTestsTransform;
+import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.ModelElementTransformer;
+import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.TransformContext;
 import com.anyilanxin.kunpeng.engine.script.ScriptEngine;
 import com.anyilanxin.kunpeng.engine.script.ScriptExpression;
 import java.util.List;
 
 /**
- * 将 DMN DecisionTable（决策表）转换为运行时 DmnDecisionTable 元素：装配输入/输出列与规则行，并把每个条件单元格的
- * FEEL 简单一元测试与输出单元格表达式编译为可执行脚本表达式。
+ * 将 DMN DecisionTable（决策表）转换为运行时 DmnDecisionTable 元素：装配输入/输出列与规则行，并把每个条件单元格的 FEEL
+ * 简单一元测试与输出单元格表达式编译为可执行脚本表达式。
  */
 public final class DecisionTableTransformer implements ModelElementTransformer<DecisionTable> {
   /** 简单一元测试（Simple Unary Tests）到脚本表达式的转换器 */

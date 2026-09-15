@@ -13,8 +13,8 @@
 
 package com.anyilanxin.kunpeng.engine.dmn.hitpolicy.handler;
 
-import com.anyilanxin.kunpeng.bpm.parse.dmn.element.HitPolicyType;
 import com.anyilanxin.kunpeng.bpm.model.dmn.BuiltinAggregator;
+import com.anyilanxin.kunpeng.bpm.parse.dmn.element.HitPolicyType;
 import com.anyilanxin.kunpeng.engine.dmn.hitpolicy.AbstractCollectNumberHitPolicyHandler;
 import java.util.List;
 

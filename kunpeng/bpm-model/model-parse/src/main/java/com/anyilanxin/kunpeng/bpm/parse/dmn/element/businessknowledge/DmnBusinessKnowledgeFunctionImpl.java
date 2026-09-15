@@ -26,16 +26,16 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-/**
- * 业务知识函数（BusinessKnowledgeFunction）的内存模型，封装知识逻辑的实现表达式及其形式参数列表。
- */
+/** 业务知识函数（BusinessKnowledgeFunction）的内存模型，封装知识逻辑的实现表达式及其形式参数列表。 */
 @Getter
 @Setter
 @ToString
 public class DmnBusinessKnowledgeFunctionImpl implements DmnElement {
   private String key;
+
   /** 知识函数的实现表达式 */
   protected DmnExpressionImpl expression;
+
   /** 形式参数（FormalParameter）列表 */
   protected List<DmnFormalParameterImpl> parameters = new ArrayList<>();
 

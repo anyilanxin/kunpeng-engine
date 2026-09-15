@@ -259,9 +259,8 @@ final class LeaderAppender {
 
   /**
    * 追平门控（参考 SOFAJRaft 的 catch-up 语义）：PASSIVE 成员追平 leader 最新日志后自动晋升为
-   * 投票成员（ACTIVE），晋升走联合共识重配置；未追平或掉线的成员不进入投票集，避免拖累 quorum。
-   * 仅服务加入流程（以 PASSIVE 身份加入、追平、晋升）：经重配置从 ACTIVE 显式降级的成员不自动
-   * 晋升，否则降级会在其下一次确认追加时被静默回滚。
+   * 投票成员（ACTIVE），晋升走联合共识重配置；未追平或掉线的成员不进入投票集，避免拖累 quorum。 仅服务加入流程（以 PASSIVE 身份加入、追平、晋升）：经重配置从 ACTIVE
+   * 显式降级的成员不自动 晋升，否则降级会在其下一次确认追加时被静默回滚。
    */
   private void promoteIfCaughtUp(final RaftMemberContext member) {
     if (member.isPromotionTriggered()
@@ -973,8 +972,8 @@ final class LeaderAppender {
   }
 
   /**
-   * 手动收尾入口（raft 线程）：对全部复制目标强制走一次标准快照安装分发。 与 {@link #shouldReplicateSnapshot}
-   * 的常规判定不同——合并收尾时 follower 日志已被合并记录条目推齐（无滞后、无缺口），常规判定不会触发， 这里绕过滞后/缺口判定； "成员已具备同水位镜像则跳过"的幂等守卫保留，正在安装中的成员由既有重试机制推进。
+   * 手动收尾入口（raft 线程）：对全部复制目标强制走一次标准快照安装分发。 与 {@link #shouldReplicateSnapshot} 的常规判定不同——合并收尾时
+   * follower 日志已被合并记录条目推齐（无滞后、无缺口），常规判定不会触发， 这里绕过滞后/缺口判定； "成员已具备同水位镜像则跳过"的幂等守卫保留，正在安装中的成员由既有重试机制推进。
    */
   public void replicateSnapshotToAll() {
     raft.checkThread();

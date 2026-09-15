@@ -320,8 +320,8 @@ public final class DefaultFileSnapshotStore implements FileSnapshotStore {
   }
 
   /**
-   * 删除指定镜像（磁盘目录与 .sfc，含内存登记）；被删除的是当前最新镜像时，currentSnapshot 回退到 剩余最新者（无剩余则为
-   * null）。供外部管控生命周期的镜像（如 bootstrap）按需删除。
+   * 删除指定镜像（磁盘目录与 .sfc，含内存登记）；被删除的是当前最新镜像时，currentSnapshot 回退到 剩余最新者（无剩余则为 null）。供外部管控生命周期的镜像（如
+   * bootstrap）按需删除。
    */
   public ActorFuture<Void> deleteSnapshot(final SnapshotId snapshotId) {
     return actor.call(

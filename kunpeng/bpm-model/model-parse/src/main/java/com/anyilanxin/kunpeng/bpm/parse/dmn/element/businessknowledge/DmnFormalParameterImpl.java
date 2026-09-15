@@ -23,6 +23,7 @@ import com.anyilanxin.kunpeng.bpm.parse.dmn.type.DmnTypeDefinition;
 public class DmnFormalParameterImpl {
 
   protected String name;
+
   /** 参数的类型定义 */
   protected DmnTypeDefinition typeDefinition;
 

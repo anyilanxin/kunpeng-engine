@@ -18,6 +18,9 @@ package com.anyilanxin.kunpeng.bpm.parse.dmn.transformer;
 
 import static com.anyilanxin.kunpeng.bpm.parse.dmn.type.TypeHelper.createTypeDefinition;
 
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.EncapsulatedLogic;
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Expression;
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.FormalParameter;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.ElementType;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.businessknowledge.DmnBusinessKnowledgeFunctionImpl;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.businessknowledge.DmnFormalParameterImpl;
@@ -25,14 +28,11 @@ import com.anyilanxin.kunpeng.bpm.parse.dmn.element.common.DmnExpressionImpl;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.ModelElementTransformer;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.TransformContext;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.type.DmnTypeDefinition;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.EncapsulatedLogic;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Expression;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.FormalParameter;
 import com.anyilanxin.kunpeng.engine.script.ScriptEngine;
 
 /**
- * 将 DMN EncapsulatedLogic（封装逻辑）转换为运行时 DmnBusinessKnowledgeFunction 业务知识函数：绑定已转换的表达式，
- * 并为每个 FormalParameter 生成带类型定义的形式参数。
+ * 将 DMN EncapsulatedLogic（封装逻辑）转换为运行时 DmnBusinessKnowledgeFunction 业务知识函数：绑定已转换的表达式， 并为每个
+ * FormalParameter 生成带类型定义的形式参数。
  */
 public final class EncapsulatedLogicTransformer
     implements ModelElementTransformer<EncapsulatedLogic> {

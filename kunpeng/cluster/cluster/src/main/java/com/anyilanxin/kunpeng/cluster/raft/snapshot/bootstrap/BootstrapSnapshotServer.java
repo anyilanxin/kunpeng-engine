@@ -41,15 +41,15 @@ import org.slf4j.LoggerFactory;
  * <p>协议（请求复用 {@link SnapshotTransferCodec}，命令扩展见 {@link RequestCommand}）：
  *
  * <ul>
- *   <li>BOOTSTRAP（首个请求，携带 transferId）：拍摄引导镜像（已有则复用）并登记 transferId 引用， 应答信息分片——chunkName
- *       承载镜像 id、content 为空；同 transferId 重试直接重发信息分片；
+ *   <li>BOOTSTRAP（首个请求，携带 transferId）：拍摄引导镜像（已有则复用）并登记 transferId 引用， 应答信息分片——chunkName 承载镜像
+ *       id、content 为空；同 transferId 重试直接重发信息分片；
  *   <li>PULL：与常规拉取一致，应答下一个传输单元（会话级断点由读取器位置承载）；
  *   <li>COMPLETE：清理本次传输的读取器（引用保留）；
  *   <li>RELEASE：引导结束/放弃，移除 transferId 引用；当镜像已无任何引用（这是最后一个请求方）时 真正删除引导镜像，否则只减少一个请求方。
  * </ul>
  *
- * <p>引用计数只在内存：拍摄节点重启后 {@link BootstrapSnapshotStore#start()} 清空残留镜像， 引导节点以新 transferId
- * 重新走 BOOTSTRAP 全流程。
+ * <p>引用计数只在内存：拍摄节点重启后 {@link BootstrapSnapshotStore#start()} 清空残留镜像， 引导节点以新 transferId 重新走
+ * BOOTSTRAP 全流程。
  *
  * @author zxuanhong
  * @since 1.0.0
@@ -150,8 +150,7 @@ public final class BootstrapSnapshotServer {
     final long term = termSupplier.getAsLong();
     if (commitIndex <= 0) {
       return CompletableFuture.failedFuture(
-          new SnapshotException(
-              "No committed data on partition; cannot take bootstrap snapshot"));
+          new SnapshotException("No committed data on partition; cannot take bootstrap snapshot"));
     }
     return bootstrapSnapshotStore
         .takeBootstrapSnapshot(commitIndex, term)
@@ -159,9 +158,7 @@ public final class BootstrapSnapshotServer {
             snapshot -> {
               sessions.put(transferId, newSession(snapshot));
               LOGGER.info(
-                  "Bootstrap snapshot {} taken for transfer {}",
-                  snapshot.snapshotId(),
-                  transferId);
+                  "Bootstrap snapshot {} taken for transfer {}", snapshot.snapshotId(), transferId);
               return infoChunk(snapshot.snapshotId().asString());
             })
         .toCompletableFuture();
@@ -189,8 +186,7 @@ public final class BootstrapSnapshotServer {
     }
     session.batcher.close();
     final boolean lastReference =
-        sessions.values().stream()
-            .noneMatch(other -> other.snapshotId.equals(session.snapshotId));
+        sessions.values().stream().noneMatch(other -> other.snapshotId.equals(session.snapshotId));
     if (lastReference) {
       LOGGER.info(
           "Last reference of bootstrap snapshot {} released, deleting it", session.snapshotId);
@@ -199,8 +195,7 @@ public final class BootstrapSnapshotServer {
           .onComplete(
               (ignored, error) -> {
                 if (error != null) {
-                  LOGGER.warn(
-                      "Failed to delete bootstrap snapshot {}", session.snapshotId, error);
+                  LOGGER.warn("Failed to delete bootstrap snapshot {}", session.snapshotId, error);
                 }
               });
     } else {

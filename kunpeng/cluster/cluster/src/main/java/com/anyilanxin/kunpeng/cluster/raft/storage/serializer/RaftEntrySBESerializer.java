@@ -90,7 +90,10 @@ public class RaftEntrySBESerializer implements RaftEntrySerializer {
 
   @Override
   public int writeMergeRecordEntry(
-      final long term, final MergeRecordEntry entry, final MutableDirectBuffer buffer, final int offset) {
+      final long term,
+      final MergeRecordEntry entry,
+      final MutableDirectBuffer buffer,
+      final int offset) {
     final int entryOffset = writeRaftFrame(term, EntryType.MergeRecordEntry, buffer, offset);
 
     headerEncoder

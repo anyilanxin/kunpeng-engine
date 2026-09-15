@@ -629,7 +629,10 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
     return future;
   }
 
-  /** 合并记录追加入口：任意线程可调，切到 raft 线程后由 leader 角色追加 {@link MergeRecordEntry} 并等待多数派提交， future 以提交条目 index 完成；本机非 leader（含易主切换瞬间）以 {@link RaftException.NoLeader} 异常完成。 */
+  /**
+   * 合并记录追加入口：任意线程可调，切到 raft 线程后由 leader 角色追加 {@link MergeRecordEntry} 并等待多数派提交， future 以提交条目 index
+   * 完成；本机非 leader（含易主切换瞬间）以 {@link RaftException.NoLeader} 异常完成。
+   */
   public CompletableFuture<Long> appendMergeRecord(final PartitionId sourcePartition) {
     final CompletableFuture<Long> future = new CompletableFuture<>();
     threadContext.execute(
@@ -655,8 +658,8 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
 
   /**
    * 手动镜像安装收尾入口（任意线程可调，合并收尾使用）：raft 线程上刷新 currentSnapshot 后， 由 leader
-   * 对全部复制目标强制走一次标准快照安装分发（InstallRequest，绕过滞后阈值判定， 已具备同水位镜像的成员仍会跳过）， future
-   * 以分发的快照 index 完成；本机非 leader（含易主切换瞬间）以 {@link RaftException.NoLeader} 异常完成。
+   * 对全部复制目标强制走一次标准快照安装分发（InstallRequest，绕过滞后阈值判定， 已具备同水位镜像的成员仍会跳过）， future 以分发的快照 index 完成；本机非
+   * leader（含易主切换瞬间）以 {@link RaftException.NoLeader} 异常完成。
    */
   public CompletableFuture<Long> forceSnapshotReplication() {
     final CompletableFuture<Long> future = new CompletableFuture<>();
@@ -964,8 +967,7 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
   /** 复制开始事件分发（须在 raft 线程）：错过的注册者补发标记 + 通知全部监听器。 */
   private void snapshotReplicationStarted() {
     missedSnapshotReplicationEvents = MissedSnapshotReplicationEvents.STARTED;
-    snapshotReplicationListeners.forEach(
-        SnapshotReplicationListener::onSnapshotReplicationStarted);
+    snapshotReplicationListeners.forEach(SnapshotReplicationListener::onSnapshotReplicationStarted);
   }
 
   /** 复制完成事件分发（须在 raft 线程）：通知全部监听器 + 错过的注册者补发标记。 */
@@ -975,11 +977,11 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
   }
 
   /**
-   * 把存储内已落地的最新镜像安装为本节点状态（两阶段通知 + 日志对齐），在 raft 线程串行执行—— 阶段一通知复制开始（业务关闭日志消费者，三态视图
-   * INACTIVE），随后把日志重置到 镜像 index+1（与 follower install 快照一致），对齐当前镜像引用，阶段二通知复制完成（业务可从镜像恢复）。
+   * 把存储内已落地的最新镜像安装为本节点状态（两阶段通知 + 日志对齐），在 raft 线程串行执行—— 阶段一通知复制开始（业务关闭日志消费者，三态视图 INACTIVE），随后把日志重置到
+   * 镜像 index+1（与 follower install 快照一致），对齐当前镜像引用，阶段二通知复制完成（业务可从镜像恢复）。
    *
-   * <p>两类调用方：跨分区引导新分区（镜像已落地、raft 尚未 bootstrap，安装后单节点 bootstrap 当选 leader， 完成 onInactive
-   * → onLeader 闭环）；follower 安装 leader 合并后的镜像（拉取落地后对齐本地状态）。
+   * <p>两类调用方：跨分区引导新分区（镜像已落地、raft 尚未 bootstrap，安装后单节点 bootstrap 当选 leader， 完成 onInactive → onLeader
+   * 闭环）；follower 安装 leader 合并后的镜像（拉取落地后对齐本地状态）。
    *
    * @return 安装完成 future；无可用镜像时异常完成
    */
@@ -998,7 +1000,9 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
               return;
             }
             LOGGER.info(
-                "Installing snapshot at index {} for partition {}", snapshotIndex, partitionId.id());
+                "Installing snapshot at index {} for partition {}",
+                snapshotIndex,
+                partitionId.id());
             snapshotReplicationStarted();
             // 日志重置到镜像 index+1：新分区从此起点开始追加自己的条目
             raftLog.reset(snapshotIndex + 1);

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xmlns:kunpeng="http://anyilanxin.com/schema/kunpeng/1.0"
+                  id="Definitions_advanced"
+                  targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:message id="Message_order" name="order-message">
+    <bpmn:extensionElements>
+      <kunpeng:subscription correlationKey="=orderId" />
+    </bpmn:extensionElements>
+  </bpmn:message>
+  <bpmn:message id="Message_ship" name="ship-message" />
+  <bpmn:signal id="signal-wait" name="wait-signal" />
+  <bpmn:error id="Error_payment" name="payment-failed" errorCode="PAY-500" />
+  <bpmn:escalation id="Escalation_urgent" name="urgent" escalationCode="URGENT-1" />
+  <bpmn:process id="Process_advanced" isExecutable="true">
+    <bpmn:startEvent id="Start_1">
+      <bpmn:outgoing>Flow_start_payment</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Task_payment" name="支付">
+      <bpmn:extensionElements>
+        <kunpeng:taskDefinition type="payment-job" retries="3" />
+        <kunpeng:ioMapping>
+          <kunpeng:input source="=order.price" target="price" />
+          <kunpeng:input source="=order.currency" target="order.currency" />
+          <kunpeng:output source="=receipt" target="paymentReceipt" />
+        </kunpeng:ioMapping>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_start_payment</bpmn:incoming>
+      <bpmn:outgoing>Flow_payment_mi</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:boundaryEvent id="Boundary_timeout" cancelActivity="true" attachedToRef="Task_payment">
+      <bpmn:timerEventDefinition>
+        <bpmn:timeDuration>PT10S</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:boundaryEvent id="Boundary_payment_error" cancelActivity="false" attachedToRef="Task_payment">
+      <bpmn:errorEventDefinition errorRef="Error_payment" />
+    </bpmn:boundaryEvent>
+    <bpmn:serviceTask id="Task_ship" name="逐单发货">
+      <bpmn:extensionElements>
+        <kunpeng:taskDefinition type="ship-job" retries="3" />
+        <kunpeng:loopCharacteristics collection="=orders" elementVariable="order" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_payment_mi</bpmn:incoming>
+      <bpmn:outgoing>Flow_ship_catch</bpmn:outgoing>
+      <bpmn:multiInstanceLoopCharacteristics isSequential="false">
+        <bpmn:loopCardinality>3</bpmn:loopCardinality>
+        <bpmn:completionCondition xsi:type="bpmn:tFormalExpression">=numberOfCompletedInstances == 3</bpmn:completionCondition>
+      </bpmn:multiInstanceLoopCharacteristics>
+    </bpmn:serviceTask>
+    <bpmn:intermediateCatchEvent id="Catch_signal" name="等待信号">
+      <bpmn:incoming>Flow_ship_catch</bpmn:incoming>
+      <bpmn:outgoing>Flow_catch_throw</bpmn:outgoing>
+      <bpmn:signalEventDefinition signalRef="signal-wait" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:intermediateThrowEvent id="Throw_message" name="发布消息">
+      <bpmn:incoming>Flow_catch_throw</bpmn:incoming>
+      <bpmn:outgoing>Flow_throw_call</bpmn:outgoing>
+      <bpmn:messageEventDefinition messageRef="Message_ship">
+        <bpmn:extensionElements>
+          <kunpeng:publishMessage correlationKey="=orderId" timeToLive="PT1H" />
+        </bpmn:extensionElements>
+      </bpmn:messageEventDefinition>
+    </bpmn:intermediateThrowEvent>
+    <bpmn:callActivity id="Call_sub" name="调用子流程">
+      <bpmn:extensionElements>
+        <kunpeng:calledElement processId="child-process"
+                               propagateAllParentVariables="true"
+                               propagateAllChildVariables="false"
+                               bindingType="latest" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_throw_call</bpmn:incoming>
+      <bpmn:outgoing>Flow_call_end</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:subProcess id="Sub_escalation" triggeredByEvent="true">
+      <bpmn:startEvent id="Start_escalation" isInterrupting="true">
+        <bpmn:escalationEventDefinition escalationRef="Escalation_urgent" />
+      </bpmn:startEvent>
+      <bpmn:endEvent id="End_escalation" />
+      <bpmn:sequenceFlow id="Flow_escalation" sourceRef="Start_escalation" targetRef="End_escalation" />
+    </bpmn:subProcess>
+    <bpmn:endEvent id="End_1">
+      <bpmn:incoming>Flow_call_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_start_payment" sourceRef="Start_1" targetRef="Task_payment" />
+    <bpmn:sequenceFlow id="Flow_payment_mi" sourceRef="Task_payment" targetRef="Task_ship" />
+    <bpmn:sequenceFlow id="Flow_ship_catch" sourceRef="Task_ship" targetRef="Catch_signal" />
+    <bpmn:sequenceFlow id="Flow_catch_throw" sourceRef="Catch_signal" targetRef="Throw_message" />
+    <bpmn:sequenceFlow id="Flow_throw_call" sourceRef="Throw_message" targetRef="Call_sub" />
+    <bpmn:sequenceFlow id="Flow_call_end" sourceRef="Call_sub" targetRef="End_1" />
+  </bpmn:process>
+</bpmn:definitions>

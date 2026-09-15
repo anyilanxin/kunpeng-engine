@@ -797,9 +797,8 @@ public final class LeaderRole extends ActiveRole implements LogAppender {
   }
 
   /**
-   * 追加合并记录条目并复制到各副本，多数派提交后以条目 index 完成 future（仅经 {@code
-   * RaftContext.appendMergeRecord} 内部入口触达）： 记录"哪个分区的数据合并进了本分区"并推进日志水位，保证（含离线后重新上线的）follower
-   * 能据此感知落后并触发镜像安装追赶。
+   * 追加合并记录条目并复制到各副本，多数派提交后以条目 index 完成 future（仅经 {@code RaftContext.appendMergeRecord} 内部入口触达）：
+   * 记录"哪个分区的数据合并进了本分区"并推进日志水位，保证（含离线后重新上线的）follower 能据此感知落后并触发镜像安装追赶。
    */
   public CompletableFuture<Long> appendMergeRecordEntry(final MergeRecordEntry entry) {
     raft.checkThread();
@@ -813,8 +812,8 @@ public final class LeaderRole extends ActiveRole implements LogAppender {
   }
 
   /**
-   * 对全部复制目标强制走一次标准快照安装分发（仅经 {@code RaftContext.forceSnapshotReplication} 内部入口触达）：
-   * 合并收尾使用——follower 日志已齐平时常规判定不会触发，需显式分发。
+   * 对全部复制目标强制走一次标准快照安装分发（仅经 {@code RaftContext.forceSnapshotReplication} 内部入口触达）： 合并收尾使用——follower
+   * 日志已齐平时常规判定不会触发，需显式分发。
    */
   public void replicateSnapshotToAll() {
     raft.checkThread();

@@ -23,17 +23,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * DMN 转换上下文：在分阶段转换器之间共享，缓存已转换的运行时元素、决策与业务知识注册表，并携带决策需求图与表达式语言等全局信息。
- */
+/** DMN 转换上下文：在分阶段转换器之间共享，缓存已转换的运行时元素、决策与业务知识注册表，并携带决策需求图与表达式语言等全局信息。 */
 public final class TransformContext {
   private final Map<String, DmnBusinessKnowledge> businessKnowledgeMap = new HashMap<>();
   private final Map<String, DmnDecision> dmnDecisionMap = new HashMap<>();
+
   /** 已转换的通用运行时元素注册表（以元素 id 为键） */
   private final Map<String, DmnElement> elementMap = new HashMap<>();
+
   private DmnDecisionRequirementsGraphImpl requirementsGraph;
+
   /** 用于把 DMN 表达式编译为可执行脚本的表达式引擎 */
   private ScriptEngine expressionLanguage;
+
   /** Definitions 上声明的全局表达式语言 */
   private String language;
 

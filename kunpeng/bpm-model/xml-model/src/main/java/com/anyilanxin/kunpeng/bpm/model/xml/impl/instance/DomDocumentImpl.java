@@ -23,10 +23,13 @@ import com.anyilanxin.kunpeng.bpm.model.xml.impl.util.DomUtil;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.util.XmlQName;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.DomDocument;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.DomElement;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.xml.transform.dom.DOMSource;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
@@ -37,6 +40,9 @@ public class DomDocumentImpl implements DomDocument {
   public static final String GENERIC_NS_PREFIX = "ns";
 
   private final Document document;
+
+  /** 元素 id 索引兜底（id -> DOM 元素），非校验解析时 w3c DOM 不标记 ID 类型，按需自建 */
+  private Map<String, Element> elementIdIndex;
 
   public DomDocumentImpl(final Document document) {
     this.document = document;
@@ -83,8 +89,39 @@ public class DomDocumentImpl implements DomDocument {
       final Element element = document.getElementById(id);
       if (element != null) {
         return new DomElementImpl(element);
-      } else {
-        return null;
+      }
+      // 非校验解析下 w3c DOM 的 getElementById 恒为空（id 属性未被标记为 ID 类型），退化为自建索引
+      return findByIdIndex(id);
+    }
+  }
+
+  /**
+   * 自建 id 索引查找：首次访问（或索引未命中时）全量重建一次，以覆盖解析后新增/改 id 的元素； 命中直接返回。模型元素实例缓存在 DOM UserData 上，重建 wrapper
+   * 不影响元素身份。
+   */
+  private DomElement findByIdIndex(final String id) {
+    if (elementIdIndex == null || !elementIdIndex.containsKey(id)) {
+      elementIdIndex = new HashMap<>();
+      collectIds(document.getDocumentElement(), elementIdIndex);
+    }
+    final Element found = elementIdIndex.get(id);
+    return found == null ? null : new DomElementImpl(found);
+  }
+
+  /** 递归收集元素的 id 属性（同名 id 保留先出现者）。 */
+  private void collectIds(final Element element, final Map<String, Element> index) {
+    if (element == null) {
+      return;
+    }
+    final String id = element.getAttribute("id");
+    if (id != null && !id.isEmpty()) {
+      index.putIfAbsent(id, element);
+    }
+    final NodeList children = element.getChildNodes();
+    for (int i = 0; i < children.getLength(); i++) {
+      final Node child = children.item(i);
+      if (child instanceof Element) {
+        collectIds((Element) child, index);
       }
     }
   }

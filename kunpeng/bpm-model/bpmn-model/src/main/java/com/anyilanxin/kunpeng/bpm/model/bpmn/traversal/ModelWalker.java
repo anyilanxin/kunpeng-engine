@@ -22,11 +22,16 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BpmnModelElementInstance;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Definitions;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Process;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.util.ModelUtil;
+import com.anyilanxin.kunpeng.bpm.model.xml.instance.DomElement;
 import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementType;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,6 +59,9 @@ public class ModelWalker {
   private final BpmnModelInstanceImpl modelInstance;
   private final Deque<BpmnModelElementInstance> elementsToVisit = new LinkedList<>();
 
+  /** 子元素列表缓存（DOM 元素 -> 已过滤的 BPMN 子元素），同一 walker 的多次遍历间复用 */
+  private final Map<DomElement, List<BpmnModelElementInstance>> childrenCache = new HashMap<>();
+
   public ModelWalker(final BpmnModelInstance modelInstance) {
     this.modelInstance = (BpmnModelInstanceImpl) modelInstance;
   }
@@ -72,26 +80,36 @@ public class ModelWalker {
       }
 
       visitor.visit(currentElement);
-      final Collection<ModelElementInstance> children = getChildElements(currentElement);
-      children.forEach(
-          c -> {
-            if (c instanceof BpmnModelElementInstance) {
-              elementsToVisit.addFirst((BpmnModelElementInstance) c);
-            } else {
-              final ModelElementType elementType = c.getElementType();
-              LOG.debug(
-                  "Ignoring unknown BPMN element '{}:{}'",
-                  elementType.getTypeNamespace(),
-                  elementType.getTypeName());
-            }
-          }); // depth-first
+      // depth-first
+      for (final BpmnModelElementInstance child : childrenOf(currentElement)) {
+        elementsToVisit.addFirst(child);
+      }
     }
   }
 
-  private Collection<ModelElementInstance> getChildElements(
-      final BpmnModelElementInstance element) {
-    return ModelUtil.getModelElementCollection(
-        element.getDomElement().getChildElements(), modelInstance);
+  /** 获取元素的 BPMN 子元素列表（非 BPMN 命名空间的子元素忽略并记日志）；结果在本 walker 实例内缓存， 多阶段转换的重复遍历不再重复物化集合与包装查找。 */
+  private List<BpmnModelElementInstance> childrenOf(final BpmnModelElementInstance element) {
+    final DomElement domElement = element.getDomElement();
+    final List<BpmnModelElementInstance> cached = childrenCache.get(domElement);
+    if (cached != null) {
+      return cached;
+    }
+    final Collection<ModelElementInstance> children =
+        ModelUtil.getModelElementCollection(domElement.getChildElements(), modelInstance);
+    final List<BpmnModelElementInstance> filtered = new ArrayList<>(children.size());
+    for (final ModelElementInstance child : children) {
+      if (child instanceof BpmnModelElementInstance) {
+        filtered.add((BpmnModelElementInstance) child);
+      } else {
+        final ModelElementType elementType = child.getElementType();
+        LOG.debug(
+            "Ignoring unknown BPMN element '{}:{}'",
+            elementType.getTypeNamespace(),
+            elementType.getTypeName());
+      }
+    }
+    childrenCache.put(domElement, filtered);
+    return filtered;
   }
 
   private boolean isNonExecutableProcess(final BpmnModelElementInstance element) {

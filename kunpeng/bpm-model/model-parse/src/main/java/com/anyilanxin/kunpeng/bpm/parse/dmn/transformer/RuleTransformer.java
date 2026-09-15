@@ -16,20 +16,20 @@
  */
 package com.anyilanxin.kunpeng.bpm.parse.dmn.transformer;
 
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.InputEntry;
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.OutputEntry;
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Rule;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.DmnElement;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.ElementType;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.common.DmnExpressionImpl;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.decision.decisiontable.DmnDecisionTableRuleImpl;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.ModelElementTransformer;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.TransformContext;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.InputEntry;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.OutputEntry;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Rule;
+import com.anyilanxin.kunpeng.bpm.parse.exception.DmnParseException;
 import java.util.Collection;
 
 /**
- * 将 DMN Rule（决策表规则行）转换为运行时 DmnDecisionTableRule 元素：按文档顺序装配已转换的条件（InputEntry）与
- * 结论（OutputEntry）表达式。
+ * 将 DMN Rule（决策表规则行）转换为运行时 DmnDecisionTableRule 元素：按文档顺序装配已转换的条件（InputEntry）与 结论（OutputEntry）表达式。
  */
 public final class RuleTransformer implements ModelElementTransformer<Rule> {
   /** 返回本转换器处理的 DMN 模型元素类型。 */
@@ -45,7 +45,7 @@ public final class RuleTransformer implements ModelElementTransformer<Rule> {
    *
    * @param element 待转换的 Rule 模型元素
    * @param context 转换上下文
-   * @throws RuntimeException 条件或结论数量与实际装配数量不一致时抛出
+   * @throws DmnParseException 条件或结论数量与实际装配数量不一致时抛出
    */
   @Override
   public void transform(final Rule element, final TransformContext context) {
@@ -63,13 +63,15 @@ public final class RuleTransformer implements ModelElementTransformer<Rule> {
     final int inputNum = inputEntries.size();
     final int inputActualNum = decisionTableRule.getConditions().size();
     if (inputNum != inputActualNum) {
-      throw new RuntimeException("有效的输入数量与实际的输入数量不一致");
+      throw new DmnParseException(
+          "Expected " + inputNum + " input entries but found " + inputActualNum);
     }
 
     final Collection<OutputEntry> outputEntries = element.getOutputEntries();
     for (final OutputEntry outputEntry : outputEntries) {
       // elementMap 以元素 id 为键（类型不参与寻址），输出条目与输入条目同以 DmnExpression 形态注册
-      final DmnElement conclusion = context.getElement(ElementType.INPUT_ENTRY, outputEntry.getId());
+      final DmnElement conclusion =
+          context.getElement(ElementType.INPUT_ENTRY, outputEntry.getId());
       if (conclusion != null) {
         decisionTableRule.getConclusions().add((DmnExpressionImpl) conclusion);
       }
@@ -78,7 +80,8 @@ public final class RuleTransformer implements ModelElementTransformer<Rule> {
     final int outNum = outputEntries.size();
     final int outActualNum = decisionTableRule.getConclusions().size();
     if (outNum != outActualNum) {
-      throw new RuntimeException("有效的输出数量与实际的输出数量不一致");
+      throw new DmnParseException(
+          "Expected " + outNum + " output entries but found " + outActualNum);
     }
     context.addElement(decisionTableRule);
   }

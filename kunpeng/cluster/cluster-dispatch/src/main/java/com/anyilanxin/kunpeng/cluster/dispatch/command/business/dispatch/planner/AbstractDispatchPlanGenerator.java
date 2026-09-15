@@ -45,8 +45,7 @@ import org.agrona.concurrent.UnsafeBuffer;
  *
  * <p>基类持有 {@link ImmutableRepositoryKey}（执行明细 ID 生成）、{@link ClusterTopologyService} （运行时分区 Leader
  * 查询）与 {@link ImmutableRepositorySource}（管理仓库分区来源标识只读视图）。 历史拓扑一律取自计划记录（oldMeta），生成器不读取业务仓库，
- * 仅有的仓库读取是按需查询分区来源标识（如缩容合并时填充来源信息）； 各策略只负责计算目标拓扑（缩容多阶段编排时直接构造执行明细、不走 diff
- * 翻译）， 操作序列统一由 {@link
+ * 仅有的仓库读取是按需查询分区来源标识（如缩容合并时填充来源信息）； 各策略只负责计算目标拓扑（缩容多阶段编排时直接构造执行明细、不走 diff 翻译）， 操作序列统一由 {@link
  * PartitionTopologyDiff} 按新旧拓扑差异推导后经 {@link #assembleFromDiff} / {@link #appendDiff} 翻译为执行明细。
  *
  * @author zxuanhong

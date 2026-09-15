@@ -31,7 +31,6 @@ import com.anyilanxin.kunpeng.bpm.parse.dmn.element.decision.decisiontable.DmnDe
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.decision.decisiontable.DmnDecisionTableInputImpl;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.decision.decisiontable.DmnDecisionTableRuleImpl;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.DmnTransformer;
-import com.anyilanxin.kunpeng.bpm.parse.dmn.util.IoUtil;
 import java.io.InputStream;
 import org.junit.jupiter.api.Test;
 
@@ -132,7 +131,7 @@ class DmnTransformTest {
     assertEquals(1, dishDecision.getRequiredDecisions().size());
     assertTrue(
         dishDecision.getRequiredDecisions().contains(seasonDecision),
-        "dish-decision 应依赖 season-decision");
+        "Expected dish-decision to require season-decision");
     final var table = (DmnDecisionTableImpl) dishDecision.getDecisionLogic();
     assertEquals(HitPolicyType.FIRST, table.getHitPolicy());
   }
@@ -140,14 +139,17 @@ class DmnTransformTest {
   private DmnDecisionRequirementsGraph transform(final String resource) {
     final DmnTransformer transformer =
         DmnFactory.createTransformer(createExpressionLanguage(null));
-    try (final InputStream stream = IoUtil.fileAsStream(resource)) {
-      return transformer.transformDefinitions(IoUtil.inputStreamAsByteArray(stream));
+    try (final InputStream stream =
+        getClass().getClassLoader().getResourceAsStream(resource)) {
+      return transformer.transformDefinitions(stream.readAllBytes());
     } catch (final Exception e) {
       throw new IllegalStateException("Failed to transform " + resource, e);
     }
   }
 
   private static void assertParsableScript(final DmnExpressionImpl expression) {
-    assertNotNull(expression.getScriptExpression(), "表达式未装配脚本: " + expression.getExpression());
+    assertNotNull(
+        expression.getScriptExpression(),
+        "Expected script expression to be set: " + expression.getExpression());
   }
 }

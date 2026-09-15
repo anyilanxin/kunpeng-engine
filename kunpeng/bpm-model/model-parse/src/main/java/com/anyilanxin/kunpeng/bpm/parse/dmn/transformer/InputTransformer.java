@@ -16,17 +16,15 @@
  */
 package com.anyilanxin.kunpeng.bpm.parse.dmn.transformer;
 
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Input;
+import com.anyilanxin.kunpeng.bpm.model.dmn.instance.InputExpression;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.ElementType;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.common.DmnExpressionImpl;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.decision.decisiontable.DmnDecisionTableInputImpl;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.ModelElementTransformer;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.TransformContext;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Input;
-import com.anyilanxin.kunpeng.bpm.model.dmn.instance.InputExpression;
 
-/**
- * 将 DMN Input（决策表输入列）转换为运行时 DmnDecisionTableInput 元素：绑定已转换的输入表达式与 kunpeng 扩展输入变量。
- */
+/** 将 DMN Input（决策表输入列）转换为运行时 DmnDecisionTableInput 元素：绑定已转换的输入表达式与 kunpeng 扩展输入变量。 */
 public final class InputTransformer implements ModelElementTransformer<Input> {
   /** 返回本转换器处理的 DMN 模型元素类型。 */
   @Override

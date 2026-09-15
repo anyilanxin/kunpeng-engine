@@ -85,14 +85,11 @@ public class RaftPartitionServer implements HealthMonitorable {
   private final SnapshotTransferServer snapshotTransferServer;
 
   /**
-   * 合并快照接收端（可空）：配置了 TransferSnapshotProvider 的分区才有——目标分区 leader 角色时注册，
-   * 接收源分区 leader 推来的合并镜像并触发合并流。
+   * 合并快照接收端（可空）：配置了 TransferSnapshotProvider 的分区才有——目标分区 leader 角色时注册， 接收源分区 leader 推来的合并镜像并触发合并流。
    */
   private final SnapshotPushServer mergePushServer;
 
-  /**
-   * 引导镜像拍摄端（可空）：配置了 TransferSnapshotProvider 的分区才有——leader 角色时注册， 接收新分区引导节点的跨分区引导请求。
-   */
+  /** 引导镜像拍摄端（可空）：配置了 TransferSnapshotProvider 的分区才有——leader 角色时注册， 接收新分区引导节点的跨分区引导请求。 */
   private final BootstrapSnapshotServer bootstrapSnapshotServer;
 
   /** 业务元数据修改请求接收端：server 存续期间常驻注册（非 leader 负责转发/拒绝）。 */
@@ -276,8 +273,8 @@ public class RaftPartitionServer implements HealthMonitorable {
   }
 
   /**
-   * 把存储内已落地的最新镜像安装为本节点状态（两阶段复制通知 + 日志对齐），详见 {@link
-   * RaftContext#installSnapshot()}；引导新分区与 follower 安装合并镜像共用。
+   * 把存储内已落地的最新镜像安装为本节点状态（两阶段复制通知 + 日志对齐），详见 {@link RaftContext#installSnapshot()}；引导新分区与 follower
+   * 安装合并镜像共用。
    */
   public CompletableFuture<Void> installSnapshot() {
     return server.getContext().installSnapshot();
@@ -487,17 +484,16 @@ public class RaftPartitionServer implements HealthMonitorable {
   }
 
   /**
-   * 追加内部合并记录条目（仅 leader 可成功，多数派提交后以提交条目 index 完成）： 记录"哪个分区的数据合并进了本分区"并推进日志水位，合并流收尾使用；非
-   * leader 以 {@link RaftException.NoLeader} 异常完成，由调用方决定失败处理。
+   * 追加内部合并记录条目（仅 leader 可成功，多数派提交后以提交条目 index 完成）： 记录"哪个分区的数据合并进了本分区"并推进日志水位，合并流收尾使用；非 leader 以
+   * {@link RaftException.NoLeader} 异常完成，由调用方决定失败处理。
    */
   public CompletableFuture<Long> appendMergeRecord(final PartitionId sourcePartition) {
     return server.getContext().appendMergeRecord(sourcePartition);
   }
 
   /**
-   * 对全部复制目标强制走一次标准快照安装分发（仅 leader 可成功，以分发的快照 index 完成）： 手动收尾使用——刷新 leader
-   * currentSnapshot 后逐成员分发 InstallRequest（已具备同水位镜像的成员跳过）； 非 leader 以 {@link
-   * RaftException.NoLeader} 异常完成。
+   * 对全部复制目标强制走一次标准快照安装分发（仅 leader 可成功，以分发的快照 index 完成）： 手动收尾使用——刷新 leader currentSnapshot 后逐成员分发
+   * InstallRequest（已具备同水位镜像的成员跳过）； 非 leader 以 {@link RaftException.NoLeader} 异常完成。
    */
   public CompletableFuture<Long> replicateSnapshotToAll() {
     return server.getContext().forceSnapshotReplication();

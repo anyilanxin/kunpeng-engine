@@ -27,20 +27,22 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-/**
- * 决策表（DecisionTable）决策逻辑的内存模型，持有决策表的命中策略、输入列、输出列与规则集合。
- */
+/** 决策表（DecisionTable）决策逻辑的内存模型，持有决策表的命中策略、输入列、输出列与规则集合。 */
 @Getter
 @Setter
 @ToString
 public class DmnDecisionTableImpl implements DmnDecisionLogic, DmnElement {
   private String key;
+
   /** 命中策略（HitPolicy） */
   protected HitPolicyType hitPolicy;
+
   /** 输入列（Input）列表 */
   protected List<DmnDecisionTableInputImpl> inputs = new ArrayList<>();
+
   /** 输出列（Output）列表 */
   protected List<DmnDecisionTableOutputImpl> outputs = new ArrayList<>();
+
   /** 规则（Rule）列表 */
   protected List<DmnDecisionTableRuleImpl> rules = new ArrayList<>();
 

@@ -23,8 +23,8 @@ import java.nio.file.Path;
 import java.util.Map;
 
 /**
- * raft 常规镜像内容拍摄/合并 SPI：具体"拍什么、怎么拍、怎么合并"由业务系统实现，在 {@link
- * ConstructableSnapshotStore} 构造时传入——一个 store 对应一种拍法。
+ * raft 常规镜像内容拍摄/合并 SPI：具体"拍什么、怎么拍、怎么合并"由业务系统实现，在 {@link ConstructableSnapshotStore} 构造时传入——一个 store
+ * 对应一种拍法。
  *
  * @author zxuanhong
  * @since 1.0.0
@@ -46,8 +46,7 @@ public interface RaftSnapshotProvider<T> extends CloseableSilently {
    * 合并镜像：把接收到的跨分区合并镜像内容（{@code snapshotDirectory} 下的文件）合并进本分区业务状态。
    *
    * <p>分区删除迁移时由源分区推送、本分区（目标分区 leader）接收完成后触发；合并发生在两阶段镜像安装
-   * 之间——开始合并对应安装开始（业务消费者已关闭），合并完成对应安装完成（业务可恢复）。应实现为幂等或
-   * 崩溃安全：合并中途失败后源分区会整体重推。
+   * 之间——开始合并对应安装开始（业务消费者已关闭），合并完成对应安装完成（业务可恢复）。应实现为幂等或 崩溃安全：合并中途失败后源分区会整体重推。
    *
    * @param snapshotDirectory 接收到的合并镜像目录
    * @return 合并完成 future；异常完成即本次合并失败

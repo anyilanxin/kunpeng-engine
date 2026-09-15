@@ -43,7 +43,8 @@ public class RepositoryDelayed implements MutableRepositoryDelayed {
 
   private final LongType dueDateDbKey;
   private final CompositeKeyType<LongType, LongType> dueDelayedIdCompositeKey;
-  private final ColumnFamily<CompositeKeyType<LongType, LongType>, NilType> dueDelayedIdColumnFamily;
+  private final ColumnFamily<CompositeKeyType<LongType, LongType>, NilType>
+      dueDelayedIdColumnFamily;
 
   public RepositoryDelayed(
       final KvStore<AdminRepositoryColumnFamilies> db, final TransactionContext transaction) {

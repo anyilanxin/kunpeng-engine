@@ -38,7 +38,8 @@ public class BooleanDataTypeTransformer implements DmnDataTypeTransformer {
       return Variables.booleanValue(booleanValue);
 
     } else {
-      throw new IllegalArgumentException();
+      throw new IllegalArgumentException(
+          "Unable to transform value of type '" + value.getClass().getName() + "' to boolean");
     }
   }
 
@@ -48,7 +49,8 @@ public class BooleanDataTypeTransformer implements DmnDataTypeTransformer {
     } else if (value.equalsIgnoreCase("false")) {
       return false;
     } else {
-      throw new IllegalArgumentException();
+      throw new IllegalArgumentException(
+          "Unable to transform string '" + value + "' to boolean: expected 'true' or 'false'");
     }
   }
 }

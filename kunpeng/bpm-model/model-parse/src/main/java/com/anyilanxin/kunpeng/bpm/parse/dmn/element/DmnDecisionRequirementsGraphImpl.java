@@ -25,8 +25,8 @@ import lombok.Setter;
 import lombok.ToString;
 
 /**
- * {@link DmnDecisionRequirementsGraph} 的默认实现，以 key 为索引持有同一决策需求图（DRG）内的
- * Decision 与 BusinessKnowledge 元素。
+ * {@link DmnDecisionRequirementsGraph} 的默认实现，以 key 为索引持有同一决策需求图（DRG）内的 Decision 与 BusinessKnowledge
+ * 元素。
  */
 @ToString
 @Setter
@@ -37,6 +37,7 @@ public class DmnDecisionRequirementsGraphImpl implements DmnDecisionRequirements
 
   /** key -> Decision 的映射 */
   protected Map<String, DmnDecision> decisions = new HashMap<>();
+
   /** key -> BusinessKnowledge 的映射 */
   protected Map<String, DmnBusinessKnowledge> businessKnowledge = new HashMap<>();
 

@@ -31,6 +31,7 @@ public class DmnDecisionTableRuleImpl implements DmnElement {
 
   /** 条件（InputEntry）表达式列表，与决策表输入列一一对应 */
   protected List<DmnExpressionImpl> conditions = new ArrayList<>();
+
   /** 结论（OutputEntry）表达式列表，与决策表输出列一一对应 */
   protected List<DmnExpressionImpl> conclusions = new ArrayList<>();
 

@@ -62,7 +62,9 @@ public abstract class AbstractModelParser {
    * @param dbf the factory to configure
    */
   protected void configureFactory(final DocumentBuilderFactory dbf) {
-    dbf.setValidating(true);
+    // 不在解析阶段做校验（validating=true 在无 DTD/schema 时会报"no grammar found"）；
+    // XSD 校验统一由 validateModel 以构造期编译缓存的 Schema 执行单遍
+    dbf.setValidating(false);
     dbf.setIgnoringComments(false);
     dbf.setIgnoringElementContentWhitespace(false);
     dbf.setNamespaceAware(true);
