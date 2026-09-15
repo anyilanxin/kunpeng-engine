@@ -51,16 +51,19 @@ public final class SegmentedJournal implements Journal {
   private final StampedLock rwlock = new StampedLock();
   private final SegmentsManager segments;
   private final JournalMetaStore metaStore;
+  private final boolean verifyReadChecksum;
 
   SegmentedJournal(
       final JournalIndex journalIndex,
       final SegmentsManager segments,
       final JournalMetrics journalMetrics,
-      final JournalMetaStore metaStore) {
+      final JournalMetaStore metaStore,
+      final boolean verifyReadChecksum) {
     this.journalMetrics = Objects.requireNonNull(journalMetrics, "must specify journal metrics");
     this.journalIndex = Objects.requireNonNull(journalIndex, "must specify a journal index");
     this.segments = Objects.requireNonNull(segments, "must specify a journal segments manager");
     this.metaStore = Objects.requireNonNull(metaStore, "must specify a journal meta store");
+    this.verifyReadChecksum = verifyReadChecksum;
     this.segments.open();
     writer = new SegmentedJournalWriter(segments, metaStore, journalMetrics);
   }
@@ -190,7 +193,7 @@ public final class SegmentedJournal implements Journal {
   public JournalReader openReader() {
     final var stamped = acquireReadlock();
     try {
-      final var reader = new SegmentedJournalReader(this, journalMetrics);
+      final var reader = new SegmentedJournalReader(this, journalMetrics, verifyReadChecksum);
       readers.add(reader);
       return reader;
     } finally {
@@ -225,7 +228,7 @@ public final class SegmentedJournal implements Journal {
    */
   private static OptionalLong findFirstAsqn(final SortedMap<Long, Segment> segments) {
     for (final var segment : segments.values()) {
-      final var reader = segment.createReader();
+      final var reader = segment.createReader(true);
       try {
         while (reader.hasNext()) {
           final var record = reader.next();

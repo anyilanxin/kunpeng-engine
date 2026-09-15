@@ -119,6 +119,18 @@ public class RaftLogBuilder implements com.anyilanxin.kunpeng.cluster.utils.Buil
   }
 
   /**
+   * Sets whether the journal read path verifies record checksums; see {@link
+   * SegmentedJournalBuilder#withVerifyReadChecksum(boolean)}.
+   *
+   * @param verifyReadChecksum whether to verify checksums when reading
+   * @return this builder for chaining
+   */
+  public RaftLogBuilder withVerifyReadChecksum(final boolean verifyReadChecksum) {
+    journalBuilder.withVerifyReadChecksum(verifyReadChecksum);
+    return this;
+  }
+
+  /**
    * Sets the strategy for pre-allocating disk space for new segment files.
    *
    * @param segmentAllocator the segment allocator to use

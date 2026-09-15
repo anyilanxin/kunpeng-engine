@@ -17,6 +17,7 @@
 package com.anyilanxin.kunpeng.cluster.raft.journal.file;
 
 import com.anyilanxin.kunpeng.cluster.raft.journal.JournalRecord;
+import java.util.List;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -91,4 +92,26 @@ interface JournalIndex {
    * @return true if this index likely have been already indexed. false if otherwise.
    */
   boolean hasIndexed(long index);
+
+  /**
+   * Returns all persisted index entries within the given inclusive range, ordered by index.
+   *
+   * <p>Used to dump a segment's index entries to disk when the segment is sealed or the journal
+   * closes.
+   *
+   * @param firstIndex lower bound (inclusive)
+   * @param lastIndex upper bound (inclusive)
+   * @return entries in the range, ordered by index; never null
+   */
+  List<IndexInfo> entriesInRange(long firstIndex, long lastIndex);
+
+  /**
+   * Bulk-loads index entries previously persisted for a segment.
+   *
+   * <p>Entries are assumed validated by the caller (monotonic, within segment bounds). Only the
+   * index-to-position mapping is restored; ASQN mappings are rebuilt lazily.
+   *
+   * @param entries entries to load, ordered by index
+   */
+  void indexAll(List<IndexInfo> entries);
 }

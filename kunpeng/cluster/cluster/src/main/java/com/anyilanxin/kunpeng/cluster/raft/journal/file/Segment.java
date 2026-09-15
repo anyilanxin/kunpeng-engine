@@ -30,6 +30,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.Set;
 import org.agrona.IoUtil;
 import org.slf4j.Logger;
@@ -135,6 +136,15 @@ final class Segment implements AutoCloseable, FlushableSegment {
 
       LOG.debug("Flushing failed on a closed or deleted segment, and will be ignored");
       return;
+    } catch (final InternalError e) {
+      // 映射失效时 force 也可能抛 InternalError（见 SegmentLoader 的同款处理）
+      if (isOpen()) {
+        throw new FlushException(
+            new IOException("Segment buffer mapping became invalid during flush", e));
+      }
+
+      LOG.debug("Flushing failed on a closed or deleted segment, and will be ignored");
+      return;
     }
 
     LOG.trace(
@@ -196,12 +206,14 @@ final class Segment implements AutoCloseable, FlushableSegment {
   /**
    * Creates a new segment reader.
    *
+   * @param verifyChecksum 读取记录时是否重算并比对 CRC 校验和
    * @return A new segment reader.
    */
-  SegmentReader createReader() {
+  SegmentReader createReader(final boolean verifyChecksum) {
     checkOpen();
     final SegmentReader reader =
-        new SegmentReader(buffer.asReadOnlyBuffer().position(0).order(ENDIANNESS), this, index);
+        new SegmentReader(
+            buffer.asReadOnlyBuffer().position(0).order(ENDIANNESS), this, index, verifyChecksum);
     readers.add(reader);
     return reader;
   }
@@ -287,7 +299,8 @@ final class Segment implements AutoCloseable, FlushableSegment {
 
     final var target = file.getFileMarkedForDeletion();
     try {
-      FileUtil.moveDurably(file.file().toPath(), target);
+      // 标记名是确定性的：reset 重建同编号 segment 后再次删除会命中同名旧标记，需覆盖
+      FileUtil.moveDurably(file.file().toPath(), target, StandardCopyOption.REPLACE_EXISTING);
     } catch (final IOException e) {
       throw new JournalException(e);
     }

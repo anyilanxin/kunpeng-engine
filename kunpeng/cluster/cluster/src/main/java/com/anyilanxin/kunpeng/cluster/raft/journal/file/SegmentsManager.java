@@ -37,9 +37,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.SortedMap;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.atomic.AtomicLong;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,8 +46,7 @@ import org.slf4j.LoggerFactory;
 /**
  * segment 生命周期的管理中枢。
  *
- * <p>持有以首索引为键的 segment 有序表，负责：启动时从磁盘加载并校验全部 segment、滚动 新 segment（含后台预创建下一个）、按索引删除/重置
- * segment，以及清理此前未及删除的 残留文件。
+ * <p>持有以首索引为键的 segment 有序表，负责：启动时从磁盘加载并校验全部 segment、滚动新 segment、按索引删除/重置 segment，以及清理此前未及删除的 残留文件。
  */
 final class SegmentsManager implements AutoCloseable {
 
@@ -72,11 +70,11 @@ final class SegmentsManager implements AutoCloseable {
   private final File directory;
   private final String name;
 
-  /** 后台预创建的下一个 segment（尚未写入描述符）。 */
-  private @Nullable CompletableFuture<UninitializedSegment> preallocatedSegment = null;
-
   /** 当前正在追加写入的 segment。 */
   private volatile @Nullable Segment currentSegment;
+
+  /** journal 磁盘占用的增量记账。segment 文件创建时即预分配到 maxSegmentSize，长度恒定， 因此加减即可保持精确，无需每次全量求和。 */
+  private final AtomicLong journalSizeBytes = new AtomicLong();
 
   SegmentsManager(
       final JournalIndex journalIndex,
@@ -166,7 +164,7 @@ final class SegmentsManager implements AutoCloseable {
     final var openDurationTimer = journalMetrics.startJournalOpenDurationTimer();
     for (final Segment segment : loadSegments()) {
       segmentsByFirstIndex.put(segment.descriptor().index(), segment);
-      updateSegmentCount(1);
+      onSegmentAdded(segment);
     }
 
     final Map.Entry<Long, Segment> lastLoaded = segmentsByFirstIndex.lastEntry();
@@ -175,7 +173,7 @@ final class SegmentsManager implements AutoCloseable {
     } else {
       currentSegment = createSegmentAt(FIRST_SEGMENT_ID, INITIAL_INDEX, INITIAL_ASQN);
       segmentsByFirstIndex.put(INITIAL_INDEX, currentSegment);
-      updateSegmentCount(1);
+      onSegmentAdded(currentSegment);
     }
     openDurationTimer.close();
 
@@ -187,17 +185,8 @@ final class SegmentsManager implements AutoCloseable {
   public void close() {
     for (final Segment segment : segmentsByFirstIndex.values()) {
       LOG.debug("Closing segment: {}", segment);
+      dumpSegmentIndex(segment);
       segment.close();
-    }
-
-    if (preallocatedSegment != null) {
-      try {
-        preallocatedSegment.join();
-      } catch (final Exception e) {
-        LOG.warn(
-            "Next segment preparation failed during close, ignoring and proceeding to close", e);
-      }
-      preallocatedSegment = null;
     }
 
     currentSegment = null;
@@ -208,36 +197,22 @@ final class SegmentsManager implements AutoCloseable {
   /**
    * 滚动到下一个 segment 并返回它。
    *
-   * <p>优先消费后台预创建的半成品 segment；若预创建失败则回退为同步创建。
-   *
    * @throws IllegalStateException 管理器未打开（无当前 segment）
    */
   Segment getNextSegment() {
+    // 滚动即封存：趁切换前把即将封口的 segment 索引落盘，限制崩溃时的索引损失范围
+    dumpSegmentIndex(getLastSegment());
+
     final Segment tail = getLastSegment();
     final long inheritedAsqn = tail != null ? tail.lastAsqn() : INITIAL_ASQN;
     final Segment writing = requireNonNull(currentSegment, "currentSegment is null");
     final long nextFirstIndex = writing.lastIndex() + 1;
     final long nextId = tail != null ? tail.descriptor().id() + 1 : FIRST_SEGMENT_ID;
 
-    if (preallocatedSegment == null) {
-      currentSegment = createSegmentAt(nextId, nextFirstIndex, inheritedAsqn);
-    } else {
-      try {
-        currentSegment =
-            preallocatedSegment
-                .join()
-                .initializeForUse(nextFirstIndex, inheritedAsqn, journalMetrics);
-      } catch (final CompletionException e) {
-        LOG.error("Failed to acquire next segment, retrying synchronously now.", e);
-        preallocatedSegment = null;
-        currentSegment = createSegmentAt(nextId, nextFirstIndex, inheritedAsqn);
-      }
-    }
-
-    prepareNextSegment();
+    currentSegment = createSegmentAt(nextId, nextFirstIndex, inheritedAsqn);
 
     segmentsByFirstIndex.put(nextFirstIndex, currentSegment);
-    updateSegmentCount(1);
+    onSegmentAdded(currentSegment);
     return currentSegment;
   }
 
@@ -270,8 +245,10 @@ final class SegmentsManager implements AutoCloseable {
         expired.size());
     for (final Segment segment : expired.values()) {
       LOG.trace("{} - Deleting segment: {}", name, segment);
+      // 先记账再删除：segment.delete() 可能把文件直接删掉，之后长度读出来是 0
+      onSegmentRemoved(segment);
       segment.delete();
-      updateSegmentCount(-1);
+      deleteSegmentIndexFile(segment);
     }
     expired.clear();
 
@@ -295,14 +272,17 @@ final class SegmentsManager implements AutoCloseable {
       // 刻意不 close：这里可能只是软删除，让在途读取器读完后自行退出，
       // 避免与底层缓冲 unmap 产生竞态
       //noinspection resource
-      descending.next().delete();
+      final Segment segment = descending.next();
+      // 先记账再删除：segment.delete() 可能把文件直接删掉，之后长度读出来是 0
+      onSegmentRemoved(segment);
+      segment.delete();
+      deleteSegmentIndexFile(segment);
       descending.remove();
-      updateSegmentCount(-1);
     }
 
     currentSegment = createSegmentAt(FIRST_SEGMENT_ID, index, INITIAL_ASQN);
     segmentsByFirstIndex.put(index, currentSegment);
-    updateSegmentCount(1);
+    onSegmentAdded(currentSegment);
     return currentSegment;
   }
 
@@ -313,8 +293,9 @@ final class SegmentsManager implements AutoCloseable {
    */
   void removeSegment(final Segment segment) {
     segmentsByFirstIndex.remove(segment.index());
-    updateSegmentCount(-1);
+    onSegmentRemoved(segment);
     segment.delete();
+    deleteSegmentIndexFile(segment);
     refreshCurrentSegment();
   }
 
@@ -328,23 +309,10 @@ final class SegmentsManager implements AutoCloseable {
 
     currentSegment = createSegmentAt(FIRST_SEGMENT_ID, INITIAL_INDEX, INITIAL_ASQN);
     segmentsByFirstIndex.put(INITIAL_INDEX, currentSegment);
-    updateSegmentCount(1);
+    onSegmentAdded(currentSegment);
   }
 
   /* ---------- 创建 ---------- */
-
-  /** 异步预创建下一个 segment（只分配文件与空间，不写描述符）。 */
-  private void prepareNextSegment() {
-    final long nextId = requireNonNull(currentSegment, "current segment is null").id() + 1;
-    final var preDescriptor =
-        SegmentDescriptor.builder()
-            .withId(nextId)
-            .withIndex(INITIAL_INDEX)
-            .withMaxSegmentSize(maxSegmentSize)
-            .build();
-    preallocatedSegment =
-        CompletableFuture.supplyAsync(() -> createUninitializedSegment(preDescriptor));
-  }
 
   private Segment createSegmentAt(final long id, final long firstIndex, final long lastAsqn) {
     final var descriptor =
@@ -355,11 +323,6 @@ final class SegmentsManager implements AutoCloseable {
             .build();
     final var segmentFile = SegmentFile.createSegmentFile(name, directory, descriptor.id());
     return segmentLoader.createSegment(segmentFile.toPath(), descriptor, lastAsqn, journalIndex);
-  }
-
-  private UninitializedSegment createUninitializedSegment(final SegmentDescriptor descriptor) {
-    final var segmentFile = SegmentFile.createSegmentFile(name, directory, descriptor.id());
-    return segmentLoader.createUninitializedSegment(segmentFile.toPath(), descriptor, journalIndex);
   }
 
   /* ---------- 加载与损坏恢复 ---------- */
@@ -401,6 +364,7 @@ final class SegmentsManager implements AutoCloseable {
         }
 
         loaded.add(segment);
+        loadSegmentIndex(segment);
         previousSegment = segment;
       } catch (final CorruptedJournalException e) {
         if (discardUnflushedTailIfSafe(files, position, loaded, lastFlushedIndex)) {
@@ -465,12 +429,71 @@ final class SegmentsManager implements AutoCloseable {
     for (final File file : files.subList(failedPosition, files.size())) {
       try {
         Files.delete(file.toPath());
+        Files.deleteIfExists(SegmentFile.indexFileOf(file).toPath());
       } catch (final IOException e) {
         throw new JournalException(
             String.format(
                 "Failed to delete log segment '%s' when handling corruption.", file.getName()),
             e);
       }
+    }
+  }
+
+  /* ---------- 索引文件持久化 ---------- */
+
+  /** 把 segment 的内存稀疏索引落盘；该 segment 没有条目时为 no-op。 */
+  private void dumpSegmentIndex(final @Nullable Segment segment) {
+    if (segment == null) {
+      return;
+    }
+
+    final var entries = journalIndex.entriesInRange(segment.index(), segment.lastIndex());
+    if (entries.isEmpty()) {
+      return;
+    }
+
+    try {
+      SegmentIndexFile.write(segment.file().indexFile().toPath(), entries);
+    } catch (final Exception e) {
+      // 索引只是加速读取的缓存，落盘失败不影响正确性；重启后会回退为扫描建索引
+      LOG.warn(
+          "Failed to persist index of segment {}; the index will be rebuilt by scanning on restart",
+          segment,
+          e);
+    }
+  }
+
+  /** 尽力加载 segment 的磁盘索引；文件缺失或校验失败时静默跳过，由读取路径扫描重建。 */
+  private void loadSegmentIndex(final Segment segment) {
+    final var indexFile = segment.file().indexFile().toPath();
+    if (!Files.exists(indexFile)) {
+      return;
+    }
+
+    final var descriptor = segment.descriptor();
+    final var entries =
+        SegmentIndexFile.read(
+            indexFile,
+            segment.index(),
+            segment.lastIndex(),
+            descriptor.encodingLength(),
+            descriptor.maxSegmentSize());
+    if (entries == null) {
+      LOG.debug(
+          "Index file {} is missing or invalid; the index will be rebuilt by scanning", indexFile);
+      return;
+    }
+    journalIndex.indexAll(entries);
+  }
+
+  private void deleteSegmentIndexFile(final Segment segment) {
+    try {
+      Files.deleteIfExists(segment.file().indexFile().toPath());
+    } catch (final IOException e) {
+      LOG.warn(
+          "Could not delete index file of segment {}; this can result in unnecessary disk usage",
+          segment,
+          e);
     }
   }
 
@@ -494,15 +517,18 @@ final class SegmentsManager implements AutoCloseable {
 
   /* ---------- 指标与残留清理 ---------- */
 
-  /** 更新 segment 数量并重算 journal 磁盘占用 */
-  private void updateSegmentCount(final int delta) {
-    if (delta > 0) {
-      journalMetrics.incSegmentCount();
-    } else {
-      journalMetrics.decSegmentCount();
-    }
-    journalMetrics.setJournalSize(
-        segmentsByFirstIndex.values().stream().mapToLong(s -> s.file().file().length()).sum());
+  /** 记录 segment 加入后的指标；segment 文件按 maxSegmentSize 预分配，长度恒定。 */
+  private void onSegmentAdded(final Segment segment) {
+    journalMetrics.incSegmentCount();
+    journalSizeBytes.addAndGet(segment.file().file().length());
+    journalMetrics.setJournalSize(journalSizeBytes.get());
+  }
+
+  /** 记录 segment 移除后的指标；必须在 {@code segment.delete()} 之前调用，文件删除后长度归零。 */
+  private void onSegmentRemoved(final Segment segment) {
+    journalMetrics.decSegmentCount();
+    journalSizeBytes.addAndGet(-segment.file().file().length());
+    journalMetrics.setJournalSize(journalSizeBytes.get());
   }
 
   /** 删除目录中所有标记为待删除（软删除残留）的 segment 文件。 */

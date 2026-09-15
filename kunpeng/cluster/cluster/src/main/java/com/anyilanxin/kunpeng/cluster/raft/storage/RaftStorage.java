@@ -263,7 +263,6 @@ public final class RaftStorage {
     private static final RaftLogFlusher.Factory DEFAULT_FLUSHER_FACTORY =
         RaftLogFlusher.Factory::direct;
     private static final int DEFAULT_JOURNAL_INDEX_DENSITY = 100;
-    private static final boolean DEFAULT_PREALLOCATE_SEGMENT_FILES = true;
 
     // impossible value to make it clear it's unset and there's an error
     private static final int DEFAULT_PARTITION_ID = -1;

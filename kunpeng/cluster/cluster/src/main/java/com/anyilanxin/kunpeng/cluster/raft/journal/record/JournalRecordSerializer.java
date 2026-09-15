@@ -50,18 +50,6 @@ public interface JournalRecordSerializer {
       int offset);
 
   /**
-   * Writes the record using the given format version; used when replicating records that were
-   * serialized by an older peer.
-   */
-  Either<BufferOverflowException, Integer> writeDataAtVersion(
-      int version,
-      long index,
-      long asqn,
-      BufferWriter recordDataWriter,
-      MutableDirectBuffer writeBuffer,
-      int offset);
-
-  /**
    * Writes the given metadata section.
    *
    * @return the number of bytes written, which is always {@link #getMetadataLength()}

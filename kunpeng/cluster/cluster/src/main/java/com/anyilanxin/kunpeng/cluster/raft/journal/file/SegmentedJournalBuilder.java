@@ -35,7 +35,7 @@ public class SegmentedJournalBuilder {
   private static final int DEFAULT_MAX_SEGMENT_SIZE = 1024 * 1024 * 32;
   private static final long DEFAULT_MIN_FREE_DISK_SPACE = 1024L * 1024 * 1024;
   private static final int DEFAULT_JOURNAL_INDEX_DENSITY = 100;
-  private static final boolean DEFAULT_PREALLOCATE_SEGMENT_FILES = true;
+  private static final boolean DEFAULT_VERIFY_READ_CHECKSUM = true;
 
   // impossible value to make it clear it's unset
   private static final int DEFAULT_PARTITION_ID = -1;
@@ -47,6 +47,7 @@ public class SegmentedJournalBuilder {
   private long freeDiskSpace = DEFAULT_MIN_FREE_DISK_SPACE;
   private int journalIndexDensity = DEFAULT_JOURNAL_INDEX_DENSITY;
   private int partitionId = DEFAULT_PARTITION_ID;
+  private boolean verifyReadChecksum = DEFAULT_VERIFY_READ_CHECKSUM;
 
   private @Nullable JournalMetaStore journalMetaStore;
   private final MeterRegistry meterRegistry;
@@ -135,6 +136,19 @@ public class SegmentedJournalBuilder {
   }
 
   /**
+   * 设置读取路径是否校验记录 CRC32C。
+   *
+   * <p>默认开启。校验能发现静默位翻转，但热读路径上每条记录都要重算校验和；若上层已有 端到端校验（如 Raft 复制重算），可关闭以换取吞吐。恢复/重放扫描不受此开关影响， 始终校验。
+   *
+   * @param verifyReadChecksum 读取时是否校验 CRC
+   * @return the journal builder for chaining
+   */
+  public SegmentedJournalBuilder withVerifyReadChecksum(final boolean verifyReadChecksum) {
+    this.verifyReadChecksum = verifyReadChecksum;
+    return this;
+  }
+
+  /**
    * Sets whether segment files are pre-allocated at creation. If true, segment files are
    * pre-allocated to the maximum segment size (see {@link #withMaxSegmentSize(int)}}) at creation
    * before any writes happen.
@@ -183,6 +197,7 @@ public class SegmentedJournalBuilder {
             journalMetrics,
             metaStore);
 
-    return new SegmentedJournal(journalIndex, segmentsManager, journalMetrics, metaStore);
+    return new SegmentedJournal(
+        journalIndex, segmentsManager, journalMetrics, metaStore, verifyReadChecksum);
   }
 }

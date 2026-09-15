@@ -87,6 +87,7 @@ public final class RaftRule extends ExternalResource {
   private final AtomicReference<CommitAwaiter> commitAwaiterRef = new AtomicReference<>();
   private long position;
   private EntryValidator entryValidator = new NoopEntryValidator();
+  private int maxSegmentSize = 1024 * 10;
   // Keep a reference to the snapshots to ensure they are persisted across the restarts.
   private Map<String, AtomicReference<InMemorySnapshot>> snapshots;
   private Map<String, TestSnapshotStore> snapshotStores;
@@ -113,6 +114,11 @@ public final class RaftRule extends ExternalResource {
 
   public RaftRule setEntryValidator(final EntryValidator entryValidator) {
     this.entryValidator = entryValidator;
+    return this;
+  }
+
+  public RaftRule setMaxSegmentSize(final int maxSegmentSize) {
+    this.maxSegmentSize = maxSegmentSize;
     return this;
   }
 
@@ -583,7 +589,7 @@ public final class RaftRule extends ExternalResource {
     final var builder =
         RaftStorage.builder(meterRegistry)
             .withDirectory(memberDirectory)
-            .withMaxSegmentSize(1024 * 10)
+            .withMaxSegmentSize(maxSegmentSize)
             .withFreeDiskSpace(100)
             .withSnapshotStore(snapshotStore);
 

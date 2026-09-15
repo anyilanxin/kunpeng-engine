@@ -421,8 +421,11 @@ public class RaftTest extends ConcurrentTestCase {
     final File directory = leader.getContext().getStorage().directory();
     appendEntry(leader);
 
+    // pick the lowest-id segment file; only data-bearing segments hold committed records
     final Optional<File> optLog =
-        Arrays.stream(directory.listFiles()).filter(f -> f.getName().endsWith(".log")).findFirst();
+        Arrays.stream(directory.listFiles())
+            .filter(f -> f.getName().endsWith(".log"))
+            .min(Comparator.comparingInt(RaftTest::segmentIdOf));
     assertThat(optLog).isPresent();
     final File log = optLog.get();
 
@@ -435,6 +438,11 @@ public class RaftTest extends ConcurrentTestCase {
     final MemberId memberId = members.get(0).memberId();
     assertThatThrownBy(() -> recreateServer(leader, memberId))
         .isInstanceOf(CorruptedJournalException.class);
+  }
+
+  private static int segmentIdOf(final File file) {
+    final var name = file.getName();
+    return Integer.parseInt(name.substring(name.indexOf('-') + 1, name.indexOf('.')));
   }
 
   private RaftServer recreateServer(final RaftServer server, final MemberId memberId) {

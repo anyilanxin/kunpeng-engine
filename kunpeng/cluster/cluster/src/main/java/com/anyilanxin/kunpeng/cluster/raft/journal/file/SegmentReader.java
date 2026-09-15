@@ -37,13 +37,19 @@ final class SegmentReader implements Iterator<JournalRecord> {
   private final ByteBuffer mappedBytes;
   private final JournalIndex sparseIndex;
   private final Segment owningSegment;
+  private final boolean verifyChecksum;
   private long lastReadIndex;
 
-  SegmentReader(final ByteBuffer buffer, final Segment segment, final JournalIndex index) {
+  SegmentReader(
+      final ByteBuffer buffer,
+      final Segment segment,
+      final JournalIndex index,
+      final boolean verifyChecksum) {
     mappedBytes = buffer;
     owningSegment = segment;
     sparseIndex = index;
     descriptorSize = segment.descriptor().encodingLength();
+    this.verifyChecksum = verifyChecksum;
     recordDecoder = new JournalRecordReaderUtil(new BinaryJournalRecordSerializer());
     reset();
   }
@@ -81,7 +87,7 @@ final class SegmentReader implements Iterator<JournalRecord> {
     FrameUtil.readVersion(mappedBytes);
 
     final JournalRecord entry =
-        recordDecoder.read(mappedBytes, getNextIndex(), FrameUtil.getLength());
+        recordDecoder.read(mappedBytes, getNextIndex(), FrameUtil.getLength(), verifyChecksum);
     lastReadIndex = entry.index();
     return entry;
   }
@@ -127,6 +133,17 @@ final class SegmentReader implements Iterator<JournalRecord> {
   /** 关闭读取器，向所属 segment 注销自身。 */
   void close() {
     owningSegment.onReaderClosed(this);
+  }
+
+  /**
+   * 直接定位到段内物理位置。
+   *
+   * <p>调用方必须保证 {@code offsetInSegment} 与 {@code index} 对应同一条记录（通常是扫描途中 经 {@link
+   * #getOffsetInSegment()} 记下的位置），本方法不做任何校验。注意入参是相对 描述符区的偏移，与 {@link #getOffsetInSegment()} 的口径一致。
+   */
+  void seekToPosition(final int offsetInSegment, final long index) {
+    mappedBytes.position(descriptorSize + offsetInSegment);
+    lastReadIndex = index - 1;
   }
 
   /**

@@ -47,7 +47,6 @@ public class RaftCfg implements ConfigurationEntry {
   private static final Duration DEFAULT_MAX_QUORUM_RESPONSE_TIMEOUT = Duration.ofSeconds(0);
   private static final int DEFAULT_MIN_STEP_DOWN_FAILURE_COUNT = 3;
   private static final int DEFAULT_PREFER_SNAPSHOT_REPLICATION_THRESHOLD = 100;
-  private static final boolean DEFAULT_PREALLOCATE_SEGMENT_FILES = true;
   private Duration requestTimeout = DEFAULT_REQUEST_TIMEOUT;
   private Duration snapshotRequestTimeout = DEFAULT_SNAPSHOT_REQUEST_TIMEOUT;
   private DataSize snapshotChunkSize = DEFAULT_SNAPSHOT_CHUNK_SIZE;
@@ -56,7 +55,6 @@ public class RaftCfg implements ConfigurationEntry {
   private int minStepDownFailureCount = DEFAULT_MIN_STEP_DOWN_FAILURE_COUNT;
   private int preferSnapshotReplicationThreshold = DEFAULT_PREFER_SNAPSHOT_REPLICATION_THRESHOLD;
   private int maxAppendsPerFollower = DEFAULT_MAX_APPENDS_PER_FOLLOWER;
-  private boolean preallocateSegmentFiles = DEFAULT_PREALLOCATE_SEGMENT_FILES;
   private FlushConfig flush = DEFAULT_FLUSH_CONFIG;
   private DataSize maxAppendBatchSize = DEFAULT_MAX_APPEND_BATCH_SIZE;
   private Duration electionTimeout = DEFAULT_ELECTION_TIMEOUT;

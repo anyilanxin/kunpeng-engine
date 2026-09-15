@@ -49,8 +49,12 @@ final class SegmentWriter {
   private final long firstIndex;
   private final long firstAsqn;
   private long lastAsqn;
-  private @Nullable JournalRecord lastEntry;
-  private int lastEntryPosition;
+
+  // volatile：lastEntry/lastEntryPosition/appendedBytes 会被读线程与刷盘线程经由
+  // Segment#lastIndex/size 跨线程读取；ByteBuffer 自身的 position 无可见性保证，故镜像维护
+  private volatile @Nullable JournalRecord lastEntry;
+  private volatile int lastEntryPosition;
+  private volatile int appendedBytes;
   private final JournalRecordReaderUtil recordUtil;
   private final ChecksumGenerator checksumGenerator = new ChecksumGenerator();
   private final JournalRecordSerializer serializer = new BinaryJournalRecordSerializer();
@@ -99,7 +103,12 @@ final class SegmentWriter {
   }
 
   int getAppendedBytes() {
-    return buffer.position() - descriptorLength;
+    return appendedBytes;
+  }
+
+  /** 把底层缓冲游标同步到 volatile 镜像，必须在每次移动 buffer 游标后调用。 */
+  private void syncAppendedBytes() {
+    appendedBytes = buffer.position() - descriptorLength;
   }
 
   long getNextIndex() {
@@ -114,7 +123,7 @@ final class SegmentWriter {
     return lastAsqn;
   }
 
-  // Used to append records received from a leader that are at version 8.2.x or older.
+  /** 追加来自 leader 的既有记录，并以其校验和复核重算结果。 */
   Either<SegmentFull, JournalRecord> append(final JournalRecord record) {
     final var entryIndex = record.index();
     final var asqn = record.asqn();
@@ -127,10 +136,8 @@ final class SegmentWriter {
     final int frameLength = FrameUtil.getLength();
     final int metadataLength = serializer.getMetadataLength();
 
-    // Write using sbe old version because the checksum is calculated based on that version. This is
-    // to handle all append requests coming from leaders that are at versions 8.2.x or older.
     final var writeResult =
-        writeRecordAtOldVersion(
+        writeRecord(
             entryIndex, asqn, startPosition + frameLength + metadataLength, recordDataWriter);
 
     return tryFinalizeAppend(
@@ -214,6 +221,7 @@ final class SegmentWriter {
         .mapLeft(
             segmentFull -> {
               buffer.position(startPosition);
+              syncAppendedBytes();
               return segmentFull;
             });
   }
@@ -235,6 +243,7 @@ final class SegmentWriter {
 
     if (expectedChecksum != null && expectedChecksum != checksum) {
       buffer.position(startPosition);
+      syncAppendedBytes();
       throw new InvalidChecksum(
           String.format(
               "Failed to append record. Checksum %d does not match the expected %d.",
@@ -250,9 +259,10 @@ final class SegmentWriter {
         updateLastWrittenEntry(startPosition, frameLength, metadataLength, recordLength);
     FrameUtil.writeVersion(buffer, startPosition);
 
-    final int appendedBytes = frameLength + metadataLength + recordLength;
-    buffer.position(startPosition + appendedBytes);
-    metrics.observeAppend(appendedBytes);
+    final int entryLength = frameLength + metadataLength + recordLength;
+    buffer.position(startPosition + entryLength);
+    syncAppendedBytes();
+    metrics.observeAppend(entryLength);
     return record;
   }
 
@@ -292,13 +302,6 @@ final class SegmentWriter {
       final long index, final long asqn, final int offset, final BufferWriter recordDataWriter) {
     return serializer
         .writeData(index, asqn, recordDataWriter, writeBuffer, offset)
-        .mapLeft(e -> new SegmentFull("Not enough space to write record"));
-  }
-
-  private Either<SegmentFull, Integer> writeRecordAtOldVersion(
-      final long index, final long asqn, final int offset, final BufferWriter recordDataWriter) {
-    return serializer
-        .writeDataAtVersion(1, index, asqn, recordDataWriter, writeBuffer, offset)
         .mapLeft(e -> new SegmentFull("Not enough space to write record"));
   }
 
@@ -353,6 +356,7 @@ final class SegmentWriter {
     lastEntryPosition = position;
     index.index(lastEntry, position);
     buffer.mark();
+    syncAppendedBytes();
   }
 
   private void reset(final long index, final boolean detectCorruption) {
@@ -376,6 +380,7 @@ final class SegmentWriter {
       resetPartiallyWrittenEntry(e, position);
     } finally {
       buffer.reset();
+      syncAppendedBytes();
     }
   }
 
@@ -387,6 +392,7 @@ final class SegmentWriter {
     FrameUtil.markAsIgnored(buffer, position);
     buffer.position(position);
     buffer.mark();
+    syncAppendedBytes();
   }
 
   void truncate(final long index) {
@@ -404,6 +410,7 @@ final class SegmentWriter {
 
     if (index < segment.index()) {
       buffer.position(descriptorLength);
+      syncAppendedBytes();
       invalidateNextEntry(descriptorLength);
     } else {
       if (lastEntryPosition > 0) {

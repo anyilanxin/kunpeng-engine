@@ -95,25 +95,6 @@ final class SegmentLoader {
   }
 
   /**
-   * 创建一个仅完成文件与空间分配、尚未写入描述符的 segment。
-   *
-   * <p>描述符的起始索引要到真正启用时才确定，故此处只准备"半成品"。
-   */
-  UninitializedSegment createUninitializedSegment(
-      final Path segmentFile, final SegmentDescriptor descriptor, final JournalIndex journalIndex) {
-    final MappedByteBuffer mapped = allocateMappedFile(segmentFile, descriptor);
-
-    syncParentDirectory(segmentFile);
-
-    return new UninitializedSegment(
-        new SegmentFile(segmentFile.toFile()),
-        descriptor.id(),
-        descriptor.maxSegmentSize(),
-        mapped,
-        journalIndex);
-  }
-
-  /**
    * 加载磁盘上已存在的 segment 文件。
    *
    * <p>先按文件当前大小建立映射并读出描述符，若描述符声明的 segment 上限更大，则解除 映射并按声明大小重新映射。

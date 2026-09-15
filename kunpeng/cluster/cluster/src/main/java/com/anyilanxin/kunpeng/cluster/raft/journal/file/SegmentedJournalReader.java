@@ -26,12 +26,17 @@ import java.util.NoSuchElementException;
 class SegmentedJournalReader implements JournalReader {
 
   private final SegmentedJournal journal;
+  private final boolean verifyReadChecksum;
   private Segment currentSegment;
   private SegmentReader currentReader;
   private final JournalMetrics metrics;
 
-  SegmentedJournalReader(final SegmentedJournal journal, final JournalMetrics journalMetrics) {
+  SegmentedJournalReader(
+      final SegmentedJournal journal,
+      final JournalMetrics journalMetrics,
+      final boolean verifyReadChecksum) {
     this.journal = journal;
+    this.verifyReadChecksum = verifyReadChecksum;
     metrics = journalMetrics;
     initialize();
   }
@@ -39,7 +44,7 @@ class SegmentedJournalReader implements JournalReader {
   /** Initializes the reader to the given index. */
   private void initialize() {
     currentSegment = journal.getFirstSegment();
-    currentReader = currentSegment.createReader();
+    currentReader = currentSegment.createReader(verifyReadChecksum);
   }
 
   @Override
@@ -128,16 +133,21 @@ class SegmentedJournalReader implements JournalReader {
           unsafeSeek(index);
         }
 
-        // potential beneficiary of a peek() call, which would avoid the duplicate seek or
-        // being at the second position if the first entry has a greater ASQN
-        JournalRecord record = null;
+        // 边扫边记下最佳记录的物理位置，结束后直接回跳，省去一次完整的重复 seek
+        Segment bestSegment = null;
+        var bestPosition = -1;
+        var bestIndex = -1L;
         while (unsafeHasNext()) {
+          final var segment = currentSegment;
+          final var position = currentReader.getOffsetInSegment();
           final var currentRecord = unsafeNext();
           if (currentRecord.index() > indexUpperBound) {
             break;
           }
           if (currentRecord.asqn() <= asqn && currentRecord.asqn() != ASQN_IGNORE) {
-            record = currentRecord;
+            bestSegment = segment;
+            bestPosition = position;
+            bestIndex = currentRecord.index();
           } else if (currentRecord.asqn() >= asqn) {
             break;
           }
@@ -146,13 +156,12 @@ class SegmentedJournalReader implements JournalReader {
         // if the journal was empty, the reader will be at the beginning of the log
         // if the journal only contained entries with ASQN greater than the one requested, then seek
         // back to the beginning
-        if (record == null) {
+        if (bestSegment == null) {
           return unsafeSeekToFirst();
         }
 
-        // This is needed so that the next() returns the correct record
-        // TODO: Remove the duplicate seek. https://github.com/zeebe-io/zeebe/issues/6223
-        return unsafeSeek(record.index());
+        reposition(bestSegment, bestPosition, bestIndex);
+        return getNextIndex();
       } finally {
         journal.releaseReadlock(stamp);
       }
@@ -269,6 +278,14 @@ class SegmentedJournalReader implements JournalReader {
 
     currentReader.close();
     currentSegment = nextSegment;
-    currentReader = currentSegment.createReader();
+    currentReader = currentSegment.createReader(verifyReadChecksum);
+  }
+
+  /** 直接定位到扫描途中记下的物理位置；只在读取器自身上操作，不再触发顺序扫描。 */
+  private void reposition(final Segment segment, final int position, final long index) {
+    if (currentSegment != segment) {
+      replaceCurrentSegment(segment);
+    }
+    currentReader.seekToPosition(position, index);
   }
 }

@@ -30,12 +30,12 @@ import org.jspecify.annotations.Nullable;
  */
 public final class SegmentFile {
 
-  private static int deletedFileIndex = 0;
   private static final char PART_SEPARATOR = '-';
   private static final char EXTENSION_SEPARATOR = '.';
   private static final String EXTENSION = "log";
+  private static final String INDEX_EXTENSION = "idx";
   private static final String DELETE_EXTENSION = "deleted";
-  private static final char DELETE_EXTENSION_SEPARATOR = '_';
+  private static final String DELETE_EXTENSION_SUFFIX = EXTENSION_SEPARATOR + DELETE_EXTENSION;
   private final File file;
   private @Nullable Path fileMarkedForDeletion;
 
@@ -123,20 +123,37 @@ public final class SegmentFile {
     return file;
   }
 
+  /**
+   * Returns the index file corresponding to this segment, e.g. {@code journal-1.log} -> {@code
+   * journal-1.idx}.
+   */
+  File indexFile() {
+    return indexFileOf(file);
+  }
+
+  /** Derives the index file path from a segment log file path. */
+  static File indexFileOf(final File logFile) {
+    final var fileName = logFile.getName();
+    return new File(
+        logFile.getParent(),
+        fileName.substring(0, fileName.length() - EXTENSION.length()) + INDEX_EXTENSION);
+  }
+
   String name() {
     return file.getName();
   }
 
+  /**
+   * 软删除时的确定性标记文件名（{@code journal-1.log} -> {@code journal-1.log.deleted}）。
+   *
+   * <p>名字不携带任何进程内计数器：崩溃残留的旧标记可在下次启动时被可靠识别并清理， 同编号 segment 重建后再次删除也能覆盖同名标记。
+   */
   Path getFileMarkedForDeletion() {
     if (fileMarkedForDeletion == null) {
-      final String renamedFileName =
-          String.format(
-              "%s%c%d-%s",
-              file.getName(), DELETE_EXTENSION_SEPARATOR, deletedFileIndex++, DELETE_EXTENSION);
       final var parent =
           checkNotNull(
               file.toPath().getParent(), "Expected file %s to have a parent, but was null", file);
-      fileMarkedForDeletion = parent.resolve(renamedFileName);
+      fileMarkedForDeletion = parent.resolve(file.getName() + DELETE_EXTENSION_SUFFIX);
     }
     return fileMarkedForDeletion;
   }
@@ -145,10 +162,10 @@ public final class SegmentFile {
     checkNotNull(journalName, "journalName cannot be null");
     checkNotNull(fileName, "fileName cannot be null");
 
-    if (!fileName.endsWith(DELETE_EXTENSION)) {
+    if (!fileName.endsWith(DELETE_EXTENSION_SUFFIX)) {
       return false;
     }
-    final var deleteExtensionIndex = fileName.lastIndexOf(DELETE_EXTENSION_SEPARATOR);
-    return isSegmentFile(journalName, fileName.substring(0, deleteExtensionIndex));
+    final var base = fileName.substring(0, fileName.length() - DELETE_EXTENSION_SUFFIX.length());
+    return isSegmentFile(journalName, base);
   }
 }

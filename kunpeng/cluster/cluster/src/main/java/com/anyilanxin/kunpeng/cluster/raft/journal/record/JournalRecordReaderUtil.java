@@ -55,6 +55,27 @@ public final class JournalRecordReaderUtil {
    */
   public JournalRecord read(
       final ByteBuffer buffer, final long expectedIndex, final int frameLength) {
+    return read(buffer, expectedIndex, frameLength, true);
+  }
+
+  /**
+   * 读取缓冲区当前位置处的日志记录，可选择跳过体部校验和重算。
+   *
+   * <p>热读路径在端到端已有校验时可通过 {@code verifyChecksum=false} 换取吞吐；恢复/重放扫描 必须传 {@code true}。
+   *
+   * @param buffer 待读取的缓冲区
+   * @param expectedIndex 期望该记录携带的日志索引（用于连续性校验）
+   * @param frameLength 记录前面的帧版本/长度字段占用的字节数
+   * @param verifyChecksum 是否重算并比对体部 CRC32C
+   * @return 解析完成的记录
+   * @throws CorruptedJournalException 边界越界或校验和不匹配
+   * @throws InvalidIndex 记录索引与期望索引不一致
+   */
+  public JournalRecord read(
+      final ByteBuffer buffer,
+      final long expectedIndex,
+      final int frameLength,
+      final boolean verifyChecksum) {
     // 打标记，失败时可以回退到进入前的位置
     buffer.mark();
     final int frameStart = buffer.position();
@@ -64,7 +85,9 @@ public final class JournalRecordReaderUtil {
     final int headerSize = serializer.getMetadataLength(frameView, 0);
     final int bodySize = metadata.length();
 
-    verifyChecksum(buffer, frameStart, headerSize, bodySize, metadata);
+    if (verifyChecksum) {
+      verifyChecksum(buffer, frameStart, headerSize, bodySize, metadata);
+    }
 
     final JournalRecordData body = serializer.readData(frameView, headerSize);
     if (body != null && expectedIndex != body.index()) {

@@ -17,6 +17,7 @@
 package com.anyilanxin.kunpeng.cluster.raft.journal.file;
 
 import com.anyilanxin.kunpeng.cluster.raft.journal.JournalRecord;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -112,5 +113,22 @@ final class SparseJournalIndex implements JournalIndex {
     } else {
       return indexInfo.index() > index - density;
     }
+  }
+
+  @Override
+  public List<IndexInfo> entriesInRange(final long firstIndex, final long lastIndex) {
+    if (firstIndex > lastIndex) {
+      // 空 segment（尚无记录）的 lastIndex 为 firstIndex-1，直接返回空列表
+      return List.of();
+    }
+    return indexToPosition.subMap(firstIndex, true, lastIndex, true).entrySet().stream()
+        .map(entry -> new IndexInfo(entry.getKey(), entry.getValue()))
+        .toList();
+  }
+
+  @Override
+  public void indexAll(final List<IndexInfo> entries) {
+    // 仅恢复 index->position 映射；asqn 映射不做持久化，由 seekToAsqn 回退扫描重建
+    entries.forEach(entry -> indexToPosition.put(entry.index(), entry.position()));
   }
 }

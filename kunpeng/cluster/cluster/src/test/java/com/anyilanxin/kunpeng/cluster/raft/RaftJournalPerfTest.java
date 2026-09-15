@@ -55,8 +55,14 @@ public class RaftJournalPerfTest {
   /** 写入/读取的测量轮数，取最优轮。 */
   private static final int ROUNDS = 3;
 
-  /** 批量 pipeline 场景的单批在途提交条数（合并窗口深度）。 */
-  private static final int PIPELINE_BATCH = 64;
+  /** 批量 pipeline 场景的单批在途提交条数（合并窗口深度），可用环境变量覆盖做深度扫描。 */
+  private static final int PIPELINE_BATCH =
+      Integer.parseInt(System.getenv().getOrDefault("RAFT_PERF_PIPELINE_BATCH", "64"));
+
+  /**
+   * 与生产一致的 segment 大小。RaftRule 默认 10KB 小 segment 会把滚动次数放大数千倍，而每次滚动 现在是同步建段（写零 + fsync），既不贴近生产形态也会拖垮测试时长。
+   */
+  private static final int SEGMENT_SIZE = 1024 * 1024 * 32;
 
   @Test
   public void singleNodeWriteLatencyFlushAndReadBaseline() throws Exception {
@@ -264,7 +270,8 @@ public class RaftJournalPerfTest {
   private static void runWithCluster(final int nodes, final ClusterScenario scenario)
       throws Exception {
     final var recorder = new RecordingFlusherConfigurator();
-    final var rule = RaftRule.withBootstrappedNodes(nodes, recorder);
+    final var rule =
+        RaftRule.withBootstrappedNodes(nodes, recorder).setMaxSegmentSize(SEGMENT_SIZE);
     final Statement scenarioStatement =
         new Statement() {
           @Override

@@ -51,18 +51,6 @@ public final class BinaryJournalRecordSerializer implements JournalRecordSeriali
     return JournalRecordDataCodec.write(index, asqn, recordDataWriter, writeBuffer, offset);
   }
 
-  /** 按指定版本写入记录数据；由于线格式目前只有一个版本，版本参数被忽略，直接按当前布局写出。 */
-  @Override
-  public Either<BufferOverflowException, Integer> writeDataAtVersion(
-      final int version,
-      final long index,
-      final long asqn,
-      final BufferWriter recordDataWriter,
-      final MutableDirectBuffer writeBuffer,
-      final int offset) {
-    return writeData(index, asqn, recordDataWriter, writeBuffer, offset);
-  }
-
   /** 把元数据（校验和与长度）编码进缓冲区指定偏移。 */
   @Override
   public int writeMetadata(

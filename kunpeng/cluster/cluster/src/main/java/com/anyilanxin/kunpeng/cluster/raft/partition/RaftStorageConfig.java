@@ -30,8 +30,6 @@ public class RaftStorageConfig {
   private static final long DEFAULT_FREE_DISK_SPACE = 1024L * 1024 * 1024;
   private static final int DEFAULT_JOURNAL_INDEX_DENSITY = 100;
 
-  private static final boolean DEFAULT_PREALLOCATE_SEGMENT_FILES = true;
-
   private long segmentSize = DEFAULT_MAX_SEGMENT_SIZE;
   private RaftLogFlusher.Factory flusherFactory = DEFAULT_FLUSHER_FACTORY;
   private long freeDiskSpace = DEFAULT_FREE_DISK_SPACE;
