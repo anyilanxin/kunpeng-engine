@@ -63,8 +63,8 @@ public final class BusinessDispatchPlanMaker {
   public BusinessDispatchPlanMaker(final LogEventWriter writer) {
     this.writer = writer;
     final AdminImmutableRepository repository = writer.getRepository();
-    final ImmutableRepositoryKey repositoryKey = repository.repositoryKey();
-    final ImmutableRepositorySource repositorySource = repository.repositorySource();
+    final ImmutableRepositoryKey repositoryKey = repository.keyRepository();
+    final ImmutableRepositorySource repositorySource = repository.sourceRepository();
     delayChecker = writer.getDelayChecker();
     membershipService = writer.getMembershipService();
     final ClusterTopologyService clusterTopologyService = writer.getClusterTopologyService();

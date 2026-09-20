@@ -30,7 +30,7 @@ public class NodeSourceMetaCreatedApplier implements NodeSourceMetaApplier {
   private final MutableRepositorySource repositorySource;
 
   public NodeSourceMetaCreatedApplier(final AdminRepository repository) {
-    repositorySource = repository.repositorySource();
+    repositorySource = repository.sourceRepository();
   }
 
   @Override

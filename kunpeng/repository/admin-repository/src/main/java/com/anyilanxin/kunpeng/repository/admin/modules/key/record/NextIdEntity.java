@@ -16,13 +16,13 @@
  */
 package com.anyilanxin.kunpeng.repository.admin.modules.key.record;
 
-import com.anyilanxin.kunpeng.kvstore.types.ValueType;
+import com.anyilanxin.kunpeng.kvstore.types.StoreValue;
 import com.anyilanxin.kunpeng.structpack.AutoDeclareProperties;
 import com.anyilanxin.kunpeng.structpack.UnpackedObject;
 import com.anyilanxin.kunpeng.structpack.property.LongProperty;
 
 @AutoDeclareProperties
-public class NextIdEntity extends UnpackedObject implements ValueType {
+public class NextIdEntity extends UnpackedObject implements StoreValue {
   private final LongProperty nextValueProp = new LongProperty(1, "NEXT_KEY_VALUE", -1L);
 
   public NextIdEntity() {

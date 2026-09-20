@@ -30,7 +30,7 @@ public class NodeSourceAppliedApplier implements NodeSourceApplier {
   private final MutableRepositorySource repositorySource;
 
   public NodeSourceAppliedApplier(final AdminRepository repository) {
-    repositorySource = repository.repositorySource();
+    repositorySource = repository.sourceRepository();
   }
 
   @Override

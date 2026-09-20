@@ -29,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * typed 追加端：typed record 经 {@link RecordAppendEntryFactory} 转为不透明 {@link AppendEntry} 后委托底层 {@link
- * EventLogWriter}，并在成功时按 RecordType × ValueType 打点（承接旧模块的 typed 计数维度）。
+ * EventLogWriter}，并在成功时按 RecordType × StoreValue 打点（承接旧模块的 typed 计数维度）。
  *
  * <p>计数在 typed 信息可得的工厂侧完成——底层 writer 只见字节，无需解码。
  */

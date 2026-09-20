@@ -21,7 +21,7 @@ import org.agrona.DirectBuffer;
 import org.agrona.MutableDirectBuffer;
 
 /** double 类型的 key/value，按大端序 8 字节读写 */
-public class DoubleType implements KeyType, ValueType {
+public class DoubleType implements StoreKey, StoreValue {
 
   private double doubleValue;
 

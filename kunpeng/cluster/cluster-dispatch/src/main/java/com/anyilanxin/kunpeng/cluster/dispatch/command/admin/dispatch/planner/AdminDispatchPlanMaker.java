@@ -63,7 +63,7 @@ public final class AdminDispatchPlanMaker {
 
   public AdminDispatchPlanMaker(final LogEventWriter writer) {
     final AdminImmutableRepository repository = writer.getRepository();
-    final ImmutableRepositoryKey repositoryKey = repository.repositoryKey();
+    final ImmutableRepositoryKey repositoryKey = repository.keyRepository();
     final ClusterTopologyService clusterTopologyService = writer.getClusterTopologyService();
     this.repositoryKey = Objects.requireNonNull(repositoryKey, "repositoryKey is null");
     this.clusterTopologyService =

@@ -16,7 +16,7 @@
  */
 package com.anyilanxin.kunpeng.repository.admin.modules.delayed.record;
 
-import com.anyilanxin.kunpeng.kvstore.types.ValueType;
+import com.anyilanxin.kunpeng.kvstore.types.StoreValue;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.delayed.DelayedRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionType;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.delayed.DelayedType;
@@ -32,7 +32,7 @@ import com.anyilanxin.kunpeng.structpack.property.LongProperty;
  * @since
  */
 @AutoDeclareProperties
-public class DelayedRecordEntity extends UnpackedObject implements ValueType {
+public class DelayedRecordEntity extends UnpackedObject implements StoreValue {
   // structpack-ids[DelayedRecordEntity]: 1,2,3,4,5,6
   private final LongProperty delayedIdProp = new LongProperty(1, "DELAYED_ID", -1);
   private final EnumProperty<PartitionType> partitionTypeProp =

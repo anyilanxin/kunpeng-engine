@@ -94,11 +94,11 @@ public class LogEventWriter {
     agentSourceIds = new ArrayList<>(partitionSourceMetadata.agentSourceIds());
 
     initCheckerAware(repositoryFactory);
-    repositoryKey = repository.repositoryKey();
+    repositoryKey = repository.keyRepository();
   }
 
   private void initCheckerAware(final AdminRepositoryFactory repositoryFactory) {
-    delayChecker = new DelayedDelayChecker(repositoryFactory.create().repositoryDelayed(), clock);
+    delayChecker = new DelayedDelayChecker(repositoryFactory.create().delayedRepository(), clock);
     checkerAwareList.add(delayChecker);
   }
 

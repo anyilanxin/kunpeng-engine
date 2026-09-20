@@ -47,7 +47,7 @@ public class AdminDispatchClusterCancelProcessor extends AbstractAdminDispatchPr
     super(writer);
     this.writer = writer;
     final AdminImmutableRepository repository = writer.getRepository();
-    repositoryAdmin = repository.repositoryAdmin();
+    repositoryAdmin = repository.adminRepository();
     adminRaft = writer.getAdminRaft();
     membershipService = writer.getMembershipService();
     delayChecker = writer.getDelayChecker();

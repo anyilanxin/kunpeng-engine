@@ -46,7 +46,7 @@ public class AdminQueryApiProcessor
     this.writer = writer;
     response = new AdminDispatchQueryResponseRecord();
     final AdminImmutableRepository repository = writer.getRepository();
-    repositoryAdmin = repository.repositoryAdmin();
+    repositoryAdmin = repository.adminRepository();
   }
 
   @Override

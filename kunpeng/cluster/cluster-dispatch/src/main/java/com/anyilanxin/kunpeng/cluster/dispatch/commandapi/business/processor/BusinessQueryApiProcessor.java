@@ -46,7 +46,7 @@ public class BusinessQueryApiProcessor
     this.writer = writer;
     response = new BusinessDispatchQueryResponseRecord();
     final AdminImmutableRepository repository = writer.getRepository();
-    repositoryBusiness = repository.repositoryBusiness();
+    repositoryBusiness = repository.businessRepository();
   }
 
   @Override

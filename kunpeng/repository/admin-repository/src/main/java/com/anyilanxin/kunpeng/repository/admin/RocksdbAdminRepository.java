@@ -82,32 +82,32 @@ final class RocksdbAdminRepository implements AdminRepository {
   }
 
   @Override
-  public MutableRepositoryAdmin repositoryAdmin() {
+  public MutableRepositoryAdmin adminRepository() {
     return repositoryAdmin;
   }
 
   @Override
-  public MutableRepositoryBusiness repositoryBusiness() {
+  public MutableRepositoryBusiness businessRepository() {
     return repositoryBusiness;
   }
 
   @Override
-  public MutableRepositoryDelayed repositoryDelayed() {
+  public MutableRepositoryDelayed delayedRepository() {
     return repositoryDelayed;
   }
 
   @Override
-  public MutableRepositoryKey repositoryKey() {
+  public MutableRepositoryKey keyRepository() {
     return repositoryKey;
   }
 
   @Override
-  public MutableRepositoryPosition repositoryPosition() {
+  public MutableRepositoryPosition positionRepository() {
     return repositoryPosition;
   }
 
   @Override
-  public MutableRepositorySource repositorySource() {
+  public MutableRepositorySource sourceRepository() {
     return repositorySource;
   }
 }

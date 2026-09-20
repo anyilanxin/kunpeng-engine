@@ -42,7 +42,7 @@ public class NodeSourceApplyingProcessor extends AbstractNodeSourceProcessor {
     this.writer = writer;
     dispatchClient = writer.getDispatchClient();
     final AdminImmutableRepository repository = writer.getRepository();
-    repositorySource = repository.repositorySource();
+    repositorySource = repository.sourceRepository();
   }
 
   @Override

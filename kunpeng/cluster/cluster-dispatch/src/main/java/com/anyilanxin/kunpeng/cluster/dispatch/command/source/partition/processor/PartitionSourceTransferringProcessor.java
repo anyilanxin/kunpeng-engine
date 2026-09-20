@@ -36,7 +36,7 @@ public class PartitionSourceTransferringProcessor extends AbstractPartitionSourc
     super(writer);
     this.writer = writer;
     final AdminImmutableRepository repository = writer.getRepository();
-    repositorySource = repository.repositorySource();
+    repositorySource = repository.sourceRepository();
   }
 
   @Override

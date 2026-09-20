@@ -16,7 +16,7 @@
  */
 package com.anyilanxin.kunpeng.repository.admin.modules.position.record;
 
-import com.anyilanxin.kunpeng.kvstore.types.ValueType;
+import com.anyilanxin.kunpeng.kvstore.types.StoreValue;
 import com.anyilanxin.kunpeng.structpack.AutoDeclareProperties;
 import com.anyilanxin.kunpeng.structpack.UnpackedObject;
 import com.anyilanxin.kunpeng.structpack.property.LongProperty;
@@ -26,7 +26,7 @@ import com.anyilanxin.kunpeng.structpack.property.LongProperty;
  * @since
  */
 @AutoDeclareProperties
-public class LastProcessedPositionEntity extends UnpackedObject implements ValueType {
+public class LastProcessedPositionEntity extends UnpackedObject implements StoreValue {
   private final LongProperty positionProp = new LongProperty(1, "LAST_PROCESS_POSITION");
 
   public LastProcessedPositionEntity() {

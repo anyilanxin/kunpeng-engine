@@ -66,9 +66,9 @@ public class BusinessDispatchClusterExecutingProcessor extends AbstractBusinessD
     super(writer);
     this.writer = writer;
     final AdminImmutableRepository repository = writer.getRepository();
-    repositoryBusiness = repository.repositoryBusiness();
-    repositorySource = repository.repositorySource();
-    repositoryKey = repository.repositoryKey();
+    repositoryBusiness = repository.businessRepository();
+    repositorySource = repository.sourceRepository();
+    repositoryKey = repository.keyRepository();
     clusterTopologyService = writer.getClusterTopologyService();
   }
 

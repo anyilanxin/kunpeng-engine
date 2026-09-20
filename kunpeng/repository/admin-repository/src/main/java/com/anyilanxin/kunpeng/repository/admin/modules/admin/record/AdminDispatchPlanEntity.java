@@ -18,7 +18,7 @@ package com.anyilanxin.kunpeng.repository.admin.modules.admin.record;
 
 import static com.anyilanxin.kunpeng.structpack.util.BufferUtil.copyInto;
 
-import com.anyilanxin.kunpeng.kvstore.types.ValueType;
+import com.anyilanxin.kunpeng.kvstore.types.StoreValue;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminDispatchPlanExecutionRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminDispatchPlanRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.common.PartitionInfoMetaRecord;
@@ -37,7 +37,7 @@ import java.util.List;
  * @since
  */
 @AutoDeclareProperties
-public class AdminDispatchPlanEntity extends UnpackedObject implements ValueType {
+public class AdminDispatchPlanEntity extends UnpackedObject implements StoreValue {
   // structpack-ids[AdminDispatchPlanEntity]: 1,2,3,4,5,6,7,8,9,10
   private final LongProperty dispatchPlanIdProp = new LongProperty(1, "DISPATCH_PLAN_ID", -1);
   private final ArrayProperty<AdminDispatchPlanExecutionEntity> executionPlanProp =

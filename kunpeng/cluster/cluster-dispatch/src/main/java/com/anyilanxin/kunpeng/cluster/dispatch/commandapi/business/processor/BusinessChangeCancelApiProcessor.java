@@ -40,7 +40,7 @@ public class BusinessChangeCancelApiProcessor
   public BusinessChangeCancelApiProcessor(final LogEventWriter writer) {
     this.writer = writer;
     final AdminImmutableRepository repository = writer.getRepository();
-    repositoryBusiness = repository.repositoryBusiness();
+    repositoryBusiness = repository.businessRepository();
     planRecord = new BusinessDispatchPlanRecord();
   }
 

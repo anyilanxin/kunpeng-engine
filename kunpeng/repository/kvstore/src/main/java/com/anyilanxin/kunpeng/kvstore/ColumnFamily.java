@@ -16,8 +16,8 @@
  */
 package com.anyilanxin.kunpeng.kvstore;
 
-import com.anyilanxin.kunpeng.kvstore.types.KeyType;
-import com.anyilanxin.kunpeng.kvstore.types.ValueType;
+import com.anyilanxin.kunpeng.kvstore.types.StoreKey;
+import com.anyilanxin.kunpeng.kvstore.types.StoreValue;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -26,7 +26,7 @@ import java.util.function.Consumer;
  *
  * @author zxuanhong
  */
-public interface ColumnFamily<Key extends KeyType, Value extends ValueType> {
+public interface ColumnFamily<Key extends StoreKey, Value extends StoreValue> {
   /**
    * 将 key-value 对写入当前列族。
    *
@@ -46,8 +46,8 @@ public interface ColumnFamily<Key extends KeyType, Value extends ValueType> {
   /**
    * 遍历列族中存储的值，顺序由 key 决定。
    *
-   * <p>给定的 consumer 会依次接收每个值。注意：给定的 ValueType 只是对存储值的包装，反映的是当前迭代步骤， 迭代过程中其内部值会被复用修改，因此不应将该
-   * ValueType 保存下来。
+   * <p>给定的 consumer 会依次接收每个值。注意：给定的 StoreValue 只是对存储值的包装，反映的是当前迭代步骤， 迭代过程中其内部值会被复用修改，因此不应将该
+   * StoreValue 保存下来。
    *
    * @param consumer 接收值的 consumer
    */
@@ -88,17 +88,18 @@ public interface ColumnFamily<Key extends KeyType, Value extends ValueType> {
    * @param keyPrefix key 的公共前缀
    * @param visitor 访问 key-value 对的 visitor
    */
-  void whileEqualPrefix(KeyType keyPrefix, BiConsumer<Key, Value> visitor);
+  void whileEqualPrefix(StoreKey keyPrefix, BiConsumer<Key, Value> visitor);
 
   /**
    * 遍历列族中具有相同公共前缀的 key-value 对，顺序由 key 决定。visitor 可通过返回值控制迭代是否继续， 即 visitor 返回 false 时迭代将停止。
    *
-   * <p>类似 {@link #whileEqualPrefix(KeyType, BiConsumer)} 与 {@link #whileTrue(KeyValuePairVisitor)}。
+   * <p>类似 {@link #whileEqualPrefix(StoreKey, BiConsumer)} 与 {@link
+   * #whileTrue(KeyValuePairVisitor)}。
    *
    * @param keyPrefix key 的公共前缀
    * @param visitor 访问 key-value 对的 visitor
    */
-  void whileEqualPrefix(KeyType keyPrefix, KeyValuePairVisitor<Key, Value> visitor);
+  void whileEqualPrefix(StoreKey keyPrefix, KeyValuePairVisitor<Key, Value> visitor);
 
   /**
    * 遍历列族中具有相同公共前缀的 key-value 对，顺序由 key 决定。visitor 可通过返回值控制迭代是否继续， 即 visitor 返回 false 时迭代将停止。
@@ -106,13 +107,15 @@ public interface ColumnFamily<Key extends KeyType, Value extends ValueType> {
    * <p>给定的 {@code startAtKey} 指示迭代的起始位置：若该 key 存在，则第一个 key-value 对的 key 即等于 {@code
    * startAtKey}；若不存在，则从其后的 key 开始。
    *
-   * <p>类似 {@link #whileEqualPrefix(KeyType, BiConsumer)} 与 {@link #whileTrue(KeyValuePairVisitor)}。
+   * <p>类似 {@link #whileEqualPrefix(StoreKey, BiConsumer)} 与 {@link
+   * #whileTrue(KeyValuePairVisitor)}。
    *
    * @param keyPrefix key 的公共前缀
    * @param startAtKey 迭代起始的 key
    * @param visitor 访问 key-value 对的 visitor
    */
-  void whileEqualPrefix(KeyType keyPrefix, Key startAtKey, KeyValuePairVisitor<Key, Value> visitor);
+  void whileEqualPrefix(
+      StoreKey keyPrefix, Key startAtKey, KeyValuePairVisitor<Key, Value> visitor);
 
   /**
    * 从列族中删除指定 key 对应的 key-value 对。
@@ -149,5 +152,5 @@ public interface ColumnFamily<Key extends KeyType, Value extends ValueType> {
    * @param prefix key 的公共前缀
    * @return 列族中具有该公共前缀的条目数量
    */
-  long countEqualPrefix(KeyType prefix);
+  long countEqualPrefix(StoreKey prefix);
 }

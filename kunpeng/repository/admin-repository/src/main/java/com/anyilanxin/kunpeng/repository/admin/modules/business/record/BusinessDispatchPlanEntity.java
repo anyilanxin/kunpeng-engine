@@ -16,7 +16,7 @@
  */
 package com.anyilanxin.kunpeng.repository.admin.modules.business.record;
 
-import com.anyilanxin.kunpeng.kvstore.types.ValueType;
+import com.anyilanxin.kunpeng.kvstore.types.StoreValue;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.common.PartitionInfoMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.DispatchPlanState;
@@ -36,7 +36,7 @@ import org.agrona.concurrent.UnsafeBuffer;
  * @since
  */
 @AutoDeclareProperties
-public class BusinessDispatchPlanEntity extends UnpackedObject implements ValueType {
+public class BusinessDispatchPlanEntity extends UnpackedObject implements StoreValue {
   // structpack-ids[BusinessDispatchPlanEntity]: 1,3,4,5,6,7,8,9,10,11,12,13
   private final LongProperty dispatchPlanIdProp = new LongProperty(1, "DISPATCH_PLAN_ID", -1);
   private final ArrayProperty<PartitionInfoMetaRecord> metaProp =

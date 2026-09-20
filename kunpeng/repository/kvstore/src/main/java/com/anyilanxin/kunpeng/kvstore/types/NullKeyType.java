@@ -20,7 +20,7 @@ import org.agrona.DirectBuffer;
 import org.agrona.MutableDirectBuffer;
 
 /** 仅由 #isEmpty 内部使用的空 key，用于按相同 column family 前缀进行查找 */
-public final class NullKeyType implements KeyType {
+public final class NullKeyType implements StoreKey {
 
   public static final NullKeyType INSTANCE = new NullKeyType();
 

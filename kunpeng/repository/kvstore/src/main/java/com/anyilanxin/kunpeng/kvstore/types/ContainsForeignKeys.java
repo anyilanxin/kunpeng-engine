@@ -26,5 +26,5 @@ public interface ContainsForeignKeys {
    *
    * @return 外键集合，不含外键时返回空集合
    */
-  Collection<ForeignKeyType<KeyType>> containedForeignKeys();
+  Collection<ForeignKeyType<StoreKey>> containedForeignKeys();
 }

@@ -40,7 +40,7 @@ public class AdminChangeCancelApiProcessor
   public AdminChangeCancelApiProcessor(final LogEventWriter writer) {
     this.writer = writer;
     final AdminImmutableRepository repository = writer.getRepository();
-    repositoryAdmin = repository.repositoryAdmin();
+    repositoryAdmin = repository.adminRepository();
     planRecord = new AdminDispatchPlanRecord();
   }
 

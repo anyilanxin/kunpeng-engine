@@ -30,7 +30,7 @@ public class PartitionSourceMetaCreatedApplier implements PartitionSourceMetaApp
   private final MutableRepositorySource repositorySource;
 
   public PartitionSourceMetaCreatedApplier(final AdminRepository repository) {
-    repositorySource = repository.repositorySource();
+    repositorySource = repository.sourceRepository();
   }
 
   @Override

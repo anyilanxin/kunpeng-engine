@@ -30,7 +30,7 @@ public class PartitionSourceAppliedApplier implements PartitionSourceApplier {
   private final MutableRepositorySource repositorySource;
 
   public PartitionSourceAppliedApplier(final AdminRepository repository) {
-    repositorySource = repository.repositorySource();
+    repositorySource = repository.sourceRepository();
   }
 
   @Override

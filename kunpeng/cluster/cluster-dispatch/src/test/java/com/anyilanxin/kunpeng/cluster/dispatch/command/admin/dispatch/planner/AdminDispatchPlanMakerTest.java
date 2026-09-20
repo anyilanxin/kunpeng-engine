@@ -197,7 +197,7 @@ class AdminDispatchPlanMakerTest {
   private static AdminDispatchPlanMaker maker(final ClusterTopologyService topologyService) {
     final long[] executionIdSeq = {0};
     final AdminImmutableRepository repository = mock(AdminImmutableRepository.class);
-    when(repository.repositoryKey()).thenReturn(() -> ++executionIdSeq[0]);
+    when(repository.keyRepository()).thenReturn(() -> ++executionIdSeq[0]);
     final LogEventWriter writer = mock(LogEventWriter.class);
     when(writer.getRepository()).thenReturn(repository);
     when(writer.getClusterTopologyService()).thenReturn(topologyService);

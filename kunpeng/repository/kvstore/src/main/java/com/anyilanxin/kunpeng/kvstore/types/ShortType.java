@@ -25,7 +25,7 @@ import org.agrona.MutableDirectBuffer;
  *
  * @author zxuanhong
  */
-public final class ShortType implements KeyType, ValueType {
+public final class ShortType implements StoreKey, StoreValue {
 
   private short shortValue;
 

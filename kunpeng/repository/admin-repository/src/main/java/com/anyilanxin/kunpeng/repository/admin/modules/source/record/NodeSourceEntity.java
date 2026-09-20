@@ -19,7 +19,7 @@ package com.anyilanxin.kunpeng.repository.admin.modules.source.record;
 import static com.anyilanxin.kunpeng.structpack.util.BufferUtil.bufferAsString;
 import static com.anyilanxin.kunpeng.structpack.util.BufferUtil.wrapString;
 
-import com.anyilanxin.kunpeng.kvstore.types.ValueType;
+import com.anyilanxin.kunpeng.kvstore.types.StoreValue;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.source.NodeSourceRecord;
 import com.anyilanxin.kunpeng.structpack.AutoDeclareProperties;
 import com.anyilanxin.kunpeng.structpack.UnpackedObject;
@@ -35,7 +35,7 @@ import org.agrona.DirectBuffer;
  * @since
  */
 @AutoDeclareProperties
-public class NodeSourceEntity extends UnpackedObject implements ValueType {
+public class NodeSourceEntity extends UnpackedObject implements StoreValue {
   // structpack-ids[NodeSourceRecord]: 1,2
   private final StringProperty memberIdProp = new StringProperty(1, "MEMBER_ID", "");
   private final IntegerProperty sourceIdProp = new IntegerProperty(2, "SOURCE_ID", -1);

@@ -30,7 +30,7 @@ public class BusinessDispatchPlanCreatedApplierImpl implements BusinessDispatchP
   private final MutableRepositoryBusiness repositoryBusiness;
 
   public BusinessDispatchPlanCreatedApplierImpl(final AdminRepository repository) {
-    repositoryBusiness = repository.repositoryBusiness();
+    repositoryBusiness = repository.businessRepository();
   }
 
   @Override

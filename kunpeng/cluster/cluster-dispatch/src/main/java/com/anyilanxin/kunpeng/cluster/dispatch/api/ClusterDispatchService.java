@@ -85,8 +85,8 @@ public class ClusterDispatchService {
           final AdminRepository repository = repositoryFactory.create();
           this.repository = repository;
           context = repository.getContext();
-          repositoryAdmin = repository.repositoryAdmin();
-          repositoryBusiness = repository.repositoryBusiness();
+          repositoryAdmin = repository.adminRepository();
+          repositoryBusiness = repository.businessRepository();
           messagingService.registerHandler(
               CLUSTER_DISPATCH_TOPIC_ACK, this::handleDispatchAck, concurrencyControl);
           messagingService.registerHandler(

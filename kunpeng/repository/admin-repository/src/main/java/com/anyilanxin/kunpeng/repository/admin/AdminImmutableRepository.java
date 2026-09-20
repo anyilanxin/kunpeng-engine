@@ -29,15 +29,15 @@ import com.anyilanxin.kunpeng.repository.admin.modules.source.ImmutableRepositor
  */
 public interface AdminImmutableRepository {
 
-  ImmutableRepositoryAdmin repositoryAdmin();
+  ImmutableRepositoryAdmin adminRepository();
 
-  ImmutableRepositoryBusiness repositoryBusiness();
+  ImmutableRepositoryBusiness businessRepository();
 
-  ImmutableRepositoryDelayed repositoryDelayed();
+  ImmutableRepositoryDelayed delayedRepository();
 
-  ImmutableRepositoryKey repositoryKey();
+  ImmutableRepositoryKey keyRepository();
 
-  ImmutableRepositoryPosition repositoryPosition();
+  ImmutableRepositoryPosition positionRepository();
 
-  ImmutableRepositorySource repositorySource();
+  ImmutableRepositorySource sourceRepository();
 }

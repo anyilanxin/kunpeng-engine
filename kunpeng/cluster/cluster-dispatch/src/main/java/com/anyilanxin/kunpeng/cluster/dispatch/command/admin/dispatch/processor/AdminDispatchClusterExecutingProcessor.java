@@ -41,7 +41,7 @@ public class AdminDispatchClusterExecutingProcessor extends AbstractAdminDispatc
     super(writer);
     this.writer = writer;
     final AdminImmutableRepository repository = writer.getRepository();
-    repositoryAdmin = repository.repositoryAdmin();
+    repositoryAdmin = repository.adminRepository();
   }
 
   @Override

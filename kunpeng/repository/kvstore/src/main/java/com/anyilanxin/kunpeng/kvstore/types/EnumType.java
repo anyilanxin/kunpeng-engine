@@ -20,7 +20,7 @@ import org.agrona.DirectBuffer;
 import org.agrona.MutableDirectBuffer;
 
 /** 将枚举（最多 255 个取值）压缩存储为单个字节 */
-public final class EnumType<T extends Enum<T>> implements KeyType, ValueType {
+public final class EnumType<T extends Enum<T>> implements StoreKey, StoreValue {
   private final ByteType value = new ByteType();
   private final T[] variants;
 

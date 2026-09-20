@@ -30,7 +30,7 @@ public class BusinessClusterMetaCreatedApplierImpl implements BusinessClusterMet
   private final MutableRepositoryBusiness repositoryBusiness;
 
   public BusinessClusterMetaCreatedApplierImpl(final AdminRepository repository) {
-    repositoryBusiness = repository.repositoryBusiness();
+    repositoryBusiness = repository.businessRepository();
   }
 
   @Override

@@ -47,7 +47,7 @@ public class AdminChangeReplicationApiProcessor
     this.writer = writer;
     membershipService = writer.getMembershipService();
     final AdminImmutableRepository repository = writer.getRepository();
-    repositoryAdmin = repository.repositoryAdmin();
+    repositoryAdmin = repository.adminRepository();
     planRecord = new AdminDispatchPlanRecord();
   }
 

@@ -30,7 +30,7 @@ public class AdminClusterMetaUpdatedApplierImpl implements AdminClusterMetaAppli
   private final MutableRepositoryAdmin repositoryAdmin;
 
   public AdminClusterMetaUpdatedApplierImpl(final AdminRepository repository) {
-    repositoryAdmin = repository.repositoryAdmin();
+    repositoryAdmin = repository.adminRepository();
   }
 
   @Override

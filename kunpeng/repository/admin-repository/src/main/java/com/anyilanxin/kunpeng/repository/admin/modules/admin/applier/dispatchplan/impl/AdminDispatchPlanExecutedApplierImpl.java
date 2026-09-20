@@ -30,7 +30,7 @@ public class AdminDispatchPlanExecutedApplierImpl implements AdminDispatchPlanAp
   private final MutableRepositoryAdmin repositoryAdmin;
 
   public AdminDispatchPlanExecutedApplierImpl(final AdminRepository repository) {
-    repositoryAdmin = repository.repositoryAdmin();
+    repositoryAdmin = repository.adminRepository();
   }
 
   @Override

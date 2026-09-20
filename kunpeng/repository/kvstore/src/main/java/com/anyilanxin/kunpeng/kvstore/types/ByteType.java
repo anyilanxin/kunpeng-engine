@@ -20,7 +20,7 @@ import org.agrona.DirectBuffer;
 import org.agrona.MutableDirectBuffer;
 
 /** byte 类型的 key/value，按单个字节读写 */
-public class ByteType implements KeyType, ValueType {
+public class ByteType implements StoreKey, StoreValue {
 
   private byte value;
 

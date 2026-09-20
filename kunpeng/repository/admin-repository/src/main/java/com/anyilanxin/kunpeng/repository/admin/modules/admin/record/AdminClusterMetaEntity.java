@@ -18,7 +18,7 @@ package com.anyilanxin.kunpeng.repository.admin.modules.admin.record;
 
 import static com.anyilanxin.kunpeng.structpack.util.BufferUtil.copyInto;
 
-import com.anyilanxin.kunpeng.kvstore.types.ValueType;
+import com.anyilanxin.kunpeng.kvstore.types.StoreValue;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminClusterMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.common.PartitionInfoMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.common.PartitionMemberMetaRecord;
@@ -35,7 +35,7 @@ import com.anyilanxin.kunpeng.structpack.property.ObjectProperty;
  * @since
  */
 @AutoDeclareProperties
-public class AdminClusterMetaEntity extends UnpackedObject implements ValueType {
+public class AdminClusterMetaEntity extends UnpackedObject implements StoreValue {
   // structpack-ids[AdminClusterMetaRecord]: 1,2,3,4,5,6,7
   private final IntegerProperty versionProp = new IntegerProperty(1, "VERSION", 0);
   private final IntegerProperty replicationFactorProp =

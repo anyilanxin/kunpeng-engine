@@ -16,7 +16,7 @@
  */
 package com.anyilanxin.kunpeng.repository.admin.modules.source.record;
 
-import com.anyilanxin.kunpeng.kvstore.types.ValueType;
+import com.anyilanxin.kunpeng.kvstore.types.StoreValue;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.source.NodeSourceMetaRecord;
 import com.anyilanxin.kunpeng.structpack.AutoDeclareProperties;
 import com.anyilanxin.kunpeng.structpack.UnpackedObject;
@@ -30,7 +30,7 @@ import com.anyilanxin.kunpeng.structpack.property.LongProperty;
  * @since
  */
 @AutoDeclareProperties
-public class NodeSourceMetaEntity extends UnpackedObject implements ValueType {
+public class NodeSourceMetaEntity extends UnpackedObject implements StoreValue {
   // structpack-ids[NodeSourceMetaRecord]: 1,2,3,5
   private final IntegerProperty versionProp = new IntegerProperty(1, "VERSION", 0);
   private final LongProperty createTimeProp = new LongProperty(2, "CREATE_TIME", -1);

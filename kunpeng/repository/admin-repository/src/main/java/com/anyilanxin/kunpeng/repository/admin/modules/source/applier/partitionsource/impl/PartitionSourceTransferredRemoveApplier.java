@@ -27,7 +27,7 @@ public class PartitionSourceTransferredRemoveApplier implements PartitionSourceA
   private final MutableRepositorySource repositorySource;
 
   public PartitionSourceTransferredRemoveApplier(final AdminRepository repository) {
-    repositorySource = repository.repositorySource();
+    repositorySource = repository.sourceRepository();
   }
 
   @Override

@@ -18,7 +18,7 @@ package com.anyilanxin.kunpeng.repository.admin.modules.business.record;
 
 import static com.anyilanxin.kunpeng.structpack.util.BufferUtil.*;
 
-import com.anyilanxin.kunpeng.kvstore.types.ValueType;
+import com.anyilanxin.kunpeng.kvstore.types.StoreValue;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanExecutionRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.DispatchExecutionState;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionExecutionType;
@@ -38,7 +38,7 @@ import org.agrona.concurrent.UnsafeBuffer;
  * @since
  */
 @AutoDeclareProperties
-public class BusinessDispatchPlanExecutionEntity extends UnpackedObject implements ValueType {
+public class BusinessDispatchPlanExecutionEntity extends UnpackedObject implements StoreValue {
   // structpack-ids[BusinessDispatchPlanExecutionRecord]: 1,2,3,4,5,6,7,8,9,10,11,12,13,14
   private final LongProperty dispatchPlanExecutionIdProp =
       new LongProperty(1, "DISPATCH_PLAN_EXECUTION_ID", -1);

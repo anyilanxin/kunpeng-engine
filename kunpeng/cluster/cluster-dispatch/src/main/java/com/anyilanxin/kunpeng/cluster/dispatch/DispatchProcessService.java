@@ -247,10 +247,10 @@ public class DispatchProcessService extends Actor implements RecordAvailableList
   }
 
   private void initProcessPosition() {
-    mutableRepositoryPosition = repository.repositoryPosition();
-    immutableRepositoryPosition = repository.repositoryPosition();
-    keyGenerator = repository.repositoryKey();
-    mutableKeyGenerator = repository.repositoryKey();
+    mutableRepositoryPosition = repository.positionRepository();
+    immutableRepositoryPosition = repository.positionRepository();
+    keyGenerator = repository.keyRepository();
+    mutableKeyGenerator = repository.keyRepository();
     processPosition = immutableRepositoryPosition.getLastSuccessfulProcessedRecordPosition();
     final ProcessingCollectSupplier collectSupplier = new ProcessingCollectSupplier();
     logEventWriter =

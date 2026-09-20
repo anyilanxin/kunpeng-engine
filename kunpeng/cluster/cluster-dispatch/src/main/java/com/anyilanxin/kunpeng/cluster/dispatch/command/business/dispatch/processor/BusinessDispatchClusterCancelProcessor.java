@@ -47,7 +47,7 @@ public class BusinessDispatchClusterCancelProcessor extends AbstractBusinessDisp
     super(writer);
     this.writer = writer;
     final AdminImmutableRepository repository = writer.getRepository();
-    repositoryBusiness = repository.repositoryBusiness();
+    repositoryBusiness = repository.businessRepository();
     businessRaft = writer.getBusinessRaft();
     membershipService = writer.getMembershipService();
     delayChecker = writer.getDelayChecker();

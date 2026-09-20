@@ -50,8 +50,8 @@ public class DelayedTriggerProcessor extends AbstractDelayedProcessor {
     super(writer);
     this.writer = writer;
     final AdminImmutableRepository repository = writer.getRepository();
-    repositoryAdmin = repository.repositoryAdmin();
-    repositoryBusiness = repository.repositoryBusiness();
+    repositoryAdmin = repository.adminRepository();
+    repositoryBusiness = repository.businessRepository();
   }
 
   @Override

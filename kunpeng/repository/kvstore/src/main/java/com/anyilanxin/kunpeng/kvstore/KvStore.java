@@ -17,6 +17,8 @@
 package com.anyilanxin.kunpeng.kvstore;
 
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotFileInfo;
+import com.anyilanxin.kunpeng.kvstore.types.StoreKey;
+import com.anyilanxin.kunpeng.kvstore.types.StoreValue;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Map;
@@ -46,9 +48,7 @@ public interface KvStore<ColumnFamilyType extends ColumnFamilies> extends AutoCl
    * @param valueInstance 定义该列族 value 类型的实例
    * @return 创建的列族访问实例
    */
-  <
-          KeyType extends com.anyilanxin.kunpeng.kvstore.types.KeyType,
-          ValueType extends com.anyilanxin.kunpeng.kvstore.types.ValueType>
+  <KeyType extends StoreKey, ValueType extends StoreValue>
       ColumnFamily<KeyType, ValueType> createColumnFamily(
           final ColumnFamilyType columnFamilies,
           TransactionContext transactionContext,

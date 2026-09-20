@@ -47,7 +47,7 @@ public class BusinessChangePartitionApiProcessor
     this.writer = writer;
     membershipService = writer.getMembershipService();
     final AdminImmutableRepository repository = writer.getRepository();
-    repositoryBusiness = repository.repositoryBusiness();
+    repositoryBusiness = repository.businessRepository();
     planRecord = new BusinessDispatchPlanRecord();
   }
 

@@ -30,7 +30,7 @@ public class DelayedCanceledApplierImpl implements DelayedApplier {
   private final MutableRepositoryDelayed repositoryDelayed;
 
   public DelayedCanceledApplierImpl(final AdminRepository repository) {
-    repositoryDelayed = repository.repositoryDelayed();
+    repositoryDelayed = repository.delayedRepository();
   }
 
   @Override

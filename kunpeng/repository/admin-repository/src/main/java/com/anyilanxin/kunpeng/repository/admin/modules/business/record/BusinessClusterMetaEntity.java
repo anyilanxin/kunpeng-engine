@@ -16,7 +16,7 @@
  */
 package com.anyilanxin.kunpeng.repository.admin.modules.business.record;
 
-import com.anyilanxin.kunpeng.kvstore.types.ValueType;
+import com.anyilanxin.kunpeng.kvstore.types.StoreValue;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessClusterMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.common.PartitionInfoMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.common.PartitionMemberMetaRecord;
@@ -36,7 +36,7 @@ import org.agrona.concurrent.UnsafeBuffer;
  * @since
  */
 @AutoDeclareProperties
-public class BusinessClusterMetaEntity extends UnpackedObject implements ValueType {
+public class BusinessClusterMetaEntity extends UnpackedObject implements StoreValue {
   // structpack-ids[BusinessClusterMetaRecord]: 1,2,3,4,5,6,7
   private final IntegerProperty versionProp = new IntegerProperty(1, "VERSION", 0);
   private final IntegerProperty replicationFactorProp =

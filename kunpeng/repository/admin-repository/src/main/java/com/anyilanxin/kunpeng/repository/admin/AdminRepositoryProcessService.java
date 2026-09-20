@@ -87,8 +87,8 @@ public class AdminRepositoryProcessService extends Actor implements RecordAvaila
   }
 
   private void initRepositoryPosition() {
-    repositoryPosition = repository.repositoryPosition();
-    repositoryKey = repository.repositoryKey();
+    repositoryPosition = repository.positionRepository();
+    repositoryKey = repository.keyRepository();
     processPosition = repositoryPosition.getLastSuccessfulProcessedRecordPosition();
   }
 

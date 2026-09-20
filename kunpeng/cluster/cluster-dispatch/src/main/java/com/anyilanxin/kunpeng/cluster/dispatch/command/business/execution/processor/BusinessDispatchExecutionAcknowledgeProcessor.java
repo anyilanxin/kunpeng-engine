@@ -51,7 +51,7 @@ public class BusinessDispatchExecutionAcknowledgeProcessor
     super(writer);
     this.writer = writer;
     final AdminImmutableRepository repository = writer.getRepository();
-    repositoryBusiness = repository.repositoryBusiness();
+    repositoryBusiness = repository.businessRepository();
     transferRecord = new PartitionLeaveSourceTransferRecord();
   }
 

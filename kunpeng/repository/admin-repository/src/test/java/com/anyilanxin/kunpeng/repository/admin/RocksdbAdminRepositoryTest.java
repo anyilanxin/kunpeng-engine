@@ -71,35 +71,35 @@ class RocksdbAdminRepositoryTest {
   @Test
   void shouldTrackProcessedPosition() {
     // 未处理过任何事件时返回 -1
-    assertThat(repository.repositoryPosition().getLastSuccessfulProcessedRecordPosition())
+    assertThat(repository.positionRepository().getLastSuccessfulProcessedRecordPosition())
         .isEqualTo(-1L);
 
-    repository.repositoryPosition().markAsProcessed(42L);
-    assertThat(repository.repositoryPosition().getLastSuccessfulProcessedRecordPosition())
+    repository.positionRepository().markAsProcessed(42L);
+    assertThat(repository.positionRepository().getLastSuccessfulProcessedRecordPosition())
         .isEqualTo(42L);
 
-    repository.repositoryPosition().markAsProcessed(100L);
-    assertThat(repository.repositoryPosition().getLastSuccessfulProcessedRecordPosition())
+    repository.positionRepository().markAsProcessed(100L);
+    assertThat(repository.positionRepository().getLastSuccessfulProcessedRecordPosition())
         .isEqualTo(100L);
   }
 
   @Test
   void shouldGenerateMonotonicallyIncreasingKeys() {
-    final var first = repository.repositoryKey().nextKey();
-    final var second = repository.repositoryKey().nextKey();
+    final var first = repository.keyRepository().nextKey();
+    final var second = repository.keyRepository().nextKey();
 
     assertThat(second).isGreaterThan(first);
 
     // setKeyIfHigher 只抬升水位，不回退
-    repository.repositoryKey().setKeyIfHigher(first);
-    final var third = repository.repositoryKey().nextKey();
+    repository.keyRepository().setKeyIfHigher(first);
+    final var third = repository.keyRepository().nextKey();
     assertThat(third).isGreaterThan(second);
   }
 
   @Test
   void shouldPersistPositionAndKeysAcrossRepositoryRecreate() {
-    repository.repositoryPosition().markAsProcessed(77L);
-    final var lastKey = repository.repositoryKey().nextKey();
+    repository.positionRepository().markAsProcessed(77L);
+    final var lastKey = repository.keyRepository().nextKey();
 
     // 同一数据库上重建仓库实例，水位应恢复
     final var recreated =
@@ -108,9 +108,9 @@ class RocksdbAdminRepositoryTest {
                 new PartitionSourceMetadata(1, 1, ImmutableSet.of(1)),
                 new SimpleMeterRegistry())
             .create();
-    assertThat(recreated.repositoryPosition().getLastSuccessfulProcessedRecordPosition())
+    assertThat(recreated.positionRepository().getLastSuccessfulProcessedRecordPosition())
         .isEqualTo(77L);
-    assertThat(recreated.repositoryKey().nextKey()).isGreaterThan(lastKey);
+    assertThat(recreated.keyRepository().nextKey()).isGreaterThan(lastKey);
   }
 
   private static DelayedRecord delayedRecord(
@@ -125,7 +125,7 @@ class RocksdbAdminRepositoryTest {
 
   @Test
   void shouldSaveReadAndDeleteDelayedRecords() {
-    final var delayed = repository.repositoryDelayed();
+    final var delayed = repository.delayedRepository();
 
     final var record =
         new DelayedRecord()
@@ -153,7 +153,7 @@ class RocksdbAdminRepositoryTest {
 
   @Test
   void shouldProcessDueDelayedRecordsInDueDateOrder() {
-    final var delayed = repository.repositoryDelayed();
+    final var delayed = repository.delayedRepository();
 
     delayed.save(1L, delayedRecord(1L, 100L));
     delayed.save(2L, delayedRecord(2L, 200L));
@@ -184,7 +184,7 @@ class RocksdbAdminRepositoryTest {
 
   @Test
   void processDelayVisitorCanStopConsumption() {
-    final var delayed = repository.repositoryDelayed();
+    final var delayed = repository.delayedRepository();
     delayed.save(1L, delayedRecord(1L, 100L));
     delayed.save(2L, delayedRecord(2L, 100L));
 
@@ -206,7 +206,7 @@ class RocksdbAdminRepositoryTest {
 
   @Test
   void shouldManageNodeSources() {
-    final var source = repository.repositorySource();
+    final var source = repository.sourceRepository();
 
     final var meta = new NodeSourceMetaRecord().setVersion(1).setCreateTime(1_000L);
     source.save(meta);
@@ -230,25 +230,25 @@ class RocksdbAdminRepositoryTest {
     assertThat(repository.getAppliers()).isNotNull();
     assertThat(repository.getContext()).isNotNull();
     // 6 个子模块的读写访问器都可用
-    assertThat(repository.repositoryAdmin()).isNotNull();
-    assertThat(repository.repositoryBusiness()).isNotNull();
-    assertThat(repository.repositoryDelayed()).isNotNull();
-    assertThat(repository.repositoryKey()).isNotNull();
-    assertThat(repository.repositoryPosition()).isNotNull();
-    assertThat(repository.repositorySource()).isNotNull();
+    assertThat(repository.adminRepository()).isNotNull();
+    assertThat(repository.businessRepository()).isNotNull();
+    assertThat(repository.delayedRepository()).isNotNull();
+    assertThat(repository.keyRepository()).isNotNull();
+    assertThat(repository.positionRepository()).isNotNull();
+    assertThat(repository.sourceRepository()).isNotNull();
   }
 
   @Test
   void shouldRunOperationsInRepositoryTransactionAtomically() throws Exception {
     final var positionBefore =
-        repository.repositoryPosition().getLastSuccessfulProcessedRecordPosition();
+        repository.positionRepository().getLastSuccessfulProcessedRecordPosition();
 
     try {
       repository
           .getContext()
           .runInTransaction(
               () -> {
-                repository.repositoryPosition().markAsProcessed(555L);
+                repository.positionRepository().markAsProcessed(555L);
                 throw new IllegalStateException("abort batch");
               });
     } catch (final RuntimeException ignored) {
@@ -256,13 +256,13 @@ class RocksdbAdminRepositoryTest {
     }
 
     // 回滚后 position 不应推进
-    assertThat(repository.repositoryPosition().getLastSuccessfulProcessedRecordPosition())
+    assertThat(repository.positionRepository().getLastSuccessfulProcessedRecordPosition())
         .isEqualTo(positionBefore);
   }
 
   @Test
   void shouldListPartitionSources() {
-    final var source = repository.repositorySource();
+    final var source = repository.sourceRepository();
     assertThat(source.getPartitionSources()).isEmpty();
 
     // 通过 applier 通道写入一条分区源记录（APPLIED 生命周期，value=2）

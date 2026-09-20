@@ -29,15 +29,15 @@ import com.anyilanxin.kunpeng.repository.admin.modules.source.MutableRepositoryS
  */
 public interface AdminMutableRepository {
 
-  MutableRepositoryAdmin repositoryAdmin();
+  MutableRepositoryAdmin adminRepository();
 
-  MutableRepositoryBusiness repositoryBusiness();
+  MutableRepositoryBusiness businessRepository();
 
-  MutableRepositoryDelayed repositoryDelayed();
+  MutableRepositoryDelayed delayedRepository();
 
-  MutableRepositoryKey repositoryKey();
+  MutableRepositoryKey keyRepository();
 
-  MutableRepositoryPosition repositoryPosition();
+  MutableRepositoryPosition positionRepository();
 
-  MutableRepositorySource repositorySource();
+  MutableRepositorySource sourceRepository();
 }
