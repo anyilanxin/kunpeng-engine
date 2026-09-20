@@ -22,9 +22,9 @@ import com.anyilanxin.kunpeng.kvstore.ColumnFamilies;
 import com.anyilanxin.kunpeng.kvstore.ColumnFamily;
 import com.anyilanxin.kunpeng.kvstore.KeyValuePairVisitor;
 import com.anyilanxin.kunpeng.kvstore.TransactionContext;
-import com.anyilanxin.kunpeng.kvstore.types.KeyType;
 import com.anyilanxin.kunpeng.kvstore.types.NullKeyType;
-import com.anyilanxin.kunpeng.kvstore.types.ValueType;
+import com.anyilanxin.kunpeng.kvstore.types.StoreKey;
+import com.anyilanxin.kunpeng.kvstore.types.StoreValue;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.nio.ByteBuffer;
@@ -50,7 +50,7 @@ import org.rocksdb.Transaction;
  * @author zxuanhong
  */
 @SuppressWarnings("rawtypes")
-public final class DefaultColumnFamily<Key extends KeyType, Value extends ValueType>
+public final class DefaultColumnFamily<Key extends StoreKey, Value extends StoreValue>
     implements ColumnFamily<Key, Value> {
   private final ColumnFamilyHandle familyHandle;
   private final long familyNativeHandle;
@@ -156,13 +156,13 @@ public final class DefaultColumnFamily<Key extends KeyType, Value extends ValueT
     }
   }
 
-  void writeKey(final KeyType key) {
+  void writeKey(final StoreKey key) {
     keyWriteBuffer.putInt(0, columnFamilies.virtualFamily(), ByteOrder.BIG_ENDIAN);
     key.write(keyWriteBuffer, Integer.BYTES);
     keyLength = key.getLength() + Integer.BYTES;
   }
 
-  void writeValue(final ValueType value) {
+  void writeValue(final StoreValue value) {
     value.write(valueWriteBuffer, 0);
     valueLength = value.getLength();
   }
@@ -306,8 +306,8 @@ public final class DefaultColumnFamily<Key extends KeyType, Value extends ValueT
   }
 
   private void forEachInPrefix(
-      final KeyType startAt,
-      final KeyType prefix,
+      final StoreKey startAt,
+      final StoreKey prefix,
       final KeyValuePairVisitor<Key, Value> visitor,
       final Transaction transaction) {
     final var seekTarget = Objects.requireNonNullElse(startAt, prefix);
@@ -343,7 +343,7 @@ public final class DefaultColumnFamily<Key extends KeyType, Value extends ValueT
   }
 
   @Override
-  public void whileEqualPrefix(final KeyType keyPrefix, final BiConsumer<Key, Value> visitor) {
+  public void whileEqualPrefix(final StoreKey keyPrefix, final BiConsumer<Key, Value> visitor) {
     whileEqualPrefix(
         keyPrefix,
         (key, value) -> {
@@ -366,13 +366,13 @@ public final class DefaultColumnFamily<Key extends KeyType, Value extends ValueT
 
   @Override
   public void whileEqualPrefix(
-      final KeyType keyPrefix, final KeyValuePairVisitor<Key, Value> visitor) {
+      final StoreKey keyPrefix, final KeyValuePairVisitor<Key, Value> visitor) {
     ensureInOpenTransaction(transaction -> forEachInPrefix(keyPrefix, visitor, transaction));
   }
 
   @Override
   public void whileEqualPrefix(
-      final KeyType keyPrefix,
+      final StoreKey keyPrefix,
       final Key startAtKey,
       final KeyValuePairVisitor<Key, Value> visitor) {
     ensureInOpenTransaction(
@@ -382,7 +382,7 @@ public final class DefaultColumnFamily<Key extends KeyType, Value extends ValueT
   }
 
   /** 将列族前缀与给定 key 写入前缀缓冲区，包装成字节数组及其长度交给 consumer 使用，使用完毕后归还缓冲区。 */
-  public void withPrefixKey(final KeyType key, final ObjIntConsumer<byte[]> prefixKeyConsumer) {
+  public void withPrefixKey(final StoreKey key, final ObjIntConsumer<byte[]> prefixKeyConsumer) {
     if (prefixKeyBuffers.peek() == null) {
       throw new IllegalStateException(
           "Currently nested prefix iterations are not supported! This will cause unexpected behavior.");
@@ -400,7 +400,7 @@ public final class DefaultColumnFamily<Key extends KeyType, Value extends ValueT
   }
 
   /** 将列族前缀与给定 key 写入 seek 缓冲区，包装成 ByteBuffer 交给 consumer 使用。 */
-  public void withSeekKeyBuffer(final KeyType key, final Consumer<ByteBuffer> keyConsumer) {
+  public void withSeekKeyBuffer(final StoreKey key, final Consumer<ByteBuffer> keyConsumer) {
     seekKeyBuffer.putInt(0, columnFamilies.virtualFamily(), ByteOrder.BIG_ENDIAN);
     key.write(seekKeyBuffer, Integer.BYTES);
     final int len = Integer.BYTES + key.getLength();
@@ -455,7 +455,7 @@ public final class DefaultColumnFamily<Key extends KeyType, Value extends ValueT
   }
 
   private void forEachInPrefix(
-      final KeyType prefix,
+      final StoreKey prefix,
       final KeyValuePairVisitor<Key, Value> visitor,
       final Transaction transaction) {
     forEachInPrefix(prefix, prefix, visitor, transaction);
@@ -485,7 +485,7 @@ public final class DefaultColumnFamily<Key extends KeyType, Value extends ValueT
    * @param prefix 所有被迭代的 key 的公共前缀
    * @return 列族中具有给定前缀的条目数量
    */
-  private long countEachInPrefix(final KeyType prefix, final Transaction transaction) {
+  private long countEachInPrefix(final StoreKey prefix, final Transaction transaction) {
     final var seekTarget = Objects.requireNonNull(prefix);
     final long[] count = {0};
     withPrefixKey(
@@ -514,7 +514,7 @@ public final class DefaultColumnFamily<Key extends KeyType, Value extends ValueT
   }
 
   @Override
-  public long countEqualPrefix(final KeyType prefix) {
+  public long countEqualPrefix(final StoreKey prefix) {
     final long[] count = {0};
     ensureInOpenTransaction(
         transaction -> {

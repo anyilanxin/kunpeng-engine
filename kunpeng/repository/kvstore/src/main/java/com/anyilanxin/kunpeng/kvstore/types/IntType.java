@@ -25,7 +25,7 @@ import org.agrona.MutableDirectBuffer;
  *
  * @author zxuanhong
  */
-public final class IntType implements KeyType, ValueType {
+public final class IntType implements StoreKey, StoreValue {
 
   private int intValue;
 

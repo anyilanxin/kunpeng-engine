@@ -20,7 +20,7 @@ import org.agrona.DirectBuffer;
 import org.agrona.MutableDirectBuffer;
 
 /** 空 value 占位类型，不读取任何内容，写入时仅输出一个存在标记字节 */
-public final class NilType implements KeyType, ValueType {
+public final class NilType implements StoreKey, StoreValue {
 
   /** 全局唯一实例 */
   public static final NilType INSTANCE = new NilType();

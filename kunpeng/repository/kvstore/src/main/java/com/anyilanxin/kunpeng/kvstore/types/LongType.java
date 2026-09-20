@@ -21,7 +21,7 @@ import org.agrona.DirectBuffer;
 import org.agrona.MutableDirectBuffer;
 
 /** long 类型的 key/value，按大端序 8 字节读写 */
-public class LongType implements KeyType, ValueType {
+public class LongType implements StoreKey, StoreValue {
 
   private long longValue;
 

@@ -25,8 +25,8 @@ import org.agrona.MutableDirectBuffer;
  * @param <FirstKeyType> 第一个 key 的类型
  * @param <SecondKeyType> 第二个 key 的类型
  */
-public class CompositeKeyType<FirstKeyType extends KeyType, SecondKeyType extends KeyType>
-    implements KeyType {
+public class CompositeKeyType<FirstKeyType extends StoreKey, SecondKeyType extends StoreKey>
+    implements StoreKey {
 
   private final FirstKeyType firstKeyTypePart;
   private final SecondKeyType secondKeyTypePart;

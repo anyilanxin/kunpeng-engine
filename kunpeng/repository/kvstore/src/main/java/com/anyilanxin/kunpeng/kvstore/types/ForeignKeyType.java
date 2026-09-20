@@ -31,9 +31,9 @@ import org.agrona.MutableDirectBuffer;
  * @param skip 跳过外键校验的判断条件
  * @param <K> 内部 key 的类型
  */
-public record ForeignKeyType<K extends KeyType>(
+public record ForeignKeyType<K extends StoreKey>(
     K inner, Enum<?> columnFamily, MatchType match, Predicate<K> skip)
-    implements ContainsForeignKeys, KeyType, ValueType {
+    implements ContainsForeignKeys, StoreKey, StoreValue {
 
   /**
    * 以完整匹配方式包装指定 column family 的 key
@@ -77,8 +77,8 @@ public record ForeignKeyType<K extends KeyType>(
    * @return 包含自身的外键集合
    */
   @Override
-  public Collection<ForeignKeyType<KeyType>> containedForeignKeys() {
-    return Collections.singletonList((ForeignKeyType<KeyType>) this);
+  public Collection<ForeignKeyType<StoreKey>> containedForeignKeys() {
+    return Collections.singletonList((ForeignKeyType<StoreKey>) this);
   }
 
   /**

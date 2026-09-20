@@ -26,6 +26,8 @@ import com.anyilanxin.kunpeng.kvstore.ColumnFamily;
 import com.anyilanxin.kunpeng.kvstore.KvStore;
 import com.anyilanxin.kunpeng.kvstore.PredefinedColumnFamily;
 import com.anyilanxin.kunpeng.kvstore.TransactionContext;
+import com.anyilanxin.kunpeng.kvstore.types.StoreKey;
+import com.anyilanxin.kunpeng.kvstore.types.StoreValue;
 import com.anyilanxin.kunpeng.rocksdb.util.RocksdbOptionsUtil;
 import com.anyilanxin.kunpeng.rocksdb.util.RocksdbUtil;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -147,9 +149,7 @@ public final class RocksdbTransactionDb<ColumnFamilyType extends ColumnFamilies>
   /** 创建指定列族的访问实例，用于类型安全地读写该列族的 key-value 数据 */
   @Override
   @SuppressWarnings({"unchecked", "rawtypes"})
-  public <
-          KeyType extends com.anyilanxin.kunpeng.kvstore.types.KeyType,
-          ValueType extends com.anyilanxin.kunpeng.kvstore.types.ValueType>
+  public <KeyType extends StoreKey, ValueType extends StoreValue>
       ColumnFamily<KeyType, ValueType> createColumnFamily(
           final ColumnFamilyType columnFamilies,
           final TransactionContext transactionContext,

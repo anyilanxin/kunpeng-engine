@@ -24,6 +24,8 @@ import com.anyilanxin.kunpeng.kvstore.ColumnFamily;
 import com.anyilanxin.kunpeng.kvstore.KvStore;
 import com.anyilanxin.kunpeng.kvstore.PredefinedColumnFamily;
 import com.anyilanxin.kunpeng.kvstore.TransactionContext;
+import com.anyilanxin.kunpeng.kvstore.types.StoreKey;
+import com.anyilanxin.kunpeng.kvstore.types.StoreValue;
 import com.anyilanxin.kunpeng.rocksdb.util.RocksdbOptionsUtil;
 import com.anyilanxin.kunpeng.rocksdb.util.RocksdbUtil;
 import java.io.File;
@@ -98,9 +100,7 @@ public final class RocksdbReadOnlyDb<ColumnFamilyType extends ColumnFamilies>
 
   /** 只读数据库不支持该操作，直接抛出异常 */
   @Override
-  public <
-          KeyType extends com.anyilanxin.kunpeng.kvstore.types.KeyType,
-          ValueType extends com.anyilanxin.kunpeng.kvstore.types.ValueType>
+  public <KeyType extends StoreKey, ValueType extends StoreValue>
       ColumnFamily<KeyType, ValueType> createColumnFamily(
           final ColumnFamilyType columnFamilies,
           final TransactionContext transactionContext,
