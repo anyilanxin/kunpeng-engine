@@ -26,7 +26,7 @@ import org.jspecify.annotations.Nullable;
  * 镜像传输服务（对外门面，业务持有）：向指定分区拉取最新镜像——先取回镜像基本信息 （信息分片），再经本地 ReceiveSnapshotStore 逐批接收分片并持久化。
  *
  * @author zxuanhong
- * @since 1.0.0
+ * @since 2026.0.0
  */
 public interface SnapshotTransfer {
   /**

@@ -21,107 +21,93 @@ import java.util.Objects;
 import org.agrona.DirectBuffer;
 
 /**
- * 已从磁盘读出的日志记录。
+ * 从 segment 读回的一条完整日志记录。
  *
- * <p>一条完整记录由两部分组成：头部 {@link JournalRecordMetadata}（校验和、长度）与体部 {@link
- * JournalRecordData}（索引、序号、负载数据）。除此之外还携带了覆盖整条记录原始字节的 {@code serializedRecord} 视图，以及该记录在 segment
- * 中占用的总字节数（含帧头）。
+ * <p>持有三个视图：头部 {@link JournalRecordMetadata}（校验和与长度）、体部 {@link
+ * JournalRecordData}（索引、序号、负载），以及直接覆盖记录原始字节的 {@code raw} 缓冲（零拷贝 交给上层）。{@code totalSize} 是该记录连同前置帧字段在 segment 内占用的字节数。
  */
 public final class PersistedJournalRecord implements JournalRecord {
 
-  /** 记录头。 */
-  private final JournalRecordMetadata metadata;
-
-  /** 记录体。 */
-  private final JournalRecordData record;
-
-  /** 覆盖记录原始字节的缓冲视图（依赖底层映射内存，不可越界存活）。 */
-  private final DirectBuffer serializedRecord;
-
-  /** 记录占用的总字节数（帧版本/长度字段 + 头部 + 体部）。 */
-  private final int size;
+  private final JournalRecordMetadata header;
+  private final JournalRecordData body;
+  private final DirectBuffer raw;
+  private final int totalSize;
 
   public PersistedJournalRecord(
-      final JournalRecordMetadata metadata,
-      final JournalRecordData record,
-      final DirectBuffer serializedRecord,
-      final int size) {
-    this.metadata = metadata;
-    this.record = record;
-    this.serializedRecord = serializedRecord;
-    this.size = size;
+      final JournalRecordMetadata header,
+      final JournalRecordData body,
+      final DirectBuffer raw,
+      final int totalSize) {
+    this.header = header;
+    this.body = body;
+    this.raw = raw;
+    this.totalSize = totalSize;
   }
 
-  /** 记录头。 */
+  /** 记录头（校验和与长度）。 */
   public JournalRecordMetadata metadata() {
-    return metadata;
+    return header;
   }
 
-  /** 记录体。 */
+  /** 记录体（索引、序号、负载）。 */
   public JournalRecordData record() {
-    return record;
+    return body;
   }
 
-  /** 覆盖记录原始字节的缓冲视图（依赖底层映射内存，不可越界存活）。 */
+  /** 直接覆盖记录原始字节的视图；底层若被 unmap 则失效，不可长期持有。 */
   @Override
   public DirectBuffer serializedRecord() {
-    return serializedRecord;
+    return raw;
   }
 
-  /** 记录占用的总字节数（帧版本/长度字段 + 头部 + 体部）。 */
+  /** 帧字段 + 头部 + 体部的总字节数。 */
   @Override
   public int size() {
-    return size;
+    return totalSize;
   }
 
   @Override
   public DirectBuffer data() {
-    return record.data();
+    return body.data();
   }
 
   @Override
   public long asqn() {
-    return record.asqn();
+    return body.asqn();
   }
 
   @Override
   public long index() {
-    return record.index();
+    return body.index();
   }
 
   @Override
   public long checksum() {
-    return metadata.checksum();
+    return header.checksum();
   }
 
   @Override
-  public boolean equals(final Object o) {
-    if (this == o) {
+  public boolean equals(final Object other) {
+    if (this == other) {
       return true;
     }
-    if (!(o instanceof PersistedJournalRecord)) {
+    if (!(other instanceof final PersistedJournalRecord record)) {
       return false;
     }
-    final PersistedJournalRecord that = (PersistedJournalRecord) o;
-    return size == that.size
-        && Objects.equals(metadata, that.metadata)
-        && Objects.equals(record, that.record)
-        && Objects.equals(serializedRecord, that.serializedRecord);
+    return totalSize == record.totalSize
+        && Objects.equals(header, record.header)
+        && Objects.equals(body, record.body)
+        && Objects.equals(raw, record.raw);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(metadata, record, serializedRecord, size);
+    return Objects.hash(header, body, raw, totalSize);
   }
 
   @Override
   public String toString() {
-    return "PersistedJournalRecord{metadata="
-        + metadata
-        + ", record="
-        + record
-        + ", size="
-        + size
-        + '}';
+    return "PersistedJournalRecord{header=%s, body=%s, totalSize=%d}"
+        .formatted(header, body, totalSize);
   }
 }

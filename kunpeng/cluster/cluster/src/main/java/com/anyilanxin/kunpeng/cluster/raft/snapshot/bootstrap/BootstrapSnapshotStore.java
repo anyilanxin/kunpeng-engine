@@ -41,7 +41,7 @@ import org.jspecify.annotations.Nullable;
  * <p>引导镜像不跨重启存活：{@link #start()} 加载后即清空残留——引用状态只在内存，重启后无人 再发 RELEASE，残留只会泄漏磁盘。
  *
  * @author zxuanhong
- * @since 1.0.0
+ * @since 2026.0.0
  */
 public final class BootstrapSnapshotStore {
 

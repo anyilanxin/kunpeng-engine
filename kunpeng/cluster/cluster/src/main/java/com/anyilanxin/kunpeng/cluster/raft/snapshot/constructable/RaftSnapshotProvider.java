@@ -27,7 +27,7 @@ import java.util.Map;
  * 对应一种拍法。
  *
  * @author zxuanhong
- * @since 1.0.0
+ * @since 2026.0.0
  */
 public interface RaftSnapshotProvider<T> extends CloseableSilently {
 

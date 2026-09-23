@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
  * snapshot.metadata}， 原子 move 到正式目录后由公共存储生成 .sfc 完成提交。
  *
  * @author zxuanhong
- * @since 1.0.0
+ * @since 2026.0.0
  */
 final class DefaultReceivedSnapshot implements ReceivedSnapshot {
 

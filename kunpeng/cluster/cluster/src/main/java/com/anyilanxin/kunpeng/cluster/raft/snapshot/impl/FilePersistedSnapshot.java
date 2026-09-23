@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
  * 文件持久镜像：镜像目录（内容文件 + snapshot.metadata）+ 同级 .sfc 校验文件。
  *
  * @author zxuanhong
- * @since 1.0.0
+ * @since 2026.0.0
  */
 public final class FilePersistedSnapshot implements PersistedSnapshot {
 

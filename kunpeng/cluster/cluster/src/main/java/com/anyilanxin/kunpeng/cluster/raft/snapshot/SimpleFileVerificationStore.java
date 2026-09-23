@@ -23,7 +23,7 @@ import java.util.Map;
  * .sfc 校验文件的读写入口。
  *
  * @author zxuanhong
- * @since 1.0.0
+ * @since 2026.0.0
  */
 public interface SimpleFileVerificationStore {
 

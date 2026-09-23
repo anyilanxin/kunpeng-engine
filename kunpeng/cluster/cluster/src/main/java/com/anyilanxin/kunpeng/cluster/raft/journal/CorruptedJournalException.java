@@ -19,23 +19,21 @@ package com.anyilanxin.kunpeng.cluster.raft.journal;
 /**
  * 日志内容损坏异常。
  *
- * <p>典型触发场景：记录只写了一半、校验和不匹配、磁盘上的编码版本无法识别等。该异常被视为 不可自愈：日志自身无法修复，通常需要人工介入（例如从快照恢复）。
+ * <p>典型诱因：记录只写入一半、CRC 校验和不一致、磁盘上的编码版本无法识别。损坏被视为 不可自愈——日志自身无法修复，需要人工介入（例如从快照重建）。
  */
 public final class CorruptedJournalException extends RuntimeException {
 
-  private static final long serialVersionUID = 1L;
-
-  /** 仅携带损坏详情描述、无根因的构造入口。 */
+  /** 只携带描述、不带根因。 */
   public CorruptedJournalException(final String message) {
-    this(message, null);
+    super(message, null);
   }
 
-  /** 仅携带根因、无额外描述的构造入口。 */
+  /** 只携带根因、不带额外描述。 */
   public CorruptedJournalException(final Throwable cause) {
-    this(null, cause);
+    super(null, cause);
   }
 
-  /** 完整构造入口：所有其他构造形态最终都汇聚到这里。 */
+  /** 描述与根因同时携带。 */
   public CorruptedJournalException(final String message, final Throwable cause) {
     super(message, cause);
   }

@@ -24,34 +24,25 @@ import java.nio.ByteBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
 
 /**
- * 从缓冲区中解码单条日志记录的通用工具。
+ * 按当前编码格式从 segment 缓冲解出单条记录。
  *
- * <p>读取流程分四步：校验头部长度边界 -> 解析记录头 -> 校验体部 CRC32C 校验和 -> 解析 记录体并核对索引连续性。任一步失败都会回滚缓冲区 position 并抛出相应异常。供
- * SegmentWriter（重放校验）与 SegmentReader（顺序读取）共用。
+ * <p>SegmentWriter 重放校验与 SegmentReader 顺序读取共用本工具。解析顺序：剩余空间判定 -> 读头部 -> （可选）CRC32C 复核 -> 读体部并对齐索引。除头部越界外，任何失败都会把
+ * position 回退到进入方法前的值；全部通过后 position 停在下一条记录起点。
  */
 public final class JournalRecordReaderUtil {
 
-  private final ChecksumGenerator checksum = new ChecksumGenerator();
+  private final ChecksumGenerator crc = new ChecksumGenerator();
   private final JournalRecordSerializer serializer;
 
-  /**
-   * @param serializer 按当前编码版本解析记录头与记录体的序列化器
-   */
+  /** @param serializer 与写盘格式匹配的编解码器 */
   public JournalRecordReaderUtil(final JournalRecordSerializer serializer) {
     this.serializer = serializer;
   }
 
   /**
-   * 读取缓冲区当前位置处的日志记录。
+   * 读取并校验（含校验和复核）一条记录。
    *
-   * <p>方法返回时，{@code buffer} 的 position 已推进到下一条记录的起始处；若中途校验失败， position 会被恢复到进入方法时的值。
-   *
-   * @param buffer 待读取的缓冲区
-   * @param expectedIndex 期望该记录携带的日志索引（用于连续性校验）
-   * @param frameLength 记录前面的帧版本/长度字段占用的字节数
-   * @return 解析完成的记录
-   * @throws CorruptedJournalException 边界越界或校验和不匹配
-   * @throws InvalidIndex 记录索引与期望索引不一致
+   * @see #read(ByteBuffer, long, int, boolean)
    */
   public JournalRecord read(
       final ByteBuffer buffer, final long expectedIndex, final int frameLength) {
@@ -59,93 +50,88 @@ public final class JournalRecordReaderUtil {
   }
 
   /**
-   * 读取缓冲区当前位置处的日志记录，可选择跳过体部校验和重算。
+   * 读取一条记录，可跳过校验和复核。
    *
-   * <p>热读路径在端到端已有校验时可通过 {@code verifyChecksum=false} 换取吞吐；恢复/重放扫描 必须传 {@code true}。
+   * <p>端到端链路已有校验时，热读路径可用 {@code verifyChecksum=false} 省一次 CRC 计算； 恢复与重放扫描必须保持 {@code true}。
    *
-   * @param buffer 待读取的缓冲区
-   * @param expectedIndex 期望该记录携带的日志索引（用于连续性校验）
-   * @param frameLength 记录前面的帧版本/长度字段占用的字节数
+   * @param buffer 待解析的缓冲
+   * @param expectedIndex 该位置应当出现的日志索引（连续性校验用）
+   * @param frameLength 记录前置帧字段占用的字节数
    * @param verifyChecksum 是否重算并比对体部 CRC32C
    * @return 解析完成的记录
-   * @throws CorruptedJournalException 边界越界或校验和不匹配
-   * @throws InvalidIndex 记录索引与期望索引不一致
+   * @throws CorruptedJournalException 剩余字节不足或校验和不一致
+   * @throws InvalidIndex 实际索引与 {@code expectedIndex} 不一致
    */
   public JournalRecord read(
       final ByteBuffer buffer,
       final long expectedIndex,
       final int frameLength,
       final boolean verifyChecksum) {
-    // 打标记，失败时可以回退到进入前的位置
+    // 记住进入点，失败路径据此回退
     buffer.mark();
-    final int frameStart = buffer.position();
+    final int recordOffset = buffer.position();
 
-    final UnsafeBuffer frameView = new UnsafeBuffer(buffer.slice());
-    final JournalRecordMetadata metadata = readHeader(buffer, frameView, frameStart);
-    final int headerSize = serializer.getMetadataLength(frameView, 0);
-    final int bodySize = metadata.length();
+    final UnsafeBuffer recordView = new UnsafeBuffer(buffer.slice());
+    final var header = readHeader(buffer, recordView, recordOffset);
+    final int headerLength = serializer.getMetadataLength(recordView, 0);
+    final int bodyLength = header.length();
 
     if (verifyChecksum) {
-      verifyChecksum(buffer, frameStart, headerSize, bodySize, metadata);
+      assertChecksum(buffer, recordOffset, headerLength, bodyLength, header);
     }
 
-    final JournalRecordData body = serializer.readData(frameView, headerSize);
-    if (body != null && expectedIndex != body.index()) {
+    final JournalRecordData body = serializer.readData(recordView, headerLength);
+    if (body != null && body.index() != expectedIndex) {
       buffer.reset();
       throw new InvalidIndex(
-          String.format(
-              "Expected to read a record with next index %d, but found %d",
-              expectedIndex, body.index()));
+          "索引不连续：此处应为 %d，实际为 %d".formatted(expectedIndex, body.index()));
     }
 
-    buffer.position(frameStart + headerSize + bodySize);
+    buffer.position(recordOffset + headerLength + bodyLength);
 
-    // 注意：UnsafeBuffer 通过内存地址直接包装 ByteBuffer；一旦底层缓冲被 unmap，
-    // 再访问 serializedRecord 会导致 JVM 崩溃
-    // 参考：https://github.com/camunda/camunda/issues/57609
-    return new PersistedJournalRecord(
-        metadata,
-        body,
-        new UnsafeBuffer(buffer, frameStart + headerSize, bodySize),
-        frameLength + headerSize + bodySize);
+    // raw 视图按内存地址直接指向映射页；segment 被 unmap 后继续访问会令 JVM 崩溃，
+    // 见 https://github.com/camunda/camunda/issues/57609
+    final var raw = new UnsafeBuffer(buffer, recordOffset + headerLength, bodyLength);
+    return new PersistedJournalRecord(header, body, raw, frameLength + headerLength + bodyLength);
   }
 
-  /** 解析并返回记录头，同时校验头部与整体记录的边界。 */
+  /**
+   * 解码头部并完成两级边界判定：剩余空间须先装下定长头部，头部声明的体部长度加上头部后
+   * 不得越出缓冲末尾。两级失败均视为日志损坏（调用方理论上已通过 hasNext() 预检过）。
+   */
   private JournalRecordMetadata readHeader(
-      final ByteBuffer buffer, final UnsafeBuffer frameView, final int frameStart) {
-    if (buffer.position() + serializer.getMetadataLength() > buffer.limit()) {
-      // 正常情况下调用方会先通过 hasNext() 确认存在记录，走到这里说明日志已损坏
-      throw new CorruptedJournalException(
-          "Expected to read a record, but reached the end of the segment.");
+      final ByteBuffer buffer, final UnsafeBuffer recordView, final int recordOffset) {
+    final int remaining = buffer.limit() - recordOffset;
+    final int fixedHeaderLength = serializer.getMetadataLength();
+    if (remaining < fixedHeaderLength) {
+      throw new CorruptedJournalException("剩余 %d 字节不足以容纳 %d 字节的记录头，日志已损坏"
+              .formatted(remaining, fixedHeaderLength));
     }
 
-    final JournalRecordMetadata metadata = serializer.readMetadata(frameView, 0);
+    final var header = serializer.readMetadata(recordView, 0);
 
-    if (buffer.position() + serializer.getMetadataLength(frameView, 0) + metadata.length()
-        > buffer.limit()) {
-      // 每条记录前都写有帧头，若帧头声称的长度超出剩余空间，说明记录不完整
+    final int declaredTotal = serializer.getMetadataLength(recordView, 0) + header.length();
+    if (declaredTotal > remaining) {
       throw new CorruptedJournalException(
-          String.format(
-              "Expected to read a record at position %d, with metadata %s, but reached the end of the segment.",
-              buffer.position(), metadata));
+          "偏移 %d 处的记录声明共 %d 字节（头部信息 %s），超出剩余 %d 字节，记录不完整"
+              .formatted(recordOffset, declaredTotal, header, remaining));
     }
-    return metadata;
+    return header;
   }
 
-  /** 对记录体重新计算校验和并与头部声明值比对，不一致则回退 position 并抛出异常。 */
-  private void verifyChecksum(
+  /** 对体部重算 CRC32C 并与头部声明比对；不一致则回退 position 后抛出损坏异常。 */
+  private void assertChecksum(
       final ByteBuffer buffer,
-      final int frameStart,
-      final int headerSize,
-      final int bodySize,
-      final JournalRecordMetadata metadata) {
-    final long actual = checksum.compute(buffer, frameStart + headerSize, bodySize);
-    final long expected = metadata.checksum();
-    if (actual != expected) {
+      final int recordOffset,
+      final int headerLength,
+      final int bodyLength,
+      final JournalRecordMetadata header) {
+    final long expected = header.checksum();
+    final long actual = crc.compute(buffer, recordOffset + headerLength, bodyLength);
+    if (expected != actual) {
       buffer.reset();
       throw new CorruptedJournalException(
-          "Record's checksum (%d) doesn't match checksum stored in metadata (%d)."
-              .formatted(actual, expected));
+          "体部校验和不一致：重算值 %d，头部声明值 %d".formatted(actual, expected));
     }
   }
 }

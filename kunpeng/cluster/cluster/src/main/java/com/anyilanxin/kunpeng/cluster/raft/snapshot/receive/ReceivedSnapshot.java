@@ -25,7 +25,7 @@ import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
  * CRC32，全部写完后 {@code persist()} 提交。
  *
  * @author zxuanhong
- * @since 1.0.0
+ * @since 2026.0.0
  */
 public interface ReceivedSnapshot extends PersistableSnapshot {
 

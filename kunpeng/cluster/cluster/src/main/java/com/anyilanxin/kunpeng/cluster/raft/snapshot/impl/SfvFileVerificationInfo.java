@@ -32,7 +32,7 @@ import java.util.zip.CRC32;
  * SFV 格式 .sfc 校验文件的内存形态：逐文件校验集 + 文件路径。
  *
  * @author zxuanhong
- * @since 1.0.0
+ * @since 2026.0.0
  */
 public final class SfvFileVerificationInfo implements SimpleFileVerificationInfo {
 

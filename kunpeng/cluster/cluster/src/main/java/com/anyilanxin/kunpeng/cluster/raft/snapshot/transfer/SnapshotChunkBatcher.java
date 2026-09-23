@@ -33,7 +33,7 @@ import java.util.List;
  * #nextChunkName()} 取得本批之后的下一个分片名作为续传 token。
  *
  * @author zxuanhong
- * @since 1.0.0
+ * @since 2026.0.0
  */
 public final class SnapshotChunkBatcher {
 

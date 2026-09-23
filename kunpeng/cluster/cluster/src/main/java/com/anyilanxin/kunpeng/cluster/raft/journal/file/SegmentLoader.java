@@ -38,34 +38,36 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * segment 文件的物理层装配器。
+ * segment 文件的磁盘装配层。
  *
- * <p>职责仅限磁盘与内存映射操作：创建新 segment 文件（含空间预分配、描述符落盘与目录 fsync）、加载既有 segment 文件（含按描述符声明大小重映射）。segment
- * 的选择与追踪由 SegmentsManager 负责。
+ * <p>只关心文件与内存映射两件事：新建 segment（空间预分配、描述符写入与目录刷盘）和打开 既有 segment（按描述符声明的大小对齐映射）。挑选、追踪与滚动 segment 是 SegmentsManager
+ * 的职责，与本类无关。
  */
 final class SegmentLoader {
 
   private static final Logger LOG = LoggerFactory.getLogger(SegmentLoader.class);
+
+  /** segment 全部多字节字段均按小端编码。 */
   private static final ByteOrder SEGMENT_BYTE_ORDER = ByteOrder.LITTLE_ENDIAN;
 
-  private final SegmentAllocator diskAllocator;
-  private final long diskSpaceThreshold;
+  private final SegmentAllocator allocator;
+  private final long minFreeDiskBytes;
   private final JournalMetrics metrics;
 
   SegmentLoader(
       final long minFreeDiskSpace, final JournalMetrics metrics, final SegmentAllocator allocator) {
-    this.diskSpaceThreshold = minFreeDiskSpace;
+    this.minFreeDiskBytes = minFreeDiskSpace;
     this.metrics = metrics;
-    this.diskAllocator = allocator;
+    this.allocator = allocator;
   }
 
   /**
-   * 创建一个立即可用的 segment：分配文件、写入并落盘描述符。
+   * 新建一个可直接写入的 segment：建文件、预分配、写入描述符并保证描述符落盘。
    *
-   * @param segmentFile 目标文件路径
-   * @param descriptor 待写入的描述符
-   * @param lastWrittenAsqn 启用前全局已写入的最大应用层序号
-   * @param journalIndex 该 segment 挂接的稀疏索引
+   * @param segmentFile 目标文件
+   * @param descriptor 随文件落盘的描述符
+   * @param lastWrittenAsqn 本 segment 启用前全局已见的最大应用层序号
+   * @param journalIndex 挂接的稀疏索引
    * @return 就绪的 segment
    */
   Segment createSegment(
@@ -74,165 +76,147 @@ final class SegmentLoader {
       final long lastWrittenAsqn,
       final JournalIndex journalIndex) {
     final var serializer = SegmentDescriptorSerializer.currentSerializer();
-    final MappedByteBuffer mapped = allocateMappedFile(segmentFile, descriptor);
+    final MappedByteBuffer mapped = createMappedFile(segmentFile, descriptor);
 
     try {
       serializer.writeTo(descriptor, mapped);
       mapped.force();
     } catch (final InternalError e) {
-      // force 可能因映射失效抛出 InternalError，此时需回滚
+      // 映射被撤销时 force 会抛 InternalError，此处统一转成受控异常上抛
       throw new JournalException(
-          String.format(
-              "Failed to ensure durability of segment %s with descriptor %s, rolling back",
-              segmentFile, descriptor),
-          e);
+          "segment %s 的描述符 %s 写入后无法确保落盘".formatted(segmentFile, descriptor), e);
     }
 
-    syncParentDirectory(segmentFile);
+    syncDirectory(segmentFile);
 
-    return assembleSegment(
-        segmentFile, mapped, descriptor, serializer, lastWrittenAsqn, journalIndex);
+    return wireSegment(segmentFile, mapped, descriptor, serializer, lastWrittenAsqn, journalIndex);
   }
 
   /**
-   * 加载磁盘上已存在的 segment 文件。
+   * 打开磁盘上已有的 segment 文件。
    *
-   * <p>先按文件当前大小建立映射并读出描述符，若描述符声明的 segment 上限更大，则解除 映射并按声明大小重新映射。
+   * <p>先按文件实际大小建立映射并解出描述符；若描述符声明的容量大于当前文件，则撤销原映射、 按声明容量重新映射（文件在建段时已预分配到该容量）。
    */
   Segment loadExistingSegment(
       final Path segmentFile, final long lastWrittenAsqn, final JournalIndex journalIndex) {
     final var serializer = SegmentDescriptorSerializer.currentSerializer();
     try (final var channel =
         FileChannel.open(segmentFile, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
-      final long fileSizeOnDisk = Files.size(segmentFile);
-      MappedByteBuffer mapped = mapReadableWritable(channel, fileSizeOnDisk);
-      final var descriptor =
-          readDescriptor(serializer, mapped, segmentFile.getFileName().toString());
+      final long fileSize = Files.size(segmentFile);
+      MappedByteBuffer mapped = mapSegment(channel, fileSize);
+      final var descriptor = decodeDescriptor(serializer, mapped, fileNameOf(segmentFile));
 
-      if (descriptor.maxSegmentSize() > fileSizeOnDisk) {
+      if (descriptor.maxSegmentSize() > fileSize) {
         IoUtil.unmap(mapped);
-        mapped = mapReadableWritable(channel, descriptor.maxSegmentSize());
+        mapped = mapSegment(channel, descriptor.maxSegmentSize());
       }
 
-      return assembleSegment(
+      return wireSegment(
           segmentFile, mapped, descriptor, serializer, lastWrittenAsqn, journalIndex);
     } catch (final IOException e) {
-      throw new JournalException(
-          String.format("Failed to load existing segment %s", segmentFile), e);
+      throw new JournalException("打开既有 segment %s 失败".formatted(segmentFile), e);
     }
   }
 
-  /* ---------- 以下为装配与映射的内部步骤 ---------- */
+  /* ---------- 内部步骤 ---------- */
 
-  private Segment assembleSegment(
+  private static String fileNameOf(final Path file) {
+    return file.getFileName().toString();
+  }
+
+  private Segment wireSegment(
       final Path file,
-      final MappedByteBuffer buffer,
+      final MappedByteBuffer mapped,
       final SegmentDescriptor descriptor,
       final SegmentDescriptorSerializer serializer,
       final long lastWrittenAsqn,
       final JournalIndex journalIndex) {
+    final var segmentFile = new SegmentFile(file.toFile());
     return new Segment(
-        new SegmentFile(file.toFile()),
-        descriptor,
-        serializer,
-        buffer,
-        lastWrittenAsqn,
-        journalIndex,
-        metrics);
+        segmentFile, descriptor, serializer, mapped, lastWrittenAsqn, journalIndex, metrics);
   }
 
-  private MappedByteBuffer mapReadableWritable(final FileChannel channel, final long segmentSize)
+  private MappedByteBuffer mapSegment(final FileChannel channel, final long segmentSize)
       throws IOException {
     final var mapped = channel.map(MapMode.READ_WRITE, 0, segmentSize);
     mapped.order(SEGMENT_BYTE_ORDER);
     return mapped;
   }
 
-  private SegmentDescriptor readDescriptor(
-      final SegmentDescriptorSerializer serializer,
-      final ByteBuffer buffer,
-      final String fileName) {
+  private SegmentDescriptor decodeDescriptor(
+      final SegmentDescriptorSerializer serializer, final ByteBuffer buffer, final String fileName) {
     try {
       return serializer.readFrom(buffer);
-    } catch (final IndexOutOfBoundsException e) {
-      throw new JournalException(
-          String.format(
-              "Expected to read descriptor of segment '%s', but nothing was read.", fileName),
-          e);
     } catch (final UnknownVersionException e) {
       throw new CorruptedJournalException(
-          String.format("Couldn't read or recognize version of segment '%s'.", fileName), e);
+          "segment '%s' 的描述符格式版本无法识别".formatted(fileName), e);
+    } catch (final IndexOutOfBoundsException e) {
+      throw new JournalException("segment '%s' 连一个完整描述符都读不出来".formatted(fileName), e);
     }
   }
 
-  /** 创建全新文件、预分配空间并返回其读写映射。 */
-  private MappedByteBuffer allocateMappedFile(
-      final Path segmentPath, final SegmentDescriptor descriptor) throws JournalException {
-    final int targetSize = descriptor.maxSegmentSize();
-    ensureEnoughDiskSpace(segmentPath, targetSize);
+  /** 建立全新文件、完成空间预分配并返回读写映射；遇到同名残留文件则先清掉再重建。 */
+  private MappedByteBuffer createMappedFile(final Path segmentPath, final SegmentDescriptor descriptor) {
+    final int segmentBytes = descriptor.maxSegmentSize();
+    checkDiskSpace(segmentPath, segmentBytes);
 
-    try {
-      Files.createFile(segmentPath);
-    } catch (final FileAlreadyExistsException e) {
-      // 残留的未使用文件直接删除后重建
-      LOG.warn(
-          "Failed to create segment {}: an unused file already existed, and will be replaced",
-          segmentPath,
-          e);
+    // 残留同名文件只可能是上次未及清理的产物，删除后重试即可
+    while (true) {
       try {
-        Files.delete(segmentPath);
-      } catch (final IOException deleteFailed) {
-        throw new JournalException(
-            String.format("Failed to replace existing segment file %s", segmentPath), deleteFailed);
+        Files.createFile(segmentPath);
+        break;
+      } catch (final FileAlreadyExistsException e) {
+        LOG.warn("segment 文件 {} 已存在，按残留文件删除后重建", segmentPath, e);
+        try {
+          Files.delete(segmentPath);
+        } catch (final IOException deleteFailure) {
+          throw new JournalException(
+              "残留 segment 文件 %s 删除失败，无法重建".formatted(segmentPath), deleteFailure);
+        }
+      } catch (final IOException e) {
+        throw new JournalException("创建 segment 文件 %s 失败".formatted(segmentPath), e);
       }
-      return allocateMappedFile(segmentPath, descriptor);
-    } catch (final IOException e) {
-      throw new JournalException(
-          String.format("Failed to create new segment file %s", segmentPath), e);
     }
 
-    try (final var raf = new RandomAccessFile(segmentPath.toFile(), "rw");
-        final var channel = raf.getChannel(); ) {
-      preallocate(targetSize, channel, raf.getFD());
-      raf.setLength(targetSize);
-      return mapReadableWritable(channel, targetSize);
+    try (final var file = new RandomAccessFile(segmentPath.toFile(), "rw");
+        final var channel = file.getChannel()) {
+      reserveSpace(segmentBytes, channel, file.getFD());
+      file.setLength(segmentBytes);
+      return mapSegment(channel, segmentBytes);
     } catch (final IOException e) {
       throw new JournalException(
-          String.format("Failed to create new segment file %s", segmentPath), e);
+          "segment 文件 %s 预分配空间失败（目标 %d 字节）".formatted(segmentPath, segmentBytes), e);
     }
   }
 
-  /** 磁盘可用空间不足以容纳新 segment（或低于安全水位）时直接失败。 */
-  private void ensureEnoughDiskSpace(final Path segmentPath, final int targetSize) {
+  /** 可用磁盘空间低于“新段容量与安全水位二者较大值”时拒绝分配。 */
+  private void checkDiskSpace(final Path segmentPath, final int segmentBytes) {
     final var parent =
         requireNonNull(
-            segmentPath.getParent(),
-            () -> String.format("Expected file %s to have a parent but it was null", segmentPath));
-    final var usableBytes = parent.toFile().getUsableSpace();
-    final var requiredBytes = Math.max(targetSize, diskSpaceThreshold);
-    if (usableBytes < requiredBytes) {
+            segmentPath.getParent(), () -> "路径 %s 没有父目录".formatted(segmentPath));
+    final long usable = parent.toFile().getUsableSpace();
+    final long needed = Math.max(segmentBytes, minFreeDiskBytes);
+    if (usable < needed) {
       throw new JournalException.OutOfDiskSpace(
-          "Not enough space to allocate a new journal segment. Required: %s, Available: %s"
-              .formatted(requiredBytes, usableBytes));
+          "磁盘空间不足，无法分配新 segment：需要 %d 字节，可用 %d 字节".formatted(needed, usable));
     }
   }
 
-  private void preallocate(
-      final int targetSize, final FileChannel channel, final FileDescriptor fileDescriptor)
+  private void reserveSpace(
+      final int segmentBytes, final FileChannel channel, final FileDescriptor fileDescriptor)
       throws IOException {
     try (final var ignored = metrics.observeSegmentAllocation()) {
-      diskAllocator.allocate(channel, fileDescriptor, targetSize);
+      allocator.allocate(channel, fileDescriptor, segmentBytes);
     }
   }
 
-  /** 刷盘父目录，确保新创建的文件在崩溃恢复后依然作为目录项可见（仅 force 文件内容不够）。 */
-  private void syncParentDirectory(final Path segmentFile) {
+  /** 刷盘父目录，让新建文件作为目录项持久可见；仅 force 文件内容不足以保证崩溃后仍可见。 */
+  private void syncDirectory(final Path segmentFile) {
     try {
       FileUtil.flushDirectory(segmentFile.getParent());
     } catch (final IOException e) {
       throw new JournalException(
-          String.format("Failed to flush journal directory after creating segment %s", segmentFile),
-          e);
+          "segment %s 建立后刷盘其所在目录失败".formatted(segmentFile), e);
     }
   }
 }

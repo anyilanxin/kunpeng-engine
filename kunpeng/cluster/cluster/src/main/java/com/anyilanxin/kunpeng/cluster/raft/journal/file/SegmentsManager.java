@@ -16,7 +16,6 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.journal.file;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Objects.requireNonNull;
 
 import com.anyilanxin.kunpeng.cluster.raft.journal.CorruptedJournalException;
@@ -44,37 +43,39 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * segment 生命周期的管理中枢。
+ * segment 全生命周期管理者。
  *
- * <p>持有以首索引为键的 segment 有序表，负责：启动时从磁盘加载并校验全部 segment、滚动新 segment、按索引删除/重置 segment，以及清理此前未及删除的 残留文件。
+ * <p>内部是一张以“segment 首索引”为键的有序表。对外承担：启动时扫描目录装载并校验所有
+ * segment、写入时按需滚动新段、按索引裁剪或整体重建，以及启动后清扫上次停机遗留的软删除 文件。
  */
 final class SegmentsManager implements AutoCloseable {
 
   private static final Logger LOG = LoggerFactory.getLogger(SegmentsManager.class);
 
-  /** 首个 segment 的编号。 */
-  private static final long FIRST_SEGMENT_ID = 1;
+  /** segment 编号从此值起分配。 */
+  private static final long SEGMENT_ID_ORIGIN = 1;
 
-  /** 全新日志的起始索引。 */
-  private static final long INITIAL_INDEX = 1;
+  /** 空日志的第一条记录索引。 */
+  private static final long EMPTY_LOG_START_INDEX = 1;
 
-  /** 尚无任何记录时的应用层序号占位值。 */
-  private static final long INITIAL_ASQN = SegmentedJournal.ASQN_IGNORE;
+  /** 一条记录都还没有时可继承的应用层序号。 */
+  private static final long EMPTY_LOG_ASQN = SegmentedJournal.ASQN_IGNORE;
 
-  private final NavigableMap<Long, Segment> segmentsByFirstIndex = new ConcurrentSkipListMap<>();
-  private final JournalMetrics journalMetrics;
-  private final JournalIndex journalIndex;
-  private final SegmentLoader segmentLoader;
+  private final NavigableMap<Long, Segment> segmentsByIndex = new ConcurrentSkipListMap<>();
+  private final JournalMetrics metrics;
+  private final JournalIndex indexLookup;
+  private final SegmentLoader loader;
   private final JournalMetaStore metaStore;
-  private final int maxSegmentSize;
-  private final File directory;
-  private final String name;
+  private final int segmentSizeLimit;
+  private final File storageDir;
+  private final String journalName;
 
-  /** 当前正在追加写入的 segment。 */
-  private volatile @Nullable Segment currentSegment;
+  /** 追加写入当前落在这个 segment 上；未打开时为 null。 */
+  private volatile @Nullable Segment activeSegment;
 
-  /** journal 磁盘占用的增量记账。segment 文件创建时即预分配到 maxSegmentSize，长度恒定， 因此加减即可保持精确，无需每次全量求和。 */
-  private final AtomicLong journalSizeBytes = new AtomicLong();
+  // 磁盘占用增量账本：segment 建段时即预分配到 segmentSizeLimit，长度不随写入变化，
+  // 因此加减即可维持精确值，不必每次全量汇总
+  private final AtomicLong diskUsageBytes = new AtomicLong();
 
   SegmentsManager(
       final JournalIndex journalIndex,
@@ -84,290 +85,276 @@ final class SegmentsManager implements AutoCloseable {
       final SegmentLoader segmentLoader,
       final JournalMetrics journalMetrics,
       final JournalMetaStore metaStore) {
-    this.name = checkNotNull(name, "name cannot be null");
-    this.journalIndex = journalIndex;
-    this.maxSegmentSize = maxSegmentSize;
-    this.directory = directory;
-    this.segmentLoader = segmentLoader;
-    this.journalMetrics = journalMetrics;
+    this.journalName = requireNonNull(name, "journal 名不能为空");
+    this.indexLookup = journalIndex;
+    this.segmentSizeLimit = maxSegmentSize;
+    this.storageDir = directory;
+    this.loader = segmentLoader;
+    this.metrics = journalMetrics;
     this.metaStore = metaStore;
   }
 
   /* ---------- 查询 ---------- */
 
-  /**
-   * @return 当前正在写入的 segment，管理器尚未打开时为 null
-   */
+  /** @return 正在接收写入的 segment；尚未 open 时为 null */
   @Nullable Segment getCurrentSegment() {
-    return currentSegment;
+    return activeSegment;
   }
 
-  /**
-   * @return 首索引最小的 segment，日志为空时为 null
-   */
+  /** @return 首索引最小的 segment；一张空表时为 null */
   @Nullable Segment getFirstSegment() {
-    final Map.Entry<Long, Segment> first = segmentsByFirstIndex.firstEntry();
-    return first != null ? first.getValue() : null;
+    final Map.Entry<Long, Segment> entry = segmentsByIndex.firstEntry();
+    return entry == null ? null : entry.getValue();
   }
 
-  /**
-   * @return 首索引最大的 segment，日志为空时为 null
-   */
+  /** @return 首索引最大的 segment；一张空表时为 null */
   @Nullable Segment getLastSegment() {
-    final Map.Entry<Long, Segment> last = segmentsByFirstIndex.lastEntry();
-    return last != null ? last.getValue() : null;
+    final Map.Entry<Long, Segment> entry = segmentsByIndex.lastEntry();
+    return entry == null ? null : entry.getValue();
   }
 
-  /**
-   * @return 首索引大于 {@code index} 的最小 segment，不存在则返回 null
-   */
+  /** @return 首索引比 {@code index} 大的最小 segment；没有更靠后的段时为 null */
   @Nullable Segment getNextSegment(final long index) {
-    final Map.Entry<Long, Segment> higher = segmentsByFirstIndex.higherEntry(index);
-    return higher != null ? higher.getValue() : null;
+    final Map.Entry<Long, Segment> entry = segmentsByIndex.higherEntry(index);
+    return entry == null ? null : entry.getValue();
   }
 
   /**
-   * 取覆盖给定索引的 segment。
+   * 定位覆盖 {@code index} 的 segment。
    *
-   * <p>先看当前写入 segment（省一次查表），否则取首索引不大于 {@code index} 的最近 segment；都不命中时兜底返回首个 segment。
+   * <p>先看写入段（省一次查表），否则取首索引不大于 {@code index} 的最近一段；两者都不命中 说明 index 落在整个日志之前，兜底返回首段。
    */
   @Nullable Segment getSegment(final long index) {
-    final Segment writing = currentSegment;
+    final Segment writing = activeSegment;
     if (writing != null && index > writing.index()) {
       return writing;
     }
 
-    final Map.Entry<Long, Segment> floor = segmentsByFirstIndex.floorEntry(index);
+    final Map.Entry<Long, Segment> floor = segmentsByIndex.floorEntry(index);
     if (floor != null) {
       return floor.getValue();
     }
     return getFirstSegment();
   }
 
-  /**
-   * @return 从覆盖 {@code index} 的 segment 起到末尾的所有 segment（只读视图）
-   */
+  /** @return 从覆盖 {@code index} 的那段起、直到末尾的全部 segment（只读视图） */
   SortedMap<Long, Segment> getTailSegments(final long index) {
-    final Segment containing = getSegment(index);
-    if (containing == null) {
+    final Segment anchor = getSegment(index);
+    if (anchor == null) {
       return Collections.emptySortedMap();
     }
-    // 不能直接以 index 取尾视图：index 可能落在某个 segment 中间，需先定位到该 segment 的首索引
-    return Collections.unmodifiableSortedMap(
-        segmentsByFirstIndex.tailMap(containing.index(), true));
+    // 不能直接 tailMap(index)：index 可能停在某个 segment 中间，必须先锚定该段的首索引
+    return Collections.unmodifiableSortedMap(segmentsByIndex.tailMap(anchor.index(), true));
   }
 
   /* ---------- 打开与关闭 ---------- */
 
-  /** 从磁盘加载全部 segment 并初始化当前写入 segment；目录为空时创建首个 segment。 */
+  /** 装载磁盘上的全部 segment 并确定写入段；目录里一个段都没有时新建首段。 */
   void open() {
-    final var openDurationTimer = journalMetrics.startJournalOpenDurationTimer();
-    for (final Segment segment : loadSegments()) {
-      segmentsByFirstIndex.put(segment.descriptor().index(), segment);
-      onSegmentAdded(segment);
+    final var openTimer = metrics.startJournalOpenDurationTimer();
+    for (final Segment segment : scanAndLoadSegments()) {
+      segmentsByIndex.put(segment.descriptor().index(), segment);
+      trackSegmentAdded(segment);
     }
 
-    final Map.Entry<Long, Segment> lastLoaded = segmentsByFirstIndex.lastEntry();
-    if (lastLoaded != null) {
-      currentSegment = lastLoaded.getValue();
+    final Segment tail = getLastSegment();
+    if (tail != null) {
+      activeSegment = tail;
     } else {
-      currentSegment = createSegmentAt(FIRST_SEGMENT_ID, INITIAL_INDEX, INITIAL_ASQN);
-      segmentsByFirstIndex.put(INITIAL_INDEX, currentSegment);
-      onSegmentAdded(currentSegment);
+      activeSegment = createSegment(SEGMENT_ID_ORIGIN, EMPTY_LOG_START_INDEX, EMPTY_LOG_ASQN);
+      segmentsByIndex.put(activeSegment.index(), activeSegment);
+      trackSegmentAdded(activeSegment);
     }
-    openDurationTimer.close();
+    openTimer.close();
 
-    // 清理上次停机前来不及删除的文件；此时没有任何读取器持有它们，可以安全删除
-    deleteDeferredFiles();
+    // 此时不可能还有读取者持有旧文件，软删除残留可以安全清掉
+    purgeMarkedFiles();
   }
 
   @Override
   public void close() {
-    for (final Segment segment : segmentsByFirstIndex.values()) {
-      LOG.debug("Closing segment: {}", segment);
-      dumpSegmentIndex(segment);
+    for (final Segment segment : segmentsByIndex.values()) {
+      LOG.debug("关闭 segment：{}", segment);
+      persistSegmentIndex(segment);
       segment.close();
     }
 
-    currentSegment = null;
+    activeSegment = null;
   }
 
   /* ---------- 滚动与删除 ---------- */
 
   /**
-   * 滚动到下一个 segment 并返回它。
+   * 滚出下一个 segment 并切换为写入段。
    *
-   * @throws IllegalStateException 管理器未打开（无当前 segment）
+   * @throws IllegalStateException 尚未 open、没有写入段可用
    */
   Segment getNextSegment() {
-    // 滚动即封存：趁切换前把即将封口的 segment 索引落盘，限制崩溃时的索引损失范围
-    dumpSegmentIndex(getLastSegment());
-
+    // 滚动前先封存旧段的索引，把崩溃时的索引损失限制在单段之内
     final Segment tail = getLastSegment();
-    final long inheritedAsqn = tail != null ? tail.lastAsqn() : INITIAL_ASQN;
-    final Segment writing = requireNonNull(currentSegment, "currentSegment is null");
-    final long nextFirstIndex = writing.lastIndex() + 1;
-    final long nextId = tail != null ? tail.descriptor().id() + 1 : FIRST_SEGMENT_ID;
+    persistSegmentIndex(tail);
 
-    currentSegment = createSegmentAt(nextId, nextFirstIndex, inheritedAsqn);
+    final long inheritedAsqn = tail == null ? EMPTY_LOG_ASQN : tail.lastAsqn();
+    final Segment writing = requireNonNull(activeSegment, "journal 尚未打开，无法滚动 segment");
+    final long nextStart = writing.lastIndex() + 1;
+    final long nextId = tail == null ? SEGMENT_ID_ORIGIN : tail.descriptor().id() + 1;
 
-    segmentsByFirstIndex.put(nextFirstIndex, currentSegment);
-    onSegmentAdded(currentSegment);
-    return currentSegment;
+    activeSegment = createSegment(nextId, nextStart, inheritedAsqn);
+    segmentsByIndex.put(nextStart, activeSegment);
+    trackSegmentAdded(activeSegment);
+    return activeSegment;
   }
 
   /**
-   * 删除首索引小于 {@code index} 的所有 segment。
+   * 裁掉首索引小于 {@code index} 的所有 segment。
    *
-   * @return 实际删除了 segment 时返回 true
+   * @return 实际删除了至少一段时为 true
    */
   boolean deleteUntil(final long index) {
-    final Map.Entry<Long, Segment> boundary = segmentsByFirstIndex.floorEntry(index);
+    final Map.Entry<Long, Segment> boundary = segmentsByIndex.floorEntry(index);
     if (boundary == null) {
       return false;
     }
 
-    final SortedMap<Long, Segment> expired =
-        segmentsByFirstIndex.headMap(boundary.getValue().index());
-    if (expired.isEmpty()) {
+    final SortedMap<Long, Segment> doomed = segmentsByIndex.headMap(boundary.getValue().index());
+    if (doomed.isEmpty()) {
       LOG.debug(
-          "No segments can be deleted with index < {} (first log index: {})",
+          "无可裁剪 segment：阈值 index {}，日志首索引 {}",
           index,
           firstIndexOrZero());
       return false;
     }
 
     LOG.debug(
-        "{} - Deleting log up from {} up to {} (removing {} segments)",
-        name,
+        "{}：裁剪首索引 {} 之前的 {} 个 segment（末段止于 {}）",
+        journalName,
         firstIndexOrZero(),
-        requireNonNull(expired.get(expired.lastKey())).index(),
-        expired.size());
-    for (final Segment segment : expired.values()) {
-      LOG.trace("{} - Deleting segment: {}", name, segment);
-      // 先记账再删除：segment.delete() 可能把文件直接删掉，之后长度读出来是 0
-      onSegmentRemoved(segment);
+        doomed.size(),
+        requireNonNull(doomed.get(doomed.lastKey())).index());
+    for (final Segment segment : doomed.values()) {
+      LOG.trace("{}：删除 segment {}", journalName, segment);
+      // 先记账再删文件：文件一旦删除，长度读出来就是 0
+      trackSegmentRemoved(segment);
       segment.delete();
-      deleteSegmentIndexFile(segment);
+      removeSegmentIndex(segment);
     }
-    expired.clear();
+    doomed.clear();
 
-    journalIndex.deleteUntil(index);
+    indexLookup.deleteUntil(index);
     return true;
   }
 
   /**
-   * 删除全部 segment，并以 {@code index} 为起始索引重建首个 segment。
+   * 删除全部 segment，再以 {@code index} 为起始索引重建首段。
    *
-   * @return 重建后的首个 segment
+   * @return 重建出的首段
    */
   Segment resetSegments(final long index) {
-    // 先把最后已刷盘索引重置为语义空值再删数据：即使中途崩溃，重启时也能据此判定
-    // "尚未写入任何内容"，即便读不到描述符（例如建完文件但还没写描述符就崩溃）
+    // 先抹掉已刷盘边界再动数据文件：即便中途崩溃，重启也能凭“无刷盘边界”识别空日志，
+    // 哪怕描述符都已读不出（例如文件建好但描述符未写就崩了）
     metaStore.resetLastFlushedIndex();
 
-    // 倒序删除：即使中途被打断，日志（以及日志与快照之间）也不会出现空洞
-    final Iterator<Segment> descending = segmentsByFirstIndex.descendingMap().values().iterator();
-    while (descending.hasNext()) {
-      // 刻意不 close：这里可能只是软删除，让在途读取器读完后自行退出，
-      // 避免与底层缓冲 unmap 产生竞态
+    // 从尾往头删：任意时刻被打断，剩下的日志都不带空洞（日志与快照之间同样如此）
+    final Iterator<Segment> fromTail = segmentsByIndex.descendingMap().values().iterator();
+    while (fromTail.hasNext()) {
+      // 刻意不 close：这里的删除是软删除，在途读取器读完自然退出，
+      // 也避免了与底层映射 unmap 的竞态
       //noinspection resource
-      final Segment segment = descending.next();
-      // 先记账再删除：segment.delete() 可能把文件直接删掉，之后长度读出来是 0
-      onSegmentRemoved(segment);
+      final Segment segment = fromTail.next();
+      trackSegmentRemoved(segment);
       segment.delete();
-      deleteSegmentIndexFile(segment);
-      descending.remove();
+      removeSegmentIndex(segment);
+      fromTail.remove();
     }
 
-    currentSegment = createSegmentAt(FIRST_SEGMENT_ID, index, INITIAL_ASQN);
-    segmentsByFirstIndex.put(index, currentSegment);
-    onSegmentAdded(currentSegment);
-    return currentSegment;
+    activeSegment = createSegment(SEGMENT_ID_ORIGIN, index, EMPTY_LOG_ASQN);
+    segmentsByIndex.put(index, activeSegment);
+    trackSegmentAdded(activeSegment);
+    return activeSegment;
   }
 
   /**
-   * 移除并删除指定 segment，必要时重建当前写入 segment。
+   * 移除指定 segment；若写段被移走，则把写段指回末段或重建首段。
    *
    * @param segment 待移除的 segment
    */
   void removeSegment(final Segment segment) {
-    segmentsByFirstIndex.remove(segment.index());
-    onSegmentRemoved(segment);
+    segmentsByIndex.remove(segment.index());
+    trackSegmentRemoved(segment);
     segment.delete();
-    deleteSegmentIndexFile(segment);
-    refreshCurrentSegment();
+    removeSegmentIndex(segment);
+    repointActiveSegment();
   }
 
-  /** 把当前写入 segment 指回末尾 segment；若已无 segment 则新建首个 segment。 */
-  private void refreshCurrentSegment() {
+  /** 写段指回末段；一段不剩时新建首段。 */
+  private void repointActiveSegment() {
     final Segment tail = getLastSegment();
     if (tail != null) {
-      currentSegment = tail;
+      activeSegment = tail;
       return;
     }
 
-    currentSegment = createSegmentAt(FIRST_SEGMENT_ID, INITIAL_INDEX, INITIAL_ASQN);
-    segmentsByFirstIndex.put(INITIAL_INDEX, currentSegment);
-    onSegmentAdded(currentSegment);
+    activeSegment = createSegment(SEGMENT_ID_ORIGIN, EMPTY_LOG_START_INDEX, EMPTY_LOG_ASQN);
+    segmentsByIndex.put(activeSegment.index(), activeSegment);
+    trackSegmentAdded(activeSegment);
   }
 
-  /* ---------- 创建 ---------- */
+  /* ---------- 建段 ---------- */
 
-  private Segment createSegmentAt(final long id, final long firstIndex, final long lastAsqn) {
+  private Segment createSegment(final long id, final long firstIndex, final long lastAsqn) {
     final var descriptor =
         SegmentDescriptor.builder()
             .withId(id)
             .withIndex(firstIndex)
-            .withMaxSegmentSize(maxSegmentSize)
+            .withMaxSegmentSize(segmentSizeLimit)
             .build();
-    final var segmentFile = SegmentFile.createSegmentFile(name, directory, descriptor.id());
-    return segmentLoader.createSegment(segmentFile.toPath(), descriptor, lastAsqn, journalIndex);
+    final var segmentFile = SegmentFile.createSegmentFile(journalName, storageDir, descriptor.id());
+    return loader.createSegment(segmentFile.toPath(), descriptor, lastAsqn, indexLookup);
   }
 
-  /* ---------- 加载与损坏恢复 ---------- */
+  /* ---------- 装载与损坏处理 ---------- */
 
-  /** 按编号升序扫描目录，逐一加载 segment 并校验索引连续性与已刷盘边界。 */
-  private Collection<Segment> loadSegments() {
+  /** 按编号升序装载目录中的 segment，校验相邻连续性与刷盘边界；必要时丢弃未刷盘的损坏尾部。 */
+  private Collection<Segment> scanAndLoadSegments() {
     final long lastFlushedIndex = metaStore.loadLastFlushedIndex();
 
-    // 确保日志目录存在
+    // 装载前确保日志目录存在
     //noinspection ResultOfMethodCallIgnored
-    directory.mkdirs();
+    storageDir.mkdirs();
 
-    final List<File> files = getSortedLogSegments();
+    final List<File> files = sortedSegmentFiles();
     final List<Segment> loaded = new ArrayList<>(files.size());
     Segment previousSegment = null;
 
-    for (final Iterator<File> it = files.iterator(); it.hasNext(); ) {
-      final File file = it.next();
-      final int position = loaded.size();
-      LOG.debug("Found segment file: {}", file.getName());
+    for (int i = 0; i < files.size(); i++) {
+      final File file = files.get(i);
+      final boolean isLastFile = i == files.size() - 1;
+      LOG.debug("发现 segment 文件：{}", file.getName());
 
       try {
         final Segment segment =
-            segmentLoader.loadExistingSegment(
+            loader.loadExistingSegment(
                 file.toPath(),
-                previousSegment != null ? previousSegment.lastAsqn() : INITIAL_ASQN,
-                journalIndex);
+                previousSegment == null ? EMPTY_LOG_ASQN : previousSegment.lastAsqn(),
+                indexLookup);
 
         if (previousSegment != null) {
-          // segment 之间索引出现空洞则视为损坏
-          checkSegmentsContiguous(previousSegment, segment);
+          // 相邻段首尾脱节视同日志损坏
+          verifySegmentsContiguous(previousSegment, segment);
         }
 
-        if (!it.hasNext() && segment.lastIndex() < lastFlushedIndex) {
-          // 最后一个 segment 必须覆盖到已刷盘边界
+        if (isLastFile && segment.lastIndex() < lastFlushedIndex) {
+          // 已刷盘边界必须被最后一个 segment 覆盖到
           throw new CorruptedJournalException(
-              "Expected to find records until index %d, but last index is %d"
+              "日志不完整：已刷盘边界为 %d，末段最后索引只有 %d"
                   .formatted(lastFlushedIndex, segment.lastIndex()));
         }
 
         loaded.add(segment);
-        loadSegmentIndex(segment);
+        restoreSegmentIndex(segment);
         previousSegment = segment;
       } catch (final CorruptedJournalException e) {
-        if (discardUnflushedTailIfSafe(files, position, loaded, lastFlushedIndex)) {
+        if (canSafelyDiscardCorruptedTail(files, i, loaded, lastFlushedIndex)) {
           return loaded;
         }
         throw e;
@@ -377,77 +364,69 @@ final class SegmentsManager implements AutoCloseable {
     return loaded;
   }
 
-  /** 校验相邻两个 segment 的索引首尾相接（前一个的 lastIndex + 1 == 后一个的首索引）。 */
-  private void checkSegmentsContiguous(final Segment prevSegment, final Segment segment) {
-    if (prevSegment.lastIndex() != segment.index() - 1) {
+  /** 校验两段首尾相接：前段 lastIndex + 1 必须等于后段首索引。 */
+  private void verifySegmentsContiguous(final Segment prevSegment, final Segment segment) {
+    if (segment.index() != prevSegment.lastIndex() + 1) {
       throw new CorruptedJournalException(
-          String.format(
-              "Log segment %s is not aligned with previous segment %s (last index: %d).",
-              segment, prevSegment, prevSegment.lastIndex()));
+          "segment %s 与前一段 %s 索引脱节（前段止于 %d）"
+              .formatted(segment, prevSegment, prevSegment.lastIndex()));
     }
   }
 
   /**
-   * 判定损坏的尾部是否可以安全丢弃。
+   * 判断损坏的尾部能否直接丢弃。
    *
-   * <p>只有当损坏部分位于最后已刷盘索引之后（即从未被确认过）时才允许直接删除，否则返回 false 让异常继续抛出。
+   * <p>只有损坏范围整体位于刷盘边界之后（即从未被确认过）才允许删文件了事；否则返回 false， 让异常继续上抛交由人工处置。
    *
-   * @return 已删除损坏尾部文件时返回 true
+   * @return 已把损坏尾部的文件删掉时为 true
    */
-  private boolean discardUnflushedTailIfSafe(
+  private boolean canSafelyDiscardCorruptedTail(
       final List<File> files,
-      final int failedPosition,
+      final int failedAt,
       final List<Segment> loadedSegments,
       final long lastFlushedIndex) {
     if (metaStore.hasLastFlushedIndex()) {
-      long highestLoadedIndex = 0;
-      final Segment lastLoaded =
-          loadedSegments.isEmpty() ? null : loadedSegments.get(loadedSegments.size() - 1);
-      if (lastLoaded != null) {
-        highestLoadedIndex = lastLoaded.lastIndex();
-      }
-
+      final long highestLoadedIndex =
+          loadedSegments.isEmpty() ? 0 : loadedSegments.get(loadedSegments.size() - 1).lastIndex();
       if (lastFlushedIndex > highestLoadedIndex) {
-        // 已确认的索引落在损坏区内，无法安全丢弃
+        // 已确认的索引淹没在损坏区里，丢弃不安全
         return false;
       }
     }
 
-    deleteUnflushedSegments(files, failedPosition, lastFlushedIndex);
+    discardCorruptedTail(files, failedAt, lastFlushedIndex);
     return true;
   }
 
-  /** 删除从首个损坏 segment 起到目录末尾的所有文件。 */
-  private void deleteUnflushedSegments(
-      final List<File> files, final int failedPosition, final long lastFlushedIndex) {
-    LOG.debug(
-        "Found corrupted segment after last ack'ed index {}. Deleting segments {} - {}",
+  /** 删除自首个损坏文件起到目录末尾的全部 segment 文件（含对应索引文件）。 */
+  private void discardCorruptedTail(
+      final List<File> files, final int failedAt, final long lastFlushedIndex) {
+    LOG.warn(
+        "在已确认索引 {} 之后发现损坏 segment，删除 {} 至 {}",
         lastFlushedIndex,
-        files.get(failedPosition).getName(),
+        files.get(failedAt).getName(),
         files.get(files.size() - 1).getName());
 
-    for (final File file : files.subList(failedPosition, files.size())) {
+    for (final File file : files.subList(failedAt, files.size())) {
       try {
         Files.delete(file.toPath());
         Files.deleteIfExists(SegmentFile.indexFileOf(file).toPath());
       } catch (final IOException e) {
         throw new JournalException(
-            String.format(
-                "Failed to delete log segment '%s' when handling corruption.", file.getName()),
-            e);
+            "清理损坏 segment 文件 '%s' 失败".formatted(file.getName()), e);
       }
     }
   }
 
-  /* ---------- 索引文件持久化 ---------- */
+  /* ---------- 索引文件读写 ---------- */
 
-  /** 把 segment 的内存稀疏索引落盘；该 segment 没有条目时为 no-op。 */
-  private void dumpSegmentIndex(final @Nullable Segment segment) {
+  /** 把该段的稀疏索引写回磁盘；段内没有索引项时什么都不做。 */
+  private void persistSegmentIndex(final @Nullable Segment segment) {
     if (segment == null) {
       return;
     }
 
-    final var entries = journalIndex.entriesInRange(segment.index(), segment.lastIndex());
+    final var entries = indexLookup.entriesInRange(segment.index(), segment.lastIndex());
     if (entries.isEmpty()) {
       return;
     }
@@ -455,16 +434,13 @@ final class SegmentsManager implements AutoCloseable {
     try {
       SegmentIndexFile.write(segment.file().indexFile().toPath(), entries);
     } catch (final Exception e) {
-      // 索引只是加速读取的缓存，落盘失败不影响正确性；重启后会回退为扫描建索引
-      LOG.warn(
-          "Failed to persist index of segment {}; the index will be rebuilt by scanning on restart",
-          segment,
-          e);
+      // 索引只是读路径的加速缓存，写不进去不影响正确性；重启后扫描重建
+      LOG.warn("segment {} 的索引落盘失败，重启后将按扫描重建", segment, e);
     }
   }
 
-  /** 尽力加载 segment 的磁盘索引；文件缺失或校验失败时静默跳过，由读取路径扫描重建。 */
-  private void loadSegmentIndex(final Segment segment) {
+  /** 尽力装载该段的磁盘索引；文件缺失或不合法则静默跳过，读路径自会扫描重建。 */
+  private void restoreSegmentIndex(final Segment segment) {
     final var indexFile = segment.file().indexFile().toPath();
     if (!Files.exists(indexFile)) {
       return;
@@ -479,86 +455,73 @@ final class SegmentsManager implements AutoCloseable {
             descriptor.encodingLength(),
             descriptor.maxSegmentSize());
     if (entries == null) {
-      LOG.debug(
-          "Index file {} is missing or invalid; the index will be rebuilt by scanning", indexFile);
+      LOG.debug("索引文件 {} 缺失或不合法，改为扫描重建", indexFile);
       return;
     }
-    journalIndex.indexAll(entries);
+    indexLookup.indexAll(entries);
   }
 
-  private void deleteSegmentIndexFile(final Segment segment) {
+  private void removeSegmentIndex(final Segment segment) {
     try {
       Files.deleteIfExists(segment.file().indexFile().toPath());
     } catch (final IOException e) {
-      LOG.warn(
-          "Could not delete index file of segment {}; this can result in unnecessary disk usage",
-          segment,
-          e);
+      LOG.warn("segment {} 的索引文件删除失败，将残留为无用磁盘占用", segment, e);
     }
   }
 
-  /**
-   * @return 目录下按编号升序排列的合法 segment 文件列表，可能为空但不为 null
-   */
-  private List<File> getSortedLogSegments() {
-    final File[] found =
-        directory.listFiles(file -> file.isFile() && SegmentFile.isSegmentFile(name, file));
+  /** @return 目录中全部合法 segment 文件，按段编号升序；可为空列表，不为 null */
+  private List<File> sortedSegmentFiles() {
+    final File[] present =
+        storageDir.listFiles(file -> file.isFile() && SegmentFile.isSegmentFile(journalName, file));
 
-    if (found == null) {
+    if (present == null) {
       throw new IllegalStateException(
-          String.format(
-              "Could not list files in directory '%s'. Either the path doesn't point to a directory or an I/O error occurred.",
-              directory));
+          "无法列出目录 '%s' 中的文件：不是目录，或列举时发生 IO 错误".formatted(storageDir));
     }
 
-    Arrays.sort(found, Comparator.comparingInt(f -> SegmentFile.getSegmentIdFromPath(f.getName())));
-    return List.of(found);
+    return Arrays.stream(present)
+        .sorted(Comparator.comparingInt(file -> SegmentFile.getSegmentIdFromPath(file.getName())))
+        .toList();
   }
 
-  /* ---------- 指标与残留清理 ---------- */
+  /* ---------- 指标与残留清扫 ---------- */
 
-  /** 记录 segment 加入后的指标；segment 文件按 maxSegmentSize 预分配，长度恒定。 */
-  private void onSegmentAdded(final Segment segment) {
-    journalMetrics.incSegmentCount();
-    journalSizeBytes.addAndGet(segment.file().file().length());
-    journalMetrics.setJournalSize(journalSizeBytes.get());
+  /** 段加入后记账：段文件长度在建段时即固定为上限值。 */
+  private void trackSegmentAdded(final Segment segment) {
+    metrics.incSegmentCount();
+    diskUsageBytes.addAndGet(segment.file().file().length());
+    metrics.setJournalSize(diskUsageBytes.get());
   }
 
-  /** 记录 segment 移除后的指标；必须在 {@code segment.delete()} 之前调用，文件删除后长度归零。 */
-  private void onSegmentRemoved(final Segment segment) {
-    journalMetrics.decSegmentCount();
-    journalSizeBytes.addAndGet(-segment.file().file().length());
-    journalMetrics.setJournalSize(journalSizeBytes.get());
+  /** 段移除前记账；必须在 {@code segment.delete()} 之前调用，删文件后长度归零。 */
+  private void trackSegmentRemoved(final Segment segment) {
+    metrics.decSegmentCount();
+    diskUsageBytes.addAndGet(-segment.file().file().length());
+    metrics.setJournalSize(diskUsageBytes.get());
   }
 
-  /** 删除目录中所有标记为待删除（软删除残留）的 segment 文件。 */
-  private void deleteDeferredFiles() {
+  /** 清扫目录中所有带软删除标记的 segment 残留文件。 */
+  private void purgeMarkedFiles() {
     try (final DirectoryStream<Path> markedForDeletion =
         Files.newDirectoryStream(
-            directory.toPath(),
-            path -> SegmentFile.isDeletedSegmentFile(name, path.getFileName().toString()))) {
-      markedForDeletion.forEach(this::deleteDeferredFile);
+            storageDir.toPath(),
+            path -> SegmentFile.isDeletedSegmentFile(journalName, path.getFileName().toString()))) {
+      markedForDeletion.forEach(this::purgeMarkedFile);
     } catch (final IOException e) {
-      LOG.warn(
-          "Could not delete segment files marked for deletion in {}. This can result in unnecessary disk usage.",
-          directory.toPath(),
-          e);
+      LOG.warn("目录 {} 中软删除残留清扫失败，将留下无用磁盘占用", storageDir.toPath(), e);
     }
   }
 
-  private void deleteDeferredFile(final Path segmentFileToDelete) {
+  private void purgeMarkedFile(final Path markedFile) {
     try {
-      Files.deleteIfExists(segmentFileToDelete);
+      Files.deleteIfExists(markedFile);
     } catch (final IOException e) {
-      LOG.warn(
-          "Could not delete file {} which is marked for deletion. This can result in unnecessary disk usage.",
-          segmentFileToDelete,
-          e);
+      LOG.warn("软删除残留文件 {} 清除失败，将留下无用磁盘占用", markedFile, e);
     }
   }
 
   private long firstIndexOrZero() {
     final Segment first = getFirstSegment();
-    return first != null ? first.index() : 0;
+    return first == null ? 0 : first.index();
   }
 }

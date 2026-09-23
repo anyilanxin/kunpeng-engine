@@ -53,7 +53,7 @@ import java.util.function.Function;
  * <p>合并推送一次只进行一个会话（单会话覆盖旧会话，支持整体重推）。
  *
  * @author zxuanhong
- * @since 1.0.0
+ * @since 2026.0.0
  */
 public final class SnapshotPushServer {
 

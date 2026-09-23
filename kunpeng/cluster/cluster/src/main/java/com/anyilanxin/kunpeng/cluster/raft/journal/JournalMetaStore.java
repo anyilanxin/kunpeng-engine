@@ -17,68 +17,63 @@
 package com.anyilanxin.kunpeng.cluster.raft.journal;
 
 /**
- * 日志元信息存取接口。
+ * “最后已刷盘索引”的持久化通道。
  *
- * <p>负责在日志体系之外持久化"最后已刷盘索引"（lastFlushedIndex），用于重启后的完整性 判定：磁盘上不该存在超过该索引的记录，否则视为损坏。实现可能落在数据库或文件中。
+ * <p>该索引独立于日志本体存放（实现可落库、落文件或仅驻内存）。重启后 journal 以它为完整性 基准：磁盘上不允许出现高于它的记录，出现即判定损坏。
  */
 public interface JournalMetaStore {
 
   /**
-   * 读取最后已刷盘索引。
+   * 取回最后已刷盘索引。
    *
-   * <p>实现可能涉及数据库或文件读取，代价较高且可能阻塞；调用方应自行缓存结果，仅在必要时 读取。
+   * <p>实现可能触发数据库或文件 IO，属高代价操作，调用方应缓存结果、按需读取。
    *
-   * @return 最后已刷盘索引
+   * @return 最后已刷盘索引；从未记录过时返回实现约定的占位值（先用 {@link
+   *     #hasLastFlushedIndex()} 判定再取值）
    */
   long loadLastFlushedIndex();
 
   /**
-   * 更新最后已刷盘索引。
+   * 覆写最后已刷盘索引。同样可能是高代价的阻塞操作。
    *
-   * <p>实现可能涉及数据库或文件写入，代价较高且可能阻塞。
-   *
-   * @param index 最后已刷盘索引
+   * @param index 新的最后已刷盘索引
    */
   void storeLastFlushedIndex(long index);
 
   /**
-   * 将最后已刷盘索引重置为语义空值。
-   *
-   * <p>重置后具体取值由实现决定；判断是否已重置请使用 {@link #hasLastFlushedIndex()}。
+   * 清除已记录的最后已刷盘索引，使 {@link #hasLastFlushedIndex()} 回到 false。删除全部日志
+   * 前必须先执行本操作，保证中途崩溃后重启也能识别“空日志”状态。
    */
   void resetLastFlushedIndex();
 
-  /**
-   * @return 若当前不存在已知的最后已刷盘索引则返回 true
-   */
+  /** @return 是否已记录过最后已刷盘索引 */
   boolean hasLastFlushedIndex();
 
-  /** 基于内存 volatile 变量的默认实现，读写均为 O(1)。 */
+  /** volatile 单变量实现：全部操作 O(1)，用于测试与内存型场景。 */
   class InMemory implements JournalMetaStore {
 
-    /** 语义空值：表示尚未记录任何已刷盘索引。 */
-    private static final long NO_FLUSHED_INDEX = -1L;
+    private static final long UNSET = -1L;
 
-    private volatile long flushedIndex = NO_FLUSHED_INDEX;
+    private volatile long lastFlushed = UNSET;
 
     @Override
     public long loadLastFlushedIndex() {
-      return flushedIndex;
+      return lastFlushed;
     }
 
     @Override
     public void storeLastFlushedIndex(final long index) {
-      this.flushedIndex = index;
+      lastFlushed = index;
     }
 
     @Override
     public void resetLastFlushedIndex() {
-      flushedIndex = NO_FLUSHED_INDEX;
+      lastFlushed = UNSET;
     }
 
     @Override
     public boolean hasLastFlushedIndex() {
-      return flushedIndex != NO_FLUSHED_INDEX;
+      return lastFlushed != UNSET;
     }
   }
 }

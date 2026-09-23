@@ -34,7 +34,7 @@ import java.util.Map;
  * SFV 格式 .sfc 校验文件的默认实现：与镜像目录同名、位于同级，逐文件记录 {@code <name> <size> <crc32-hex>}。
  *
  * @author zxuanhong
- * @since 1.0.0
+ * @since 2026.0.0
  */
 public final class DefaultSimpleFileVerificationStore implements SimpleFileVerificationStore {
 

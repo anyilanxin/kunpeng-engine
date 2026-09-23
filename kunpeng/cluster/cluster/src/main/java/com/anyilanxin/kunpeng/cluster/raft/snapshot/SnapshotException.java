@@ -20,7 +20,7 @@ package com.anyilanxin.kunpeng.cluster.raft.snapshot;
  * 镜像模块异常基类。
  *
  * @author zxuanhong
- * @since 1.0.0
+ * @since 2026.0.0
  */
 public class SnapshotException extends RuntimeException {
 

@@ -22,7 +22,7 @@ import java.util.Map;
  * 镜像逐文件校验集的只读视图。
  *
  * @author zxuanhong
- * @since 1.0.0
+ * @since 2026.0.0
  */
 public interface SimpleFileVerificationChecksums {
 

@@ -20,32 +20,30 @@ import java.io.IOException;
 import org.jspecify.annotations.Nullable;
 
 /**
- * 受检型日志异常基类。
+ * 受检型日志异常。
  *
- * <p>与 {@link RuntimeException} 体系不同，本类及其子类强制调用方显式处理失败场景，用于 “失败属于可预期运维事件、调用方必须做出决策”的场合（例如刷盘失败）。
+ * <p>与 {@link RuntimeException} 体系相对：这一族异常代表“调用方必须显式决策的运维性失败”， 编译期强制处理，不允许静默吞掉。目前唯一的子类是刷盘失败。
  */
 public sealed class CheckedJournalException extends Exception {
 
-  /** 刷盘（将映射内存中的脏页落盘）失败时抛出。 */
-  public static final class FlushException extends CheckedJournalException {
-
-    /**
-     * 以底层 {@link IOException} 为根因构造刷盘异常。
-     *
-     * @param cause 触发失败的底层 IO 异常，可为 null
-     */
-    public FlushException(@Nullable final IOException cause) {
-      super("Error when flushing", cause);
-    }
-  }
-
   /**
-   * 基类构造方法，供子类复用。
+   * 基类构造入口，仅限子类使用。
    *
-   * @param message 异常描述
-   * @param cause 根因，可为 null
+   * @param message 失败描述
+   * @param cause 底层根因，允许为 null
    */
   public CheckedJournalException(final String message, @Nullable final Throwable cause) {
     super(message, cause);
+  }
+
+  /** 把映射内存中的脏页写入磁盘失败时抛出。 */
+  public static final class FlushException extends CheckedJournalException {
+
+    /**
+     * @param cause 触发失败的底层 IO 异常，允许为 null
+     */
+    public FlushException(@Nullable final IOException cause) {
+      super("journal 刷盘失败", cause);
+    }
   }
 }
