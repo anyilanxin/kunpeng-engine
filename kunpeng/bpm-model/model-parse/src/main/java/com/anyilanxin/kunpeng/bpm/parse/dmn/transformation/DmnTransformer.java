@@ -23,6 +23,8 @@ import com.anyilanxin.kunpeng.bpm.parse.dmn.element.DmnDecisionRequirementsGraph
 import com.anyilanxin.kunpeng.bpm.parse.dmn.transformer.*;
 import com.anyilanxin.kunpeng.engine.script.ScriptEngine;
 
+import java.io.InputStream;
+
 /**
  * DMN 模型转换入口：将 DMN XML 模型分五个阶段（每阶段一次全量遍历）转换为运行时决策需求图（DRG）。
  *
@@ -87,6 +89,18 @@ public final class DmnTransformer {
     step5Visitor = new TransformationVisitor();
     step5Visitor.registerHandler(new InformationRequirementTransformer());
     step5Visitor.registerHandler(new KnowledgeRequirementTransformer());
+  }
+
+
+  /**
+   * 从 DMN XML 输入流读取模型并执行转换。
+   *
+   * @param inputStream DMN XML 输入流
+   * @return 转换得到的决策需求图
+   */
+  public DmnDecisionRequirementsGraph transformDefinitions(final InputStream inputStream) {
+    final DmnModelInstance dmnModelInstance = Dmn.readModelFromStream(inputStream);
+    return transformDefinitions(dmnModelInstance);
   }
 
   /**

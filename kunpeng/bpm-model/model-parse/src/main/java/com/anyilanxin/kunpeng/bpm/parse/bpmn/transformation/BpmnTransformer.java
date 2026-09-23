@@ -48,6 +48,8 @@ import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformer.StartEventTransformer;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformer.SubProcessTransformer;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformer.UserTaskTransformer;
 import com.anyilanxin.kunpeng.engine.script.ScriptEngine;
+
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -124,6 +126,17 @@ public final class BpmnTransformer {
     step5Visitor = new ElementTransformVisitor();
     step5Visitor.registerHandler(new CurrentProcessSwitcher());
     step5Visitor.registerHandler(new MultiInstanceActivityTransformer());
+  }
+
+  /**
+   * 从 BPMN XML 输入流读取模型并执行转换。
+   *
+   * @param inputStream BPMN XML 输入流
+   * @return 转换得到的可执行流程集合
+   */
+  public List<BpmnProcess> transformDefinitions(final InputStream inputStream) {
+    final BpmnModelInstance bpmnModelInstance = Bpmn.readModelFromStream(inputStream);
+    return transformDefinitions(bpmnModelInstance);
   }
 
   /**
