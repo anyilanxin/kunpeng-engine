@@ -6,7 +6,7 @@
 
 这是项目里反复强调的红线。原因：
 
-1. `RecordConstant` 是**协议级常量**，跨模块使用，改动影响面大
+1. `BusinessRecordConstant` 是**协议级常量**，跨模块使用，改动影响面大
 2. 每个 Record 自己的 key 大多是**局部使用**，没必要提到全局
 3. 历史上加新常量经常导致用户回退修改
 
@@ -14,7 +14,7 @@
 
 | 场景 | 做法 |
 |------|------|
-| 字段名是跨 Record 通用的（`TENANT_ID`、`DEPLOYMENT_ID`、`RESOURCE_ID`、`VERSION_TAG`、`PROCESS_DEFINITION_ID`、`START_TIME`、`END_TIME`、`STATE`、`LIFE_CYCLE` 等） | ✅ 用 `RecordConstant` 常量 |
+| 字段名是跨 Record 通用的（`TENANT_ID`、`DEPLOYMENT_ID`、`RESOURCE_ID`、`VERSION_TAG`、`PROCESS_DEFINITION_ID`、`START_TIME`、`END_TIME`、`STATE`、`LIFE_CYCLE` 等） | ✅ 用 `BusinessRecordConstant` 常量 |
 | 字段名是这个 Record 特有的（`DECISION_DEFINITION_KEY`、`HISTORY_TIME_TO_LIVE`、`CANDIDATE_STARTER_GROUPS` 等） | ✅ 直接写字面量字符串 |
 | 想新加一个常量 | ❌ 不要加，写字面量 |
 
@@ -118,8 +118,8 @@ key 字符串统一 `UPPER_SNAKE_CASE`，跟字段含义对齐：
 ## 反例（不要做）
 
 ```java
-// ❌ 不要往 RecordConstant 加常量
-// 在 RecordConstant.java 里加：
+// ❌ 不要往 BusinessRecordConstant 加常量
+// 在 BusinessRecordConstant.java 里加：
 //   String HISTORY_TIME_TO_LIVE = "HISTORY_TIME_TO_LIVE";
 //   String DECISION_DEFINITION_KEY = "DECISION_DEFINITION_KEY";
 

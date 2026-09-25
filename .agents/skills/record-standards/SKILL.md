@@ -20,7 +20,7 @@ description: Use when writing or modifying protocol Record classes (*Record exte
 - **类骨架**：`extends UnifiedRecordValue<Self> implements XxxRecordValue` + `@AutoDeclareProperties`
 - **字段命名**：内部叫 `xxxProp`，private final
 - **Property id**：构造器首参为 id（强制，1..127），同一 Record 内唯一且永不复用；新字段可省略 id 由构建任务自动分配
-- **key**：先查 `RecordConstant`，有就用常量；没有就写字面量字符串（**不要自己往 RecordConstant 加常量**）
+- **key**：先查 `BusinessRecordConstant`，有就用常量；没有就写字面量字符串（**不要自己往 RecordConstant 加常量**）
 - **getter**：`@Override` 来自接口的，读 `xxxProp.getValue()`
 - **setter**：返回 `Self` 链式；String/Binary 类型必须有 String + DirectBuffer 两个重载
 - **Buffer getter**：`@JsonIgnore public DirectBuffer getXxxBuffer()`，对 String/Binary 才提供
@@ -36,7 +36,7 @@ description: Use when writing or modifying protocol Record classes (*Record exte
 |---|------|------|--------|
 | 01 | [01-class-skeleton-and-constructor.md](./01-class-skeleton-and-constructor.md) | 类声明、`super(N)` 容量、`declareProperty` 链、Property id | 第一次搭骨架 |
 | 02 | [02-property-field-types.md](./02-property-field-types.md) | `LongProperty`、`StringProperty`、`BinaryProperty`、`EnumProperty`、`ArrayProperty` 等 | 字段类型选型 |
-| 03 | [03-key-constants.md](./03-key-constants.md) | 哪些 key 用 `RecordConstant` 常量、哪些用字面量 | 加新字段时 |
+| 03 | [03-key-constants.md](./03-key-constants.md) | 哪些 key 用 `BusinessRecordConstant` 常量、哪些用字面量 | 加新字段时 |
 | 04 | [04-getters-and-setters.md](./04-getters-and-setters.md) | `String`/`DirectBuffer` 双 setter、`@JsonIgnore` Buffer getter | 写字段访问方法 |
 | 05 | [05-collections-and-addxxx.md](./05-collections-and-addxxx.md) | `ArrayProperty` 暴露 vs `addXxx(commandRecord)` 封装、wrap/unwrap | 集合字段设计 |
 | 06 | [06-typical-examples.md](./06-typical-examples.md) | 标量 / 集合 / 嵌套 Response Record 完整模板 | 抄代码时 |

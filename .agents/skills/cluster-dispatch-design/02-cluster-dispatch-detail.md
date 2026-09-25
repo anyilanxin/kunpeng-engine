@@ -52,7 +52,7 @@ applier 全部已实现）。写入门面 `LogEventWriter`：`addCommand`（仅�
 | `distributor/` | `PartitionDistributor` 接口 + `RoundRobinPartitionDistributor` / `FixedPartitionDistributor` |
 | `scheduling/` | `TimerSchedulerFactory`/`OrderedTimerScheduler`/`AsyncTimerRouter`、`LanePool`/`ExecutionLane`、`BufferedCommandCollector`/`HeapCommandBatch`/`PendingCommandRegistry` |
 | `cache/` | `BoundedPendingCommandRegistry`（在途命令去重）、`RegistryMetrics` |
-| `eventlog/` | 日志读写抽象（`LogRecord` 等） |
+| `eventlog/` | 日志读写抽象（`AdminLogRecord` 等） |
 
 ---
 
