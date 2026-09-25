@@ -32,7 +32,6 @@ import org.springframework.context.annotation.Profile;
  * broker configuration
  *
  * @author zxuanhong
- * @copyright zhouxuanhong（https://anyilanxin.com）
  * @since 2026.9.0
  */
 @Configuration(proxyBeanMethods = false)

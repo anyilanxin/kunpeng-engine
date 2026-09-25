@@ -25,7 +25,6 @@ import org.springframework.stereotype.Component;
  * prometheus 指标配置检查
  *
  * @author zxuanhong
- * @copyright zhouxuanhong（https://anyilanxin.com）
  * @since 2026.9.0
  */
 @Component

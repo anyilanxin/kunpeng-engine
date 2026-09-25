@@ -29,7 +29,6 @@ import org.springframework.stereotype.Component;
  * 存活探针
  *
  * @author zxuanhong
- * @copyright zhouxuanhong（https://anyilanxin.com）
  * @since 2026.9.0
  */
 @Component(value = INDICATOR_BROKER_LIVENESS)

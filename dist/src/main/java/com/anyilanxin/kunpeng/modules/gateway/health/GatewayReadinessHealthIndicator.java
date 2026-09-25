@@ -25,7 +25,6 @@ import org.springframework.stereotype.Component;
  * 就绪探针
  *
  * @author zxuanhong
- * @copyright zhouxuanhong（https://anyilanxin.com）
  * @since 2026.9.0
  */
 @Component

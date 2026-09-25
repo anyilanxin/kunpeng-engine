@@ -33,19 +33,18 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-
-@Configuration(proxyBeanMethods = false)
-@ComponentScan(
-    basePackages = {
-      "com.anyilanxin.kunpeng.modules.gateway",
-      "com.anyilanxin.kunpeng.modules.common",
-    })
 /**
  * 网关模块装配配置。
  *
  * @author zxuanhong
  * @since 2026.9.0
  */
+@Configuration(proxyBeanMethods = false)
+@ComponentScan(
+    basePackages = {
+      "com.anyilanxin.kunpeng.modules.gateway",
+      "com.anyilanxin.kunpeng.modules.common",
+    })
 @EnableAutoConfiguration
 @Profile("gateway")
 public class GatewayModuleConfiguration {

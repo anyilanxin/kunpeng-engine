@@ -30,7 +30,6 @@ import org.springframework.core.env.Environment;
  * broker configuration
  *
  * @author zxuanhong
- * @copyright zhouxuanhong（https://anyilanxin.com）
  * @since 2026.9.0
  */
 @Configuration(proxyBeanMethods = false)

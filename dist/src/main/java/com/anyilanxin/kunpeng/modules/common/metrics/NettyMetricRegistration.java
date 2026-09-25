@@ -27,7 +27,6 @@ import org.springframework.context.annotation.Configuration;
  * nett metrics绑定
  *
  * @author zxuanhong
- * @copyright zhouxuanhong（https://anyilanxin.com）
  * @since 2026.9.0
  */
 @Configuration(proxyBeanMethods = false)
