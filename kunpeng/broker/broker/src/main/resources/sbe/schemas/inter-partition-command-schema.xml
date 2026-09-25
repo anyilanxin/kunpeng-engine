@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+  Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU Affero General Public License for more details.
+
+  You should have received a copy of the GNU Affero General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<sbe:messageSchema xmlns:sbe="http://fixprotocol.io/2016/sbe"
+  package="com.anyilanxin.kunpeng.broker.protocol" id="10" version="1"
+  description="Kunpeng Inter Partition Command Schema" byteOrder="littleEndian">
+
+  <types>
+    <composite name="messageHeader" description="Message identifiers and length of message root">
+      <type name="blockLength" primitiveType="uint16"/>
+      <type name="templateId" primitiveType="uint16"/>
+      <type name="schemaId" primitiveType="uint16"/>
+      <type name="version" primitiveType="uint16"/>
+    </composite>
+    <!-- 变长命令载荷（structpack 编码的 UnifiedRecordValue） -->
+    <composite name="blob">
+      <type name="length" primitiveType="uint32" maxValue="2147483647"/>
+      <type name="varData" primitiveType="uint8" length="0"/>
+    </composite>
+  </types>
+
+  <sbe:message name="InterPartitionMessage" id="1" description="跨分区命令转发消息">
+    <field name="operationReference" id="1" type="int64"/>
+    <field name="receiverPartitionId" id="2" type="int32"/>
+    <field name="valueType" id="3" type="uint16"/>
+    <field name="valueState" id="4" type="uint16"/>
+    <field name="recordKey" id="5" type="int64" nullValue="-1"/>
+    <data name="command" id="6" type="blob"/>
+  </sbe:message>
+</sbe:messageSchema>

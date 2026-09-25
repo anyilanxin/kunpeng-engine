@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+  Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU Affero General Public License for more details.
+
+  You should have received a copy of the GNU Affero General Public License
+  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+-->
+<sbe:messageSchema xmlns:sbe="http://fixprotocol.io/2016/sbe"
+  package="com.anyilanxin.kunpeng.broker.client.jobstream.protocol" id="11" version="1"
+  description="Kunpeng Job Stream Wire Schema" byteOrder="littleEndian">
+
+  <types>
+    <composite name="messageHeader" description="Message identifiers and length of message root">
+      <type name="blockLength" primitiveType="uint16"/>
+      <type name="templateId" primitiveType="uint16"/>
+      <type name="schemaId" primitiveType="uint16"/>
+      <type name="version" primitiveType="uint16"/>
+    </composite>
+    <composite name="varDataEncoding" description="UTF-8 变长字符串">
+      <type name="length" primitiveType="uint32" maxValue="2147483647"/>
+      <type name="varData" primitiveType="uint8" length="0" characterEncoding="UTF-8"/>
+    </composite>
+    <composite name="blob" description="structpack 帧等原始字节">
+      <type name="length" primitiveType="uint32" maxValue="2147483647"/>
+      <type name="varData" primitiveType="uint8" length="0"/>
+    </composite>
+    <composite name="groupSizeEncoding" description="Repeating group dimensions（数百消费者，numInGroup 用 uint16）">
+      <type name="blockLength" primitiveType="uint16"/>
+      <type name="numInGroup" primitiveType="uint16" semanticType="NumInGroup"/>
+    </composite>
+  </types>
+
+  <!-- 网关聚合订阅快照：每 jobType 一条聚合，sessions 为稳定会话 ID → worker 映射（删除零重排） -->
+  <sbe:message name="subscriptionSnapshot" id="1" description="GW→B 订阅对账">
+    <field name="generation" id="1" type="int64"/>
+    <group name="aggregates" id="2" dimensionType="groupSizeEncoding" description="聚合注册数组（group 先于 data）">
+      <group name="sessions" id="4" dimensionType="groupSizeEncoding" description="会话集合（稳定 ID，下线只删一项）">
+        <field name="sessionId" id="5" type="int64"/>
+        <data name="worker" id="6" type="varDataEncoding"/>
+      </group>
+      <data name="jobType" id="3" type="varDataEncoding"/>
+    </group>
+  </sbe:message>
+
+
+  <!-- 单条流推送：record 为 structpack JobRecord 帧 -->
+  <sbe:message name="streamPush" id="3" description="B→GW 流推送">
+    <field name="sessionId" id="1" type="int64"/>
+    <field name="jobKey" id="2" type="int64"/>
+    <field name="partitionId" id="3" type="int32"/>
+    <field name="deadline" id="4" type="int64"/>
+    <data name="worker" id="5" type="varDataEncoding"/>
+    <data name="record" id="6" type="blob"/>
+  </sbe:message>
+
+  <sbe:message name="pushResult" id="4" description="推送送达应答">
+    <field name="delivered" id="1" type="uint8"/>
+    <data name="reason" id="2" type="varDataEncoding"/>
+  </sbe:message>
+
+</sbe:messageSchema>

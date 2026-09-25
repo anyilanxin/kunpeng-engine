@@ -18,11 +18,32 @@ plugins {
     id 'kunpeng.build-publish'
 }
 
-description = "Gateway Job"
+description = "Kunpeng Gateway Job"
 
 configure(jarInfo) {
     archiveName = "kunpeng-gateway-job"
 }
-dependencies {
 
+
+dependencies {
+    api project(':kunpeng:gateway:gateway-protocol')
+    api project(':kunpeng:cluster:cluster')
+    api project(':kunpeng:broker:broker-client')
+
+    implementation project(':kunpeng:cluster:cluster-config')
+    implementation project(':kunpeng:configuration')
+    implementation project(':kunpeng:structpack')
+    implementation project(':kunpeng:scheduler')
+    implementation project(':kunpeng:protocol:protocol-business')
+    implementation project(':kunpeng:protocol:protocol-business-impl')
+    implementation project(':kunpeng:utils')
+
+    implementation 'org.agrona:agrona'
+    implementation 'net.jcip:jcip-annotations'
+    implementation 'org.springframework:spring-core'
+    implementation 'io.grpc:grpc-api'
+    implementation 'io.grpc:grpc-stub'
+    implementation 'com.google.protobuf:protobuf-java'
+    implementation 'io.micrometer:micrometer-core'
+    implementation 'io.micrometer:micrometer-commons'
 }
