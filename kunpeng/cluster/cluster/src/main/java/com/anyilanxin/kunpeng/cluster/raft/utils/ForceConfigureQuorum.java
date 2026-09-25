@@ -44,6 +44,9 @@ import java.util.function.Consumer;
  *      |                    |                |                 |                |
  *      |（若 赞成 + 剩余未决 &lt; 多数，例如过半掉线，立即回调 false）            |
  * </pre>
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class ForceConfigureQuorum {
 

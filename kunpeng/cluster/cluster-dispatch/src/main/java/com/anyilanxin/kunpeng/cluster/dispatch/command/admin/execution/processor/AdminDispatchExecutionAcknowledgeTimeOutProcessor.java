@@ -18,13 +18,15 @@ package com.anyilanxin.kunpeng.cluster.dispatch.command.admin.execution.processo
 
 import com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter;
 import com.anyilanxin.kunpeng.cluster.dispatch.command.admin.execution.AbstractAdminDispatchExecutionProcessor;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.LogRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminDispatchPlanExecutionRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.admin.AdminDispatchPlanExecutionLifeCycle;
 
 /**
+ * 管理面执行明细 ACK 超时命令处理器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class AdminDispatchExecutionAcknowledgeTimeOutProcessor
     extends AbstractAdminDispatchExecutionProcessor {
@@ -36,7 +38,7 @@ public class AdminDispatchExecutionAcknowledgeTimeOutProcessor
   }
 
   @Override
-  public void processRecord(final LogRecord<AdminDispatchPlanExecutionRecord> record) {}
+  public void processRecord(final AdminLogRecord<AdminDispatchPlanExecutionRecord> record) {}
 
   @Override
   public AdminDispatchPlanExecutionLifeCycle valueLifeCycle() {

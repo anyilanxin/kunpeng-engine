@@ -35,7 +35,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * 集群领导者发现管理服务默认实现：维护监听器列表并分发领导者变更事件。
+ *
  * @author zxuanhong
+ * @since 2026.9.0
  */
 public class DefaultManageClusterLeaderFoundService implements ManageClusterLeaderFoundService {
 

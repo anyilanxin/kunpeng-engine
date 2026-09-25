@@ -28,6 +28,9 @@ import org.agrona.collections.LongHashSet;
  * #remove}。
  *
  * <p>插入将超出容量时，先淘汰任意牺牲者；唯一保证是 {@link #size()} 不超过配置容量。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class BoundedKeySet {
 

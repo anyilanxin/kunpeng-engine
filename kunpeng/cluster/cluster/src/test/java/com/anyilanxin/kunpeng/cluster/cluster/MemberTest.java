@@ -24,6 +24,12 @@ import com.anyilanxin.kunpeng.cluster.utils.net.Address;
 import java.util.Properties;
 import org.junit.jupiter.api.Test;
 
+/**
+ * 成员测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 final class MemberTest {
 
   private static final Address ADDRESS = Address.from("localhost", 26502);

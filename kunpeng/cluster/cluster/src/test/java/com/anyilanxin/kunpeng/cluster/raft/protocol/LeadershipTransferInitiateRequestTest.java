@@ -24,6 +24,12 @@ import com.anyilanxin.kunpeng.cluster.raft.RebalanceConfiguration;
 import java.time.Duration;
 import org.junit.jupiter.api.Test;
 
+/**
+ * leader 迁移发起请求测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 final class LeadershipTransferInitiateRequestTest {
 
   private static final RebalanceConfiguration CONFIGURED =

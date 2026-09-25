@@ -33,6 +33,9 @@ import java.util.stream.Collectors;
 
 /**
  * 面向测试的内存版镜像存储，用于在无磁盘依赖的情况下模拟镜像的拍摄、接收与持久化。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class TestSnapshotStore implements RaftSnapshotStore {
 

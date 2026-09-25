@@ -24,6 +24,7 @@ import com.anyilanxin.kunpeng.scheduler.startup.StartupStep;
  * 分区启动流程中的加入（join）步骤：创建 Raft 分区并加入已存在的集群，关闭时释放分区。
  *
  * @author zxuanhong
+ * @since 2026.9.0
  */
 @SuppressWarnings("rawtypes")
 public abstract class RaftJoinStep<CONTENT extends PartitionStartupContext>

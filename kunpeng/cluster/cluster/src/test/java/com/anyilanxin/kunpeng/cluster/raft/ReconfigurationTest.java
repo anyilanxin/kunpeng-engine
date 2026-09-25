@@ -73,6 +73,9 @@ import org.junit.jupiter.api.io.TempDir;
 /**
  * 集群成员变更：节点加入/离开/重配置的各种场景，包括 join 重试、联合共识的持久化、
  * leave 的幂等性，以及 force configure 的 quorum 要求。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 final class ReconfigurationTest {
   private static final MemberId N1 = MemberId.from("11");

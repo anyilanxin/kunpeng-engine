@@ -35,6 +35,9 @@ import org.slf4j.Logger;
  *
  * <p>非浮动注册块（{@code begin != FLOATING_ID}）内的类型按 {@code begin + index} 显式分配 Fory 类型 id 并写入线格式，
  * 两端注册顺序不同也能按 id 对齐，类型增删不会漂移其它类型的 id；浮动块内的类型仍由 Fory 按注册顺序自动分配。 构建后不允许再注册。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class Namespace {
 

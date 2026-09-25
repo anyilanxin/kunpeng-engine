@@ -23,8 +23,10 @@ import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.source.NodeSour
 import com.anyilanxin.kunpeng.protocol.admin.record.command.source.NodeSourceLifeCycle;
 
 /**
+ * 节点 source 治理命令处理器抽象基类。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public abstract class AbstractNodeSourceProcessor
     implements LogEventProcessorSingleState<NodeSourceRecord> {

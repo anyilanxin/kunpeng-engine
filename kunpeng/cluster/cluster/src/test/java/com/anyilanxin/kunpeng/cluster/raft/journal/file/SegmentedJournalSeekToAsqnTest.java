@@ -31,7 +31,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-/** seekToAsqn 定位语义：读取器应停在 asqn 不大于目标值的最后一条记录上。 */
+/**
+ * seekToAsqn 定位语义：读取器应停在 asqn 不大于目标值的最后一条记录上。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class SegmentedJournalSeekToAsqnTest {
 
   private static final int MAX_SEGMENT_SIZE = 1024;

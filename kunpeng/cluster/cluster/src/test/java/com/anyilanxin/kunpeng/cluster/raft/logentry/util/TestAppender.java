@@ -26,6 +26,12 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+/**
+ * 测试追加监听器。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class TestAppender implements AppendListener {
   private final BlockingQueue<IndexedRaftLogEntry> written;
   private final BlockingQueue<Long> committed;

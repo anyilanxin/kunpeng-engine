@@ -64,6 +64,12 @@ import static org.mockito.AdditionalAnswers.answerVoid;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+/**
+ * leader 角色测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class LeaderRoleTest {
 
   @AutoClose SingleThreadContext threadContext;

@@ -40,6 +40,12 @@ import org.awaitility.Awaitility;
 import org.junit.Rule;
 import org.junit.Test;
 
+/**
+ * Raft 协同 leader 迁移测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class RaftCoordinatedLeadershipTransferTest {
 
   @Rule public RaftRule raftRule = RaftRule.withBootstrappedNodes(3);

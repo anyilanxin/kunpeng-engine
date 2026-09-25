@@ -29,7 +29,12 @@ import java.util.Map;
 import org.agrona.concurrent.UnsafeBuffer;
 import org.junit.jupiter.api.Test;
 
-/** {@link BusinessMetaEntry} SBE 序列化 roundtrip 测试。 */
+/**
+ * {@link BusinessMetaEntry} SBE 序列化 roundtrip 测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class BusinessMetaEntrySerializerTest {
 
   private final RaftEntrySBESerializer serializer = new RaftEntrySBESerializer();

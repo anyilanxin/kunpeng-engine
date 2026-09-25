@@ -33,6 +33,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * 业务分区启动流程中的引导（bootstrap）步骤，负责在初始成员上创建并引导业务 Raft 分组。
  *
  * @author zxuanhong
+ * @since 2026.9.0
  */
 public abstract class RaftFailureListenerStep<CONTENT extends PartitionStartupContext>
     implements StartupStep<CONTENT> {

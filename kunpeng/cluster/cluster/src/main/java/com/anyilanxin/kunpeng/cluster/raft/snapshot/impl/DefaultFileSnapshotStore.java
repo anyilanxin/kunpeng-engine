@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
  * 为模块内部 SPI，供各模块的 pending 实现调用，不属于对外契约。所有状态变更串行在持有的 actor 上执行。
  *
  * @author zxuanhong
- * @since 2026.0.0
+ * @since 2026.9.0
  */
 public final class DefaultFileSnapshotStore implements FileSnapshotStore {
 

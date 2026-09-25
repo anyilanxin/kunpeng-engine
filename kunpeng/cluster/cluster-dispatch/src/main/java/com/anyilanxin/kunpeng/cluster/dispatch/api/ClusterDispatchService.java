@@ -24,7 +24,6 @@ import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.CLUST
 
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
 import com.anyilanxin.kunpeng.cluster.dispatch.ClusterDispatchLoggers;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.RecordAppendEntryFactory;
 import com.anyilanxin.kunpeng.cluster.raft.partition.PartitionMetadata;
 import com.anyilanxin.kunpeng.cluster.utils.net.Address;
 import com.anyilanxin.kunpeng.eventlog.AppendEntry;
@@ -34,6 +33,7 @@ import com.anyilanxin.kunpeng.eventlog.WriteContext;
 import com.anyilanxin.kunpeng.kvstore.TransactionContext;
 import com.anyilanxin.kunpeng.protocol.admin.AdminValueType;
 import com.anyilanxin.kunpeng.protocol.admin.impl.AdminRecordMetadata;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.RecordAppendEntryFactory;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminDispatchPlanExecutionRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanExecutionRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.common.NodeSourceApplyRecord;
@@ -50,15 +50,17 @@ import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 import com.anyilanxin.kunpeng.repository.admin.AdminImmutableRepository;
 import com.anyilanxin.kunpeng.repository.admin.AdminRepository;
 import com.anyilanxin.kunpeng.repository.admin.AdminRepositoryFactory;
-import com.anyilanxin.kunpeng.repository.admin.modules.admin.ImmutableRepositoryAdmin;
-import com.anyilanxin.kunpeng.repository.admin.modules.business.ImmutableRepositoryBusiness;
+import com.anyilanxin.kunpeng.repository.admin.modules.admin.ImmutableAdminRepository;
+import com.anyilanxin.kunpeng.repository.admin.modules.business.ImmutableBusinessRepository;
 import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 import org.slf4j.Logger;
 
 /**
+ * 集群调度服务：调度引擎对外暴露的 API 能力实现。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class ClusterDispatchService {
   private final MessagingService messagingService;
@@ -66,8 +68,8 @@ public class ClusterDispatchService {
   private EventLogWriter logStreamWriter;
   public static final Logger LOGGER = ClusterDispatchLoggers.CLUSTER_DISPATCH;
   private AdminImmutableRepository repository;
-  private ImmutableRepositoryAdmin repositoryAdmin;
-  private ImmutableRepositoryBusiness repositoryBusiness;
+  private ImmutableAdminRepository repositoryAdmin;
+  private ImmutableBusinessRepository repositoryBusiness;
   private TransactionContext context;
 
   public ClusterDispatchService(

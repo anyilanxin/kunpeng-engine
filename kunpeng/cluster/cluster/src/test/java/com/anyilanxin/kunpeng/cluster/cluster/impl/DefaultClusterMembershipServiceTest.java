@@ -37,6 +37,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 
+/**
+ * 集群成员服务测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @Execution(ExecutionMode.CONCURRENT)
 final class DefaultClusterMembershipServiceTest {
 

@@ -17,8 +17,10 @@
 package com.anyilanxin.kunpeng.cluster.config;
 
 /**
+ * 集群元数据只读存储：拓扑与分区元信息的查询视图。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface ClusterMetaImmutableStore {
 

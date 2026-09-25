@@ -18,7 +18,12 @@ package com.anyilanxin.kunpeng.cluster.raft.storage.log.entry;
 
 import com.anyilanxin.kunpeng.structpack.buffer.BufferWriter;
 
-/** 承载应用（状态机）数据的 Raft 日志条目，以所覆盖的源事件位置区间来标识。 */
+/**
+ * 承载应用（状态机）数据的 Raft 日志条目，以所覆盖的源事件位置区间来标识。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface ApplicationEntry extends RaftEntry {
 
   /** 本条目覆盖的最低源位置。 */

@@ -33,6 +33,9 @@ import org.slf4j.LoggerFactory;
 /**
  * 测试辅助配置器：当 {@code faultyWhen} 判定为真时，给编号最小的若干节点装配一个注定刷盘失败的
  * flusher，从而在测试中模拟磁盘故障场景；其余节点保持正常，保证集群仍能选出健康 leader。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public record FaultyFlusherConfigurator(
     int faultyFlusherNumber,

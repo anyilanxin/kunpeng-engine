@@ -37,6 +37,12 @@ import org.awaitility.Awaitility;
 import org.junit.Rule;
 import org.junit.Test;
 
+/**
+ * Raft leader 迁移发起测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class RaftLeadershipTransferInitiateTest {
   /**
    * For tests we don't install a real coordinator check, so any member ID and config version will

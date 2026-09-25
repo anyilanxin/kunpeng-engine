@@ -24,6 +24,9 @@ import org.agrona.DirectBuffer;
  * CRC32C 校验和计算器。
  *
  * <p>内部复用同一个 {@link CRC32C} 实例，每次计算前重置状态，避免频繁分配。此类非线程 安全，各使用点应持有独立实例。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class ChecksumGenerator {
 

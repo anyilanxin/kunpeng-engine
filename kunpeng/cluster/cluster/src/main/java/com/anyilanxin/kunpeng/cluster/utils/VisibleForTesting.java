@@ -25,6 +25,9 @@ import java.lang.annotation.Target;
 /**
  * Denotes that a member is visible for testing only, i.e. its visibility was widened beyond what
  * production code strictly requires, solely to allow unit testing.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 @Documented
 @Retention(RetentionPolicy.SOURCE)

@@ -14,4 +14,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+/**
+ * Raft 日志存储核心包：日志段追加、索引与恢复的抽象与默认实现。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 package com.anyilanxin.kunpeng.cluster.raft.journal;

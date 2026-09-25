@@ -31,7 +31,12 @@ import java.util.Map;
 import org.agrona.ExpandableArrayBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
 
-/** 业务元数据修改请求/响应的线格式编解码（byte[] 载荷，经 ClusterCommunicationService 传输）。 */
+/**
+ * 业务元数据修改请求/响应的线格式编解码（byte[] 载荷，经 ClusterCommunicationService 传输）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class BusinessMetaTransfer {
 
   /** 请求：1 字节 forwarded 标志 + SBE BusinessMetaEntry 编码的全量键值对（整体覆盖语义）。 */

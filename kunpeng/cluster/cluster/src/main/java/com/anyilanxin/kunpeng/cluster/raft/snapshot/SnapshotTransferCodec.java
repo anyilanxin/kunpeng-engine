@@ -30,6 +30,9 @@ import org.agrona.concurrent.UnsafeBuffer;
  * <p>传输单元线格式：外层 kind 与 hasMore 标记 + 定长 group 条目（含各分片名字与内容的长度）+ 尾部 payload（所有分片的 chunkName 与 content
  * 按条目顺序拼接）。编码时布局定长可算，名字与内容直接写入 消息数组最终位置，全程一次拷贝；解码时内容区只做 payload 视图包装，不发生拷贝。每次调用使用独立 的 flyweight
  * 实例，线程安全。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class SnapshotTransferCodec {
 

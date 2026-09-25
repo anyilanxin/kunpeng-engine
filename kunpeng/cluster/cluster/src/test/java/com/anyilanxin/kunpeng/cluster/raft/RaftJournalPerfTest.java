@@ -43,6 +43,9 @@ import org.junit.runners.model.Statement;
  * flusher 为 {@link RecordingFlusherConfigurator} 注入的"真刷盘 + 计数"实现，flush 次数为
  * 测量窗口内的真实 fsync 次数（不刻意断言具体值，改造前后由数字自证）。所有数字以
  * TEST OUTPUT 前缀打印，便于从测试报告中提取。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class RaftJournalPerfTest {
 

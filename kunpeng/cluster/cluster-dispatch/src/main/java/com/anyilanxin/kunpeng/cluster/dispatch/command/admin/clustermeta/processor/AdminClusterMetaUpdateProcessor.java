@@ -18,13 +18,15 @@ package com.anyilanxin.kunpeng.cluster.dispatch.command.admin.clustermeta.proces
 
 import com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter;
 import com.anyilanxin.kunpeng.cluster.dispatch.command.admin.clustermeta.AbstractAdminClusterMetaProcessor;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.LogRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminClusterMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.admin.AdminClusterMetaLifeCycle;
 
 /**
+ * 管理面集群元数据更新命令处理器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class AdminClusterMetaUpdateProcessor extends AbstractAdminClusterMetaProcessor {
   protected final LogEventWriter writer;
@@ -35,7 +37,7 @@ public class AdminClusterMetaUpdateProcessor extends AbstractAdminClusterMetaPro
   }
 
   @Override
-  public void processRecord(final LogRecord<AdminClusterMetaRecord> record) {
+  public void processRecord(final AdminLogRecord<AdminClusterMetaRecord> record) {
     final AdminClusterMetaRecord value = record.getValue();
     writer.addEvent(-1, AdminClusterMetaLifeCycle.UPDATED, record.getRequestId(), value);
   }

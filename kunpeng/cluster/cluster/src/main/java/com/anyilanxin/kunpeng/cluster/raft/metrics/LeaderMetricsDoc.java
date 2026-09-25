@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.cluster.raft.metrics;
 import com.anyilanxin.kunpeng.utils.micrometer.CustomMeterDocumentation;
 import io.micrometer.core.instrument.Meter.Type;
 
-/** Leader 追加与复制相关指标定义 */
+/**
+ * Leader 追加与复制相关指标定义。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public enum LeaderMetricsDoc implements CustomMeterDocumentation {
   /** 向 Follower 追加条目的延迟 */
   APPEND_ENTRIES_LATENCY(

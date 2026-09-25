@@ -29,6 +29,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * 内存版快照测试替身：同时实现持久快照、拍摄 pending 与接收 pending 三种契约。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class InMemorySnapshot
         implements PersistedSnapshot, ConstructableSnapshot, ReceivedSnapshot {

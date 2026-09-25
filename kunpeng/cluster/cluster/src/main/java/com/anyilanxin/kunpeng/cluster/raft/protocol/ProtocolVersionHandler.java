@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.cluster.raft.protocol;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import java.util.List;
 
-/** 把各受支持线上版本的追加请求统一转换为 {@link InternalAppendRequest}。 */
+/**
+ * 把各受支持线上版本的追加请求统一转换为 {@link InternalAppendRequest}。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class ProtocolVersionHandler {
 
   private ProtocolVersionHandler() {

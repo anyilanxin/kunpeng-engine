@@ -25,6 +25,12 @@ import java.net.UnknownHostException;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
+/**
+ * 地址初始化测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 final class AddressInitializationsTest {
 
   private static final InetAddress SITE_IPV4 =

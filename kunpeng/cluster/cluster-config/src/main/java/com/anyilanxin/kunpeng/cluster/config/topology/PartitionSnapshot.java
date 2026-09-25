@@ -26,6 +26,9 @@ import java.util.Set;
  * 单个分区的全集群聚合快照：leader、跟随者集合与各成员健康状态。
  *
  * <p>不可变值对象，由 {@link ClusterPartitionSnapshot} 聚合构建，可在无锁状态下安全读取。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class PartitionSnapshot {
   private final String partitionName;

@@ -32,6 +32,9 @@ import java.util.function.Supplier;
  * </ul>
  *
  * <p>只要满足上述保证，实现可以忽略部分成员。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface PartitionDistributor {
 

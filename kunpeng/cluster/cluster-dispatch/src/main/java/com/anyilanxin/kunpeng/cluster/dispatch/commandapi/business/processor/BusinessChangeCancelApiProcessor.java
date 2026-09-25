@@ -18,23 +18,25 @@ package com.anyilanxin.kunpeng.cluster.dispatch.commandapi.business.processor;
 
 import com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter;
 import com.anyilanxin.kunpeng.cluster.dispatch.commandapi.business.AbstractBusinessApiProcessor;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.LogRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessClusterMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.business.dispatch.BusinessChangeCancelRequestRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.business.BusinessDispatchPlanLifeCycle;
 import com.anyilanxin.kunpeng.protocol.admin.record.commandapi.business.BusinessDispatchApiValueLifeCycle;
 import com.anyilanxin.kunpeng.repository.admin.AdminImmutableRepository;
-import com.anyilanxin.kunpeng.repository.admin.modules.business.ImmutableRepositoryBusiness;
+import com.anyilanxin.kunpeng.repository.admin.modules.business.ImmutableBusinessRepository;
 
 /**
+ * 业务面变更取消 API 处理器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class BusinessChangeCancelApiProcessor
     extends AbstractBusinessApiProcessor<BusinessChangeCancelRequestRecord> {
   private final LogEventWriter writer;
-  private final ImmutableRepositoryBusiness repositoryBusiness;
+  private final ImmutableBusinessRepository repositoryBusiness;
   private final BusinessDispatchPlanRecord planRecord;
 
   public BusinessChangeCancelApiProcessor(final LogEventWriter writer) {
@@ -45,7 +47,7 @@ public class BusinessChangeCancelApiProcessor
   }
 
   @Override
-  public void processRecord(final LogRecord<BusinessChangeCancelRequestRecord> record) {
+  public void processRecord(final AdminLogRecord<BusinessChangeCancelRequestRecord> record) {
     final BusinessClusterMetaRecord clusterMeta = repositoryBusiness.getClusterMeta();
     if (clusterMeta == null) {
       writer.adErrorResponse(record.getRequestId(), -1, "集群未初始化，无法调度");

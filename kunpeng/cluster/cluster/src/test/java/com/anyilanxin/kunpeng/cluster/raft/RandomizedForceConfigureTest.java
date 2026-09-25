@@ -47,6 +47,12 @@ import org.slf4j.LoggerFactory;
 
 // 标签必须用 jqwik 的 @Tag（jqwik 引擎不上报 Jupiter 的 @Tag，否则 build.gradle 的默认排除失效，
 // 默认套件会执行本类）
+/**
+ * 随机化强制重配置测试（jqwik）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @Tag("randomized")
 public final class RandomizedForceConfigureTest {
 

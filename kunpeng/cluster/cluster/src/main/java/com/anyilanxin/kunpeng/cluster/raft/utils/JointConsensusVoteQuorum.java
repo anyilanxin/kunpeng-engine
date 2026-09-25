@@ -39,6 +39,9 @@ import java.util.function.Consumer;
  *      |                      |                 |                 |
  *      |（任一侧反对先到多数，立即回调 false）                     |
  * </pre>
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class JointConsensusVoteQuorum implements VoteQuorum {
 

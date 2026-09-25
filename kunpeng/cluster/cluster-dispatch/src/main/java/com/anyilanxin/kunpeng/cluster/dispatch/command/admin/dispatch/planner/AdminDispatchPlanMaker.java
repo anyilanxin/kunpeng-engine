@@ -30,7 +30,7 @@ import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionExecutionRe
 import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionType;
 import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 import com.anyilanxin.kunpeng.repository.admin.AdminImmutableRepository;
-import com.anyilanxin.kunpeng.repository.admin.modules.key.ImmutableRepositoryKey;
+import com.anyilanxin.kunpeng.repository.admin.modules.key.ImmutableKeyRepository;
 import java.util.*;
 import org.agrona.concurrent.UnsafeBuffer;
 
@@ -53,17 +53,17 @@ import org.agrona.concurrent.UnsafeBuffer;
  * </ul>
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public final class AdminDispatchPlanMaker {
   private static final Comparator<MemberId> MEMBER_ORDER = Comparator.comparing(MemberId::id);
 
-  private final ImmutableRepositoryKey repositoryKey;
+  private final ImmutableKeyRepository repositoryKey;
   private final ClusterTopologyService clusterTopologyService;
 
   public AdminDispatchPlanMaker(final LogEventWriter writer) {
     final AdminImmutableRepository repository = writer.getRepository();
-    final ImmutableRepositoryKey repositoryKey = repository.keyRepository();
+    final ImmutableKeyRepository repositoryKey = repository.keyRepository();
     final ClusterTopologyService clusterTopologyService = writer.getClusterTopologyService();
     this.repositoryKey = Objects.requireNonNull(repositoryKey, "repositoryKey is null");
     this.clusterTopologyService =

@@ -32,7 +32,7 @@ import lombok.ToString;
  * 集群 Raft 配置，当前为占位实现，始终视为未初始化状态。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)

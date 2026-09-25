@@ -22,7 +22,12 @@ import com.anyilanxin.kunpeng.cluster.dispatch.distributor.round.RoundRobinParti
 import com.anyilanxin.kunpeng.configuration.broker.partition.PartitionScheme;
 import com.anyilanxin.kunpeng.configuration.broker.partition.PartitioningRaftConfig;
 
-/** 根据给定的集群配置确定分区分配的工具类。 */
+/**
+ * 根据给定的集群配置确定分区分配的工具类。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class StaticConfigurationGenerator {
 
   private StaticConfigurationGenerator() {}

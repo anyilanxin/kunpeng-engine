@@ -31,6 +31,12 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * 优先选举定时器测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 final class PriorityElectionTimerTest {
 
   private final Logger log = LoggerFactory.getLogger(PriorityElectionTimerTest.class);

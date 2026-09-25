@@ -44,6 +44,9 @@ import org.slf4j.LoggerFactory;
  *
  * <p>成员表完全镜像 {@link NodeDiscoveryService} 的节点视图：节点加入即成员加入，节点离开即 成员离开，本地成员在 {@link #join}
  * 时单独登记。构造时可预置一批初始成员，用于测试或静态 组播场景。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class DiscoveryMembershipProtocol
     extends AbstractListenerManager<GroupMembershipEvent, GroupMembershipEventListener>

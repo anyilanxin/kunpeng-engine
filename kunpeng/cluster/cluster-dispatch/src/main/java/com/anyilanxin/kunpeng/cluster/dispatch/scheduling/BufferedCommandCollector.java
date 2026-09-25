@@ -36,6 +36,9 @@ import java.util.List;
  * PendingCommandRegistry.Staging#commit()} 时才合并进主 注册表。
  *
  * <p>大小估算委托给批次完成：先以通用元数据形状推导每条目的额外开销，再征询容量探针。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class BufferedCommandCollector implements CommandCollector {
 

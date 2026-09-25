@@ -37,6 +37,9 @@ import org.junit.Test;
  * Coverage for the paused-mode watchdog on the Raft thread (Coordinated Leadership Transfer). The
  * watchdog guarantees a partition is never left paused and unavailable: if it is not resumed in
  * time, the leader steps down so services restart and a new leader can be elected.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class RaftLeadershipTransferPauseTest {
 

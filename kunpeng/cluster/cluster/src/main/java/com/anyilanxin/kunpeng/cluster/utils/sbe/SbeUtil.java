@@ -20,7 +20,12 @@ import com.anyilanxin.kunpeng.structpack.buffer.BufferWriter;
 import java.nio.ByteOrder;
 import org.agrona.MutableDirectBuffer;
 
-/** Helpers for working with SBE-encoded messages. */
+/**
+ * Helpers for working with SBE-encoded messages.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class SbeUtil {
 
   private SbeUtil() {}

@@ -25,6 +25,9 @@ import java.util.Map;
 
 /**
  * 测试用镜像拍摄 SPI 实现：拍摄动作委托给构造时传入的内容写入函数， recover/合并为空完成，目录/store 访问器仅做赋值。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class TestSnapshotProvider implements RaftSnapshotProvider<Void> {
 

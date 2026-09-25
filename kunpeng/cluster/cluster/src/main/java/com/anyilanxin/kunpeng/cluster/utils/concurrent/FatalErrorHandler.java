@@ -18,7 +18,12 @@ package com.anyilanxin.kunpeng.cluster.utils.concurrent;
 
 import org.slf4j.Logger;
 
-/** Handler invoked when an unrecoverable error occurs on a component's thread. */
+/**
+ * Handler invoked when an unrecoverable error occurs on a component's thread.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @FunctionalInterface
 public interface FatalErrorHandler {
 

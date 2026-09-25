@@ -26,6 +26,9 @@ import java.util.Objects;
  * Request asking the cluster to remove the sender from the member set (removePeer-style membership
  * change): the leader commits the removal through consensus and the departing member steps down
  * once acknowledged.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class LeaveRequest extends AbstractRaftRequest {
   private final RaftMember leavingMember;

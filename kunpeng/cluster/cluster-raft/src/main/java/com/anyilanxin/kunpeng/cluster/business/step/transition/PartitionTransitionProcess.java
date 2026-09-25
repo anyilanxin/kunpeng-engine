@@ -31,7 +31,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 
-/** 单次分区角色切换的执行过程，按顺序执行各切换步骤。 */
+/**
+ * 单次分区角色切换的执行过程，按顺序执行各切换步骤。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 final class PartitionTransitionProcess<CONTENT extends TransitionContent> {
 
   public static final String MSG_PREPARE_TRANSITION =

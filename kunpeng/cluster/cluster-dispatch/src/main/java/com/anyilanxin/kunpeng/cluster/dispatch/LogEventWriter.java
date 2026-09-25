@@ -37,15 +37,17 @@ import com.anyilanxin.kunpeng.protocol.common.VersionInfo;
 import com.anyilanxin.kunpeng.repository.admin.AdminImmutableRepository;
 import com.anyilanxin.kunpeng.repository.admin.AdminRepository;
 import com.anyilanxin.kunpeng.repository.admin.AdminRepositoryFactory;
-import com.anyilanxin.kunpeng.repository.admin.modules.key.ImmutableRepositoryKey;
+import com.anyilanxin.kunpeng.repository.admin.modules.key.ImmutableKeyRepository;
 import com.anyilanxin.kunpeng.utils.VersionUtil;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * 日志事件写入器：将事件 Record 追加写入分区日志。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class LogEventWriter {
   // Broker 版本在启动时就已固定；解析 semver 字符串代价不小（正则 + 3 次 Integer.parseInt + 对象分配），
@@ -54,7 +56,7 @@ public class LogEventWriter {
   private final AdminRepository repository;
   private final ProcessingCollectSupplier collectSupplier;
   private final int sourceId;
-  private final ImmutableRepositoryKey repositoryKey;
+  private final ImmutableKeyRepository repositoryKey;
   private final List<Integer> agentSourceIds;
   private final MeterRegistry meterRegistry;
   private final RecordValueMapper valueMapper = DefaultRecordValueMapper.getInstance();

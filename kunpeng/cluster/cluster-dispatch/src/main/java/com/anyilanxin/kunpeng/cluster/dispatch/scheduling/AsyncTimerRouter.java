@@ -26,6 +26,9 @@ import java.time.Duration;
  *
  * <p>车道调度器只暴露同步入口（实现 {@link TimerScheduler}），因此这里的异步方法委托给 车道的同步方法；返回的句柄即车道自身的句柄，由于车道队列可从任意线程入列，取消立即
  * 生效。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class AsyncTimerRouter implements AsyncTimerScheduler {
 

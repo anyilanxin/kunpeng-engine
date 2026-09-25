@@ -22,6 +22,9 @@ import java.util.Map;
  * 分区业务元数据的内存存储类型：内部 {@code Map<String, String>} 存放键值对，具体内容由调用方决定（如 sourceId）。
  *
  * <p>apply 为 copy-on-write：整体替换不可变 map 引用，读方（含快照拍摄线程）无锁读取一致性视图； appliedIndex 单调递增保证重复/乱序回调幂等。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class PartitionBusinessMeta {
 

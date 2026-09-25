@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.cluster.dispatch.scheduling;
 
-/** 命令批次容量超限：拒绝入批时由 {@link HeapCommandBatch#append} 返回。 */
+/**
+ * 命令批次容量超限：拒绝入批时由 {@link HeapCommandBatch#append} 返回。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class BatchCapacityExceededException extends RuntimeException {
 
   public BatchCapacityExceededException(

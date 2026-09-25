@@ -24,6 +24,12 @@ import org.apache.fory.context.WriteContext;
 import org.apache.fory.serializer.Serializer;
 import org.junit.Test;
 
+/**
+ * 序列化命名空间测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class NamespaceTest {
 
   @Test

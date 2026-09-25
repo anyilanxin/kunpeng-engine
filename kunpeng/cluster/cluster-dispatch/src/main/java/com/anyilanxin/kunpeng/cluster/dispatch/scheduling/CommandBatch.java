@@ -25,6 +25,9 @@ import java.util.function.BiPredicate;
  *
  * <p>批次可按条目迭代，也可经 {@link #entries()} 取得可写入事件日志的待追加条目列表。 构建完成后批次不再暴露产出它的收集器。可变实现见 {@link
  * HeapCommandBatch}。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface CommandBatch extends Iterable<CommandRecord> {
 

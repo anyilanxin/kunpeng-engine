@@ -20,6 +20,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
 
+/**
+ * 字符串工具测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class StringUtilsTest {
 
   @Test

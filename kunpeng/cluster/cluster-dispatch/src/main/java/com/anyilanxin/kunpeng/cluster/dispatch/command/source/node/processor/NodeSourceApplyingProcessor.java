@@ -20,21 +20,23 @@ import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter;
 import com.anyilanxin.kunpeng.cluster.dispatch.api.ClusterDispatchClient;
 import com.anyilanxin.kunpeng.cluster.dispatch.command.source.node.AbstractNodeSourceProcessor;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.LogRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.source.NodeSourceMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.source.NodeSourceRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.source.NodeSourceLifeCycle;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.source.NodeSourceMetaLifeCycle;
 import com.anyilanxin.kunpeng.repository.admin.AdminImmutableRepository;
-import com.anyilanxin.kunpeng.repository.admin.modules.source.ImmutableRepositorySource;
+import com.anyilanxin.kunpeng.repository.admin.modules.source.ImmutableSourceRepository;
 
 /**
+ * 节点 source 应用命令处理器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class NodeSourceApplyingProcessor extends AbstractNodeSourceProcessor {
   protected final LogEventWriter writer;
-  private final ImmutableRepositorySource repositorySource;
+  private final ImmutableSourceRepository repositorySource;
   private final ClusterDispatchClient dispatchClient;
 
   public NodeSourceApplyingProcessor(final LogEventWriter writer) {
@@ -46,7 +48,7 @@ public class NodeSourceApplyingProcessor extends AbstractNodeSourceProcessor {
   }
 
   @Override
-  public void processRecord(final LogRecord<NodeSourceRecord> record) {
+  public void processRecord(final AdminLogRecord<NodeSourceRecord> record) {
     final NodeSourceRecord value = record.getValue();
     final NodeSourceRecord nodeSource = repositorySource.getNodeSource(value.getMemberId());
     if (nodeSource == null) {

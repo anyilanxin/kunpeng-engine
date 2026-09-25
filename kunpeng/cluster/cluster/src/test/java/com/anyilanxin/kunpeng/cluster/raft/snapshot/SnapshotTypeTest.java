@@ -20,6 +20,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
+/**
+ * 快照类型测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 final class SnapshotTypeTest {
 
   @Test

@@ -33,6 +33,9 @@ import org.junit.Test;
  * 因此改用 {@link RaftRule#appendEntryAsync()}（不等 commit 的追加 API）在测试线程上
  * 不间断地投递 {@value #BURST} 个追加请求，它们在 raft 线程上构成同一合并窗口内的
  * {@value #BURST} 个提交目标，最后只等最终一条提交完成，再统计窗口内的真实 fsync 次数。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class RaftGroupCommitTest {
 

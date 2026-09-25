@@ -22,6 +22,9 @@ import com.anyilanxin.kunpeng.scheduler.SchedulingHints;
  * 可承接异步定时任务的具名执行车道。
  *
  * <p>每条车道携带用于标识其执行上下文的 actor 标签，以及描述底层 actor 应如何托管的调度 提示。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public enum ExecutionLane {
   COMPUTE("ComputeLaneActor", SchedulingHints.CPU_BOUND),

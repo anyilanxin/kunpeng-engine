@@ -23,8 +23,8 @@ import com.anyilanxin.kunpeng.cluster.dispatch.command.business.dispatch.planner
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.common.PartitionInfoMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.business.BusinessDispatchType;
-import com.anyilanxin.kunpeng.repository.admin.modules.key.ImmutableRepositoryKey;
-import com.anyilanxin.kunpeng.repository.admin.modules.source.ImmutableRepositorySource;
+import com.anyilanxin.kunpeng.repository.admin.modules.key.ImmutableKeyRepository;
+import com.anyilanxin.kunpeng.repository.admin.modules.source.ImmutableSourceRepository;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -37,14 +37,14 @@ import java.util.Set;
  * 升序剔除差额成员（Leader 永不移除）； 相等时生成空计划。 成员池由调用方保证满足补足需要，本生成器不做充足性校验。 副本增减不涉及数据迁移。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class ChangeReplicationDispatchPlanGenerator extends AbstractDispatchPlanGenerator {
 
   public ChangeReplicationDispatchPlanGenerator(
-      final ImmutableRepositoryKey repositoryKey,
+      final ImmutableKeyRepository repositoryKey,
       final ClusterTopologyService clusterTopologyService,
-      final ImmutableRepositorySource repositorySource) {
+      final ImmutableSourceRepository repositorySource) {
     super(repositoryKey, clusterTopologyService, repositorySource);
   }
 

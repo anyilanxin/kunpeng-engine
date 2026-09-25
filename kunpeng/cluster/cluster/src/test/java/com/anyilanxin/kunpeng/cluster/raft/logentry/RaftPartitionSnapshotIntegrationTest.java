@@ -33,7 +33,12 @@ import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** 验证 {@link com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartition} 的拍摄与关闭前快照。 */
+/**
+ * 验证 {@link com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartition} 的拍摄与关闭前快照。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class RaftPartitionSnapshotIntegrationTest {
 
   @Rule public final TemporaryFolder temporaryFolder = new TemporaryFolder();

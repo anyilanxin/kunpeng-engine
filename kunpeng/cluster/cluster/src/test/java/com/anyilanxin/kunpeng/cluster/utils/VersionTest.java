@@ -21,7 +21,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.Test;
 
-/** Version test. */
+/**
+ * Version test.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class VersionTest {
 
   @Test

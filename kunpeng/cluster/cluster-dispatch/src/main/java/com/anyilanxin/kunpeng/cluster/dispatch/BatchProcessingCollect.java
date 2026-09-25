@@ -18,11 +18,11 @@ package com.anyilanxin.kunpeng.cluster.dispatch;
 
 import com.anyilanxin.kunpeng.broker.client.admin.BrokerResponseWriter;
 import com.anyilanxin.kunpeng.broker.client.admin.commandapi.CommandApiHandle;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.LogRecord;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.RecordAppendEntryFactory;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.UnwrittenRecord;
 import com.anyilanxin.kunpeng.eventlog.AppendEntry;
 import com.anyilanxin.kunpeng.protocol.admin.impl.AdminRecordMetadata;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.RecordAppendEntryFactory;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.UnwrittenRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.DefaultRecordValueMapper;
 import com.anyilanxin.kunpeng.protocol.admin.record.CommandApiValueLifeCycle;
 import com.anyilanxin.kunpeng.protocol.admin.record.RecordValueMapper;
@@ -32,11 +32,13 @@ import com.anyilanxin.kunpeng.utils.CloseableSilently;
 import java.util.*;
 
 /**
+ * 批处理收集器：聚合一批处理结果并在关闭时统一提交。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class BatchProcessingCollect implements CloseableSilently {
-  private final Deque<LogRecord<?>> toProcess = new ArrayDeque<>();
+  private final Deque<AdminLogRecord<?>> toProcess = new ArrayDeque<>();
   private final List<AppendEntry> toWrite = new ArrayList<>();
   private final CommandApiHandle commandApiHandle;
   private Optional<BrokerResponseWriter<UnifiedRecordValue>> responseWriter = Optional.empty();
@@ -66,7 +68,7 @@ public class BatchProcessingCollect implements CloseableSilently {
     sideEffectProducers.clear();
   }
 
-  public BatchProcessingCollect addInitCommand(final LogRecord<?> logRecord) {
+  public BatchProcessingCollect addInitCommand(final AdminLogRecord<?> logRecord) {
     reset();
     processSize++;
     toProcess.addLast(logRecord);
@@ -137,8 +139,8 @@ public class BatchProcessingCollect implements CloseableSilently {
     return !toProcess.isEmpty();
   }
 
-  public LogRecord<?> next() {
-    final LogRecord<?> logRecord = toProcess.removeFirst();
+  public AdminLogRecord<?> next() {
+    final AdminLogRecord<?> logRecord = toProcess.removeFirst();
     final AdminRecordMetadata copyMetadata = logRecord.getMetadata().copy();
     final UnifiedRecordValue value = logRecord.getValue();
 
@@ -153,7 +155,7 @@ public class BatchProcessingCollect implements CloseableSilently {
 
   public List<AppendEntry> waitWrite() {
     if (!toProcess.isEmpty()) {
-      for (final LogRecord<?> logRecord : toProcess) {
+      for (final AdminLogRecord<?> logRecord : toProcess) {
         final AppendEntry logAppendEntry =
             RecordAppendEntryFactory.of(
                 logRecord.getKey(), logRecord.getMetadata(), logRecord.getValue());
@@ -163,7 +165,7 @@ public class BatchProcessingCollect implements CloseableSilently {
     return toWrite;
   }
 
-  public List<LogRecord<?>> waitProcess() {
+  public List<AdminLogRecord<?>> waitProcess() {
     return new ArrayList<>(toProcess);
   }
 

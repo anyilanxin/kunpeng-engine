@@ -14,4 +14,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+/**
+ * Raft 日志工具包：段定位与索引辅助类型。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 package com.anyilanxin.kunpeng.cluster.raft.journal.util;

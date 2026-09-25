@@ -27,6 +27,12 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
+/**
+ * Raft 优先选举测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @RunWith(Parameterized.class)
 public class RaftPriorityElectionTest {
 

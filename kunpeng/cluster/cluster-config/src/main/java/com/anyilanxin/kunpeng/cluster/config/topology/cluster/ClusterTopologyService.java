@@ -22,6 +22,12 @@ import com.anyilanxin.kunpeng.cluster.config.topology.PartitionMemberInfo;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 集群拓扑服务接口。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface ClusterTopologyService {
 
   MemberId getPartitionLeader(PartitionId partitionId);

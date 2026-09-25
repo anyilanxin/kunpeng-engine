@@ -23,7 +23,12 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-/** 用于构建 {@link FixedPartitionDistributor} 的简化 builder 接口，以降低构建固定分区分配时 配置出错的风险。 */
+/**
+ * 用于构建 {@link FixedPartitionDistributor} 的简化 builder 接口，以降低构建固定分区分配时 配置出错的风险。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class FixedPartitionDistributorBuilder {
   private final Map<PartitionId, Set<FixedDistributionMember>> partitions = new HashMap<>();
 

@@ -45,6 +45,9 @@ import org.junit.jupiter.api.Test;
  *
  * <p>逐类型尝试"注册具体形态类 → 序列化 → 反序列化 → 相等性比对"，结果打印到标准输出；
  * 用于评估 Namespace 池化层迁移到 Fory 时，哪些 Kryo 自定义序列化器可以被原生能力替代。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 final class ForyTypeSupportTest {
 

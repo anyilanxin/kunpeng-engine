@@ -31,7 +31,7 @@ import org.slf4j.Logger;
  * 分区角色切换服务的默认实现，负责按步骤执行 leader/follower/inactive 之间的切换并保证切换串行执行。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class DefaultPartitionTransitionService<CONTENT extends TransitionContent>
     implements PartitionTransitionService<CONTENT> {

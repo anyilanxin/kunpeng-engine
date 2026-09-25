@@ -22,24 +22,26 @@ import com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter;
 import com.anyilanxin.kunpeng.cluster.dispatch.command.business.dispatch.AbstractBusinessDispatchProcessor;
 import com.anyilanxin.kunpeng.cluster.dispatch.command.business.dispatch.planner.BusinessDispatchPlanMaker;
 import com.anyilanxin.kunpeng.cluster.dispatch.command.delayed.DelayedDelayChecker;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.LogRecord;
 import com.anyilanxin.kunpeng.configuration.broker.BusinessRaftCfg;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessClusterMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.business.BusinessDispatchPlanLifeCycle;
 import com.anyilanxin.kunpeng.repository.admin.AdminImmutableRepository;
-import com.anyilanxin.kunpeng.repository.admin.modules.business.ImmutableRepositoryBusiness;
+import com.anyilanxin.kunpeng.repository.admin.modules.business.ImmutableBusinessRepository;
 import org.slf4j.Logger;
 
 /**
+ * 业务面副本数变更调度计划命令处理器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class BusinessDispatchChangeReplicationProcessor extends AbstractBusinessDispatchProcessor {
   protected final LogEventWriter writer;
   private final BusinessRaftCfg businessRaft;
   private final ClusterMembershipService membershipService;
-  private final ImmutableRepositoryBusiness repositoryBusiness;
+  private final ImmutableBusinessRepository repositoryBusiness;
   private final DelayedDelayChecker delayChecker;
   public static final Logger LOGGER = ClusterDispatchLoggers.CLUSTER_DISPATCH;
   private final BusinessDispatchPlanMaker planGenerator;
@@ -56,7 +58,7 @@ public class BusinessDispatchChangeReplicationProcessor extends AbstractBusiness
   }
 
   @Override
-  public void processRecord(final LogRecord<BusinessDispatchPlanRecord> record) {
+  public void processRecord(final AdminLogRecord<BusinessDispatchPlanRecord> record) {
     final BusinessDispatchPlanRecord value = record.getValue();
     value.setDispatchPlanId(writer.nextKey());
     final BusinessClusterMetaRecord oldClusterMeta = repositoryBusiness.getClusterMeta();

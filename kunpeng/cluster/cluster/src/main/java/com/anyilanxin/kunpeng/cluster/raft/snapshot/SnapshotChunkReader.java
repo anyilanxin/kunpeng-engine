@@ -24,7 +24,7 @@ import java.nio.ByteBuffer;
  * 文件名@字节偏移}）的 UTF-8 字节，作为续传 token。 读取失败（镜像被删或损坏）抛 {@link UncheckedIOException}。
  *
  * @author zxuanhong
- * @since 2026.0.0
+ * @since 2026.9.0
  */
 public interface SnapshotChunkReader extends AutoCloseable {
 

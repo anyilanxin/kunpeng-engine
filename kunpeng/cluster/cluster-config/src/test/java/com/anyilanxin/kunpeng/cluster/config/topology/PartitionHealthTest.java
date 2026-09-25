@@ -22,7 +22,12 @@ import com.anyilanxin.kunpeng.cluster.raft.RaftServer;
 import com.anyilanxin.kunpeng.cluster.utils.health.HealthReport;
 import org.junit.jupiter.api.Test;
 
-/** {@link PartitionHealth#of(RaftServer.Role)} 角色推导健康规则测试：参与选举与复制为 HEALTHY，其余为 DEAD。 */
+/**
+ * {@link PartitionHealth#of(RaftServer.Role)} 角色推导健康规则测试：参与选举与复制为 HEALTHY，其余为 DEAD。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class PartitionHealthTest {
 
   @Test

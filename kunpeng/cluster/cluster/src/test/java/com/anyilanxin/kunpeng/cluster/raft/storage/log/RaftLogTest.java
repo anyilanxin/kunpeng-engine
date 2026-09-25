@@ -54,6 +54,12 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+/**
+ * Raft 日志测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class RaftLogTest {
   private static final long DEFAULT_APPLICATION_ENTRY_LENGTH = 2L;
   @AutoClose private final MeterRegistry meterRegistry = new SimpleMeterRegistry();

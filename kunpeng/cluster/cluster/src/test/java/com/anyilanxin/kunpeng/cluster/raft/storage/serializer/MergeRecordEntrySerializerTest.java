@@ -27,7 +27,12 @@ import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.RaftLogEntry;
 import org.agrona.concurrent.UnsafeBuffer;
 import org.junit.jupiter.api.Test;
 
-/** {@link MergeRecordEntry} SBE 序列化 roundtrip 测试。 */
+/**
+ * {@link MergeRecordEntry} SBE 序列化 roundtrip 测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class MergeRecordEntrySerializerTest {
 
   private final RaftEntrySBESerializer serializer = new RaftEntrySBESerializer();

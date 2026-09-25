@@ -36,7 +36,12 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 
-/** 分段 journal（预写日志）相关指标采集，按分区名打标签 */
+/**
+ * 分段 journal（预写日志）相关指标采集，按分区名打标签。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 final class JournalMetrics extends RaftMetrics {
 
   /** 计时采样句柄，关闭时停止计时 */

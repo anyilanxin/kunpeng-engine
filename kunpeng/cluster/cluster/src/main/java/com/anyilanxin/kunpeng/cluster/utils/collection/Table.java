@@ -24,6 +24,8 @@ import java.util.Map;
  * @param <R> the row key type
  * @param <C> the column key type
  * @param <V> the cell value type
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class Table<R, C, V> {
 

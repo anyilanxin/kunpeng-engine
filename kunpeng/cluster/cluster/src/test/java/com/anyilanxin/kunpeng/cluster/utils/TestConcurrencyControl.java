@@ -29,6 +29,9 @@ import java.util.function.Consumer;
 /**
  * A {@link ConcurrencyControl} which executes everything immediately on the calling thread, for
  * testing purposes.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class TestConcurrencyControl implements ConcurrencyControl {
 

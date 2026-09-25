@@ -32,7 +32,12 @@ import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Utilities to help write tests; as these are utils, everything is public by default */
+/**
+ * Utilities to help write tests; as these are utils, everything is public by default.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @SuppressWarnings("WeakerAccess")
 public class KunpengTestHelper {
 

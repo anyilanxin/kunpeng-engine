@@ -26,7 +26,7 @@ import com.anyilanxin.kunpeng.cluster.dispatch.command.business.clustermeta.proc
  * 流程实例相关
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public final class BusinessClusterMetaProcessorRegister {
 

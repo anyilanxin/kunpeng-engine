@@ -26,11 +26,14 @@ import java.util.Objects;
  * Request asking the cluster to add the sender as a member. Modelled after the membership-change
  * operations of classic Raft implementations (e.g. addPeer): the receiving member forwards the
  * request to the leader, which appends the membership change through the normal consensus flow.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class JoinRequest extends AbstractRaftRequest {
   private final RaftMember joiningMember;
 
-  private JoinRequest(final RaftMember joiningMember) {
+  JoinRequest(final RaftMember joiningMember) {
     this.joiningMember = requireNonNull(joiningMember);
   }
 

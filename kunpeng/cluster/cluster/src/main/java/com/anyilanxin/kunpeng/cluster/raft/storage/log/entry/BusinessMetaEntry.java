@@ -29,6 +29,9 @@ import java.util.Objects;
  * <p>Map 形态由类型保证单条目内 key 不重复；应用语义为整体覆盖（先清空再添加）， 未携带的 key 即视为删除。非
  * ApplicationEntry：业务日志消费端（EventStore/业务处理器）天然跳过； {@link RaftLogEntry#getLowestAsqn()} 对本类型返回
  * empty，不占用业务 asqn 序列。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public record BusinessMetaEntry(Map<String, String> entries) implements RaftEntry {
 

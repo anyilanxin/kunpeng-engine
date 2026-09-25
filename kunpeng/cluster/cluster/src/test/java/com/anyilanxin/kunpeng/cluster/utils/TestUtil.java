@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.cluster.utils;
 import java.time.Duration;
 import org.awaitility.Awaitility;
 
-/** Small collection of test helpers. */
+/**
+ * Small collection of test helpers.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class TestUtil {
 
   private TestUtil() {}

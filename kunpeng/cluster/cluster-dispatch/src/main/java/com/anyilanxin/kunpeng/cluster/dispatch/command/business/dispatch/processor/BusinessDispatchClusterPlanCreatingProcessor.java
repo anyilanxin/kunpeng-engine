@@ -25,8 +25,8 @@ import com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter;
 import com.anyilanxin.kunpeng.cluster.dispatch.command.business.dispatch.AbstractBusinessDispatchProcessor;
 import com.anyilanxin.kunpeng.cluster.dispatch.command.business.dispatch.planner.BusinessDispatchPlanMaker;
 import com.anyilanxin.kunpeng.cluster.dispatch.command.delayed.DelayedDelayChecker;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.LogRecord;
 import com.anyilanxin.kunpeng.configuration.ZoneType;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.delayed.DelayedRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionType;
@@ -37,8 +37,10 @@ import java.util.Set;
 import org.slf4j.Logger;
 
 /**
+ * 业务面调度计划创建中命令处理器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class BusinessDispatchClusterPlanCreatingProcessor
     extends AbstractBusinessDispatchProcessor {
@@ -58,7 +60,7 @@ public class BusinessDispatchClusterPlanCreatingProcessor
   }
 
   @Override
-  public void processRecord(final LogRecord<BusinessDispatchPlanRecord> record) {
+  public void processRecord(final AdminLogRecord<BusinessDispatchPlanRecord> record) {
     final BusinessDispatchPlanRecord value = record.getValue();
     final Set<MemberId> memberIds = membershipService.getMemberIds(ZoneType.BROKER.getType());
     if (value.getExpectReplicationFactor() > memberIds.size()) {

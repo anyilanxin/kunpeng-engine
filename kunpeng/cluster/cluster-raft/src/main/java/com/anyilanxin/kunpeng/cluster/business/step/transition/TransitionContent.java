@@ -23,7 +23,7 @@ import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
  * 分区角色切换上下文接口，承载切换过程中的并发控制及当前 term 与角色信息。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface TransitionContent<T> {
   ConcurrencyControl getConcurrencyControl();

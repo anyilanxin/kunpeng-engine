@@ -32,6 +32,9 @@ import java.util.stream.Stream;
  *   <li>解析失败时，从网卡地址中各取首个非环回的 IPv4 / IPv6 地址，按系统地址族偏好取首选， 首选族缺失时取另一族；
  *   <li>全部缺失时退回偏好族的环回地址。
  * </ol>
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 final class AddressInitializations {
 

@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.cluster.raft.metrics;
 import com.anyilanxin.kunpeng.utils.micrometer.CustomMeterDocumentation;
 import io.micrometer.core.instrument.Meter.Type;
 
-/** Raft 日志复制位点相关指标定义 */
+/**
+ * Raft 日志复制位点相关指标定义。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public enum RaftReplicationMetricsDoc implements CustomMeterDocumentation {
   /** 当前提交索引 */
   COMMIT_INDEX("atomix_partition_raft_commit_index", "The commit index", Type.GAUGE),

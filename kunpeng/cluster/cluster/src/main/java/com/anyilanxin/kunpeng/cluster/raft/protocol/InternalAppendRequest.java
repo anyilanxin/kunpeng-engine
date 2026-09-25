@@ -20,7 +20,12 @@ import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import java.util.List;
 import java.util.Objects;
 
-/** 追加消息的归一化形态，让 {@code RaftRoles} 用同一个入口处理 不同协议版本携带的日志条目。 */
+/**
+ * 追加消息的归一化形态，让 {@code RaftRoles} 用同一个入口处理 不同协议版本携带的日志条目。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class InternalAppendRequest {
 
   /** 发起该追加请求的领导任期。 */

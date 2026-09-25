@@ -32,7 +32,7 @@ import java.nio.file.Path;
  * 分区启动上下文，聚合创建 Raft 分区、执行启动引导（bootstrap/join）以及角色切换所需的各类依赖组件。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface PartitionStartupContext<CONTENT extends TransitionContent> {
 

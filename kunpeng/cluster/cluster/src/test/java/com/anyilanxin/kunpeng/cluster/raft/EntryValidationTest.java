@@ -28,6 +28,12 @@ import java.util.function.BiFunction;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * Raft 日志条目校验测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class EntryValidationTest {
 
   private final TestEntryValidator entryValidator = new TestEntryValidator();

@@ -22,7 +22,7 @@ import com.anyilanxin.kunpeng.cluster.raft.RaftServer;
  * 分区业务视角角色：广播与拓扑视图使用的三态角色，与 Raft 内部细粒度状态解耦。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public enum PartitionRole {
   /** 分区主成员（Leader） */

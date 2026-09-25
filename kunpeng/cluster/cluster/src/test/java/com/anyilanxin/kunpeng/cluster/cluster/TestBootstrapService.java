@@ -27,6 +27,9 @@ import java.util.concurrent.CompletableFuture;
  * Test bootstrap service.
  *
  * <p>两参构造便于大多数只关心消息/单播的测试使用，leader-found 服务默认挂空实现； 需要自定义时使用全参构造。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public record TestBootstrapService(
     MessagingService messagingService,

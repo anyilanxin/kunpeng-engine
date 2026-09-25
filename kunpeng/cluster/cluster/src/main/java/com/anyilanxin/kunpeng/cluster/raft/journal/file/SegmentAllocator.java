@@ -21,7 +21,12 @@ import java.io.FileDescriptor;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 
-/** Strategy for pre-allocating disk space for new segment files. */
+/**
+ * Strategy for pre-allocating disk space for new segment files.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @FunctionalInterface
 public interface SegmentAllocator {
 

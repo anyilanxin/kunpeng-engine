@@ -23,8 +23,10 @@ import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminClus
 import com.anyilanxin.kunpeng.protocol.admin.record.command.admin.AdminClusterMetaLifeCycle;
 
 /**
+ * 管理面集群元数据命令处理器抽象基类。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public abstract class AbstractAdminClusterMetaProcessor
     implements LogEventProcessorSingleState<AdminClusterMetaRecord> {

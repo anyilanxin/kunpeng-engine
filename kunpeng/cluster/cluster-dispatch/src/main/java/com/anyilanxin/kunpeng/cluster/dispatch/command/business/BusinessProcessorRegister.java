@@ -23,8 +23,10 @@ import com.anyilanxin.kunpeng.cluster.dispatch.command.business.dispatch.Busines
 import com.anyilanxin.kunpeng.cluster.dispatch.command.business.execution.BusinessExecutionProcessorRegister;
 
 /**
+ * 业务面命令处理器注册器：登记全部业务面处理器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public final class BusinessProcessorRegister {
 

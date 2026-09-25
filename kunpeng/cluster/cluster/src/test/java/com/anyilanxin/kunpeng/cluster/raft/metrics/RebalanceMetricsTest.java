@@ -23,6 +23,12 @@ import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
+/**
+ * 再均衡指标测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 final class RebalanceMetricsTest {
 
   private final SimpleMeterRegistry registry = new SimpleMeterRegistry();

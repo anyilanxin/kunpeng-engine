@@ -33,6 +33,9 @@ import org.junit.rules.TemporaryFolder;
 
 /**
  * segment 软删除标记文件的命名与复用语义：标记名必须确定（不含进程内计数器）， 同编号 segment 重建后再次删除时能覆盖同名标记。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class SegmentDeletionMarkerTest {
 

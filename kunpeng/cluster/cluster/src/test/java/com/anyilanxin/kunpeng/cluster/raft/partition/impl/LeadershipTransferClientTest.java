@@ -43,6 +43,12 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+/**
+ * leader 迁移客户端测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 final class LeadershipTransferClientTest {
 
   private static final String PARTITION_GROUP = "tenant-a";

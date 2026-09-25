@@ -26,15 +26,20 @@ import org.agrona.concurrent.UnsafeBuffer;
 /**
  * 按当前编码格式从 segment 缓冲解出单条记录。
  *
- * <p>SegmentWriter 重放校验与 SegmentReader 顺序读取共用本工具。解析顺序：剩余空间判定 -> 读头部 -> （可选）CRC32C 复核 -> 读体部并对齐索引。除头部越界外，任何失败都会把
- * position 回退到进入方法前的值；全部通过后 position 停在下一条记录起点。
+ * <p>SegmentWriter 重放校验与 SegmentReader 顺序读取共用本工具。解析顺序：剩余空间判定 -> 读头部 -> （可选）CRC32C 复核 ->
+ * 读体部并对齐索引。除头部越界外，任何失败都会把 position 回退到进入方法前的值；全部通过后 position 停在下一条记录起点。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class JournalRecordReaderUtil {
 
   private final ChecksumGenerator crc = new ChecksumGenerator();
   private final JournalRecordSerializer serializer;
 
-  /** @param serializer 与写盘格式匹配的编解码器 */
+  /**
+   * @param serializer 与写盘格式匹配的编解码器
+   */
   public JournalRecordReaderUtil(final JournalRecordSerializer serializer) {
     this.serializer = serializer;
   }
@@ -83,8 +88,7 @@ public final class JournalRecordReaderUtil {
     final JournalRecordData body = serializer.readData(recordView, headerLength);
     if (body != null && body.index() != expectedIndex) {
       buffer.reset();
-      throw new InvalidIndex(
-          "索引不连续：此处应为 %d，实际为 %d".formatted(expectedIndex, body.index()));
+      throw new InvalidIndex("索引不连续：此处应为 %d，实际为 %d".formatted(expectedIndex, body.index()));
     }
 
     buffer.position(recordOffset + headerLength + bodyLength);
@@ -95,17 +99,14 @@ public final class JournalRecordReaderUtil {
     return new PersistedJournalRecord(header, body, raw, frameLength + headerLength + bodyLength);
   }
 
-  /**
-   * 解码头部并完成两级边界判定：剩余空间须先装下定长头部，头部声明的体部长度加上头部后
-   * 不得越出缓冲末尾。两级失败均视为日志损坏（调用方理论上已通过 hasNext() 预检过）。
-   */
+  /** 解码头部并完成两级边界判定：剩余空间须先装下定长头部，头部声明的体部长度加上头部后 不得越出缓冲末尾。两级失败均视为日志损坏（调用方理论上已通过 hasNext() 预检过）。 */
   private JournalRecordMetadata readHeader(
       final ByteBuffer buffer, final UnsafeBuffer recordView, final int recordOffset) {
     final int remaining = buffer.limit() - recordOffset;
     final int fixedHeaderLength = serializer.getMetadataLength();
     if (remaining < fixedHeaderLength) {
-      throw new CorruptedJournalException("剩余 %d 字节不足以容纳 %d 字节的记录头，日志已损坏"
-              .formatted(remaining, fixedHeaderLength));
+      throw new CorruptedJournalException(
+          "剩余 %d 字节不足以容纳 %d 字节的记录头，日志已损坏".formatted(remaining, fixedHeaderLength));
     }
 
     final var header = serializer.readMetadata(recordView, 0);
@@ -130,8 +131,7 @@ public final class JournalRecordReaderUtil {
     final long actual = crc.compute(buffer, recordOffset + headerLength, bodyLength);
     if (expected != actual) {
       buffer.reset();
-      throw new CorruptedJournalException(
-          "体部校验和不一致：重算值 %d，头部声明值 %d".formatted(actual, expected));
+      throw new CorruptedJournalException("体部校验和不一致：重算值 %d，头部声明值 %d".formatted(actual, expected));
     }
   }
 }

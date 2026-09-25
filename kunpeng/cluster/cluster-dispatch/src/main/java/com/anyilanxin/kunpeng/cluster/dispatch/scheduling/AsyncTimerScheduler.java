@@ -23,6 +23,9 @@ import java.time.Duration;
  *
  * <p>异步调度不保证顺序与单线程执行：任务在独立的车道 actor 上并发运行。未指定车道的方法 默认使用 {@link ExecutionLane#COMPUTE} 车道。从 {@link
  * TimerScheduler} 继承的同步方法仍 保持其顺序约定。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface AsyncTimerScheduler extends TimerScheduler {
 

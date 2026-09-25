@@ -20,7 +20,7 @@ package com.anyilanxin.kunpeng.cluster.config;
  * 集群元数据存储接口，定义管理配置与 Raft 配置的读取及更新契约。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface ClusterMetaStore extends ClusterMetaImmutableStore, ClusterMetaMutableStore {
 

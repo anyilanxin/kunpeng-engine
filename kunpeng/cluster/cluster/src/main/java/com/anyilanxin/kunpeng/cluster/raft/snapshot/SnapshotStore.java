@@ -21,7 +21,10 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 /**
+ * 快照存储：Raft 快照的创建、加载与持久化管理接口。
+ *
  * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface SnapshotStore {
 

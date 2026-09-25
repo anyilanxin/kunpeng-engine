@@ -21,7 +21,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.net.InetAddress;
 import org.junit.Test;
 
-/** Address test. */
+/**
+ * Address test.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class AddressTest {
   @Test
   public void testIPv4Address() throws Exception {

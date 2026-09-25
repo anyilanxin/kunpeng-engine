@@ -30,6 +30,9 @@ import org.slf4j.LoggerFactory;
  *
  * <p>段文件头部布局为：一个字节的描述符版本号，随后是元数据帧（"DESC" 魔数 + 描述符帧的 CRC32 校验和），最后是描述符帧本身（"SEGD" 魔数、格式版本、段
  * ID、起始索引、最大段大小、 最后一条日志索引与最后写入位置）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 final class BinarySegmentDescriptorSerializer implements SegmentDescriptorSerializer {
 

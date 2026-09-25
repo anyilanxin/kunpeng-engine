@@ -43,6 +43,12 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+/**
+ * Raft 元数据存储测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class MetaStoreTest {
   @TempDir Path temporaryFolder;
   @AutoClose MeterRegistry meterRegistry = new SimpleMeterRegistry();

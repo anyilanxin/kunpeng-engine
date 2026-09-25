@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.cluster.utils.health;
 
-/** Listener notified when a monitored component's health transitions to failed or recovered. */
+/**
+ * Listener notified when a monitored component's health transitions to failed or recovered.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface FailureListener {
 
   /**

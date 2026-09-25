@@ -23,6 +23,6 @@ import com.anyilanxin.kunpeng.cluster.raft.snapshot.receive.ReceiveSnapshotStore
  * raft 分区镜像存储门面：一个分区既能本地拍摄（constructable）又能接收 install/传输 （receive），二者共享同一份持久存储（同一目录、同一最新镜像状态）。
  *
  * @author zxuanhong
- * @since 2026.0.0
+ * @since 2026.9.0
  */
 public interface RaftSnapshotStore extends ConstructableSnapshotStore, ReceiveSnapshotStore {}

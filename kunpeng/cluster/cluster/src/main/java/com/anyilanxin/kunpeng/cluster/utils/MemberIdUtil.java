@@ -18,7 +18,12 @@ package com.anyilanxin.kunpeng.cluster.utils;
 
 import org.jspecify.annotations.Nullable;
 
-/** Helpers to validate zone-aware member identifiers of the form {@code zone@suffix}. */
+/**
+ * Helpers to validate zone-aware member identifiers of the form {@code zone@suffix}.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class MemberIdUtil {
 
   private MemberIdUtil() {}

@@ -18,13 +18,15 @@ package com.anyilanxin.kunpeng.cluster.dispatch.command.source.partitionmeta.pro
 
 import com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter;
 import com.anyilanxin.kunpeng.cluster.dispatch.command.source.partitionmeta.AbstractPartitionSourceMetaProcessor;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.LogRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.source.PartitionSourceMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.source.PartitionSourceMetaLifeCycle;
 
 /**
+ * 分区 source 元数据更新命令处理器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class PartitionSourceMetaUpdatingProcessor extends AbstractPartitionSourceMetaProcessor {
   protected final LogEventWriter writer;
@@ -35,7 +37,7 @@ public class PartitionSourceMetaUpdatingProcessor extends AbstractPartitionSourc
   }
 
   @Override
-  public void processRecord(final LogRecord<PartitionSourceMetaRecord> record) {
+  public void processRecord(final AdminLogRecord<PartitionSourceMetaRecord> record) {
     final PartitionSourceMetaRecord value = record.getValue();
     writer.addEvent(-1, PartitionSourceMetaLifeCycle.UPDATED, record.getRequestId(), value);
   }

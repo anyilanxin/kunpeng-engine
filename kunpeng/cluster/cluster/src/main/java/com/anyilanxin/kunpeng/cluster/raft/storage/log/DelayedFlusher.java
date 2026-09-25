@@ -33,6 +33,9 @@ import org.slf4j.LoggerFactory;
  * <p><b>线程契约</b>：{@link #flush(Journal)} 由写日志线程（通常是 Raft 线程）调用； 实际的 fsync 在 {@code scheduler}
  * 的线程上执行， 因此传入的 {@link Journal} 必须容忍与写线程并发的 {@code flush()}， 且线程安全范围仅限 pending 状态本身（由内部监视器保护）。若无法保证
  * Journal 的并发安全， 应改用 {@link RaftLogFlusher.Factory#direct()}。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class DelayedFlusher implements RaftLogFlusher {
 

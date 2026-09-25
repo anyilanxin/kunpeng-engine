@@ -16,18 +16,20 @@
  */
 package com.anyilanxin.kunpeng.cluster.dispatch;
 
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.LogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.AdminValueLifeCycle;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 
 /**
+ * 单状态日志事件处理器接口：处理单一生效状态的事件。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface LogEventProcessorSingleState<T extends UnifiedRecordValue>
     extends LogEventProcessor<T> {
   @Override
-  default void processRecord(final LogRecord<T> record) {}
+  default void processRecord(final AdminLogRecord<T> record) {}
 
   @Override
   default AdminValueLifeCycle[] valueLifeCycles() {

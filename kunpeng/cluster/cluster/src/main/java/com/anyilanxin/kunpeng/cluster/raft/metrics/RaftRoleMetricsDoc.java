@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.cluster.raft.metrics;
 import com.anyilanxin.kunpeng.utils.micrometer.CustomMeterDocumentation;
 import io.micrometer.core.instrument.Meter.Type;
 
-/** Raft 角色与心跳相关指标定义 */
+/**
+ * Raft 角色与心跳相关指标定义。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public enum RaftRoleMetricsDoc implements CustomMeterDocumentation {
   /** 当前角色（0=非活跃，1=Follower，2=Candidate，3=Leader） */
   ROLE("atomix_role", "Shows current role", Type.GAUGE),

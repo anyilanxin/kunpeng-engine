@@ -31,7 +31,12 @@ import java.util.concurrent.atomic.LongAdder;
 import org.junit.Rule;
 import org.junit.Test;
 
-/** Coverage for the promotion step of a coordinated leadership transfer. */
+/**
+ * Coverage for the promotion step of a coordinated leadership transfer.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class RaftLeadershipTransferPromoteTest {
 
   @Rule public RaftRule raftRule = RaftRule.withBootstrappedNodes(3);

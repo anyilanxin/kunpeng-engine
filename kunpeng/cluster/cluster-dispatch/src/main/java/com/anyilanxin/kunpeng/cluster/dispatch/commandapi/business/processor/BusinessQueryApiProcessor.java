@@ -20,27 +20,29 @@ import static com.anyilanxin.kunpeng.structpack.util.BufferUtil.copyInto;
 
 import com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter;
 import com.anyilanxin.kunpeng.cluster.dispatch.commandapi.business.AbstractBusinessApiProcessor;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.LogRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessClusterMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.business.dispatch.BusinessChangeResponseRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.business.query.BusinessDispatchQueryResponseRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.commandapi.business.BusinessDispatchApiValueLifeCycle;
 import com.anyilanxin.kunpeng.repository.admin.AdminImmutableRepository;
-import com.anyilanxin.kunpeng.repository.admin.modules.business.ImmutableRepositoryBusiness;
+import com.anyilanxin.kunpeng.repository.admin.modules.business.ImmutableBusinessRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * 业务面调度查询 API 处理器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class BusinessQueryApiProcessor
     extends AbstractBusinessApiProcessor<BusinessChangeResponseRecord> {
   private static final Logger LOG = LoggerFactory.getLogger(BusinessQueryApiProcessor.class);
   private final LogEventWriter writer;
   private final BusinessDispatchQueryResponseRecord response;
-  private final ImmutableRepositoryBusiness repositoryBusiness;
+  private final ImmutableBusinessRepository repositoryBusiness;
 
   public BusinessQueryApiProcessor(final LogEventWriter writer) {
     this.writer = writer;
@@ -50,7 +52,7 @@ public class BusinessQueryApiProcessor
   }
 
   @Override
-  public void processRecord(final LogRecord<BusinessChangeResponseRecord> record) {
+  public void processRecord(final AdminLogRecord<BusinessChangeResponseRecord> record) {
     response.reset();
     final BusinessClusterMetaRecord clusterMeta = repositoryBusiness.getClusterMeta();
     if (clusterMeta != null) {

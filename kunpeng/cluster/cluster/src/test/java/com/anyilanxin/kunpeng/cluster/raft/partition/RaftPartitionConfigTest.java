@@ -21,6 +21,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.Duration;
 import org.junit.jupiter.api.Test;
 
+/**
+ * Raft 分区配置测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 final class RaftPartitionConfigTest {
 
   @Test

@@ -66,7 +66,12 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
-/** 投票行为：谁可以被询问、谁必须回答、谁应拒绝，以及每任期一票的持久化约束。 */
+/**
+ * 投票行为：谁可以被询问、谁必须回答、谁应拒绝，以及每任期一票的持久化约束。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 final class VotingTest {
   // 与 ReconfigurationTest 不同的编号段，便于日志排查
   private static final MemberId ID_A = MemberId.from("11");

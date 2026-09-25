@@ -20,6 +20,9 @@ import org.agrona.MutableDirectBuffer;
 
 /**
  * Standard SBE message header encoder: blockLength u16, templateId u16, schemaId u16, version u16.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class MessageHeaderEncoder {
 

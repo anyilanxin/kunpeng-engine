@@ -20,8 +20,8 @@ import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
 import com.anyilanxin.kunpeng.cluster.cluster.Member;
 import com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter;
 import com.anyilanxin.kunpeng.cluster.dispatch.commandapi.admin.AbstractAdminApiProcessor;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.LogRecord;
 import com.anyilanxin.kunpeng.configuration.ZoneType;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminClusterMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminDispatchPlanRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.admin.dispatch.AdminChangeReplicationRequestRecord;
@@ -29,18 +29,20 @@ import com.anyilanxin.kunpeng.protocol.admin.record.command.admin.AdminDispatchP
 import com.anyilanxin.kunpeng.protocol.admin.record.command.admin.AdminDispatchType;
 import com.anyilanxin.kunpeng.protocol.admin.record.commandapi.admin.AdminDispatchApiValueLifeCycle;
 import com.anyilanxin.kunpeng.repository.admin.AdminImmutableRepository;
-import com.anyilanxin.kunpeng.repository.admin.modules.admin.ImmutableRepositoryAdmin;
+import com.anyilanxin.kunpeng.repository.admin.modules.admin.ImmutableAdminRepository;
 import java.util.Set;
 
 /**
+ * 管理面副本数变更 API 处理器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class AdminChangeReplicationApiProcessor
     extends AbstractAdminApiProcessor<AdminChangeReplicationRequestRecord> {
   private final LogEventWriter writer;
   private final ClusterMembershipService membershipService;
-  private final ImmutableRepositoryAdmin repositoryAdmin;
+  private final ImmutableAdminRepository repositoryAdmin;
   private final AdminDispatchPlanRecord planRecord;
 
   public AdminChangeReplicationApiProcessor(final LogEventWriter writer) {
@@ -52,7 +54,7 @@ public class AdminChangeReplicationApiProcessor
   }
 
   @Override
-  public void processRecord(final LogRecord<AdminChangeReplicationRequestRecord> record) {
+  public void processRecord(final AdminLogRecord<AdminChangeReplicationRequestRecord> record) {
     final AdminChangeReplicationRequestRecord value = record.getValue();
     if (value.getExpectReplicationFactor() <= 0) {
       writer.adErrorResponse(record.getRequestId(), -1, "期望副本数量必须大于0");

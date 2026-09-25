@@ -14,4 +14,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+/**
+ * Raft 日志记录类型定义：日志条目与序号化的读写编解码。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 package com.anyilanxin.kunpeng.cluster.raft.journal.record;

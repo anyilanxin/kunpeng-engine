@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.cluster.raft.journal.file;
 import com.anyilanxin.kunpeng.utils.micrometer.CustomMeterDocumentation;
 import io.micrometer.core.instrument.Meter.Type;
 
-/** journal（预写日志）导出的全部指标定义 */
+/**
+ * journal（预写日志）导出的全部指标定义。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public enum JournalMetricsDoc implements CustomMeterDocumentation {
   /** 创建新 segment 的耗时 */
   SEGMENT_CREATION_TIME(

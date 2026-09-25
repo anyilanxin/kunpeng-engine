@@ -29,6 +29,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+/**
+ * 确定性单线程上下文（测试用）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class DeterministicSingleThreadContext implements ThreadContext {
 
   private static final Logger LOGGER =

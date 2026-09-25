@@ -18,23 +18,25 @@ package com.anyilanxin.kunpeng.cluster.dispatch.commandapi.admin.processor;
 
 import com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter;
 import com.anyilanxin.kunpeng.cluster.dispatch.commandapi.admin.AbstractAdminApiProcessor;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.LogRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminClusterMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminDispatchPlanRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.admin.dispatch.AdminChangeCancelRequestRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.admin.AdminDispatchPlanLifeCycle;
 import com.anyilanxin.kunpeng.protocol.admin.record.commandapi.admin.AdminDispatchApiValueLifeCycle;
 import com.anyilanxin.kunpeng.repository.admin.AdminImmutableRepository;
-import com.anyilanxin.kunpeng.repository.admin.modules.admin.ImmutableRepositoryAdmin;
+import com.anyilanxin.kunpeng.repository.admin.modules.admin.ImmutableAdminRepository;
 
 /**
+ * 管理面变更取消 API 处理器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class AdminChangeCancelApiProcessor
     extends AbstractAdminApiProcessor<AdminChangeCancelRequestRecord> {
   private final LogEventWriter writer;
-  private final ImmutableRepositoryAdmin repositoryAdmin;
+  private final ImmutableAdminRepository repositoryAdmin;
   private final AdminDispatchPlanRecord planRecord;
 
   public AdminChangeCancelApiProcessor(final LogEventWriter writer) {
@@ -45,7 +47,7 @@ public class AdminChangeCancelApiProcessor
   }
 
   @Override
-  public void processRecord(final LogRecord<AdminChangeCancelRequestRecord> record) {
+  public void processRecord(final AdminLogRecord<AdminChangeCancelRequestRecord> record) {
     final AdminClusterMetaRecord clusterMeta = repositoryAdmin.getClusterMeta();
     if (clusterMeta == null) {
       writer.adErrorResponse(record.getRequestId(), -1, "集群未初始化，无法调度");

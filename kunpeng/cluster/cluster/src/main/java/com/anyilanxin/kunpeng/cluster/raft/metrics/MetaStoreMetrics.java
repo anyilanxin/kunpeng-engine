@@ -25,7 +25,12 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import java.util.Objects;
 
-/** Raft 元数据存储相关指标采集 */
+/**
+ * Raft 元数据存储相关指标采集。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class MetaStoreMetrics extends RaftMetrics {
   private final Timer lastFlushedIndexUpdate;
   private final MeterRegistry registry;

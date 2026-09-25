@@ -20,7 +20,7 @@ import com.anyilanxin.kunpeng.cluster.dispatch.ClusterDispatchLoggers;
 import com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter;
 import com.anyilanxin.kunpeng.cluster.dispatch.api.ClusterDispatchClient;
 import com.anyilanxin.kunpeng.cluster.dispatch.command.admin.execution.AbstractAdminDispatchExecutionProcessor;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.LogRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminDispatchPlanExecutionRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.admin.AdminDispatchPlanExecutionLifeCycle;
 import org.slf4j.Logger;
@@ -29,7 +29,7 @@ import org.slf4j.Logger;
  * 管理面执行明细下发：管理分区不产生引导与 source 治理，负载即编码后的调度动作记录， 按执行类型路由到对应成员处理端（topic 由分区类型 + 执行类型推导）。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class AdminDispatchExecutionExecutingProcessor
     extends AbstractAdminDispatchExecutionProcessor {
@@ -44,7 +44,7 @@ public class AdminDispatchExecutionExecutingProcessor
   }
 
   @Override
-  public void processRecord(final LogRecord<AdminDispatchPlanExecutionRecord> record) {
+  public void processRecord(final AdminLogRecord<AdminDispatchPlanExecutionRecord> record) {
     final AdminDispatchPlanExecutionRecord value = record.getValue();
     final long requestId = record.getRequestId();
     value.setDispatchStartTime(writer.millis());

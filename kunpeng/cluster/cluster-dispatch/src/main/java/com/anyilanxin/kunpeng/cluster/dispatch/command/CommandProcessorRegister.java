@@ -27,8 +27,10 @@ import com.anyilanxin.kunpeng.cluster.dispatch.command.source.partition.Partitio
 import com.anyilanxin.kunpeng.cluster.dispatch.command.source.partitionmeta.PartitionSourceMetaProcessorRegister;
 
 /**
+ * 调度命令处理器总注册器：登记全部调度子系统命令处理器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public final class CommandProcessorRegister {
 

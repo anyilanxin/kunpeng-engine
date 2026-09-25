@@ -17,7 +17,10 @@
 package com.anyilanxin.kunpeng.cluster.cluster.leaderfound;
 
 /**
+ * 集群领导者变更监听器：领导者产生或失效时回调。
+ *
  * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface ClusterLeaderChangeListener {
   void foundLeader(LeaderInfo memberId);

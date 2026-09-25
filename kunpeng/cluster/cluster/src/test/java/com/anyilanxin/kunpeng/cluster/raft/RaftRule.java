@@ -71,6 +71,12 @@ import java.util.stream.Collectors;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
+/**
+ * Raft 测试规则：多节点 Raft 集群测试夹具。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class RaftRule extends ExternalResource {
 
   public TemporaryFolder temporaryFolder = new TemporaryFolder();

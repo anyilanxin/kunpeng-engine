@@ -29,8 +29,10 @@ import org.apache.commons.lang3.StringUtils;
 import tools.jackson.databind.ObjectMapper;
 
 /**
+ * 业务 source 元数据工具：source 属性的解析与构造辅助。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class BusinessSourceMetaUtils {
   private static final ObjectMapper MAPPER = new ObjectMapper();

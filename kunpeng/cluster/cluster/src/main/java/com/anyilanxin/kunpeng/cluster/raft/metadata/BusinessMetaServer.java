@@ -27,6 +27,9 @@ import java.util.function.Function;
  *
  * <p>修改请求处理规则：本机 leader → 追加日志；非 leader 且已知 leader → 转发（防环：转发请求 不再转发）；无 leader → NO_LEADER 拒绝。另常驻注册
  * leader 同步拉取主题 （{@link BusinessMetaSync#syncSubjectOf}）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class BusinessMetaServer {
 

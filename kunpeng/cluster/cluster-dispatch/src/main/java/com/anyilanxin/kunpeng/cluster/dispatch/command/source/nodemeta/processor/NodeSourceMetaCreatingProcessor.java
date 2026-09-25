@@ -18,13 +18,15 @@ package com.anyilanxin.kunpeng.cluster.dispatch.command.source.nodemeta.processo
 
 import com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter;
 import com.anyilanxin.kunpeng.cluster.dispatch.command.source.nodemeta.AbstractNodeSourceMetaProcessor;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.LogRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.source.NodeSourceMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.source.NodeSourceMetaLifeCycle;
 
 /**
+ * 节点 source 元数据创建命令处理器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class NodeSourceMetaCreatingProcessor extends AbstractNodeSourceMetaProcessor {
   protected final LogEventWriter writer;
@@ -35,7 +37,7 @@ public class NodeSourceMetaCreatingProcessor extends AbstractNodeSourceMetaProce
   }
 
   @Override
-  public void processRecord(final LogRecord<NodeSourceMetaRecord> record) {
+  public void processRecord(final AdminLogRecord<NodeSourceMetaRecord> record) {
     final NodeSourceMetaRecord value = record.getValue();
     writer.addEvent(-1, NodeSourceMetaLifeCycle.CREATED, record.getRequestId(), value);
   }

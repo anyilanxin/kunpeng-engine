@@ -38,6 +38,12 @@ import java.util.stream.Collectors;
 
 import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.RUNTIME_DIRECTORY;
 
+/**
+ * 测试节点工具。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class KunpengTestNode {
 
   public static final String CLUSTER_ID = "kunpeng";

@@ -22,7 +22,10 @@ import com.anyilanxin.kunpeng.cluster.utils.net.Address;
 import java.util.concurrent.CompletableFuture;
 
 /**
+ * 集群领导者发现服务：监听成员事件并维护当前领导者信息。
+ *
  * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface ClusterLeaderFoundService extends ClusterMembershipEventListener {
   void addLeaderChangeListener(final ClusterLeaderChangeListener listener);

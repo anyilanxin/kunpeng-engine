@@ -55,6 +55,9 @@ import static org.mockito.Mockito.verify;
 /**
  * 逐一验证 {@link RaftServerProtocol} 的每种发送调用，都会落到形如
  * {@code <group>-<partition>-<动作名>} 的正确 subject 上。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 @ExtendWith(MockitoExtension.class)
 public class RaftServerSenderSubjectsTest {

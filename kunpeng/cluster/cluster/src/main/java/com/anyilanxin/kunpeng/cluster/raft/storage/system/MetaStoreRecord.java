@@ -21,6 +21,9 @@ import static com.google.common.base.Preconditions.checkArgument;
 /**
  * Persisted metadata of a Raft partition, serialized through the "Meta" SBE message defined in
  * raft-entry-schema.xml.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public record MetaStoreRecord(long term, long lastFlushedIndex, long commitIndex, String votedFor) {
 

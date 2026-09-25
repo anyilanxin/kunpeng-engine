@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.cluster.raft.journal.record;
 import java.util.Objects;
 import org.agrona.DirectBuffer;
 
-/** 记录体（数据）部分，承载索引、应用层序号与负载数据。 */
+/**
+ * 记录体（数据）部分，承载索引、应用层序号与负载数据。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class JournalRecordData {
 
   /** 记录在日志中的全局索引。 */

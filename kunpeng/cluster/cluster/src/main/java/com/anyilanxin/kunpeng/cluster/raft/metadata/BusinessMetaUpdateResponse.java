@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.metadata;
 
-/** 业务元数据修改结果：success 时 index 为提交条目号；失败时 error 携带原因。 */
+/**
+ * 业务元数据修改结果：success 时 index 为提交条目号；失败时 error 携带原因。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public record BusinessMetaUpdateResponse(boolean success, long index, String error) {
 
   public static BusinessMetaUpdateResponse ok(final long index) {

@@ -22,8 +22,10 @@ import com.anyilanxin.kunpeng.protocol.admin.record.commandapi.admin.AdminDispat
 import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 
 /**
+ * 管理面 API 请求处理器抽象基类。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public abstract class AbstractAdminApiProcessor<T extends UnifiedRecordValue>
     implements LogEventProcessorSingleState<T> {

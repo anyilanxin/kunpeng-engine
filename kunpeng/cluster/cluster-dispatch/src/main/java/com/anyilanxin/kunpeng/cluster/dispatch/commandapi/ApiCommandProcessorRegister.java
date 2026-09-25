@@ -22,8 +22,10 @@ import com.anyilanxin.kunpeng.cluster.dispatch.commandapi.admin.AdminApiProcesso
 import com.anyilanxin.kunpeng.cluster.dispatch.commandapi.business.BusinessApiProcessorRegister;
 
 /**
+ * 调度 API 命令处理器总注册器：登记全部 API 处理器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public final class ApiCommandProcessorRegister {
 

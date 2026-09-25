@@ -17,8 +17,10 @@
 package com.anyilanxin.kunpeng.cluster.dispatch.exception;
 
 /**
+ * 调度引擎回滚异常：处理失败需回滚本次变更时抛出。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class EngineRollbackException extends RuntimeException {
 

@@ -36,7 +36,12 @@ import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-/** 验证 {@link DynamicDiscoveryProvider} 的地址解析、节点生成与 JOIN/LEAVE 事件派发。 */
+/**
+ * 验证 {@link DynamicDiscoveryProvider} 的地址解析、节点生成与 JOIN/LEAVE 事件派发。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class DynamicDiscoveryProviderTest {
 
   /** 每个用例创建的 provider，结束后统一离场，避免泄漏线程。 */
@@ -126,17 +131,21 @@ class DynamicDiscoveryProviderTest {
 
   @Test
   void emitsOnlyJoinEventsForStableNodes() throws Exception {
-    // given：记录所有事件
-    final var provider = joinWith("localhost:26500");
+    // given：先挂监听器再触发扫描——初始扫描在调度线程异步执行, 若监听器注册晚于扫描完成,
+    // JOIN 事件已发完, 下一轮要等整个 refreshInterval(30s), 6s 等待必然超时(竞态闪断)
+    final var provider =
+        new DynamicDiscoveryProvider(configOf(new String[] {"localhost:26500"}, Duration.ofSeconds(30)));
+    active.add(provider);
     final List<NodeDiscoveryEvent> seen = new CopyOnWriteArrayList<>();
     provider.addListener(seen::add);
 
-    // when：等待刷新周期带来事件
+    // when：join 触发初始扫描
+    provider.join(null, null).get(15, TimeUnit.SECONDS);
+
+    // then：稳定节点只会产生 JOIN 事件
     Awaitility.await()
         .atMost(Duration.ofSeconds(6))
         .untilAsserted(() -> assertThat(seen).isNotEmpty());
-
-    // then：稳定节点只会产生 JOIN 事件
     assertThat(seen).allMatch(e -> e.type() == Type.JOIN);
   }
 

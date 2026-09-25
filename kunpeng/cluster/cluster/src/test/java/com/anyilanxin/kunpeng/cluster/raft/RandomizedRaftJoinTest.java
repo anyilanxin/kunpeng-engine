@@ -47,6 +47,9 @@ import org.slf4j.LoggerFactory;
  * 故障停止后 join 必须最终完成，且每轮都满足“每个成员每个任期至多投一票”的安全性不变量。
  *
  * <p>标签必须用 jqwik 的 {@link Tag}（jqwik 引擎不上报 Jupiter 的 @Tag，否则 build.gradle 的默认排除失效）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 @Tag("randomized")
 @PropertyDefaults(tries = 10, shrinking = ShrinkingMode.OFF, edgeCases = EdgeCasesMode.NONE)

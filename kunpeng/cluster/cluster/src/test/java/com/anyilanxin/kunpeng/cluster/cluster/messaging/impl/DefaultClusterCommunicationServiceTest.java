@@ -48,6 +48,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 /**
  * 验证 {@link DefaultClusterCommunicationService} 在收到来源不明的请求/消息时，
  * 会拒绝请求或静默丢弃消息，避免未识别节点进入业务处理链路。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 @ExtendWith(MockitoExtension.class)
 class DefaultClusterCommunicationServiceTest {

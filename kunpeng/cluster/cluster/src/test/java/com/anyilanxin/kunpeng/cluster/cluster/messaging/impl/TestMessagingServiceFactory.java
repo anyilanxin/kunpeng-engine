@@ -21,7 +21,12 @@ import com.anyilanxin.kunpeng.cluster.cluster.messaging.ManagedMessagingService;
 import com.anyilanxin.kunpeng.cluster.utils.net.Address;
 import java.util.Map;
 
-/** Test messaging service factory. */
+/**
+ * Test messaging service factory.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class TestMessagingServiceFactory {
   private final Map<Address, TestMessagingService> services = Maps.newConcurrentMap();
 

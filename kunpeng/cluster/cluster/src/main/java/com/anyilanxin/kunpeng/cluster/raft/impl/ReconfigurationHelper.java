@@ -54,6 +54,9 @@ import org.slf4j.LoggerFactory;
 /**
  * 成员变更操作的客户端入口，操作形态与 jraft CLI 的经典做法一致： 加入集群（addPeer 视角）、退出集群（removePeers 视角）、强制重配（changePeers 视角，
  * 丢失多数派时的逃生通道）、自我推举（向自己转移领导权）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class ReconfigurationHelper {
   private static final Logger LOGGER = LoggerFactory.getLogger(ReconfigurationHelper.class);

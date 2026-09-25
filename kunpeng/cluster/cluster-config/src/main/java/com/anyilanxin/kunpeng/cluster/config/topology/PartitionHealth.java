@@ -23,7 +23,7 @@ import com.anyilanxin.kunpeng.cluster.utils.health.HealthReport;
  * 分区健康状态：广播与拓扑视图使用的健康枚举，与健康报告组件解耦。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public enum PartitionHealth {
   /** 健康 */

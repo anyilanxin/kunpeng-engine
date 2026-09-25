@@ -36,6 +36,9 @@ import java.util.Objects;
  *
  * <p>非 ApplicationEntry：业务日志消费端天然跳过，不路由到业务侧； {@link RaftLogEntry#getLowestAsqn()} 对本类型返回
  * empty，不占用业务 asqn 序列。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public record MergeRecordEntry(PartitionId sourcePartition) implements RaftEntry {
 

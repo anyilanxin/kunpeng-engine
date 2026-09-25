@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.cluster.raft.metrics;
 import com.anyilanxin.kunpeng.utils.micrometer.CustomMeterDocumentation;
 import io.micrometer.core.instrument.Meter.Type;
 
-/** 协作式 Leader 转移（rebalance）相关指标定义 */
+/**
+ * 协作式 Leader 转移（rebalance）相关指标定义。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public enum RebalanceMetricsDoc implements CustomMeterDocumentation {
   /** Leader 转移期间分区保持暂停（拒绝写入、暂停处理）的时长 */
   PARTITION_PAUSE_DURATION(

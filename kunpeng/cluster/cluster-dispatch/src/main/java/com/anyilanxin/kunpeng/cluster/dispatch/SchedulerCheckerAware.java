@@ -19,8 +19,10 @@ package com.anyilanxin.kunpeng.cluster.dispatch;
 import com.anyilanxin.kunpeng.cluster.dispatch.scheduling.SchedulerContext;
 
 /**
+ * 调度检查器感知接口：向组件注入调度检查器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface SchedulerCheckerAware {
 

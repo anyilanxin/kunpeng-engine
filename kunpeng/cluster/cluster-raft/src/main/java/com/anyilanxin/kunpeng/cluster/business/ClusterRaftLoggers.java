@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.cluster.business;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** 集群 Raft 模块共享的日志器常量定义。 */
+/**
+ * 集群 Raft 模块共享的日志器常量定义。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class ClusterRaftLoggers {
   public static final Logger CLUSTER_RAFT =
       LoggerFactory.getLogger("com.anyilanxin.kunpeng.cluster.raft");

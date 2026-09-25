@@ -27,7 +27,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Rule;
 import org.junit.Test;
 
-/** Coverage for the coordinator overriding the leader's configured defaults for rebalances. */
+/**
+ * Coverage for the coordinator overriding the leader's configured defaults for rebalances.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class RaftLeadershipTransferOverrideTest {
 
   @Rule public RaftRule raftRule = RaftRule.withBootstrappedNodes(3);

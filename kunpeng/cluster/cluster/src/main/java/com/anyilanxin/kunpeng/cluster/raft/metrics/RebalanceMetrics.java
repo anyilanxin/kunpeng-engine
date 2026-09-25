@@ -27,7 +27,12 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import java.time.Duration;
 
-/** 协作式 Leader 转移（rebalance）相关指标采集 */
+/**
+ * 协作式 Leader 转移（rebalance）相关指标采集。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class RebalanceMetrics extends RaftMetrics {
 
   private final MeterRegistry meterRegistry;

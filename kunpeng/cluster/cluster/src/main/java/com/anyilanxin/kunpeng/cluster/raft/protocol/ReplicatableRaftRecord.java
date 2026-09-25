@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.protocol;
 
-/** 可复制给跟随者的日志记录的统一形态，屏蔽其来源协议版本的差异。 */
+/**
+ * 可复制给跟随者的日志记录的统一形态，屏蔽其来源协议版本的差异。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface ReplicatableRaftRecord {
 
   /** 该记录在 Raft 日志中的索引。 */

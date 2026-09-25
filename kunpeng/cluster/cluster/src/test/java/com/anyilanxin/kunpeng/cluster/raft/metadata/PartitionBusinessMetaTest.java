@@ -24,7 +24,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-/** {@link PartitionBusinessMeta} 内存状态测试。 */
+/**
+ * {@link PartitionBusinessMeta} 内存状态测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class PartitionBusinessMetaTest {
 
   @Test

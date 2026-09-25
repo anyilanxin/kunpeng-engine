@@ -31,8 +31,8 @@ import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.common.Partitio
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.delayed.DelayedRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.business.BusinessDispatchType;
 import com.anyilanxin.kunpeng.repository.admin.AdminImmutableRepository;
-import com.anyilanxin.kunpeng.repository.admin.modules.key.ImmutableRepositoryKey;
-import com.anyilanxin.kunpeng.repository.admin.modules.source.ImmutableRepositorySource;
+import com.anyilanxin.kunpeng.repository.admin.modules.key.ImmutableKeyRepository;
+import com.anyilanxin.kunpeng.repository.admin.modules.source.ImmutableSourceRepository;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
@@ -49,7 +49,7 @@ import org.slf4j.Logger;
  * 增减方向由历史值与期望值比较得出； 成员池由调用方计算传入，调用方保证满足副本分配需要，本类不做校验。 未注册策略的调度类型不支持在线制定计划，直接抛出异常。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public final class BusinessDispatchPlanMaker {
   private final Map<BusinessDispatchType, DispatchPlanGenerator> generators =
@@ -63,8 +63,8 @@ public final class BusinessDispatchPlanMaker {
   public BusinessDispatchPlanMaker(final LogEventWriter writer) {
     this.writer = writer;
     final AdminImmutableRepository repository = writer.getRepository();
-    final ImmutableRepositoryKey repositoryKey = repository.keyRepository();
-    final ImmutableRepositorySource repositorySource = repository.sourceRepository();
+    final ImmutableKeyRepository repositoryKey = repository.keyRepository();
+    final ImmutableSourceRepository repositorySource = repository.sourceRepository();
     delayChecker = writer.getDelayChecker();
     membershipService = writer.getMembershipService();
     final ClusterTopologyService clusterTopologyService = writer.getClusterTopologyService();

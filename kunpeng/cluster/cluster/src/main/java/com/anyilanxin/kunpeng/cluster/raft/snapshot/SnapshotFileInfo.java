@@ -20,5 +20,6 @@ package com.anyilanxin.kunpeng.cluster.raft.snapshot;
  * 快照文件信息：文件校验和与大小
  *
  * @author zxuanhong
+ * @since 2026.9.0
  */
 public record SnapshotFileInfo(Long checksum, Long size) {}

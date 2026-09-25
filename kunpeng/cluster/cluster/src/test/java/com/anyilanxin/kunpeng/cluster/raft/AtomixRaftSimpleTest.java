@@ -50,6 +50,7 @@ import java.util.stream.Collectors;
  * 简单测试
  *
  * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class AtomixRaftSimpleTest {
 

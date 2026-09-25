@@ -75,7 +75,12 @@ import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.mockito.Mockito.mock;
 
-/** Raft test. */
+/**
+ * Raft test.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class RaftTest extends ConcurrentTestCase {
   private static final Logger LOGGER = LoggerFactory.getLogger(RaftTest.class);
 

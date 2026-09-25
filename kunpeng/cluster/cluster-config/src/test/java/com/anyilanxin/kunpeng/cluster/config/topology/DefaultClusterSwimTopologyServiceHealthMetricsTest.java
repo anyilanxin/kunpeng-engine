@@ -36,7 +36,12 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-/** 本地分区健康 Micrometer gauge 集成测试：分区首次出现时注册，后续更新自动反映。 */
+/**
+ * 本地分区健康 Micrometer gauge 集成测试：分区首次出现时注册，后续更新自动反映。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class DefaultClusterSwimTopologyServiceHealthMetricsTest {
   private static final String METRIC = "kunpeng.engine.partition.health";
 

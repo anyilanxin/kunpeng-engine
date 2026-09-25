@@ -21,8 +21,10 @@ import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 import com.anyilanxin.kunpeng.scheduler.startup.StartupStep;
 
 /**
+ * 分区相位切换步骤抽象基类。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public abstract class AbstractPartitionTransitionStep<CONTENT extends PartitionStartupContext>
     implements StartupStep<CONTENT> {

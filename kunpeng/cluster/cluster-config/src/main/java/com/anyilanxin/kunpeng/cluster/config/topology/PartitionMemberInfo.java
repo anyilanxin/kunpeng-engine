@@ -26,8 +26,10 @@ import lombok.Setter;
 import lombok.ToString;
 
 /**
+ * 分区成员信息：分区在各成员上的角色与健康描述（可序列化）。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @Getter
 @Setter

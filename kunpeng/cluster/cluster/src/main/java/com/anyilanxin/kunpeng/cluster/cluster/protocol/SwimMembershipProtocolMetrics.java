@@ -28,7 +28,12 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import net.jcip.annotations.ThreadSafe;
 
-/** SWIM 成员协议相关指标采集 */
+/**
+ * SWIM 成员协议相关指标采集
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @ThreadSafe
 final class SwimMembershipProtocolMetrics {
 

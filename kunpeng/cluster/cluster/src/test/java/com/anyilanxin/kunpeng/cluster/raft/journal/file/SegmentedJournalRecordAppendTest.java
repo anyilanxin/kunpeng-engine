@@ -31,7 +31,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-/** 以 {@code append(JournalRecord)}（跟随者复制路径）追加的记录必须可完整回读且校验和一致。 */
+/**
+ * 以 {@code append(JournalRecord)}（跟随者复制路径）追加的记录必须可完整回读且校验和一致。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class SegmentedJournalRecordAppendTest {
 
   @Rule public final TemporaryFolder temporaryFolder = new TemporaryFolder();

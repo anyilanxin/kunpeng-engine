@@ -26,6 +26,9 @@ import java.util.Optional;
  * Configuration#quorum()} and {@code Ballot}: a quorum of an n-member voting set is {@code n / 2 +
  * 1}, and during a joint (two-phase) configuration a round is only granted when majorities of both
  * the old and the new member sets have acknowledged.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class Quorum {
 

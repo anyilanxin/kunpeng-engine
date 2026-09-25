@@ -26,6 +26,12 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+/**
+ * 成员 ID 测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 final class MemberIdTest {
 
   @Test

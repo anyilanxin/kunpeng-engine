@@ -20,14 +20,16 @@ import com.anyilanxin.kunpeng.cluster.dispatch.ClusterDispatchLoggers;
 import com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter;
 import com.anyilanxin.kunpeng.cluster.dispatch.api.ClusterDispatchClient;
 import com.anyilanxin.kunpeng.cluster.dispatch.command.business.execution.AbstractBusinessDispatchExecutionProcessor;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.LogRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanExecutionRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.business.BusinessDispatchPlanExecutionLifeCycle;
 import org.slf4j.Logger;
 
 /**
+ * 业务面执行明细执行中命令处理器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class BusinessDispatchExecutionExecutingProcessor
     extends AbstractBusinessDispatchExecutionProcessor {
@@ -42,7 +44,7 @@ public class BusinessDispatchExecutionExecutingProcessor
   }
 
   @Override
-  public void processRecord(final LogRecord<BusinessDispatchPlanExecutionRecord> record) {
+  public void processRecord(final AdminLogRecord<BusinessDispatchPlanExecutionRecord> record) {
     final BusinessDispatchPlanExecutionRecord value = record.getValue();
     final long requestId = record.getRequestId();
     value.setDispatchStartTime(writer.millis());

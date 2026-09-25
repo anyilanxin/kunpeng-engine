@@ -23,7 +23,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-/** {@link BusinessMetaTransfer} 请求/响应编解码测试。 */
+/**
+ * {@link BusinessMetaTransfer} 请求/响应编解码测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class BusinessMetaTransferTest {
 
   @Test

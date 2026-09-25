@@ -23,6 +23,9 @@ import org.jspecify.annotations.Nullable;
  * 受检型日志异常。
  *
  * <p>与 {@link RuntimeException} 体系相对：这一族异常代表“调用方必须显式决策的运维性失败”， 编译期强制处理，不允许静默吞掉。目前唯一的子类是刷盘失败。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public sealed class CheckedJournalException extends Exception {
 

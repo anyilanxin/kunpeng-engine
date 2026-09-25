@@ -36,6 +36,9 @@ import org.junit.Test;
  * applyCommitAdvance 同栈执行）同步快照各 follower 的刷盘计数——若实现退化为"先 ack 后刷盘"，
  * 该快照会观察到 0 次 follower 刷盘，断言即失败。合批断言：突发投递下真实 fsync 的耗时会迫使
  * 后续 AppendRequest 在同一合并窗口内排队，follower 的 fsync 次数应显著少于突发条目数。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class RaftFollowerFlushCoalescingTest {
 

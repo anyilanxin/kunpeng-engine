@@ -24,7 +24,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
 
-/** 强制配置（force configure）阶段的多数派判定行为。 */
+/**
+ * 强制配置（force configure）阶段的多数派判定行为。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class ForceConfigureQuorumTest {
 
   // 用不同编号的四人集合验证多数派语义（quorum=3），对应"四副本掉线一个"的场景

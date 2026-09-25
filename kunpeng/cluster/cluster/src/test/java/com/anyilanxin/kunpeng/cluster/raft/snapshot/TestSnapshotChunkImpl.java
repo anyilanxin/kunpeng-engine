@@ -20,6 +20,9 @@ import java.nio.ByteBuffer;
 
 /**
  * 测试用的快照分片桩实现，除名称与内容字段外其余属性均取默认值。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 class TestSnapshotChunkImpl implements SnapshotChunk {
 

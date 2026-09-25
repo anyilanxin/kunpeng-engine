@@ -23,8 +23,10 @@ import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.delayed.Delayed
 import com.anyilanxin.kunpeng.protocol.admin.record.command.delayed.DelayedLifeCycle;
 
 /**
+ * 延迟触发命令处理器抽象基类。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public abstract class AbstractDelayedProcessor
     implements LogEventProcessorSingleState<DelayedRecord> {

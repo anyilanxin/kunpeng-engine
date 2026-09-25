@@ -27,7 +27,7 @@ import java.util.Map;
  * （目录内全部文件都会作为分片随镜像传输），也可经返回值随镜像持久化到 snapshot.metadata。
  *
  * @author zxuanhong
- * @since 2026.0.0
+ * @since 2026.9.0
  */
 public interface TransferSnapshotProvider extends CloseableSilently {
 

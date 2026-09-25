@@ -36,6 +36,12 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
+/**
+ * Raft 复制延迟测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class RaftReplicationLagTest {
 
   @Rule public RaftRule raftRule = RaftRule.withBootstrappedNodes(3);

@@ -23,8 +23,10 @@ import com.anyilanxin.kunpeng.cluster.dispatch.commandapi.admin.processor.AdminC
 import com.anyilanxin.kunpeng.cluster.dispatch.commandapi.admin.processor.AdminQueryApiProcessor;
 
 /**
+ * 管理面 API 处理器注册器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public final class AdminApiProcessorRegister {
 

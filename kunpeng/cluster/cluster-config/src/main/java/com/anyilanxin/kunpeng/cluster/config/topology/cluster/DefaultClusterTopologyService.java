@@ -28,7 +28,7 @@ import java.util.Map;
  * 网关端集群分区拓扑服务：只读汇聚各成员经 SWIM 广播的分区拓扑数据，供 broker-client 路由与查询使用。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class DefaultClusterTopologyService extends AbstractSwimTopologyService
     implements ClusterTopologyService {

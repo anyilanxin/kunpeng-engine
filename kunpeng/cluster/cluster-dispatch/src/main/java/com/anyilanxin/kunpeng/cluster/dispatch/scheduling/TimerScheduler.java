@@ -22,6 +22,9 @@ import java.time.Duration;
  * 调度定时任务，任务在其所属上下文中按序执行。
  *
  * <p>实现保证任务相对其绑定的上下文有序且单线程执行；不保证顺序的并发调度由继承本接口的 {@link AsyncTimerScheduler} 提供。延迟已到期的句柄再调用取消可能不生效。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface TimerScheduler {
 

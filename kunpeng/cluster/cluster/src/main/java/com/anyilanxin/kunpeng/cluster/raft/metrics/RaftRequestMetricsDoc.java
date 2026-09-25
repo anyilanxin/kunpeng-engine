@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.cluster.raft.metrics;
 import com.anyilanxin.kunpeng.utils.micrometer.CustomMeterDocumentation;
 import io.micrometer.core.instrument.Meter.Type;
 
-/** Raft 协议消息收发相关指标定义 */
+/**
+ * Raft 协议消息收发相关指标定义。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public enum RaftRequestMetricsDoc implements CustomMeterDocumentation {
   /** 收到的 Raft 消息数 */
   RAFT_MESSAGE_RECEIVED(

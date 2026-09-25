@@ -31,6 +31,12 @@ import java.util.function.BiFunction;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+/**
+ * 单条 Raft 日志校验测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class SingleRaftEntryValidationTest {
 
   private final TestEntryValidator entryValidator = new TestEntryValidator();

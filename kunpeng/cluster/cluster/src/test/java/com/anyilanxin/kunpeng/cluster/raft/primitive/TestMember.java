@@ -22,7 +22,12 @@ import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
-/** Test member. */
+/**
+ * Test member.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class TestMember implements RaftMember {
 
   private final MemberId memberId;

@@ -33,6 +33,12 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 
+/**
+ * Raft 日志追加测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @RunWith(Parameterized.class)
 public class RaftAppendTest {
 

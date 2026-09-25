@@ -27,7 +27,7 @@ import lombok.ToString;
  * 管理分区（admin partition）的配置信息，记录配置版本、是否本地管理模式、管理分区元数据以及当前节点是否为集群组建发起者。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @Getter
 @Setter

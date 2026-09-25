@@ -21,7 +21,12 @@ import com.anyilanxin.kunpeng.cluster.raft.storage.serializer.RaftEntrySerialize
 import com.anyilanxin.kunpeng.structpack.buffer.BufferWriter;
 import java.util.Objects;
 
-/** 负载尚未序列化的 {@link ApplicationEntry}，是向日志追加新条目时使用的形态。 */
+/**
+ * 负载尚未序列化的 {@link ApplicationEntry}，是向日志追加新条目时使用的形态。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class UnserializedApplicationEntry implements ApplicationEntry {
 
   /** 本条目覆盖的最小条目位置。 */

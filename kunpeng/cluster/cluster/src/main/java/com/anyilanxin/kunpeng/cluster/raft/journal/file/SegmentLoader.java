@@ -40,8 +40,11 @@ import org.slf4j.LoggerFactory;
 /**
  * segment 文件的磁盘装配层。
  *
- * <p>只关心文件与内存映射两件事：新建 segment（空间预分配、描述符写入与目录刷盘）和打开 既有 segment（按描述符声明的大小对齐映射）。挑选、追踪与滚动 segment 是 SegmentsManager
- * 的职责，与本类无关。
+ * <p>只关心文件与内存映射两件事：新建 segment（空间预分配、描述符写入与目录刷盘）和打开 既有 segment（按描述符声明的大小对齐映射）。挑选、追踪与滚动 segment 是
+ * SegmentsManager 的职责，与本类无关。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 final class SegmentLoader {
 
@@ -144,19 +147,21 @@ final class SegmentLoader {
   }
 
   private SegmentDescriptor decodeDescriptor(
-      final SegmentDescriptorSerializer serializer, final ByteBuffer buffer, final String fileName) {
+      final SegmentDescriptorSerializer serializer,
+      final ByteBuffer buffer,
+      final String fileName) {
     try {
       return serializer.readFrom(buffer);
     } catch (final UnknownVersionException e) {
-      throw new CorruptedJournalException(
-          "segment '%s' 的描述符格式版本无法识别".formatted(fileName), e);
+      throw new CorruptedJournalException("segment '%s' 的描述符格式版本无法识别".formatted(fileName), e);
     } catch (final IndexOutOfBoundsException e) {
       throw new JournalException("segment '%s' 连一个完整描述符都读不出来".formatted(fileName), e);
     }
   }
 
   /** 建立全新文件、完成空间预分配并返回读写映射；遇到同名残留文件则先清掉再重建。 */
-  private MappedByteBuffer createMappedFile(final Path segmentPath, final SegmentDescriptor descriptor) {
+  private MappedByteBuffer createMappedFile(
+      final Path segmentPath, final SegmentDescriptor descriptor) {
     final int segmentBytes = descriptor.maxSegmentSize();
     checkDiskSpace(segmentPath, segmentBytes);
 
@@ -192,8 +197,7 @@ final class SegmentLoader {
   /** 可用磁盘空间低于“新段容量与安全水位二者较大值”时拒绝分配。 */
   private void checkDiskSpace(final Path segmentPath, final int segmentBytes) {
     final var parent =
-        requireNonNull(
-            segmentPath.getParent(), () -> "路径 %s 没有父目录".formatted(segmentPath));
+        requireNonNull(segmentPath.getParent(), () -> "路径 %s 没有父目录".formatted(segmentPath));
     final long usable = parent.toFile().getUsableSpace();
     final long needed = Math.max(segmentBytes, minFreeDiskBytes);
     if (usable < needed) {
@@ -215,8 +219,7 @@ final class SegmentLoader {
     try {
       FileUtil.flushDirectory(segmentFile.getParent());
     } catch (final IOException e) {
-      throw new JournalException(
-          "segment %s 建立后刷盘其所在目录失败".formatted(segmentFile), e);
+      throw new JournalException("segment %s 建立后刷盘其所在目录失败".formatted(segmentFile), e);
     }
   }
 }

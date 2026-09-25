@@ -21,7 +21,7 @@ import static com.anyilanxin.kunpeng.protocol.admin.impl.record.command.common.E
 import com.anyilanxin.kunpeng.cluster.dispatch.ClusterDispatchLoggers;
 import com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter;
 import com.anyilanxin.kunpeng.cluster.dispatch.command.business.execution.AbstractBusinessDispatchExecutionProcessor;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.LogRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanExecutionRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.common.PartitionLeaveSourceTransferRecord;
@@ -32,18 +32,20 @@ import com.anyilanxin.kunpeng.protocol.admin.record.command.business.BusinessDis
 import com.anyilanxin.kunpeng.protocol.admin.record.command.business.BusinessDispatchPlanLifeCycle;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.source.PartitionSourceLifeCycle;
 import com.anyilanxin.kunpeng.repository.admin.AdminImmutableRepository;
-import com.anyilanxin.kunpeng.repository.admin.modules.business.ImmutableRepositoryBusiness;
+import com.anyilanxin.kunpeng.repository.admin.modules.business.ImmutableBusinessRepository;
 import com.anyilanxin.kunpeng.structpack.value.IntegerValue;
 import org.slf4j.Logger;
 
 /**
+ * 业务面执行明细 ACK 命令处理器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class BusinessDispatchExecutionAcknowledgeProcessor
     extends AbstractBusinessDispatchExecutionProcessor {
   protected final LogEventWriter writer;
-  private final ImmutableRepositoryBusiness repositoryBusiness;
+  private final ImmutableBusinessRepository repositoryBusiness;
   public static final Logger LOGGER = ClusterDispatchLoggers.CLUSTER_DISPATCH;
   private final PartitionLeaveSourceTransferRecord transferRecord;
 
@@ -56,7 +58,7 @@ public class BusinessDispatchExecutionAcknowledgeProcessor
   }
 
   @Override
-  public void processRecord(final LogRecord<BusinessDispatchPlanExecutionRecord> record) {
+  public void processRecord(final AdminLogRecord<BusinessDispatchPlanExecutionRecord> record) {
     final BusinessDispatchPlanExecutionRecord value = record.getValue();
     // 幂等：明细已到达终态说明是重复 ack（成员重启重放调度后会再次 ack），直接跳过
     final BusinessDispatchPlanExecutionRecord stored =

@@ -20,6 +20,9 @@ package com.anyilanxin.kunpeng.cluster.dispatch.scheduling;
  * 一份在持有其队列的线程上执行的已调度工作。
  *
  * <p>产出的命令经由传入的 {@link CommandCollector} 交付而非直接返回，调度器因此无需关心 命令如何缓冲与刷写。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface TimerJob {
 

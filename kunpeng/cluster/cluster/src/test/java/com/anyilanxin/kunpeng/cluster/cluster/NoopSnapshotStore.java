@@ -28,7 +28,12 @@ import com.anyilanxin.kunpeng.scheduler.future.CompletableActorFuture;
 import java.nio.file.Path;
 import java.util.Optional;
 
-/** A no-op snapshot store which never holds any snapshots. */
+/**
+ * A no-op snapshot store which never holds any snapshots.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class NoopSnapshotStore implements RaftSnapshotStore {
 
   @Override

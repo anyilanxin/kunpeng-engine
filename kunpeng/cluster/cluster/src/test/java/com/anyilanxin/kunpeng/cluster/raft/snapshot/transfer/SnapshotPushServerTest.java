@@ -62,6 +62,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
  * {@link SnapshotPushServer}：info 批识别、合并镜像接收落地（merge 目录）后触发合并流， 以及合并完成等待请求按镜像 id 应答。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 @ExtendWith(MockitoExtension.class)
 final class SnapshotPushServerTest {

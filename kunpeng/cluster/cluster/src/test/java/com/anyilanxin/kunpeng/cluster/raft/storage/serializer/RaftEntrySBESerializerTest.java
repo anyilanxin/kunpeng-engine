@@ -34,6 +34,12 @@ import org.agrona.MutableDirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
 import org.junit.Test;
 
+/**
+ * Raft 条目 SBE 序列化器测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class RaftEntrySBESerializerTest {
 
   final RaftEntrySerializer serializer = new RaftEntrySBESerializer();

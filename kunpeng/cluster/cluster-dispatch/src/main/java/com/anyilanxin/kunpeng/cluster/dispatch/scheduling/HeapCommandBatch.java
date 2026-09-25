@@ -28,6 +28,9 @@ import java.util.function.Consumer;
  *
  * <p>每次 {@link #append} 都先征询 {@link CommandBatch.CapacityProbe}：探针拒绝时返回 {@link
  * BatchCapacityExceededException}、批次保持原样；接受时条目入列并累加字节数。 非线程安全，限单个收集者使用。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class HeapCommandBatch implements CommandBatch {
 

@@ -32,7 +32,12 @@ import org.assertj.core.api.Assertions;
 import org.junit.Rule;
 import org.junit.Test;
 
-/** Atomix cluster test. */
+/**
+ * Atomix cluster test.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class AtomixClusterTest {
   private static final int TIMEOUT_IN_S = 90;
 

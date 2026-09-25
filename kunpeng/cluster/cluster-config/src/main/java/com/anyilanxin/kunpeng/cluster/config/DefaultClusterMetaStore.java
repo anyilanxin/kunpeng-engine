@@ -29,7 +29,7 @@ import java.util.Optional;
  * ClusterMetaStore 接口的默认实现，将集群配置序列化后持久化到数据目录下的 .cluster.meta 文件，并通过同步锁保证读写线程安全。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class DefaultClusterMetaStore implements ClusterMetaStore {
   private static final String CLUSTER_FILE_NAME = ".cluster.meta";

@@ -18,7 +18,12 @@ package com.anyilanxin.kunpeng.cluster.raft.journal.file;
 
 import com.anyilanxin.kunpeng.cluster.raft.journal.CheckedJournalException.FlushException;
 
-/** 可刷盘 segment 的最小能力契约：批量刷盘逻辑只依赖这两个方法。 */
+/**
+ * 可刷盘 segment 的最小能力契约：批量刷盘逻辑只依赖这两个方法。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 interface FlushableSegment {
 
   /**

@@ -32,6 +32,9 @@ import java.util.function.IntConsumer;
  * 为有界待发命令注册表提供按 lifeCycle 划分的大小上报器。
  *
  * <p>每个上报器是一个 {@link IntConsumer}，注册表在每次变更后以当前大小调用它，指标实现 借此将这些回调转化为实时 gauge。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface RegistryMetrics {
 

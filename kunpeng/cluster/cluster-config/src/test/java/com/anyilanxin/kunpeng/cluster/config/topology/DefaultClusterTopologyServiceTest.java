@@ -35,7 +35,12 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-/** {@link DefaultClusterTopologyService} 多成员广播汇聚视图测试。 */
+/**
+ * {@link DefaultClusterTopologyService} 多成员广播汇聚视图测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class DefaultClusterTopologyServiceTest {
 
   private static final PartitionId PARTITION = PartitionId.from("raft-partition", 1);

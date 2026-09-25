@@ -41,7 +41,12 @@ import org.junit.jupiter.api.AutoClose;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** {@link BusinessMetaManager} 应用与投影测试。 */
+/**
+ * {@link BusinessMetaManager} 应用与投影测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class BusinessMetaManagerTest {
 
   @TempDir Path directory;

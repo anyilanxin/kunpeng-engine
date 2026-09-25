@@ -24,7 +24,7 @@ package com.anyilanxin.kunpeng.cluster.raft.snapshot;
  * 合并）。后两者不参与常规保留策略，生命周期由引导引用计数/合并流程与节点关闭清理管控。
  *
  * @author zxuanhong
- * @since 2026.0.0
+ * @since 2026.9.0
  */
 public enum SnapshotType {
   /** 常规快照（本地定时/手动拍摄，leader 用于 install 复制）。 */

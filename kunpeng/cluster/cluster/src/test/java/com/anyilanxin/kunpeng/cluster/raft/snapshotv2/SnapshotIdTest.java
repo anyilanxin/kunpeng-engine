@@ -22,6 +22,12 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+/**
+ * 快照 ID 测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 final class SnapshotIdTest {
 
   @Test

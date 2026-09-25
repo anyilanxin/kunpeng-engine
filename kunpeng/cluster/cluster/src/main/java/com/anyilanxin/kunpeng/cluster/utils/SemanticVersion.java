@@ -23,6 +23,9 @@ import java.util.regex.Pattern;
 /**
  * Immutable semantic version as defined by <a href="https://semver.org">semver.org</a>, with
  * optional pre-release and build metadata segments.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class SemanticVersion implements Comparable<SemanticVersion> {
 

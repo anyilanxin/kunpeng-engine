@@ -30,7 +30,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runners.Parameterized.Parameter;
 
-/** 网络隔离场景：领导者退位、故障转移与恢复连接后的追赶。 */
+/**
+ * 网络隔离场景：领导者退位、故障转移与恢复连接后的追赶。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class RaftServerDisconnectTest {
 
   @Rule @Parameter public RaftRule raftRule = RaftRule.withBootstrappedNodes(3);

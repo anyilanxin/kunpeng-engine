@@ -17,8 +17,10 @@
 package com.anyilanxin.kunpeng.cluster.config;
 
 /**
+ * 集群元数据可写存储：拓扑与分区元信息的更新入口。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface ClusterMetaMutableStore {
 

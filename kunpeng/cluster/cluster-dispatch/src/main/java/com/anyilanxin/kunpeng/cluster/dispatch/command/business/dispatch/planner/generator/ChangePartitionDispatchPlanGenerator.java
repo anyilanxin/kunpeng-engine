@@ -30,8 +30,8 @@ import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.common.Partitio
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.common.PartitionLeaveSourceTransferRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.source.PartitionSourceRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.business.BusinessDispatchType;
-import com.anyilanxin.kunpeng.repository.admin.modules.key.ImmutableRepositoryKey;
-import com.anyilanxin.kunpeng.repository.admin.modules.source.ImmutableRepositorySource;
+import com.anyilanxin.kunpeng.repository.admin.modules.key.ImmutableKeyRepository;
+import com.anyilanxin.kunpeng.repository.admin.modules.source.ImmutableSourceRepository;
 import java.util.*;
 
 /**
@@ -50,14 +50,14 @@ import java.util.*;
  * </ul>
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class ChangePartitionDispatchPlanGenerator extends AbstractDispatchPlanGenerator {
 
   public ChangePartitionDispatchPlanGenerator(
-      final ImmutableRepositoryKey repositoryKey,
+      final ImmutableKeyRepository repositoryKey,
       final ClusterTopologyService clusterTopologyService,
-      final ImmutableRepositorySource repositorySource) {
+      final ImmutableSourceRepository repositorySource) {
     super(repositoryKey, clusterTopologyService, repositorySource);
   }
 

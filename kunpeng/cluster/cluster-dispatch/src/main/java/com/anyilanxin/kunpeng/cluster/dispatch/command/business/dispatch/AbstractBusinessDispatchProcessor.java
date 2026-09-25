@@ -23,8 +23,10 @@ import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.Busine
 import com.anyilanxin.kunpeng.protocol.admin.record.command.business.BusinessDispatchPlanLifeCycle;
 
 /**
+ * 业务面调度计划命令处理器抽象基类。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public abstract class AbstractBusinessDispatchProcessor
     implements LogEventProcessorSingleState<BusinessDispatchPlanRecord> {

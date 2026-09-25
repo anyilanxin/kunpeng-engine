@@ -18,7 +18,12 @@ package com.anyilanxin.kunpeng.cluster.raft.protocol;
 
 import com.anyilanxin.kunpeng.cluster.raft.RaftError;
 
-/** Acknowledgement of a {@link LeaveRequest}. */
+/**
+ * Acknowledgement of a {@link LeaveRequest}.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class LeaveResponse extends AbstractRaftResponse {
 
   private LeaveResponse(final Status status, final RaftError error) {

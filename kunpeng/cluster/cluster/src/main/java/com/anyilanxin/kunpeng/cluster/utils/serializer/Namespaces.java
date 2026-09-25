@@ -27,6 +27,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+/**
+ * 序列化命名空间管理。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class Namespaces {
 
   /**

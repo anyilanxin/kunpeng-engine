@@ -33,6 +33,9 @@ import org.junit.Test;
 /**
  * 跟随者刷盘失败时的行为：故障节点数不足半数时，提交不受影响；flusher 恢复后日志收敛，
  * 全部成员保持在 LEADER/FOLLOWER 正常角色。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class RaftFollowerFlushErrorTest {
 

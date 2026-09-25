@@ -19,7 +19,10 @@ package com.anyilanxin.kunpeng.cluster.cluster.leaderfound;
 import com.anyilanxin.kunpeng.cluster.utils.Managed;
 
 /**
+ * 集群领导者发现管理服务：注册与注销领导者变更监听器。
+ *
  * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface ManageClusterLeaderFoundService
     extends ClusterLeaderFoundService, Managed<ClusterLeaderFoundService> {}

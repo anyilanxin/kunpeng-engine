@@ -20,7 +20,12 @@ import com.google.common.collect.Maps;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import java.util.Map;
 
-/** Test Raft protocol factory. */
+/**
+ * Test Raft protocol factory.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class TestRaftProtocolFactory {
 
   private final Map<MemberId, TestRaftServerProtocol> servers = Maps.newConcurrentMap();

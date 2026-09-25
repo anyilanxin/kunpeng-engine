@@ -34,6 +34,9 @@ import org.slf4j.LoggerFactory;
 /**
  * 启动一致性检查：节点启动时校验快照索引与日志首索引之间的间隙。无法恢复一致的间隙应抛异常；
  * 日志为空但有间隙的状态应通过“重置日志到快照索引 + 1”恢复一致；其余状态直接放行。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 class StateUtilTest {
 

@@ -36,7 +36,12 @@ import org.junit.jupiter.api.AutoClose;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-/** 日志压缩器：按快照边界截断日志，并保留一段追赶余量。 */
+/**
+ * 日志压缩器：按快照边界截断日志，并保留一段追赶余量。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 final class LogCompactorTest {
 
   // 与上游测试不同的常量取值：边界 24、保留余量 8，期望截断到 16

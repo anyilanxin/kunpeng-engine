@@ -24,7 +24,11 @@ import org.agrona.DirectBuffer;
  * 从 segment 读回的一条完整日志记录。
  *
  * <p>持有三个视图：头部 {@link JournalRecordMetadata}（校验和与长度）、体部 {@link
- * JournalRecordData}（索引、序号、负载），以及直接覆盖记录原始字节的 {@code raw} 缓冲（零拷贝 交给上层）。{@code totalSize} 是该记录连同前置帧字段在 segment 内占用的字节数。
+ * JournalRecordData}（索引、序号、负载），以及直接覆盖记录原始字节的 {@code raw} 缓冲（零拷贝 交给上层）。{@code totalSize}
+ * 是该记录连同前置帧字段在 segment 内占用的字节数。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class PersistedJournalRecord implements JournalRecord {
 

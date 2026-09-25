@@ -16,18 +16,20 @@
  */
 package com.anyilanxin.kunpeng.cluster.dispatch;
 
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.LogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.AdminValueLifeCycle;
 import com.anyilanxin.kunpeng.protocol.admin.AdminValueType;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 
 /**
+ * 日志事件处理器接口：按 Record 类型分发事件处理。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @SuppressWarnings("rawtypes")
 public interface LogEventProcessor<T extends UnifiedRecordValue> {
-  default void processRecord(final LogRecord<T> record) {}
+  default void processRecord(final AdminLogRecord<T> record) {}
 
   /**
    * 尝试处理过程中发生的错误。
@@ -36,7 +38,7 @@ public interface LogEventProcessor<T extends UnifiedRecordValue> {
    * @param error 已发生的错误，processor 应尝试对其处理
    * @return 处理错误的类型。默认为 {@link ProcessingError#UNEXPECTED_ERROR}。
    */
-  default ProcessingError tryHandleError(final LogRecord<T> command, final Throwable error) {
+  default ProcessingError tryHandleError(final AdminLogRecord<T> command, final Throwable error) {
     return ProcessingError.UNEXPECTED_ERROR;
   }
 

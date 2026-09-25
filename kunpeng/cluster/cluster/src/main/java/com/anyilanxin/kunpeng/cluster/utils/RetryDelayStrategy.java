@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.cluster.utils;
 import java.time.Duration;
 import java.util.function.Supplier;
 
-/** Provides the delay to wait before the next retry attempt. */
+/**
+ * Provides the delay to wait before the next retry attempt.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @FunctionalInterface
 public interface RetryDelayStrategy extends Supplier<Duration> {
 

@@ -23,7 +23,12 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.AutoClose;
 import org.junit.jupiter.api.Test;
 
-/** 校验 {@link LeaderAppenderMetrics} 中复制延迟 gauge 的命名、标签与生命周期行为。 */
+/**
+ * 校验 {@link LeaderAppenderMetrics} 中复制延迟 gauge 的命名、标签与生命周期行为。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 final class LeaderAppenderMetricsTest {
 
   private static final String GAUGE_NAME = "zeebe_raft_replication_lag_bytes";

@@ -37,7 +37,12 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import org.slf4j.Logger;
 
-/** Raft 分区工厂，基于 broker 配置构建 RaftPartition 及其存储与分区运行配置。 */
+/**
+ * Raft 分区工厂，基于 broker 配置构建 RaftPartition 及其存储与分区运行配置。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class RaftPartitionFactory {
   private static final Logger LOG = ClusterRaftLoggers.CLUSTER_RAFT;
   private final BrokerCfg brokerCfg;

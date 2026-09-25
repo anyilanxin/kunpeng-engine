@@ -33,7 +33,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-/** 热读路径的 CRC 校验开关：默认校验损坏记录并抛异常，关闭后跳过校验直接返回记录。 */
+/**
+ * 热读路径的 CRC 校验开关：默认校验损坏记录并抛异常，关闭后跳过校验直接返回记录。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class SegmentedJournalReaderChecksumTest {
 
   private static final int MAX_SEGMENT_SIZE = 8192;

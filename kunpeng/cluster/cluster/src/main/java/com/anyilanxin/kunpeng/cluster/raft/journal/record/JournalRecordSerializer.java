@@ -27,14 +27,17 @@ import org.agrona.MutableDirectBuffer;
  * 日志记录在 segment 缓冲上的编解码契约。
  *
  * <p>一条记录按“头部（定长）+ 体部（变长）”两段编码；本接口同时覆盖两段的双向转换。头部 长度恒定，由 {@link #getMetadataLength()} 给出。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface JournalRecordSerializer {
 
   /**
    * 把 {@code entry} 的体部写入 buffer。
    *
-   * <p>等价于用 {@link DirectBufferWriter} 包装负载后走 {@link #writeData(long, long,
-   * BufferWriter, MutableDirectBuffer, int)}。
+   * <p>等价于用 {@link DirectBufferWriter} 包装负载后走 {@link #writeData(long, long, BufferWriter,
+   * MutableDirectBuffer, int)}。
    *
    * @param entry 提供索引、序号与负载的记录体
    * @param buffer 写入目标
@@ -58,11 +61,7 @@ public interface JournalRecordSerializer {
    * @return 空间不足时返回 {@link BufferOverflowException}，否则返回写入字节数
    */
   Either<BufferOverflowException, Integer> writeData(
-      long index,
-      long asqn,
-      BufferWriter payload,
-      MutableDirectBuffer buffer,
-      int offset);
+      long index, long asqn, BufferWriter payload, MutableDirectBuffer buffer, int offset);
 
   /**
    * 写入头部。字节数恒为 {@link #getMetadataLength()}。
@@ -71,7 +70,9 @@ public interface JournalRecordSerializer {
    */
   int writeMetadata(JournalRecordMetadata metadata, MutableDirectBuffer buffer, int offset);
 
-  /** @return 当前编码版本下头部的固定字节数 */
+  /**
+   * @return 当前编码版本下头部的固定字节数
+   */
   int getMetadataLength();
 
   /**
@@ -90,6 +91,8 @@ public interface JournalRecordSerializer {
    */
   JournalRecordData readData(DirectBuffer buffer, int offset);
 
-  /** @return buffer 中实际编码出的头部长度（与版本相关时以缓冲内容为准） */
+  /**
+   * @return buffer 中实际编码出的头部长度（与版本相关时以缓冲内容为准）
+   */
   int getMetadataLength(DirectBuffer buffer, int offset);
 }

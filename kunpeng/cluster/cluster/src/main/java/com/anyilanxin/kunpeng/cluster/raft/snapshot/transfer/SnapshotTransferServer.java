@@ -40,7 +40,7 @@ import java.util.function.Function;
  * 会话级断点由读取器位置承载；客户端整体失败即以新 transferId 重拉。
  *
  * @author zxuanhong
- * @since 2026.0.0
+ * @since 2026.9.0
  */
 public final class SnapshotTransferServer {
 

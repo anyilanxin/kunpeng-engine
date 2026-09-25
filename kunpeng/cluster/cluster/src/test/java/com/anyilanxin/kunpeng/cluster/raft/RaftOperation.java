@@ -22,7 +22,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
 
-/** An operation that can be executed on a raft member */
+/**
+ * An operation that can be executed on a raft member.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class RaftOperation {
 
   private final BiConsumer<ControllableRaftContexts, MemberId> operation;

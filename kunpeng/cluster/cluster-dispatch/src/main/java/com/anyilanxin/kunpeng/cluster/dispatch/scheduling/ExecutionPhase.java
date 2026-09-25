@@ -21,6 +21,9 @@ package com.anyilanxin.kunpeng.cluster.dispatch.scheduling;
  *
  * <p>处理器从 {@link #INITIAL} 出发，进入 {@link #REPLAY} 依据历史重建状态，随后稳定在 {@link #RUNNING} 处理实时命令。{@link
  * #FAILED} 表示处理器因不可恢复错误而中止； {@link #PAUSED} 表示其消费被临时挂起。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public enum ExecutionPhase {
   INITIAL,

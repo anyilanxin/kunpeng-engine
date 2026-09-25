@@ -32,6 +32,9 @@ import org.slf4j.LoggerFactory;
 /**
  * 数据损坏场景：多数节点数据丢失后组成 quorum 时，日志最新的少数派节点重新加入集群
  * 不应删除自己的数据，而应进入 INACTIVE 保护自身日志。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class RaftCorruptedDataTest {
   private static final Logger LOG = LoggerFactory.getLogger(RaftCorruptedDataTest.class);

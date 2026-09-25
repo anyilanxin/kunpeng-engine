@@ -31,7 +31,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-/** Drives a coordinated leadership transfer the way a coordinator would. */
+/**
+ * Drives a coordinated leadership transfer the way a coordinator would.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 final class CoordinatedTransferDriver {
   /** For tests we don't install a real coordinator check, so any version will do. */
   private static final long CONFIG_VERSION = 7;

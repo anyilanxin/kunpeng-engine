@@ -43,6 +43,12 @@ import java.util.zip.CRC32;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+/**
+ * 默认 Raft 快照存储测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 final class DefaultRaftSnapshotStoreTest {
 
   @TempDir

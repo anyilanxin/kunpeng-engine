@@ -27,7 +27,12 @@ import java.util.function.Consumer;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-/** 投票 quorum：多数派判定、去重、未知成员忽略，以及失败后的不可恢复性。 */
+/**
+ * 投票 quorum：多数派判定、去重、未知成员忽略，以及失败后的不可恢复性。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 final class VoteQuorumTest {
 
   /** 构造一个以 “n1/n2/n3” 为选民集合的 quorum，回调用 mock 记录判定结果。 */

@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.cluster.cluster.protocol;
 import com.anyilanxin.kunpeng.utils.micrometer.CustomMeterDocumentation;
 import io.micrometer.core.instrument.Meter.Type;
 
-/** SWIM 成员协议相关指标定义 */
+/**
+ * SWIM 成员协议相关指标定义
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public enum SwimMembershipProtocolMetricsDoc implements CustomMeterDocumentation {
   /** 各成员的 incarnation 编号（观察成员状态传播） */
   MEMBERS_INCARNATION_NUMBER(

@@ -22,23 +22,25 @@ import com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter;
 import com.anyilanxin.kunpeng.cluster.dispatch.command.admin.dispatch.AbstractAdminDispatchProcessor;
 import com.anyilanxin.kunpeng.cluster.dispatch.command.admin.dispatch.planner.AdminDispatchPlanMaker;
 import com.anyilanxin.kunpeng.cluster.dispatch.command.delayed.DelayedDelayChecker;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.LogRecord;
 import com.anyilanxin.kunpeng.configuration.broker.ManageRaftCfg;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminClusterMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminDispatchPlanRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.admin.AdminDispatchPlanLifeCycle;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.admin.AdminDispatchType;
 import com.anyilanxin.kunpeng.repository.admin.AdminImmutableRepository;
-import com.anyilanxin.kunpeng.repository.admin.modules.admin.ImmutableRepositoryAdmin;
+import com.anyilanxin.kunpeng.repository.admin.modules.admin.ImmutableAdminRepository;
 import org.slf4j.Logger;
 
 /**
+ * 管理面副本数变更调度计划命令处理器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class AdminDispatchChangeReplicationProcessor extends AbstractAdminDispatchProcessor {
   protected final LogEventWriter writer;
-  private final ImmutableRepositoryAdmin repositoryAdmin;
+  private final ImmutableAdminRepository repositoryAdmin;
   private final ManageRaftCfg adminRaft;
   private final ClusterMembershipService membershipService;
   private final DelayedDelayChecker delayChecker;
@@ -57,7 +59,7 @@ public class AdminDispatchChangeReplicationProcessor extends AbstractAdminDispat
   }
 
   @Override
-  public void processRecord(final LogRecord<AdminDispatchPlanRecord> record) {
+  public void processRecord(final AdminLogRecord<AdminDispatchPlanRecord> record) {
     final AdminDispatchPlanRecord value = record.getValue();
     final AdminClusterMetaRecord clusterMeta = repositoryAdmin.getClusterMeta();
     LOGGER.info("\n---->管理端初始化<-----\n{}", value);

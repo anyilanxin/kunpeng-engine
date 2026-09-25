@@ -30,7 +30,7 @@ import java.util.zip.CRC32;
  * 默认逐文件校验信息计算：递归遍历镜像目录，逐文件记录 size + CRC32。
  *
  * @author zxuanhong
- * @since 2026.0.0
+ * @since 2026.9.0
  */
 public final class DefaultSnapshotFileInfoProvider implements SnapshotFileInfoProvider {
 

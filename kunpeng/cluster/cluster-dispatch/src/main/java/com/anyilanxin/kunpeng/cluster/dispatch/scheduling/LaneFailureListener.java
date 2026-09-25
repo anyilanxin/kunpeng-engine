@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.cluster.dispatch.scheduling;
 
-/** 车道 actor 失败/重建回调：供上层做健康上报与 checker 重振。 */
+/**
+ * 车道 actor 失败/重建回调：供上层做健康上报与 checker 重振。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface LaneFailureListener {
 
   /** 车道 actor 已失败；LanePool 会以新实例替换并重新提交。 */

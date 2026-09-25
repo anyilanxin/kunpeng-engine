@@ -25,7 +25,7 @@ import com.anyilanxin.kunpeng.cluster.dispatch.command.admin.clustermeta.process
  * 流程实例相关
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public final class AdminClusterMetaProcessorRegister {
 

@@ -38,6 +38,9 @@ import org.junit.runners.Parameterized.Parameters;
 /**
  * 领导者刷盘失败时的行为：写入失败要让对应追加请求以 AppendFailureException 失败，
  * 且失败不可恢复（同一个请求不能在 flusher 恢复后成功）；随后集群应选出新领导并正常写入。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 @RunWith(Parameterized.class)
 public class RaftLeaderFlushErrorTest {

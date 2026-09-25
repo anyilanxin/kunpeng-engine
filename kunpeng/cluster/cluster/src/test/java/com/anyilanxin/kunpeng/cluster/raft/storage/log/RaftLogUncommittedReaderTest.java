@@ -34,6 +34,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+/**
+ * Raft 日志未提交读取器测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class RaftLogUncommittedReaderTest {
 
   private RaftLog raftlog;

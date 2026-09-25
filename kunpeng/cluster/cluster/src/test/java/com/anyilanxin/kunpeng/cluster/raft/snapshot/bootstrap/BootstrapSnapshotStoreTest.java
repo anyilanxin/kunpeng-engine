@@ -38,6 +38,9 @@ import org.junit.jupiter.api.io.TempDir;
 
 /**
  * {@link BootstrapSnapshotStore} 的拍摄复用、删除与启动清理语义：复用保证多请求共享同一镜像 （引用未归零期间不重拍），删除后可重拍，启动清空残留。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 final class BootstrapSnapshotStoreTest {
 

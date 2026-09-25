@@ -25,6 +25,9 @@ import java.util.Map;
 /**
  * Broker 端 SWIM 拓扑服务：收集集群各成员经 SWIM 广播的分区拓扑供查询，同时发布本成员的分区拓扑广播（与只读收集的 {@link
  * com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService} 相对）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface ClusterSwimTopologyService {
 

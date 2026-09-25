@@ -29,7 +29,12 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-/** Test server protocol. */
+/**
+ * Test server protocol.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class TestRaftServerProtocol implements RaftServerProtocol {
 
   private static final long REQUEST_TIMEOUT_MS = 1000;

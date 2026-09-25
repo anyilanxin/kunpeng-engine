@@ -22,7 +22,12 @@ import com.anyilanxin.kunpeng.cluster.utils.misc.TimestampPrinter;
 import org.junit.Ignore;
 import org.junit.Test;
 
-/** Timestamp printer test. */
+/**
+ * Timestamp printer test.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class TimestampPrinterTest {
   @Test
   @Ignore // Timestamp is environment specific

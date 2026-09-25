@@ -24,6 +24,9 @@ import java.util.Arrays;
  *
  * <p>描述符固定占据 segment 文件开头 {@link #encodingLength()} 字节，携带格式版本、segment
  * 编号、首索引与容量上限。每个格式版本对应一个实现；{@link #CUR_VERSION} 是当前写盘版本。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 interface SegmentDescriptorSerializer {
 
@@ -33,12 +36,16 @@ interface SegmentDescriptorSerializer {
   /** 全部可读取的格式版本。 */
   byte[] SUPPORTED_VERSIONS = new byte[] {CUR_VERSION};
 
-  /** @return 当前格式下描述符的固定字节数 */
+  /**
+   * @return 当前格式下描述符的固定字节数
+   */
   static short currentEncodingLength() {
     return (short) BinarySegmentDescriptorSerializer.ENCODING_LENGTH;
   }
 
-  /** @return 当前写盘版本对应的编解码器 */
+  /**
+   * @return 当前写盘版本对应的编解码器
+   */
   static SegmentDescriptorSerializer currentSerializer() {
     return forVersion(CUR_VERSION);
   }
@@ -51,19 +58,24 @@ interface SegmentDescriptorSerializer {
   static SegmentDescriptorSerializer forVersion(final byte version) {
     if (version != CUR_VERSION) {
       throw new IllegalArgumentException(
-          "不支持的描述符格式版本 %d，可读取的版本为 %s"
-              .formatted(version, Arrays.toString(SUPPORTED_VERSIONS)));
+          "不支持的描述符格式版本 %d，可读取的版本为 %s".formatted(version, Arrays.toString(SUPPORTED_VERSIONS)));
     }
     return new BinarySegmentDescriptorSerializer();
   }
 
-  /** @return 该格式的主版本号（不兼容变更时递增） */
+  /**
+   * @return 该格式的主版本号（不兼容变更时递增）
+   */
   byte majorVersion();
 
-  /** @return 该格式的次版本号（向前/向后兼容的结构微调） */
+  /**
+   * @return 该格式的次版本号（向前/向后兼容的结构微调）
+   */
   byte minorVersion();
 
-  /** @return 该格式下描述符的固定字节数 */
+  /**
+   * @return 该格式下描述符的固定字节数
+   */
   int encodingLength();
 
   /**
@@ -79,8 +91,7 @@ interface SegmentDescriptorSerializer {
    *
    * @param buffer 来源缓冲
    * @throws UnknownVersionException 声明的格式版本无法识别
-   * @throws com.anyilanxin.kunpeng.cluster.raft.journal.CorruptedJournalException 描述符
-   *     校验和不一致
+   * @throws com.anyilanxin.kunpeng.cluster.raft.journal.CorruptedJournalException 描述符 校验和不一致
    */
   SegmentDescriptor readFrom(ByteBuffer buffer);
 }

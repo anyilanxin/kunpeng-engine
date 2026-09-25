@@ -43,6 +43,9 @@ import java.util.function.Supplier;
  * |                5 | 3  | 1  | 2  |   |
  * +------------------+----+----+----+---+
  * </pre>
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class RoundRobinPartitionDistributor implements PartitionDistributor {
 

@@ -23,6 +23,9 @@ import java.nio.ByteBuffer;
  *
  * <p>checksum 仅覆盖本分片内容（CRC32）；{@code chunkName} 以 {@code 文件名@字节偏移} 编码，
  * 与分片尺寸无关以支持断点续传。分片内容是只读字节视图，可能直接内存映射自源文件，消费方不应假设 其底层是堆内数组。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface SnapshotChunk {
   /** 分片名：{@code 文件名@字节偏移}。 */

@@ -41,7 +41,7 @@ import org.agrona.collections.Int2ObjectHashMap;
  * 集群管理模块的序列化器，基于 Namespace 注册基础类型与集群管理相关类型（成员、分区、配置等）供元数据编解码使用。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class ClusterAdminSerializer {
   public static final Serializer SERIALIZER =

@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.cluster.cluster;
 
-/** Constants for physical tenant identifiers used to scope partitions. */
+/**
+ * Constants for physical tenant identifiers used to scope partitions.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class PhysicalTenantIds {
 
   /** Tenant used when no physical tenant separation is configured. */

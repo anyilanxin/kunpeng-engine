@@ -37,7 +37,7 @@ import java.util.zip.CRC32;
  * stat。 分片 id 为 chunkName（{@code 文件名@字节偏移}）的 UTF-8 字节，与分片尺寸无关以支持续传。
  *
  * @author zxuanhong
- * @since 2026.0.0
+ * @since 2026.9.0
  */
 public final class FileSnapshotChunkReader implements SnapshotChunkReader {
 

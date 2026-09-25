@@ -23,6 +23,7 @@ import java.util.Map;
  * 快照文件信息提供器：枚举指定快照目录中各文件的校验和与大小
  *
  * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface SnapshotFileInfoProvider {
 

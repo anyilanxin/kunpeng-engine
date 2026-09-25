@@ -20,7 +20,7 @@ package com.anyilanxin.kunpeng.cluster.config;
  * 集群配置聚合类，同时持有管理配置与 Raft 配置两部分，loadConfiguration 用于以给定配置整体替换当前配置。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class ClusterConfiguration {
 

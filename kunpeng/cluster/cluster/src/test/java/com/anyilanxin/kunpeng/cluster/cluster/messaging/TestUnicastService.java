@@ -26,7 +26,12 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 
-/** Test unicast service. */
+/**
+ * Test unicast service.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class TestUnicastService implements ManagedUnicastService {
   private final Address address;
   private final Map<Address, TestUnicastService> services;

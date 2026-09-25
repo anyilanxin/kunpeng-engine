@@ -18,7 +18,12 @@ package com.anyilanxin.kunpeng.cluster.raft.protocol;
 
 import com.anyilanxin.kunpeng.cluster.raft.RaftError;
 
-/** 节点加入集群请求（{@link JoinRequest}）的应答消息。 */
+/**
+ * 节点加入集群请求（{@link JoinRequest}）的应答消息。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class JoinResponse extends AbstractRaftResponse {
 
   /** {@link JoinResponse} 的构建器，字段状态直接由本类持有并组装。 */

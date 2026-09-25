@@ -28,6 +28,9 @@ import org.agrona.concurrent.UnsafeBuffer;
  * 批内单条命令记录：不可变 record 形态的 {@link AppendEntry}。
  *
  * <p>入批时 value 被物化为独立字节拷贝并按生命周期还原为 typed value，后续对源缓冲的修改 不再影响批内快照。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public record CommandRecord(
     long key, int sourceIndex, AdminRecordMetadata header, UnifiedRecordValue valueSnapshot)

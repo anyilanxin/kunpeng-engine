@@ -17,8 +17,10 @@
 package com.anyilanxin.kunpeng.cluster.dispatch.exception;
 
 /**
+ * 调度引擎错误处理异常：处理失败需走错误路径时抛出。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class EngineErrorHandleException extends RuntimeException {
   public EngineErrorHandleException(final String message) {

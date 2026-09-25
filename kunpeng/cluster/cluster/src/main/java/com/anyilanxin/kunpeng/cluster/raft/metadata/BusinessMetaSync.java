@@ -26,6 +26,9 @@ import org.slf4j.LoggerFactory;
 /**
  * 业务元数据 leader 同步拉取端：follower 检测到日志压缩缺口（appliedIndex+1 &lt; firstIndex）后 向 leader 拉取全量已提交状态（对齐 conf
  * 的 ConfigureRequest 内置通道意图；leader 主动推送需 扩展 raft 线协议，不在本特性范围）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class BusinessMetaSync {
   public static final byte STATUS_AVAILABLE = 1;

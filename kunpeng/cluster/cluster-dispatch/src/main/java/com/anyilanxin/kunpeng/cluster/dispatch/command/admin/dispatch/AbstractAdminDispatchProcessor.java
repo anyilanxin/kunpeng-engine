@@ -23,8 +23,10 @@ import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminDisp
 import com.anyilanxin.kunpeng.protocol.admin.record.command.admin.AdminDispatchPlanLifeCycle;
 
 /**
+ * 管理面调度计划命令处理器抽象基类。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public abstract class AbstractAdminDispatchProcessor
     implements LogEventProcessorSingleState<AdminDispatchPlanRecord> {

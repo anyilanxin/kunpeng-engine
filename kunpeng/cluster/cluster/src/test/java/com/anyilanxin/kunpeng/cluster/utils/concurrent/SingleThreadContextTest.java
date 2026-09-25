@@ -34,6 +34,12 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * 单线程上下文测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class SingleThreadContextTest {
 
   private final Logger log = LoggerFactory.getLogger("thread");

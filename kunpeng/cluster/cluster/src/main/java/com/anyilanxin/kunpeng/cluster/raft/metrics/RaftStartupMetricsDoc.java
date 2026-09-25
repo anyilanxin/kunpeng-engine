@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.cluster.raft.metrics;
 import com.anyilanxin.kunpeng.utils.micrometer.CustomMeterDocumentation;
 import io.micrometer.core.instrument.Meter.Type;
 
-/** Raft 分区服务启动相关指标定义 */
+/**
+ * Raft 分区服务启动相关指标定义。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public enum RaftStartupMetricsDoc implements CustomMeterDocumentation {
   /** 分区服务引导启动耗时（毫秒） */
   BOOTSTRAP_DURATION(

@@ -24,7 +24,12 @@ import com.anyilanxin.kunpeng.cluster.raft.storage.system.BusinessMetaStore;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-/** {@link BusinessMetaSync} 同步响应帧编解码测试。 */
+/**
+ * {@link BusinessMetaSync} 同步响应帧编解码测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class BusinessMetaSyncTest {
 
   @Test

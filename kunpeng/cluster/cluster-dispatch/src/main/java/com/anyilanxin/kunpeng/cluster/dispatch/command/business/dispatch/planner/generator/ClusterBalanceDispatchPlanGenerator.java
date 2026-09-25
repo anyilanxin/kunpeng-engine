@@ -23,8 +23,8 @@ import com.anyilanxin.kunpeng.cluster.raft.partition.PartitionMetadata;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.common.PartitionInfoMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.business.BusinessDispatchType;
-import com.anyilanxin.kunpeng.repository.admin.modules.key.ImmutableRepositoryKey;
-import com.anyilanxin.kunpeng.repository.admin.modules.source.ImmutableRepositorySource;
+import com.anyilanxin.kunpeng.repository.admin.modules.key.ImmutableKeyRepository;
+import com.anyilanxin.kunpeng.repository.admin.modules.source.ImmutableSourceRepository;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,14 +37,14 @@ import java.util.Set;
  * 对比历史拓扑与目标拓扑统一推导——目标成员先 JOIN、多余成员后 LEAVE（先扩后缩）， 两份拓扑无差异时生成空计划。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class ClusterBalanceDispatchPlanGenerator extends AbstractDispatchPlanGenerator {
 
   public ClusterBalanceDispatchPlanGenerator(
-      final ImmutableRepositoryKey repositoryKey,
+      final ImmutableKeyRepository repositoryKey,
       final ClusterTopologyService clusterTopologyService,
-      final ImmutableRepositorySource repositorySource) {
+      final ImmutableSourceRepository repositorySource) {
     super(repositoryKey, clusterTopologyService, repositorySource);
   }
 

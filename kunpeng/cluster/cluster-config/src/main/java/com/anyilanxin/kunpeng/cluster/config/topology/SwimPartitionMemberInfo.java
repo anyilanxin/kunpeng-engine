@@ -26,8 +26,10 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * SWIM 视角的分区成员信息：经成员协议扩散的分区拓扑描述。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class SwimPartitionMemberInfo implements Serializable {
   @Serial private static final long serialVersionUID = 1788311783333L;

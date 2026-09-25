@@ -22,7 +22,12 @@ import org.awaitility.Awaitility;
 import org.junit.Rule;
 import org.junit.Test;
 
-/** 单节点集群在重启后应能重新进入 READY 状态。 */
+/**
+ * 单节点集群在重启后应能重新进入 READY 状态。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class RaftSingleNodeTest {
   @Rule public final RaftRule rule = RaftRule.withBootstrappedNodes(1);
 

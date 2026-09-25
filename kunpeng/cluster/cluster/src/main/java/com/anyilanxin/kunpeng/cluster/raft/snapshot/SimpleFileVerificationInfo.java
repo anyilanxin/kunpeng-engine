@@ -22,7 +22,7 @@ import java.nio.file.Path;
  * .sfc 校验文件：SFV 行式的逐文件校验清单，与镜像目录同名、位于同级， 兼作镜像"提交完成"标记——启动时缺失标记的目录视为未完整提交并清除。
  *
  * @author zxuanhong
- * @since 2026.0.0
+ * @since 2026.9.0
  */
 public interface SimpleFileVerificationInfo extends SimpleFileVerificationChecksums {
 

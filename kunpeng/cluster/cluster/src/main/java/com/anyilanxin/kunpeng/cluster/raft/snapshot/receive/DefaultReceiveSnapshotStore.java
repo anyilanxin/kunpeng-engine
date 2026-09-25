@@ -33,7 +33,7 @@ import java.util.Optional;
  * #newReceivedSnapshot}，其余存储能力全部委托。
  *
  * @author zxuanhong
- * @since 2026.0.0
+ * @since 2026.9.0
  */
 public class DefaultReceiveSnapshotStore implements ReceiveSnapshotStore {
 

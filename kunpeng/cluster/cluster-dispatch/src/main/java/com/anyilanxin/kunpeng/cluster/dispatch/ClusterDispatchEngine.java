@@ -18,7 +18,7 @@ package com.anyilanxin.kunpeng.cluster.dispatch;
 
 import com.anyilanxin.kunpeng.cluster.dispatch.command.CommandProcessorRegister;
 import com.anyilanxin.kunpeng.cluster.dispatch.commandapi.ApiCommandProcessorRegister;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.LogRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.common.PartitionSourceMetadata;
 import com.anyilanxin.kunpeng.repository.admin.AdminRepository;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -26,8 +26,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * 集群调度引擎：调度命令处理与事件流转的核心装配。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class ClusterDispatchEngine {
 
@@ -59,7 +61,8 @@ public class ClusterDispatchEngine {
     return schedulerCheckerAwares;
   }
 
-  public void processEvent(final LogRecord record, final BatchProcessingCollect processingCollect) {
+  public void processEvent(
+      final AdminLogRecord record, final BatchProcessingCollect processingCollect) {
     final LogEventProcessor<?> processor = processors.getProcessor(record);
     collectSupplier.setCollect(processingCollect);
     if (processor == null) {

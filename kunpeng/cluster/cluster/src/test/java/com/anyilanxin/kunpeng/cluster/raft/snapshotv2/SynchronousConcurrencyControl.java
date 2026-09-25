@@ -27,7 +27,12 @@ import java.util.concurrent.Callable;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-/** 测试用同步并发控制：任务即时执行、future 即时完成，供单线程确定性测试。 */
+/**
+ * 测试用同步并发控制：任务即时执行、future 即时完成，供单线程确定性测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 final class SynchronousConcurrencyControl implements ConcurrencyControl {
 
   @Override

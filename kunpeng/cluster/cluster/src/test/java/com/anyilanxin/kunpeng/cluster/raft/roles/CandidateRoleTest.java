@@ -28,6 +28,12 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.io.TempDir;
 
+/**
+ * 候选者角色测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class CandidateRoleTest {
   private ControllableRaftContexts raftContexts;
 

@@ -20,7 +20,12 @@ import com.google.common.collect.Maps;
 import com.anyilanxin.kunpeng.cluster.utils.net.Address;
 import java.util.Map;
 
-/** Test unicast service factory. */
+/**
+ * Test unicast service factory.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class TestUnicastServiceFactory {
   private final Map<Address, TestUnicastService> services = Maps.newConcurrentMap();
 

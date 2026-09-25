@@ -37,6 +37,9 @@ import org.slf4j.Logger;
  * <p>已调度的工作进入所属 actor 持有的按截止时间排序的队列。截止时间到达后，任务在该 actor 上执行，其产出的命令被暂存、提交到待发命令注册表，随后以可中止重试写入事件日志。
  * 所有环节都在所属 actor 上运行，以此保证顺序与单线程执行。不保证顺序的异步调度由实现 {@link AsyncTimerScheduler} 的 {@link
  * AsyncTimerRouter} 提供。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class OrderedTimerScheduler implements TimerScheduler, AutoCloseable {
 

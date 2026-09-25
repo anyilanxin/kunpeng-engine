@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.cluster.dispatch.distributor.fixed;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import java.util.Objects;
 
-/** 固定分区分配中的成员，包含成员 ID 与优先级。 */
+/**
+ * 固定分区分配中的成员，包含成员 ID 与优先级。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 final class FixedDistributionMember {
   private final MemberId id;
   private final int priority;

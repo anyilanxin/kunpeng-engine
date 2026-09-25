@@ -20,13 +20,15 @@ import com.anyilanxin.kunpeng.cluster.config.ClusterAdminConfiguration;
 import com.anyilanxin.kunpeng.cluster.config.ClusterMetaStore;
 import com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter;
 import com.anyilanxin.kunpeng.cluster.dispatch.command.admin.clustermeta.AbstractAdminClusterMetaProcessor;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.LogRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminClusterMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.admin.AdminClusterMetaLifeCycle;
 
 /**
+ * 管理面集群元数据创建命令处理器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class AdminClusterMetaCreateProcessor extends AbstractAdminClusterMetaProcessor {
   protected final LogEventWriter writer;
@@ -39,7 +41,7 @@ public class AdminClusterMetaCreateProcessor extends AbstractAdminClusterMetaPro
   }
 
   @Override
-  public void processRecord(final LogRecord<AdminClusterMetaRecord> record) {
+  public void processRecord(final AdminLogRecord<AdminClusterMetaRecord> record) {
     final AdminClusterMetaRecord value = record.getValue();
     writer.addEvent(-1, AdminClusterMetaLifeCycle.CREATED, record.getRequestId(), value);
     final ClusterAdminConfiguration adminConfiguration = clusterMetaStore.getAdminConfiguration();

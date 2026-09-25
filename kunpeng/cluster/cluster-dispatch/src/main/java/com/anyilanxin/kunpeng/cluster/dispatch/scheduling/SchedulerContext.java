@@ -20,6 +20,9 @@ package com.anyilanxin.kunpeng.cluster.dispatch.scheduling;
  * 交付给流处理器的只读调度上下文。
  *
  * <p>暴露有序的 {@link TimerScheduler}、处理器所属的分区，以及用于解析截止时间的 {@link TimerClock}。本上下文始终启用异步调度。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class SchedulerContext {
 

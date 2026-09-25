@@ -35,6 +35,9 @@ import org.junit.rules.TemporaryFolder;
 
 /**
  * segment 创建时机：打开只建首个 segment，滚动时同步创建下一个（不提前在后台备好）， 重置与关闭后不残留多余文件。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class SegmentsManagerSegmentCreationTest {
 

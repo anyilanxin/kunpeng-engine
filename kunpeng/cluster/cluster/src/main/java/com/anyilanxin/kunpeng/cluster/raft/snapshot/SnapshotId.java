@@ -27,7 +27,7 @@ import java.util.Objects;
  * compareTo；节点 id 按 UTF-8 字节十六进制编码，避免 nodeId 含 '-' 时无法反向解析。
  *
  * @author zxuanhong
- * @since 2026.0.0
+ * @since 2026.9.0
  */
 public record SnapshotId(String nodeId, long index, long term) implements Comparable<SnapshotId> {
 

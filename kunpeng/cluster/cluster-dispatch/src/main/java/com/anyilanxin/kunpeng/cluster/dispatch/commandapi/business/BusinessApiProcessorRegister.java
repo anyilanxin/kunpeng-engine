@@ -21,8 +21,10 @@ import com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter;
 import com.anyilanxin.kunpeng.cluster.dispatch.commandapi.business.processor.*;
 
 /**
+ * 业务面 API 处理器注册器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public final class BusinessApiProcessorRegister {
 

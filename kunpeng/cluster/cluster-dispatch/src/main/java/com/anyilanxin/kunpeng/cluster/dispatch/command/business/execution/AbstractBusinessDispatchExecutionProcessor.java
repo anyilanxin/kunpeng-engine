@@ -30,8 +30,10 @@ import com.anyilanxin.kunpeng.protocol.admin.record.command.delayed.DelayedLifeC
 import com.anyilanxin.kunpeng.protocol.admin.record.command.delayed.DelayedType;
 
 /**
+ * 业务面调度执行明细命令处理器抽象基类。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public abstract class AbstractBusinessDispatchExecutionProcessor
     implements LogEventProcessorSingleState<BusinessDispatchPlanExecutionRecord> {

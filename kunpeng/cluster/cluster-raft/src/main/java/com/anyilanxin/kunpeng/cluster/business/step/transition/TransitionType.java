@@ -20,7 +20,7 @@ package com.anyilanxin.kunpeng.cluster.business.step.transition;
  * 分区角色切换类型枚举，表示切换的目标角色：follower、leader 或 inactive。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public enum TransitionType {
   TO_FOLLOWER,

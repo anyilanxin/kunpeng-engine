@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.cluster.raft.metrics;
 import com.anyilanxin.kunpeng.utils.micrometer.CustomMeterDocumentation;
 import io.micrometer.core.instrument.Meter.Type;
 
-/** Raft 元数据存储相关指标定义 */
+/**
+ * Raft 元数据存储相关指标定义。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public enum MetaStoreMetricsDoc implements CustomMeterDocumentation {
   /** 更新最后落盘索引的耗时 */
   LAST_FLUSHED_INDEX(

@@ -24,6 +24,9 @@ import java.util.function.Consumer;
  * 为一条执行车道托管单个 {@link OrderedTimerScheduler} 的 actor。
  *
  * <p>调度器随 actor 启动而绑定、随 actor 关闭而解绑；绑定与解绑均为同步操作，因此使用 actor 基类的默认生命周期即可。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 final class LaneActor extends Actor {
 

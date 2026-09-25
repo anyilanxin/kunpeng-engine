@@ -28,7 +28,12 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import java.util.concurrent.TimeUnit;
 
-/** 快照复制（接收侧）相关指标采集 */
+/**
+ * 快照复制（接收侧）相关指标采集。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class SnapshotReplicationMetrics extends RaftMetrics implements CloseableSilently {
 
   private final MeterRegistry meterRegistry;

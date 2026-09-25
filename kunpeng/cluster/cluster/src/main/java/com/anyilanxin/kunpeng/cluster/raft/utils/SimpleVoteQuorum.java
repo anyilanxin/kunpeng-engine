@@ -40,6 +40,9 @@ import java.util.function.Consumer;
  *      |                      |                 |                 |
  *      |（任一成员改为 fail 累计反对，反对先到多数则回调 false）    |
  * </pre>
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class SimpleVoteQuorum implements VoteQuorum {
 

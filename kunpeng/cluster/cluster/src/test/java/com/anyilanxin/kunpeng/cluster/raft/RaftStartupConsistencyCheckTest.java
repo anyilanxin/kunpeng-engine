@@ -35,7 +35,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 
-/** 节点重启时的一致性检查与快照安装重试。 */
+/**
+ * 节点重启时的一致性检查与快照安装重试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class RaftStartupConsistencyCheckTest {
 
   @Rule public RaftRule raftRule = RaftRule.withBootstrappedNodes(3);

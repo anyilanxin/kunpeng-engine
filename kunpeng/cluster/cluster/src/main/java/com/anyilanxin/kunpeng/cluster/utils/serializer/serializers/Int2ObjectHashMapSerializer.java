@@ -25,6 +25,9 @@ import org.apache.fory.serializer.collection.MapSerializer;
 /**
  * {@link Int2ObjectHashMap} 的 Fory 序列化器：Fory 要求 Map 类型序列化器挂载到 MapSerializer 框架 （负责 size/chunk
  * 头部读写），这里只提供条目视图与重建；agrona 内部复用迭代器/Entry，框架单次遍历 直接消费条目是安全的，读取侧经 {@code putAll} 重建实例。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class Int2ObjectHashMapSerializer extends MapSerializer<Int2ObjectHashMap> {

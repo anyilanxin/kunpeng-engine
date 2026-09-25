@@ -25,7 +25,7 @@ import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionType;
  * 调度计划执行明细负载记录工厂，统一填充分区类型、执行类型、目标成员与计划归属信息。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public final class ExecutionRecordFactory {
 

@@ -35,7 +35,7 @@ import org.junit.jupiter.api.io.TempDir;
  * （addDispatch 落盘 → dispatchComplete 携带分区元数据落盘 → store 重启读取），守护「重启后分区元数据丢失」问题。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 class ClusterRaftConfigurationPersistenceTest {
 

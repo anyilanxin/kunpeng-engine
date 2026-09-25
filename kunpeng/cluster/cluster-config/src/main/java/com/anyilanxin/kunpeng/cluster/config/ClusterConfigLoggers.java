@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.cluster.config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** 集群管理模块统一的日志 Logger 常量定义。 */
+/**
+ * 集群管理模块统一的日志 Logger 常量定义。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class ClusterConfigLoggers {
   public static final Logger CLUSTER_CONFIG =
       LoggerFactory.getLogger("com.anyilanxin.kunpeng.cluster.config");

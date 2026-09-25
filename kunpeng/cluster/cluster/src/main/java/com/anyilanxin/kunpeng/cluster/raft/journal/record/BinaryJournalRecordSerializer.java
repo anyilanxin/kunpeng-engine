@@ -24,6 +24,9 @@ import org.agrona.MutableDirectBuffer;
 
 /**
  * 日志记录的二进制序列化器，编码逻辑委托给 SBE 生成的 {@link JournalRecordMetadataCodec} 与 {@link JournalRecordDataCodec}。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class BinaryJournalRecordSerializer implements JournalRecordSerializer {
 

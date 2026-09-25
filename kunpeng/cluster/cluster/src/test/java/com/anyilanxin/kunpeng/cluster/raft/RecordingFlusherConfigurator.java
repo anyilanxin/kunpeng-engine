@@ -40,6 +40,9 @@ import java.util.function.LongConsumer;
  *
  * <p>沿 {@link FaultyFlusherConfigurator} 的存储替换模式注入；替换后的存储沿用
  * {@link RaftStorage.Builder} 缺省配置（32MB 段大小，与生产默认一致）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class RecordingFlusherConfigurator implements Configurator {
 

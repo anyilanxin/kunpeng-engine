@@ -31,6 +31,9 @@ import java.util.stream.Stream;
  * 测试辅助：成员列表固定不变的 {@link ClusterMembershipService} 实现。
  *
  * <p>本节点与远端节点均使用本地回环地址构造，成员视图创建后不再变化，事件监听为空实现。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 final class StaticClusterMembershipService implements ClusterMembershipService {
 

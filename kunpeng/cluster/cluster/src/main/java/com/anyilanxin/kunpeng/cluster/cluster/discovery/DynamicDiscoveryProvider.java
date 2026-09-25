@@ -57,6 +57,9 @@ import org.slf4j.LoggerFactory;
  *
  * <p>扫描由单线程调度器按 {@link DynamicDiscoveryConfig#getRefreshInterval()} 周期驱动， 地址中未写端口时按 {@link
  * DynamicDiscoveryConfig#getDefaultPort()} 补齐。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class DynamicDiscoveryProvider
     extends AbstractListenerManager<NodeDiscoveryEvent, NodeDiscoveryEventListener>

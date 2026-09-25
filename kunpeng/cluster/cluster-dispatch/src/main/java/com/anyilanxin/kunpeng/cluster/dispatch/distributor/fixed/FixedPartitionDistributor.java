@@ -31,6 +31,9 @@ import java.util.stream.Collectors;
  * {@link PartitionDistributor} 的一种实现，接收一个预先给定的、描述成员与分区映射关系的固定映射， 并按需返回对应的已分配分区集合。
  *
  * <p>请参阅 {@link FixedPartitionDistributorBuilder} 来构建新实例。为降低配置出错的风险， 该类有意不支持公开实例化。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class FixedPartitionDistributor implements PartitionDistributor {
   private final Map<PartitionId, Set<FixedDistributionMember>> distribution;

@@ -26,7 +26,12 @@ import java.util.Base64;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
-/** {@link SwimPartitionMemberInfo} 经 Kryo + Base64 的 member property 广播编解码往返测试。 */
+/**
+ * {@link SwimPartitionMemberInfo} 经 Kryo + Base64 的 member property 广播编解码往返测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class SwimPartitionMemberInfoSerializationTest {
 
   @Test

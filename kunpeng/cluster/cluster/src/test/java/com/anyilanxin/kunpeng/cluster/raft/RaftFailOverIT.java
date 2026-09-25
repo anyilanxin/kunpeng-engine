@@ -34,6 +34,12 @@ import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Raft 故障转移集成测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @RunWith(Parameterized.class)
 public class RaftFailOverIT {
   private static final Logger LOG = LoggerFactory.getLogger(RaftFailOverIT.class);

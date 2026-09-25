@@ -22,7 +22,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-/** Immutable report describing the health of a component at a point in time. */
+/**
+ * Immutable report describing the health of a component at a point in time.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class HealthReport {
 
   private final Status status;

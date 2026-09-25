@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.snapshot;
 
-/** Listener notified when a new snapshot has been persisted locally. */
+/**
+ * Listener notified when a new snapshot has been persisted locally.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @FunctionalInterface
 public interface PersistedSnapshotListener {
 

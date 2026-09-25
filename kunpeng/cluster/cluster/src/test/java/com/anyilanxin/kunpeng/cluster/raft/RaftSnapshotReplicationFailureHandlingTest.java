@@ -34,6 +34,12 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+/**
+ * Raft 快照复制失败处理测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class RaftSnapshotReplicationFailureHandlingTest {
 
   @Rule public RaftRule raftRule = RaftRule.withBootstrappedNodes(3);

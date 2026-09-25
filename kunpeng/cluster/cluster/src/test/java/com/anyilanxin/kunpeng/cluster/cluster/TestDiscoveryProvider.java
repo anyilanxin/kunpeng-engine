@@ -29,6 +29,9 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * 测试辅助：节点集合由用例手动驱动的发现服务提供者。
  *
  * <p>join/leave 只负责把本地节点加入或移出集合，并在集合确实发生变化时派发对应事件。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class TestDiscoveryProvider
     extends AbstractListenerManager<NodeDiscoveryEvent, NodeDiscoveryEventListener>

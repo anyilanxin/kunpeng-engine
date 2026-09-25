@@ -34,6 +34,9 @@ import org.slf4j.LoggerFactory;
 /**
  * Controllable raft server protocol. The messages are delivered only when explicitly instructed and
  * messages can be dropped.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class ControllableRaftServerProtocol implements RaftServerProtocol {
   private static final Logger LOG = LoggerFactory.getLogger(ControllableRaftServerProtocol.class);

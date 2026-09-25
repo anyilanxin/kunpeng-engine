@@ -26,6 +26,9 @@ import org.junit.jupiter.api.Test;
 /**
  * Composed annotation for tests which reproduce a specific regression; the value is expected to be
  * a link to the issue describing the regression.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)

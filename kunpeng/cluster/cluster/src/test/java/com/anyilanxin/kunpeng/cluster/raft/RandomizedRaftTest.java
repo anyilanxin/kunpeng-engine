@@ -48,6 +48,12 @@ import org.slf4j.MDC;
 // 必须用 jqwik 的 @Tag 而非 Jupiter 的：build.gradle 的 excludeTags 经 JUnit Platform 发现过滤，
 // 而 jqwik 引擎只上报 net.jqwik.api.Tag（Jupiter 的 @Tag 在 jqwik 引擎下不可见，曾导致默认套件
 // 仍然执行本类、整体测试被 20+ 分钟的 fsync 密集模拟拖死）
+/**
+ * 随机化 Raft 模拟测试（jqwik）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @Tag("randomized")
 @PropertyDefaults(tries = 10, shrinking = ShrinkingMode.OFF, edgeCases = EdgeCasesMode.NONE)
 public class RandomizedRaftTest {

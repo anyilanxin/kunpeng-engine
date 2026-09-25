@@ -25,6 +25,9 @@ import java.util.List;
  * 缓冲 {@link TimerJob} 运行期间产出的命令，并将其组装为 {@link CommandBatch}。
  *
  * <p>各重载仅为便利而设：不关心 key 的调用方可省略 key，不关心后续元数据的调用方也可 将其省略。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface CommandCollector {
 

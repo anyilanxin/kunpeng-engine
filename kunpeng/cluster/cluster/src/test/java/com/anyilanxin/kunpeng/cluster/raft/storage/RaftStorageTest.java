@@ -30,7 +30,12 @@ import org.junit.After;
 import org.junit.Test;
 import org.junit.jupiter.api.AutoClose;
 
-/** Raft storage test. */
+/**
+ * Raft storage test.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class RaftStorageTest {
 
   private static final Path PATH = Paths.get("target/test-logs/");

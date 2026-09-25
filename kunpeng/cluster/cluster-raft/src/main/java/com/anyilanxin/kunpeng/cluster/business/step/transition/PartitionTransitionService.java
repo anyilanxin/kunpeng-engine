@@ -23,7 +23,7 @@ import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
  * 分区角色切换服务接口，定义按 term 触发 leader/follower/inactive 切换及更新切换上下文的能力。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface PartitionTransitionService<CONTENT extends TransitionContent> {
   ActorFuture<Void> toFollower(final long currentTerm);

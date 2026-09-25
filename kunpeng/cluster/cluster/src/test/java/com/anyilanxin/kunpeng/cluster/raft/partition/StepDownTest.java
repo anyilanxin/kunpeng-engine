@@ -34,7 +34,12 @@ import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.RUNTI
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
-/** 针对 {@link RaftPartition#stepDownForLeaderBalancing()} 与 {@link RaftPartition#stepDown()} 的行为验证。 */
+/**
+ * 针对 {@link RaftPartition#stepDownForLeaderBalancing()} 与 {@link RaftPartition#stepDown()} 的行为验证。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 final class StepDownTest {
 
   private static final String GROUP_NAME = "core-group";

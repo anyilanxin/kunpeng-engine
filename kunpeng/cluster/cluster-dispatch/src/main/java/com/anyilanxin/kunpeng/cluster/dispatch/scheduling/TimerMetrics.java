@@ -26,6 +26,9 @@ import java.util.concurrent.atomic.LongAdder;
  * 记录定时调度器的运行计数与耗时指标。
  *
  * <p>队列深度以单调调整的计数器跟踪；任务截止时间与实际执行之间的滞后、以及执行任务 所耗时间，则以分布计时器记录。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface TimerMetrics {
 

@@ -48,6 +48,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 /**
  * {@link BootstrapSnapshotServer} 的 transferId 引用计数语义：多个引导请求共享同一镜像， 引用未归零时 RELEASE 只减少请求方，最后一个 RELEASE
  * 才真正删除镜像。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 @ExtendWith(MockitoExtension.class)
 final class BootstrapSnapshotServerTest {

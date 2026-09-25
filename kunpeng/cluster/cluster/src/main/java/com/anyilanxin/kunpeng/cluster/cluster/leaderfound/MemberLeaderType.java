@@ -17,7 +17,10 @@
 package com.anyilanxin.kunpeng.cluster.cluster.leaderfound;
 
 /**
+ * 成员领导者类型枚举：区分集群领导者与分区领导者。
+ *
  * @author zxuanhong
+ * @since 2026.9.0
  */
 public enum MemberLeaderType {
   LEADER("LEADER", "领导角色"),

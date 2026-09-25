@@ -27,6 +27,9 @@ import java.util.Optional;
  *
  * <p>查询基于 {@link ClusterMembershipService#getMembers()} 的内存视图，无需订阅事件即可获得 最新拓扑；属性 key 统一为 {@value
  * #ROLE_PROPERTY_PREFIX}{分区名}。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class RaftPartitionTopology {
 

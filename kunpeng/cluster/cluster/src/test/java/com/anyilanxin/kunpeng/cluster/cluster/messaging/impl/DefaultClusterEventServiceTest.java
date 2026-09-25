@@ -57,7 +57,12 @@ import org.junit.After;
 import org.junit.Test;
 import org.junit.jupiter.api.AutoClose;
 
-/** Cluster event service test. */
+/**
+ * Cluster event service test.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class DefaultClusterEventServiceTest {
 
   private static final Serializer SERIALIZER = Serializer.using(Namespaces.BASIC);

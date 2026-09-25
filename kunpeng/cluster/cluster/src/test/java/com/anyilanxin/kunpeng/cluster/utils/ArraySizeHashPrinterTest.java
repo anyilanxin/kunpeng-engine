@@ -21,7 +21,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.anyilanxin.kunpeng.cluster.utils.misc.ArraySizeHashPrinter;
 import org.junit.Test;
 
-/** Array size hash printer test. */
+/**
+ * Array size hash printer test.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class ArraySizeHashPrinterTest {
   @Test
   public void testArraySizeHashPrinter() throws Exception {

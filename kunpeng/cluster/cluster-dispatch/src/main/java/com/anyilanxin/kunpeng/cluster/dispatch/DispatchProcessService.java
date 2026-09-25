@@ -27,8 +27,6 @@ import com.anyilanxin.kunpeng.cluster.config.ClusterMetaStore;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.cluster.dispatch.api.ClusterDispatchClient;
 import com.anyilanxin.kunpeng.cluster.dispatch.api.ClusterDispatchService;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.RecordAppendEntryFactory;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.TypedRecordReader;
 import com.anyilanxin.kunpeng.cluster.dispatch.exception.EngineErrorHandleException;
 import com.anyilanxin.kunpeng.cluster.dispatch.exception.EngineRollbackException;
 import com.anyilanxin.kunpeng.cluster.dispatch.scheduling.*;
@@ -44,6 +42,8 @@ import com.anyilanxin.kunpeng.kvstore.TransactionContext;
 import com.anyilanxin.kunpeng.protocol.admin.AdminValueLifeCycle;
 import com.anyilanxin.kunpeng.protocol.admin.AdminValueType;
 import com.anyilanxin.kunpeng.protocol.admin.impl.AdminRecordMetadata;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.RecordAppendEntryFactory;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.TypedRecordReader;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.DefaultRecordValueMapper;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminClusterMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminDispatchPlanRecord;
@@ -70,10 +70,10 @@ import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 import com.anyilanxin.kunpeng.repository.admin.AdminRepository;
 import com.anyilanxin.kunpeng.repository.admin.AdminRepositoryAppliers;
 import com.anyilanxin.kunpeng.repository.admin.AdminRepositoryFactory;
-import com.anyilanxin.kunpeng.repository.admin.modules.key.ImmutableRepositoryKey;
-import com.anyilanxin.kunpeng.repository.admin.modules.key.MutableRepositoryKey;
-import com.anyilanxin.kunpeng.repository.admin.modules.position.ImmutableRepositoryPosition;
-import com.anyilanxin.kunpeng.repository.admin.modules.position.MutableRepositoryPosition;
+import com.anyilanxin.kunpeng.repository.admin.modules.key.ImmutableKeyRepository;
+import com.anyilanxin.kunpeng.repository.admin.modules.key.MutableKeyRepository;
+import com.anyilanxin.kunpeng.repository.admin.modules.position.ImmutablePositionRepository;
+import com.anyilanxin.kunpeng.repository.admin.modules.position.MutablePositionRepository;
 import com.anyilanxin.kunpeng.scheduler.Actor;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -87,7 +87,7 @@ import org.slf4j.Logger;
  * 日志事件处理状态机
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class DispatchProcessService extends Actor implements RecordAvailableListener {
   private final EventLog logStream;
@@ -96,15 +96,15 @@ public class DispatchProcessService extends Actor implements RecordAvailableList
   private boolean processing = false;
   public static final Logger LOGGER = ClusterDispatchLoggers.CLUSTER_DISPATCH;
   private long processPosition = -1;
-  private MutableRepositoryPosition mutableRepositoryPosition;
-  private ImmutableRepositoryPosition immutableRepositoryPosition;
+  private MutablePositionRepository mutableRepositoryPosition;
+  private ImmutablePositionRepository immutableRepositoryPosition;
   private final CommandApiHandle commandApiHandle;
   private final AdminRecordMetadata metadata = new AdminRecordMetadata();
   private final int sourceId;
   private final Set<Integer> agentSourceIds;
   private final int partitionId;
-  private ImmutableRepositoryKey keyGenerator;
-  private MutableRepositoryKey mutableKeyGenerator;
+  private ImmutableKeyRepository keyGenerator;
+  private MutableKeyRepository mutableKeyGenerator;
   private OrderedTimerScheduler primaryScheduler;
   private final AdminRepository repository;
   private RepositoryTransaction currentTransaction;

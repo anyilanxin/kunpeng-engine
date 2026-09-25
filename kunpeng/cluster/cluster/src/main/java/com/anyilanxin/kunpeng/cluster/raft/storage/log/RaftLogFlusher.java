@@ -31,6 +31,9 @@ import com.anyilanxin.kunpeng.utils.CloseableSilently;
  *   <li>{@link DelayedFlusher}：把 fsync 合并到可配置延迟之后批量执行，介于两个极端之间， 建议在满足吞吐目标的前提下取最小延迟；
  *   <li>{@link NoopFlusher}：从不主动 fsync，持久性完全交给操作系统，最快但崩溃时可能丢数据。
  * </ul>
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 @FunctionalInterface
 public interface RaftLogFlusher extends CloseableSilently {

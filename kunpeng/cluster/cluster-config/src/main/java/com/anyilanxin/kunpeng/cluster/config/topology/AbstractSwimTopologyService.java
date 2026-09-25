@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
  * 广播数据，维护成员/分区两个维度的拓扑视图供查询；子类按需叠加本地广播发布逻辑。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public abstract class AbstractSwimTopologyService extends Actor
     implements ClusterMembershipEventListener {

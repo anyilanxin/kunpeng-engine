@@ -23,6 +23,6 @@ import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistableSnapshot;
  * SnapshotContentWriter} 完成内容拍摄。 标记接口——区分"拍摄产生"的 pending 镜像与其他来源（如接收），无自有方法。
  *
  * @author zxuanhong
- * @since 2026.0.0
+ * @since 2026.9.0
  */
 public interface ConstructableSnapshot extends PersistableSnapshot {}

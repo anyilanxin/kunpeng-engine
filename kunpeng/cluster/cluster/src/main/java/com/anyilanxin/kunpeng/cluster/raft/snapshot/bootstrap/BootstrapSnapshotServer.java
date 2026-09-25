@@ -52,7 +52,7 @@ import org.slf4j.LoggerFactory;
  * BOOTSTRAP 全流程。
  *
  * @author zxuanhong
- * @since 2026.0.0
+ * @since 2026.9.0
  */
 public final class BootstrapSnapshotServer {
 

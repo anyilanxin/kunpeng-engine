@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * 分区角色切换入口组件：以 Actor 方式运行，监听 Raft 分区的角色状态变化并驱动角色切换服务执行相应切换。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class PartitionTransition<CONTENT extends TransitionContent> extends Actor
     implements RaftRoleStateListener {

@@ -20,8 +20,10 @@ import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionExecutionTy
 import java.io.Serializable;
 
 /**
+ * 调度元数据载体：执行类型与序列化负载的组合 record。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public record DispatchMeta(PartitionExecutionType executionType, byte[] bytes)
     implements Serializable {}

@@ -43,6 +43,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Tests the {@link com.anyilanxin.kunpeng.cluster.raft.roles.LeaderRole} implementation of {@link LogAppender}
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class LogAppenderTest {
   @Rule public final TemporaryFolder temporaryFolder = new TemporaryFolder();

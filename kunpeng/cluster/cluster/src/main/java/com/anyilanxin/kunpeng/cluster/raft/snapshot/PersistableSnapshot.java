@@ -20,7 +20,10 @@ import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 import java.nio.file.Path;
 
 /**
+ * 可持久化快照：Raft 快照数据写入与提交的抽象接口。
+ *
  * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface PersistableSnapshot {
   /**

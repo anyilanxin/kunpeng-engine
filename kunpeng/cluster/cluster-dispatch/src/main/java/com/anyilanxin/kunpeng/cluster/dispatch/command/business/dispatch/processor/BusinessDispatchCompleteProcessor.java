@@ -18,24 +18,26 @@ package com.anyilanxin.kunpeng.cluster.dispatch.command.business.dispatch.proces
 
 import com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter;
 import com.anyilanxin.kunpeng.cluster.dispatch.command.business.dispatch.AbstractBusinessDispatchProcessor;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.LogRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessClusterMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.common.PartitionInfoMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.business.BusinessClusterMetaLifeCycle;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.business.BusinessDispatchPlanLifeCycle;
 import com.anyilanxin.kunpeng.repository.admin.AdminImmutableRepository;
-import com.anyilanxin.kunpeng.repository.admin.modules.business.ImmutableRepositoryBusiness;
+import com.anyilanxin.kunpeng.repository.admin.modules.business.ImmutableBusinessRepository;
 import com.anyilanxin.kunpeng.structpack.property.ArrayProperty;
 import java.util.List;
 
 /**
+ * 业务面调度计划完成命令处理器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class BusinessDispatchCompleteProcessor extends AbstractBusinessDispatchProcessor {
   protected final LogEventWriter writer;
-  private final ImmutableRepositoryBusiness repositoryBusiness;
+  private final ImmutableBusinessRepository repositoryBusiness;
 
   public BusinessDispatchCompleteProcessor(final LogEventWriter writer) {
     super(writer);
@@ -45,7 +47,7 @@ public class BusinessDispatchCompleteProcessor extends AbstractBusinessDispatchP
   }
 
   @Override
-  public void processRecord(final LogRecord<BusinessDispatchPlanRecord> record) {
+  public void processRecord(final AdminLogRecord<BusinessDispatchPlanRecord> record) {
     final BusinessDispatchPlanRecord value = record.getValue();
     final BusinessClusterMetaRecord clusterMeta;
     if (value.isInitialize()) {

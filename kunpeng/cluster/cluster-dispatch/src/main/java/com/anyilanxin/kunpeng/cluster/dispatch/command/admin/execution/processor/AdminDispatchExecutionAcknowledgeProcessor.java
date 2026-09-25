@@ -19,26 +19,26 @@ package com.anyilanxin.kunpeng.cluster.dispatch.command.admin.execution.processo
 import com.anyilanxin.kunpeng.cluster.dispatch.ClusterDispatchLoggers;
 import com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter;
 import com.anyilanxin.kunpeng.cluster.dispatch.command.admin.execution.AbstractAdminDispatchExecutionProcessor;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.LogRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminDispatchPlanExecutionRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminDispatchPlanRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.DispatchExecutionState;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.admin.AdminDispatchPlanExecutionLifeCycle;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.admin.AdminDispatchPlanLifeCycle;
 import com.anyilanxin.kunpeng.repository.admin.AdminImmutableRepository;
-import com.anyilanxin.kunpeng.repository.admin.modules.admin.ImmutableRepositoryAdmin;
+import com.anyilanxin.kunpeng.repository.admin.modules.admin.ImmutableAdminRepository;
 import org.slf4j.Logger;
 
 /**
  * 管理面执行明细 ack 回流：失败不终止计划而是注册延迟重试，成功推进下一条明细或完成计划。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class AdminDispatchExecutionAcknowledgeProcessor
     extends AbstractAdminDispatchExecutionProcessor {
   protected final LogEventWriter writer;
-  private final ImmutableRepositoryAdmin repositoryAdmin;
+  private final ImmutableAdminRepository repositoryAdmin;
   public static final Logger LOGGER = ClusterDispatchLoggers.CLUSTER_DISPATCH;
 
   public AdminDispatchExecutionAcknowledgeProcessor(final LogEventWriter writer) {
@@ -49,7 +49,7 @@ public class AdminDispatchExecutionAcknowledgeProcessor
   }
 
   @Override
-  public void processRecord(final LogRecord<AdminDispatchPlanExecutionRecord> record) {
+  public void processRecord(final AdminLogRecord<AdminDispatchPlanExecutionRecord> record) {
     final AdminDispatchPlanExecutionRecord value = record.getValue();
     // 幂等：明细已到达终态说明是重复 ack（成员重启重放调度后会再次 ack），直接跳过
     final AdminDispatchPlanExecutionRecord stored =

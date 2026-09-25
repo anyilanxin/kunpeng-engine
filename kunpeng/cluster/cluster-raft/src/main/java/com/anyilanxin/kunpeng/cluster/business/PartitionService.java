@@ -30,8 +30,10 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 
 /**
+ * 分区服务：驱动分区启动、相位切换与角色变更的核心编排。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @SuppressWarnings("rawtypes")
 public class PartitionService<CONTENT extends PartitionStartupContext> {

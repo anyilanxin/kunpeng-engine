@@ -47,6 +47,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+/**
+ * 被动角色（follower/learner）测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class PassiveRoleTest {
 
   @Rule public Timeout timeout = new Timeout(30, TimeUnit.SECONDS);

@@ -21,7 +21,7 @@ import com.anyilanxin.kunpeng.cluster.dispatch.SchedulerCheckerAware;
 import com.anyilanxin.kunpeng.cluster.dispatch.scheduling.*;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.delayed.DelayedRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.delayed.DelayedLifeCycle;
-import com.anyilanxin.kunpeng.repository.admin.modules.delayed.ImmutableRepositoryDelayed;
+import com.anyilanxin.kunpeng.repository.admin.modules.delayed.ImmutableDelayedRepository;
 import com.anyilanxin.kunpeng.utils.AtomicUtil;
 import java.time.Duration;
 import java.time.InstantSource;
@@ -30,6 +30,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import org.slf4j.Logger;
 
+/**
+ * 延迟事件延迟检查器。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class DelayedDelayChecker implements SchedulerCheckerAware {
   private static final Logger LOG = ClusterDispatchLoggers.CLUSTER_DISPATCH;
   private volatile boolean shouldRescheduleChecker;
@@ -48,7 +54,7 @@ public class DelayedDelayChecker implements SchedulerCheckerAware {
   private final InstantSource clock;
 
   public DelayedDelayChecker(
-      final ImmutableRepositoryDelayed repositoryDelayed, final InstantSource clock) {
+      final ImmutableDelayedRepository repositoryDelayed, final InstantSource clock) {
     timerResolution = TIMER_RESOLUTION;
 
     visitor = new TriggerTimersSideEffect(repositoryDelayed, clock, yieldingDueDateChecker);
@@ -179,11 +185,11 @@ public class DelayedDelayChecker implements SchedulerCheckerAware {
 
     private final InstantSource clock;
 
-    private final ImmutableRepositoryDelayed repositoryDelayed;
+    private final ImmutableDelayedRepository repositoryDelayed;
     private final boolean yieldControl;
 
     public TriggerTimersSideEffect(
-        final ImmutableRepositoryDelayed repositoryDelayed,
+        final ImmutableDelayedRepository repositoryDelayed,
         final InstantSource clock,
         final boolean yieldControl) {
       this.repositoryDelayed = repositoryDelayed;
@@ -197,7 +203,7 @@ public class DelayedDelayChecker implements SchedulerCheckerAware {
 
       final var yieldAfter = now + Math.round(TIMER_RESOLUTION * GIVE_YIELD_FACTOR);
 
-      final ImmutableRepositoryDelayed.DispatchDelayVisitor delayVisitor;
+      final ImmutableDelayedRepository.DispatchDelayVisitor delayVisitor;
       if (yieldControl) {
         delayVisitor =
             new YieldingDecorator(clock, yieldAfter, new WriteTriggerTimerCommandVisitor(output));
@@ -209,7 +215,7 @@ public class DelayedDelayChecker implements SchedulerCheckerAware {
   }
 
   protected static final class WriteTriggerTimerCommandVisitor
-      implements ImmutableRepositoryDelayed.DispatchDelayVisitor {
+      implements ImmutableDelayedRepository.DispatchDelayVisitor {
     private final CommandCollector output;
 
     public WriteTriggerTimerCommandVisitor(final CommandCollector output) {
@@ -225,16 +231,16 @@ public class DelayedDelayChecker implements SchedulerCheckerAware {
   }
 
   protected static final class YieldingDecorator
-      implements ImmutableRepositoryDelayed.DispatchDelayVisitor {
+      implements ImmutableDelayedRepository.DispatchDelayVisitor {
 
-    private final ImmutableRepositoryDelayed.DispatchDelayVisitor delegate;
+    private final ImmutableDelayedRepository.DispatchDelayVisitor delegate;
     private final InstantSource clock;
     private final long giveYieldAfter;
 
     public YieldingDecorator(
         final InstantSource clock,
         final long giveYieldAfter,
-        final ImmutableRepositoryDelayed.DispatchDelayVisitor delegate) {
+        final ImmutableDelayedRepository.DispatchDelayVisitor delegate) {
       this.delegate = delegate;
       this.clock = clock;
       this.giveYieldAfter = giveYieldAfter;

@@ -24,7 +24,7 @@ import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
  * 接收式镜像存储入口：接收外部传入的镜像（install 复制 / 跨分区传输），逐分片写入后持久化。
  *
  * @author zxuanhong
- * @since 2026.0.0
+ * @since 2026.9.0
  */
 public interface ReceiveSnapshotStore extends FileSnapshotStore {
 

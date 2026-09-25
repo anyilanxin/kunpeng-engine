@@ -45,7 +45,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
-/** 集群配置上下文：配置加载/重载、成员增删、投票 quorum 与提交索引 quorum 的计算。 */
+/**
+ * 集群配置上下文：配置加载/重载、成员增删、投票 quorum 与提交索引 quorum 的计算。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 final class RaftClusterContextTest {
 
   private static final long TERM = 1L;

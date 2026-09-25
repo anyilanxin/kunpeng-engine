@@ -22,7 +22,7 @@ import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
  * 分区角色切换步骤接口，定义分别切换为 leader/follower/inactive 时需要执行的逻辑。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface TransitionStep<CONTENT extends TransitionContent> {
 

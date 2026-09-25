@@ -14,4 +14,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+/**
+ * Raft 日志的文件系统访问层：段文件、元数据文件与 mmap 读写相关类型。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 package com.anyilanxin.kunpeng.cluster.raft.journal.fs;

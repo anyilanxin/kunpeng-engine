@@ -27,6 +27,12 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Rule;
 import org.junit.Test;
 
+/**
+ * 快照复制监听器测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class SnapshotReplicationListenerTest {
 
   @Rule public RaftRule raftRule = RaftRule.withBootstrappedNodes(3);

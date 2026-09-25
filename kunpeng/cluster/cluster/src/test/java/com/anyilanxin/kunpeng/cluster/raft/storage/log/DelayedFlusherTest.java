@@ -39,7 +39,12 @@ import org.agrona.CloseHelper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-/** 延迟刷盘器：刷盘请求被合并成一次延迟调度，关闭时取消调度，失败时重新调度。 */
+/**
+ * 延迟刷盘器：刷盘请求被合并成一次延迟调度，关闭时取消调度，失败时重新调度。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 final class DelayedFlusherTest {
 
   // 换用不同的延迟参数，覆盖语义不变：仍验证“按配置的延迟间隔调度”

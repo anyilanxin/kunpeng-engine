@@ -28,7 +28,12 @@ import org.awaitility.Awaitility;
 import org.junit.Rule;
 import org.junit.Test;
 
-/** Coverage for the catch-up step of a coordinated leadership transfer. */
+/**
+ * Coverage for the catch-up step of a coordinated leadership transfer.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class RaftLeadershipTransferCatchUpTest {
 
   private static final Duration REPLICATION_TIMEOUT = Duration.ofSeconds(2);

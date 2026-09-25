@@ -55,7 +55,7 @@ import java.util.Set;
  * 执行端据此决定是否从既有分区引导数据；该标识仅对分区增加的引导操作有意义。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public final class PartitionTopologyDiff {
 

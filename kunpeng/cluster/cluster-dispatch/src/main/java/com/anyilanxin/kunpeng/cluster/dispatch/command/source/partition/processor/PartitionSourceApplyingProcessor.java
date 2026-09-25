@@ -19,21 +19,23 @@ package com.anyilanxin.kunpeng.cluster.dispatch.command.source.partition.process
 import com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter;
 import com.anyilanxin.kunpeng.cluster.dispatch.api.ClusterDispatchClient;
 import com.anyilanxin.kunpeng.cluster.dispatch.command.source.partition.AbstractPartitionSourceProcessor;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.LogRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.source.PartitionSourceMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.source.PartitionSourceRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.source.PartitionSourceLifeCycle;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.source.PartitionSourceMetaLifeCycle;
 import com.anyilanxin.kunpeng.repository.admin.AdminImmutableRepository;
-import com.anyilanxin.kunpeng.repository.admin.modules.source.ImmutableRepositorySource;
+import com.anyilanxin.kunpeng.repository.admin.modules.source.ImmutableSourceRepository;
 
 /**
+ * 分区 source 应用命令处理器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class PartitionSourceApplyingProcessor extends AbstractPartitionSourceProcessor {
   protected final LogEventWriter writer;
-  private final ImmutableRepositorySource repositorySource;
+  private final ImmutableSourceRepository repositorySource;
   private final ClusterDispatchClient dispatchClient;
 
   public PartitionSourceApplyingProcessor(final LogEventWriter writer) {
@@ -45,7 +47,7 @@ public class PartitionSourceApplyingProcessor extends AbstractPartitionSourcePro
   }
 
   @Override
-  public void processRecord(final LogRecord<PartitionSourceRecord> record) {
+  public void processRecord(final AdminLogRecord<PartitionSourceRecord> record) {
     final PartitionSourceRecord value = record.getValue();
     final PartitionSourceRecord partitionSource =
         repositorySource.getPartitionSource(value.getPartitionGroup(), value.getPartitionId());

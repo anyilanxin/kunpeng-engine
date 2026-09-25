@@ -24,6 +24,9 @@ import java.util.concurrent.CompletableFuture;
 /**
  * 测试辅助类：把一次日志追加的写入阶段与提交阶段分别暴露为 future，便于在断言中
  * 分别等待“条目已写入”和“条目已提交”两种结果。任一阶段失败时对应 future 会收到异常。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 final class AppendResult implements AppendListener {
   private final CompletableFuture<Long> persisted = new CompletableFuture<>();

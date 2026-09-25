@@ -26,6 +26,9 @@ package com.anyilanxin.kunpeng.cluster.raft;
  * {@link #onFollower(long)}（恢复跟随可用）。
  *
  * <p>监听器在 Raft 线程回调，不应执行耗时操作。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface RaftRoleStateListener {
 

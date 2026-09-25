@@ -30,6 +30,12 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Rule;
 import org.junit.Test;
 
+/**
+ * 追赶等待测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class CatchUpWaitTest {
 
   /** Ample budget, so a wait ends for the reason under test rather than for lack of time. */

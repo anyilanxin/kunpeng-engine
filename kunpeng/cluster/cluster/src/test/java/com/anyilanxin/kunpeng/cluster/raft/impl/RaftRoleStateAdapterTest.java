@@ -23,7 +23,12 @@ import com.anyilanxin.kunpeng.cluster.raft.RaftServer.Role;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/** {@link RaftContext.RaftRoleStateAdapter} 角色映射与快照复制映射测试。 */
+/**
+ * {@link RaftContext.RaftRoleStateAdapter} 角色映射与快照复制映射测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class RaftRoleStateAdapterTest {
 
   private final List<String> events = new java.util.ArrayList<>();

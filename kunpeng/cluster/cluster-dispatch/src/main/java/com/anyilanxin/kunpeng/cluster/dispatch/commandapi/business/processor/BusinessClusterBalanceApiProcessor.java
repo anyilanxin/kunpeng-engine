@@ -20,8 +20,8 @@ import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
 import com.anyilanxin.kunpeng.cluster.cluster.Member;
 import com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter;
 import com.anyilanxin.kunpeng.cluster.dispatch.commandapi.business.AbstractBusinessApiProcessor;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.LogRecord;
 import com.anyilanxin.kunpeng.configuration.ZoneType;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessClusterMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.business.dispatch.BusinessClusterBalanceRequestRecord;
@@ -29,18 +29,20 @@ import com.anyilanxin.kunpeng.protocol.admin.record.command.business.BusinessDis
 import com.anyilanxin.kunpeng.protocol.admin.record.command.business.BusinessDispatchType;
 import com.anyilanxin.kunpeng.protocol.admin.record.commandapi.business.BusinessDispatchApiValueLifeCycle;
 import com.anyilanxin.kunpeng.repository.admin.AdminImmutableRepository;
-import com.anyilanxin.kunpeng.repository.admin.modules.business.ImmutableRepositoryBusiness;
+import com.anyilanxin.kunpeng.repository.admin.modules.business.ImmutableBusinessRepository;
 import java.util.Set;
 
 /**
+ * 业务面集群再均衡 API 处理器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class BusinessClusterBalanceApiProcessor
     extends AbstractBusinessApiProcessor<BusinessClusterBalanceRequestRecord> {
   private final LogEventWriter writer;
   private final ClusterMembershipService membershipService;
-  private final ImmutableRepositoryBusiness repositoryBusiness;
+  private final ImmutableBusinessRepository repositoryBusiness;
   private final BusinessDispatchPlanRecord planRecord;
 
   public BusinessClusterBalanceApiProcessor(final LogEventWriter writer) {
@@ -52,7 +54,7 @@ public class BusinessClusterBalanceApiProcessor
   }
 
   @Override
-  public void processRecord(final LogRecord<BusinessClusterBalanceRequestRecord> record) {
+  public void processRecord(final AdminLogRecord<BusinessClusterBalanceRequestRecord> record) {
     final BusinessClusterBalanceRequestRecord value = record.getValue();
     final BusinessClusterMetaRecord clusterMeta = repositoryBusiness.getClusterMeta();
     if (clusterMeta == null) {

@@ -22,8 +22,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
+ * 分区信息元数据：分区角色、成员与健康状态的聚合描述。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class PartitionInfoMetadata {
   private final PartitionMetadata metadata;

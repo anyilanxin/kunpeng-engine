@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.cluster.dispatch;
 
-/** 在处理结束时执行的动作。<b>不会</b>在重新处理（re-processing）期间执行。 */
+/**
+ * 在处理结束时执行的动作。<b>不会</b>在重新处理（re-processing）期间执行。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @FunctionalInterface
 public interface SideEffectProducer {
 

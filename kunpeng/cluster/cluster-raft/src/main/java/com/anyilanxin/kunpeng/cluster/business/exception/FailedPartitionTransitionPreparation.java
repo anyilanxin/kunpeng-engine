@@ -20,7 +20,7 @@ package com.anyilanxin.kunpeng.cluster.business.exception;
  * 分区角色切换的准备阶段执行失败时抛出的运行时异常，此时不会更新 term 与角色。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class FailedPartitionTransitionPreparation extends RuntimeException {
   public FailedPartitionTransitionPreparation(final Throwable cause) {

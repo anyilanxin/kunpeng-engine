@@ -28,6 +28,9 @@ import org.slf4j.helpers.MessageFormatter;
  *
  * <p>Use for expected-but-noisy events (e.g. rejected requests during reconfiguration) to avoid
  * flooding the log.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class ThrottledLogger implements Logger {
 

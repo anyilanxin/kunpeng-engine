@@ -25,6 +25,8 @@ import java.util.List;
  * @param kind 传输单元类型
  * @param chunks 分片列表，按条目顺序排列
  * @param hasMore 本单元之后是否还有更多传输单元
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public record SnapshotChunkBatch(TransferKind kind, List<SnapshotChunk> chunks, boolean hasMore) {
 

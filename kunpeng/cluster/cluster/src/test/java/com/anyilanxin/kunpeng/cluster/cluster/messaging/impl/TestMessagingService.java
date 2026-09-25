@@ -37,7 +37,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
-/** Test messaging service. */
+/**
+ * Test messaging service.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class TestMessagingService implements ManagedMessagingService {
   private final Address address;
   private final Map<Address, TestMessagingService> services;

@@ -26,6 +26,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * @param <K2> the second key type
  * @param <K3> the third key type
  * @param <V> the value type
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class Map3D<K1, K2, K3, V> {
 

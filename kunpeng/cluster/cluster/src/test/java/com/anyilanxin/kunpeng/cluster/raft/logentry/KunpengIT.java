@@ -50,6 +50,12 @@ import java.util.stream.Collectors;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assumptions.assumeThat;
 
+/**
+ * Raft 日志条目集成测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @RunWith(Parameterized.class)
 public class KunpengIT {
 

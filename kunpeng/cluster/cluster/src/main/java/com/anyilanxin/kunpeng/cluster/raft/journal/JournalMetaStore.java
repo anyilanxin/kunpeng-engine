@@ -20,6 +20,9 @@ package com.anyilanxin.kunpeng.cluster.raft.journal;
  * “最后已刷盘索引”的持久化通道。
  *
  * <p>该索引独立于日志本体存放（实现可落库、落文件或仅驻内存）。重启后 journal 以它为完整性 基准：磁盘上不允许出现高于它的记录，出现即判定损坏。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface JournalMetaStore {
 
@@ -28,8 +31,7 @@ public interface JournalMetaStore {
    *
    * <p>实现可能触发数据库或文件 IO，属高代价操作，调用方应缓存结果、按需读取。
    *
-   * @return 最后已刷盘索引；从未记录过时返回实现约定的占位值（先用 {@link
-   *     #hasLastFlushedIndex()} 判定再取值）
+   * @return 最后已刷盘索引；从未记录过时返回实现约定的占位值（先用 {@link #hasLastFlushedIndex()} 判定再取值）
    */
   long loadLastFlushedIndex();
 
@@ -41,12 +43,13 @@ public interface JournalMetaStore {
   void storeLastFlushedIndex(long index);
 
   /**
-   * 清除已记录的最后已刷盘索引，使 {@link #hasLastFlushedIndex()} 回到 false。删除全部日志
-   * 前必须先执行本操作，保证中途崩溃后重启也能识别“空日志”状态。
+   * 清除已记录的最后已刷盘索引，使 {@link #hasLastFlushedIndex()} 回到 false。删除全部日志 前必须先执行本操作，保证中途崩溃后重启也能识别“空日志”状态。
    */
   void resetLastFlushedIndex();
 
-  /** @return 是否已记录过最后已刷盘索引 */
+  /**
+   * @return 是否已记录过最后已刷盘索引
+   */
   boolean hasLastFlushedIndex();
 
   /** volatile 单变量实现：全部操作 O(1)，用于测试与内存型场景。 */

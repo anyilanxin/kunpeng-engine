@@ -43,6 +43,9 @@ import org.junit.rules.TemporaryFolder;
  * <p>SegmentWriter 的 {@code lastEntry}/{@code lastEntryPosition} 会被读线程经由 {@code
  * Segment#lastIndex()} 访问，字段必须保证可见性（volatile）。内存可见性缺陷无法确定性复现，
  * 本测试作为并发契约的回归守卫。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class SegmentWriterVisibilityTest {
 

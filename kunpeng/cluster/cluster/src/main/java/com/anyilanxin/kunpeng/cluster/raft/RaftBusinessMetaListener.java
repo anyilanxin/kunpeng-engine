@@ -29,6 +29,9 @@ import java.util.Map;
  * 表示新元数据已安装完成（可恢复使用）。 所有 raft 角色（含 leader）均触发； 不修改真实 raft 角色，携带的 role 为回调时刻的真实角色。
  *
  * <p>监听器在 Raft 线程回调，不应执行耗时操作。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface RaftBusinessMetaListener {
 

@@ -20,6 +20,9 @@ package com.anyilanxin.kunpeng.cluster.raft.journal;
  * 日志内容损坏异常。
  *
  * <p>典型诱因：记录只写入一半、CRC 校验和不一致、磁盘上的编码版本无法识别。损坏被视为 不可自愈——日志自身无法修复，需要人工介入（例如从快照重建）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class CorruptedJournalException extends RuntimeException {
 

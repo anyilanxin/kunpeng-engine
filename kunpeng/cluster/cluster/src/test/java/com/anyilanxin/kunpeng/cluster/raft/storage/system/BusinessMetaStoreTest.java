@@ -26,7 +26,12 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** {@link BusinessMetaStore} 文件读写测试。 */
+/**
+ * {@link BusinessMetaStore} 文件读写测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class BusinessMetaStoreTest {
 
   @TempDir Path directory;

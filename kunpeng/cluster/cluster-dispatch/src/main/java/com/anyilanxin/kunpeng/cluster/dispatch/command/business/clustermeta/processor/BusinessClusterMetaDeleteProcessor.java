@@ -18,13 +18,15 @@ package com.anyilanxin.kunpeng.cluster.dispatch.command.business.clustermeta.pro
 
 import com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter;
 import com.anyilanxin.kunpeng.cluster.dispatch.command.business.clustermeta.AbstractBusinessClusterMetaProcessor;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.LogRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessClusterMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.business.BusinessClusterMetaLifeCycle;
 
 /**
+ * 业务面集群元数据删除命令处理器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class BusinessClusterMetaDeleteProcessor extends AbstractBusinessClusterMetaProcessor {
   protected final LogEventWriter writer;
@@ -35,7 +37,7 @@ public class BusinessClusterMetaDeleteProcessor extends AbstractBusinessClusterM
   }
 
   @Override
-  public void processRecord(final LogRecord<BusinessClusterMetaRecord> record) {
+  public void processRecord(final AdminLogRecord<BusinessClusterMetaRecord> record) {
     final BusinessClusterMetaRecord value = record.getValue();
     writer.addEvent(
         record.getKey(), BusinessClusterMetaLifeCycle.DELETED, record.getRequestId(), value);

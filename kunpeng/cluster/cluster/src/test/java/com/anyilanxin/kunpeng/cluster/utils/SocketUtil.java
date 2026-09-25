@@ -22,7 +22,12 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.SocketException;
 
-/** Utility to acquire available local addresses/ports for tests. */
+/**
+ * Utility to acquire available local addresses/ports for tests.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class SocketUtil {
   private static final InetAddress LOCALHOST = InetAddress.getLoopbackAddress();
 

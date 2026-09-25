@@ -26,7 +26,7 @@ import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologySer
 import com.anyilanxin.kunpeng.cluster.dispatch.ClusterDispatchLoggers;
 import com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter;
 import com.anyilanxin.kunpeng.cluster.dispatch.command.business.dispatch.AbstractBusinessDispatchProcessor;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.LogRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanExecutionRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.common.*;
@@ -41,9 +41,9 @@ import com.anyilanxin.kunpeng.protocol.admin.record.command.source.PartitionSour
 import com.anyilanxin.kunpeng.protocol.admin.record.command.source.PartitionSourceMetaLifeCycle;
 import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 import com.anyilanxin.kunpeng.repository.admin.AdminImmutableRepository;
-import com.anyilanxin.kunpeng.repository.admin.modules.business.ImmutableRepositoryBusiness;
-import com.anyilanxin.kunpeng.repository.admin.modules.key.ImmutableRepositoryKey;
-import com.anyilanxin.kunpeng.repository.admin.modules.source.ImmutableRepositorySource;
+import com.anyilanxin.kunpeng.repository.admin.modules.business.ImmutableBusinessRepository;
+import com.anyilanxin.kunpeng.repository.admin.modules.key.ImmutableKeyRepository;
+import com.anyilanxin.kunpeng.repository.admin.modules.source.ImmutableSourceRepository;
 import com.anyilanxin.kunpeng.structpack.value.IntegerValue;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -51,14 +51,16 @@ import java.util.List;
 import org.slf4j.Logger;
 
 /**
+ * 业务面调度计划执行中命令处理器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class BusinessDispatchClusterExecutingProcessor extends AbstractBusinessDispatchProcessor {
   protected final LogEventWriter writer;
-  private final ImmutableRepositoryBusiness repositoryBusiness;
-  private final ImmutableRepositorySource repositorySource;
-  private final ImmutableRepositoryKey repositoryKey;
+  private final ImmutableBusinessRepository repositoryBusiness;
+  private final ImmutableSourceRepository repositorySource;
+  private final ImmutableKeyRepository repositoryKey;
   private final ClusterTopologyService clusterTopologyService;
   public static final Logger LOGGER = ClusterDispatchLoggers.CLUSTER_DISPATCH;
 
@@ -73,7 +75,7 @@ public class BusinessDispatchClusterExecutingProcessor extends AbstractBusinessD
   }
 
   @Override
-  public void processRecord(final LogRecord<BusinessDispatchPlanRecord> record) {
+  public void processRecord(final AdminLogRecord<BusinessDispatchPlanRecord> record) {
     final BusinessDispatchPlanRecord planRecord = record.getValue();
     final BusinessDispatchPlanRecord dispatchPlan =
         repositoryBusiness.getDispatchPlan(planRecord.getDispatchPlanId());

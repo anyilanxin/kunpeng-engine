@@ -73,6 +73,9 @@ import static org.mockito.Mockito.*;
 /**
  * Uses a DeterministicScheduler and controllable messaging layer to get a deterministic execution
  * of raft threads.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class ControllableRaftContexts {
 

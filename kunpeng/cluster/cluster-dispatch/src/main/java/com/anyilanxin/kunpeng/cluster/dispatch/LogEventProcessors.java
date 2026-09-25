@@ -16,13 +16,15 @@
  */
 package com.anyilanxin.kunpeng.cluster.dispatch;
 
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.LogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.AdminRecordProcessIndex;
 import com.anyilanxin.kunpeng.protocol.admin.AdminValueLifeCycle;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 
 /**
+ * 日志事件处理器容器：按事件类型索引全部处理器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @SuppressWarnings({"rawtypes"})
 public final class LogEventProcessors {
@@ -48,7 +50,7 @@ public final class LogEventProcessors {
     return this;
   }
 
-  public LogEventProcessor<?> getProcessor(final LogRecord record) {
+  public LogEventProcessor<?> getProcessor(final AdminLogRecord record) {
     final LogEventProcessor processor = processors[record.getValueState().processIndex()];
     if (processor == null) {
       throw new IllegalStateException(

@@ -33,7 +33,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
-/** 跟随者复制上下文：字节级复制延迟（lag）统计、快照安装状态与追加成功标记。 */
+/**
+ * 跟随者复制上下文：字节级复制延迟（lag）统计、快照安装状态与追加成功标记。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 final class RaftMemberContextTest {
 
   /** 构造一个未打开复制上下文的成员，返回其上下文对象。 */

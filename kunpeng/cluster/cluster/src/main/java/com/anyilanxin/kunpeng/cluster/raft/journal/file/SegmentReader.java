@@ -29,6 +29,9 @@ import java.util.NoSuchElementException;
  *
  * <p>底层游标直接架在 segment 的内存映射上，支持顺序迭代（{@link #hasNext}/{@link #next}）、 回到 segment 起点（{@link
  * #reset}）以及借助稀疏索引的定位（{@link #seek}）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 final class SegmentReader implements Iterator<JournalRecord> {
 

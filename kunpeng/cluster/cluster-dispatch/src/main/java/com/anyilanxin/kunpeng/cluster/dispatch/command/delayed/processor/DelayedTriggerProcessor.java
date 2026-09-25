@@ -19,7 +19,7 @@ package com.anyilanxin.kunpeng.cluster.dispatch.command.delayed.processor;
 import com.anyilanxin.kunpeng.cluster.dispatch.ClusterDispatchLoggers;
 import com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter;
 import com.anyilanxin.kunpeng.cluster.dispatch.command.delayed.AbstractDelayedProcessor;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.LogRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminDispatchPlanExecutionRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminDispatchPlanRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanExecutionRecord;
@@ -32,19 +32,21 @@ import com.anyilanxin.kunpeng.protocol.admin.record.command.business.BusinessDis
 import com.anyilanxin.kunpeng.protocol.admin.record.command.business.BusinessDispatchPlanLifeCycle;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.delayed.DelayedLifeCycle;
 import com.anyilanxin.kunpeng.repository.admin.AdminImmutableRepository;
-import com.anyilanxin.kunpeng.repository.admin.modules.admin.ImmutableRepositoryAdmin;
-import com.anyilanxin.kunpeng.repository.admin.modules.business.ImmutableRepositoryBusiness;
+import com.anyilanxin.kunpeng.repository.admin.modules.admin.ImmutableAdminRepository;
+import com.anyilanxin.kunpeng.repository.admin.modules.business.ImmutableBusinessRepository;
 import org.slf4j.Logger;
 
 /**
+ * 延迟触发命令处理器：到期唤醒被延迟的调度计划。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class DelayedTriggerProcessor extends AbstractDelayedProcessor {
   public static final Logger LOGGER = ClusterDispatchLoggers.CLUSTER_DISPATCH;
   protected final LogEventWriter writer;
-  private final ImmutableRepositoryAdmin repositoryAdmin;
-  private final ImmutableRepositoryBusiness repositoryBusiness;
+  private final ImmutableAdminRepository repositoryAdmin;
+  private final ImmutableBusinessRepository repositoryBusiness;
 
   public DelayedTriggerProcessor(final LogEventWriter writer) {
     super(writer);
@@ -55,7 +57,7 @@ public class DelayedTriggerProcessor extends AbstractDelayedProcessor {
   }
 
   @Override
-  public void processRecord(final LogRecord<DelayedRecord> record) {
+  public void processRecord(final AdminLogRecord<DelayedRecord> record) {
     final DelayedRecord value = record.getValue();
     final long requestId = record.getRequestId();
     switch (value.getDelayedType()) {

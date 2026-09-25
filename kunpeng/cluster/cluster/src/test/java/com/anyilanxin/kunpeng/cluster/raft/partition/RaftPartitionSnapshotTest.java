@@ -30,7 +30,12 @@ import java.util.Set;
 import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.RUNTIME_DIRECTORY;
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** 未启动分区上 {@link RaftPartition#takeSnapshot()} 与 {@link RaftPartition#close()} 的行为。 */
+/**
+ * 未启动分区上 {@link RaftPartition#takeSnapshot()} 与 {@link RaftPartition#close()} 的行为。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 final class RaftPartitionSnapshotTest {
 
   @AutoClose MeterRegistry registry = new SimpleMeterRegistry();

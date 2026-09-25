@@ -24,7 +24,7 @@ import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
  * #newTransientSnapshot} 返回前已完成内容拍摄。
  *
  * @author zxuanhong
- * @since 2026.0.0
+ * @since 2026.9.0
  */
 public interface ConstructableSnapshotStore extends FileSnapshotStore {
 

@@ -32,6 +32,9 @@ import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
  *      |                       |                    |
  *      |----- cancel() --------------------------->| 发起方放弃本轮，不再回调
  * </pre>
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface VoteQuorum {
 

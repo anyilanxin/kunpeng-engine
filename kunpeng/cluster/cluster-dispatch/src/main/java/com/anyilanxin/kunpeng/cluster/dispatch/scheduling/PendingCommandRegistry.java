@@ -23,6 +23,9 @@ import com.anyilanxin.kunpeng.protocol.admin.AdminValueLifeCycle;
  *
  * <p>{@link Stageable} 注册表可在 {@link Staging} 会话中缓冲一批变更：暂存的变更对主缓存 不可见，直到 {@link Staging#commit()}
  * 将其合并；{@link Staging#rollback()} 则整体丢弃。 暂存会话内，{@link Staging#contains} 先查缓冲、再回落到主缓存。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface PendingCommandRegistry {
 

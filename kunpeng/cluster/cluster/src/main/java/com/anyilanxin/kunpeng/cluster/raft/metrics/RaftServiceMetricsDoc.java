@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.cluster.raft.metrics;
 import com.anyilanxin.kunpeng.utils.micrometer.CustomMeterDocumentation;
 import io.micrometer.core.instrument.Meter.Type;
 
-/** Raft 日志压缩相关指标定义 */
+/**
+ * Raft 日志压缩相关指标定义。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public enum RaftServiceMetricsDoc implements CustomMeterDocumentation {
   /** 日志压缩耗时 */
   COMPACTION_TIME("atomix_compaction_time_ms", "Time spend to compact", Type.TIMER);

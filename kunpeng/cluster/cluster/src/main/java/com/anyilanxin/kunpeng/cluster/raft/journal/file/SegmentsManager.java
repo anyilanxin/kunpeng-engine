@@ -45,8 +45,11 @@ import org.slf4j.LoggerFactory;
 /**
  * segment 全生命周期管理者。
  *
- * <p>内部是一张以“segment 首索引”为键的有序表。对外承担：启动时扫描目录装载并校验所有
- * segment、写入时按需滚动新段、按索引裁剪或整体重建，以及启动后清扫上次停机遗留的软删除 文件。
+ * <p>内部是一张以“segment 首索引”为键的有序表。对外承担：启动时扫描目录装载并校验所有 segment、写入时按需滚动新段、按索引裁剪或整体重建，以及启动后清扫上次停机遗留的软删除
+ * 文件。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 final class SegmentsManager implements AutoCloseable {
 
@@ -69,9 +72,16 @@ final class SegmentsManager implements AutoCloseable {
   private final int segmentSizeLimit;
   private final File storageDir;
   private final String journalName;
+  private final int journalIndexDensity;
 
   /** 追加写入当前落在这个 segment 上；未打开时为 null。 */
   private volatile @Nullable Segment activeSegment;
+
+  /**
+   * active 段的索引写入映射；非 active 段的索引文件在建段/滚动时已封存（Kafka offset index 风格：预分配 + mmap +
+   * 追加式提交），只有接收写入的段需要常驻映射。
+   */
+  private @Nullable SegmentIndexFile activeIndexFile;
 
   // 磁盘占用增量账本：segment 建段时即预分配到 segmentSizeLimit，长度不随写入变化，
   // 因此加减即可维持精确值，不必每次全量汇总
@@ -84,7 +94,8 @@ final class SegmentsManager implements AutoCloseable {
       final String name,
       final SegmentLoader segmentLoader,
       final JournalMetrics journalMetrics,
-      final JournalMetaStore metaStore) {
+      final JournalMetaStore metaStore,
+      final int journalIndexDensity) {
     this.journalName = requireNonNull(name, "journal 名不能为空");
     this.indexLookup = journalIndex;
     this.segmentSizeLimit = maxSegmentSize;
@@ -92,28 +103,37 @@ final class SegmentsManager implements AutoCloseable {
     this.loader = segmentLoader;
     this.metrics = journalMetrics;
     this.metaStore = metaStore;
+    this.journalIndexDensity = journalIndexDensity;
   }
 
   /* ---------- 查询 ---------- */
 
-  /** @return 正在接收写入的 segment；尚未 open 时为 null */
+  /**
+   * @return 正在接收写入的 segment；尚未 open 时为 null
+   */
   @Nullable Segment getCurrentSegment() {
     return activeSegment;
   }
 
-  /** @return 首索引最小的 segment；一张空表时为 null */
+  /**
+   * @return 首索引最小的 segment；一张空表时为 null
+   */
   @Nullable Segment getFirstSegment() {
     final Map.Entry<Long, Segment> entry = segmentsByIndex.firstEntry();
     return entry == null ? null : entry.getValue();
   }
 
-  /** @return 首索引最大的 segment；一张空表时为 null */
+  /**
+   * @return 首索引最大的 segment；一张空表时为 null
+   */
   @Nullable Segment getLastSegment() {
     final Map.Entry<Long, Segment> entry = segmentsByIndex.lastEntry();
     return entry == null ? null : entry.getValue();
   }
 
-  /** @return 首索引比 {@code index} 大的最小 segment；没有更靠后的段时为 null */
+  /**
+   * @return 首索引比 {@code index} 大的最小 segment；没有更靠后的段时为 null
+   */
   @Nullable Segment getNextSegment(final long index) {
     final Map.Entry<Long, Segment> entry = segmentsByIndex.higherEntry(index);
     return entry == null ? null : entry.getValue();
@@ -137,7 +157,9 @@ final class SegmentsManager implements AutoCloseable {
     return getFirstSegment();
   }
 
-  /** @return 从覆盖 {@code index} 的那段起、直到末尾的全部 segment（只读视图） */
+  /**
+   * @return 从覆盖 {@code index} 的那段起、直到末尾的全部 segment（只读视图）
+   */
   SortedMap<Long, Segment> getTailSegments(final long index) {
     final Segment anchor = getSegment(index);
     if (anchor == null) {
@@ -160,6 +182,7 @@ final class SegmentsManager implements AutoCloseable {
     final Segment tail = getLastSegment();
     if (tail != null) {
       activeSegment = tail;
+      openActiveIndexFile(tail);
     } else {
       activeSegment = createSegment(SEGMENT_ID_ORIGIN, EMPTY_LOG_START_INDEX, EMPTY_LOG_ASQN);
       segmentsByIndex.put(activeSegment.index(), activeSegment);
@@ -173,9 +196,11 @@ final class SegmentsManager implements AutoCloseable {
 
   @Override
   public void close() {
+    // 封存 active 段剩余条目；其余段的索引文件在滚动时已封存
+    persistActiveSegmentIndex();
+    closeIndexFile();
     for (final Segment segment : segmentsByIndex.values()) {
       LOG.debug("关闭 segment：{}", segment);
-      persistSegmentIndex(segment);
       segment.close();
     }
 
@@ -192,7 +217,8 @@ final class SegmentsManager implements AutoCloseable {
   Segment getNextSegment() {
     // 滚动前先封存旧段的索引，把崩溃时的索引损失限制在单段之内
     final Segment tail = getLastSegment();
-    persistSegmentIndex(tail);
+    persistActiveSegmentIndex();
+    closeIndexFile();
 
     final long inheritedAsqn = tail == null ? EMPTY_LOG_ASQN : tail.lastAsqn();
     final Segment writing = requireNonNull(activeSegment, "journal 尚未打开，无法滚动 segment");
@@ -218,10 +244,7 @@ final class SegmentsManager implements AutoCloseable {
 
     final SortedMap<Long, Segment> doomed = segmentsByIndex.headMap(boundary.getValue().index());
     if (doomed.isEmpty()) {
-      LOG.debug(
-          "无可裁剪 segment：阈值 index {}，日志首索引 {}",
-          index,
-          firstIndexOrZero());
+      LOG.debug("无可裁剪 segment：阈值 index {}，日志首索引 {}", index, firstIndexOrZero());
       return false;
     }
 
@@ -255,6 +278,8 @@ final class SegmentsManager implements AutoCloseable {
     metaStore.resetLastFlushedIndex();
 
     // 从尾往头删：任意时刻被打断，剩下的日志都不带空洞（日志与快照之间同样如此）
+    // 索引映射先于文件删除关闭，避免向已删除文件继续追加
+    closeIndexFile();
     final Iterator<Segment> fromTail = segmentsByIndex.descendingMap().values().iterator();
     while (fromTail.hasNext()) {
       // 刻意不 close：这里的删除是软删除，在途读取器读完自然退出，
@@ -281,6 +306,9 @@ final class SegmentsManager implements AutoCloseable {
   void removeSegment(final Segment segment) {
     segmentsByIndex.remove(segment.index());
     trackSegmentRemoved(segment);
+    if (segment == activeSegment) {
+      closeIndexFile();
+    }
     segment.delete();
     removeSegmentIndex(segment);
     repointActiveSegment();
@@ -291,6 +319,8 @@ final class SegmentsManager implements AutoCloseable {
     final Segment tail = getLastSegment();
     if (tail != null) {
       activeSegment = tail;
+      // 指回的是已封存段：续接其提交点，若日志截断使条目收缩，下次持久化时全量重写自愈
+      openActiveIndexFile(tail);
       return;
     }
 
@@ -309,7 +339,10 @@ final class SegmentsManager implements AutoCloseable {
             .withMaxSegmentSize(segmentSizeLimit)
             .build();
     final var segmentFile = SegmentFile.createSegmentFile(journalName, storageDir, descriptor.id());
-    return loader.createSegment(segmentFile.toPath(), descriptor, lastAsqn, indexLookup);
+    final var segment =
+        loader.createSegment(segmentFile.toPath(), descriptor, lastAsqn, indexLookup);
+    openActiveIndexFile(segment);
+    return segment;
   }
 
   /* ---------- 装载与损坏处理 ---------- */
@@ -346,8 +379,7 @@ final class SegmentsManager implements AutoCloseable {
         if (isLastFile && segment.lastIndex() < lastFlushedIndex) {
           // 已刷盘边界必须被最后一个 segment 覆盖到
           throw new CorruptedJournalException(
-              "日志不完整：已刷盘边界为 %d，末段最后索引只有 %d"
-                  .formatted(lastFlushedIndex, segment.lastIndex()));
+              "日志不完整：已刷盘边界为 %d，末段最后索引只有 %d".formatted(lastFlushedIndex, segment.lastIndex()));
         }
 
         loaded.add(segment);
@@ -412,34 +444,78 @@ final class SegmentsManager implements AutoCloseable {
         Files.delete(file.toPath());
         Files.deleteIfExists(SegmentFile.indexFileOf(file).toPath());
       } catch (final IOException e) {
-        throw new JournalException(
-            "清理损坏 segment 文件 '%s' 失败".formatted(file.getName()), e);
+        throw new JournalException("清理损坏 segment 文件 '%s' 失败".formatted(file.getName()), e);
       }
     }
   }
 
   /* ---------- 索引文件读写 ---------- */
 
-  /** 把该段的稀疏索引写回磁盘；段内没有索引项时什么都不做。 */
-  private void persistSegmentIndex(final @Nullable Segment segment) {
+  /**
+   * 把当前写入段的稀疏索引增量落盘。
+   *
+   * <p>在 {@link SegmentedJournal#flush()} 中于日志 fsync 之后调用：log 数据先行持久化，索引引用的 position 才一定有效；未滚动也未关闭的
+   * active 段由此获得运行期落盘点，重启后免于扫描重建。追加式更新只写新增条目， 条目收缩（日志截断）时全量重写自愈。
+   */
+  void persistActiveSegmentIndex() {
+    final Segment segment = activeSegment;
     if (segment == null) {
       return;
     }
 
     final var entries = indexLookup.entriesInRange(segment.index(), segment.lastIndex());
-    if (entries.isEmpty()) {
+    if (entries.isEmpty() && activeIndexFile == null) {
+      // 没有新条目，也没有需要收缩的既有提交点
       return;
     }
 
     try {
-      SegmentIndexFile.write(segment.file().indexFile().toPath(), entries);
+      ensureActiveIndexFile(segment).persist(entries);
     } catch (final Exception e) {
-      // 索引只是读路径的加速缓存，写不进去不影响正确性；重启后扫描重建
-      LOG.warn("segment {} 的索引落盘失败，重启后将按扫描重建", segment, e);
+      // 索引只是读路径的加速缓存，写不进去不影响正确性；下次落盘重试，重启后扫描重建
+      LOG.warn("segment {} 的索引落盘失败", segment, e);
+      closeIndexFile();
     }
   }
 
-  /** 尽力装载该段的磁盘索引；文件缺失或不合法则静默跳过，读路径自会扫描重建。 */
+  /** 为 active 段打开（或新建）索引写入映射；先关闭旧映射。 */
+  private void openActiveIndexFile(final Segment segment) {
+    closeIndexFile();
+    try {
+      activeIndexFile =
+          SegmentIndexFile.openOrCreate(
+              segment.file().indexFile().toPath(), indexEntryCapacity(segment));
+    } catch (final IOException e) {
+      LOG.warn("segment {} 的索引文件打开失败，本段索引暂退化为仅内存", segment, e);
+    }
+  }
+
+  /**
+   * @return active 段的索引写入映射，缺失时延迟打开
+   */
+  private SegmentIndexFile ensureActiveIndexFile(final Segment segment) throws IOException {
+    if (activeIndexFile == null) {
+      activeIndexFile =
+          SegmentIndexFile.openOrCreate(
+              segment.file().indexFile().toPath(), indexEntryCapacity(segment));
+    }
+    return activeIndexFile;
+  }
+
+  /** 按该段创建时的容量估算索引条目数：段的 maxSegmentSize 封存在描述符里一次性定死， 重启后配置变更不改变既有段的 idx 预分配长度。 */
+  private int indexEntryCapacity(final Segment segment) {
+    return SegmentIndexFile.capacityEntries(
+        segment.descriptor().maxSegmentSize(), journalIndexDensity);
+  }
+
+  private void closeIndexFile() {
+    if (activeIndexFile != null) {
+      activeIndexFile.close();
+      activeIndexFile = null;
+    }
+  }
+
+  /** 尽力装载该段的磁盘索引；文件不合法则删除（映射打开时按空索引重建），读路径自会扫描重建。 */
   private void restoreSegmentIndex(final Segment segment) {
     final var indexFile = segment.file().indexFile().toPath();
     if (!Files.exists(indexFile)) {
@@ -455,7 +531,12 @@ final class SegmentsManager implements AutoCloseable {
             descriptor.encodingLength(),
             descriptor.maxSegmentSize());
     if (entries == null) {
-      LOG.debug("索引文件 {} 缺失或不合法，改为扫描重建", indexFile);
+      LOG.debug("索引文件 {} 缺失或不合法，删除并改为扫描重建", indexFile);
+      try {
+        Files.deleteIfExists(indexFile);
+      } catch (final IOException e) {
+        LOG.warn("非法索引文件 {} 删除失败", indexFile, e);
+      }
       return;
     }
     indexLookup.indexAll(entries);
@@ -469,14 +550,15 @@ final class SegmentsManager implements AutoCloseable {
     }
   }
 
-  /** @return 目录中全部合法 segment 文件，按段编号升序；可为空列表，不为 null */
+  /**
+   * @return 目录中全部合法 segment 文件，按段编号升序；可为空列表，不为 null
+   */
   private List<File> sortedSegmentFiles() {
     final File[] present =
         storageDir.listFiles(file -> file.isFile() && SegmentFile.isSegmentFile(journalName, file));
 
     if (present == null) {
-      throw new IllegalStateException(
-          "无法列出目录 '%s' 中的文件：不是目录，或列举时发生 IO 错误".formatted(storageDir));
+      throw new IllegalStateException("无法列出目录 '%s' 中的文件：不是目录，或列举时发生 IO 错误".formatted(storageDir));
     }
 
     return Arrays.stream(present)

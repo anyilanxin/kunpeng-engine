@@ -19,14 +19,16 @@ package com.anyilanxin.kunpeng.cluster.dispatch.command.business.execution.proce
 import com.anyilanxin.kunpeng.cluster.dispatch.ClusterDispatchLoggers;
 import com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter;
 import com.anyilanxin.kunpeng.cluster.dispatch.command.business.execution.AbstractBusinessDispatchExecutionProcessor;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.LogRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanExecutionRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.business.BusinessDispatchPlanExecutionLifeCycle;
 import org.slf4j.Logger;
 
 /**
+ * 业务面执行明细 ACK 超时命令处理器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class BusinessDispatchExecutionAcknowledgeTimeOutProcessor
     extends AbstractBusinessDispatchExecutionProcessor {
@@ -39,7 +41,7 @@ public class BusinessDispatchExecutionAcknowledgeTimeOutProcessor
   }
 
   @Override
-  public void processRecord(final LogRecord<BusinessDispatchPlanExecutionRecord> record) {}
+  public void processRecord(final AdminLogRecord<BusinessDispatchPlanExecutionRecord> record) {}
 
   @Override
   public BusinessDispatchPlanExecutionLifeCycle valueLifeCycle() {

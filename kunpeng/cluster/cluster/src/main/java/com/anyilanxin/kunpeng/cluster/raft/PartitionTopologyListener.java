@@ -26,6 +26,7 @@ import com.anyilanxin.kunpeng.cluster.utils.health.HealthReport;
  * <p>Raft 原生回调不携带分区信息，由 {@code RaftTopologyStep} 注册时按分区适配转发， 供拓扑服务按分区维护广播状态。
  *
  * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface PartitionTopologyListener extends FailureListener, RaftRoleChangeListener {
 

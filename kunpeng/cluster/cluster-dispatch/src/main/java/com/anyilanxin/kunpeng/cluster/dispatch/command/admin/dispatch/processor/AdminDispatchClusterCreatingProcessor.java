@@ -25,8 +25,8 @@ import com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter;
 import com.anyilanxin.kunpeng.cluster.dispatch.command.admin.dispatch.AbstractAdminDispatchProcessor;
 import com.anyilanxin.kunpeng.cluster.dispatch.command.admin.dispatch.planner.AdminDispatchPlanMaker;
 import com.anyilanxin.kunpeng.cluster.dispatch.command.delayed.DelayedDelayChecker;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.LogRecord;
 import com.anyilanxin.kunpeng.configuration.ZoneType;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminDispatchPlanRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.delayed.DelayedRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionType;
@@ -40,7 +40,7 @@ import org.slf4j.Logger;
  * 管理面调度计划制定：期望副本数超出当前成员池时注册计划级延迟任务等待成员加入， 否则立即制定计划并按需进入执行。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class AdminDispatchClusterCreatingProcessor extends AbstractAdminDispatchProcessor {
   protected final LogEventWriter writer;
@@ -59,7 +59,7 @@ public class AdminDispatchClusterCreatingProcessor extends AbstractAdminDispatch
   }
 
   @Override
-  public void processRecord(final LogRecord<AdminDispatchPlanRecord> record) {
+  public void processRecord(final AdminLogRecord<AdminDispatchPlanRecord> record) {
     final AdminDispatchPlanRecord value = record.getValue();
     final Set<MemberId> memberIds = membershipService.getMemberIds(ZoneType.BROKER.getType());
     if (value.getExpectReplicationFactor() > memberIds.size()) {

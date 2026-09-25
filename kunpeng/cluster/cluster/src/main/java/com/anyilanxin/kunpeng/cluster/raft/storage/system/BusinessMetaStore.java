@@ -40,6 +40,9 @@ import org.slf4j.LoggerFactory;
  *
  * <p>文件是已提交 busimeta 条目的投影：每次应用整体重写（内容自带 index/term）；写失败仅告警， 可由日志重放或快照恢复重建。内容为 1 字节 VERSION + SBE
  * {@code BusinessMeta} 消息 （与 {@code *.conf} 存 Configuration 同模式）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class BusinessMetaStore implements AutoCloseable {
   public static final int VERSION_LENGTH = Byte.BYTES;

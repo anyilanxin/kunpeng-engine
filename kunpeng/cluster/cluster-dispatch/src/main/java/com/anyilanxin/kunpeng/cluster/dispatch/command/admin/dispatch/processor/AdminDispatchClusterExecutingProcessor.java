@@ -19,22 +19,24 @@ package com.anyilanxin.kunpeng.cluster.dispatch.command.admin.dispatch.processor
 import com.anyilanxin.kunpeng.cluster.dispatch.ClusterDispatchLoggers;
 import com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter;
 import com.anyilanxin.kunpeng.cluster.dispatch.command.admin.dispatch.AbstractAdminDispatchProcessor;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.LogRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminDispatchPlanExecutionRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminDispatchPlanRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.admin.AdminDispatchPlanExecutionLifeCycle;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.admin.AdminDispatchPlanLifeCycle;
 import com.anyilanxin.kunpeng.repository.admin.AdminImmutableRepository;
-import com.anyilanxin.kunpeng.repository.admin.modules.admin.ImmutableRepositoryAdmin;
+import com.anyilanxin.kunpeng.repository.admin.modules.admin.ImmutableAdminRepository;
 import org.slf4j.Logger;
 
 /**
+ * 管理面调度计划执行中命令处理器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class AdminDispatchClusterExecutingProcessor extends AbstractAdminDispatchProcessor {
   protected final LogEventWriter writer;
-  private final ImmutableRepositoryAdmin repositoryAdmin;
+  private final ImmutableAdminRepository repositoryAdmin;
   public static final Logger LOGGER = ClusterDispatchLoggers.CLUSTER_DISPATCH;
 
   public AdminDispatchClusterExecutingProcessor(final LogEventWriter writer) {
@@ -45,7 +47,7 @@ public class AdminDispatchClusterExecutingProcessor extends AbstractAdminDispatc
   }
 
   @Override
-  public void processRecord(final LogRecord<AdminDispatchPlanRecord> record) {
+  public void processRecord(final AdminLogRecord<AdminDispatchPlanRecord> record) {
     final AdminDispatchPlanRecord planRecord = record.getValue();
     final AdminDispatchPlanRecord dispatchPlan = repositoryAdmin.getDispatchPlan();
     if (dispatchPlan == null) {

@@ -56,7 +56,7 @@ import org.jspecify.annotations.Nullable;
  * <p>推送流程（合并转移）：先发信息批，再逐批推送内容，末批写完由目标侧 persist。 任一环节失败：abort pending（拉取时已创建）并以异常完成返回 future。
  *
  * @author zxuanhong
- * @since 2026.0.0
+ * @since 2026.9.0
  */
 public class DefaultSnapshotTransfer extends Actor implements SnapshotTransfer {
 

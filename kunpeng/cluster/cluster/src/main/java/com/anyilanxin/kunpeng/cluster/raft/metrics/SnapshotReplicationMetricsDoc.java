@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.cluster.raft.metrics;
 import com.anyilanxin.kunpeng.utils.micrometer.CustomMeterDocumentation;
 import io.micrometer.core.instrument.Meter.Type;
 
-/** 快照复制相关指标定义 */
+/**
+ * 快照复制相关指标定义。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public enum SnapshotReplicationMetricsDoc implements CustomMeterDocumentation {
   /** 进行中的快照复制数量 */
   COUNT("atomix_snapshot_replication_count", "Count of ongoing snapshot replication", Type.GAUGE),

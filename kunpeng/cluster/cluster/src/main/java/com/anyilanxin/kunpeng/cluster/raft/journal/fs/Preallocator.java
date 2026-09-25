@@ -26,6 +26,9 @@ import java.nio.channels.FileChannel;
  *
  * <p>This is a pure-Java replacement for {@code posix_fallocate}-based preallocation. It is
  * portable to every platform, at the cost of performing actual I/O for every allocated byte.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class Preallocator {
 

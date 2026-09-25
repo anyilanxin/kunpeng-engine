@@ -31,6 +31,9 @@ import org.slf4j.LoggerFactory;
  * <p>池以车道自身的调度提示启动每条车道，并将启动与关闭聚合为单个 future。车道 actor 失败时以新实例
  * 原子替换并重新提交（对齐"调度基座随分区存亡"的自愈语义），避免引擎主体仍在运行而调度车道永久死亡 导致定时任务静默丢失；失败与恢复经 {@link LaneFailureListener}
  * 通知上层。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class LanePool {
 

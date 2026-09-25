@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
  * 时生成元数据文件与校验集，原子 move 到正式目录后由存储生成 .sfc 完成提交。
  *
  * @author zxuanhong
- * @since 2026.0.0
+ * @since 2026.9.0
  */
 final class DefaultConstructableSnapshot implements ConstructableSnapshot {
 

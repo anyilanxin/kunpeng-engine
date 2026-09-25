@@ -27,6 +27,9 @@ import java.util.concurrent.atomic.AtomicReference;
  * Adjustable.Adjustment}：{@link Adjustable.Adjustment.Shift} 相对时间源
  * 持续偏移（因此持续追踪时间源，而非冻结应用时刻的值），{@link Adjustable.Adjustment.Pin} 则将时间彻底固定。应用新调整会替换旧调整而非叠加；{@link
  * Adjustable#stackOffset} 是 显式扩展现有偏移的途径。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface TimerClock extends InstantSource {
 

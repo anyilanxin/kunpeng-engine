@@ -31,6 +31,9 @@ import org.slf4j.LoggerFactory;
  *
  * <p>提交推进时增量扫描 (scannedIndex, commitIndex] 应用 BusinessMetaEntry 条目并投影写文件； 日志压缩形成缺口（appliedIndex+1
  * &lt; firstIndex）时经同步通道向 leader 拉取全量状态整体覆盖。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class BusinessMetaManager {
   private static final Logger LOGGER = LoggerFactory.getLogger(BusinessMetaManager.class);

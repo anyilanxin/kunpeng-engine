@@ -18,7 +18,12 @@ package com.anyilanxin.kunpeng.cluster.cluster;
 
 import java.util.Objects;
 
-/** Identifies a partition within a partition group (physical tenant). */
+/**
+ * Identifies a partition within a partition group (physical tenant).
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class PartitionId {
 
   private final String group;

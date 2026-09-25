@@ -34,7 +34,7 @@ import java.util.Optional;
  * store，二者共享同一持久存储实例。
  *
  * @author zxuanhong
- * @since 2026.0.0
+ * @since 2026.9.0
  */
 public final class DefaultRaftSnapshotStore implements RaftSnapshotStore {
 

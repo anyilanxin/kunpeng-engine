@@ -30,7 +30,7 @@ import java.nio.file.Path;
  * #newTransientSnapshot}——内容由调用方按次传入的 {@link SnapshotContentWriter} 写入，其余存储能力全部委托。
  *
  * @author zxuanhong
- * @since 2026.0.0
+ * @since 2026.9.0
  */
 public class DefaultConstructableSnapshotStore {
 

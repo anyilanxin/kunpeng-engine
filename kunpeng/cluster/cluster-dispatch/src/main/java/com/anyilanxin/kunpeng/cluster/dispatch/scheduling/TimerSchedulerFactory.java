@@ -26,6 +26,9 @@ import java.util.function.Supplier;
  * 基于一组共享协作对象创建 {@link OrderedTimerScheduler} 实例。
  *
  * <p>工厂捕获所有 actor 车道间共享的调度器部件——阶段与中止信号、写入器来源、待发命令 注册表、时钟、扫描间隔与指标——使每条车道都能构建绑定自身 actor 的调度器。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class TimerSchedulerFactory {
 

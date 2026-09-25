@@ -30,7 +30,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.AutoClose;
 import org.junit.jupiter.api.Test;
 
-/** 并发压测 {@link RaftRequestMetrics} 的计数接口，确认内部计数器无线程安全问题。 */
+/**
+ * 并发压测 {@link RaftRequestMetrics} 的计数接口，确认内部计数器无线程安全问题。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class RaftRequestMetricsTest {
 
   private static final int CONCURRENT_ROUNDS = 7_500;

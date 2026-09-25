@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<sbe:messageSchema xmlns:sbe="http://fixprotocol.io/2016/sbe"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://fixprotocol.io/2016/sbe sbe.xsd"
+                   package="com.anyilanxin.kunpeng.cluster.raft.protocol"
+                   id="10"
+                   version="0"
+                   description="Raft 协议报文（线上编码，全量 SBE 化，替代 Fory）">
+  <types>
+    <composite name="messageHeader" description="标准 SBE 消息头">
+      <type name="blockLength" primitiveType="uint16"/>
+      <type name="templateId" primitiveType="uint16"/>
+      <type name="schemaId" primitiveType="uint16"/>
+      <type name="version" primitiveType="uint16"/>
+    </composite>
+    <composite name="groupSizeEncoding" description="重复组头">
+      <type name="blockLength" primitiveType="uint16"/>
+      <type name="numInGroup" primitiveType="uint16"/>
+    </composite>
+    <composite name="varAsciiEncoding" description="UTF-8 变长字符串">
+      <type name="length" primitiveType="uint16"/>
+      <type name="varData" primitiveType="uint8" length="0" characterEncoding="UTF-8"/>
+    </composite>
+    <composite name="varDataEncoding" description="变长字节块(uint32 长度)">
+      <type name="length" primitiveType="uint32" maxValue="2147483647"/>
+      <type name="varData" primitiveType="uint8" length="0"/>
+    </composite>
+
+    <enum name="ResponseStatus" encodingType="int8" nullValue="127" description="对齐 RaftResponse.Status">
+      <validValue name="ERROR" description="失败">0</validValue>
+      <validValue name="OK" description="成功">1</validValue>
+    </enum>
+    <enum name="ErrorType" encodingType="int8" nullValue="127" description="对齐 RaftError.Type(按名字映射)">
+      <validValue name="NO_LEADER">0</validValue>
+      <validValue name="QUERY_FAILURE">1</validValue>
+      <validValue name="COMMAND_FAILURE">2</validValue>
+      <validValue name="APPLICATION_ERROR">3</validValue>
+      <validValue name="ILLEGAL_MEMBER_STATE">4</validValue>
+      <validValue name="UNKNOWN_CLIENT">5</validValue>
+      <validValue name="UNKNOWN_SESSION">6</validValue>
+      <validValue name="UNKNOWN_SERVICE">7</validValue>
+      <validValue name="CLOSED_SESSION">8</validValue>
+      <validValue name="PROTOCOL_ERROR">9</validValue>
+      <validValue name="CONFIGURATION_ERROR">10</validValue>
+      <validValue name="UNAVAILABLE">11</validValue>
+    </enum>
+    <enum name="MemberType" encodingType="int8" nullValue="127" description="对齐 RaftMember.Type">
+      <validValue name="INACTIVE">0</validValue>
+      <validValue name="PASSIVE">1</validValue>
+      <validValue name="PROMOTABLE">2</validValue>
+      <validValue name="ACTIVE">3</validValue>
+    </enum>
+    <enum name="TransferResultCode" encodingType="int8" nullValue="127" description="对齐 LeadershipTransferResult(14 值)">
+      <validValue name="TRANSFERRED">0</validValue>
+      <validValue name="ALREADY_LEADER">1</validValue>
+      <validValue name="NOT_MEMBER">2</validValue>
+      <validValue name="NOT_REPLICATING">3</validValue>
+      <validValue name="UNREACHABLE">4</validValue>
+      <validValue name="NOT_COORDINATOR">5</validValue>
+      <validValue name="STALE_CONFIGURATION">6</validValue>
+      <validValue name="TRANSFER_IN_PROGRESS">7</validValue>
+      <validValue name="LAG_TOO_HIGH">8</validValue>
+      <validValue name="LEADER_INITIALIZING">9</validValue>
+      <validValue name="CONFIGURATION_CHANGE_IN_PROGRESS">10</validValue>
+      <validValue name="PAUSE_FAILED">11</validValue>
+      <validValue name="REPLICATION_TIMED_OUT">12</validValue>
+      <validValue name="TIMEOUT_NOW_EXHAUSTED">13</validValue>
+    </enum>
+  </types>
+
+  <!-- ==================== 追加(热路径) ==================== -->
+  <sbe:message name="AppendRequest" id="1" description="v1 追加请求(PersistedRaftRecord 条目)">
+    <field name="term" id="1" type="int64"/>
+    <field name="prevLogIndex" id="2" type="int64"/>
+    <field name="prevLogTerm" id="3" type="int64"/>
+    <field name="commitIndex" id="4" type="int64"/>
+    <group name="Entries" id="5" dimensionType="groupSizeEncoding">
+      <field name="entryTerm" id="6" type="int64"/>
+      <field name="entryIndex" id="7" type="int64"/>
+      <field name="entryAsqn" id="8" type="int64"/>
+      <field name="entryChecksum" id="9" type="int64"/>
+      <data name="entryData" id="10" type="varDataEncoding"/>
+    </group>
+    <data name="leader" id="11" type="varAsciiEncoding"/>
+  </sbe:message>
+
+  <sbe:message name="VersionedAppendRequest" id="2" description="v2 追加请求(ReplicatableJournalRecord 条目)">
+    <field name="version" id="1" type="int32"/>
+    <field name="term" id="2" type="int64"/>
+    <field name="prevLogIndex" id="3" type="int64"/>
+    <field name="prevLogTerm" id="4" type="int64"/>
+    <field name="commitIndex" id="5" type="int64"/>
+    <group name="Entries" id="6" dimensionType="groupSizeEncoding">
+      <field name="entryTerm" id="7" type="int64"/>
+      <field name="entryIndex" id="8" type="int64"/>
+      <field name="entryChecksum" id="9" type="int64"/>
+      <data name="entryData" id="10" type="varDataEncoding"/>
+    </group>
+    <data name="leader" id="11" type="varAsciiEncoding"/>
+  </sbe:message>
+
+  <sbe:message name="AppendResponse" id="3" description="追加响应">
+    <field name="status" id="1" type="ResponseStatus"/>
+    <field name="errorType" id="2" type="ErrorType"/>
+    <field name="term" id="3" type="int64"/>
+    <field name="succeeded" id="4" type="uint8"/>
+    <field name="lastLogIndex" id="5" type="int64"/>
+    <field name="lastSnapshotIndex" id="6" type="int64"/>
+    <field name="configurationIndex" id="7" type="int64"/>
+    <data name="errorMessage" id="8" type="varAsciiEncoding"/>
+  </sbe:message>
+
+  <!-- ==================== 选举(热路径) ==================== -->
+  <sbe:message name="PollRequest" id="4" description="预投票请求">
+    <field name="term" id="1" type="int64"/>
+    <field name="lastLogIndex" id="2" type="int64"/>
+    <field name="lastLogTerm" id="3" type="int64"/>
+    <data name="candidate" id="4" type="varAsciiEncoding"/>
+  </sbe:message>
+
+  <sbe:message name="PollResponse" id="5" description="预投票响应">
+    <field name="status" id="1" type="ResponseStatus"/>
+    <field name="errorType" id="2" type="ErrorType"/>
+    <field name="term" id="3" type="int64"/>
+    <field name="accepted" id="4" type="uint8"/>
+    <data name="errorMessage" id="5" type="varAsciiEncoding"/>
+  </sbe:message>
+
+  <sbe:message name="VoteRequest" id="6" description="投票请求">
+    <field name="term" id="1" type="int64"/>
+    <field name="lastLogIndex" id="2" type="int64"/>
+    <field name="lastLogTerm" id="3" type="int64"/>
+    <data name="candidate" id="4" type="varAsciiEncoding"/>
+  </sbe:message>
+
+  <sbe:message name="VoteResponse" id="7" description="投票响应">
+    <field name="status" id="1" type="ResponseStatus"/>
+    <field name="errorType" id="2" type="ErrorType"/>
+    <field name="term" id="3" type="int64"/>
+    <field name="voted" id="4" type="uint8"/>
+    <data name="errorMessage" id="5" type="varAsciiEncoding"/>
+  </sbe:message>
+
+  <!-- ==================== 快照安装 ==================== -->
+  <sbe:message name="InstallRequest" id="8" description="快照安装分块请求">
+    <field name="currentTerm" id="1" type="int64"/>
+    <field name="index" id="2" type="int64"/>
+    <field name="term" id="3" type="int64"/>
+    <field name="version" id="4" type="int32"/>
+    <field name="initial" id="5" type="uint8"/>
+    <field name="complete" id="6" type="uint8"/>
+    <data name="leader" id="7" type="varAsciiEncoding"/>
+    <data name="chunkId" id="8" type="varDataEncoding"/>
+    <data name="nextChunkId" id="9" type="varDataEncoding"/>
+    <data name="data" id="10" type="varDataEncoding"/>
+  </sbe:message>
+
+  <sbe:message name="InstallResponse" id="9" description="快照安装响应">
+    <field name="status" id="1" type="ResponseStatus"/>
+    <field name="errorType" id="2" type="ErrorType"/>
+    <field name="preferredChunkSize" id="3" type="int32"/>
+    <data name="errorMessage" id="4" type="varAsciiEncoding"/>
+  </sbe:message>
+
+  <!-- ==================== 配置变更(冷路径) ==================== -->
+  <sbe:message name="ConfigureRequest" id="10" description="配置提交请求">
+    <field name="term" id="1" type="int64"/>
+    <field name="index" id="2" type="int64"/>
+    <field name="timestamp" id="3" type="int64"/>
+    <group name="Members" id="4" dimensionType="groupSizeEncoding">
+      <field name="memberType" id="5" type="MemberType"/>
+      <field name="updatedEpochSecond" id="6" type="int64"/>
+      <field name="updatedNano" id="7" type="int32"/>
+      <data name="memberId" id="8" type="varAsciiEncoding"/>
+    </group>
+    <group name="OldMembers" id="9" dimensionType="groupSizeEncoding">
+      <field name="memberType" id="10" type="MemberType"/>
+      <field name="updatedEpochSecond" id="11" type="int64"/>
+      <field name="updatedNano" id="12" type="int32"/>
+      <data name="memberId" id="13" type="varAsciiEncoding"/>
+    </group>
+    <data name="leader" id="14" type="varAsciiEncoding"/>
+  </sbe:message>
+
+  <sbe:message name="ConfigureResponse" id="11" description="配置提交响应(仅状态)">
+    <field name="status" id="1" type="ResponseStatus"/>
+    <field name="errorType" id="2" type="ErrorType"/>
+    <data name="errorMessage" id="3" type="varAsciiEncoding"/>
+  </sbe:message>
+
+  <sbe:message name="ReconfigureRequest" id="12" description="重配置请求">
+    <field name="index" id="1" type="int64"/>
+    <field name="term" id="2" type="int64"/>
+    <group name="Members" id="3" dimensionType="groupSizeEncoding">
+      <field name="memberType" id="4" type="MemberType"/>
+      <field name="updatedEpochSecond" id="5" type="int64"/>
+      <field name="updatedNano" id="6" type="int32"/>
+      <data name="memberId" id="7" type="varAsciiEncoding"/>
+    </group>
+    <data name="from" id="8" type="varAsciiEncoding"/>
+  </sbe:message>
+
+  <sbe:message name="ReconfigureResponse" id="13" description="重配置响应(继承 ConfigurationResponse 业务字段)">
+    <field name="status" id="1" type="ResponseStatus"/>
+    <field name="errorType" id="2" type="ErrorType"/>
+    <field name="index" id="3" type="int64"/>
+    <field name="term" id="4" type="int64"/>
+    <field name="timestamp" id="5" type="int64"/>
+    <group name="Members" id="6" dimensionType="groupSizeEncoding">
+      <field name="memberType" id="7" type="MemberType"/>
+      <field name="updatedEpochSecond" id="8" type="int64"/>
+      <field name="updatedNano" id="9" type="int32"/>
+      <data name="memberId" id="10" type="varAsciiEncoding"/>
+    </group>
+    <data name="errorMessage" id="11" type="varAsciiEncoding"/>
+  </sbe:message>
+
+  <sbe:message name="TransferRequest" id="14" description="领导权转移请求">
+    <data name="member" id="1" type="varAsciiEncoding"/>
+  </sbe:message>
+
+  <sbe:message name="TransferResponse" id="15" description="领导权转移响应(仅状态)">
+    <field name="status" id="1" type="ResponseStatus"/>
+    <field name="errorType" id="2" type="ErrorType"/>
+    <data name="errorMessage" id="3" type="varAsciiEncoding"/>
+  </sbe:message>
+
+  <sbe:message name="JoinRequest" id="16" description="入簇请求(单成员)">
+    <field name="memberType" id="1" type="MemberType"/>
+    <field name="updatedEpochSecond" id="2" type="int64"/>
+    <field name="updatedNano" id="3" type="int32"/>
+    <data name="memberId" id="4" type="varAsciiEncoding"/>
+  </sbe:message>
+
+  <sbe:message name="JoinResponse" id="17" description="入簇响应(仅状态)">
+    <field name="status" id="1" type="ResponseStatus"/>
+    <field name="errorType" id="2" type="ErrorType"/>
+    <data name="errorMessage" id="3" type="varAsciiEncoding"/>
+  </sbe:message>
+
+  <sbe:message name="LeaveRequest" id="18" description="离簇请求(单成员)">
+    <field name="memberType" id="1" type="MemberType"/>
+    <field name="updatedEpochSecond" id="2" type="int64"/>
+    <field name="updatedNano" id="3" type="int32"/>
+    <data name="memberId" id="4" type="varAsciiEncoding"/>
+  </sbe:message>
+
+  <sbe:message name="LeaveResponse" id="19" description="离簇响应(仅状态)">
+    <field name="status" id="1" type="ResponseStatus"/>
+    <field name="errorType" id="2" type="ErrorType"/>
+    <data name="errorMessage" id="3" type="varAsciiEncoding"/>
+  </sbe:message>
+
+  <sbe:message name="ForceConfigureRequest" id="20" description="强制配置请求">
+    <field name="term" id="1" type="int64"/>
+    <field name="index" id="2" type="int64"/>
+    <field name="timestamp" id="3" type="int64"/>
+    <group name="Members" id="4" dimensionType="groupSizeEncoding">
+      <field name="memberType" id="5" type="MemberType"/>
+      <field name="updatedEpochSecond" id="6" type="int64"/>
+      <field name="updatedNano" id="7" type="int32"/>
+      <data name="memberId" id="8" type="varAsciiEncoding"/>
+    </group>
+    <data name="from" id="9" type="varAsciiEncoding"/>
+  </sbe:message>
+
+  <sbe:message name="ForceConfigureResponse" id="21" description="强制配置响应">
+    <field name="status" id="1" type="ResponseStatus"/>
+    <field name="errorType" id="2" type="ErrorType"/>
+    <field name="index" id="3" type="int64"/>
+    <field name="term" id="4" type="int64"/>
+    <data name="errorMessage" id="5" type="varAsciiEncoding"/>
+  </sbe:message>
+
+  <sbe:message name="TimeoutNowRequest" id="22" description="立即超时(选举)请求">
+    <field name="term" id="1" type="int64"/>
+    <data name="leader" id="2" type="varAsciiEncoding"/>
+  </sbe:message>
+
+  <sbe:message name="TimeoutNowResponse" id="23" description="立即超时响应(仅状态)">
+    <field name="status" id="1" type="ResponseStatus"/>
+    <field name="errorType" id="2" type="ErrorType"/>
+    <data name="errorMessage" id="3" type="varAsciiEncoding"/>
+  </sbe:message>
+
+  <sbe:message name="LeadershipTransferInitiateRequest" id="24" description="领导权转移发起请求(可空字段用哨兵值)">
+    <field name="coordinatorConfigVersion" id="1" type="int64"/>
+    <field name="correlationId" id="2" type="int64"/>
+    <field name="replicationLagThreshold" id="3" type="int64" description="null 用 int64 最小值哨兵"/>
+    <field name="replicationTimeoutNanos" id="4" type="int64" description="null 用 -1 哨兵"/>
+    <field name="maxTransferAttempts" id="5" type="int32" description="null 用 int32 最小值哨兵"/>
+    <data name="desiredLeader" id="6" type="varAsciiEncoding"/>
+    <data name="coordinator" id="7" type="varAsciiEncoding"/>
+  </sbe:message>
+
+  <sbe:message name="LeadershipTransferInitiateResponse" id="25" description="领导权转移发起响应">
+    <field name="status" id="1" type="ResponseStatus"/>
+    <field name="errorType" id="2" type="ErrorType"/>
+    <field name="rejectionReason" id="3" type="TransferResultCode" description="null 用枚举 nullValue"/>
+    <data name="errorMessage" id="4" type="varAsciiEncoding"/>
+  </sbe:message>
+
+  <sbe:message name="LeadershipTransferResultRequest" id="26" description="领导权转移结果上报请求">
+    <field name="correlationId" id="1" type="int64"/>
+    <field name="result" id="2" type="TransferResultCode"/>
+    <data name="leader" id="3" type="varAsciiEncoding"/>
+    <data name="desiredLeader" id="4" type="varAsciiEncoding"/>
+  </sbe:message>
+
+  <sbe:message name="LeadershipTransferResultResponse" id="27" description="领导权转移结果上报响应(仅状态)">
+    <field name="status" id="1" type="ResponseStatus"/>
+    <field name="errorType" id="2" type="ErrorType"/>
+    <data name="errorMessage" id="3" type="varAsciiEncoding"/>
+  </sbe:message>
+</sbe:messageSchema>

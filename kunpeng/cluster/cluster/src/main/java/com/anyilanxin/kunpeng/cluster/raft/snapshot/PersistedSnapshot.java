@@ -26,6 +26,7 @@ import java.util.UUID;
  * 镜像持久对象
  *
  * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface PersistedSnapshot {
   int version();

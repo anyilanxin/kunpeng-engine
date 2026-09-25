@@ -41,6 +41,9 @@ import org.slf4j.LoggerFactory;
  *      |                       |   （落后跟随者仍可复制追上，
  *      |                       |    无需触发完整快照传输）
  * </pre>
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class LogCompactor {
   private static final Logger LOGGER = LoggerFactory.getLogger(LogCompactor.class);

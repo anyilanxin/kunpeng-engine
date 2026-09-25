@@ -23,8 +23,10 @@ import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.source.Partitio
 import com.anyilanxin.kunpeng.protocol.admin.record.command.source.PartitionSourceMetaLifeCycle;
 
 /**
+ * 分区 source 元数据命令处理器抽象基类。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public abstract class AbstractPartitionSourceMetaProcessor
     implements LogEventProcessorSingleState<PartitionSourceMetaRecord> {

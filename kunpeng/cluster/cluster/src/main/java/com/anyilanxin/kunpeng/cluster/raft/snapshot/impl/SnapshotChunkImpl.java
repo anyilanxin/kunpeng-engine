@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.cluster.raft.snapshot.impl;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChunk;
 import java.nio.ByteBuffer;
 
-/** {@link SnapshotChunk} 的默认实现：不可变分片。 */
+/**
+ * {@link SnapshotChunk} 的默认实现：不可变分片。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class SnapshotChunkImpl implements SnapshotChunk {
 
   private final String chunkName;

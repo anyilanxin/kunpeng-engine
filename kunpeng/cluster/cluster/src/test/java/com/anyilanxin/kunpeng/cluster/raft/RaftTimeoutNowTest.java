@@ -37,6 +37,12 @@ import org.awaitility.Awaitility;
 import org.junit.Rule;
 import org.junit.Test;
 
+/**
+ * Raft TimeoutNow 立即选举测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class RaftTimeoutNowTest {
 
   @Rule public RaftRule raftRule = RaftRule.withBootstrappedNodes(3);

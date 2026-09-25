@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.cluster.raft.utils;
 import java.util.function.LongConsumer;
 import org.slf4j.Logger;
 
-/** 校验最新快照与 Raft 日志头部之间的索引衔接关系。 */
+/**
+ * 校验最新快照与 Raft 日志头部之间的索引衔接关系。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class StateUtil {
 
   private StateUtil() {}

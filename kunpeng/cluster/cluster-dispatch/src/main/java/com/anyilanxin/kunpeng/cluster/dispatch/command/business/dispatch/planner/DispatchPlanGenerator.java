@@ -25,7 +25,7 @@ import java.util.Set;
  * 单一调度类型的执行计划生成策略，每种 {@link BusinessDispatchType} 对应一个实现。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface DispatchPlanGenerator {
 

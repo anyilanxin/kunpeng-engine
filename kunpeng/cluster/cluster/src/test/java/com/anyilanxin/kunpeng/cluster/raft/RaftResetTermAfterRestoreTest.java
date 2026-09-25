@@ -27,6 +27,9 @@ import org.junit.Test;
 /**
  * 覆盖恢复（restore）场景下的任期恢复：元数据文件丢失时，节点应从日志最后一条条目恢复任期，
  * 对应上游回归问题 camunda/issues/14509。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class RaftResetTermAfterRestoreTest {
   @Rule public RaftRule raftRule = RaftRule.withBootstrappedNodes(1);

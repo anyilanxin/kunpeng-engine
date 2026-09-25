@@ -33,6 +33,9 @@ import org.agrona.concurrent.UnsafeBuffer;
  * <pre>
  * | int32 magic | int8 version | int64 index | int64 asqn | int32 length | byte[length] payload |
  * </pre>
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 final class JournalRecordDataCodec {
 

@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.cluster.dispatch.scheduling;
 
-/** 定时任务健康上报：车道 actor 失败/恢复时由引擎回调，实现方映射到分区健康面。 */
+/**
+ * 定时任务健康上报：车道 actor 失败/恢复时由引擎回调，实现方映射到分区健康面。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @FunctionalInterface
 public interface ScheduledTasksHealthListener {
 

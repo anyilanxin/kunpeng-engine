@@ -44,7 +44,7 @@ import org.slf4j.Logger;
  * 广播，同时汇聚全集群广播数据供查询。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class DefaultClusterSwimTopologyService extends AbstractSwimTopologyService
     implements ClusterSwimTopologyService, PartitionTopologyListener, RaftBusinessMetaListener {

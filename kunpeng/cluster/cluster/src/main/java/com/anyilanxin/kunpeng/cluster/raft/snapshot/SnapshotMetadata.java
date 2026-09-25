@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
  * 与换行）。标识三元组由目录名承载，文件内不重复。
  *
  * @author zxuanhong
- * @since 2026.0.0
+ * @since 2026.9.0
  */
 public record SnapshotMetadata(
     String nodeId, long index, long term, int version, Map<String, String> metaInfo) {

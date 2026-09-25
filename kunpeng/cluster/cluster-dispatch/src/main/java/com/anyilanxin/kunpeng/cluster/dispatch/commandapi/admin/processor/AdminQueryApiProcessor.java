@@ -20,27 +20,29 @@ import static com.anyilanxin.kunpeng.structpack.util.BufferUtil.copyInto;
 
 import com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter;
 import com.anyilanxin.kunpeng.cluster.dispatch.commandapi.admin.AbstractAdminApiProcessor;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.LogRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminClusterMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminDispatchPlanRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.admin.query.AdminDispatchQueryRequestRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.admin.query.AdminDispatchQueryResponseRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.commandapi.admin.AdminDispatchApiValueLifeCycle;
 import com.anyilanxin.kunpeng.repository.admin.AdminImmutableRepository;
-import com.anyilanxin.kunpeng.repository.admin.modules.admin.ImmutableRepositoryAdmin;
+import com.anyilanxin.kunpeng.repository.admin.modules.admin.ImmutableAdminRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * 管理面调度查询 API 处理器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class AdminQueryApiProcessor
     extends AbstractAdminApiProcessor<AdminDispatchQueryRequestRecord> {
   private static final Logger LOG = LoggerFactory.getLogger(AdminQueryApiProcessor.class);
   private final AdminDispatchQueryResponseRecord response;
   private final LogEventWriter writer;
-  private final ImmutableRepositoryAdmin repositoryAdmin;
+  private final ImmutableAdminRepository repositoryAdmin;
 
   public AdminQueryApiProcessor(final LogEventWriter writer) {
     this.writer = writer;
@@ -50,7 +52,7 @@ public class AdminQueryApiProcessor
   }
 
   @Override
-  public void processRecord(final LogRecord<AdminDispatchQueryRequestRecord> record) {
+  public void processRecord(final AdminLogRecord<AdminDispatchQueryRequestRecord> record) {
     response.reset();
     final AdminClusterMetaRecord clusterMeta = repositoryAdmin.getClusterMeta();
     if (clusterMeta != null) {

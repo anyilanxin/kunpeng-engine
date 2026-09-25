@@ -23,7 +23,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
-/** Ordered completable future test. */
+/**
+ * Ordered completable future test.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class OrderedFutureTest {
 
   /** Tests ordered completion of future callbacks. */

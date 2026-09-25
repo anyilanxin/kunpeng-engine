@@ -18,7 +18,12 @@ package com.anyilanxin.kunpeng.cluster.raft.journal.record;
 
 import java.util.Objects;
 
-/** 记录头（元数据）部分，承载校验和与记录体长度。 */
+/**
+ * 记录头（元数据）部分，承载校验和与记录体长度。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class JournalRecordMetadata {
 
   /** 记录体数据的 CRC32C 校验和。 */

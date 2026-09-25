@@ -19,8 +19,10 @@ package com.anyilanxin.kunpeng.cluster.dispatch;
 import java.util.function.Supplier;
 
 /**
+ * 批处理收集器供给器：为每次处理批次提供收集器实例。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public final class ProcessingCollectSupplier implements Supplier<BatchProcessingCollect> {
 

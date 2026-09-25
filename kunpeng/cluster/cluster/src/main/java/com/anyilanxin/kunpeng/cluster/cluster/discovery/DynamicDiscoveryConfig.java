@@ -20,7 +20,12 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 
-/** 基于动态解析（DNS 等）的节点发现配置。 */
+/**
+ * 基于动态解析（DNS 等）的节点发现配置。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class DynamicDiscoveryConfig extends NodeDiscoveryConfig {
 
   /** 刷新间隔的缺省值：每分钟重新解析一次地址。 */

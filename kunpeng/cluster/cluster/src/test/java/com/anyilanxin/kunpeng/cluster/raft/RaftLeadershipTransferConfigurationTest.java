@@ -38,7 +38,12 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-/** Coverage for the leader-side rebalance settings (and overrides). */
+/**
+ * Coverage for the leader-side rebalance settings (and overrides).
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @RunWith(Parameterized.class)
 public class RaftLeadershipTransferConfigurationTest {
 

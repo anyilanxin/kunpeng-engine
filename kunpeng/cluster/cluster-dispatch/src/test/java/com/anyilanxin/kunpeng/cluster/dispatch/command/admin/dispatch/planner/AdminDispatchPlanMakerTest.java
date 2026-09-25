@@ -52,7 +52,7 @@ import org.junit.jupiter.api.Test;
  * Leader 通过 {@link ClusterTopologyService} 桩返回（固定为成员 ID 升序的首个成员）。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 class AdminDispatchPlanMakerTest {
 

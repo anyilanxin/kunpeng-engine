@@ -30,6 +30,12 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * Raft 复制测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @RunWith(Parameterized.class)
 public class RaftReplicationTest {
   @Rule @Parameter public RaftRule raftRule;

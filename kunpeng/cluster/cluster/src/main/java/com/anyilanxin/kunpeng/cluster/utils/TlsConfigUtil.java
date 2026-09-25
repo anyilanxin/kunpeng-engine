@@ -37,6 +37,9 @@ import java.util.List;
  *
  * <p>服务端身份（私钥 + 证书链）用 {@link #loadServerIdentity(Path, char[])} 一次打开密钥库同时取出， 避免同一文件读两遍；客户端信任材料用
  * {@link #readTrustedCertificates(Path, char[])}，只要求证书、 不要求密钥库中存在私钥条目（纯信任库场景）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class TlsConfigUtil {
 

@@ -51,6 +51,9 @@ import static org.mockito.Mockito.*;
 /**
  * 验证 receiver 在不同分组（默认租户分组 / 自定义分组 / 旧版 subject）下，
  * 对全部协议动作完成 replyTo 注册，并在 stop 时逐个 unsubscribe。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 @ExtendWith(MockitoExtension.class)
 public class RaftServerReceiverSubjectsTest {

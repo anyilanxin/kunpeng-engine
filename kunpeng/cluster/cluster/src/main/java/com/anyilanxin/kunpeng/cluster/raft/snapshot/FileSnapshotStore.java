@@ -22,7 +22,7 @@ import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
  * 文件镜像存储公共契约：各模块（拍摄/接收/传输）的 store 共用的存储能力—— 启动加载与 pending 清理。镜像目录、.sfc 校验文件、保留策略等由实现统一承载。
  *
  * @author zxuanhong
- * @since 2026.0.0
+ * @since 2026.9.0
  */
 public interface FileSnapshotStore extends SnapshotStore {
 

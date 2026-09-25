@@ -50,7 +50,12 @@ import java.util.function.UnaryOperator;
 import static com.anyilanxin.kunpeng.cluster.cluster.protocol.GroupMembershipEvent.Type.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** SWIM membership protocol test. */
+/**
+ * SWIM membership protocol test.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class SwimProtocolTest extends ConcurrentTestCase {
 
   private static final Duration GOSSIP_INTERVAL = Duration.ofMillis(25);

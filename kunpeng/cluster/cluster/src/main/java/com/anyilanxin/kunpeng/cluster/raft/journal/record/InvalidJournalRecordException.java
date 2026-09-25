@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.journal.record;
 
-/** 记录内容不合法（例如反序列化后字段取值超出允许范围）时抛出的运行时异常。 */
+/**
+ * 记录内容不合法（例如反序列化后字段取值超出允许范围）时抛出的运行时异常。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class InvalidJournalRecordException extends RuntimeException {
 
   /**

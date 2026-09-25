@@ -27,7 +27,7 @@ import org.jspecify.annotations.Nullable;
  * TransferSnapshotProvider} 对应方法的直写 lambda，无需再做整接口适配。
  *
  * @author zxuanhong
- * @since 2026.0.0
+ * @since 2026.9.0
  */
 @FunctionalInterface
 public interface SnapshotContentWriter {

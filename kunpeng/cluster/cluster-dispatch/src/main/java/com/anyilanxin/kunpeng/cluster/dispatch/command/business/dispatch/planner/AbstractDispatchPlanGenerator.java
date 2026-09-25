@@ -29,8 +29,8 @@ import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.common.Partitio
 import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionExecutionRecordValue;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionType;
 import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
-import com.anyilanxin.kunpeng.repository.admin.modules.key.ImmutableRepositoryKey;
-import com.anyilanxin.kunpeng.repository.admin.modules.source.ImmutableRepositorySource;
+import com.anyilanxin.kunpeng.repository.admin.modules.key.ImmutableKeyRepository;
+import com.anyilanxin.kunpeng.repository.admin.modules.source.ImmutableSourceRepository;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -43,24 +43,24 @@ import org.agrona.concurrent.UnsafeBuffer;
 /**
  * 调度计划生成策略的公共基类，封装拓扑读取、执行明细构造与新旧拓扑 diff 翻译等各类型共享的逻辑。
  *
- * <p>基类持有 {@link ImmutableRepositoryKey}（执行明细 ID 生成）、{@link ClusterTopologyService} （运行时分区 Leader
- * 查询）与 {@link ImmutableRepositorySource}（管理仓库分区来源标识只读视图）。 历史拓扑一律取自计划记录（oldMeta），生成器不读取业务仓库，
+ * <p>基类持有 {@link ImmutableKeyRepository}（执行明细 ID 生成）、{@link ClusterTopologyService} （运行时分区 Leader
+ * 查询）与 {@link ImmutableSourceRepository}（管理仓库分区来源标识只读视图）。 历史拓扑一律取自计划记录（oldMeta），生成器不读取业务仓库，
  * 仅有的仓库读取是按需查询分区来源标识（如缩容合并时填充来源信息）； 各策略只负责计算目标拓扑（缩容多阶段编排时直接构造执行明细、不走 diff 翻译）， 操作序列统一由 {@link
  * PartitionTopologyDiff} 按新旧拓扑差异推导后经 {@link #assembleFromDiff} / {@link #appendDiff} 翻译为执行明细。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public abstract class AbstractDispatchPlanGenerator implements DispatchPlanGenerator {
-  protected final ImmutableRepositoryKey repositoryKey;
-  protected final ImmutableRepositorySource repositorySource;
+  protected final ImmutableKeyRepository repositoryKey;
+  protected final ImmutableSourceRepository repositorySource;
   private final PartitionDistributor partitionDistributor = new RoundRobinPartitionDistributor();
   private final ClusterTopologyService clusterTopologyService;
 
   protected AbstractDispatchPlanGenerator(
-      final ImmutableRepositoryKey repositoryKey,
+      final ImmutableKeyRepository repositoryKey,
       final ClusterTopologyService clusterTopologyService,
-      final ImmutableRepositorySource repositorySource) {
+      final ImmutableSourceRepository repositorySource) {
     this.repositoryKey = Objects.requireNonNull(repositoryKey, "repositoryKey is null");
     this.clusterTopologyService =
         Objects.requireNonNull(clusterTopologyService, "clusterTopologyService is null");

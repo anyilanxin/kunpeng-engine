@@ -27,6 +27,9 @@ import org.agrona.collections.LongHashSet;
  *
  * <p>只跟踪底层映射中存在的 intent，其余 lifeCycle 一律静默忽略。每个被跟踪的 lifeCycle 拥有 独立的 {@link BoundedKeySet}，总上界即各
  * intent 上界之和。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class BoundedPendingCommandRegistry implements PendingCommandRegistry.Stageable {
 

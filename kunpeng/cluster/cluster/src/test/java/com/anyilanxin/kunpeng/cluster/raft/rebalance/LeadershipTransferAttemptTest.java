@@ -36,6 +36,12 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Rule;
 import org.junit.Test;
 
+/**
+ * leader 迁移尝试测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class LeadershipTransferAttemptTest {
   /** For tests we don't install a real coordinator check, so any version will do. */
   private static final long CONFIG_VERSION = 7;

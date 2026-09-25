@@ -19,14 +19,16 @@ package com.anyilanxin.kunpeng.cluster.dispatch.command.admin.dispatch.processor
 import com.anyilanxin.kunpeng.cluster.dispatch.ClusterDispatchLoggers;
 import com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter;
 import com.anyilanxin.kunpeng.cluster.dispatch.command.admin.dispatch.AbstractAdminDispatchProcessor;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.LogRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminDispatchPlanRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.admin.AdminDispatchPlanLifeCycle;
 import org.slf4j.Logger;
 
 /**
+ * 管理面调度计划失败命令处理器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class AdminDispatchFailProcessor extends AbstractAdminDispatchProcessor {
   protected final LogEventWriter writer;
@@ -38,7 +40,7 @@ public class AdminDispatchFailProcessor extends AbstractAdminDispatchProcessor {
   }
 
   @Override
-  public void processRecord(final LogRecord<AdminDispatchPlanRecord> record) {
+  public void processRecord(final AdminLogRecord<AdminDispatchPlanRecord> record) {
     final AdminDispatchPlanRecord value = record.getValue();
     LOGGER.info("\n\n------->管理面调度计划失败，停止推进<-------\n{}\n", value);
     // 计划标记失败并清理（applier 复用 updateDispatchPlan）；未执行明细保持 WAIT，等待后续人工重试

@@ -37,8 +37,10 @@ import java.time.Duration;
 import org.slf4j.Logger;
 
 /**
+ * 集群调度客户端默认实现：actor 化的请求发送与应答匹配。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class DefaultClusterDispatchClient extends Actor implements ClusterDispatchClient {
   /** 发送重试次数上限，目标成员重启或网络抖动时兜底 */

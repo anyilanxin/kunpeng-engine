@@ -20,6 +20,9 @@ import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.utils.net.Address;
 
 /**
+ * 领导者信息：领导者成员 ID 与访问地址。
+ *
  * @author zxuanhong
+ * @since 2026.9.0
  */
 public record LeaderInfo(MemberId memberId, Address address) {}

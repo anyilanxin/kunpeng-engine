@@ -40,6 +40,12 @@ import org.junit.rules.TemporaryFolder;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
+/**
+ * Atomix 集群测试规则。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class AtomixClusterRule extends ExternalResource {
   private static final int TIMEOUT_IN_S = 90;
 

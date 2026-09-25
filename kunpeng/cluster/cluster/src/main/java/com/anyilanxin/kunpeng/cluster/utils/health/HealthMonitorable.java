@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.cluster.utils.health;
 
-/** A component whose health can be monitored. */
+/**
+ * A component whose health can be monitored.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface HealthMonitorable {
 
   /**

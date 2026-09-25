@@ -31,7 +31,7 @@ import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.source.Partitio
 import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionExecutionType;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.business.BusinessDispatchType;
 import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
-import com.anyilanxin.kunpeng.repository.admin.modules.source.ImmutableRepositorySource;
+import com.anyilanxin.kunpeng.repository.admin.modules.source.ImmutableSourceRepository;
 import java.util.*;
 import org.junit.jupiter.api.Test;
 
@@ -48,7 +48,7 @@ import static org.mockito.Mockito.when;
  * 桩返回。 拓扑桩约定：分区 Leader 固定为 sortedMembers[(分区 ID - 1) % size]，分区来源默认为空（未分配来源）。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 class BusinessDispatchPlanGeneratorTest {
   private static final String GROUP = BUSINESS_RAFT_GROUP;
@@ -311,7 +311,7 @@ class BusinessDispatchPlanGeneratorTest {
   @Test
   void scaleDownShouldCarrySourceIdentityIntoMergeAndTransferRecords() {
     // 分区已分配来源时，来源标识（sourceId + 代理来源集合）填充到数据转移与标识符转移明细
-    final ImmutableRepositorySource repositorySource = mock(ImmutableRepositorySource.class);
+    final ImmutableSourceRepository repositorySource = mock(ImmutableSourceRepository.class);
     final PartitionSourceRecord partitionSource = mock(PartitionSourceRecord.class);
     when(partitionSource.getSourceId()).thenReturn(7);
     when(partitionSource.getAgentSourceIds()).thenReturn(Set.of(8, 9));
@@ -463,17 +463,17 @@ class BusinessDispatchPlanGeneratorTest {
       final ClusterTopologyService topologyService) {
     final long[] executionIdSeq = {0};
     return new ClusterBalanceDispatchPlanGenerator(
-        () -> ++executionIdSeq[0], topologyService, mock(ImmutableRepositorySource.class));
+        () -> ++executionIdSeq[0], topologyService, mock(ImmutableSourceRepository.class));
   }
 
   private static ChangePartitionDispatchPlanGenerator changePartitionGenerator(
       final ClusterTopologyService topologyService) {
-    return changePartitionGenerator(topologyService, mock(ImmutableRepositorySource.class));
+    return changePartitionGenerator(topologyService, mock(ImmutableSourceRepository.class));
   }
 
   private static ChangePartitionDispatchPlanGenerator changePartitionGenerator(
       final ClusterTopologyService topologyService,
-      final ImmutableRepositorySource repositorySource) {
+      final ImmutableSourceRepository repositorySource) {
     final long[] executionIdSeq = {0};
     return new ChangePartitionDispatchPlanGenerator(
         () -> ++executionIdSeq[0], topologyService, repositorySource);
@@ -483,7 +483,7 @@ class BusinessDispatchPlanGeneratorTest {
       final ClusterTopologyService topologyService) {
     final long[] executionIdSeq = {0};
     return new ChangeReplicationDispatchPlanGenerator(
-        () -> ++executionIdSeq[0], topologyService, mock(ImmutableRepositorySource.class));
+        () -> ++executionIdSeq[0], topologyService, mock(ImmutableSourceRepository.class));
   }
 
   private static void assertLeave(

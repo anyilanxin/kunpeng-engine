@@ -20,7 +20,12 @@ import com.anyilanxin.kunpeng.protocol.admin.AdminValueLifeCycle;
 import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 import java.util.Set;
 
-/** 支持向其他 partition 发送任意 command。发送可能不可靠且会静默失败，需要由调用方自行检测并重试。 */
+/**
+ * 支持向其他 partition 发送任意 command。发送可能不可靠且会静默失败，需要由调用方自行检测并重试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface InterPartitionCommandSender {
   void sendCommand(
       final int receiverResourceId,

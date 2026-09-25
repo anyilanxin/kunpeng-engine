@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!--
+  ~ 本文件为 kunpeng sink 运行时独立编写，并非衍生自任何第三方 schema 文件。
+  ~ 其中的数字标识（schema id 5、模板 id 1、版本 3）与各字段的字节布局刻意与上一代实现
+  ~ 仍在使用的保持一致，以便滚动升级期间新旧 broker 能继续互相解码对方的位置快照。
+  -->
+<sbe:messageSchema xmlns:sbe="http://fixprotocol.io/2016/sbe"
+                   package="com.anyilanxin.kunpeng.sink.protocol"
+                   id="5" version="3" semanticVersion="0.2.0"
+                   description="分区 leader 向 follower 广播的 Sink 位置快照"
+                   byteOrder="littleEndian">
+  <types>
+    <!-- SBE 标准封帧：位于每个消息体之前的 8 字节消息头 -->
+    <composite name="messageHeader" description="后续消息的标识符与块长度">
+      <type name="blockLength" primitiveType="uint16" description="消息体的根块长度"/>
+      <type name="templateId" primitiveType="uint16" description="消息体的模板 id"/>
+      <type name="schemaId" primitiveType="uint16" description="本 schema 的 id"/>
+      <type name="version" primitiveType="uint16" description="编码消息所用的 schema 版本"/>
+    </composite>
+    <composite name="groupDimensions" description="重复组的块长度与条目数">
+      <type name="blockLength" primitiveType="uint16"/>
+      <type name="numInGroup" primitiveType="uint8" semanticType="NumInGroup"/>
+    </composite>
+    <composite name="utf8Chars" description="带长度前缀的 UTF-8 文本">
+      <type name="length" primitiveType="uint32" maxValue="2147483647"/>
+      <type name="varData" primitiveType="uint8" length="0" characterEncoding="UTF-8"/>
+    </composite>
+    <composite name="rawBytes" description="带长度前缀的不透明负载">
+      <type name="length" primitiveType="uint32" maxValue="2147483647"/>
+      <type name="varData" primitiveType="uint8" length="0"/>
+    </composite>
+  </types>
+
+  <!-- 一份快照承载分区上每个已安装 Sink 的确认位置（及可选的检查点元数据）。
+       leader 一次性编码整个集合；follower 按单调递增方式应用各条目。 -->
+  <sbe:message id="1" name="SinkPositions" description="一个分区上全部 Sink 的确认位置">
+    <group id="0" name="entry" dimensionType="groupDimensions" description="单个 Sink 的确认状态">
+      <field id="0" name="position" type="uint64" description="该 Sink 最后确认的位置"/>
+      <data id="1" name="sinkId" type="utf8Chars" description="该条目所属 Sink 的 id"/>
+      <data id="2" name="metadata" type="rawBytes" description="随位置一并存储的检查点元数据" sinceVersion="3"/>
+    </group>
+  </sbe:message>
+</sbe:messageSchema>

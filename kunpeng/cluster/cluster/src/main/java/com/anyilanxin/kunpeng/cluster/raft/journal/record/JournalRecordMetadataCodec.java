@@ -32,6 +32,9 @@ import org.agrona.MutableDirectBuffer;
  *
  * <p>{@code length} is the size, in bytes, of the serialized {@link JournalRecordData} frame that
  * follows this metadata frame.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 final class JournalRecordMetadataCodec {
 

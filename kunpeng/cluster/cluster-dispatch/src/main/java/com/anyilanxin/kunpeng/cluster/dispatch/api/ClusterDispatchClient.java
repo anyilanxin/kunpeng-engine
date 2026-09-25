@@ -22,8 +22,10 @@ import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionExecutionRe
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 
 /**
+ * 集群调度客户端：对外发起调度计划创建、取消与查询的入口。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface ClusterDispatchClient {
   ActorFuture<Void> send(final PartitionExecutionRecordValue recordValue, final byte[] encode);
