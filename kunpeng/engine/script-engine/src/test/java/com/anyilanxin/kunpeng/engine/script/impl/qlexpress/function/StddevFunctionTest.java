@@ -26,6 +26,9 @@ import org.junit.jupiter.api.Test;
  *
  * <p>注意：当前实现使用<b>总体标准差</b>（除以 n），与 FEEL 规范定义的<b>样本标准差</b>（除以 n-1）不同。
  * 例：{@code stddev([2, 4, 7, 5])} 总体标准差 ≈ 1.8027756，样本标准差 ≈ 2.0816659。此差异留作后续讨论。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 class StddevFunctionTest extends FunctionTestBase {
 

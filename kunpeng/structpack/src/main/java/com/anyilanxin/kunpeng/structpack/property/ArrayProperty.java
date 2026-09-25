@@ -21,6 +21,12 @@ import com.anyilanxin.kunpeng.structpack.value.BaseValue;
 import com.anyilanxin.kunpeng.structpack.value.ValueArray;
 import java.util.function.Supplier;
 
+/**
+ * 数组属性：structpack 数组类型字段的编解码。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class ArrayProperty<T extends BaseValue> extends BaseProperty<ArrayValue<T>>
     implements ValueArray<T> {
 

@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
  * 字符串类型（string）的一元测试转换器：将一元测试转换为 QlExpress 的 in / not_in 集合判断。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class StringTransform implements ExpressTransformer {
   private static final Pattern NOT_PATTERN = Pattern.compile("^not\\((.*)\\)$");

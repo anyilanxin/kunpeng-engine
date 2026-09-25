@@ -29,6 +29,9 @@ import java.lang.invoke.VarHandle;
  *
  * <p>不变量：每个 WAITING→WAKING_UP 片段恰有一个入队者（CAS 唯一胜者），因此队列中同一 cell 至多一个实例——物理移除式偷取下天然单线程执行, 无需旧版
  * stateCount claim 竞争。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class SchedulingGate {
 

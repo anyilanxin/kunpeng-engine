@@ -29,7 +29,7 @@ import com.anyilanxin.kunpeng.structpack.property.ObjectProperty;
  * 管理面调度查询响应记录，携带当前调度计划与集群元数据快照。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @AutoDeclareProperties
 public class AdminDispatchQueryResponseRecord

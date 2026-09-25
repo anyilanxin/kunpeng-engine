@@ -17,8 +17,10 @@
 package com.anyilanxin.kunpeng.broker.bootstrap.step.idgenerator;
 
 /**
+ * 节点 ID 生成服务：为 broker 分配唯一节点 ID。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface NodeIdGeneratorService {
   long nextId();

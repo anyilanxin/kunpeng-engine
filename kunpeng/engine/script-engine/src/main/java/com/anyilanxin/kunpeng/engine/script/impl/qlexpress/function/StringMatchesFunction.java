@@ -24,7 +24,7 @@ import com.anyilanxin.kunpeng.engine.script.impl.qlexpress.QLFunction;
  * matches(input, pattern)
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class StringMatchesFunction implements QLFunction {
 

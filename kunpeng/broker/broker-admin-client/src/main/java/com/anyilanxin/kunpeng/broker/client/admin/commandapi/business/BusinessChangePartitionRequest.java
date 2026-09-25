@@ -22,8 +22,10 @@ import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.business.dis
 import com.anyilanxin.kunpeng.protocol.admin.record.commandapi.business.BusinessDispatchApiValueLifeCycle;
 
 /**
+ * 业务分区变更（扩缩分区）请求。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class BusinessChangePartitionRequest
     extends CommandApiBrokerRequest<BusinessChangePartitionRequestRecord> {

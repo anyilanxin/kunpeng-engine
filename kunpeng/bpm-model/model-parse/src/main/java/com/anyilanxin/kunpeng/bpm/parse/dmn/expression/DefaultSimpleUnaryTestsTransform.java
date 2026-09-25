@@ -27,7 +27,7 @@ import java.util.Map;
  * QlExpress 适配。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class DefaultSimpleUnaryTestsTransform implements SimpleUnaryTestsTransform {
   private final Map<DmnValueType, ExpressTransformer> transform = new HashMap<>();

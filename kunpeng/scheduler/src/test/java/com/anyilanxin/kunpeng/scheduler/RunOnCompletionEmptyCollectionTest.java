@@ -33,6 +33,9 @@ import org.junit.jupiter.api.Timeout;
  * FileBasedSnapshotStoreImpl.abortPendingSnapshots 的 inProgress 为空 → runOnCompletion([])
  * 回调永不触发 → future 永不完成 → Raft 线程在角色切换 stop() 的 join() 永久阻塞 → 分区
  * bootstrap 卡死、集群零分区。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 @DisplayName("空集合的 runOnCompletion")
 class RunOnCompletionEmptyCollectionTest {

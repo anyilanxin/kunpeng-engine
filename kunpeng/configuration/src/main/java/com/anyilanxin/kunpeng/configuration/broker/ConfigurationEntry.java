@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.configuration.broker;
 
-/** 配置项接口，提供基于全局配置与 broker 基路径的初始化入口。 */
+/**
+ * 配置项接口，提供基于全局配置与 broker 基路径的初始化入口。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface ConfigurationEntry {
   default void init(final BrokerCfg globalConfig, final String brokerBase) {
     // noop;

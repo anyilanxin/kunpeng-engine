@@ -21,6 +21,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+/**
+ * 原子操作工具类。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class AtomicUtil {
 
   private AtomicUtil() {}

@@ -18,7 +18,12 @@ package com.anyilanxin.kunpeng.bpm.parse.bpmn.element;
 
 import com.anyilanxin.kunpeng.engine.script.ScriptExpression;
 
-/** 用户任务的运行时模型：受理人、候选组与候选人均以表达式承载（扁平字段而非嵌套属性对象，减少一层对象开销）。 */
+/**
+ * 用户任务的运行时模型：受理人、候选组与候选人均以表达式承载（扁平字段而非嵌套属性对象，减少一层对象开销）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class BpmnUserTask extends BpmnActivity {
   /** 受理人表达式，未声明为 null */
   private ScriptExpression assignee;

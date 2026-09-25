@@ -24,6 +24,8 @@ import com.anyilanxin.kunpeng.structpack.buffer.BufferWriter;
  *
  * @param <Key> key 的类型
  * @param <Value> value 的类型
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 @FunctionalInterface
 public interface KeyValuePairVisitor<

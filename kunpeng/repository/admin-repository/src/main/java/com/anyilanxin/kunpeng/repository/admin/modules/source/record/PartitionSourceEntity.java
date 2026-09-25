@@ -36,7 +36,7 @@ import org.agrona.DirectBuffer;
  * 分区来源实体，记录分区组、分区 ID、来源 ID 与代理来源 ID 集合。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @AutoDeclareProperties
 public class PartitionSourceEntity extends UnpackedObject implements StoreValue {

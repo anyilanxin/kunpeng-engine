@@ -18,6 +18,12 @@ package com.anyilanxin.kunpeng.configuration.broker.backpressure;
 
 import static com.anyilanxin.kunpeng.configuration.broker.ConfigurationUtil.checkPositive;
 
+/**
+ * Vegas 流控算法配置。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class VegasCfg {
 
   private int alpha = 3;

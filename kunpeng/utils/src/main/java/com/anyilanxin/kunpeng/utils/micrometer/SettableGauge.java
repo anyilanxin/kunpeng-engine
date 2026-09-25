@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * 关闭时从注册中心移除该指标。
  *
  * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class SettableGauge implements CloseableSilently {
 

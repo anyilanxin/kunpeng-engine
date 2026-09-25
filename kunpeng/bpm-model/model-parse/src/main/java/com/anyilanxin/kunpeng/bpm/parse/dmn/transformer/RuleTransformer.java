@@ -30,6 +30,9 @@ import java.util.Collection;
 
 /**
  * 将 DMN Rule（决策表规则行）转换为运行时 DmnDecisionTableRule 元素：按文档顺序装配已转换的条件（InputEntry）与 结论（OutputEntry）表达式。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class RuleTransformer implements ModelElementTransformer<Rule> {
   /** 返回本转换器处理的 DMN 模型元素类型。 */

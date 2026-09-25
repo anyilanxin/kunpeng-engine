@@ -24,7 +24,7 @@ import java.io.StringWriter;
  * ValidationResults#write(StringWriter, ValidationResultFormatter)}
  *
  * @author Daniel Meyer
- * @since 7.6
+ * @since 2026.9.0
  */
 public interface ValidationResultFormatter {
 

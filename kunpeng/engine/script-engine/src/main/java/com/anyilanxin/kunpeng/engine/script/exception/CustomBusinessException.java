@@ -20,8 +20,10 @@ import com.alibaba.qlexpress4.runtime.Value;
 import com.alibaba.qlexpress4.runtime.data.AssignableDataValue;
 
 /**
+ * 自定义业务异常：表达式执行中业务规则失败时抛出。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class CustomBusinessException extends RuntimeException {
 

@@ -30,7 +30,12 @@ import org.agrona.concurrent.UnsafeBuffer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/** DocumentUtil 测试：JSON ↔ 标准 msgpack ↔ Map/Object 桥接 */
+/**
+ * DocumentUtil 测试：JSON ↔ 标准 msgpack ↔ Map/Object 桥接。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @DisplayName("DocumentUtil 文档桥接")
 class DocumentUtilTest {
 

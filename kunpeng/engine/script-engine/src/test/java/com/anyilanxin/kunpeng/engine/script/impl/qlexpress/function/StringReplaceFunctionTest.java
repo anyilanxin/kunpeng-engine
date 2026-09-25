@@ -20,7 +20,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
-/** 通过表达式引擎端到端测试 {@code replace()} 函数（正则替换）。 */
+/**
+ * 通过表达式引擎端到端测试 {@code replace()} 函数（正则替换）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class StringReplaceFunctionTest extends FunctionTestBase {
 
   @Test

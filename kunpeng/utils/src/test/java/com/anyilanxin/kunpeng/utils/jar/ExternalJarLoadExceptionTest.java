@@ -24,7 +24,12 @@ import java.io.IOException;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 
-/** {@link ExternalJarLoadException} 单元测试 */
+/**
+ * {@link ExternalJarLoadException} 单元测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class ExternalJarLoadExceptionTest {
 
   @Test

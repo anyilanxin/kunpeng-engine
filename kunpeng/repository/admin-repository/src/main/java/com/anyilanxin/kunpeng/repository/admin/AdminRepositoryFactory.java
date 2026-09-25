@@ -17,8 +17,10 @@
 package com.anyilanxin.kunpeng.repository.admin;
 
 /**
+ * 管理面仓储工厂接口。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface AdminRepositoryFactory {
   AdminRepository create();

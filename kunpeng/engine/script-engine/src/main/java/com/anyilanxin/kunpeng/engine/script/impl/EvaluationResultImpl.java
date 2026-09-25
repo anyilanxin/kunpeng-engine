@@ -27,8 +27,10 @@ import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
 /**
+ * 表达式求值结果默认实现。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public final class EvaluationResultImpl implements EvaluationResult {
   private final String expression;

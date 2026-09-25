@@ -27,6 +27,9 @@ import java.util.*;
  *
  * <p>类型映射：null/Boolean/Long/Double/String/byte[]/List/Map（读侧 Integer 一律回读为 {@link Long}, Float
  * 一律回读为 {@link Double}, 键序用 {@link LinkedHashMap} 保持）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class DocumentCodec {
 

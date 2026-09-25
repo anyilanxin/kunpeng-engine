@@ -19,8 +19,10 @@ package com.anyilanxin.kunpeng.protocol.common;
 import java.util.Set;
 
 /**
+ * 分区 source 元数据 record：source ID 与代理 source 集合。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public record PartitionSourceMeta(int sourceId, Set<Integer> agentSourceIds) {
 

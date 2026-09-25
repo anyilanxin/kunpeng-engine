@@ -1,0 +1,36 @@
+syntax = 'proto3';
+package gateway_protocol;
+
+option java_multiple_files = false;
+option java_package = "com.anyilanxin.kunpeng.gateway.grpc.service";
+option go_package = "./;pb";
+
+
+message SignalCorrelationRequest {
+  int64 processInstanceId = 2;
+  string signalName = 4;
+  string tenantId = 6;
+  string variable = 7;
+}
+
+
+message SignalCorrelationResponse {
+}
+
+
+
+service SignalService {
+  /*
+   Iterates through all known partitions round-robin and activates up to the requested
+   maximum and streams them back to the client as they are activated.
+
+   Errors:
+    INVALID_ARGUMENT:
+     - type is blank (empty string, null)
+     - worker is blank (empty string, null)
+     - timeout less than 1
+     - maxJobsToActivate is less than 1
+  */
+  rpc SignalCorrelation (SignalCorrelationRequest) returns (stream SignalCorrelationResponse) {
+  }
+}

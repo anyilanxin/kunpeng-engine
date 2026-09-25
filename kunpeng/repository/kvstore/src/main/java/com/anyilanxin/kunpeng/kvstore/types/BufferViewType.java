@@ -20,7 +20,12 @@ import org.agrona.DirectBuffer;
 import org.agrona.MutableDirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
 
-/** 以 {@link DirectBuffer} 视图承载的 value，可直接包装底层字节缓冲区而无需拷贝 */
+/**
+ * 以 {@link DirectBuffer} 视图承载的 value，可直接包装底层字节缓冲区而无需拷贝。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class BufferViewType implements StoreValue {
 
   private final MutableDirectBuffer value = new UnsafeBuffer(0, 0);

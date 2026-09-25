@@ -29,6 +29,9 @@ import org.rocksdb.Status;
 /**
  * {@link TransactionContext} 的 RocksDB 实现，负责事务的复用、提交与回滚，并将可恢复的 RocksDB 异常包装为 {@link
  * KvStoreException}
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class RocksdbTransactionContext implements TransactionContext {
 

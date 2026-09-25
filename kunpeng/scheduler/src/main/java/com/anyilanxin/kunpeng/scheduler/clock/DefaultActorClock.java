@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.scheduler.clock;
 
-/** 默认时钟：millis 值每毫秒至多采样一次 System.currentTimeMillis; 亚毫秒精度查询每次调用 nanoTime */
+/**
+ * 默认时钟：millis 值每毫秒至多采样一次 System.currentTimeMillis; 亚毫秒精度查询每次调用 nanoTime。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class DefaultActorClock implements ActorClock {
 
   private long currentNanoTime;

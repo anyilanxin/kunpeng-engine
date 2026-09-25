@@ -28,7 +28,12 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 
-/** 收集 ActorFuture 流为聚合 future：全成功 → 有序值列表; 任一失败 → 聚合异常 */
+/**
+ * 收集 ActorFuture 流为聚合 future：全成功 → 有序值列表; 任一失败 → 聚合异常。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class ActorFutureCollector<V>
     implements Collector<ActorFuture<V>, List<ActorFuture<V>>, ActorFuture<List<V>>> {
 

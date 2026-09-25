@@ -19,8 +19,10 @@ package com.anyilanxin.kunpeng.protocol.admin.record;
 import com.anyilanxin.kunpeng.protocol.admin.AdminValueLifeCycle;
 
 /**
+ * 命令 API 值生命周期契约接口。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface CommandApiValueLifeCycle extends AdminValueLifeCycle {
   @Override

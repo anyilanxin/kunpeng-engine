@@ -31,6 +31,9 @@ import com.anyilanxin.kunpeng.bpm.parse.exception.DmnParseException;
 /**
  * 将 DMN Decision（决策）转换为运行时 DmnDecision 元素：按决策逻辑类型装配 DecisionTable 或 LiteralExpression
  * 决策逻辑，并注册到决策需求图。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class DecisionTransformer implements ModelElementTransformer<Decision> {
   /** 返回本转换器处理的 DMN 模型元素类型。 */

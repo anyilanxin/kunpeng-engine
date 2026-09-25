@@ -32,6 +32,12 @@ import org.agrona.DirectBuffer;
 import org.agrona.MutableDirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
 
+/**
+ * 管理协议 Record 元数据：请求头与鉴权声明的编解码。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class AdminRecordMetadata implements BufferWriter, BufferReader {
   public static final int BLOCK_LENGTH =
       MessageHeaderEncoder.ENCODED_LENGTH + AdminRecordMetadataEncoder.BLOCK_LENGTH;

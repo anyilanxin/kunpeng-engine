@@ -25,8 +25,10 @@ import com.anyilanxin.kunpeng.scheduler.Actor;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 
 /**
+ * 管理面命令 API 服务：actor 化的命令接收与处理器分发。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class CommandApiServiceImpl extends Actor implements CommandApiService {
   private final CommandApiHandleImpl handle;

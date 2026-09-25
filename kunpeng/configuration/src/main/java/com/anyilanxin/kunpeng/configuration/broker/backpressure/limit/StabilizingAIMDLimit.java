@@ -30,6 +30,9 @@ import java.util.concurrent.TimeUnit;
  * limit for the system. It rarely stabilizes at X. This results in always fluctuating throughput
  * and latency. {@link StabilizingAIMDLimit} fixes this issue, by not reducing the limit if the
  * inflight is greater than the current limit. As a result it attempts to keep the limit around X.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class StabilizingAIMDLimit extends AbstractLimit {
 

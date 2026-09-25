@@ -49,6 +49,9 @@ import org.slf4j.LoggerFactory;
  *   <li>存储移交同步失败：区间烧毁（onFailure 后永不 onCommit），调用方仍收到 Appended
  *   <li>在途环仅登记持背压占位的批次（≤ 窗口上限 &lt; 环容量 1024）；内部上下文与流控零耦合， 永不拒绝、永不因流控状态失败
  * </ul>
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class PositionSequencer implements EventLogWriter {
 

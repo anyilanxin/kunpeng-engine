@@ -20,7 +20,12 @@ import com.anyilanxin.kunpeng.bpm.model.dmn.impl.DmnModelConstants;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.LiteralExpression;
 import com.anyilanxin.kunpeng.bpm.model.dmn.instance.Text;
 
-/** DMN 转换辅助工具：解析表达式语言（元素局部声明优先，缺失时回退全局声明并剔除 FEEL 命名空间）并提取字面表达式的文本内容。 */
+/**
+ * DMN 转换辅助工具：解析表达式语言（元素局部声明优先，缺失时回退全局声明并剔除 FEEL 命名空间）并提取字面表达式的文本内容。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class TransformHelper {
 
   /**

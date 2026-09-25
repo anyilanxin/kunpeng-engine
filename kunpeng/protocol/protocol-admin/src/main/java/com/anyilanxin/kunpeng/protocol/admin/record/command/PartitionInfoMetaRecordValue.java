@@ -20,8 +20,10 @@ import com.anyilanxin.kunpeng.protocol.common.RecordValue;
 import java.util.List;
 
 /**
+ * 分区信息元数据 Record 值接口。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface PartitionInfoMetaRecordValue extends RecordValue {
   String getPartitionGroup();

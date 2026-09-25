@@ -18,6 +18,12 @@ package com.anyilanxin.kunpeng.protocol.common;
 
 import java.nio.ByteOrder;
 
+/**
+ * 协议常量：帧协议魔数与字节序定义。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class Protocol {
 
   public static final int PROTOCOL_VERSION = 6;

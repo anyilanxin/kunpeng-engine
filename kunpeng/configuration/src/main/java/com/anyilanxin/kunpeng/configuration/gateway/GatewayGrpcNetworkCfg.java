@@ -26,7 +26,12 @@ import lombok.ToString;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.unit.DataSize;
 
-/** gateway gRPC 网络配置，定义 gRPC 端口、流量控制窗口、keep-alive 等参数。 */
+/**
+ * gateway gRPC 网络配置，定义 gRPC 端口、流量控制窗口、keep-alive 等参数。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @Setter
 @Getter
 @ToString(callSuper = true)

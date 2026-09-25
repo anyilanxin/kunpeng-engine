@@ -20,7 +20,12 @@ import java.nio.ByteOrder;
 import org.agrona.DirectBuffer;
 import org.agrona.MutableDirectBuffer;
 
-/** long 类型的 key/value，按大端序 8 字节读写 */
+/**
+ * long 类型的 key/value，按大端序 8 字节读写。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class LongType implements StoreKey, StoreValue {
 
   private long longValue;

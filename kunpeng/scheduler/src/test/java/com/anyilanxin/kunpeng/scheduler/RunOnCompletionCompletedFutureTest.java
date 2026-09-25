@@ -27,7 +27,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
-/** 回归：runOnCompletion 绑定已完成 future 时必须立即消费（启动链停止事故场景） */
+/**
+ * 回归：runOnCompletion 绑定已完成 future 时必须立即消费（启动链停止事故场景）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @DisplayName("已完成 future 的续接")
 class RunOnCompletionCompletedFutureTest {
 

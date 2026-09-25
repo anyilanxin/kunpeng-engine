@@ -21,6 +21,12 @@ import com.anyilanxin.kunpeng.protocol.admin.AdminValueType;
 import com.anyilanxin.kunpeng.protocol.admin.record.AdminApiRequestEncoder;
 import com.anyilanxin.kunpeng.protocol.common.api.RequestRecordValue;
 
+/**
+ * 管理面 broker 请求抽象基类。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public abstract class BrokerRequest<VALUE extends RequestRecordValue>
     implements ClientRequest<VALUE> {
   private long key = AdminApiRequestEncoder.keyNullValue();

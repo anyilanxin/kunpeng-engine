@@ -33,7 +33,7 @@ import org.agrona.concurrent.UnsafeBuffer;
  * 调度计划执行明细实体，记录所属计划 ID、执行顺序、分区类型、执行类型、执行节点、 调度起止时间与执行状态，以及序列化后的单条调度动作负载。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @AutoDeclareProperties
 public class AdminDispatchPlanExecutionRecord

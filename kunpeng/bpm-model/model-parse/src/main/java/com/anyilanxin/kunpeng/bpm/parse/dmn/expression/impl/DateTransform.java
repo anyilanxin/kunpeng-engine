@@ -24,7 +24,7 @@ import com.anyilanxin.kunpeng.bpm.parse.dmn.expression.ExpressTransformer;
  * 日期类型（date）的一元测试转换器：区间语法转换为 QlExpress 的 between 判断，其余直接与输入变量拼接。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class DateTransform implements ExpressTransformer {
 

@@ -27,6 +27,9 @@ import org.junit.jupiter.api.Test;
  * （例：{@code substring("foobar", 3) -> "obar"}），但当前实现 {@link StringSubFunction}
  * 直接调用 {@code StringUtils.substring(s, pos)}，使用 <b>0</b> 基索引
  * （返回 {@code "bar"}）。下面的断言按 FEEL 规范写，预期 fail，待实现修复后转绿。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 class StringSubFunctionTest extends FunctionTestBase {
 

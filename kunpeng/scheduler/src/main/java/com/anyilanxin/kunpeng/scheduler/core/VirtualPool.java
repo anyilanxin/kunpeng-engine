@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.scheduler.core;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-/** 虚拟线程组：cell → 载体一一绑定 */
+/**
+ * 虚拟线程组：cell → 载体一一绑定。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class VirtualPool implements CellPool {
 
   private final ConcurrentMap<ActorCell, VirtualCarrier> carriers = new ConcurrentHashMap<>();

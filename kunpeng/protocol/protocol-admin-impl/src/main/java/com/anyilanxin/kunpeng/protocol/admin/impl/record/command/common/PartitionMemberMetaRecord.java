@@ -31,7 +31,7 @@ import org.agrona.DirectBuffer;
  * 分区组成员元数据记录，描述成员 ID 及其在分区组内的优先级。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @AutoDeclareProperties
 public class PartitionMemberMetaRecord extends UnifiedRecordValue<PartitionMemberMetaRecord>

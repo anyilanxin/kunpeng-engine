@@ -30,6 +30,9 @@ import org.junit.jupiter.api.Timeout;
  * 回归：createContext() 必须惰性调用（旧调度器语义）。生产事故：基类构造器调用 createContext()
  * 时子类字段尚未初始化（父类构造器先于子类字段赋值）→ PartitionTransition.createContext 读取
  * this.context 抛 NPE → Partition Transition 步骤失败 → 分区启动中止。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 @DisplayName("createContext 惰性初始化")
 class LazyActorContextTest {

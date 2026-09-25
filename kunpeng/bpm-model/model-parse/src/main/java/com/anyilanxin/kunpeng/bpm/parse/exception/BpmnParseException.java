@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.bpm.parse.exception;
 
-/** BPMN 解析异常：模型元素缺失或类型不符等解析期错误。 */
+/**
+ * BPMN 解析异常：模型元素缺失或类型不符等解析期错误。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class BpmnParseException extends BpmParseException {
   /**
    * 以错误消息构造解析异常。

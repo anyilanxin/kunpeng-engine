@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.broker.client.admin.commandapi;
 import com.anyilanxin.kunpeng.eventlog.EventLog;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 
-/** 支持向其他分区发送任意命令。发送过程可能不可靠并静默失败，需要由调用方自行检测失败并进行重试。 */
+/**
+ * 支持向其他分区发送任意命令。发送过程可能不可靠并静默失败，需要由调用方自行检测失败并进行重试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface CommandApiService {
 
   void onRecovered(final int partitionId);

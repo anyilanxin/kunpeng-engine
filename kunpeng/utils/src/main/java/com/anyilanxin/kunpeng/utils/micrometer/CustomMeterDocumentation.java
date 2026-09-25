@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.utils.micrometer;
 import io.micrometer.core.instrument.docs.MeterDocumentation;
 import java.time.Duration;
 
-/** 指标文档接口：在 {@link MeterDocumentation} 基础上补充静态描述（help/description）与 SLO 桶定义，作为各模块指标枚举的统一基接口。 */
+/**
+ * 指标文档接口：在 {@link MeterDocumentation} 基础上补充静态描述（help/description）与 SLO 桶定义，作为各模块指标枚举的统一基接口。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface CustomMeterDocumentation extends MeterDocumentation {
 
   double[] EMPTY_DISTRIBUTION_SLOS = new double[0];

@@ -23,6 +23,9 @@ import java.util.Collection;
  * DMN 引擎中的一个业务知识（BusinessKnowledge）。
  *
  * <p>业务知识可以以多种方式实现。要检查该业务知识是否实现为
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface DmnBusinessKnowledge extends DmnElement {
 

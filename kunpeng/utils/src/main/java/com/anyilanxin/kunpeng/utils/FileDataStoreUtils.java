@@ -36,6 +36,9 @@ import java.util.zip.CRC32C;
  * </ul>
  *
  * <p>崩溃安全策略：同目录 {@code <file>.tmp} + DSYNC 落盘 → 原子 rename 覆盖并 fsync 父目录；目标文件任意时刻要么完整旧版要么完整新版。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class FileDataStoreUtils {
 

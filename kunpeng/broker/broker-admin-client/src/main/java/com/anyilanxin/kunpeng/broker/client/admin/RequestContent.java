@@ -22,8 +22,10 @@ import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 
 /**
+ * 请求内容载体：请求与响应类型配对的组合 record。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public record RequestContent<Response extends ResponseRecordValue>(
     Address apiAddress,

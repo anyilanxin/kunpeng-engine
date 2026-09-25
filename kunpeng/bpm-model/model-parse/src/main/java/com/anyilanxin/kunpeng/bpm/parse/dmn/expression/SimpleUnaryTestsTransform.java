@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.bpm.parse.dmn.expression;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.common.DmnExpressionImpl;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.decision.decisiontable.DmnDecisionTableInputImpl;
 
-/** FEEL simple unary tests 表达式的转换接口，将决策表输入上的一元测试（如 "&gt; 100"、区间、"-" 任意匹配）适配为 可执行表达式。 */
+/**
+ * FEEL simple unary tests 表达式的转换接口，将决策表输入上的一元测试（如 "&gt; 100"、区间、"-" 任意匹配）适配为 可执行表达式。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface SimpleUnaryTestsTransform {
 
   /**

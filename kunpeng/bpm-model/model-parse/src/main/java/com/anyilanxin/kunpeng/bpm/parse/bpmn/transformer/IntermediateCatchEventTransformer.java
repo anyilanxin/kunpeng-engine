@@ -20,7 +20,12 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.IntermediateCatchEvent;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.BpmnTransformContext;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.ElementTransformer;
 
-/** 中间捕获事件转换器：事件载荷已由 {@link CatchEventTransformer}（CatchEvent 层级）装配，本阶段预留以承接后续按上下文调整的逻辑。 */
+/**
+ * 中间捕获事件转换器：事件载荷已由 {@link CatchEventTransformer}（CatchEvent 层级）装配，本阶段预留以承接后续按上下文调整的逻辑。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class IntermediateCatchEventTransformer
     implements ElementTransformer<IntermediateCatchEvent> {
 

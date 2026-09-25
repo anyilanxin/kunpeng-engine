@@ -18,7 +18,12 @@ package com.anyilanxin.kunpeng.configuration.broker;
 
 import com.anyilanxin.kunpeng.configuration.gateway.GatewayCfg;
 
-/** 内嵌网关配置，在 broker 内启用并配置嵌入式 gateway。 */
+/**
+ * 内嵌网关配置，在 broker 内启用并配置嵌入式 gateway。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class EmbeddedGatewayCfg extends GatewayCfg implements ConfigurationEntry {
   private boolean enable = true;
 

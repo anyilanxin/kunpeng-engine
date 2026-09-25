@@ -1,0 +1,101 @@
+/*
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ *
+ * Software distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.anyilanxin.kunpeng.protocol.business.record.command.signal;
+
+import static com.anyilanxin.kunpeng.protocol.business.RecordMappingIndex.RECORD_INDEX_82;
+import static com.anyilanxin.kunpeng.protocol.business.RecordProcessIndex.*;
+
+import com.anyilanxin.kunpeng.protocol.business.ValueLifeCycle;
+import com.anyilanxin.kunpeng.protocol.business.ValueType;
+
+/**
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
+public enum SignalDistributeCorrelateLifeCycle implements ValueLifeCycle {
+  NULL_VAL((short) -1, NOT_PROCESS_INDEX),
+
+  CREATE((short) 2, PROCESS_INDEX_214),
+
+  CREATED((short) 2, PROCESS_INDEX_215),
+
+  CORRELATE_DISTRIBUTE((short) 3, PROCESS_INDEX_216),
+
+  CORRELATE_CONFIRM((short) 4, PROCESS_INDEX_217),
+
+  CORRELATE_COMPLETE_CONFIRM((short) 5, PROCESS_INDEX_218),
+
+  CORRELATE_CONFIRMED((short) 4, PROCESS_INDEX_219),
+
+  CORRELATED((short) 6, PROCESS_INDEX_220),
+
+  FAILED((short) 7, PROCESS_INDEX_221),
+  ;
+
+  private final short value;
+  private final short processIndex;
+
+  SignalDistributeCorrelateLifeCycle(final short value, final short processIndex) {
+    this.value = value;
+    this.processIndex = processIndex;
+  }
+
+  public static ValueLifeCycle from(final short value) {
+    return switch (value) {
+      case 2 -> CREATE;
+      case 3 -> CORRELATE_DISTRIBUTE;
+      case 4 -> CORRELATE_CONFIRM;
+      case 5 -> CORRELATE_COMPLETE_CONFIRM;
+      case 6 -> CORRELATED;
+      case 7 -> FAILED;
+      default -> UNKNOWN;
+    };
+  }
+
+  public static SignalDistributeCorrelateLifeCycle fromValue(final short value) {
+    return switch (value) {
+      case 2 -> CREATE;
+      case 3 -> CORRELATE_DISTRIBUTE;
+      case 4 -> CORRELATE_CONFIRM;
+      case 5 -> CORRELATE_COMPLETE_CONFIRM;
+      case 6 -> CORRELATED;
+      case 7 -> FAILED;
+      default -> NULL_VAL;
+    };
+  }
+
+  @Override
+  public ValueType getValueType() {
+    return ValueType.SIGNAL_DISTRIBUTE_CORRELATE;
+  }
+
+  @Override
+  public short value() {
+    return value;
+  }
+
+  @Override
+  public boolean isEvent() {
+    return false;
+  }
+
+  @Override
+  public short processIndex() {
+    return processIndex;
+  }
+
+  @Override
+  public short recordIndex() {
+    return RECORD_INDEX_82;
+  }
+}

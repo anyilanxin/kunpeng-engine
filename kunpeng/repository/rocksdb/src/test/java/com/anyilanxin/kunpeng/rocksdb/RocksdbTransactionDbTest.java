@@ -36,7 +36,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** 基于 rocksdbjni 的 KvStore 功能测试：CRUD、事务语义、迭代与虚拟列族隔离 */
+/**
+ * 基于 rocksdbjni 的 KvStore 功能测试：CRUD、事务语义、迭代与虚拟列族隔离。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class RocksdbTransactionDbTest {
 
   @TempDir Path tempDir;

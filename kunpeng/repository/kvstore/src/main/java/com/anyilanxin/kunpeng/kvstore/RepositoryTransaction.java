@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.kvstore;
 
-/** 表示一个可提交、出错时可回滚的数据库事务。 */
+/**
+ * 表示一个可提交、出错时可回滚的数据库事务。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface RepositoryTransaction {
 
   /**

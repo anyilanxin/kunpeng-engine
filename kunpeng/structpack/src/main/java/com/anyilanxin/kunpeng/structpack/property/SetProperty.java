@@ -21,6 +21,12 @@ import com.anyilanxin.kunpeng.structpack.value.SetValue;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+/**
+ * 集合属性：structpack set 类型字段的编解码。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class SetProperty<T extends BaseValue> extends BaseProperty<SetValue<T>> {
 
   public SetValue<T> getValue() {

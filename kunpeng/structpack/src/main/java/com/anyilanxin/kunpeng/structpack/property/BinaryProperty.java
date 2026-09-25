@@ -21,6 +21,12 @@ import com.anyilanxin.kunpeng.structpack.value.BinaryValue;
 import org.agrona.DirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
 
+/**
+ * 二进制属性：structpack 二进制字段的编解码。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class BinaryProperty extends BaseProperty<BinaryValue> {
 
   /** 零拷贝视图（msgpack 同形语义） */

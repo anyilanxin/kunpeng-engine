@@ -20,6 +20,9 @@ package com.anyilanxin.kunpeng.bpm.parse.bpmn.element;
  * 多实例活动体的运行时模型：包裹内部活动并承载循环特征，与内部活动共用同一元素 id。
  *
  * <p>运行期流程执行到多实例活动时以本对象为节点（边界事件、顺序流均挂接到本对象），每个实例再执行内部活动。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class BpmnMultiInstanceBody extends BpmnActivity {
   /** 循环特征 */

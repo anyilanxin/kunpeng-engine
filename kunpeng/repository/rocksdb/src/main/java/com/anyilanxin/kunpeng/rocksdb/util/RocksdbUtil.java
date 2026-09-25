@@ -38,6 +38,7 @@ import org.slf4j.Logger;
  * RocksDB 工具类，提供列族 handle 创建、文件校验和计算、列族数据复制与合并等通用能力
  *
  * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class RocksdbUtil {
   private static final Logger LOG = RocksdbLoggers.ROCKSDB_LOGGER;

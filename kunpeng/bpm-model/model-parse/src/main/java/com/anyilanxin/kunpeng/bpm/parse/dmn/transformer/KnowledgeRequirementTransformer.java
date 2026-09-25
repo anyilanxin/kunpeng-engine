@@ -29,6 +29,9 @@ import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.TransformContext;
 /**
  * 将 DMN KnowledgeRequirement（知识依赖）装配到运行时模型：按父元素类型把被引用的业务知识挂到发起依赖的 Decision 或 BusinessKnowledgeModel
  * 上。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class KnowledgeRequirementTransformer
     implements ModelElementTransformer<KnowledgeRequirement> {

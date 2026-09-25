@@ -16,6 +16,7 @@
  */
 plugins {
     id 'kunpeng.build-publish'
+    id 'kunpeng.sbe-java'
 }
 
 description = "Kunpeng Broker Client"
@@ -28,6 +29,8 @@ configure(jarInfo) {
 dependencies {
     implementation  project(':kunpeng:scheduler')
     implementation project(':kunpeng:cluster:cluster')
+    implementation project(':kunpeng:cluster:cluster-config')
+    implementation project(':kunpeng:eventlog')
     implementation project(':kunpeng:structpack')
     implementation project(':kunpeng:protocol:protocol-common')
     implementation project(":kunpeng:protocol:protocol-business")

@@ -23,6 +23,9 @@ import org.agrona.MutableDirectBuffer;
  * LEB128 变长整数（批帧专用）：每字节低 7 位为有效位、最高位为继续位，低位组在前。
  *
  * <p>有符号量用 zigzag 映射为无符号后编码（负数也保持小体积）。写入返回新偏移； 读取通过 {@link Cursor} 游标推进。长度计算为纯静态位移循环，供帧长度预分配。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class VarInt {
 

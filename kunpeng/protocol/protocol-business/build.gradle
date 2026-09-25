@@ -12,6 +12,7 @@
  */
 plugins {
     id 'kunpeng.build-publish'
+    id 'kunpeng.sbe-java'
 }
 
 description = "Kunpeng Protocol"
@@ -23,9 +24,11 @@ configure(jarInfo) {
 
 
 dependencies {
-    implementation project(':kunpeng:structpack')
+    api project(':kunpeng:structpack')
+    api project(':kunpeng:protocol:protocol-common')
+
+    implementation project(':kunpeng:bpm-model:model-parse')
     implementation project(':kunpeng:utils')
-    implementation project(':kunpeng:protocol:protocol-common')
     implementation 'org.agrona:agrona'
     implementation 'com.github.spotbugs:spotbugs-annotations'
     implementation 'net.jcip:jcip-annotations'

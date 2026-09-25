@@ -31,7 +31,12 @@ import org.agrona.ExpandableArrayBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
 import org.agrona.MutableDirectBuffer;
 
-/** 测试用内存存储：同步（默认）或单线程异步提交；可注入同步失败；记录追加顺序 */
+/**
+ * 测试用内存存储：同步（默认）或单线程异步提交；可注入同步失败；记录追加顺序。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class InMemoryEventStore implements EventStore {
 
   private final List<UnsafeBuffer> blocks = new CopyOnWriteArrayList<>();

@@ -25,7 +25,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
-/** 回归：订阅动作内再注册订阅（runOnCompletion 于条件回调中）不抛 CME */
+/**
+ * 回归：订阅动作内再注册订阅（runOnCompletion 于条件回调中）不抛 CME。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @DisplayName("订阅重入注册")
 class SubscriptionReentrantTest {
 

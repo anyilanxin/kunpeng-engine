@@ -22,7 +22,12 @@ import com.anyilanxin.kunpeng.engine.script.exception.CustomBusinessException;
 import com.anyilanxin.kunpeng.engine.script.impl.qlexpress.QLFunction;
 import java.util.List;
 
-/** all(list...) — true if every element is true */
+/**
+ * all(list...) — true if every element is true.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class AllFunction implements QLFunction {
   @Override
   public Object call(final QContext qContext, final Parameters parameters) throws Throwable {

@@ -29,6 +29,9 @@ import org.junit.jupiter.api.Timeout;
  * 回归：submitActor 之前的早期提交是合法形态（旧调度器语义）。生产场景：集群拓扑事件在
  * ClusterConfigurationStep 之前就把 update 回调打到 gossiper actor——job 必须在首次调度时
  * 被捞起执行，而不是被拒绝或永久挂起。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 @DisplayName("submitActor 之前的早期提交")
 class SubmitBeforeScheduledTest {

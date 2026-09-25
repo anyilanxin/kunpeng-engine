@@ -20,7 +20,12 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.Objects;
 
-/** 密钥库配置，包含密钥库文件路径与密码。 */
+/**
+ * 密钥库配置，包含密钥库文件路径与密码。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class KeyStoreCfg {
   private File filePath;
   private String password;

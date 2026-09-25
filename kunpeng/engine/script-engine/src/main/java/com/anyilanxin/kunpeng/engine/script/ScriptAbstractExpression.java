@@ -24,8 +24,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * 脚本表达式抽象基类：公共缓存与求值入口。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public abstract class ScriptAbstractExpression implements ScriptExpression {
 

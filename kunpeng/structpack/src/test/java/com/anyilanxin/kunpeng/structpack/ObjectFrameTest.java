@@ -42,7 +42,12 @@ import org.agrona.concurrent.UnsafeBuffer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/** ObjectValue 帧测试：wire 布局/全类型往返/JSON/校验错误/复用 */
+/**
+ * ObjectValue 帧测试：wire 布局/全类型往返/JSON/校验错误/复用。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @DisplayName("ObjectValue structpack 帧")
 class ObjectFrameTest {
 

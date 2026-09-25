@@ -20,8 +20,10 @@ import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.business.dis
 import java.util.concurrent.CompletableFuture;
 
 /**
+ * 业务面调度客户端：向 broker 业务分区发起调度变更与查询请求。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface BusinessDispatchClient {
   /** 集群重新负载 */

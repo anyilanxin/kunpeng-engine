@@ -29,6 +29,9 @@ import org.slf4j.MDC;
  * 平台线程载体：固定线程 + 偷取主循环。
  *
  * <p>主循环：跨线程回调排空 → 时钟步进 + 定时轮扫描 → 本队列取 cell（空则偷）→ 执行 （MDC 注入 actor 上下文）→ idle 退避。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class StealingRunner implements CellRunner {
 

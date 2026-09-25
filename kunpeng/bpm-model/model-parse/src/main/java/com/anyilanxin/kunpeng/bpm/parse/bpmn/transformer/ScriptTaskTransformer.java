@@ -24,7 +24,12 @@ import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnScriptTask;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.BpmnTransformContext;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.ElementTransformer;
 
-/** 脚本任务转换器：装配任务定义扩展（任务型脚本任务）与内联脚本扩展。 */
+/**
+ * 脚本任务转换器：装配任务定义扩展（任务型脚本任务）与内联脚本扩展。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class ScriptTaskTransformer implements ElementTransformer<ScriptTask> {
 
   /** 返回本转换器处理的模型元素类型。 */

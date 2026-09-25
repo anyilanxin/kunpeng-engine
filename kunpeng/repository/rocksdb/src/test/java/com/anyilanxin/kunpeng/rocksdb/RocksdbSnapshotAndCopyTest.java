@@ -29,7 +29,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** 快照、复制与合并功能测试：对应集群变更时的数据迁移路径 */
+/**
+ * 快照、复制与合并功能测试：对应集群变更时的数据迁移路径。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class RocksdbSnapshotAndCopyTest {
 
   @TempDir Path tempDir;

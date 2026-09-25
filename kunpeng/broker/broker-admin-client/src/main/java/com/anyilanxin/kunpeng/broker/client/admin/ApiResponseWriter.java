@@ -22,8 +22,10 @@ import com.anyilanxin.kunpeng.structpack.buffer.BufferWriter;
 import org.agrona.DirectBuffer;
 
 /**
+ * API 响应写入器：将 API 响应编码到二进制缓冲。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface ApiResponseWriter extends BufferWriter {
 

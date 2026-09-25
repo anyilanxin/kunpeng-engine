@@ -23,7 +23,12 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.springframework.util.unit.DataSize;
 
-/** 数据配置，定义数据目录、日志段大小、快照周期与磁盘监控等。 */
+/**
+ * 数据配置，定义数据目录、日志段大小、快照周期与磁盘监控等。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class DataCfg implements ConfigurationEntry {
 
   public static final String DEFAULT_DIRECTORY = "data";

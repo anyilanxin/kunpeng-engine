@@ -31,6 +31,9 @@ import com.anyilanxin.kunpeng.structpack.buffer.BufferWriter;
  *       firstPosition + sourceIndex
  *   <li>{@link #isSkipProcessing()}：标记该条已被处理（重放/补写场景跳过引擎处理）
  * </ul>
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface AppendEntry {
 

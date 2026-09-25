@@ -27,6 +27,9 @@ import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.TransformContext;
 /**
  * 将 DMN InputEntry（决策表条件单元格）转换为运行时 DmnExpression 条件表达式：提取标签、表达式语言与 FEEL 文本； 脚本编译统一由
  * DecisionTableTransformer 完成。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class InputEntryTransformer implements ModelElementTransformer<InputEntry> {
   /** 返回本转换器处理的 DMN 模型元素类型。 */

@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.structpack.value;
 import com.anyilanxin.kunpeng.structpack.PackerReader;
 import com.anyilanxin.kunpeng.structpack.PackerWriter;
 
-/** float 值：4 字节小端定宽 */
+/**
+ * float 值：4 字节小端定宽。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class FloatValue extends BaseValue {
 
   private float value;

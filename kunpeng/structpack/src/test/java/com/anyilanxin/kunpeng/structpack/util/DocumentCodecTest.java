@@ -25,7 +25,12 @@ import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/** DocumentCodec 测试：字节级 msgpack 规范（与官方 msgpack-java 默认 packer 字节一致） */
+/**
+ * DocumentCodec 测试：字节级 msgpack 规范（与官方 msgpack-java 默认 packer 字节一致）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @DisplayName("DocumentCodec 自研 msgpack 编解码")
 class DocumentCodecTest {
 

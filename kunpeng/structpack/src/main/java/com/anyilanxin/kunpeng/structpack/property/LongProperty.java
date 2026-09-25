@@ -18,6 +18,12 @@ package com.anyilanxin.kunpeng.structpack.property;
 
 import com.anyilanxin.kunpeng.structpack.value.LongValue;
 
+/**
+ * 长整型属性：structpack long 字段的编解码。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class LongProperty extends BaseProperty<LongValue> {
 
   public long getValue() {

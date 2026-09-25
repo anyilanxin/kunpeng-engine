@@ -30,6 +30,9 @@ import com.anyilanxin.kunpeng.structpack.buffer.BufferWriter;
  *   <li>onFailure 后该批永不 onCommit（position 区间被烧毁，读者容忍 gap）
  *   <li>{@link CommitListener#onCommit()} 无参——只表示"有新数据可读"， 具体 position 由读者自己拉取
  * </ul>
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface EventStore {
 

@@ -38,6 +38,9 @@ import org.agrona.MutableDirectBuffer;
  *   key(svarint64, -1=null) + entryFlags(1B bit0=skipProcessing) + sourceIndex(svarint32, -1=无)
  *   + metadataLen(uvarint32) + metadata + valueLen(uvarint32) + value
  * </pre>
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class BatchFrame {
 

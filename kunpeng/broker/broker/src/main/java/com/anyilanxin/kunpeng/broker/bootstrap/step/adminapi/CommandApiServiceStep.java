@@ -24,8 +24,10 @@ import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 
 /**
+ * 管理面命令 API 服务启动步骤：构建并装配命令 API 服务。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class CommandApiServiceStep extends AbstractBrokerStartupStep {
   @Override

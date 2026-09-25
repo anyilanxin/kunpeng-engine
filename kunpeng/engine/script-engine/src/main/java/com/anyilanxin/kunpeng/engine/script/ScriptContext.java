@@ -19,8 +19,10 @@ package com.anyilanxin.kunpeng.engine.script;
 import java.util.Map;
 
 /**
+ * 脚本上下文：变量绑定与求值环境。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface ScriptContext {
   Map<String, Object> getVariable();

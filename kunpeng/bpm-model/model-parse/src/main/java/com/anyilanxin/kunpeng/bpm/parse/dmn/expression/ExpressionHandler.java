@@ -24,7 +24,12 @@ import com.anyilanxin.kunpeng.engine.script.ScriptExpression;
 import com.anyilanxin.kunpeng.utils.Either;
 import java.util.Map;
 
-/** 基于 QlExpress 脚本引擎的 DMN 表达式求值处理器，在给定 {@link ScriptContext} 中解析并执行表达式。 */
+/**
+ * 基于 QlExpress 脚本引擎的 DMN 表达式求值处理器，在给定 {@link ScriptContext} 中解析并执行表达式。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class ExpressionHandler {
 
   protected final ScriptEngine scriptEngine;

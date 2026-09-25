@@ -25,6 +25,9 @@ import org.agrona.concurrent.UnsafeBuffer;
  * 文档值（流程变量等）：内容保持**标准 msgpack 字节**，本类只做字节级透传，永不解析。
  *
  * <p>解析/生成由 {@code DocumentUtil}(Jackson) 完成——存量变量字节与 gateway/job API 完全兼容。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class DocumentValue extends BaseValue {
 

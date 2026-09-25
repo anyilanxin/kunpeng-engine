@@ -22,6 +22,9 @@ import java.util.List;
  * 追加端：一次调用 = 一个批 = 一个存储块；批内 entry 获得连续 position。
  *
  * <p>成功语义为"已定序"（position 唯一分配）；多写者并发下块帧可能延后提交 （有序提交链），消费方以 commit 通知为准。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface EventLogWriter extends AutoCloseable {
 

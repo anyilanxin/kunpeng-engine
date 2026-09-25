@@ -24,6 +24,9 @@ import java.lang.annotation.Target;
 /**
  * 标记 {@link UnpackedObject} 子类：构建任务将自动改写其无参构造器，生成全量 {@code declareProperty} 链（与 msgpack 模块的
  * AutoDeclareProperties 同义，识别规则为字段类型名以 {@code Property} 结尾）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.SOURCE)

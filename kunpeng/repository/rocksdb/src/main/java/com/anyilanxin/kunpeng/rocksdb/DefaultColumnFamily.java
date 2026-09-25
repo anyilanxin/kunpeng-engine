@@ -48,6 +48,7 @@ import org.rocksdb.Transaction;
  * {@link ColumnFamily} 的默认实现，基于 RocksDB Transaction 通过 native handle 直接读写指定列族中的 key-value 对
  *
  * @author zxuanhong
+ * @since 2026.9.0
  */
 @SuppressWarnings("rawtypes")
 public final class DefaultColumnFamily<Key extends StoreKey, Value extends StoreValue>

@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.structpack;
 
-/** 可输出 JSON 表示（调试/导出用，非热路径） */
+/**
+ * 可输出 JSON 表示（调试/导出用，非热路径）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface JsonSerializable {
 
   default String toJson() {

@@ -21,7 +21,12 @@ import java.time.Duration;
 import org.slf4j.Logger;
 import org.springframework.util.unit.DataSize;
 
-/** 磁盘配置，定义磁盘使用监控与空闲空间阈值。 */
+/**
+ * 磁盘配置，定义磁盘使用监控与空闲空间阈值。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class DiskCfg implements ConfigurationEntry {
 
   private static final Logger LOG = ConfigurationLoggers.CONFIGURATION_LOGGER;

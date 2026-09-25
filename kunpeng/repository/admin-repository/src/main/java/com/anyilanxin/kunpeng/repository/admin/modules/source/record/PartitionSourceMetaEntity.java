@@ -27,7 +27,7 @@ import com.anyilanxin.kunpeng.structpack.property.LongProperty;
  * 分区来源元数据实体，记录元数据版本号、创建与更新时间。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @AutoDeclareProperties
 public class PartitionSourceMetaEntity extends UnpackedObject implements StoreValue {

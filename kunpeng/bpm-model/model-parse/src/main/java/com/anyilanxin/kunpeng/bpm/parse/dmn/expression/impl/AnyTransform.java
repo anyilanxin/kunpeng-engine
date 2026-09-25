@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
  * 任意类型（any）的一元测试转换器：以比较运算符开头的一元测试按比较表达式拼接，其余按相等判断处理。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class AnyTransform implements ExpressTransformer {
   private static final Pattern COMPARISON_PATTERN = Pattern.compile("^(==|>=|<=|>|<).+$");

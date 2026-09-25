@@ -1,0 +1,103 @@
+/*
+ * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package com.anyilanxin.kunpeng.protocol.business.impl.record;
+
+import com.anyilanxin.kunpeng.protocol.business.RecordMappingIndex;
+import com.anyilanxin.kunpeng.protocol.business.ValueLifeCycle;
+import com.anyilanxin.kunpeng.protocol.business.impl.record.command.CommandRecordRegister;
+import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.CommandApiRecordRegister;
+import com.anyilanxin.kunpeng.protocol.business.record.RecordValueMapper;
+import com.anyilanxin.kunpeng.protocol.business.record.RecordValueMapperRegister;
+import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
+import java.util.function.Supplier;
+import org.agrona.concurrent.UnsafeBuffer;
+
+/**
+ * 业务协议 Record 值映射默认实现：Record 与落库值的转换。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
+@SuppressWarnings({"rawtypes", "unchecked"})
+public class DefaultRecordValueMapper<RECORD extends UnifiedRecordValue>
+    implements RecordValueMapper<RECORD>, RecordValueMapperRegister<RECORD> {
+  private final Supplier<RECORD>[] valueSuppliers;
+  private final RECORD[] valueCache;
+
+  public static RecordValueMapper getInstance() {
+    return new DefaultRecordValueMapper();
+  }
+
+  private DefaultRecordValueMapper() {
+    valueSuppliers = new Supplier[RecordMappingIndex.size()];
+    valueCache = (RECORD[]) new UnifiedRecordValue[RecordMappingIndex.size()];
+    registerInit();
+  }
+
+  @Override
+  public RecordValueMapperRegister register(
+      final ValueLifeCycle lifeCycle, final Supplier<RECORD> recordSupplier) {
+    if (valueSuppliers[lifeCycle.recordIndex()] != null) {
+      throw new IllegalStateException(
+          "Record value mapper has already been registered:"
+              + valueSuppliers[lifeCycle.recordIndex()].getClass().getName());
+    }
+    valueSuppliers[lifeCycle.recordIndex()] = recordSupplier;
+    valueCache[lifeCycle.recordIndex()] = recordSupplier.get();
+    return this;
+  }
+
+  private void registerInit() {
+    CommandApiRecordRegister.register(this);
+    CommandRecordRegister.register(this);
+  }
+
+  @Override
+  public RECORD getValue(final ValueLifeCycle lifeCycle) {
+    final Supplier<RECORD> valueSupplier = valueSuppliers[lifeCycle.recordIndex()];
+    if (valueSupplier == null) {
+      throw new IllegalStateException(
+          "No record value supplier registered for value life cycle " + lifeCycle.name());
+    }
+    return valueSupplier.get();
+  }
+
+  @Override
+  public RECORD getCacheValue(final ValueLifeCycle lifeCycle) {
+    final RECORD record = valueCache[lifeCycle.recordIndex()];
+    record.reset();
+    return record;
+  }
+
+  @Override
+  public RECORD copyValue(final ValueLifeCycle lifeCycle, final RECORD value) {
+    final RECORD copyRecord = getValue(lifeCycle);
+    final var valueBuffer = new UnsafeBuffer(new byte[value.getLength()]);
+    value.write(valueBuffer, 0);
+    copyRecord.wrap(valueBuffer, 0, valueBuffer.capacity());
+    return copyRecord;
+  }
+
+  @Override
+  public RECORD copyCacheValue(final ValueLifeCycle lifeCycle, final RECORD value) {
+    final RECORD copyRecord = getCacheValue(lifeCycle);
+    final var valueBuffer = new UnsafeBuffer(new byte[value.getLength()]);
+    value.write(valueBuffer, 0);
+    copyRecord.wrap(valueBuffer, 0, valueBuffer.capacity());
+    return copyRecord;
+  }
+}

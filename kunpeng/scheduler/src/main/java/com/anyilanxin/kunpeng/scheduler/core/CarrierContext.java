@@ -22,6 +22,9 @@ import com.anyilanxin.kunpeng.scheduler.clock.ActorClock;
 /**
  * 载体线程上下文：runner/虚拟载体在运行期绑定，暴露当前时钟与正在执行的 actor 控制。
  * ActorClock.current()/ActorControl.current()/CompletableActorFuture 的 actor 线程判定都经此。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class CarrierContext {
 

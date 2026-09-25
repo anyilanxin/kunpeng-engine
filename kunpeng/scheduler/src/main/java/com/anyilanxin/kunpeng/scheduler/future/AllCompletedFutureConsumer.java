@@ -23,6 +23,9 @@ import java.util.function.Consumer;
  * 计数器：全部完成后回调一次（保留最后一个异常）。
  *
  * <p>线程约束：计数器非原子——accept 调用必须串行（actor 内经 cell 订阅轮询天然满足）, 并发调用会丢失计数。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class AllCompletedFutureConsumer<T> implements BiConsumer<T, Throwable> {
 

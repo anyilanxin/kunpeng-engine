@@ -16,28 +16,30 @@
  */
 package com.anyilanxin.kunpeng.repository.admin;
 
-import com.anyilanxin.kunpeng.repository.admin.modules.admin.ImmutableRepositoryAdmin;
-import com.anyilanxin.kunpeng.repository.admin.modules.business.ImmutableRepositoryBusiness;
-import com.anyilanxin.kunpeng.repository.admin.modules.delayed.ImmutableRepositoryDelayed;
-import com.anyilanxin.kunpeng.repository.admin.modules.key.ImmutableRepositoryKey;
-import com.anyilanxin.kunpeng.repository.admin.modules.position.ImmutableRepositoryPosition;
-import com.anyilanxin.kunpeng.repository.admin.modules.source.ImmutableRepositorySource;
+import com.anyilanxin.kunpeng.repository.admin.modules.admin.ImmutableAdminRepository;
+import com.anyilanxin.kunpeng.repository.admin.modules.business.ImmutableBusinessRepository;
+import com.anyilanxin.kunpeng.repository.admin.modules.delayed.ImmutableDelayedRepository;
+import com.anyilanxin.kunpeng.repository.admin.modules.key.ImmutableKeyRepository;
+import com.anyilanxin.kunpeng.repository.admin.modules.position.ImmutablePositionRepository;
+import com.anyilanxin.kunpeng.repository.admin.modules.source.ImmutableSourceRepository;
 
 /**
+ * 管理面只读仓储接口：source 等模块的查询能力聚合。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface AdminImmutableRepository {
 
-  ImmutableRepositoryAdmin adminRepository();
+  ImmutableAdminRepository adminRepository();
 
-  ImmutableRepositoryBusiness businessRepository();
+  ImmutableBusinessRepository businessRepository();
 
-  ImmutableRepositoryDelayed delayedRepository();
+  ImmutableDelayedRepository delayedRepository();
 
-  ImmutableRepositoryKey keyRepository();
+  ImmutableKeyRepository keyRepository();
 
-  ImmutableRepositoryPosition positionRepository();
+  ImmutablePositionRepository positionRepository();
 
-  ImmutableRepositorySource sourceRepository();
+  ImmutableSourceRepository sourceRepository();
 }

@@ -48,7 +48,6 @@ import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformer.StartEventTransformer;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformer.SubProcessTransformer;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformer.UserTaskTransformer;
 import com.anyilanxin.kunpeng.engine.script.ScriptEngine;
-
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -62,6 +61,9 @@ import java.util.List;
  * 依据容器调整（中间抛出事件）→ ⑤ 依据容器元素调整（多实例活动体重组）。
  *
  * <p>五个阶段共用同一个 {@link ModelWalker}，每个阶段各持一组转换器；调用活动的字典序索引在全部遍历完成后统一计算一次（避免逐元素全量排序）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class BpmnTransformer {
   /** 阶段一：实例化流程与全局事件载荷 */

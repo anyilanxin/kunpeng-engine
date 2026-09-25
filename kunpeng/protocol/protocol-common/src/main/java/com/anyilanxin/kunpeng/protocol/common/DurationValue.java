@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.protocol.common;
 
-/** 表示一个时长区间值（含开始时间、结束时间与时长）。 */
+/**
+ * 表示一个时长区间值（含开始时间、结束时间与时长）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface DurationValue {
 
   long getStartTime();

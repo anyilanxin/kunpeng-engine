@@ -22,7 +22,7 @@ import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionExecutionRe
  * 分区引导命令记录契约，描述初始化目标分区组所需的拓扑元数据。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface PartitionBootstrapSourceDataTransferRecordValue
     extends PartitionExecutionRecordValue {

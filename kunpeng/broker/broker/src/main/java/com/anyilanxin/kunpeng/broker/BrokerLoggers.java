@@ -19,8 +19,16 @@ package com.anyilanxin.kunpeng.broker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** 集中管理 broker 各子系统的日志器（Logger）实例。 */
+/**
+ * 集中管理 broker 各子系统的日志器（Logger）实例。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class BrokerLoggers {
   public static final Logger BROKER_LOGGER =
       LoggerFactory.getLogger("com.anyilanxin.kunpeng.broker");
+
+  public static final Logger TRANSPORT_LOGGER =
+      LoggerFactory.getLogger("com.anyilanxin.kunpeng.broker.transport");
 }

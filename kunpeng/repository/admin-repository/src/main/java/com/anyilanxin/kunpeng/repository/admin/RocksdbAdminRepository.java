@@ -18,33 +18,36 @@ package com.anyilanxin.kunpeng.repository.admin;
 
 import com.anyilanxin.kunpeng.kvstore.KvStore;
 import com.anyilanxin.kunpeng.kvstore.TransactionContext;
-import com.anyilanxin.kunpeng.repository.admin.modules.admin.MutableRepositoryAdmin;
-import com.anyilanxin.kunpeng.repository.admin.modules.admin.RepositoryAdmin;
-import com.anyilanxin.kunpeng.repository.admin.modules.business.MutableRepositoryBusiness;
-import com.anyilanxin.kunpeng.repository.admin.modules.business.RepositoryBusiness;
-import com.anyilanxin.kunpeng.repository.admin.modules.delayed.MutableRepositoryDelayed;
-import com.anyilanxin.kunpeng.repository.admin.modules.delayed.RepositoryDelayed;
-import com.anyilanxin.kunpeng.repository.admin.modules.key.MutableRepositoryKey;
-import com.anyilanxin.kunpeng.repository.admin.modules.key.RepositoryKey;
-import com.anyilanxin.kunpeng.repository.admin.modules.position.MutableRepositoryPosition;
-import com.anyilanxin.kunpeng.repository.admin.modules.position.RepositoryPosition;
-import com.anyilanxin.kunpeng.repository.admin.modules.source.MutableRepositorySource;
-import com.anyilanxin.kunpeng.repository.admin.modules.source.RepositorySource;
+import com.anyilanxin.kunpeng.repository.admin.modules.admin.AdminRepository;
+import com.anyilanxin.kunpeng.repository.admin.modules.admin.MutableAdminRepository;
+import com.anyilanxin.kunpeng.repository.admin.modules.business.BusinessRepository;
+import com.anyilanxin.kunpeng.repository.admin.modules.business.MutableBusinessRepository;
+import com.anyilanxin.kunpeng.repository.admin.modules.delayed.DelayedRepository;
+import com.anyilanxin.kunpeng.repository.admin.modules.delayed.MutableDelayedRepository;
+import com.anyilanxin.kunpeng.repository.admin.modules.key.KeyRepository;
+import com.anyilanxin.kunpeng.repository.admin.modules.key.MutableKeyRepository;
+import com.anyilanxin.kunpeng.repository.admin.modules.position.MutablePositionRepository;
+import com.anyilanxin.kunpeng.repository.admin.modules.position.PositionRepository;
+import com.anyilanxin.kunpeng.repository.admin.modules.source.MutableSourceRepository;
+import com.anyilanxin.kunpeng.repository.admin.modules.source.SourceRepository;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.util.Set;
 
 /**
+ * RocksDB 管理面仓储实现。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
-final class RocksdbAdminRepository implements AdminRepository {
+final class RocksdbAdminRepository
+    implements com.anyilanxin.kunpeng.repository.admin.AdminRepository {
   private final TransactionContext transaction;
-  private final MutableRepositoryAdmin repositoryAdmin;
-  private final MutableRepositoryBusiness repositoryBusiness;
-  private final MutableRepositoryKey repositoryKey;
-  private final MutableRepositoryPosition repositoryPosition;
-  private final MutableRepositoryDelayed repositoryDelayed;
-  private final MutableRepositorySource repositorySource;
+  private final MutableAdminRepository repositoryAdmin;
+  private final MutableBusinessRepository repositoryBusiness;
+  private final MutableKeyRepository repositoryKey;
+  private final MutablePositionRepository repositoryPosition;
+  private final MutableDelayedRepository repositoryDelayed;
+  private final MutableSourceRepository repositorySource;
   private final AdminRepositoryAppliers appliers;
 
   public RocksdbAdminRepository(
@@ -62,12 +65,12 @@ final class RocksdbAdminRepository implements AdminRepository {
       final TransactionContext transaction,
       final MeterRegistry meterRegistry) {
     this.transaction = transaction;
-    repositoryAdmin = new RepositoryAdmin(db, transaction);
-    repositoryBusiness = new RepositoryBusiness(db, transaction);
-    repositoryKey = new RepositoryKey(db, transaction);
-    repositoryPosition = new RepositoryPosition(db, transaction);
-    repositoryDelayed = new RepositoryDelayed(db, transaction);
-    repositorySource = new RepositorySource(db, transaction);
+    repositoryAdmin = new AdminRepository(db, transaction);
+    repositoryBusiness = new BusinessRepository(db, transaction);
+    repositoryKey = new KeyRepository(db, transaction);
+    repositoryPosition = new PositionRepository(db, transaction);
+    repositoryDelayed = new DelayedRepository(db, transaction);
+    repositorySource = new SourceRepository(db, transaction);
     appliers = new RocksdbAdminRepositoryApplierAdmin(this);
   }
 
@@ -82,32 +85,32 @@ final class RocksdbAdminRepository implements AdminRepository {
   }
 
   @Override
-  public MutableRepositoryAdmin adminRepository() {
+  public MutableAdminRepository adminRepository() {
     return repositoryAdmin;
   }
 
   @Override
-  public MutableRepositoryBusiness businessRepository() {
+  public MutableBusinessRepository businessRepository() {
     return repositoryBusiness;
   }
 
   @Override
-  public MutableRepositoryDelayed delayedRepository() {
+  public MutableDelayedRepository delayedRepository() {
     return repositoryDelayed;
   }
 
   @Override
-  public MutableRepositoryKey keyRepository() {
+  public MutableKeyRepository keyRepository() {
     return repositoryKey;
   }
 
   @Override
-  public MutableRepositoryPosition positionRepository() {
+  public MutablePositionRepository positionRepository() {
     return repositoryPosition;
   }
 
   @Override
-  public MutableRepositorySource sourceRepository() {
+  public MutableSourceRepository sourceRepository() {
     return repositorySource;
   }
 }

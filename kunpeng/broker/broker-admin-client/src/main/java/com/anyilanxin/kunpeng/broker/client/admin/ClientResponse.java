@@ -20,8 +20,10 @@ import com.anyilanxin.kunpeng.protocol.admin.AdminValueType;
 import com.anyilanxin.kunpeng.protocol.common.api.ResponseRecordValue;
 
 /**
+ * 客户端响应抽象：承载响应 Record 与请求关联标识。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface ClientResponse<VALUE extends ResponseRecordValue> {
 

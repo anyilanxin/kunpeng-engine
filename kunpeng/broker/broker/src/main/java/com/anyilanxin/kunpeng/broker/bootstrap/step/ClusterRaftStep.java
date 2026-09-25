@@ -18,13 +18,18 @@ package com.anyilanxin.kunpeng.broker.bootstrap.step;
 
 import com.anyilanxin.kunpeng.broker.bootstrap.AbstractBrokerStartupStep;
 import com.anyilanxin.kunpeng.broker.bootstrap.BrokerStartupContext;
+import com.anyilanxin.kunpeng.broker.business.ClusterBusinessService;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
-import com.anyilanxin.kunpeng.cluster.manager.business.ClusterBusinessService;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
 import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 
-/** 集群引擎（Cluster Engine）相关的 broker 启动步骤。 */
+/**
+ * 集群引擎（Cluster Engine）相关的 broker 启动步骤。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class ClusterRaftStep extends AbstractBrokerStartupStep {
 
   @Override
@@ -50,7 +55,11 @@ public final class ClusterRaftStep extends AbstractBrokerStartupStep {
             actorSchedulingService,
             brokerStartupContext.getMeterRegistry(),
             brokerStartupContext.getClusterDispatchClient(),
-            brokerStartupContext.getClusterPartitionTopology());
+            brokerStartupContext.getClusterPartitionTopology(),
+            brokerStartupContext.getBeanFactory(),
+            brokerStartupContext.getSinksConfig(),
+            brokerStartupContext.getJobStreamDispatcher(),
+            brokerStartupContext.getBusinessCommandApiService());
     actorSchedulingService.submitActor(businessService);
     businessService
         .start()

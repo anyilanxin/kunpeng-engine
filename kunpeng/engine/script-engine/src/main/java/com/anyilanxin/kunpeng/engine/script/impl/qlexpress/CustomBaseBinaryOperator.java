@@ -17,7 +17,9 @@
 package com.anyilanxin.kunpeng.engine.script.impl.qlexpress;
 
 /**
+ * QLExpress 自定义二元操作符抽象基类。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public abstract class CustomBaseBinaryOperator implements CustomOperator {}

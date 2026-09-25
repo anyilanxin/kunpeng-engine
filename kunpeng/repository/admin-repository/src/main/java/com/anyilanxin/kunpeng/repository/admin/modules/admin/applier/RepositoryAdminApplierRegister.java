@@ -26,8 +26,10 @@ import com.anyilanxin.kunpeng.repository.admin.modules.admin.applier.execution.i
 import com.anyilanxin.kunpeng.repository.admin.modules.admin.applier.execution.impl.AdminDispatchPlanExecutionSucceedApplierImpl;
 
 /**
+ * 管理域应用器注册器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class RepositoryAdminApplierRegister {
 

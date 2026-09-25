@@ -18,7 +18,12 @@ package com.anyilanxin.kunpeng.scheduler;
 
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 
-/** actor 提交服务（集群线程命名的集成锚点） */
+/**
+ * actor 提交服务（集群线程命名的集成锚点）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface ActorSchedulingService {
 
   ActorFuture<Void> submitActor(final Actor actor);

@@ -20,7 +20,7 @@ package com.anyilanxin.kunpeng.protocol.admin.record.command.business;
  * 集群管理调度操作的分发类型枚举，作为管理面与业务面 Raft 消息分发时的操作类型标识。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public enum BusinessDispatchType {
   /** 业务负载平衡 */

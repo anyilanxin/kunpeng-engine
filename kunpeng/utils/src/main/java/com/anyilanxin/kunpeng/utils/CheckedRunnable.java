@@ -18,7 +18,12 @@ package com.anyilanxin.kunpeng.utils;
 
 import java.util.concurrent.Callable;
 
-/** 可抛受检异常的 Runnable */
+/**
+ * 可抛受检异常的 Runnable。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @FunctionalInterface
 @SuppressWarnings("java:S112")
 public interface CheckedRunnable {

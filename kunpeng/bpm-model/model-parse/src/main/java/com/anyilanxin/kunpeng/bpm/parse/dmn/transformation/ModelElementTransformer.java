@@ -23,6 +23,8 @@ import com.anyilanxin.kunpeng.bpm.model.dmn.instance.DmnModelElementInstance;
  * bpm-model 的 XML 模型实例转换为 dmn/element 包的运行时元素。
  *
  * @param <T> 本转换器处理的 DMN 模型元素类型
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface ModelElementTransformer<T extends DmnModelElementInstance> {
 

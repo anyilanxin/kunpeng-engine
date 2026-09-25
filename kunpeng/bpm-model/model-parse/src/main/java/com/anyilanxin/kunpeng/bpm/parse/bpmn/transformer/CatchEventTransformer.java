@@ -43,6 +43,9 @@ import java.util.Collection;
  * 捕获事件转换器：按第一个事件定义装配事件载荷（消息/定时/错误/升级/信号/链接/补偿）。
  *
  * <p>定时载荷在此编译为延迟到运行期的定时构建工厂；补偿载荷依据关联线（association）定位补偿处理器。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class CatchEventTransformer implements ElementTransformer<CatchEvent> {
 

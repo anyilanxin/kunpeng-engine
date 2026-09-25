@@ -20,7 +20,12 @@ package com.anyilanxin.kunpeng.bpm.parse.dmn.element;
 import java.util.Collection;
 import java.util.Set;
 
-/** 属于同一决策需求图（即 DMN 资源）的 {@link DmnDecision} 的容器。 */
+/**
+ * 属于同一决策需求图（即 DMN 资源）的 {@link DmnDecision} 的容器。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface DmnDecisionRequirementsGraph {
 
   /**

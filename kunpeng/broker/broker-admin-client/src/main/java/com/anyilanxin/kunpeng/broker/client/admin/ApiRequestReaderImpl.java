@@ -23,8 +23,10 @@ import org.agrona.DirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
 
 /**
+ * API 请求读取器默认实现。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class ApiRequestReaderImpl implements ApiRequestReader {
   private final AdminApiRequestDecoder decoder = new AdminApiRequestDecoder();

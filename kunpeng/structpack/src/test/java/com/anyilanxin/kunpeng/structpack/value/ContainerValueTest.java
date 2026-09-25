@@ -27,7 +27,12 @@ import org.agrona.concurrent.UnsafeBuffer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/** 容器值测试：ArrayValue/SetValue/MapValue（类型化元素 + 槽位池化） */
+/**
+ * 容器值测试：ArrayValue/SetValue/MapValue（类型化元素 + 槽位池化）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @DisplayName("容器值类型")
 class ContainerValueTest {
 

@@ -18,4 +18,10 @@ package com.anyilanxin.kunpeng.protocol.common;
 
 import com.anyilanxin.kunpeng.structpack.JsonSerializable;
 
+/**
+ * Record 值标记接口。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface RecordValue extends JsonSerializable {}

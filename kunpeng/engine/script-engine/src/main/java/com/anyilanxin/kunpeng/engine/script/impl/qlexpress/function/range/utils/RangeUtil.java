@@ -23,8 +23,10 @@ import com.anyilanxin.kunpeng.engine.script.exception.CustomBusinessException;
 import java.util.List;
 
 /**
+ * range 函数工具：区间表达式的解析与求值辅助。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class RangeUtil {
   private RangeUtil() {}

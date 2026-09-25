@@ -21,8 +21,10 @@ import com.anyilanxin.kunpeng.protocol.admin.record.CommandApiValueLifeCycle;
 import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 
 /**
+ * 命令 API 处理句柄：命令处理器的注册标识与生命周期管理。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface CommandApiHandle {
 

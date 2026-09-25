@@ -17,8 +17,10 @@
 package com.anyilanxin.kunpeng.broker.client.admin;
 
 /**
+ * 服务端响应抽象：应答编码与请求匹配。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface ServerResponse {
 

@@ -22,6 +22,9 @@ import com.anyilanxin.kunpeng.engine.script.ScriptExpression;
  * 任务型元素（job worker 元素）的任务属性：任务类型与重试次数，两者均以表达式承载。
  *
  * <p>独立的顶层类（而非嵌套类）便于任务元素与执行监听器共同复用，避免为每个元素复制定义。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class BpmnJobProperties {
   /** 任务类型表达式 */

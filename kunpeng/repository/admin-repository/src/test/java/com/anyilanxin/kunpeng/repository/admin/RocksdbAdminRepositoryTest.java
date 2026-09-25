@@ -37,7 +37,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** 基于 RocksdbTransactionDb 的 AdminRepository 功能测试：position/key/delayed/source 子模块 */
+/**
+ * 基于 RocksdbTransactionDb 的 AdminRepository 功能测试：position/key/delayed/source 子模块。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class RocksdbAdminRepositoryTest {
 
   @TempDir Path tempDir;

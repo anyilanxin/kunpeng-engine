@@ -25,7 +25,12 @@ import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnStartEvent;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.BpmnTransformContext;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.ElementTransformer;
 
-/** 子流程转换器：triggeredByEvent 的子流程改标为事件子流程并挂载到父容器（或流程本身）。 */
+/**
+ * 子流程转换器：triggeredByEvent 的子流程改标为事件子流程并挂载到父容器（或流程本身）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class SubProcessTransformer implements ElementTransformer<SubProcess> {
 
   /** 返回本转换器处理的模型元素类型。 */

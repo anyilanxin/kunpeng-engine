@@ -26,8 +26,10 @@ import java.util.Set;
 import javax.script.SimpleScriptContext;
 
 /**
+ * JavaScript 表达式实现。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public final class JavaScriptExpression extends ScriptAbstractExpression {
   private boolean isValid;

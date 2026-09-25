@@ -23,7 +23,7 @@ import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.Busine
  * 调度计划执行明细（管理面与业务面通用）。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public record DispatchPlanExecution(
     long dispatchPlanExecutionId,

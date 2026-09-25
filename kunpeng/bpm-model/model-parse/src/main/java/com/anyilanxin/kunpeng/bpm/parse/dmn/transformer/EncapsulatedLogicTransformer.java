@@ -33,6 +33,9 @@ import com.anyilanxin.kunpeng.engine.script.ScriptEngine;
 /**
  * 将 DMN EncapsulatedLogic（封装逻辑）转换为运行时 DmnBusinessKnowledgeFunction 业务知识函数：绑定已转换的表达式， 并为每个
  * FormalParameter 生成带类型定义的形式参数。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class EncapsulatedLogicTransformer
     implements ModelElementTransformer<EncapsulatedLogic> {

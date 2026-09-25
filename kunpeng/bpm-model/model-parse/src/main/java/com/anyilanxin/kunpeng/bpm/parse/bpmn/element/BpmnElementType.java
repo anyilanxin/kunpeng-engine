@@ -24,6 +24,9 @@ import java.util.Map;
  *
  * <p>每个枚举值携带其对应的 BPMN XSD 元素名；{@link #forTypeName(String)} 依据元素名（如 {@code serviceTask}、{@code
  * startEvent}）完成查找，未知类型统一归入 {@link #UNSPECIFIED}。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public enum BpmnElementType {
   /** 未指定类型（初始态或无法识别的元素） */

@@ -18,7 +18,12 @@ package com.anyilanxin.kunpeng.bpm.parse.bpmn.element;
 
 import com.anyilanxin.kunpeng.engine.script.ScriptExpression;
 
-/** 信号的运行时模型：信号名以表达式承载，静态表达式可提前解析为常量。 */
+/**
+ * 信号的运行时模型：信号名以表达式承载，静态表达式可提前解析为常量。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class BpmnSignal extends BpmnFlowElement {
   /** 信号名表达式 */
   private ScriptExpression signalNameExpression;

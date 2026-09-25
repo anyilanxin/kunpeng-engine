@@ -23,7 +23,7 @@ import java.util.Set;
  * 分区数据合并命令记录契约，描述数据合并的目标成员。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface PartitionLeaveSourceTransferValue extends PartitionExecutionRecordValue {
   /** 分区组 */

@@ -30,7 +30,7 @@ import java.util.List;
  * 分区来源元数据实体，记录元数据版本号、创建与更新时间，以及分区来源列表。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @AutoDeclareProperties
 public class PartitionSourceMetaRecord extends UnifiedRecordValue<PartitionSourceMetaRecord>

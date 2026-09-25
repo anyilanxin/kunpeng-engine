@@ -18,11 +18,16 @@ package com.anyilanxin.kunpeng.bpm.parse.dmn.expression;
 
 /**
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 import java.util.regex.Pattern;
 
-/** 区间类型枚举，每种类型对应一个独立的正则。 */
+/**
+ * 区间类型枚举，每种类型对应一个独立的正则。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public enum RangeType {
   /** [start..end] — 闭-闭 */
   CLOSED_CLOSED(Pattern.compile("^\\[(.+)\\.\\.(.+)\\]$"), "rangeClosed(%s,%s)"),

@@ -21,6 +21,12 @@ import com.anyilanxin.kunpeng.structpack.AutoDeclareProperties;
 import com.anyilanxin.kunpeng.structpack.UnpackedObject;
 import com.anyilanxin.kunpeng.structpack.property.LongProperty;
 
+/**
+ * 下一 ID Entity：key 生成器当前值的落库映射。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @AutoDeclareProperties
 public class NextIdEntity extends UnpackedObject implements StoreValue {
   private final LongProperty nextValueProp = new LongProperty(1, "NEXT_KEY_VALUE", -1L);

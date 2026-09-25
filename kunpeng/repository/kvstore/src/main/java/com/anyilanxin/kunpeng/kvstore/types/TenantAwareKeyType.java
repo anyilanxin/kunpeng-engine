@@ -28,6 +28,9 @@ import org.agrona.MutableDirectBuffer;
  *
  * <p>使用 PREFIX 时需要注意可能产生优先级差异：RocksDB 中的 key 是有序的。以 Jobs 为例，激活时需要 遍历所有可激活的 job 返回给 worker，我们不希望租户
  * AAA 的 job 比租户 ZZZ 的 job 更优先，这种场景 更适合使用 SUFFIX。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public record TenantAwareKeyType<WrappedKey extends StoreKey>(
     StringType tenantKey, WrappedKey wrappedKey, PlacementType placementType)

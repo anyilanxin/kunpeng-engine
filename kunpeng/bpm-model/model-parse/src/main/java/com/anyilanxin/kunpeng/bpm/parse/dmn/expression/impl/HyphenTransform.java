@@ -23,7 +23,7 @@ import com.anyilanxin.kunpeng.bpm.parse.dmn.expression.ExpressTransformer;
  * "-"（任意匹配）一元测试转换器：FEEL 中一元测试为 "-" 时表示匹配任意输入值。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class HyphenTransform implements ExpressTransformer {
   /** 返回该转换器适配的值类型：hyphen。 */

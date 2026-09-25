@@ -24,8 +24,10 @@ import java.util.Set;
 import org.apache.commons.lang3.Strings;
 
 /**
+ * 静态表达式：求值结果恒定的表达式实现。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class StaticExpression extends ScriptAbstractExpression {
   private final boolean isStatic;

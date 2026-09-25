@@ -22,8 +22,10 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.stereotype.Component;
 
 /**
+ * gateway 配置属性装配：将配置文件绑定并构建 gateway 启动配置。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @Component
 @EnableConfigurationProperties(GatewayPropertiesConfiguration.GatewayProperties.class)

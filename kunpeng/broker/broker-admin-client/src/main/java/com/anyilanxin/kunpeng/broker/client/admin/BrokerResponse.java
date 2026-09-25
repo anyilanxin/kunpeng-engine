@@ -23,6 +23,12 @@ import com.anyilanxin.kunpeng.protocol.admin.record.RecordValueMapper;
 import com.anyilanxin.kunpeng.protocol.common.api.ResponseRecordValue;
 import org.agrona.DirectBuffer;
 
+/**
+ * 管理面 broker 响应。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class BrokerResponse<VALUE extends ResponseRecordValue> implements ClientResponse<VALUE> {
   private static final RecordValueMapper VALUE_MAPPER = DefaultRecordValueMapper.getInstance();

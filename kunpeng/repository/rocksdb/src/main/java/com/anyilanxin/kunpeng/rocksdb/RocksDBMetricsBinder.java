@@ -33,6 +33,7 @@ import org.slf4j.Logger;
  * 将 RocksDB Statistics 中的 ticker 指标绑定到 Micrometer，统一注册并在关闭时移除这些 gauge 指标
  *
  * @author zxuanhong
+ * @since 2026.9.0
  */
 public class RocksDBMetricsBinder implements AutoCloseable {
   private static final Logger LOG = RocksdbLoggers.ROCKSDB_LOGGER;

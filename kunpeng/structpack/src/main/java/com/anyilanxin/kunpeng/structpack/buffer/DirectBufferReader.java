@@ -20,7 +20,12 @@ import com.anyilanxin.kunpeng.structpack.util.BufferUtil;
 import org.agrona.DirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
 
-/** 从 direct buffer 反序列化的对象契约 */
+/**
+ * 从 direct buffer 反序列化的对象契约。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class DirectBufferReader implements BufferReader {
   protected final UnsafeBuffer readBuffer = new UnsafeBuffer(0, 0);
 

@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.eventlog;
 
-/** 流控对外窄接口：消费方标记处理进度 + 读取水位快照 */
+/**
+ * 流控对外窄接口：消费方标记处理进度 + 读取水位快照。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface LogFlowControl {
 
   /** 标记某 position（批的 lastPosition）已处理完毕（处理 actor 调用，推进 AIMD 窗口） */

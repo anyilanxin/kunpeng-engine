@@ -23,8 +23,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * 表达式求值结果：取值与类型信息的统一视图。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface EvaluationResult {
   /**

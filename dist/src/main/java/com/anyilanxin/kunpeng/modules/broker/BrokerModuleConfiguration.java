@@ -35,7 +35,7 @@ import org.springframework.context.annotation.Profile;
  *
  * @author zxuanhong
  * @copyright zhouxuanhong（https://anyilanxin.com）
- * @since 1.0.0
+ * @since 2026.9.0
  */
 @Configuration(proxyBeanMethods = false)
 @ComponentScan(
@@ -43,6 +43,12 @@ import org.springframework.context.annotation.Profile;
       "com.anyilanxin.kunpeng.modules.broker",
       "com.anyilanxin.kunpeng.modules.common",
     })
+/**
+ * broker 模块装配配置。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @EnableAutoConfiguration
 @Profile("broker")
 public class BrokerModuleConfiguration {

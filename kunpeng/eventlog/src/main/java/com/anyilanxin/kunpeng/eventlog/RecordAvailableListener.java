@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.eventlog;
 
-/** 新条目可读通知：存储 commit 后回调（消费方应在自己的线程内拉取，不在回调里做重活） */
+/**
+ * 新条目可读通知：存储 commit 后回调（消费方应在自己的线程内拉取，不在回调里做重活）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @FunctionalInterface
 public interface RecordAvailableListener {
 

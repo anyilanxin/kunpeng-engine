@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.bpm.parse.bpmn.element;
 
-/** 事件相关流程元素的事件语义类型（消息、定时、错误等）。 */
+/**
+ * 事件相关流程元素的事件语义类型（消息、定时、错误等）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public enum BpmnEventType {
   /** 未指定（初始态） */
   UNSPECIFIED,

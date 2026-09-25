@@ -28,6 +28,9 @@ import java.util.Map;
  * 变量映射转换器：把一组 kunpeng 输入/输出映射（source -> 目标路径）编译为单个上下文表达式。
  *
  * <p>目标路径支持点号嵌套（如 {@code a.b}），渲染为嵌套上下文字面量；输出映射的嵌套路径追加上下文合并逻辑（追加属性而非整体覆盖既有上下文变量）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 final class VariableMappingTransformer {
 

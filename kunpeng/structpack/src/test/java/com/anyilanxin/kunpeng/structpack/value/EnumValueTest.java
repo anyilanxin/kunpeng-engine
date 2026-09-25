@@ -26,7 +26,12 @@ import org.agrona.concurrent.UnsafeBuffer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/** EnumValue 测试：ordinal 编解码/null=-1/越界拒绝 */
+/**
+ * EnumValue 测试：ordinal 编解码/null=-1/越界拒绝。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @DisplayName("EnumValue 枚举值")
 class EnumValueTest {
 

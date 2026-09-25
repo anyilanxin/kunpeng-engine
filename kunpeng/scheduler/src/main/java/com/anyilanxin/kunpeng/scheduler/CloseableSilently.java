@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.scheduler;
 
-/** close 不抛异常 */
+/**
+ * close 不抛异常。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface CloseableSilently extends AutoCloseable {
   @Override
   void close();

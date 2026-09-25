@@ -32,6 +32,9 @@ import org.junit.jupiter.api.Test;
  *       {@code date(2026, 1, 1)} 被当作 (value, format) 处理，返回 null。</li>
  * </ul>
  * 下方断言按 FEEL 规范写，预期 fail。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 class DateFunctionTest extends FunctionTestBase {
 

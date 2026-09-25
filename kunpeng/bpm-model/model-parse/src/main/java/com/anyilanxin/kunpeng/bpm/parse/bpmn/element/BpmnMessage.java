@@ -18,7 +18,12 @@ package com.anyilanxin.kunpeng.bpm.parse.bpmn.element;
 
 import com.anyilanxin.kunpeng.engine.script.ScriptExpression;
 
-/** 消息的运行时模型：消息名与关联键以表达式承载；消息名表达式为静态时可提前解析为常量。 */
+/**
+ * 消息的运行时模型：消息名与关联键以表达式承载；消息名表达式为静态时可提前解析为常量。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class BpmnMessage extends BpmnFlowElement {
   /** 消息名表达式 */
   private ScriptExpression messageNameExpression;

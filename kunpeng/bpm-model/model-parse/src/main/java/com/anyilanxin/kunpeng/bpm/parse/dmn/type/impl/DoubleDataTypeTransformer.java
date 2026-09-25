@@ -25,6 +25,7 @@ import com.anyilanxin.kunpeng.bpm.parse.dmn.type.Variables;
  * 将 {@link Number} 和 {@link String} 类型的值转换为 {@link DoubleValue}。
  *
  * @author Philipp Ossler
+ * @since 2026.9.0
  */
 public class DoubleDataTypeTransformer implements DmnDataTypeTransformer {
 

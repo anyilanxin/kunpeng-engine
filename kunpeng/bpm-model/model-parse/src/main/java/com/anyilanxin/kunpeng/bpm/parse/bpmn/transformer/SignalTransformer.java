@@ -22,7 +22,12 @@ import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.BpmnTransformContext
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.ElementTransformer;
 import com.anyilanxin.kunpeng.utils.Either;
 
-/** 信号转换器：解析信号名表达式，静态信号名在部署期提前求值为常量。 */
+/**
+ * 信号转换器：解析信号名表达式，静态信号名在部署期提前求值为常量。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class SignalTransformer implements ElementTransformer<Signal> {
 
   /** 返回本转换器处理的模型元素类型。 */

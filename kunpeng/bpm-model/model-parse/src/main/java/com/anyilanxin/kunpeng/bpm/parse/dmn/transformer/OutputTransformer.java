@@ -23,7 +23,12 @@ import com.anyilanxin.kunpeng.bpm.parse.dmn.element.decision.decisiontable.DmnDe
 import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.ModelElementTransformer;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.TransformContext;
 
-/** 将 DMN Output（决策表输出列）转换为运行时 DmnDecisionTableOutput 元素：设置输出名称并按 typeRef 解析类型定义。 */
+/**
+ * 将 DMN Output（决策表输出列）转换为运行时 DmnDecisionTableOutput 元素：设置输出名称并按 typeRef 解析类型定义。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class OutputTransformer implements ModelElementTransformer<Output> {
   /** 返回本转换器处理的 DMN 模型元素类型。 */
   @Override

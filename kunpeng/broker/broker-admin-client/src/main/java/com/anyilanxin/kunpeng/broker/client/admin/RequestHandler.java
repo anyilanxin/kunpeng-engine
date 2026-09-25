@@ -16,6 +16,12 @@
  */
 package com.anyilanxin.kunpeng.broker.client.admin;
 
+/**
+ * 请求处理器函数接口。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @FunctionalInterface
 public interface RequestHandler {
 

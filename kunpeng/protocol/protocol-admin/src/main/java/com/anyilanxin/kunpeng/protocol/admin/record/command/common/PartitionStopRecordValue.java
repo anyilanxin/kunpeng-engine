@@ -22,7 +22,7 @@ import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionExecutionRe
  * 分区离开命令记录契约，直接复用执行记录的公共字段。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface PartitionStopRecordValue extends PartitionExecutionRecordValue {
   /** 分区组 */

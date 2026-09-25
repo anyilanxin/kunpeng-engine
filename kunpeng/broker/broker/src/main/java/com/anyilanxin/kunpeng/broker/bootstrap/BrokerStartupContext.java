@@ -16,28 +16,39 @@
  */
 package com.anyilanxin.kunpeng.broker.bootstrap;
 
+import com.anyilanxin.kunpeng.broker.admin.ClusterAdminService;
 import com.anyilanxin.kunpeng.broker.bootstrap.step.adminapi.CommandApiServiceImpl;
 import com.anyilanxin.kunpeng.broker.bootstrap.step.idgenerator.NodeIdGeneratorService;
 import com.anyilanxin.kunpeng.broker.bootstrap.step.idgenerator.NodeIdGeneratorServiceImpl;
+import com.anyilanxin.kunpeng.broker.business.ClusterBusinessService;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
 import com.anyilanxin.kunpeng.cluster.config.ClusterMetaStore;
 import com.anyilanxin.kunpeng.cluster.config.topology.broker.DefaultClusterSwimTopologyService;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.cluster.dispatch.api.ClusterDispatchClient;
 import com.anyilanxin.kunpeng.cluster.dispatch.scheduling.TimerClock;
-import com.anyilanxin.kunpeng.cluster.manager.admin.ClusterAdminService;
-import com.anyilanxin.kunpeng.cluster.manager.business.ClusterBusinessService;
 import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
 import com.anyilanxin.kunpeng.configuration.cluster.ClusterCfg;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
 import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
+import com.anyilanxin.kunpeng.sink.config.SinksConfig;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.springframework.beans.factory.BeanFactory;
 
-/** broker 启动与关闭过程中使用的上下文，包含启动/关闭所需的依赖。它是可修改的上下文， 会在启动或关闭过程中被更新。 */
+/**
+ * broker 启动与关闭过程中使用的上下文，包含启动/关闭所需的依赖。它是可修改的上下文， 会在启动或关闭过程中被更新。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface BrokerStartupContext {
   BrokerCfg getBrokerConfiguration();
 
-  ClusterCfg getClusterConfiguration();
+  BeanFactory getBeanFactory();
+
+  ClusterCfg getClusterCft();
+
+  SinksConfig getSinksConfig();
 
   ActorSchedulingService getActorSchedulingService();
 
@@ -70,6 +81,18 @@ public interface BrokerStartupContext {
   ClusterDispatchClient getClusterDispatchClient();
 
   void setClusterDispatchClient(ClusterDispatchClient dispatchClient);
+
+  /** broker 层 job 流推送服务件（协调器 + 引擎适配器 + 失败回退）；raft 业务层 transition 消费 */
+  com.anyilanxin.kunpeng.broker.jobstream.JobStreamDispatcher getJobStreamDispatcher();
+
+  void setJobStreamDispatcher(
+      com.anyilanxin.kunpeng.broker.jobstream.JobStreamDispatcher jobStreamDispatcher);
+
+  /** 业务命令 API 服务（business 链 client 命令入口，分区 leader 时经 transition 绑定日志写入器） */
+  com.anyilanxin.kunpeng.broker.commandapi.CommandApiServiceImpl getBusinessCommandApiService();
+
+  void setBusinessCommandApiService(
+      com.anyilanxin.kunpeng.broker.commandapi.CommandApiServiceImpl businessCommandApiService);
 
   DefaultClusterSwimTopologyService getClusterPartitionTopology();
 

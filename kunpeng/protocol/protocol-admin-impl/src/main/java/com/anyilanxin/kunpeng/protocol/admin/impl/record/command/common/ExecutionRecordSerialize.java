@@ -24,8 +24,10 @@ import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 import java.util.function.Supplier;
 
 /**
+ * 执行明细 Record 序列化：执行明细的 SBE 编解码。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class ExecutionRecordSerialize {

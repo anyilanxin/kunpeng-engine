@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.bpm.parse.exception;
 
-/** BPM 模型解析模块的基础异常，DMN 与 BPMN 解析期的业务异常均继承本类。 */
+/**
+ * BPM 模型解析模块的基础异常，DMN 与 BPMN 解析期的业务异常均继承本类。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class BpmParseException extends RuntimeException {
 
   /**

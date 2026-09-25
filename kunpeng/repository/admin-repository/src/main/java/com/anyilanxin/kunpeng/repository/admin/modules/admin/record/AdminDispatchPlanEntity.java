@@ -34,7 +34,7 @@ import java.util.List;
  * 调度计划实体，包含计划 ID、依次执行的调度明细列表，以及计划所基于的分区组拓扑快照。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @AutoDeclareProperties
 public class AdminDispatchPlanEntity extends UnpackedObject implements StoreValue {

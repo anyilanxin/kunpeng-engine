@@ -22,7 +22,7 @@ import lombok.Getter;
  * DMN typeRef 到值类型的枚举映射，用于为决策表输入选择对应的 QlExpress 转换器。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @Getter
 public enum DmnValueType {

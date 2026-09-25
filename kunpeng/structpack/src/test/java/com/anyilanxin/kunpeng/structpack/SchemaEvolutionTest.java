@@ -28,6 +28,9 @@ import org.junit.jupiter.api.Test;
 /**
  * 演进测试：值自界定 —— 未知 id（新版本字段/已删字段）读长度直接跳过，
  * 新旧版本双向互读互不失败；删除字段零动作（无 ghost）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 @DisplayName("schema 演进（自界定值, 双向跳过）")
 class SchemaEvolutionTest {

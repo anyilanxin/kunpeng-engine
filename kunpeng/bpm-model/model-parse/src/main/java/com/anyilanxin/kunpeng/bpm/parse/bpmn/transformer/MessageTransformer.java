@@ -23,7 +23,12 @@ import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.BpmnTransformContext
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.ElementTransformer;
 import com.anyilanxin.kunpeng.utils.Either;
 
-/** 消息转换器：解析消息名与订阅关联键表达式；静态消息名在部署期提前求值为常量。 */
+/**
+ * 消息转换器：解析消息名与订阅关联键表达式；静态消息名在部署期提前求值为常量。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class MessageTransformer implements ElementTransformer<Message> {
 
   /** 返回本转换器处理的模型元素类型。 */

@@ -25,6 +25,9 @@ import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.ElementTransformer;
  * 流程上下文切换转换器：在后续阶段遍历到流程元素时把该流程恢复为当前流程。
  *
  * <p>多流程模型中，阶段二起的遍历顺序可能离开当前流程，本转换器确保流程内元素转换时上下文指向正确的流程。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class CurrentProcessSwitcher implements ElementTransformer<Process> {
 

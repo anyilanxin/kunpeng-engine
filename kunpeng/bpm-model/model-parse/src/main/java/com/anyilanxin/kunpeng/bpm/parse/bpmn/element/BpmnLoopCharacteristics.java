@@ -26,6 +26,8 @@ import com.anyilanxin.kunpeng.engine.script.ScriptExpression;
  * @param completionCondition 完成条件表达式，未声明为 null
  * @param collection 迭代集合表达式，未声明为 null
  * @param elementVariable 元素变量名，未声明为 null
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public record BpmnLoopCharacteristics(
     boolean isSequential,

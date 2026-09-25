@@ -20,7 +20,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
-/** 通过表达式引擎端到端测试 {@code sort()} 函数（默认升序）。 */
+/**
+ * 通过表达式引擎端到端测试 {@code sort()} 函数（默认升序）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class SortFunctionTest extends FunctionTestBase {
 
   @Test

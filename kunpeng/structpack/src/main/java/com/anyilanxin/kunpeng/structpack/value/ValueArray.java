@@ -18,6 +18,12 @@ package com.anyilanxin.kunpeng.structpack.value;
 
 import java.util.stream.Stream;
 
+/**
+ * 值数组接口：structpack 数组值的只读访问。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface ValueArray<T> extends Iterable<T> {
   T add();
 

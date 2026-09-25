@@ -27,7 +27,7 @@ import com.anyilanxin.kunpeng.protocol.admin.record.CommandValueLifeCycle;
  * 业务面节点来源生命周期，描述单条节点来源从应用到完成的状态流转。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public enum NodeSourceLifeCycle implements CommandValueLifeCycle {
   NULL_VAL((short) -1, NOT_PROCESS_INDEX),

@@ -19,15 +19,17 @@ package com.anyilanxin.kunpeng.repository.admin.modules.source.applier.nodesourc
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.source.NodeSourceRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.source.NodeSourceLifeCycle;
 import com.anyilanxin.kunpeng.repository.admin.AdminRepository;
-import com.anyilanxin.kunpeng.repository.admin.modules.source.MutableRepositorySource;
+import com.anyilanxin.kunpeng.repository.admin.modules.source.MutableSourceRepository;
 import com.anyilanxin.kunpeng.repository.admin.modules.source.applier.nodesource.NodeSourceApplier;
 
 /**
+ * 节点 source 应用事件应用器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class NodeSourceAppliedApplier implements NodeSourceApplier {
-  private final MutableRepositorySource repositorySource;
+  private final MutableSourceRepository repositorySource;
 
   public NodeSourceAppliedApplier(final AdminRepository repository) {
     repositorySource = repository.sourceRepository();

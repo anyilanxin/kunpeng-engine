@@ -29,6 +29,8 @@ import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.ElementTransformer;
  * <p>任务定义的解析逻辑抽为静态方法，供脚本任务、业务规则任务与任务型中间抛出事件复用。
  *
  * @param <T> 目标模型元素类型
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class JobWorkerTaskTransformer<T extends FlowElement>
     implements ElementTransformer<T> {

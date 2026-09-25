@@ -19,8 +19,10 @@ package com.anyilanxin.kunpeng.engine.script.impl.qlexpress;
 import com.alibaba.qlexpress4.runtime.function.CustomFunction;
 
 /**
+ * QLExpress 自定义函数接口：无对象上下文的静态函数。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface QLFunction extends CustomFunction {
   String getSignature();

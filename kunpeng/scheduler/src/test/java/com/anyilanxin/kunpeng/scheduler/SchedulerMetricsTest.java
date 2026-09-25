@@ -27,7 +27,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
-/** 调度器指标采集验证（生命周期/job/定时器/拒绝） */
+/**
+ * 调度器指标采集验证（生命周期/job/定时器/拒绝）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @DisplayName("scheduler 指标采集")
 class SchedulerMetricsTest {
 

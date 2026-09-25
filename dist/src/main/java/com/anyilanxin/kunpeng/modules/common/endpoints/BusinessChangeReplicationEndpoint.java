@@ -24,7 +24,7 @@ import org.springframework.boot.actuate.endpoint.annotation.WriteOperation;
  * 业务集群副本数量修改 Actuator 端点（/actuator/businessChangeReplication）：apply=false 仅生成调度计划预览。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @Endpoint(id = "businessChangeReplication")
 public class BusinessChangeReplicationEndpoint {

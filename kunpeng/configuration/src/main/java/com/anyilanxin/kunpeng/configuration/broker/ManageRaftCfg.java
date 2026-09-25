@@ -28,7 +28,7 @@ import org.apache.commons.lang3.StringUtils;
  * 管理 raft 分区配置
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @Getter
 @Setter

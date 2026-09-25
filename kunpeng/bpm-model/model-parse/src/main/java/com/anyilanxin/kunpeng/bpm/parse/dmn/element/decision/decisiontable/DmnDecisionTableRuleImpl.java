@@ -23,7 +23,12 @@ import com.anyilanxin.kunpeng.bpm.parse.dmn.element.common.DmnExpressionImpl;
 import java.util.ArrayList;
 import java.util.List;
 
-/** 决策表规则（Rule）的内存模型，由条件（InputEntry）列表与结论（OutputEntry）列表构成。 */
+/**
+ * 决策表规则（Rule）的内存模型，由条件（InputEntry）列表与结论（OutputEntry）列表构成。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class DmnDecisionTableRuleImpl implements DmnElement {
 
   public String id;

@@ -20,7 +20,7 @@ package com.anyilanxin.kunpeng.bpm.parse.dmn.element;
  * DMN 解析后内存元素模型的根接口，提供元素的唯一标识与类型信息。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface DmnElement {
 

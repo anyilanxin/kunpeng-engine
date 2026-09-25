@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.bpm.parse.bpmn.element;
 
-/** 任务型活动（服务任务、发送任务等）的运行时基类：携带任务类型与重试次数构成的任务属性。 */
+/**
+ * 任务型活动（服务任务、发送任务等）的运行时基类：携带任务类型与重试次数构成的任务属性。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class BpmnJobWorkerTask extends BpmnActivity {
   /** 任务属性，未声明任务定义时为 null */
   private BpmnJobProperties jobProperties;

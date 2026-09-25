@@ -23,7 +23,7 @@ import com.anyilanxin.kunpeng.protocol.common.RecordValue;
  * 业务调度计划记录契约，描述计划 ID、依次执行的调度明细列表以及计划所基于的分区组拓扑快照。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface DelayedRecordValue extends RecordValue {
 

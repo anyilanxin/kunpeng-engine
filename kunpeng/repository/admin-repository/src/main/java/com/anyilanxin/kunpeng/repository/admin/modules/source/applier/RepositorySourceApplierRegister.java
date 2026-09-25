@@ -28,8 +28,10 @@ import com.anyilanxin.kunpeng.repository.admin.modules.source.applier.partitions
 import com.anyilanxin.kunpeng.repository.admin.modules.source.applier.partitionsourcemeta.impl.PartitionSourceMetaUpdatedApplier;
 
 /**
+ * source 域应用器注册器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class RepositorySourceApplierRegister {
 

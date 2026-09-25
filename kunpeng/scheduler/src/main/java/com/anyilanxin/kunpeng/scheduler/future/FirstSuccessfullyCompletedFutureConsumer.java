@@ -23,6 +23,9 @@ import java.util.function.Consumer;
  * 首个成功者触发回调；其余成功结果交 closer；全部失败才异常回调。
  *
  * <p>线程约束：状态非原子——accept 调用必须串行（actor 内经 cell 订阅轮询天然满足）, 并发调用会重复触发回调。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class FirstSuccessfullyCompletedFutureConsumer<T> implements BiConsumer<T, Throwable> {
 

@@ -30,7 +30,12 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 
-/** 顺序启动链 + 逆序关闭；失败聚合 StartupProcessException */
+/**
+ * 顺序启动链 + 逆序关闭；失败聚合 StartupProcessException。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class StartupProcess<CONTEXT> {
 
   private static final Logger DEFAULT_LOG = SchedulerLoggers.SCHEDULER_LOGGER;

@@ -22,7 +22,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-/** 成员协议（SWIM）配置，定义 gossip、探测与故障超时等参数。 */
+/**
+ * 成员协议（SWIM）配置，定义 gossip、探测与故障超时等参数。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @Getter
 @Setter
 @EqualsAndHashCode(callSuper = false)

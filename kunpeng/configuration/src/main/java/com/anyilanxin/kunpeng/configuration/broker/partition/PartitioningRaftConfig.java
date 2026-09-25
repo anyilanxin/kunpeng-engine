@@ -26,7 +26,7 @@ import lombok.ToString;
  * 分区 Raft 配置，定义分区数量、副本因子与分区方案。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @Getter
 @Setter

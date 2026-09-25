@@ -24,7 +24,7 @@ import java.util.List;
  * 分区配置变更命令记录契约，描述变更后目标分区的拓扑元数据。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface PartitionConfigChangeRecordValue extends PartitionExecutionRecordValue {
   List<String> getMembers();

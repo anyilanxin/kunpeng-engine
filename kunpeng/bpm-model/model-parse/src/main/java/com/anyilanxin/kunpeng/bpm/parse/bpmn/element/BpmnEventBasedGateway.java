@@ -20,7 +20,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/** 事件网关的运行时模型：收集后继的捕获事件，任一事件先触发则取消其余分支。 */
+/**
+ * 事件网关的运行时模型：收集后继的捕获事件，任一事件先触发则取消其余分支。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class BpmnEventBasedGateway extends BpmnFlowNode {
   /** 后继捕获事件列表，未装配为 null */
   private List<BpmnCatchEventElement> events;

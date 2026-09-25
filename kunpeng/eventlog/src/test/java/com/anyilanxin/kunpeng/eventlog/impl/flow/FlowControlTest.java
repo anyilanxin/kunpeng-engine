@@ -28,7 +28,12 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/** 自研流控测试：令牌桶速率数学 / AIMD 升降 / 三态水位转移 / 拒绝语义 / 失败释放 */
+/**
+ * 自研流控测试：令牌桶速率数学 / AIMD 升降 / 三态水位转移 / 拒绝语义 / 失败释放。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @DisplayName("FlowController 自研流控")
 class FlowControlTest {
 

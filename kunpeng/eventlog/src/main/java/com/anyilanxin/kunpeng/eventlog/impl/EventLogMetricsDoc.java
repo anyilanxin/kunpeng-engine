@@ -23,6 +23,9 @@ import io.micrometer.core.instrument.docs.MeterDocumentation;
  * EventLog 指标定义（紧凑声明式; 前缀 eventlog.*）——单一事实源，实现类一律经此构建 meter。
  *
  * <p>问题域分组：追加（成功/拒绝/烧毁）、按写入上下文（context tag）、提交、水位 position、流控。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public enum EventLogMetricsDoc implements MeterDocumentation {
   APPEND_COUNT("eventlog.append.count", Type.COUNTER, "成功定序的批数"),

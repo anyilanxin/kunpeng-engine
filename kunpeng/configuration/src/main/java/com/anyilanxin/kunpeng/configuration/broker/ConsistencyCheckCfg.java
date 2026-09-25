@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.configuration.broker;
 
-/** 一致性检查配置，控制前置条件校验与外键校验的开关。 */
+/**
+ * 一致性检查配置，控制前置条件校验与外键校验的开关。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class ConsistencyCheckCfg {
   private static final boolean DEFAULT_ENABLE_PRECONDITIONS = false;
   private static final boolean DEFAULT_ENABLE_FOREIGN_KEY_CHECKS = false;

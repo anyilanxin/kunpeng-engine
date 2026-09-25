@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.structpack;
 
-/** 可复用对象契约：reset 后可重复 wrap/write，稳态零分配 */
+/**
+ * 可复用对象契约：reset 后可重复 wrap/write，稳态零分配。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface Recyclable {
 
   void reset();

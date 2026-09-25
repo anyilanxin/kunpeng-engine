@@ -19,8 +19,10 @@ package com.anyilanxin.kunpeng.protocol.common;
 import com.google.common.collect.ImmutableSet;
 
 /**
+ * 分区 source 元数据 record：不可变集合形式的 source 详情。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public record PartitionSourceMetadata(
     int partitionId, int sourceId, ImmutableSet<Integer> agentSourceIds) {}

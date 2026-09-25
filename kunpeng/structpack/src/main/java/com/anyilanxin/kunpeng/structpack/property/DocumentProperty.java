@@ -24,6 +24,9 @@ import org.agrona.DirectBuffer;
  * 文档属性（流程变量等）：内容为标准 msgpack 字节，本类只透传不解析。
  *
  * <p>解析/生成由 {@code DocumentUtil}(Jackson) 完成——存量变量字节与外部 API 完全兼容。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class DocumentProperty extends BaseProperty<DocumentValue> {
 

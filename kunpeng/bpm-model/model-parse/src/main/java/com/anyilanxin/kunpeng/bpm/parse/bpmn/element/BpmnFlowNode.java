@@ -25,6 +25,9 @@ import java.util.List;
  * 流程节点（活动、事件、网关）的运行时基类。
  *
  * <p>维护入边/出边连接、输入输出变量映射；两侧集合均懒分配，多数节点只有少量连线，未分配时可节省每个节点两个 ArrayList 的开销。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class BpmnFlowNode extends BpmnFlowElement {
   /** 入边（指向本节点的顺序流），懒分配 */

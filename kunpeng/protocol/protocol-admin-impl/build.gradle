@@ -27,6 +27,7 @@ configure(jarInfo) {
 
 dependencies {
     implementation project(':kunpeng:structpack')
+    implementation project(':kunpeng:eventlog')
     implementation project(':kunpeng:utils')
     implementation project(':kunpeng:protocol:protocol-admin')
     implementation project(':kunpeng:protocol:protocol-common')

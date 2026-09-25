@@ -25,7 +25,12 @@ import org.agrona.DirectBuffer;
 import org.agrona.MutableDirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
 
-/** buffer 便利工具（UTF-8 语义） */
+/**
+ * buffer 便利工具（UTF-8 语义）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class BufferUtil {
 
   private BufferUtil() {}

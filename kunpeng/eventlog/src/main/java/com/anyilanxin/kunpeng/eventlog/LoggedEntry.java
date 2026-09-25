@@ -25,6 +25,9 @@ import org.agrona.DirectBuffer;
  * <p>读→写转发用 {@link AppendEntry#copyOf(LoggedEntry)}（自有字节拷贝）。
  *
  * <p>生命周期约定：视图指向底层块 buffer，下一次 {@link EventLogReader#next()} 前 访问有效；需要跨迭代持有请用 {@code copyOf} 或立即物化。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface LoggedEntry {
 

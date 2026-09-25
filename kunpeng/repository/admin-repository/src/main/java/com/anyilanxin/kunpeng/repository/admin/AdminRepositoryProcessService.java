@@ -30,8 +30,8 @@ import com.anyilanxin.kunpeng.protocol.admin.record.RecordType;
 import com.anyilanxin.kunpeng.protocol.admin.record.RecordValueMapper;
 import com.anyilanxin.kunpeng.protocol.common.PartitionSourceMetadata;
 import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
-import com.anyilanxin.kunpeng.repository.admin.modules.key.MutableRepositoryKey;
-import com.anyilanxin.kunpeng.repository.admin.modules.position.MutableRepositoryPosition;
+import com.anyilanxin.kunpeng.repository.admin.modules.key.MutableKeyRepository;
+import com.anyilanxin.kunpeng.repository.admin.modules.position.MutablePositionRepository;
 import com.anyilanxin.kunpeng.scheduler.Actor;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.util.Set;
@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
  * 日志事件重放状态机
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class AdminRepositoryProcessService extends Actor implements RecordAvailableListener {
   private static final Logger LOG = LoggerFactory.getLogger(AdminRepositoryProcessService.class);
@@ -50,8 +50,8 @@ public class AdminRepositoryProcessService extends Actor implements RecordAvaila
   private BatchEntryReader logStreamReader;
   private boolean processing = false;
   private long processPosition = -1;
-  private MutableRepositoryPosition repositoryPosition;
-  private MutableRepositoryKey repositoryKey;
+  private MutablePositionRepository repositoryPosition;
+  private MutableKeyRepository repositoryKey;
   private final AdminRecordMetadata metadata = new AdminRecordMetadata();
   private RepositoryTransaction currentTransaction;
   private final int sourceId;

@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.scheduler;
 
-/** actor 条件：signal 计数合并, 下轮执行消费 */
+/**
+ * actor 条件：signal 计数合并, 下轮执行消费。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface ActorCondition {
   /** 条件满足通知（可从任意线程调用; 多次 signal 合并为一轮执行） */
   void signal();

@@ -21,6 +21,7 @@ package com.anyilanxin.kunpeng.bpm.parse.dmn.type;
  * 将值转换为特定的类型。
  *
  * @author Philipp Ossler
+ * @since 2026.9.0
  */
 public interface DmnDataTypeTransformer {
 

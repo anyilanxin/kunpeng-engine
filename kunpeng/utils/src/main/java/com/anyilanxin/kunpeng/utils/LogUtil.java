@@ -20,7 +20,12 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 
-/** 日志工具类，提供 MDC 上下文包装与异常捕获日志等静态方法。 */
+/**
+ * 日志工具类，提供 MDC 上下文包装与异常捕获日志等静态方法。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class LogUtil {
   private LogUtil() {}
 

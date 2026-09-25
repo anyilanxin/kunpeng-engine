@@ -24,6 +24,9 @@ package com.anyilanxin.kunpeng.eventlog.impl.flow;
  *
  * <p>线程约定：add 由提交路径按 position 升序调用；markWritten/markCommitted 由存储回调线程 按提交序调用；release
  * 由处理/失败路径调用。各调用方单线程顺序推进，本类不做跨槽原子性承诺。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 final class InflightRing {
 

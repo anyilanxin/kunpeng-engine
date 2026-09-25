@@ -27,8 +27,10 @@ import com.anyilanxin.kunpeng.repository.admin.modules.business.applier.executio
 import com.anyilanxin.kunpeng.repository.admin.modules.business.applier.execution.impl.BusinessDispatchPlanExecutionSucceedApplierImpl;
 
 /**
+ * 业务域应用器注册器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class RepositoryBusinessApplierRegister {
 

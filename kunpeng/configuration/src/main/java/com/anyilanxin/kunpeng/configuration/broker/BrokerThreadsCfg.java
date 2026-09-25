@@ -21,7 +21,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-/** Broker 线程配置，定义 CPU 线程数与 IO 线程数。 */
+/**
+ * Broker 线程配置，定义 CPU 线程数与 IO 线程数。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @Getter
 @Setter
 @ToString

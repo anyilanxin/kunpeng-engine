@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.bpm.parse.bpmn.element;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengBindingType;
 import com.anyilanxin.kunpeng.engine.script.ScriptExpression;
 
-/** 业务规则任务的运行时模型：引用一个 DMN 决策并可选地把结果写入变量。 */
+/**
+ * 业务规则任务的运行时模型：引用一个 DMN 决策并可选地把结果写入变量。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class BpmnBusinessRuleTask extends BpmnJobWorkerTask {
   /** 被调用决策的 id 表达式，未声明为 null */
   private ScriptExpression decisionId;

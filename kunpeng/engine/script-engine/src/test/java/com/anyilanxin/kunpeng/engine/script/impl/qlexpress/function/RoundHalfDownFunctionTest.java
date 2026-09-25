@@ -20,7 +20,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
-/** 通过表达式引擎端到端测试 {@code roundHalfDown()} 函数（最近舍入，.5 向下）。 */
+/**
+ * 通过表达式引擎端到端测试 {@code roundHalfDown()} 函数（最近舍入，.5 向下）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class RoundHalfDownFunctionTest extends FunctionTestBase {
 
   @Test

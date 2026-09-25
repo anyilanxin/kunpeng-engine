@@ -21,7 +21,12 @@ import com.anyilanxin.kunpeng.structpack.PackerWriter;
 import org.agrona.DirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
 
-/** 二进制值：零拷贝字节视图，len varint + bytes 编码 */
+/**
+ * 二进制值：零拷贝字节视图，len varint + bytes 编码。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class BinaryValue extends BaseValue {
 
   private final UnsafeBuffer bytes = new UnsafeBuffer(0, 0);

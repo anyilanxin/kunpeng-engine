@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.scheduler.exception;
 
-/** shutdown 抢占进行中的 startup 时抛出 */
+/**
+ * shutdown 抢占进行中的 startup 时抛出。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class StartupProcessShutdownException extends RuntimeException {
   public StartupProcessShutdownException(final String message) {
     super(message);

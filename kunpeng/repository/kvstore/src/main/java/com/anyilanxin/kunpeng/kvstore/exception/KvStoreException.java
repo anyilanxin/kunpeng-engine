@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.kvstore.exception;
 
-/** 包装数据库实现抛出的异常 */
+/**
+ * 包装数据库实现抛出的异常。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class KvStoreException extends RuntimeException {
 
   public KvStoreException(final Throwable cause) {

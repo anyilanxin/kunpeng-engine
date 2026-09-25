@@ -21,7 +21,12 @@ import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnError;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.BpmnTransformContext;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.ElementTransformer;
 
-/** 错误转换器：解析错误码表达式，静态错误码在部署期提前求值为常量。 */
+/**
+ * 错误转换器：解析错误码表达式，静态错误码在部署期提前求值为常量。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class ErrorTransformer implements ElementTransformer<Error> {
 
   /** 返回本转换器处理的模型元素类型。 */

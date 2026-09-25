@@ -26,7 +26,12 @@ import org.agrona.concurrent.UnsafeBuffer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/** 字节类值测试：BinaryValue/DocumentValue/PackedValue（len+bytes 零拷贝透传） */
+/**
+ * 字节类值测试：BinaryValue/DocumentValue/PackedValue（len+bytes 零拷贝透传）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @DisplayName("字节类值类型")
 class BytesValueTest {
 

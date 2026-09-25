@@ -25,6 +25,9 @@ import java.util.Objects;
  * 枚举值：按 ordinal 的 zigzag varint 编解码（null 用 -1 表示）。
  *
  * <p>⚠️ wire 契约：ordinal 一旦上线即冻结，枚举常量只能尾部追加，不可重排（与 protocol LifeCycle 枚举纪律一致）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class EnumValue<E extends Enum<E>> extends BaseValue {
 

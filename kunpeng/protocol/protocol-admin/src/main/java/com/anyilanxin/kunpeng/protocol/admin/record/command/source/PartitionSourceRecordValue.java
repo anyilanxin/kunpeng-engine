@@ -23,7 +23,7 @@ import java.util.Set;
  * 业务调度计划执行明细记录契约，描述所属计划执行 ID、执行顺序、调度起止时间、执行状态、补充说明与目标成员。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface PartitionSourceRecordValue extends RecordValue {
   String getPartitionGroup();

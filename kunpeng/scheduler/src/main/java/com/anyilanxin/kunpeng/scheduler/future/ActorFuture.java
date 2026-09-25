@@ -28,6 +28,8 @@ import java.util.function.Supplier;
  * actor future：完成回调可回投 actor 上下文；actor 线程内未完成 get() 抛异常（非阻塞纪律）。
  *
  * @param <V> 结果类型
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface ActorFuture<V> extends Future<V>, BiConsumer<V, Throwable> {
 

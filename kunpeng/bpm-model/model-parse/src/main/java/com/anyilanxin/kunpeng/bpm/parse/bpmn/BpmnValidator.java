@@ -28,6 +28,9 @@ import java.io.StringWriter;
  * BPMN 模型校验器：以设计期校验规则集合遍历模型，存在错误时格式化输出全部校验结果。
  *
  * <p>校验只读模型结构、不依赖表达式引擎；结果条数超出上限时仅输出计数后缀。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class BpmnValidator {
   /** 设计期校验访问器（规则集合静态共享，访问器本身带重置能力可重复使用） */

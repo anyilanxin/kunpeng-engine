@@ -17,6 +17,8 @@
 package com.anyilanxin.kunpeng.configuration.broker;
 
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,7 +28,12 @@ import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.core.env.Environment;
 
-/** Broker 根配置，聚合线程、数据、网关与 raft 等子配置。 */
+/**
+ * Broker 根配置，聚合线程、数据、网关与 raft 等子配置。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @Getter
 @Setter
 @ToString
@@ -39,18 +46,25 @@ public class BrokerCfg {
 
   @NestedConfigurationProperty private EmbeddedGatewayCfg gateway = new EmbeddedGatewayCfg();
 
+  @NestedConfigurationProperty private SinkingCfg sinking = SinkingCfg.defaultSinkingCfg();
+
+  @NestedConfigurationProperty private Map<String, SinkCfg> sinks = new HashMap<>();
+
   @NestedConfigurationProperty private BusinessRaftCfg raft = new BusinessRaftCfg();
+
   @NestedConfigurationProperty private ManageRaftCfg manage = new ManageRaftCfg();
 
   @NestedConfigurationProperty private RocksdbCfg rocksdb = new RocksdbCfg();
 
   @NestedConfigurationProperty private FlowControlCfg flowControl = new FlowControlCfg();
 
+  @NestedConfigurationProperty private EngineCfg engine = new EngineCfg();
+
   private Path brokerBase;
 
-  private boolean enableMetricsExporter;
+  private boolean enableMetricsSink;
 
-  private boolean enableDebugExporter;
+  private boolean enableDebugSink;
 
   public void init(final String brokerBase, final Environment environment) {
     this.brokerBase = Path.of(brokerBase);
@@ -66,7 +80,7 @@ public class BrokerCfg {
   /** 配置覆盖：支持环境变量 KUNPENG_DEBUG、-Dkunpeng.debug、--kunpeng.debug 及配置项 kunpeng.debug。 */
   private void applyEnvironment(final Environment environment) {
     if (Binder.get(environment).bind("kunpeng.debug", Bindable.of(Boolean.class)).orElse(false)) {
-      enableDebugExporter = true;
+      enableDebugSink = true;
     }
   }
 }

@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.kvstore.types;
 import org.agrona.DirectBuffer;
 import org.agrona.MutableDirectBuffer;
 
-/** 空 value 占位类型，不读取任何内容，写入时仅输出一个存在标记字节 */
+/**
+ * 空 value 占位类型，不读取任何内容，写入时仅输出一个存在标记字节。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class NilType implements StoreKey, StoreValue {
 
   /** 全局唯一实例 */

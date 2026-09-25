@@ -32,8 +32,10 @@ import java.util.Set;
 import org.springframework.beans.factory.BeanFactory;
 
 /**
+ * QLExpress 表达式实现。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public final class QlExpressExpression extends ScriptAbstractExpression {
   private boolean isValid;

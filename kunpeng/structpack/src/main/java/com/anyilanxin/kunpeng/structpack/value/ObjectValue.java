@@ -51,6 +51,9 @@ import java.util.List;
  *
  * <p>读入按 id 数组直读——零字符串比较；id 严格升序（规范写出序），违例视为数据损坏。 每个值带长度前缀（自界定）：<b>未知 id（新版本字段或已删字段）读长度后直接跳过</b>，
  * 新旧版本双向互读互不失败，无需任何 ghost/载体声明。<b>已知 id 永不错读</b>—— id 永不复用保证同 id 必为同字段同类型。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class ObjectValue extends BaseValue {
 

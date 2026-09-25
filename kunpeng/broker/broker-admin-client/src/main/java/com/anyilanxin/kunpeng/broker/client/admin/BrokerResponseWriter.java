@@ -20,6 +20,12 @@ import com.anyilanxin.kunpeng.protocol.admin.AdminValueLifeCycle;
 import com.anyilanxin.kunpeng.protocol.admin.AdminValueType;
 import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 
+/**
+ * 管理面 broker 响应编码写出器。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class BrokerResponseWriter<T extends UnifiedRecordValue> {
   private T response;
   private final long requestId;

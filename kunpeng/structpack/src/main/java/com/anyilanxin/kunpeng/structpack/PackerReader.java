@@ -18,7 +18,12 @@ package com.anyilanxin.kunpeng.structpack;
 
 import org.agrona.DirectBuffer;
 
-/** structpack 解码器：varint/zigzag/裸字节原语 + 带 tag 值的通用跳过 */
+/**
+ * structpack 解码器：varint/zigzag/裸字节原语 + 带 tag 值的通用跳过。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class PackerReader {
 
   /** 带 tag 值类型（字段统一自描述编码） */

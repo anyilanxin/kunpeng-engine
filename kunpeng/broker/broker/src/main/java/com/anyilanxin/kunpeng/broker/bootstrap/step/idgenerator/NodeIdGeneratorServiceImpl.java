@@ -40,8 +40,10 @@ import org.agrona.concurrent.SystemEpochClock;
 import org.slf4j.Logger;
 
 /**
+ * 节点 ID 生成服务默认实现：基于集群元数据分配唯一节点 ID。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class NodeIdGeneratorServiceImpl
     implements NodeIdGeneratorService, ClusterLeaderChangeListener {

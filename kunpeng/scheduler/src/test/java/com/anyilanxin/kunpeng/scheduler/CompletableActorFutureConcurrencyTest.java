@@ -37,7 +37,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
-/** 无锁 future 的并发压力测试：注册 vs 完成的竞态、阻塞 get 的丢唤醒、复用清回调 */
+/**
+ * 无锁 future 的并发压力测试：注册 vs 完成的竞态、阻塞 get 的丢唤醒、复用清回调。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @DisplayName("CompletableActorFuture 并发契约")
 class CompletableActorFutureConcurrencyTest {
 

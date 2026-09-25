@@ -17,8 +17,10 @@
 package com.anyilanxin.kunpeng.modules;
 
 /**
+ * 启动类型枚举：区分 broker 与 gateway 两种发行形态。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public enum StartType {
   BROKER("broker") {},

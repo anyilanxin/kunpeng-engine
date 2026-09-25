@@ -26,7 +26,7 @@ import com.anyilanxin.kunpeng.protocol.admin.record.CommandApiValueLifeCycle;
  * 管理面调度对外 API 生命周期，副本变更、取消变更与调度查询的请求/响应成对状态。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public enum AdminDispatchApiValueLifeCycle implements CommandApiValueLifeCycle {
   CHANGE_REPLICATION_REQUEST((short) 0, PROCESS_INDEX_48, RECORD_INDEX_6),

@@ -32,7 +32,7 @@ import com.anyilanxin.kunpeng.structpack.property.ObjectProperty;
  * 集群元数据实体，记录集群配置版本号、创建与更新时间，以及当前与上一版的分区组拓扑信息。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @AutoDeclareProperties
 public class AdminClusterMetaEntity extends UnpackedObject implements StoreValue {

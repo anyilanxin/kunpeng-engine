@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.bpm.parse.bpmn.element;
 
-/** 链接事件的运行时模型：以链接名配对链接抛出与链接捕获事件。 */
+/**
+ * 链接事件的运行时模型：以链接名配对链接抛出与链接捕获事件。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class BpmnLink extends BpmnFlowElement {
   /** 配对的链接捕获事件，未装配为 null */
   private BpmnCatchEventElement catchEvent;

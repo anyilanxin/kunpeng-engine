@@ -20,7 +20,12 @@ import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-/** 配置工具类，提供路径解析与正整数校验等静态方法。 */
+/**
+ * 配置工具类，提供路径解析与正整数校验等静态方法。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class ConfigurationUtil {
   public static String toAbsolutePath(final String path, final String base) {
     final Path asPath = Paths.get(path);

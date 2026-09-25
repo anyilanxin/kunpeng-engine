@@ -19,6 +19,12 @@ package com.anyilanxin.kunpeng.broker.client.admin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * 管理客户端日志器集合。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class AdminClientLoggers {
   public static final Logger STREAM_PROCESSING =
       LoggerFactory.getLogger("com.anyilanxin.kunpeng.broker.clustering");

@@ -22,8 +22,10 @@ import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.business.dis
 import com.anyilanxin.kunpeng.protocol.admin.record.commandapi.business.BusinessDispatchApiValueLifeCycle;
 
 /**
+ * 业务分区副本数变更请求。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class BusinessChangeReplicationRequest
     extends CommandApiBrokerRequest<BusinessChangeReplicationRequestRecord> {

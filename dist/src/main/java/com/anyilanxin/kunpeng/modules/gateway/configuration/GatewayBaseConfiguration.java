@@ -17,7 +17,10 @@
 package com.anyilanxin.kunpeng.modules.gateway.configuration;
 
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterConfig;
+import com.anyilanxin.kunpeng.cluster.config.BrokerTopologyManager;
+import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.configuration.cluster.ClusterConfigFactory;
+import com.anyilanxin.kunpeng.gateway.SpringGatewayBridge;
 import com.anyilanxin.kunpeng.modules.common.actor.ActorSchedulerConfiguration;
 import com.anyilanxin.kunpeng.modules.common.configuration.ClusterPropertiesConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +33,7 @@ import org.springframework.context.annotation.Profile;
  *
  * @author zxuanhong
  * @copyright zhouxuanhong（https://anyilanxin.com）
- * @since 1.0.0
+ * @since 2026.9.0
  */
 @Configuration(proxyBeanMethods = false)
 @Profile(value = {"gateway", "restore"})
@@ -53,6 +56,17 @@ public class GatewayBaseConfiguration {
   public ClusterConfig clusterConfig() {
     final var configFactory = new ClusterConfigFactory();
     return configFactory.mapConfiguration(clusterProperties, false);
+  }
+
+  /** 网关侧 broker 拓扑管理：基于 ClusterTopologyService 构建 */
+  @Bean
+  public BrokerTopologyManager topologyManager(final ClusterTopologyService topologyService) {
+    return new BrokerTopologyManager(topologyService);
+  }
+
+  @Bean
+  public SpringGatewayBridge springGatewayBridge() {
+    return new SpringGatewayBridge();
   }
 
   @Bean

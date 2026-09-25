@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.bpm.parse.bpmn.element;
 
-/** 结束事件的运行时模型：可为普通结束、终止结束（terminateEndEvent）或补偿结束；声明任务定义时也可作为任务型元素抛出消息。 */
+/**
+ * 结束事件的运行时模型：可为普通结束、终止结束（terminateEndEvent）或补偿结束；声明任务定义时也可作为任务型元素抛出消息。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class BpmnEndEvent extends BpmnFlowNode {
   /** 终止结束事件标记 */
   private boolean terminateEndEvent;

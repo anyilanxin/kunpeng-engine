@@ -19,5 +19,10 @@ package com.anyilanxin.kunpeng.kvstore.types;
 import com.anyilanxin.kunpeng.structpack.buffer.BufferReader;
 import com.anyilanxin.kunpeng.structpack.buffer.BufferWriter;
 
-/** 用于存取 value 的 key，模块中所有 key 类型的顶层接口 */
+/**
+ * 用于存取 value 的 key，模块中所有 key 类型的顶层接口。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface StoreKey extends BufferReader, BufferWriter {}

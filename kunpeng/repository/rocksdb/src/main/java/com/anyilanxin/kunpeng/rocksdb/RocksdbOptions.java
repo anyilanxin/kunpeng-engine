@@ -31,6 +31,8 @@ import org.rocksdb.WriteOptions;
  * @param dbOptions 打开 RocksDB 数据库所用的数据库选项
  * @param cfOptions 打开 RocksDB 数据库所用的 column family 选项，按 {@link PredefinedColumnFamily#getFamily()}
  *     为键，仅包含上层声明使用的实体列族（default 恒有）
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public record RocksdbOptions(
     DBOptions dbOptions,

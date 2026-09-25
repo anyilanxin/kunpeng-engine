@@ -22,6 +22,7 @@ import com.alibaba.qlexpress4.runtime.operator.CustomBinaryOperator;
  * 操作符接口
  *
  * @author bingo
+ * @since 2026.9.0
  */
 public interface CustomOperator extends CustomBinaryOperator {
   /**

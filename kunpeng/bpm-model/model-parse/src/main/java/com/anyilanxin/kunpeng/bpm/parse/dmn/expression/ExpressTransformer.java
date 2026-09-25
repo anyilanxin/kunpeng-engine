@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.bpm.parse.dmn.expression;
 
-/** DMN 值类型的一元测试转换器接口，将 FEEL simple unary tests 表达式适配为 QlExpress 可执行表达式。 */
+/**
+ * DMN 值类型的一元测试转换器接口，将 FEEL simple unary tests 表达式适配为 QlExpress 可执行表达式。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface ExpressTransformer {
   /** 返回该转换器适配的 DMN 值类型。 */
   DmnValueType valueType();

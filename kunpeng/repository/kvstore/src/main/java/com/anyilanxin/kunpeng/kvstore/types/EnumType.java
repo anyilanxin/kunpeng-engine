@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.kvstore.types;
 import org.agrona.DirectBuffer;
 import org.agrona.MutableDirectBuffer;
 
-/** 将枚举（最多 255 个取值）压缩存储为单个字节 */
+/**
+ * 将枚举（最多 255 个取值）压缩存储为单个字节。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class EnumType<T extends Enum<T>> implements StoreKey, StoreValue {
   private final ByteType value = new ByteType();
   private final T[] variants;

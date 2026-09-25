@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.structpack.property;
 import com.anyilanxin.kunpeng.structpack.value.PackedValue;
 import org.agrona.DirectBuffer;
 
-/** 不透明子树属性：任意字节块透传（内容格式由使用方约定） */
+/**
+ * 不透明子树属性：任意字节块透传（内容格式由使用方约定）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class PackedProperty extends BaseProperty<PackedValue> {
 
   public DirectBuffer getValue() {

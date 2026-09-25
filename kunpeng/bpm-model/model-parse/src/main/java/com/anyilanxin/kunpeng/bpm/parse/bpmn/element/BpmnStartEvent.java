@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.bpm.parse.bpmn.element;
 
-/** 开始事件的运行时模型：记录其所属事件子流程（若为事件子流程的开始事件）。 */
+/**
+ * 开始事件的运行时模型：记录其所属事件子流程（若为事件子流程的开始事件）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class BpmnStartEvent extends BpmnCatchEventElement {
   /** 所属事件子流程的 id，非事件子流程开始事件为 null */
   private String eventSubProcessId;

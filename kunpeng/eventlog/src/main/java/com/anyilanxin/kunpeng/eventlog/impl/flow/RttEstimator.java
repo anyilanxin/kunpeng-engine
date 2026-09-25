@@ -20,6 +20,9 @@ package com.anyilanxin.kunpeng.eventlog.impl.flow;
  * 追加→处理往返延迟估计：EMA（α=0.2）+ 最小值跟踪。
  *
  * <p>仅由处理线程单线程更新（onProcessed 路径），无竞争；窗口梯度 = EMA/minRTT。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 final class RttEstimator {
 

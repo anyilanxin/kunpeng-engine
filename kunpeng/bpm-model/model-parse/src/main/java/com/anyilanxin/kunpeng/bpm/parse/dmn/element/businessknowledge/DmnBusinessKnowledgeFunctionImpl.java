@@ -26,7 +26,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-/** 业务知识函数（BusinessKnowledgeFunction）的内存模型，封装知识逻辑的实现表达式及其形式参数列表。 */
+/**
+ * 业务知识函数（BusinessKnowledgeFunction）的内存模型，封装知识逻辑的实现表达式及其形式参数列表。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @Getter
 @Setter
 @ToString

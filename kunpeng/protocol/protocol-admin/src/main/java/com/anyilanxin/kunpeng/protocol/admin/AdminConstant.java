@@ -17,8 +17,10 @@
 package com.anyilanxin.kunpeng.protocol.admin;
 
 /**
+ * 管理协议常量定义。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface AdminConstant {
   /** 调度延迟2分钟 */

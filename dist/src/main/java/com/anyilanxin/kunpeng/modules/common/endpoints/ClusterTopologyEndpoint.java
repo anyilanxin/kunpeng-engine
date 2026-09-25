@@ -36,7 +36,7 @@ import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
  * 集群分区拓扑 Actuator 端点（/actuator/clusterTopology）：按在线成员维度输出各成员广播的分区状态。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @Endpoint(id = "clusterTopology")
 public class ClusterTopologyEndpoint {

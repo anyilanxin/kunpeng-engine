@@ -37,7 +37,7 @@ import org.agrona.DirectBuffer;
  * 分区组元数据记录，描述分区组标识、分区 ID、目标优先级、当前主成员及组内成员列表。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @AutoDeclareProperties
 public class PartitionInfoMetaRecord extends UnifiedRecordValue<PartitionInfoMetaRecord>

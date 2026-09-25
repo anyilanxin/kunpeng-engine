@@ -19,15 +19,17 @@ package com.anyilanxin.kunpeng.repository.admin.modules.source.applier.nodesourc
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.source.NodeSourceMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.source.NodeSourceMetaLifeCycle;
 import com.anyilanxin.kunpeng.repository.admin.AdminRepository;
-import com.anyilanxin.kunpeng.repository.admin.modules.source.MutableRepositorySource;
+import com.anyilanxin.kunpeng.repository.admin.modules.source.MutableSourceRepository;
 import com.anyilanxin.kunpeng.repository.admin.modules.source.applier.nodesourcemeta.NodeSourceMetaApplier;
 
 /**
+ * 节点 source 元数据更新事件应用器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class NodeSourceMetaUpdatedApplier implements NodeSourceMetaApplier {
-  private final MutableRepositorySource repositorySource;
+  private final MutableSourceRepository repositorySource;
 
   public NodeSourceMetaUpdatedApplier(final AdminRepository repository) {
     repositorySource = repository.sourceRepository();

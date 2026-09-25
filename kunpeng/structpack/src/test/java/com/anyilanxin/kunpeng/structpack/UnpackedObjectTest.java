@@ -25,7 +25,12 @@ import org.agrona.concurrent.UnsafeBuffer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/** UnpackedObject 与深层嵌套 ObjectProperty 测试 */
+/**
+ * UnpackedObject 与深层嵌套 ObjectProperty 测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @DisplayName("UnpackedObject/嵌套对象")
 class UnpackedObjectTest {
 

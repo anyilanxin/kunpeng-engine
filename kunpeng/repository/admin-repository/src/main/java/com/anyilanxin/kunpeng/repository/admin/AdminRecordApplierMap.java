@@ -21,6 +21,12 @@ import com.anyilanxin.kunpeng.protocol.admin.AdminValueType;
 import com.anyilanxin.kunpeng.protocol.admin.record.RecordType;
 import java.util.Iterator;
 
+/**
+ * 管理面 Record 到应用器的映射表。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @SuppressWarnings({"rawtypes"})
 public final class AdminRecordApplierMap {
   private final AdminApplier[] elements;

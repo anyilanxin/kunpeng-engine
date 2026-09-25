@@ -28,7 +28,7 @@ import tools.jackson.databind.json.JsonMapper;
  * toJson(string)
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class StringToJsonFunction implements QLFunction {
   private static final ObjectMapper MAPPER = JsonMapper.builder().build();

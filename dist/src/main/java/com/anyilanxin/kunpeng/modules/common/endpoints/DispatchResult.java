@@ -20,7 +20,7 @@ package com.anyilanxin.kunpeng.modules.common.endpoints;
  * 调度端点统一响应结果。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public record DispatchResult(boolean success, int code, String message, Object data) {
 

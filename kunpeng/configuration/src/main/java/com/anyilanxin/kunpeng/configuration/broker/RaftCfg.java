@@ -24,7 +24,12 @@ import lombok.Setter;
 import lombok.ToString;
 import org.springframework.util.unit.DataSize;
 
-/** raft 基础配置，定义心跳间隔、选举超时、快照与请求超时等参数。 */
+/**
+ * raft 基础配置，定义心跳间隔、选举超时、快照与请求超时等参数。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @Getter
 @Setter
 @ToString

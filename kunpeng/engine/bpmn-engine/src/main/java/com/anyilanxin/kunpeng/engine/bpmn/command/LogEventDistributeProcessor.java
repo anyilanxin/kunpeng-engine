@@ -1,0 +1,78 @@
+/*
+ * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package com.anyilanxin.kunpeng.engine.bpmn.command;
+
+import com.anyilanxin.kunpeng.engine.bpmn.LogEventProcessor;
+import com.anyilanxin.kunpeng.engine.bpmn.LogEventWriter;
+import com.anyilanxin.kunpeng.protocol.business.ValueLifeCycle;
+import com.anyilanxin.kunpeng.protocol.business.impl.eventlog.BusinessLogRecord;
+import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
+
+/**
+ * 日志事件分发处理器抽象基类：本地处理后并行分发至各分区。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
+public abstract class LogEventDistributeProcessor<T extends UnifiedRecordValue>
+    implements LogEventProcessor<T> {
+  private final LogEventWriter writer;
+
+  public LogEventDistributeProcessor(final LogEventWriter writer) {
+    this.writer = writer;
+  }
+
+  @Override
+  public void processRecord(final BusinessLogRecord<T> record) {
+    final ValueLifeCycle valueState = record.getValueState();
+    if (valueState == processRecordNewLifeCycle()) {
+      processRecordNew(record);
+    } else if (valueState == processRecordDistributeLifeCycle()) {
+      processRecordDistribute(record);
+    } else if (processRecordDistributeAfterLifeCycle() != ValueLifeCycle.UNKNOWN
+        && valueState == processRecordDistributeAfterLifeCycle()) {
+      processRecordDistributeAfter(record);
+    }
+  }
+
+  @Override
+  public ValueLifeCycle[] valueLifeCycles() {
+    if (processRecordDistributeAfterLifeCycle() != ValueLifeCycle.UNKNOWN) {
+      return new ValueLifeCycle[] {
+        processRecordNewLifeCycle(),
+        processRecordDistributeLifeCycle(),
+        processRecordDistributeAfterLifeCycle()
+      };
+    } else {
+      return new ValueLifeCycle[] {processRecordNewLifeCycle(), processRecordDistributeLifeCycle()};
+    }
+  }
+
+  public abstract ValueLifeCycle processRecordNewLifeCycle();
+
+  public abstract ValueLifeCycle processRecordDistributeLifeCycle();
+
+  public ValueLifeCycle processRecordDistributeAfterLifeCycle() {
+    return ValueLifeCycle.UNKNOWN;
+  }
+
+  public abstract void processRecordNew(final BusinessLogRecord<T> record);
+
+  public abstract void processRecordDistribute(final BusinessLogRecord<T> record);
+
+  public void processRecordDistributeAfter(final BusinessLogRecord<T> record) {}
+}

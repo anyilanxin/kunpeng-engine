@@ -27,6 +27,9 @@ import org.junit.jupiter.api.Test;
  * <p><b>BUG MARKER</b>：与 {@code date()} 类似，当前实现 {@link TimeFunction} 单参路径
  * {@code format(value, null)} 在 format 为 null 时直接返回 null，因此 {@code time("12:00:00")}
  * 无法按 ISO 解析。下方断言按 FEEL 规范写，预期 fail。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 class TimeFunctionTest extends FunctionTestBase {
 

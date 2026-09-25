@@ -26,7 +26,7 @@ import com.anyilanxin.kunpeng.structpack.property.IntegerProperty;
  * 管理面调度请求记录，携带期望副本数与是否执行。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @AutoDeclareProperties
 public class AdminChangeReplicationRequestRecord

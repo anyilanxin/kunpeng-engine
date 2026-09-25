@@ -24,7 +24,7 @@ import com.anyilanxin.kunpeng.engine.script.impl.qlexpress.QLFunction;
  * lowerCase(string)
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class StringLowerCaseFunction implements QLFunction {
 

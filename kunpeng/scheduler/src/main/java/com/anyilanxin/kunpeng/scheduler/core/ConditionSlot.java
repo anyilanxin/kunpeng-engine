@@ -18,7 +18,12 @@ package com.anyilanxin.kunpeng.scheduler.core;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-/** 条件订阅：signal 计数合并, 轮询消费（多次未消费 signal 合并为一轮执行） */
+/**
+ * 条件订阅：signal 计数合并, 轮询消费（多次未消费 signal 合并为一轮执行）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class ConditionSlot extends SubscriptionSlot {
 
   private final AtomicInteger signalCount = new AtomicInteger();

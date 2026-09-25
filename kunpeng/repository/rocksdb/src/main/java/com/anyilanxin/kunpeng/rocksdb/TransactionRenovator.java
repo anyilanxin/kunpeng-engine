@@ -18,7 +18,12 @@ package com.anyilanxin.kunpeng.rocksdb;
 
 import org.rocksdb.Transaction;
 
-/** 事务续借函数接口，用于将旧事务续借为可复用的新事务 */
+/**
+ * 事务续借函数接口，用于将旧事务续借为可复用的新事务。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @FunctionalInterface
 public interface TransactionRenovator {
 

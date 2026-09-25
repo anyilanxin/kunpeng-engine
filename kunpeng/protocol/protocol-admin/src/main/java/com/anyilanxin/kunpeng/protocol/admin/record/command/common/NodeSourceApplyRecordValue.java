@@ -22,7 +22,7 @@ import com.anyilanxin.kunpeng.protocol.common.RecordValue;
  * 节点来源应用记录契约，描述目标节点成员 ID 与为其分配的来源 ID。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface NodeSourceApplyRecordValue extends RecordValue {
   /** 目标节点成员 ID */

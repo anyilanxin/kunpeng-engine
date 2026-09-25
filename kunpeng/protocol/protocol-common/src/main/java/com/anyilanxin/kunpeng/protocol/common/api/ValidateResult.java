@@ -17,8 +17,10 @@
 package com.anyilanxin.kunpeng.protocol.common.api;
 
 /**
+ * 校验结果 record：成功标志与错误信息。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public record ValidateResult(boolean success, String errorMessage) {
 

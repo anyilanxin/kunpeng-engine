@@ -25,7 +25,7 @@ import org.apache.commons.lang3.StringUtils;
  * substring(string, position) substring(string, position, length)
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class StringSubFunction implements QLFunction {
 

@@ -22,8 +22,10 @@ import com.anyilanxin.kunpeng.protocol.admin.record.command.source.PartitionSour
 import com.anyilanxin.kunpeng.repository.admin.AdminApplier;
 
 /**
+ * 分区 source Record 应用器接口。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface PartitionSourceApplier extends AdminApplier<PartitionSourceRecord> {
   @Override

@@ -25,6 +25,8 @@ import io.micrometer.core.instrument.MeterRegistry;
  * RocksDB 数据库工厂。{@link ColumnFamilyNames} 必须是枚举，用于定义 RocksDB 数据库的各个 column family
  *
  * @param <ColumnFamilyNames> column family 名称集合
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public sealed interface RocksdbFactory<ColumnFamilyNames extends ColumnFamilies>
     permits DefaultRocksdbFactory {

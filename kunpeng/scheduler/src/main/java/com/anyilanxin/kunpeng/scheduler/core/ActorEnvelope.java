@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.scheduler.core;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 import java.util.concurrent.Callable;
 
-/** 一次调用绑定的一次性/复用信封（fast-lane 与订阅轮询走 owner 池化复用） */
+/**
+ * 一次调用绑定的一次性/复用信封（fast-lane 与订阅轮询走 owner 池化复用）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class ActorEnvelope {
 
   public enum Kind {

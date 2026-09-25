@@ -22,8 +22,10 @@ import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.admin.query.
 import com.anyilanxin.kunpeng.protocol.admin.record.commandapi.admin.AdminDispatchApiValueLifeCycle;
 
 /**
+ * 管理面调度查询请求。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class AdminQueryRequest extends CommandApiBrokerRequest<AdminDispatchQueryRequestRecord> {
 

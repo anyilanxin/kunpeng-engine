@@ -21,7 +21,12 @@ import java.util.List;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
-/** 字符串工具 */
+/**
+ * 字符串工具。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class StringUtil {
 
   /** 列表清洗器：去除每项首尾空白并过滤空白项 */

@@ -31,7 +31,7 @@ import org.springframework.beans.factory.BeanFactory;
  * ql spring context
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class QLSpringContext implements ExpressContext {
 

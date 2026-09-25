@@ -25,6 +25,9 @@ import org.junit.jupiter.api.Test;
  *
  * <p>注意：{@code decimal} 使用 {@link java.math.RoundingMode#HALF_EVEN}，与 {@code roundHalfUp}
  * 的 {@link java.math.RoundingMode#HALF_UP} 不同，是区分两者的关键测试点。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 class DecimalFunctionTest extends FunctionTestBase {
 

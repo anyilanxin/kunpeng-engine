@@ -25,7 +25,12 @@ import com.anyilanxin.kunpeng.engine.script.impl.qlexpress.QLFunction;
 import java.math.BigDecimal;
 import java.time.Duration;
 
-/** abs(n) */
+/**
+ * abs(n).
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class AbsFunction implements QLFunction {
   @Override
   public Object call(final QContext qContext, final Parameters parameters) throws Throwable {

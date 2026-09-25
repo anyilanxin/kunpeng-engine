@@ -24,6 +24,7 @@ import org.rocksdb.TickerType;
  * RocksDB ticker 与指标名称的映射枚举，用于将 RocksDB 的 TickerType 统计项注册为监控指标
  *
  * @author zxuanhong
+ * @since 2026.9.0
  */
 public enum RocksdbTickerMapping {
   BLOCK_CACHE_MISS("block.cache.miss", TickerType.BLOCK_CACHE_MISS),

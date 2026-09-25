@@ -26,8 +26,10 @@ import javax.script.SimpleScriptContext;
 import org.python.jsr223.PyScriptEngine;
 
 /**
+ * Python 表达式实现。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public final class PythonExpression extends ScriptAbstractExpression {
   private boolean isValid;

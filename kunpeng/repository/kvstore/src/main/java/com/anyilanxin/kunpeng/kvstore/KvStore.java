@@ -31,6 +31,7 @@ import java.util.concurrent.Executors;
  * 存储无关的 KV 数据库顶层接口，提供列族创建、事务管理、快照与数据复制/合并等能力，具体实现由后端模块提供
  *
  * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface KvStore<ColumnFamilyType extends ColumnFamilies> extends AutoCloseable {
 

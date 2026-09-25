@@ -42,6 +42,9 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * 指标绑定（前缀 {@code eventlog.}，registry 为 null 时全部 no-op——测试零依赖）。 指标名/类型/描述的单一事实源见 {@link
  * EventLogMetricsDoc}。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class EventLogMetrics {
 

@@ -21,8 +21,10 @@ import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 import java.util.function.Supplier;
 
 /**
+ * Record 值映射器注册接口。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @SuppressWarnings("rawtypes")
 public interface RecordValueMapperRegister<RECORD extends UnifiedRecordValue> {

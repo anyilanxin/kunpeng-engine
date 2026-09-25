@@ -27,6 +27,9 @@ import lombok.ToString;
 /**
  * {@link DmnDecisionRequirementsGraph} 的默认实现，以 key 为索引持有同一决策需求图（DRG）内的 Decision 与 BusinessKnowledge
  * 元素。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 @ToString
 @Setter

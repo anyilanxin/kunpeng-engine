@@ -49,6 +49,9 @@ import org.junit.jupiter.api.Test;
 
 /**
  * BPMN 模型转换测试：覆盖任务装配、连线、分支网关、事件载荷、多实例重组与调用活动等主路径。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 class BpmnTransformTest {
   /** 基础流程：服务/脚本/用户任务、排他网关（条件+默认流）、流程级监听器。 */

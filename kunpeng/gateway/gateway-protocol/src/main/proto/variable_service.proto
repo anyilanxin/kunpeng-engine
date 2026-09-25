@@ -1,0 +1,63 @@
+syntax = 'proto3';
+package gateway_protocol;
+
+option java_multiple_files = false;
+option java_package = "com.anyilanxin.kunpeng.gateway.grpc.service";
+option go_package = "./;pb";
+
+message VariableUpdateRequest {
+  int64 processInstanceId = 1;
+  int64 activityInstanceId = 2;
+  int64 taskId = 3;
+  string variable = 4;
+}
+
+
+message VariableUpdateResponse {
+}
+
+
+
+message VariableRemoveRequest {
+  int64 processInstanceId = 1;
+  int64 activityInstanceId = 2;
+  int64 taskId = 3;
+  bool removeAll = 4;
+  repeated string removeVariable = 5;
+}
+
+
+message VariableRemoveResponse {
+}
+
+
+service VariableService {
+  /*
+   Iterates through all known partitions round-robin and activates up to the requested
+   maximum and streams them back to the client as they are activated.
+
+   Errors:
+    INVALID_ARGUMENT:
+     - type is blank (empty string, null)
+     - worker is blank (empty string, null)
+     - timeout less than 1
+     - maxJobsToActivate is less than 1
+  */
+  rpc VariableUpdate (VariableUpdateRequest) returns (stream VariableUpdateResponse) {
+  }
+
+
+  /*
+   Iterates through all known partitions round-robin and activates up to the requested
+   maximum and streams them back to the client as they are activated.
+
+   Errors:
+    INVALID_ARGUMENT:
+     - type is blank (empty string, null)
+     - worker is blank (empty string, null)
+     - timeout less than 1
+     - maxJobsToActivate is less than 1
+  */
+  rpc VariableRemove (VariableRemoveRequest) returns (stream VariableRemoveResponse) {
+  }
+}

@@ -30,7 +30,12 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** {@link ExternalJarRepository} 外部 jar 仓库测试 */
+/**
+ * {@link ExternalJarRepository} 外部 jar 仓库测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class ExternalJarRepositoryTest {
 
   @TempDir

@@ -18,7 +18,12 @@ package com.anyilanxin.kunpeng.structpack.buffer;
 
 import org.agrona.MutableDirectBuffer;
 
-/** 向 buffer 序列化的对象契约 */
+/**
+ * 向 buffer 序列化的对象契约。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface BufferWriter {
 
   int getLength();

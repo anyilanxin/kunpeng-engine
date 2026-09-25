@@ -31,7 +31,7 @@ import org.springframework.util.unit.DataSize;
  * 成员通信网络配置，定义成员间通信的端口、心跳与消息压缩等参数。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @Getter
 @Setter

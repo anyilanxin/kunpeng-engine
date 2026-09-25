@@ -19,6 +19,12 @@ package com.anyilanxin.kunpeng.configuration.broker.backpressure;
 import static com.anyilanxin.kunpeng.configuration.broker.ConfigurationUtil.checkPositive;
 import static com.google.common.base.Preconditions.checkArgument;
 
+/**
+ * Gradient2 流控算法配置。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class Gradient2Cfg {
 
   private int minLimit = 10;

@@ -24,6 +24,12 @@ import com.netflix.concurrency.limits.limit.*;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * 并发限流算法配置。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class LimitCfg implements ConfigurationEntry {
 
   private boolean enabled = true;

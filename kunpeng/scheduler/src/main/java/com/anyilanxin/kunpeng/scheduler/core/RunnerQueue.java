@@ -23,6 +23,9 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * runner 任务队列：MC 添加（任意提交线程）+ MC 消费（owner 优先 + 空闲 thief 偷取）。 物理移除；gate 保证同一 cell 至多一个排队实例, 无需 claim
  * 竞争。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class RunnerQueue {
 

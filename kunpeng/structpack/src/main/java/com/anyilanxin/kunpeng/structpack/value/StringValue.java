@@ -26,6 +26,9 @@ import org.agrona.concurrent.UnsafeBuffer;
  * 字符串值：零拷贝视图（{@code wrap} 只记录 地址+偏移+长度，不复制字节）。
  *
  * <p>生命周期约束：视图依赖源 buffer 存活；对象 reset 重读之前源 buffer 不可被改写或回收。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class StringValue extends BaseValue {
 

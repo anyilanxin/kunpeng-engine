@@ -18,7 +18,12 @@ package com.anyilanxin.kunpeng.structpack.buffer;
 
 import org.agrona.DirectBuffer;
 
-/** 从 buffer 反序列化的对象契约 */
+/**
+ * 从 buffer 反序列化的对象契约。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface BufferReader {
 
   void wrap(final DirectBuffer buff, final int offset, final int length);

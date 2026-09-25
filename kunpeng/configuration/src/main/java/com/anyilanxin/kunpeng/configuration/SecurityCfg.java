@@ -22,7 +22,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-/** 安全配置，包含是否启用 TLS、证书链路径、私钥路径与密钥库配置。 */
+/**
+ * 安全配置，包含是否启用 TLS、证书链路径、私钥路径与密钥库配置。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @Getter
 @Setter
 @ToString

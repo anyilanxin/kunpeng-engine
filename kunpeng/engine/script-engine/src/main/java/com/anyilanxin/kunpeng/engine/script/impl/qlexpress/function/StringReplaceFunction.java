@@ -24,7 +24,7 @@ import com.anyilanxin.kunpeng.engine.script.impl.qlexpress.QLFunction;
  * replace(input, pattern, replacement)
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class StringReplaceFunction implements QLFunction {
 

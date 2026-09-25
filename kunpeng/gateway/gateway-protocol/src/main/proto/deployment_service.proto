@@ -1,0 +1,105 @@
+syntax = 'proto3';
+package gateway_protocol;
+
+option java_multiple_files = false;
+option java_package = "com.anyilanxin.kunpeng.gateway.grpc.service";
+option go_package = "./;pb";
+
+
+message DeployResourceRequest {
+  // list of resources to deploy
+  repeated Resource resources = 1;
+  // the tenant id of the resources to deploy
+  string tenantId = 2;
+}
+
+message Resource {
+  // the resource name, e.g. myProcess.bpmn or myDecision.dmn
+  string name = 1;
+  // the file content as a UTF8-encoded string
+  bytes content = 2;
+}
+
+message DeployResourceResponse {
+  int64 deploymentId = 1;
+  string tenantId = 2;
+  repeated ProcessDefinition processDefinitions=3;
+  repeated FromDefinition fromDefinitions=4;
+}
+
+message ProcessDefinition {
+  string processDefinitionKey = 1;
+  int32 processDefinitionVersion = 2;
+  int64 processDefinitionId = 3;
+  string resourceName = 4;
+  string tenantId = 5;
+}
+
+
+message FromDefinition {
+  string processDefinitionKey = 1;
+  int32 processDefinitionVersion = 2;
+  int64 processDefinitionId = 3;
+  string resourceName = 4;
+  string tenantId = 5;
+}
+
+
+message DeleteResourceRequest {
+  // The key of the resource that should be deleted. This can either be the key
+  // of a process definition, the key of a decision requirements definition or the key of a form.
+  int64 resourceKey = 1;
+  // a reference key chosen by the user and will be part of all records resulted from this operation
+  optional uint64 operationReference = 2;
+}
+
+message DeleteResourceResponse {
+
+}
+
+service DeploymentService {
+  /*
+    Deploys one or more resources (e.g. processes or decision models) to Zeebe.
+    Note that this is an atomic call, i.e. either all resources are deployed, or none of them are.
+
+    Errors:
+      PERMISSION_DENIED:
+        - if a deployment to an unauthorized tenant is performed
+      INVALID_ARGUMENT:
+        - no resources given.
+        - if at least one resource is invalid. A resource is considered invalid if:
+          - the content is not deserializable (e.g. detected as BPMN, but it's broken XML)
+          - the content is invalid (e.g. an event-based gateway has an outgoing sequence flow to a task)
+        - if multi-tenancy is enabled, and:
+          - a tenant id is not provided
+          - a tenant id with an invalid format is provided
+        - if multi-tenancy is disabled and a tenant id is provided
+  */
+  rpc DeployResource (DeployResourceRequest) returns (DeployResourceResponse) {
+  }
+
+  /*
+    Deletes a resource from the state. Once a resource has been deleted it cannot
+    be recovered. If the resource needs to be available again, a new deployment
+    of the resource is required.
+
+    Deleting a process will cancel any running instances of this process
+    definition. New instances of a deleted process are created using
+    the lastest version that hasn't been deleted. Creating a new
+    process instance is impossible when all versions have been
+    deleted.
+
+    Deleting a decision requirement definitions could cause incidents in process
+    instances referencing these decisions in a business rule task. A decision
+    will be evaluated with the latest version that hasn't been deleted. If all
+    versions of a decision have been deleted the evaluation is rejected.
+
+    Errors:
+      NOT_FOUND:
+        - No resource exists with the given key
+
+   */
+  rpc DeleteResource (DeleteResourceRequest) returns (DeleteResourceResponse) {
+
+  }
+}

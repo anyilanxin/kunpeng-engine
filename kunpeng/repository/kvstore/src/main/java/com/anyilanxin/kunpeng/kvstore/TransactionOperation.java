@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.kvstore;
 
-/** 在打开的事务中执行的一个或多个操作 */
+/**
+ * 在打开的事务中执行的一个或多个操作。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @FunctionalInterface
 public interface TransactionOperation {
 

@@ -21,7 +21,12 @@ import com.anyilanxin.kunpeng.bpm.parse.dmn.element.common.DmnExpressionImpl;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.common.DmnVariableImpl;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.decision.DmnDecisionLogic;
 
-/** 字面量表达式决策逻辑（DecisionLiteralExpression）的内存模型，由输出变量与字面量表达式构成。 */
+/**
+ * 字面量表达式决策逻辑（DecisionLiteralExpression）的内存模型，由输出变量与字面量表达式构成。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class DmnDecisionLiteralExpressionImpl implements DmnDecisionLogic {
   /** 决策逻辑的输出变量 */
   protected DmnVariableImpl variable;

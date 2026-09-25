@@ -27,7 +27,12 @@ import org.agrona.concurrent.UnsafeBuffer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/** 属性槽位测试：默认值语义/isSet/reset/key+value 写出形态/equals */
+/**
+ * 属性槽位测试：默认值语义/isSet/reset/key+value 写出形态/equals。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @DisplayName("Property 属性槽位")
 class PropertyTest {
 

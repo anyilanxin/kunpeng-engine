@@ -20,7 +20,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
-/** 通过表达式引擎端到端测试 {@code partition()} 函数（按固定大小分块）。 */
+/**
+ * 通过表达式引擎端到端测试 {@code partition()} 函数（按固定大小分块）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class PartitionFunctionTest extends FunctionTestBase {
 
   @Test

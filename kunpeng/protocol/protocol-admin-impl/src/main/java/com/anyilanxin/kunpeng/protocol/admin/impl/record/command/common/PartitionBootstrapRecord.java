@@ -36,7 +36,7 @@ import org.agrona.DirectBuffer;
  * 分区引导命令记录，携带分区类型、执行类型、发起执行的节点 ID、 引导期分区拓扑（主成员单节点起步）与计划制定后的分区完整最终拓扑元数据。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @AutoDeclareProperties
 public class PartitionBootstrapRecord extends UnifiedRecordValue<PartitionBootstrapRecord>

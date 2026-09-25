@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.bpm.parse.dmn.type;
 
 import java.util.Date;
 
-/** （已移除的）Camunda {@code Variables} 工厂类的本地替代实现。 */
+/**
+ * （已移除的）Camunda {@code Variables} 工厂类的本地替代实现。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class Variables {
   private Variables() {}
 

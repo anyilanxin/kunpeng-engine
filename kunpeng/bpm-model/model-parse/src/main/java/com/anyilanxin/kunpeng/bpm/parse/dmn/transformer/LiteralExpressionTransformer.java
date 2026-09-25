@@ -26,7 +26,12 @@ import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.ModelElementTransform
 import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.TransformContext;
 import com.anyilanxin.kunpeng.engine.script.ScriptEngine;
 
-/** 将 DMN LiteralExpression（字面表达式）转换为运行时 DmnExpression 元素：提取表达式语言与文本，并立即编译为脚本表达式。 */
+/**
+ * 将 DMN LiteralExpression（字面表达式）转换为运行时 DmnExpression 元素：提取表达式语言与文本，并立即编译为脚本表达式。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class LiteralExpressionTransformer
     implements ModelElementTransformer<LiteralExpression> {
   /** 返回本转换器处理的 DMN 模型元素类型。 */

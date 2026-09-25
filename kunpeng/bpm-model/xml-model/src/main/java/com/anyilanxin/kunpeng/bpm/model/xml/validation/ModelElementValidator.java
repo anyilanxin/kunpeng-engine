@@ -24,7 +24,7 @@ import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
  *
  * @param <T> the type of the elements to validate.
  * @see ModelInstance#validate(java.util.Collection)
- * @since 7.6
+ * @since 2026.9.0
  */
 public interface ModelElementValidator<T extends ModelElementInstance> {
 

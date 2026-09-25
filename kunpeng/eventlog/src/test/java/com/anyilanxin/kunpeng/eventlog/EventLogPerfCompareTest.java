@@ -43,6 +43,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  * 验证性能预估报告的门槛（不劣于 ±5%）；旧模块删除后本测试随之移除。
  *
  * <p>跑法：{@code ./gradlew :kunpeng:logstreams:test --tests "*EventLogPerfCompare*"}
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 @DisplayName("EventLog vs 旧 LogStream 性能对比")
 class EventLogPerfCompareTest {

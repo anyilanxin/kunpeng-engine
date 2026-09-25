@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.bpm.parse.exception;
 
-/** DMN 解析异常：模型转换、类型转换、表达式求值等 DMN 解析期错误。 */
+/**
+ * DMN 解析异常：模型转换、类型转换、表达式求值等 DMN 解析期错误。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class DmnParseException extends BpmParseException {
 
   /**

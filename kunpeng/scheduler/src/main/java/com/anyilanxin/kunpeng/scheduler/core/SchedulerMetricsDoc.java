@@ -23,6 +23,9 @@ import io.micrometer.core.instrument.docs.MeterDocumentation;
  * 调度器指标定义（紧凑声明式; 前缀 scheduler.*）——单一事实源，实现类一律经此构建 meter。
  *
  * <p>问题域分组：actor 生命周期、job（按 pool 打标）、定时器、阻塞外包、池深度。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public enum SchedulerMetricsDoc implements MeterDocumentation {
   ACTOR_SUBMITTED("scheduler.actor.submitted", Type.COUNTER, "提交调度的 actor 数"),

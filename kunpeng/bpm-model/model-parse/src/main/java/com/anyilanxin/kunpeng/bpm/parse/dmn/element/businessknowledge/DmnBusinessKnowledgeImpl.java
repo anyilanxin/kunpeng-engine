@@ -25,7 +25,12 @@ import java.util.Collection;
 import lombok.Setter;
 import lombok.ToString;
 
-/** {@link DmnBusinessKnowledge} 的默认实现，持有业务知识的知识逻辑（BusinessKnowledgeLogic）及其依赖的 其他业务知识。 */
+/**
+ * {@link DmnBusinessKnowledge} 的默认实现，持有业务知识的知识逻辑（BusinessKnowledgeLogic）及其依赖的 其他业务知识。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @Setter
 @ToString
 public class DmnBusinessKnowledgeImpl implements DmnBusinessKnowledge {

@@ -23,6 +23,9 @@ import java.util.Iterator;
  *
  * <p>{@code next()} 返回的 {@link LoggedEntry} 是复用视图——到下一次 {@code next()} 前有效。 空 position 区间（失败烧毁产生的
  * gap）在迭代中表现为 position 跳跃，不报错。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface EventLogReader extends Iterator<LoggedEntry>, AutoCloseable {
 

@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.scheduler.exception;
 
-/** 可恢复异常：retry 的 RecoverableRetryStrategy 仅对此类重试 */
+/**
+ * 可恢复异常：retry 的 RecoverableRetryStrategy 仅对此类重试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class RecoverableException extends RuntimeException {
   public RecoverableException(final String message) {
     super(message);

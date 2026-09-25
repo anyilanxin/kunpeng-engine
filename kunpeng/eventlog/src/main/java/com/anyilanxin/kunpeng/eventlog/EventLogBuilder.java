@@ -20,7 +20,12 @@ import com.anyilanxin.kunpeng.eventlog.storage.EventStore;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Clock;
 
-/** {@link EventLog} 装配器 */
+/**
+ * {@link EventLog} 装配器。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface EventLogBuilder {
 
   /** 存储实现（必填，通常为 broker 侧 Raft 桥） */

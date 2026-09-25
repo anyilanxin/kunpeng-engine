@@ -36,7 +36,12 @@ import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.BpmnTransformContext
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.ElementTransformer;
 import java.util.Collection;
 
-/** 中间抛出事件转换器：按第一个事件定义装配抛出语义——无操作、消息（任务型或发布型）、链接、升级、信号与补偿。 */
+/**
+ * 中间抛出事件转换器：按第一个事件定义装配抛出语义——无操作、消息（任务型或发布型）、链接、升级、信号与补偿。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class IntermediateThrowEventTransformer
     implements ElementTransformer<IntermediateThrowEvent> {
 

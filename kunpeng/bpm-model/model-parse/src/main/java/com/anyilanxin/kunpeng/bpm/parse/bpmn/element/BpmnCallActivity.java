@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.bpm.parse.bpmn.element;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengBindingType;
 import com.anyilanxin.kunpeng.engine.script.ScriptExpression;
 
-/** 调用活动的运行时模型：以表达式引用被调用流程并声明变量传递策略与绑定方式。 */
+/**
+ * 调用活动的运行时模型：以表达式引用被调用流程并声明变量传递策略与绑定方式。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class BpmnCallActivity extends BpmnActivity {
   /** 被调用流程 id 的表达式 */
   private ScriptExpression calledElementProcessId;

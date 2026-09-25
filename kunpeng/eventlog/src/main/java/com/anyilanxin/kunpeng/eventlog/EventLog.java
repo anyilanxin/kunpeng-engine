@@ -16,15 +16,20 @@
  */
 package com.anyilanxin.kunpeng.eventlog;
 
+import com.anyilanxin.kunpeng.eventlog.impl.EventLogBuilderImpl;
+
 /**
  * 事件日志门面：一个分区一个实例，聚合追加（定序+流控+批帧）、拉取读、提交通知。
  *
  * <p>恢复语义：打开时通过存储 seekToEnd 找回 lastPosition，新写入从 lastPosition+1 续号。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface EventLog extends AutoCloseable {
 
   static EventLogBuilder builder() {
-    return new com.anyilanxin.kunpeng.eventlog.impl.EventLogBuilderImpl();
+    return new EventLogBuilderImpl();
   }
 
   int getPartitionId();

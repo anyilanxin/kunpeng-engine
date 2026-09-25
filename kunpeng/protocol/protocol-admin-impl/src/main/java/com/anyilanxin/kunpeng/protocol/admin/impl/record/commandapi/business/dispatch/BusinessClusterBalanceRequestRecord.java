@@ -25,7 +25,7 @@ import com.anyilanxin.kunpeng.structpack.property.BooleanProperty;
  * 业务面负载均衡调度请求记录，携带是否执行。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @AutoDeclareProperties
 public class BusinessClusterBalanceRequestRecord

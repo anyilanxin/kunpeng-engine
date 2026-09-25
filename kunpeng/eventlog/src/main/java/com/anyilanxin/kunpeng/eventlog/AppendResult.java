@@ -21,6 +21,9 @@ package com.anyilanxin.kunpeng.eventlog;
  *
  * <p>成功语义为"已定序"——position 已唯一分配；多写者并发下批帧可能延后瞬间才提交到存储 （有序提交链保证按 firstPosition 升序落盘），消费方以 commit
  * 通知为准。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public sealed interface AppendResult {
 

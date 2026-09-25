@@ -26,6 +26,9 @@ import org.agrona.ExpandableArrayBuffer;
  * buffer 生命周期）。
  *
  * <p>metadata/value 恒非 null：null 归一化为空载荷（帧编码热路径免判空）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class AppendEntryImpl implements AppendEntry {
 

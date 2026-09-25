@@ -24,7 +24,12 @@ import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnJobProperties;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.BpmnTransformContext;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.ElementTransformer;
 
-/** 业务规则任务转换器：装配任务定义扩展（任务型）或被调用决策扩展（决策型），二者按声明取其一。 */
+/**
+ * 业务规则任务转换器：装配任务定义扩展（任务型）或被调用决策扩展（决策型），二者按声明取其一。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class BusinessRuleTaskTransformer implements ElementTransformer<BusinessRuleTask> {
 
   /** 返回本转换器处理的模型元素类型。 */

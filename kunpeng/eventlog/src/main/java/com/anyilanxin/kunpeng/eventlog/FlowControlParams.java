@@ -24,6 +24,8 @@ package com.anyilanxin.kunpeng.eventlog;
  * @param requestWindowMin 窗口下限（默认 10）
  * @param requestWindowMax 窗口上限（默认 1000）
  * @param rttTolerance 梯度容差（默认 0.1，容差内不动窗口）
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public record FlowControlParams(
     int requestWindowInitial, int requestWindowMin, int requestWindowMax, double rttTolerance) {

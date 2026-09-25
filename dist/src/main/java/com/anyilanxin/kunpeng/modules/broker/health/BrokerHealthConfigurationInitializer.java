@@ -22,6 +22,12 @@ import org.springframework.boot.env.DefaultPropertiesPropertySource;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 
+/**
+ * broker 健康检查配置初始化器。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class BrokerHealthConfigurationInitializer
     implements ApplicationContextInitializer<ConfigurableApplicationContext> {
   public static final String INDICATOR_BROKER_LIVENESS = "brokerLiveness";

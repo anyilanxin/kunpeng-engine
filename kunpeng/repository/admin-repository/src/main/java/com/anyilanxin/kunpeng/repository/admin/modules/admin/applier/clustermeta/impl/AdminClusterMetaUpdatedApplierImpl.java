@@ -19,15 +19,17 @@ package com.anyilanxin.kunpeng.repository.admin.modules.admin.applier.clustermet
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminClusterMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.admin.AdminClusterMetaLifeCycle;
 import com.anyilanxin.kunpeng.repository.admin.AdminRepository;
-import com.anyilanxin.kunpeng.repository.admin.modules.admin.MutableRepositoryAdmin;
+import com.anyilanxin.kunpeng.repository.admin.modules.admin.MutableAdminRepository;
 import com.anyilanxin.kunpeng.repository.admin.modules.admin.applier.clustermeta.AdminClusterMetaApplier;
 
 /**
+ * 集群元数据更新事件应用器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class AdminClusterMetaUpdatedApplierImpl implements AdminClusterMetaApplier {
-  private final MutableRepositoryAdmin repositoryAdmin;
+  private final MutableAdminRepository repositoryAdmin;
 
   public AdminClusterMetaUpdatedApplierImpl(final AdminRepository repository) {
     repositoryAdmin = repository.adminRepository();

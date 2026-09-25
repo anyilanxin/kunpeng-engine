@@ -18,7 +18,12 @@ package com.anyilanxin.kunpeng.bpm.parse.bpmn.element;
 
 import com.anyilanxin.kunpeng.engine.script.ScriptExpression;
 
-/** 顺序流的运行时模型：连接源节点与目标节点，可携带条件表达式，take 时机可挂执行监听器。 */
+/**
+ * 顺序流的运行时模型：连接源节点与目标节点，可携带条件表达式，take 时机可挂执行监听器。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class BpmnSequenceFlow extends BpmnFlowElement {
   /** 源节点 */
   private BpmnFlowNode source;

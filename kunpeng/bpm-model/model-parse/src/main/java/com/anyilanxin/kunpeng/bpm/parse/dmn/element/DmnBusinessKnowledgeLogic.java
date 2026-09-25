@@ -17,5 +17,10 @@
 
 package com.anyilanxin.kunpeng.bpm.parse.dmn.element;
 
-/** 表示某个 Decision 的决策逻辑。 */
+/**
+ * 表示某个 Decision 的决策逻辑。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface DmnBusinessKnowledgeLogic {}

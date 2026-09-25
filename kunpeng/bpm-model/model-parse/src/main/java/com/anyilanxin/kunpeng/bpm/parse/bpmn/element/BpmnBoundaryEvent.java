@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.bpm.parse.bpmn.element;
 
-/** 边界事件的运行时模型：挂载到某个活动上，依据 {@link #isInterrupting()} 决定是否中断宿主活动。 */
+/**
+ * 边界事件的运行时模型：挂载到某个活动上，依据 {@link #isInterrupting()} 决定是否中断宿主活动。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class BpmnBoundaryEvent extends BpmnCatchEventElement {
 
   /**

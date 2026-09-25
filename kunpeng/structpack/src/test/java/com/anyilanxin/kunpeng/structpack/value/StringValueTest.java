@@ -25,7 +25,12 @@ import org.agrona.concurrent.UnsafeBuffer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/** StringValue 测试：零拷贝视图/UTF-8/向量化 equals/缓存哈希/wire 往返 */
+/**
+ * StringValue 测试：零拷贝视图/UTF-8/向量化 equals/缓存哈希/wire 往返。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @DisplayName("StringValue 字符串值")
 class StringValueTest {
 

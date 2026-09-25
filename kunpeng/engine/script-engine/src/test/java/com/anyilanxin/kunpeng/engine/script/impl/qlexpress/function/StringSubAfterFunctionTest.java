@@ -27,6 +27,9 @@ import org.junit.jupiter.api.Test;
  * {@link StringSubAfterFunction} 用 {@code indexOf(match) + match.length()} 作起点，
  * 未找到时 indexOf 返回 -1，得到 {@code substring(len-1)} 而非原字符串。
  * {@code noMatchReturnsEntireString} 用例按规范写，预期 fail，待实现修复后转绿。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 class StringSubAfterFunctionTest extends FunctionTestBase {
 

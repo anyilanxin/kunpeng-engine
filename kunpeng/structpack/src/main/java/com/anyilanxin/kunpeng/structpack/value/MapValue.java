@@ -28,6 +28,9 @@ import java.util.function.Supplier;
  * 类型化键值对集合值：[count varint][k1][v1][k2][v2]...
  *
  * <p>key/value 槽位池化复用。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class MapValue<K extends BaseValue, V extends BaseValue> extends BaseValue
     implements ValueMap<K, V> {

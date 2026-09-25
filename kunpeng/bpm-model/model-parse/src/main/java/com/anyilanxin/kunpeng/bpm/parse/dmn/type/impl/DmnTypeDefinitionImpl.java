@@ -23,7 +23,12 @@ import com.anyilanxin.kunpeng.bpm.parse.dmn.type.TypedValue;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.type.Variables;
 import com.anyilanxin.kunpeng.bpm.parse.exception.DmnParseException;
 
-/** {@link DmnTypeDefinition} 的默认实现：持有类型名称，并委托 {@link DmnDataTypeTransformer} 完成值的类型转换。 */
+/**
+ * {@link DmnTypeDefinition} 的默认实现：持有类型名称，并委托 {@link DmnDataTypeTransformer} 完成值的类型转换。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class DmnTypeDefinitionImpl implements DmnTypeDefinition {
 
   protected String typeName;

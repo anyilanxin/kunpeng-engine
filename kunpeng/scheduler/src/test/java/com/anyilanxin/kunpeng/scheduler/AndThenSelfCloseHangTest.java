@@ -30,6 +30,9 @@ import org.junit.jupiter.api.Timeout;
  * 复刻 ReplicaPullTransfer.closeAsync 形态: 依赖 future 的续接经自身 actor 排队, 且该 actor 在
  * closeAsync 内自关。修复前: closeFuture 完成于 actor 终态后, andThen 结果经已关闭 actor 路由被静默丢弃
  * → closeAsync future 永不完成（缩容离席卡在 Shutdown Snapshot Store 的根因 11）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 @DisplayName("andThen 自关闭形态完成不丢失")
 class AndThenSelfCloseHangTest {

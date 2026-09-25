@@ -22,6 +22,12 @@ import com.anyilanxin.kunpeng.structpack.UnpackedObject;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.agrona.concurrent.UnsafeBuffer;
 
+/**
+ * 统一 Record 值基类：所有 Record 的 structpack 序列化基座。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @SuppressWarnings("rawtypes")
 public class UnifiedRecordValue<T extends UnifiedRecordValue> extends UnpackedObject
     implements RecordValue {

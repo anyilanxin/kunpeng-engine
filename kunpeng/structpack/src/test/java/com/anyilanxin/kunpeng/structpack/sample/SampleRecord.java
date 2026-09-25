@@ -30,6 +30,9 @@ import com.anyilanxin.kunpeng.structpack.property.LongProperty;
  *
  * <p>删除零动作演示：历史字段 STATE(id=3) 已被直接删行 —— id 由 structpack-ids 标记注释
  * 自动退休（永不复用），存量 Raft 日志/RocksDB 中的旧数据被读方按值长度直接跳过。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 @AutoDeclareProperties
 public class SampleRecord extends UnpackedObject {

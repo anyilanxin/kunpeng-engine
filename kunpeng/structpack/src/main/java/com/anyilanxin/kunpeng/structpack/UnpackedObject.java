@@ -38,6 +38,9 @@ import org.agrona.MutableDirectBuffer;
  * r.write(mutableBuffer, 0);     // 序列化
  * r.reset();                     // 复用
  * }</pre>
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class UnpackedObject extends ObjectValue implements BufferReader, BufferWriter {
 

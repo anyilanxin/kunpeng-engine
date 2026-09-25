@@ -27,7 +27,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
-/** 按 WriteContext 维度的指标采集验证 */
+/**
+ * 按 WriteContext 维度的指标采集验证。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @DisplayName("WriteContext 指标采集")
 class WriteContextMetricsTest {
 

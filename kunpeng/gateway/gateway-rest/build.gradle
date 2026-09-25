@@ -18,11 +18,25 @@ plugins {
     id 'kunpeng.build-publish'
 }
 
-description = "Gateway Rest"
+description = "Kunpeng Gateway Rest"
 
 configure(jarInfo) {
     archiveName = "kunpeng-gateway-rest"
 }
-dependencies {
 
+
+dependencies {
+    api project(':kunpeng:broker:broker-client')
+    implementation project(':kunpeng:configuration')
+    implementation project(':kunpeng:scheduler')
+    implementation project(':kunpeng:protocol:protocol-business')
+    implementation project(':kunpeng:protocol:protocol-business-impl')
+    implementation project(':kunpeng:utils')
+
+    implementation 'org.springframework.boot:spring-boot'
+    implementation 'org.springframework:spring-webflux'
+    implementation 'org.springframework.boot:spring-boot-autoconfigure'
+
+    implementation 'io.micrometer:micrometer-core'
+    implementation 'io.micrometer:micrometer-commons'
 }

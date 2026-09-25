@@ -21,6 +21,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
+/**
+ * 后续命令元数据 record：操作引用与鉴权声明。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public record FollowUpCommandMetadata(long operationReference, Map<String, Object> claims) {
 
   public static FollowUpCommandMetadata empty() {

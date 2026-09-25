@@ -42,6 +42,9 @@ import java.util.List;
 /**
  * 将 DMN DecisionTable（决策表）转换为运行时 DmnDecisionTable 元素：装配输入/输出列与规则行，并把每个条件单元格的 FEEL
  * 简单一元测试与输出单元格表达式编译为可执行脚本表达式。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class DecisionTableTransformer implements ModelElementTransformer<DecisionTable> {
   /** 简单一元测试（Simple Unary Tests）到脚本表达式的转换器 */

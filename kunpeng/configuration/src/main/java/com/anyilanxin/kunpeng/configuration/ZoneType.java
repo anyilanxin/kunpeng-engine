@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.configuration;
 
-/** 节点类型 */
+/**
+ * 节点类型。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public enum ZoneType {
   /** 仅broker */
   BROKER("broker"),

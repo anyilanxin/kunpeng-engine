@@ -21,7 +21,12 @@ import com.anyilanxin.kunpeng.eventlog.EventLogReader;
 import com.anyilanxin.kunpeng.eventlog.LoggedEntry;
 import java.util.NoSuchElementException;
 
-/** 按源 position 聚合的批读实现：同一 sourcePosition 的<b>连续</b>条目归为一个批 （处理单条源事件产生的结果在日志中连续存放）。 */
+/**
+ * 按源 position 聚合的批读实现：同一 sourcePosition 的<b>连续</b>条目归为一个批 （处理单条源事件产生的结果在日志中连续存放）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class BatchEntryReaderImpl implements BatchEntryReader {
 
   private final EventLogReader reader;

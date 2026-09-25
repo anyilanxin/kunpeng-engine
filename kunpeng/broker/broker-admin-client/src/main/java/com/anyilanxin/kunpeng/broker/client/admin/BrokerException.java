@@ -17,8 +17,10 @@
 package com.anyilanxin.kunpeng.broker.client.admin;
 
 /**
+ * broker 通信异常：请求失败或超时时的统一异常类型。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class BrokerException extends Exception {
   private final int code;

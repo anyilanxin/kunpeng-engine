@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.structpack.value;
 import com.anyilanxin.kunpeng.structpack.PackerReader;
 import com.anyilanxin.kunpeng.structpack.PackerWriter;
 
-/** byte 值：zigzag varint 编码 */
+/**
+ * byte 值：zigzag varint 编码。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class ByteValue extends BaseValue {
 
   private byte value;

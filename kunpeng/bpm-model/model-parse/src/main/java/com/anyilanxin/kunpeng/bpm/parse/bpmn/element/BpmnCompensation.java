@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.bpm.parse.bpmn.element;
 
-/** 补偿的运行时模型：补偿处理器为补偿边界事件的宿主；补偿抛出事件可经 activityRef 引用其他活动作为处理器。 */
+/**
+ * 补偿的运行时模型：补偿处理器为补偿边界事件的宿主；补偿抛出事件可经 activityRef 引用其他活动作为处理器。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class BpmnCompensation extends BpmnFlowElement {
   /** 补偿处理器（多实例活动存在时为其活动体） */
   private BpmnActivity compensationHandler;

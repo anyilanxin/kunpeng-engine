@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.scheduler.core;
 
-/** 载体统一接口：平台 runner 与虚拟载体共用（定时器路由/阻塞外包/回调队列/线程判定） */
+/**
+ * 载体统一接口：平台 runner 与虚拟载体共用（定时器路由/阻塞外包/回调队列/线程判定）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface CellRunner {
 
   TimerHub getTimers();

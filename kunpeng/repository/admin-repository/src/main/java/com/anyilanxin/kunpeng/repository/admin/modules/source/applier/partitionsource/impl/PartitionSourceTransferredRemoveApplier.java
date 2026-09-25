@@ -19,12 +19,17 @@ package com.anyilanxin.kunpeng.repository.admin.modules.source.applier.partition
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.source.PartitionSourceRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.source.PartitionSourceLifeCycle;
 import com.anyilanxin.kunpeng.repository.admin.AdminRepository;
-import com.anyilanxin.kunpeng.repository.admin.modules.source.MutableRepositorySource;
+import com.anyilanxin.kunpeng.repository.admin.modules.source.MutableSourceRepository;
 import com.anyilanxin.kunpeng.repository.admin.modules.source.applier.partitionsource.PartitionSourceApplier;
 
-/** 分区代理资源被迁出：从分区来源记录中移除已转移的代理资源标识 */
+/**
+ * 分区代理资源被迁出：从分区来源记录中移除已转移的代理资源标识。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class PartitionSourceTransferredRemoveApplier implements PartitionSourceApplier {
-  private final MutableRepositorySource repositorySource;
+  private final MutableSourceRepository repositorySource;
 
   public PartitionSourceTransferredRemoveApplier(final AdminRepository repository) {
     repositorySource = repository.sourceRepository();

@@ -26,7 +26,12 @@ import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnProcess;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.BpmnTransformContext;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.ElementTransformer;
 
-/** 流程节点通用转换器：装配节点所属流程范围（flowScope）、输入输出变量映射与执行监听器。 */
+/**
+ * 流程节点通用转换器：装配节点所属流程范围（flowScope）、输入输出变量映射与执行监听器。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class FlowNodeTransformer implements ElementTransformer<FlowNode> {
 
   /** 变量映射装配器（无状态可复用） */

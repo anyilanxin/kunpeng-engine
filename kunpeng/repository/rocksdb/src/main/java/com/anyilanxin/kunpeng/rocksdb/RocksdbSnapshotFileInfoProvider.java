@@ -24,7 +24,12 @@ import java.util.Map;
 import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
 
-/** RocksDB 快照文件信息提供器，基于快照目录中各文件计算校验和与大小 */
+/**
+ * RocksDB 快照文件信息提供器，基于快照目录中各文件计算校验和与大小。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class RocksdbSnapshotFileInfoProvider implements SnapshotFileInfoProvider {
   /**
    * 以只读方式打开快照目录并计算其中各文件的校验和信息

@@ -18,6 +18,12 @@ package com.anyilanxin.kunpeng.structpack.property;
 
 import com.anyilanxin.kunpeng.structpack.value.IntegerValue;
 
+/**
+ * 整型属性：structpack int 字段的编解码。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class IntegerProperty extends BaseProperty<IntegerValue> {
 
   public int getValue() {

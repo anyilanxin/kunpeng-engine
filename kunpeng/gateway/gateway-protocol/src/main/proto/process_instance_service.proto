@@ -1,0 +1,99 @@
+syntax = 'proto3';
+package gateway_protocol;
+
+option java_multiple_files = false;
+option java_package = "com.anyilanxin.kunpeng.gateway.grpc.service";
+option go_package = "./;pb";
+
+message CreateProcessInstanceRequest {
+  string processDefinitionKey = 1;
+  // a list of variables to fetch as the job variables; if empty, all visible variables at
+  // the time of activation for the scope of the job will be returned
+  string variable = 2;
+  // -1最新版本
+  int32 version = 3;
+  string tenantId = 4;
+  int64 processDefinitionId = 5;
+  repeated string activateActivityDefinitionKey = 6;
+  repeated string terminateActivityDefinitionKey = 7;
+}
+
+message CreateProcessInstanceResponse {
+  int64 processInstanceId = 1;
+}
+
+
+message CreateProcessInstanceWithResultRequest {
+  CreateProcessInstanceRequest request = 1;
+  // timeout (in ms). the request will be closed if the process is not completed
+  // before the requestTimeout.
+  // if requestTimeout = 0, uses the generic requestTimeout configured in the gateway.
+  int64 requestTimeout = 2;
+  // list of names of variables to be included in `CreateProcessInstanceWithResultResponse.variables`
+  // if empty, all visible variables in the root scope will be returned.
+  repeated string fetchVariables = 3;
+}
+
+message CreateProcessInstanceWithResultResponse {
+  // the key of the process definition which was used to create the process instance
+  int64 processDefinitionKey = 1;
+  // the BPMN process ID of the process definition which was used to create the process
+  // instance
+  string bpmnProcessId = 2;
+  // the version of the process definition which was used to create the process instance
+  int32 version = 3;
+  // the unique identifier of the created process instance; to be used wherever a request
+  // needs a process instance key (e.g. CancelProcessInstanceRequest)
+  int64 processInstanceId = 4;
+  // JSON document
+  // consists of visible variables in the root scope
+  string variables = 5;
+  // the tenant identifier of the process definition
+  string tenantId = 6;
+  // tags attached to a process instance
+  repeated string tags = 7;
+}
+
+
+message CancelProcessInstanceRequest {
+  int64 processInstanceId = 3;
+}
+
+message CancelProcessInstanceResponse {
+
+}
+
+service ProcessInstanceService {
+  /*
+   Iterates through all known partitions round-robin and activates up to the requested
+   maximum and streams them back to the client as they are activated.
+
+   Errors:
+    INVALID_ARGUMENT:
+     - type is blank (empty string, null)
+     - worker is blank (empty string, null)
+     - timeout less than 1
+     - maxJobsToActivate is less than 1
+  */
+  rpc CreateProcessInstance (CreateProcessInstanceRequest) returns (stream CreateProcessInstanceResponse) {
+  }
+
+  /*
+  Behaves similarly to `rpc CreateProcessInstance`, except that a successful response is received when the process completes successfully.
+*/
+  rpc CreateProcessInstanceWithResult (CreateProcessInstanceWithResultRequest) returns (CreateProcessInstanceWithResultResponse) {
+  }
+  /*
+    Updates the number of retries a job has left. This is mostly useful for jobs that have run out of
+    retries, should the underlying problem be solved.
+
+    Errors:
+      NOT_FOUND:
+        - no job exists with the given key
+
+      INVALID_ARGUMENT:
+        - retries is not greater than 0
+   */
+  rpc CancelProcessInstance (CancelProcessInstanceRequest) returns (CancelProcessInstanceResponse) {
+  }
+}

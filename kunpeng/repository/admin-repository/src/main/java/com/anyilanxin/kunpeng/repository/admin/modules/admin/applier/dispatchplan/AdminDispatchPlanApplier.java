@@ -22,8 +22,10 @@ import com.anyilanxin.kunpeng.protocol.admin.record.command.admin.AdminDispatchP
 import com.anyilanxin.kunpeng.repository.admin.AdminApplier;
 
 /**
+ * 调度计划 Record 应用器接口。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface AdminDispatchPlanApplier extends AdminApplier<AdminDispatchPlanRecord> {
   @Override

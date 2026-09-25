@@ -30,7 +30,12 @@ import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.ElementTransformer;
 import com.anyilanxin.kunpeng.bpm.parse.exception.BpmnParseException;
 import com.anyilanxin.kunpeng.utils.Either;
 
-/** 开始事件转换器：推导事件语义、登记到所属容器（流程或子流程），流程级消息/信号开始事件提前求值名称。 */
+/**
+ * 开始事件转换器：推导事件语义、登记到所属容器（流程或子流程），流程级消息/信号开始事件提前求值名称。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class StartEventTransformer implements ElementTransformer<StartEvent> {
 
   /** 返回本转换器处理的模型元素类型。 */

@@ -23,7 +23,12 @@ import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnSequenceFlow;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.BpmnTransformContext;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.ElementTransformer;
 
-/** 排他网关转换器：装配默认流（所有条件分支都未命中时的走向）。 */
+/**
+ * 排他网关转换器：装配默认流（所有条件分支都未命中时的走向）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class ExclusiveGatewayTransformer implements ElementTransformer<ExclusiveGateway> {
 
   /** 返回本转换器处理的模型元素类型。 */

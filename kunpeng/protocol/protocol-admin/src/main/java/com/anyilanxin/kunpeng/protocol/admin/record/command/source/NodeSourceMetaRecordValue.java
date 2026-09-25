@@ -23,7 +23,7 @@ import java.util.List;
  * 业务集群元数据记录契约，描述集群配置版本号、副本因子、创建与更新时间，以及当前与上一版的分区组拓扑列表。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface NodeSourceMetaRecordValue extends RecordValue {
   int getVersion();

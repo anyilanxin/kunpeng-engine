@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.scheduler.core;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 import java.util.function.BiConsumer;
 
-/** future 完成订阅：future.block(cell) 完成时唤醒, 轮询到 isDone 执行消费 */
+/**
+ * future 完成订阅：future.block(cell) 完成时唤醒, 轮询到 isDone 执行消费。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class FutureSlot extends SubscriptionSlot {
 
   private final ActorFuture<?> future;

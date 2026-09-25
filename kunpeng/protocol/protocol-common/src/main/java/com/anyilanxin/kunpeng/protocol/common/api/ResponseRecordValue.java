@@ -19,8 +19,10 @@ package com.anyilanxin.kunpeng.protocol.common.api;
 import com.anyilanxin.kunpeng.structpack.buffer.BufferReader;
 
 /**
+ * 响应 Record 值接口：响应类 Record 的自反序列化契约。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface ResponseRecordValue extends BufferReader {
   void reset();

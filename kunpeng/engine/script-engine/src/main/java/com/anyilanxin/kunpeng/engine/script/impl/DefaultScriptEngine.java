@@ -28,8 +28,10 @@ import org.apache.commons.lang3.Strings;
 import org.springframework.beans.factory.BeanFactory;
 
 /**
+ * 脚本引擎默认实现：按语言路由表达式编译与求值。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public final class DefaultScriptEngine implements ScriptEngine {
   private final ScriptLanguage[] scriptLanguages;

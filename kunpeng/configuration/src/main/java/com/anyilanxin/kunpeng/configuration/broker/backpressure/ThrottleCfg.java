@@ -19,6 +19,12 @@ package com.anyilanxin.kunpeng.configuration.broker.backpressure;
 import java.time.Duration;
 import java.util.Objects;
 
+/**
+ * 节流配置。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class ThrottleCfg {
   private boolean enabled = false;
   private int acceptableBacklog = 100_000;

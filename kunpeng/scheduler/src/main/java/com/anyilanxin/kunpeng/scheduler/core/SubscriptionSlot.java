@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.scheduler.core;
 
-/** 订阅槽：条件/定时器/future 完成的可轮询载体（owner 线程轮询, 到期执行绑定的动作） */
+/**
+ * 订阅槽：条件/定时器/future 完成的可轮询载体（owner 线程轮询, 到期执行绑定的动作）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public abstract class SubscriptionSlot {
 
   protected final Runnable action;

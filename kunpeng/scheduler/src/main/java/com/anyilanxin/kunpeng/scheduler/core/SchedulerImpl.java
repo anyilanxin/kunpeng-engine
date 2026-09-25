@@ -24,7 +24,12 @@ import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 import java.time.Duration;
 import java.util.concurrent.ThreadFactory;
 
-/** 调度器实现：三组载体（CPU/IO/虚拟）+ 阻塞外包池聚合 */
+/**
+ * 调度器实现：三组载体（CPU/IO/虚拟）+ 阻塞外包池聚合。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class SchedulerImpl {
 
   private final String schedulerName;

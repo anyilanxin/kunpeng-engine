@@ -27,6 +27,9 @@ import java.util.function.Supplier;
  *
  * <p>计数：actor 生命周期（提交/启动完成/关闭/失败）；job（提交/执行/拒绝, 按 pool 打标）； 定时器（调度/触发/取消）；阻塞外包（提交/完成）。仪表：各池待执行 cell
  * 深度、活跃 actor 数。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class SchedulerMetrics {
 

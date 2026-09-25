@@ -22,8 +22,10 @@ import com.anyilanxin.kunpeng.protocol.admin.record.command.source.NodeSourceMet
 import com.anyilanxin.kunpeng.repository.admin.AdminApplier;
 
 /**
+ * 节点 source 元数据 Record 应用器接口。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface NodeSourceMetaApplier extends AdminApplier<NodeSourceMetaRecord> {
   @Override

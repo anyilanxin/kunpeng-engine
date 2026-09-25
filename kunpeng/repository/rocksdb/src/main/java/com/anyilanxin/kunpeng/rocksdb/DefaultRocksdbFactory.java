@@ -28,6 +28,7 @@ import org.rocksdb.RocksDB;
  *
  * @param <ColumnFamilyNames> 列族名称
  * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class DefaultRocksdbFactory<ColumnFamilyNames extends ColumnFamilies>
     implements RocksdbFactory<ColumnFamilyNames> {

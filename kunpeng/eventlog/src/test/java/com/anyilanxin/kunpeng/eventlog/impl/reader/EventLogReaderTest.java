@@ -32,7 +32,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/** 拉取式读游标：seek 族 / 跨块遍历 / gap 容忍 / peek 不消费 */
+/**
+ * 拉取式读游标：seek 族 / 跨块遍历 / gap 容忍 / peek 不消费。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @DisplayName("EventLogReader 读游标")
 class EventLogReaderTest {
 
@@ -161,7 +166,7 @@ class EventLogReaderTest {
     }
   }
   @Test
-  @DisplayName("回归: 空日志负哨兵(-1)恢复成功——exporter 新数据目录启动场景")
+  @DisplayName("回归: 空日志负哨兵(-1)恢复成功——sink 新数据目录启动场景")
   void emptyLogNegativeSentinelRecovery() {
     final InMemoryEventStore emptyStore = new InMemoryEventStore();
     final EventLog emptyLog = EventLog.builder()

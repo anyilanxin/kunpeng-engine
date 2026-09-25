@@ -21,7 +21,12 @@ import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnEscalation;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.BpmnTransformContext;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.ElementTransformer;
 
-/** 升级转换器：解析升级码表达式，静态升级码在部署期提前求值为常量。 */
+/**
+ * 升级转换器：解析升级码表达式，静态升级码在部署期提前求值为常量。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class EscalationTransformer implements ElementTransformer<Escalation> {
 
   /** 返回本转换器处理的模型元素类型。 */

@@ -17,7 +17,12 @@
 
 package com.anyilanxin.kunpeng.bpm.parse.dmn.type;
 
-/** DMN 引擎中用于转换数据的类型定义 */
+/**
+ * DMN 引擎中用于转换数据的类型定义
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface DmnTypeDefinition {
 
   /**

@@ -23,7 +23,7 @@ import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionInfoMetaRec
  * 分区加入命令记录契约，描述成员加入时目标分区的拓扑元数据。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface PartitionJoinRecordValue extends PartitionExecutionRecordValue {
   PartitionInfoMetaRecordValue getPartitionMeta();

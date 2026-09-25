@@ -20,7 +20,12 @@ import com.anyilanxin.kunpeng.utils.CheckedRunnable;
 import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 
-/** 线程上下文类加载器切换工具：外部 jar 侧载的代码可能经由 {@link Thread#getContextClassLoader()} 取类，执行期间需临时切换为本进程暴露的加载器。 */
+/**
+ * 线程上下文类加载器切换工具：外部 jar 侧载的代码可能经由 {@link Thread#getContextClassLoader()} 取类，执行期间需临时切换为本进程暴露的加载器。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class ThreadContextUtil {
 
   private ThreadContextUtil() {}

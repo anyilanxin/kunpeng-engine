@@ -26,7 +26,7 @@ import javax.script.ScriptEngineManager;
  * java script 引擎
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public final class JavaScriptLanguage implements ScriptLanguage {
   private final GraalJSScriptEngine engine;

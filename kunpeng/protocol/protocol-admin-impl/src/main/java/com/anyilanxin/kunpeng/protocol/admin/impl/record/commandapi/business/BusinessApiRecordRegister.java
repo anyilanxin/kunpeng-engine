@@ -23,8 +23,10 @@ import com.anyilanxin.kunpeng.protocol.admin.record.RecordValueMapperRegister;
 import com.anyilanxin.kunpeng.protocol.admin.record.commandapi.business.BusinessDispatchApiValueLifeCycle;
 
 /**
+ * 业务面 API Record 注册器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class BusinessApiRecordRegister {
   private BusinessApiRecordRegister() {}

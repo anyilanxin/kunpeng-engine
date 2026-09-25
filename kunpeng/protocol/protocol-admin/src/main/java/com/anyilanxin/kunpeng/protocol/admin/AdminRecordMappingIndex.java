@@ -17,8 +17,10 @@
 package com.anyilanxin.kunpeng.protocol.admin;
 
 /**
+ * 管理协议 Record 映射索引号池。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface AdminRecordMappingIndex {
   short RECORD_INDEX_0 = 0;

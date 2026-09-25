@@ -21,6 +21,12 @@ import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * actor 调度器装配配置。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @Configuration(proxyBeanMethods = false)
 public final class ActorSchedulerConfiguration {
 

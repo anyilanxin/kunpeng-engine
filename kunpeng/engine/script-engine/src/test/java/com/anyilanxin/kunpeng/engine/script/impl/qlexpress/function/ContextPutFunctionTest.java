@@ -20,7 +20,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
-/** 通过表达式引擎端到端测试 {@code contextPut()} 函数。 */
+/**
+ * 通过表达式引擎端到端测试 {@code contextPut()} 函数。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class ContextPutFunctionTest extends FunctionTestBase {
 
   @Test

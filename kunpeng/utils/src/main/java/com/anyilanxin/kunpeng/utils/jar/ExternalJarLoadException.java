@@ -20,7 +20,12 @@ import java.io.IOException;
 import java.io.Serial;
 import java.nio.file.Path;
 
-/** 外部 jar 装载失败（路径 + 原因） */
+/**
+ * 外部 jar 装载失败（路径 + 原因）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class ExternalJarLoadException extends IOException {
 
   @Serial private static final long serialVersionUID = 20260818L;

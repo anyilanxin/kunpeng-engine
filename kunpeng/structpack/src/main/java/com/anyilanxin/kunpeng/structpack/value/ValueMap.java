@@ -19,6 +19,12 @@ package com.anyilanxin.kunpeng.structpack.value;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+/**
+ * 值映射接口：structpack map 值的只读访问。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface ValueMap<K, V> {
   void put(final Consumer<K> key, final Consumer<V> value);
 

@@ -31,7 +31,7 @@ import org.springframework.core.env.Environment;
  *
  * @author zxuanhong
  * @copyright zhouxuanhong（https://anyilanxin.com）
- * @since 1.0.0
+ * @since 2026.9.0
  */
 @Configuration(proxyBeanMethods = false)
 @Profile(value = {"broker", "restore"})

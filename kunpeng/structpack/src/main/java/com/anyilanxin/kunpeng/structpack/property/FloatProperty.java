@@ -18,6 +18,12 @@ package com.anyilanxin.kunpeng.structpack.property;
 
 import com.anyilanxin.kunpeng.structpack.value.FloatValue;
 
+/**
+ * 单精度属性：structpack float 字段的编解码。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class FloatProperty extends BaseProperty<FloatValue> {
 
   public float getValue() {

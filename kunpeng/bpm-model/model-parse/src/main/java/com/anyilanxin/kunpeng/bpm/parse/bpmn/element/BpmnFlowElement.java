@@ -28,6 +28,9 @@ import java.util.Map;
  *
  * <p>承载元素的标识、名称、文档、类型、所属流程范围以及扩展属性；执行监听器也统一存储在基类，由子类按自身语义提供访问方法。 集合字段均为懒分配，未使用时保持 {@code null}
  * 以最小化单个元素的内存占用。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public abstract class BpmnFlowElement {
   /** 元素唯一标识（对应 BPMN 的 id 属性） */

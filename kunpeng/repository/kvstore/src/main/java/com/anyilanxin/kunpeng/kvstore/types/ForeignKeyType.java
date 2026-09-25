@@ -30,6 +30,8 @@ import org.agrona.MutableDirectBuffer;
  * @param match 外键匹配类型
  * @param skip 跳过外键校验的判断条件
  * @param <K> 内部 key 的类型
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public record ForeignKeyType<K extends StoreKey>(
     K inner, Enum<?> columnFamily, MatchType match, Predicate<K> skip)

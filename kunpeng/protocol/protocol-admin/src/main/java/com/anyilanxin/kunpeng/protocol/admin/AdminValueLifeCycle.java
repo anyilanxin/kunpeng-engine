@@ -38,7 +38,7 @@ import java.util.Collection;
  * 管理面协议生命周期总注册表，维护全部 LifeCycle 枚举并按 AdminValueType 路由反序列化。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface AdminValueLifeCycle {
   Collection<Class<? extends AdminValueLifeCycle>> INTENT_CLASSES =

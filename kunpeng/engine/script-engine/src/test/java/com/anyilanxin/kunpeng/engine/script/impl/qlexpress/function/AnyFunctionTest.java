@@ -28,6 +28,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  * <p><b>BUG MARKER</b>：当前实现 {@link AnyFunction} 复用 {@link AllFunction#toBool(Object)}，
  * 而该 {@code toBool} 对集合的语义是"全部 true"，不是"任一 true"。因此 {@code any([false, true])}
  * 实际返回 false，与 FEEL 规范不符。下方断言按 FEEL 规范写，预期 fail。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 class AnyFunctionTest extends FunctionTestBase {
 

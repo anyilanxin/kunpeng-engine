@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.scheduler.exception;
 
-/** 启动流程失败（聚合各 step 异常） */
+/**
+ * 启动流程失败（聚合各 step 异常）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class StartupProcessException extends Exception {
   public StartupProcessException(final String message) {
     super(message);

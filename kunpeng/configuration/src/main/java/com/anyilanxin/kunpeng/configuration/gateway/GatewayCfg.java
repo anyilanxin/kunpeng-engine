@@ -24,7 +24,12 @@ import lombok.Setter;
 import lombok.ToString;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
 
-/** gateway 配置，定义请求超时、客户端发现开关及网络、线程、长轮询等子配置。 */
+/**
+ * gateway 配置，定义请求超时、客户端发现开关及网络、线程、长轮询等子配置。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @Getter
 @Setter
 @ToString

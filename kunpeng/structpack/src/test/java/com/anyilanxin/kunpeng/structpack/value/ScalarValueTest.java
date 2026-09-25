@@ -24,7 +24,12 @@ import org.agrona.concurrent.UnsafeBuffer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/** 标量值类型测试：Long/Integer/Short/Byte/Boolean/Double/Float */
+/**
+ * 标量值类型测试：Long/Integer/Short/Byte/Boolean/Double/Float。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @DisplayName("标量值类型")
 class ScalarValueTest {
 

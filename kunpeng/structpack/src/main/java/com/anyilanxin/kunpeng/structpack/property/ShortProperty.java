@@ -18,6 +18,12 @@ package com.anyilanxin.kunpeng.structpack.property;
 
 import com.anyilanxin.kunpeng.structpack.value.ShortValue;
 
+/**
+ * 短整型属性：structpack short 字段的编解码。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class ShortProperty extends BaseProperty<ShortValue> {
 
   public short getValue() {

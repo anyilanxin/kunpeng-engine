@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.scheduler.exception;
 
-/** 单个启动 step 失败（含 step 名） */
+/**
+ * 单个启动 step 失败（含 step 名）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class StartupProcessStepException extends Exception {
   private final String stepName;
 

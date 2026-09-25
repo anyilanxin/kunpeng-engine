@@ -19,15 +19,17 @@ package com.anyilanxin.kunpeng.repository.admin.modules.business.applier.cluster
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessClusterMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.business.BusinessClusterMetaLifeCycle;
 import com.anyilanxin.kunpeng.repository.admin.AdminRepository;
-import com.anyilanxin.kunpeng.repository.admin.modules.business.MutableRepositoryBusiness;
+import com.anyilanxin.kunpeng.repository.admin.modules.business.MutableBusinessRepository;
 import com.anyilanxin.kunpeng.repository.admin.modules.business.applier.clustermeta.BusinessClusterMetaApplier;
 
 /**
+ * 业务面集群元数据更新事件应用器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class BusinessClusterMetaUpdatedApplierImpl implements BusinessClusterMetaApplier {
-  private final MutableRepositoryBusiness repositoryBusiness;
+  private final MutableBusinessRepository repositoryBusiness;
 
   public BusinessClusterMetaUpdatedApplierImpl(final AdminRepository repository) {
     repositoryBusiness = repository.businessRepository();

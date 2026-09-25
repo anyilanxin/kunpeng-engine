@@ -24,7 +24,7 @@ import com.anyilanxin.kunpeng.protocol.common.RecordValue;
  * 分区引导命令记录契约，描述初始化目标分区组所需的拓扑元数据。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface PartitionExecutionAckRecordValue extends RecordValue {
   /** 调度计划 id */

@@ -20,7 +20,12 @@ package com.anyilanxin.kunpeng.bpm.parse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** 解析模块的日志聚合类，集中定义模块内使用的 slf4j 日志记录器。 */
+/**
+ * 解析模块的日志聚合类，集中定义模块内使用的 slf4j 日志记录器。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class BpmParseLogger {
   /** dmn 解析日志 */
   public static final Logger PARSE_DMN_LOGGER =

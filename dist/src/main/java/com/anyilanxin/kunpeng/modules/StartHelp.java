@@ -35,7 +35,7 @@ import org.springframework.core.env.StandardEnvironment;
  * start help
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class StartHelp {
   public static final Logger LOGGER = LoggerFactory.getLogger("com.anyilanxin.kunpeng");

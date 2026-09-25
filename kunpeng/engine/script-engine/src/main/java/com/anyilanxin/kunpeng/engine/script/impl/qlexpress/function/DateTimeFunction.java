@@ -26,7 +26,7 @@ import java.time.format.DateTimeFormatter;
  * dateTime() dateTime(string) dateTime(string, format)
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class DateTimeFunction implements QLFunction {
 

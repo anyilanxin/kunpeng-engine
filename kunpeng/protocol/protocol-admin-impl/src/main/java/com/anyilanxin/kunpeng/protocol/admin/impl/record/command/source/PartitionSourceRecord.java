@@ -35,7 +35,7 @@ import org.agrona.DirectBuffer;
  * 分区来源记录，描述分区组、分区 ID、来源 ID、代理来源 ID 集合与目标分区组、目标分区 ID。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @AutoDeclareProperties
 public class PartitionSourceRecord extends UnifiedRecordValue<PartitionSourceRecord>

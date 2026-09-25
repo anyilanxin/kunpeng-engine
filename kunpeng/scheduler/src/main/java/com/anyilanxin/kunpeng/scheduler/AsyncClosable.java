@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.scheduler;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 import com.anyilanxin.kunpeng.scheduler.future.CompletableActorFuture;
 
-/** 异步关闭契约 */
+/**
+ * 异步关闭契约。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface AsyncClosable {
   ActorFuture<Void> closeAsync();
 

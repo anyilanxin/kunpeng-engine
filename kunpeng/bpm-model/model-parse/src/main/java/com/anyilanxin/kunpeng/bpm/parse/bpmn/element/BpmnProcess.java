@@ -26,6 +26,9 @@ import java.util.Map;
  * 流程定义的运行时模型：持有全流程元素注册表（以元素 id 索引）与流程级配置。
  *
  * <p>注册表同时覆盖嵌套子流程中的元素与多实例活动体（多实例体与内部活动共用同一 id，查询时可按期望类型解包）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class BpmnProcess extends BpmnContainer {
   /** 全流程元素注册表（id -> 元素），初始容量取常见流程规模减少扩容拷贝 */

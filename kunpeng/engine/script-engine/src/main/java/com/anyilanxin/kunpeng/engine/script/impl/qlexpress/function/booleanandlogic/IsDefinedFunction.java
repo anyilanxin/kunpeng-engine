@@ -20,7 +20,12 @@ import com.alibaba.qlexpress4.runtime.Parameters;
 import com.alibaba.qlexpress4.runtime.QContext;
 import com.anyilanxin.kunpeng.engine.script.impl.qlexpress.QLFunction;
 
-/** isDefined(value) — true if value is not null */
+/**
+ * isDefined(value) — true if value is not null.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class IsDefinedFunction implements QLFunction {
   @Override
   public Object call(final QContext qContext, final Parameters parameters) throws Throwable {

@@ -21,7 +21,12 @@ import com.anyilanxin.kunpeng.bpm.parse.dmn.element.DmnElement;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.ElementType;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.type.DmnTypeDefinition;
 
-/** DMN 变量（InformationItem/Variable）的内存模型，包含变量名与类型定义。 */
+/**
+ * DMN 变量（InformationItem/Variable）的内存模型，包含变量名与类型定义。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class DmnVariableImpl implements DmnElement {
 
   protected String key;

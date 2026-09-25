@@ -27,8 +27,10 @@ import java.util.function.Supplier;
 import org.agrona.concurrent.UnsafeBuffer;
 
 /**
+ * Record 值映射默认实现：Record 与落库值的转换。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class DefaultRecordValueMapper<RECORD extends UnifiedRecordValue>

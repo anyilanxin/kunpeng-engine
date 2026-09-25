@@ -20,8 +20,10 @@ import com.anyilanxin.kunpeng.engine.script.impl.DefaultScriptEngine;
 import org.springframework.beans.factory.BeanFactory;
 
 /**
+ * 脚本引擎工厂：按语言构建表达式实例。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public final class ScriptEngineFactory {
   public static ScriptEngine createScriptEngine(final BeanFactory beanFactory) {

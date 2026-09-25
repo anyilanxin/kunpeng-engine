@@ -29,7 +29,12 @@ import java.util.concurrent.Callable;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-/** actor 控制面：actor 内部线程调用（条件/定时器/续接/关闭） */
+/**
+ * actor 控制面：actor 内部线程调用（条件/定时器/续接/关闭）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class ActorControl implements ConcurrencyControl {
 
   private final Actor actor;

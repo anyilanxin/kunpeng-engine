@@ -19,8 +19,10 @@ package com.anyilanxin.kunpeng.broker.client.admin;
 import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.ADMIN_PARTITION_SOURCE;
 
 /**
+ * 主题工具：构造 broker 间通信的主题字符串。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class TopicUtils {
   private static final String API_TOPIC_PREFIX = "admin-api-";

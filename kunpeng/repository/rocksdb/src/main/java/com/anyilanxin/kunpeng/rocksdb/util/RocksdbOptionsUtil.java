@@ -34,6 +34,7 @@ import org.rocksdb.*;
  * RocksDB 配置选项工具类，根据 {@link RocksdbConfiguration} 构建 DBOptions、 ColumnFamilyOptions 以及读写选项
  *
  * @author zxuanhong
+ * @since 2026.9.0
  */
 public class RocksdbOptionsUtil {
 

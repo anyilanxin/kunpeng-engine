@@ -17,8 +17,10 @@
 package com.anyilanxin.kunpeng.engine.script;
 
 /**
+ * 脚本语言接口：语言级能力描述。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface ScriptLanguage {
   /**

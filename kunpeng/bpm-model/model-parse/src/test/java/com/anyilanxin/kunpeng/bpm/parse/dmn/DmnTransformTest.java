@@ -37,6 +37,9 @@ import org.junit.jupiter.api.Test;
 /**
  * DMN 模型转换测试（自 dmn-engine 迁入，改走 {@link DmnTransformer} 新 API）： 决策表结构（输入/输出/规则/命中策略）、
  * 表达式脚本装配、字面表达式决策与决策依赖（DRG）装配。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 class DmnTransformTest {
 

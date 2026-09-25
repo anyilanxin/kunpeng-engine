@@ -24,8 +24,10 @@ import java.util.Map;
 
 /**
  *
+ * QLExpress 表达式求值测试。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class QlTest {
   static void main() {

@@ -21,7 +21,12 @@ import com.anyilanxin.kunpeng.bpm.parse.dmn.element.DmnElement;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.ElementType;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.type.DmnTypeDefinition;
 
-/** 决策表输出列（Output）的内存模型，持有输出名称与输出结果的类型定义。 */
+/**
+ * 决策表输出列（Output）的内存模型，持有输出名称与输出结果的类型定义。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class DmnDecisionTableOutputImpl implements DmnElement {
 
   protected String id;

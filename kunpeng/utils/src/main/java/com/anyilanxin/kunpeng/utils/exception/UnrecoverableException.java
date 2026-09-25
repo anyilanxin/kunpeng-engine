@@ -20,6 +20,7 @@ package com.anyilanxin.kunpeng.utils.exception;
  * 不可恢复异常
  *
  * @author zxuanhong
+ * @since 2026.9.0
  */
 public class UnrecoverableException extends RuntimeException {
 

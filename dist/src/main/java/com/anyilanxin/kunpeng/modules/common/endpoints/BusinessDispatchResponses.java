@@ -31,7 +31,7 @@ import java.util.concurrent.CompletionException;
  * 业务面调度端点共享响应转换：等待 Broker 响应并映射为端点 DTO。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 final class BusinessDispatchResponses {
 

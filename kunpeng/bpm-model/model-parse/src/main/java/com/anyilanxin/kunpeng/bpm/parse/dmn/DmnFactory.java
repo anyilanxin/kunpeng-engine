@@ -25,7 +25,7 @@ import org.springframework.beans.factory.BeanFactory;
  * DMN 解析模块的工厂类，用于创建 DMN 模型转换器 {@link DmnTransformer} 及其依赖的表达式语言引擎 {@link ScriptEngine}。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public final class DmnFactory {
   /**

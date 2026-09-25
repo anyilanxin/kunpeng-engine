@@ -32,6 +32,8 @@ import java.util.function.Function;
  *
  * @param <L> 左值类型（错误）
  * @param <R> 右值类型（成功）
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public sealed interface Either<L, R> {
 

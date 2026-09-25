@@ -19,6 +19,12 @@ package com.anyilanxin.kunpeng.modules.gateway.health;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 
+/**
+ * 网关健康检查配置初始化器。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class GatewayHealthConfigurationInitializer
     implements ApplicationContextInitializer<ConfigurableApplicationContext> {
 

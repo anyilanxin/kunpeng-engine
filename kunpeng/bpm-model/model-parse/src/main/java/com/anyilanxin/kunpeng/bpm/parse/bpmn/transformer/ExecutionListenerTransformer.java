@@ -27,6 +27,9 @@ import org.slf4j.Logger;
  * 执行监听器转换器：把 kunpeng:executionListeners 声明装配到宿主元素（流程、节点或顺序流）。
  *
  * <p>声明缺失必要属性（eventType/type/retries）或解析异常时记录日志并跳过该条监听器，不中断整体转换。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 final class ExecutionListenerTransformer {
   private static final Logger LOGGER = BpmParseLogger.PARSE_BPMN_LOGGER;

@@ -20,7 +20,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
-/** 通过表达式引擎端到端测试 {@code roundUp()} 函数（远离零舍入）。 */
+/**
+ * 通过表达式引擎端到端测试 {@code roundUp()} 函数（远离零舍入）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class RoundUpFunctionTest extends FunctionTestBase {
 
   @Test

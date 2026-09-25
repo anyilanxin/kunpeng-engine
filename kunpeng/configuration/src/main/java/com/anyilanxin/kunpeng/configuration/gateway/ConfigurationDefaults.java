@@ -18,7 +18,12 @@ package com.anyilanxin.kunpeng.configuration.gateway;
 
 import java.time.Duration;
 
-/** gateway 相关配置的默认值常量。 */
+/**
+ * gateway 相关配置的默认值常量。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class ConfigurationDefaults {
 
   public static final String DEFAULT_HOST = "0.0.0.0";

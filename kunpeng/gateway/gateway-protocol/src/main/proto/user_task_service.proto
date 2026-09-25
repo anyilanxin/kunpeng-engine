@@ -1,0 +1,60 @@
+syntax = 'proto3';
+package gateway_protocol;
+
+option java_multiple_files = false;
+option java_package = "com.anyilanxin.kunpeng.gateway.grpc.service";
+option go_package = "./;pb";
+
+message CompleteUserTaskRequest {
+  int64 userTaskId = 1;
+  string tenantId = 2;
+  string localVariable = 3;
+  string variable = 4;
+}
+
+
+message CompleteUserTaskResponse {
+}
+
+
+
+message CancelUserTaskRequest {
+  int64 userTaskId = 1;
+  string tenantId = 2;
+}
+
+
+message CancelUserTaskResponse {
+}
+
+
+service UserTaskService {
+  /*
+   Iterates through all known partitions round-robin and activates up to the requested
+   maximum and streams them back to the client as they are activated.
+
+   Errors:
+    INVALID_ARGUMENT:
+     - type is blank (empty string, null)
+     - worker is blank (empty string, null)
+     - timeout less than 1
+     - maxJobsToActivate is less than 1
+  */
+  rpc CompleteUserTask (CompleteUserTaskRequest) returns (stream CompleteUserTaskResponse) {
+  }
+
+
+  /*
+   Iterates through all known partitions round-robin and activates up to the requested
+   maximum and streams them back to the client as they are activated.
+
+   Errors:
+    INVALID_ARGUMENT:
+     - type is blank (empty string, null)
+     - worker is blank (empty string, null)
+     - timeout less than 1
+     - maxJobsToActivate is less than 1
+  */
+  rpc CancelUserTask (CancelUserTaskRequest) returns (stream CancelUserTaskResponse) {
+  }
+}

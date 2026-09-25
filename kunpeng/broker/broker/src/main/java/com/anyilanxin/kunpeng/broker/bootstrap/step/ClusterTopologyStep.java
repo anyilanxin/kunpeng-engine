@@ -23,7 +23,12 @@ import com.anyilanxin.kunpeng.cluster.config.topology.cluster.DefaultClusterTopo
 import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 
-/** 集群分区拓扑（Cluster Partition Topology）相关的 broker 启动步骤：创建拓扑服务并注册到上下文。 */
+/**
+ * 集群分区拓扑（Cluster Partition Topology）相关的 broker 启动步骤：创建拓扑服务并注册到上下文。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class ClusterTopologyStep extends AbstractBrokerStartupStep {
 
   @Override

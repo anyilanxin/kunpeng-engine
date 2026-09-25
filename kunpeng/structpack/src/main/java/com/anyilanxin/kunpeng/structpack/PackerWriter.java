@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.structpack;
 import org.agrona.DirectBuffer;
 import org.agrona.MutableDirectBuffer;
 
-/** structpack 编码器：varint/zipzag/裸字节原语，直接操作 Agrona buffer */
+/**
+ * structpack 编码器：varint/zipzag/裸字节原语，直接操作 Agrona buffer。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class PackerWriter {
 
   private MutableDirectBuffer buffer;

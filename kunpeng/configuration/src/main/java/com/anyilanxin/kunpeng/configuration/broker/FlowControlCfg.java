@@ -23,6 +23,12 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
+/**
+ * 流控配置。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class FlowControlCfg implements ConfigurationEntry {
 
   private static final ObjectMapper MAPPER = JsonMapper.builder().build();

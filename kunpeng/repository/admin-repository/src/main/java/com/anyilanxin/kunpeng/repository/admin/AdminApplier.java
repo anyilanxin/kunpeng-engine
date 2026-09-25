@@ -21,8 +21,10 @@ import com.anyilanxin.kunpeng.protocol.admin.AdminValueType;
 import com.anyilanxin.kunpeng.protocol.common.RecordValue;
 
 /**
+ * 管理面 Record 落库应用器接口：按生命周期事件写入存储。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface AdminApplier<Record extends RecordValue> {
   void applyState(long key, Record recordValue);

@@ -22,7 +22,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
 
-/** 预定义列族的编号、迁移语义与名称反查测试 */
+/**
+ * 预定义列族的编号、迁移语义与名称反查测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class PredefinedColumnFamilyTest {
 
   @Test

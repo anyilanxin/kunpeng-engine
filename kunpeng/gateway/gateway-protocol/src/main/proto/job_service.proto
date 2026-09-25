@@ -1,0 +1,277 @@
+syntax = 'proto3';
+package gateway_protocol;
+
+option java_multiple_files = false;
+option java_package = "com.anyilanxin.kunpeng.gateway.grpc.service";
+option go_package = "./;pb";
+
+// job 协议总文件：单一 JobService 服务承载 job 全部两个面。
+// 1. 业务命令面：complete / fail / retries / timeout / throwError（经 commandapi 进 raft）。
+// 2. 消费面（workjob 设计 §8.1，分布式 Job 推拉系统）：
+//    STREAM 模式经 OpenJobStream 双向流（注册即开流，Resolve 复用同一连接）；
+//    PULL 模式经 PullJobs 长轮询（deadline 内挂起，有 job 立即返回，空批 = 到期）。
+
+// ==================== 业务命令面 ====================
+
+message CompleteJobRequest {
+  // the unique job identifier, as obtained from ActivateJobsResponse
+  int64 jobKey = 1;
+  // a JSON document representing the variables in the current task scope
+  string variables = 2;
+  string localVariables = 3;
+}
+
+message UserTaskProperties {
+  // The action performed on the user task (e.g., "claim", "update", "complete").
+  optional string action = 1;
+
+  // The user assigned to the task.
+  optional string assignee = 2;
+
+  // The list of candidate groups for the user task.
+  repeated string candidateGroups = 3;
+
+  // The list of candidate users for the user task.
+  repeated string candidateUsers = 4;
+
+  // The list of attributes that were changed in the user task.
+  repeated string changedAttributes = 5;
+
+  // The due date of the user task in ISO 8601 format.
+  optional string dueDate = 6;
+
+  // The follow-up date of the user task in ISO 8601 format.
+  optional string followUpDate = 7;
+
+  // The key of the form associated with the user task.
+  optional int64 formKey = 8;
+
+  // The priority of the user task (0-100).
+  optional int32 priority = 9;
+
+  // The unique key identifying the user task.
+  optional int64 userTaskKey = 10;
+}
+
+message CompleteJobResponse {
+}
+
+message FailJobRequest {
+  // the unique job identifier, as obtained when activating the job
+  int64 jobKey = 1;
+  // the amount of retries the job should have left
+  int32 retries = 2;
+  // an optional message describing why the job failed
+  // this is particularly useful if a job runs out of retries and an incident is raised,
+  // as it this message can help explain why an incident was raised
+  string errorMessage = 3;
+  // the backoff timeout (in ms) for the next retry
+  int64 retryBackOff = 4;
+  // JSON document that will instantiate the variables at the local scope of the
+  // job's associated task; it must be a JSON object, as variables will be mapped in a
+  // key-value fashion. e.g. { "a": 1, "b": 2 } will create two variables, named "a" and
+  // "b" respectively, with their associated values. [{ "a": 1, "b": 2 }] would not be a
+  // valid argument, as the root of the JSON document is an array and not an object.
+  string variables = 5;
+}
+
+message FailJobResponse {
+}
+
+message UpdateJobTimeoutRequest {
+  // the unique job identifier, as obtained from ActivateJobsResponse
+  int64 jobKey = 1;
+  // the duration of the new timeout in ms, starting from the current moment
+  int64 timeout = 2;
+  // a reference key chosen by the user and will be part of all records resulted from this operation
+  optional uint64 operationReference = 3;
+}
+
+message UpdateJobTimeoutResponse {
+}
+
+message UpdateJobRetriesRequest {
+  // the unique job identifier, as obtained through ActivateJobs
+  int64 jobKey = 1;
+  // the new amount of retries for the job; must be positive
+  int32 retries = 2;
+  // a reference key chosen by the user and will be part of all records resulted from this operation
+  optional uint64 operationReference = 3;
+}
+
+message UpdateJobRetriesResponse {
+}
+
+message ThrowErrorRequest {
+  // the unique job identifier, as obtained when activating the job
+  int64 jobKey = 1;
+  // the error code that will be matched with an error catch event
+  string errorCode = 2;
+  // an optional error message that provides additional context
+  string errorMessage = 3;
+  // JSON document that will instantiate the variables at the local scope of the
+  // error catch event that catches the thrown error; it must be a JSON object, as variables will be mapped in a
+  // key-value fashion. e.g. { "a": 1, "b": 2 } will create two variables, named "a" and
+  // "b" respectively, with their associated values. [{ "a": 1, "b": 2 }] would not be a
+  // valid argument, as the root of the JSON document is an array and not an object.
+  string variables = 4;
+}
+
+message ThrowErrorResponse {
+}
+
+service JobService {
+  /*
+    Updates the number of retries a job has left. This is mostly useful for jobs that have run out of
+    retries, should the underlying problem be solved.
+
+    Errors:
+      NOT_FOUND:
+        - no job exists with the given key
+
+      INVALID_ARGUMENT:
+        - retries is not greater than 0
+   */
+  rpc UpdateJobRetries (UpdateJobRetriesRequest) returns (UpdateJobRetriesResponse) {
+  }
+
+  /*
+    Reports a business error (i.e. non-technical) that occurs while processing a job. The error is handled in the process by an error catch event. If there is no error catch event with the specified errorCode then an incident will be raised instead.
+
+    Errors:
+      NOT_FOUND:
+        - no job was found with the given key
+
+      FAILED_PRECONDITION:
+        - the job is not in an activated state
+   */
+  rpc ThrowError (ThrowErrorRequest) returns (ThrowErrorResponse) {
+  }
+  /*
+    Marks the job as failed; if the retries argument is positive, then the job will be immediately
+    activatable again, and a worker could try again to process it. If it is zero or negative however,
+    an incident will be raised, tagged with the given errorMessage, and the job will not be
+    activatable until the incident is resolved.
+
+    Errors:
+      NOT_FOUND:
+        - no job was found with the given key
+
+      FAILED_PRECONDITION:
+        - the job was not activated
+        - the job is already in a failed state, i.e. ran out of retries
+   */
+  rpc FailJob (FailJobRequest) returns (FailJobResponse) {
+  }
+
+  /*
+  Updates the deadline of a job using the timeout (in ms) provided. This can be used
+  for extending or shortening the job deadline.
+
+  Errors:
+    NOT_FOUND:
+      - no job exists with the given key
+
+    INVALID_STATE:
+      - no deadline exists for the given job key
+ */
+  rpc UpdateJobTimeout (UpdateJobTimeoutRequest) returns (UpdateJobTimeoutResponse) {
+  }
+
+  /*
+    Completes a job with the given variables, which allows completing the associated service task.
+
+    Errors:
+      NOT_FOUND:
+        - no job exists with the given job key. Note that since jobs are removed once completed,
+          it could be that this job did exist at some point.
+
+      FAILED_PRECONDITION:
+        - the job was marked as failed. In that case, the related incident must be resolved before
+          the job can be activated again and completed.
+   */
+  rpc CompleteJob (CompleteJobRequest) returns (CompleteJobResponse) {
+  }
+
+  // —— 消费面（流推送 + 长轮询；完成走 CompleteJob 命令 rpc） ——
+
+  // 实时流：双向流。首个请求必须携带 register（注册为一条流订阅，随订阅快照对账同步到 broker）；
+  // 完成经独立的 CompleteJob 命令 rpc，流上无需其他信号。
+  rpc OpenJobStream (stream OpenStreamRequest) returns (stream JobDelivery) {
+  }
+
+  // 长连接拉取：立即向全部分区发激活命令探测，首个非空批次胜出；全空挂起，
+  // 被 job-ready 广播唤醒重试，挂起到期返回空批（client 立即重挂，兼作双向存活探活）。
+  rpc PullJobs (PullRequest) returns (PullResponse) {
+  }
+}
+
+message OpenStreamRequest {
+  oneof kind {
+    // 首个请求：注册为一条流订阅
+    StreamRegister register = 1;
+  }
+}
+
+message StreamRegister {
+  // 消费类型（BPMN taskDefinition type）
+  string type = 1;
+  // worker 名称，用于日志与审计
+  string worker = 2;
+  // 容量（可选轻量背压：WAITING 条目数超容量时 broker 跳派）
+  int32 capacity = 3;
+}
+
+// 推送给 worker 的 job 载荷
+message JobDelivery {
+  // job 主键（引擎全局唯一）
+  int64 jobKey = 1;
+  // 消费类型
+  string type = 2;
+  // 租户
+  string tenantId = 3;
+  // 所属流程实例
+  int64 processInstanceId = 4;
+  // 关联元素 ID
+  string elementId = 5;
+  // 激活该 job 的 worker 名称
+  string worker = 6;
+  // 剩余重试次数
+  int32 retries = 7;
+  // deadline（UNIX epoch ms），到期未 resolve 由业务侧处置
+  int64 deadline = 8;
+  // 任务变量（JSON UTF-8）
+  bytes variables = 9;
+  // 自定义头（JSON UTF-8）
+  bytes customHeaders = 10;
+  // 关联活动实例
+  int64 activityInstanceId = 11;
+  // job 种类（JobKindType 序数值）
+  int32 jobKind = 12;
+  // 监听事件类型（序数值，非监听 job 为 -1）
+  int32 listenerEventType = 13;
+  // user task 属性（JSON UTF-8，非 user task 相关 job 为空）
+  bytes userTask = 14;
+}
+
+message PullRequest {
+  // 消费类型
+  string type = 1;
+  // worker 名称，用于日志与审计
+  string worker = 2;
+  // 本请求最多拉取的 job 数
+  int32 maxBatch = 3;
+  // 挂起超时（ms）；到期返回空批
+  int64 deadlineMs = 4;
+  // 租户过滤
+  repeated string tenantIds = 5;
+}
+
+message PullResponse {
+  // 空批 = deadline 到期
+  repeated JobDelivery jobs = 1;
+}
+
+
+
+

@@ -31,6 +31,9 @@ import tools.jackson.databind.ObjectMapper;
  *
  * <p>与 Record 帧格式无关——文档内容保持标准 msgpack（与存量变量字节、gateway/job API 完全兼容）。 msgpack 编解码由自研 {@link
  * DocumentCodec} 完成（字节与官方实现一致, 零外部依赖）； JSON 解析仍走 Jackson。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class DocumentUtil {
 

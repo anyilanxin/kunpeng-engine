@@ -18,7 +18,12 @@ package com.anyilanxin.kunpeng.bpm.parse.bpmn.element;
 
 import com.anyilanxin.kunpeng.engine.script.ScriptExpression;
 
-/** 脚本任务的运行时模型：内联脚本表达式与可选的结果变量名。 */
+/**
+ * 脚本任务的运行时模型：内联脚本表达式与可选的结果变量名。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class BpmnScriptTask extends BpmnJobWorkerTask {
   /** 脚本表达式，未声明为 null */
   private ScriptExpression expression;

@@ -26,7 +26,7 @@ import com.anyilanxin.kunpeng.protocol.admin.record.CommandApiValueLifeCycle;
  * 业务面调度对外 API 生命周期，负载均衡、分区变更、副本变更、取消变更与调度查询的请求/响应成对状态。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public enum BusinessDispatchApiValueLifeCycle implements CommandApiValueLifeCycle {
   CLUSTER_BALANCE_REQUEST((short) 0, PROCESS_INDEX_51, RECORD_INDEX_12),

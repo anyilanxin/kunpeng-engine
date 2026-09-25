@@ -26,6 +26,9 @@ import org.junit.jupiter.api.Test;
  * <p><b>BUG MARKER</b>：FEEL 规范定义 {@code indexOf} 返回 <b>1 基</b>位置列表
  * （例：{@code indexOf([1,2,3,2], 2) -> [2, 4]}），但当前实现 {@link IndexOfFunction}
  * 返回单个 <b>0 基</b>索引（返回 {@code 1L}）。下方断言按 FEEL 规范写，预期 fail。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 class IndexOfFunctionTest extends FunctionTestBase {
 

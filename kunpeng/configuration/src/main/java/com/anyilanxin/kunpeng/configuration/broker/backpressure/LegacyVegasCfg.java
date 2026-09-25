@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.configuration.broker.backpressure;
 
-/** A Vegas configuration that matches our old default values for the log storage appender. */
+/**
+ * A Vegas configuration that matches our old default values for the log storage appender.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class LegacyVegasCfg {
 
   private int initialLimit = 1024;

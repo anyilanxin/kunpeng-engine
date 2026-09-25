@@ -20,7 +20,7 @@ package com.anyilanxin.kunpeng.configuration.broker.partition;
  * 分区方案枚举。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public enum PartitionScheme {
   FIXED,

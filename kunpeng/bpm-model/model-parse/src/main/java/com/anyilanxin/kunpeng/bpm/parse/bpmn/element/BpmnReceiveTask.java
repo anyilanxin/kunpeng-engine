@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.bpm.parse.bpmn.element;
 
-/** 接收任务的运行时模型：等待一个消息到达后继续（消息语义固定）。 */
+/**
+ * 接收任务的运行时模型：等待一个消息到达后继续（消息语义固定）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class BpmnReceiveTask extends BpmnActivity {
   /** 等待的消息载荷，未装配为 null */
   private BpmnMessage message;

@@ -24,6 +24,12 @@ import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 import com.anyilanxin.kunpeng.scheduler.startup.StartupStep;
 
+/**
+ * 节点 ID 生成器启动步骤。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class NodeIdGeneratorStep implements StartupStep<BrokerStartupContext> {
 
   @Override

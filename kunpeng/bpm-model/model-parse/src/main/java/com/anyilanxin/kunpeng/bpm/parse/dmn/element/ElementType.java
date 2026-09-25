@@ -20,7 +20,7 @@ package com.anyilanxin.kunpeng.bpm.parse.dmn.element;
  * DMN 内存元素类型枚举，标识解析后的元素对应 DMN 规范中的哪一类 DRG 元素。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public enum ElementType {
   /** Decision（决策） */

@@ -22,8 +22,10 @@ import com.anyilanxin.kunpeng.protocol.common.RecordValue;
 import com.anyilanxin.kunpeng.protocol.common.api.ResponseRecordValue;
 
 /**
+ * 管理面调度查询响应 Record 值接口。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface AdminDispatchQueryResponseRecordValue extends RecordValue, ResponseRecordValue {
   AdminDispatchPlanRecordValue getDispatchPlan();

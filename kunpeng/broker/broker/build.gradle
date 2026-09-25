@@ -16,6 +16,7 @@
  */
 plugins {
     id 'kunpeng.build-publish'
+    id 'kunpeng.sbe-java'
 }
 
 description = "Broker"
@@ -25,19 +26,33 @@ configure(jarInfo) {
 }
 dependencies {
     implementation project(':kunpeng:configuration')
+    implementation project(':kunpeng:engine:bpmn-engine')
+    implementation project(':kunpeng:gateway:gateway')
+    implementation project(':kunpeng:gateway:gateway-job')
     implementation project(':kunpeng:cluster:cluster')
-    implementation project(':kunpeng:cluster:cluster-admin')
     implementation project(':kunpeng:cluster:cluster-config')
     implementation project(':kunpeng:cluster:cluster-raft')
     implementation project(':kunpeng:cluster:cluster-dispatch')
+    implementation project(':kunpeng:sink:sink')
     implementation project(':kunpeng:protocol:protocol-common')
     implementation project(':kunpeng:protocol:protocol-admin')
     implementation project(':kunpeng:protocol:protocol-admin-impl')
+    implementation project(':kunpeng:protocol:protocol-business')
+    implementation project(':kunpeng:protocol:protocol-business-impl')
+    implementation project(':kunpeng:broker:broker-admin-client')
+    implementation project(':kunpeng:broker:broker-client')
+    implementation project(':kunpeng:repository:kvstore')
+    implementation project(':kunpeng:repository:rocksdb')
+    implementation project(':kunpeng:repository:admin-repository')
+    implementation project(':kunpeng:repository:business-repository')
     implementation project(':kunpeng:structpack')
     implementation project(':kunpeng:eventlog')
-    implementation project(':kunpeng:broker:broker-admin-client')
     implementation project(':kunpeng:scheduler')
     implementation project(':kunpeng:utils')
+
+    implementation 'tools.jackson.core:jackson-databind'
+    implementation 'tools.jackson.core:jackson-core'
+    implementation 'com.fasterxml.jackson.core:jackson-annotations'
     implementation 'org.agrona:agrona'
     implementation 'org.apache.commons:commons-lang3'
     implementation 'io.netty:netty-common'

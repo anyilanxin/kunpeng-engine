@@ -25,7 +25,7 @@ import com.anyilanxin.kunpeng.utils.Either;
  * 所有 *Function 测试的基类：通过表达式引擎 {@link QlExpressLanguage} 端到端求值。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 class FunctionTestBase {
   /** 共享一个 language 实例（所有函数都在 loadFunction 中注册好了）。 */

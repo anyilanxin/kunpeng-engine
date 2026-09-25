@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.protocol.common;
 
-/** 表示归属于某个租户（Tenant）的实体。 */
+/**
+ * 表示归属于某个租户（Tenant）的实体。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface TenantOwned {
 
   /** 默认租户标识。未启用多租户时，实体归属该默认租户。这样做是为了兼容将来启用多租户的场景。 */

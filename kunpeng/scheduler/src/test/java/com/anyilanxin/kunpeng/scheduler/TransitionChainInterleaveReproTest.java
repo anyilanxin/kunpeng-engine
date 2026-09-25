@@ -36,6 +36,9 @@ import org.junit.jupiter.api.Timeout;
 /**
  * 复刻缩容离席形态: PartitionTransitionProcess 链驱动（步骤返回同步完成 future）+ 交错取消 +
  * closeAsync 等待 INACTIVE 转换完成后关闭 actor。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 @DisplayName("分区转换链交错取消复现")
 class TransitionChainInterleaveReproTest {
@@ -190,7 +193,7 @@ class TransitionChainInterleaveReproTest {
             .build();
     scheduler.start();
 
-    final var steps = List.of("Metrics", "LogStorage", "EventLog", "Rocksdb", "Engine", "Exporter");
+    final var steps = List.of("Metrics", "LogStorage", "EventLog", "Rocksdb", "Engine", "Sink");
     final var partition = new FakePartitionTransition(steps);
     scheduler.submitActor(partition).get(10, TimeUnit.SECONDS);
 
@@ -228,7 +231,7 @@ class TransitionChainInterleaveReproTest {
             .build();
     scheduler.start();
 
-    final var steps = List.of("Metrics", "LogStorage", "EventLog", "Rocksdb", "Engine", "Exporter");
+    final var steps = List.of("Metrics", "LogStorage", "EventLog", "Rocksdb", "Engine", "Sink");
     final var partition = new FakePartitionTransition(steps);
     scheduler.submitActor(partition).get(10, TimeUnit.SECONDS);
 
@@ -252,7 +255,7 @@ class TransitionChainInterleaveReproTest {
             .build();
     scheduler.start();
 
-    final var steps = List.of("Metrics", "LogStorage", "EventLog", "Rocksdb", "Engine", "Exporter");
+    final var steps = List.of("Metrics", "LogStorage", "EventLog", "Rocksdb", "Engine", "Sink");
     final var partition = new FakePartitionTransition(steps);
     scheduler.submitActor(partition).get(10, TimeUnit.SECONDS);
 
@@ -280,7 +283,7 @@ class TransitionChainInterleaveReproTest {
             .build();
     scheduler.start();
 
-    final var steps = List.of("Metrics", "LogStorage", "EventLog", "Rocksdb", "Engine", "Exporter");
+    final var steps = List.of("Metrics", "LogStorage", "EventLog", "Rocksdb", "Engine", "Sink");
     final var partition = new FakePartitionTransition(steps);
     scheduler.submitActor(partition).get(10, TimeUnit.SECONDS);
 

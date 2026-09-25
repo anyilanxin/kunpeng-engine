@@ -20,7 +20,12 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicLong;
 
-/** 测试用受控时钟：可 pin 到指定时刻或 offset 推进 */
+/**
+ * 测试用受控时钟：可 pin 到指定时刻或 offset 推进。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class ControlledActorClock implements ActorClock {
 
   private final AtomicLong currentTimeMillis = new AtomicLong(System.currentTimeMillis());

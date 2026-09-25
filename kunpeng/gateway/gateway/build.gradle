@@ -18,16 +18,28 @@ plugins {
     id 'kunpeng.build-publish'
 }
 
-description = "Gateway"
+description = "Kunpeng Gateway"
 
 configure(jarInfo) {
     archiveName = "kunpeng-gateway"
 }
+
+
 dependencies {
+    api project(':kunpeng:gateway:gateway-grpc')
+    api project(':kunpeng:gateway:gateway-rest')
     implementation project(':kunpeng:configuration')
-    implementation project(':kunpeng:cluster:cluster')
-    implementation project(':kunpeng:scheduler')
     implementation project(':kunpeng:utils')
+    implementation project(':kunpeng:structpack')
+    implementation project(':kunpeng:scheduler')
+    implementation project(':kunpeng:broker:broker-client')
+    implementation project(':kunpeng:protocol:protocol-business')
+    implementation project(':kunpeng:protocol:protocol-business-impl')
+    implementation project(':kunpeng:cluster:cluster')
+    implementation project(':kunpeng:cluster:cluster-config')
+    implementation 'io.netty:netty-common'
+    implementation 'org.springframework.boot:spring-boot'
+    implementation 'org.springframework:spring-core'
     implementation 'io.micrometer:micrometer-core'
     implementation 'io.micrometer:micrometer-commons'
 }

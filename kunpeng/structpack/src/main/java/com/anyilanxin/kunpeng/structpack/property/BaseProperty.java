@@ -32,6 +32,9 @@ import java.util.Objects;
  *   <li>{@link #writeValue(PackerWriter)}：只写 value（structpack 帧 declared 路径，wire 上无 key）
  *   <li>{@link #write(PackerWriter)}：key + value（undeclared/独立场景）
  * </ul>
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public abstract class BaseProperty<T extends BaseValue> {
 

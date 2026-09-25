@@ -22,7 +22,12 @@ import com.anyilanxin.kunpeng.engine.script.exception.CustomBusinessException;
 import com.anyilanxin.kunpeng.engine.script.impl.qlexpress.QLFunction;
 import java.util.Objects;
 
-/** assert(condition, [message]) — throw if condition is false */
+/**
+ * assert(condition, [message]) — throw if condition is false.
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class AssertFunction implements QLFunction {
   @Override
   public Object call(final QContext qContext, final Parameters parameters) throws Throwable {

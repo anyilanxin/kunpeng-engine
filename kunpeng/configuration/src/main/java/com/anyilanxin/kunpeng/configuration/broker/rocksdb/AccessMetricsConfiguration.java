@@ -22,7 +22,7 @@ package com.anyilanxin.kunpeng.configuration.broker.rocksdb;
  * @param kind 采集级别：{@link Kind#NONE} 不采集，{@link Kind#FINE} 细粒度采集
  * @param partitionId 关联的分区 ID
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public record AccessMetricsConfiguration(Kind kind, int partitionId) {
 

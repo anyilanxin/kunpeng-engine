@@ -23,7 +23,7 @@ import com.anyilanxin.kunpeng.bpm.parse.dmn.expression.ExpressTransformer;
  * 布尔类型（boolean）的一元测试转换器，将一元测试转换为与输入变量的相等判断。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class BooleanTransform implements ExpressTransformer {
   /** 返回该转换器适配的值类型：boolean。 */

@@ -24,7 +24,12 @@ import com.anyilanxin.kunpeng.bpm.parse.dmn.type.impl.DefaultDataTypeTransformer
 import com.anyilanxin.kunpeng.bpm.parse.dmn.type.impl.DefaultTypeDefinition;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.type.impl.DmnTypeDefinitionImpl;
 
-/** DMN 类型系统的工具类：根据类型引用（typeRef）创建类型定义，并从 DMN 表达式中提取文本内容。 */
+/**
+ * DMN 类型系统的工具类：根据类型引用（typeRef）创建类型定义，并从 DMN 表达式中提取文本内容。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class TypeHelper {
   /** 内置数据类型转换器注册表（静态共享实例）。 */
   private static final DefaultDataTypeTransformerRegistry typeTransformerRegistry =

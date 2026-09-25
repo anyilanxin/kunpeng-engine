@@ -19,15 +19,17 @@ package com.anyilanxin.kunpeng.repository.admin.modules.business.applier.dispatc
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.business.BusinessDispatchPlanLifeCycle;
 import com.anyilanxin.kunpeng.repository.admin.AdminRepository;
-import com.anyilanxin.kunpeng.repository.admin.modules.business.MutableRepositoryBusiness;
+import com.anyilanxin.kunpeng.repository.admin.modules.business.MutableBusinessRepository;
 import com.anyilanxin.kunpeng.repository.admin.modules.business.applier.dispatchplan.BusinessDispatchPlanApplier;
 
 /**
+ * 业务面调度计划延迟事件应用器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class BusinessDispatchPlanDelayedApplierImpl implements BusinessDispatchPlanApplier {
-  private final MutableRepositoryBusiness repositoryBusiness;
+  private final MutableBusinessRepository repositoryBusiness;
 
   public BusinessDispatchPlanDelayedApplierImpl(final AdminRepository repository) {
     repositoryBusiness = repository.businessRepository();

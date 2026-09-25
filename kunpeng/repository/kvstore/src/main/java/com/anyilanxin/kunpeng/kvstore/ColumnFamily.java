@@ -25,6 +25,7 @@ import java.util.function.Consumer;
  * 列族访问接口，提供对指定 column family 中 key-value 对的写入、读取、遍历与删除等操作
  *
  * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface ColumnFamily<Key extends StoreKey, Value extends StoreValue> {
   /**

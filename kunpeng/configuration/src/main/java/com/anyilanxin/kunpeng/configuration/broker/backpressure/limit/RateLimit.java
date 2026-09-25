@@ -20,6 +20,12 @@ import com.google.common.util.concurrent.RateLimiter;
 import java.time.Duration;
 import java.util.Objects;
 
+/**
+ * 速率限制 record：开关、限额、预热与节流策略。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @SuppressWarnings("UnstableApiUsage")
 public record RateLimit(boolean enabled, int limit, Duration rampUp, Throttling throttling) {
   public RateLimit {

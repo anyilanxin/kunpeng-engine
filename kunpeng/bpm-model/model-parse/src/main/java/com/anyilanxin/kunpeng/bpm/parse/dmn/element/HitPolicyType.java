@@ -23,7 +23,7 @@ import com.anyilanxin.kunpeng.bpm.model.dmn.HitPolicy;
  * 决策表命中策略（HitPolicy）类型枚举，将 DMN 模型中的 HitPolicy 与可选的内置聚合器 （BuiltinAggregator）组合映射为运行时使用的命中策略类型。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public enum HitPolicyType {
   /** 唯一命中（Unique） */

@@ -18,6 +18,12 @@ package com.anyilanxin.kunpeng.structpack.property;
 
 import com.anyilanxin.kunpeng.structpack.value.BooleanValue;
 
+/**
+ * 布尔属性：structpack 布尔字段的编解码。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class BooleanProperty extends BaseProperty<BooleanValue> {
 
   public boolean getValue() {

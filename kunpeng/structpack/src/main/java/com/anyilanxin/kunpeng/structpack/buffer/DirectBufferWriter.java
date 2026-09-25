@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.structpack.buffer;
 import org.agrona.DirectBuffer;
 import org.agrona.MutableDirectBuffer;
 
-/** 向 direct buffer 序列化的对象契约 */
+/**
+ * 向 direct buffer 序列化的对象契约。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class DirectBufferWriter implements BufferWriter {
   protected DirectBuffer buffer;
   protected int offset;

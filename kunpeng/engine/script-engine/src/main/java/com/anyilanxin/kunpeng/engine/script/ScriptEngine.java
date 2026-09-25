@@ -17,8 +17,10 @@
 package com.anyilanxin.kunpeng.engine.script;
 
 /**
+ * 脚本引擎接口：表达式编译与求值的统一入口。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface ScriptEngine {
 

@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.rocksdb;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** rocksdb 模块统一日志器定义 */
+/**
+ * rocksdb 模块统一日志器定义。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class RocksdbLoggers {
   public static final Logger ROCKSDB_LOGGER =
       LoggerFactory.getLogger("com.anyilanxin.kunpeng.rocksdb");

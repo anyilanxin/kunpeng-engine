@@ -17,7 +17,9 @@
 package com.anyilanxin.kunpeng.engine.script.impl.qlexpress;
 
 /**
+ * QLExpress 对象函数接口：带对象上下文的成员函数。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface QLObjectFunction {}

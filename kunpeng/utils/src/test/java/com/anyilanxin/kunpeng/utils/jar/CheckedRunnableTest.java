@@ -28,7 +28,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.anyilanxin.kunpeng.utils.CheckedRunnable;
 import org.junit.jupiter.api.Test;
 
-/** {@link CheckedRunnable} 单元测试 */
+/**
+ * {@link CheckedRunnable} 单元测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class CheckedRunnableTest {
 
   @Test

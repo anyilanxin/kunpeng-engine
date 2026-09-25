@@ -19,16 +19,18 @@ package com.anyilanxin.kunpeng.repository.admin.modules.admin.applier.execution.
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminDispatchPlanExecutionRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.admin.AdminDispatchPlanExecutionLifeCycle;
 import com.anyilanxin.kunpeng.repository.admin.AdminRepository;
-import com.anyilanxin.kunpeng.repository.admin.modules.admin.MutableRepositoryAdmin;
+import com.anyilanxin.kunpeng.repository.admin.modules.admin.MutableAdminRepository;
 import com.anyilanxin.kunpeng.repository.admin.modules.admin.applier.execution.AdminDispatchPlanExecutionApplier;
 
 /**
+ * 调度执行明细失败事件应用器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class AdminDispatchPlanExecutionFailedApplierImpl
     implements AdminDispatchPlanExecutionApplier {
-  private final MutableRepositoryAdmin repositoryAdmin;
+  private final MutableAdminRepository repositoryAdmin;
 
   public AdminDispatchPlanExecutionFailedApplierImpl(final AdminRepository repository) {
     repositoryAdmin = repository.adminRepository();

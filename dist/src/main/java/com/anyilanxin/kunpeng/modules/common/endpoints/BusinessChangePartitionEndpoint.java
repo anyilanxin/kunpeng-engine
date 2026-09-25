@@ -24,7 +24,7 @@ import org.springframework.boot.actuate.endpoint.annotation.WriteOperation;
  * 业务集群分区数量修改 Actuator 端点（/actuator/businessChangePartition）：apply=false 仅生成调度计划预览。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @Endpoint(id = "businessChangePartition")
 public class BusinessChangePartitionEndpoint {

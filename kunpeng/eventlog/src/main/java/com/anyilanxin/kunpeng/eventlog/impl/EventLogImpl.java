@@ -32,7 +32,12 @@ import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Clock;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-/** {@link EventLog} 实现：恢复（seekToEnd 找回 lastPosition）→ 装配定序器/流控 → 提交通知分发。 */
+/**
+ * {@link EventLog} 实现：恢复（seekToEnd 找回 lastPosition）→ 装配定序器/流控 → 提交通知分发。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class EventLogImpl implements EventLog {
 
   private final EventStore store;

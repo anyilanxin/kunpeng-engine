@@ -25,7 +25,12 @@ import org.agrona.MutableDirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
 import org.junit.jupiter.api.Test;
 
-/** kvstore 类型体系（flyweight 编解码）的往返与格式约定测试 */
+/**
+ * kvstore 类型体系（flyweight 编解码）的往返与格式约定测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class KvStoreTypesTest {
 
   private static final int OFFSET = 7; // 故意不从 0 开始，验证偏移计算

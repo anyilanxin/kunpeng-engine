@@ -17,8 +17,10 @@
 package com.anyilanxin.kunpeng.repository.admin;
 
 /**
+ * 管理面仓储应用器注册接口：汇总各域应用器的装配入口。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface AdminRegisterRepositoryAppliers extends AdminRepositoryAppliers {
   AdminRegisterRepositoryAppliers register(final AdminApplier applier);

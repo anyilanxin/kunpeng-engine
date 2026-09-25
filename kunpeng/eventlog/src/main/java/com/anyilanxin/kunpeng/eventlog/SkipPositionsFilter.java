@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.eventlog;
 import java.util.Set;
 import org.agrona.collections.LongHashSet;
 
-/** 按 position 集合跳过条目的过滤器（导出回放时跳过已导出的批） */
+/**
+ * 按 position 集合跳过条目的过滤器（导出回放时跳过已导出的批）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class SkipPositionsFilter implements EntryFilter {
 
   private final LongHashSet positionsToSkip;

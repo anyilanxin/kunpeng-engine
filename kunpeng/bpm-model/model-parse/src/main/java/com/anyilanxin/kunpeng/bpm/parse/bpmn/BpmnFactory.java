@@ -21,7 +21,12 @@ import com.anyilanxin.kunpeng.engine.script.ScriptEngine;
 import com.anyilanxin.kunpeng.engine.script.ScriptEngineFactory;
 import org.springframework.beans.factory.BeanFactory;
 
-/** BPMN 解析组件工厂：创建模型转换器与模型校验器。 */
+/**
+ * BPMN 解析组件工厂：创建模型转换器与模型校验器。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class BpmnFactory {
 
   private BpmnFactory() {}

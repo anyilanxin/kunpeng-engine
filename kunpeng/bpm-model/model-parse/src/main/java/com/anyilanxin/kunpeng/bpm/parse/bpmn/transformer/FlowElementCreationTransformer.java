@@ -83,6 +83,9 @@ import java.util.function.Function;
  * 流程元素实例化转换器：按模型元素类型创建对应的运行时元素骨架并登记到当前流程。
  *
  * <p>实例化时同步搬运通用属性（名称、文档、扩展属性、动态扩展表达式）；类型到构造器的映射表静态构建一次、全部转换共享。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class FlowElementCreationTransformer implements ElementTransformer<FlowElement> {
 

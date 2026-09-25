@@ -25,6 +25,9 @@ import java.util.function.Function;
  * 捕获事件元素的运行时模型（中间捕获事件、开始事件、边界事件的共同基类）。
  *
  * <p>依据事件定义装配一种事件载荷：消息、定时、错误、升级、信号、链接或补偿；由 {@code isXxx()} 系列方法判定事件语义。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class BpmnCatchEventElement extends BpmnFlowNode {
   /** 消息载荷，非消息事件为 null */

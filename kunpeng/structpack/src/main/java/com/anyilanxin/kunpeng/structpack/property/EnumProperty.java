@@ -22,6 +22,9 @@ import com.anyilanxin.kunpeng.structpack.value.EnumValue;
  * 枚举属性：ordinal 整数编解码。
  *
  * <p>⚠️ wire 契约：ordinal 一旦上线即冻结，枚举常量只能尾部追加。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class EnumProperty<E extends Enum<E>> extends BaseProperty<EnumValue<E>> {
 

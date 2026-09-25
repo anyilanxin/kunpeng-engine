@@ -21,8 +21,10 @@ import com.anyilanxin.kunpeng.protocol.admin.AdminValueType;
 import com.anyilanxin.kunpeng.protocol.common.api.RequestRecordValue;
 
 /**
+ * 客户端请求抽象：承载请求 Record 与目标主题。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface ClientRequest<VALUE extends RequestRecordValue> {
   long key();

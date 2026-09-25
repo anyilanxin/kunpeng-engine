@@ -19,16 +19,18 @@ package com.anyilanxin.kunpeng.repository.admin.modules.business.applier.executi
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanExecutionRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.business.BusinessDispatchPlanExecutionLifeCycle;
 import com.anyilanxin.kunpeng.repository.admin.AdminRepository;
-import com.anyilanxin.kunpeng.repository.admin.modules.business.MutableRepositoryBusiness;
+import com.anyilanxin.kunpeng.repository.admin.modules.business.MutableBusinessRepository;
 import com.anyilanxin.kunpeng.repository.admin.modules.business.applier.execution.BusinessDispatchPlanExecutionApplier;
 
 /**
+ * 业务面调度执行明细已执行事件应用器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class BusinessDispatchPlanExecutionExecutedApplierImpl
     implements BusinessDispatchPlanExecutionApplier {
-  private final MutableRepositoryBusiness repositoryBusiness;
+  private final MutableBusinessRepository repositoryBusiness;
 
   public BusinessDispatchPlanExecutionExecutedApplierImpl(final AdminRepository repository) {
     repositoryBusiness = repository.businessRepository();

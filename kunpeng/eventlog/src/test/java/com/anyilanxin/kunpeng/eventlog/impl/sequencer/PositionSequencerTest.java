@@ -42,7 +42,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
-/** 无锁定序器测试：并发唯一性/连续性 + 提交有序 + 拒绝路径 + 烧毁推进 + 看门狗 */
+/**
+ * 无锁定序器测试：并发唯一性/连续性 + 提交有序 + 拒绝路径 + 烧毁推进 + 看门狗。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @DisplayName("PositionSequencer 无锁定序")
 class PositionSequencerTest {
 

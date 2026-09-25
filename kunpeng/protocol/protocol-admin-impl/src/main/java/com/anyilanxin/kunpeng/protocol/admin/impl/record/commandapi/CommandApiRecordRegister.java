@@ -21,8 +21,10 @@ import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.business.Bus
 import com.anyilanxin.kunpeng.protocol.admin.record.RecordValueMapperRegister;
 
 /**
+ * 管理协议 API Record 总注册器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class CommandApiRecordRegister {
   private CommandApiRecordRegister() {}

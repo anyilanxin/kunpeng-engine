@@ -20,7 +20,12 @@ import com.anyilanxin.kunpeng.scheduler.clock.ActorClock;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/** 平台线程池（CPU/IO 各一实例）：固定 runner + 随机路由 + 软上限溢出转移 */
+/**
+ * 平台线程池（CPU/IO 各一实例）：固定 runner + 随机路由 + 软上限溢出转移。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class RunnerPool implements CellPool {
 
   private final StealingRunner[] runners;

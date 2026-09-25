@@ -21,7 +21,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.Period;
 import org.junit.jupiter.api.Test;
 
-/** 通过表达式引擎端到端测试 {@code yearsAndMonthsDuration()} 函数。 */
+/**
+ * 通过表达式引擎端到端测试 {@code yearsAndMonthsDuration()} 函数。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class YearsAndMonthsDurationFunctionTest extends FunctionTestBase {
 
   @Test

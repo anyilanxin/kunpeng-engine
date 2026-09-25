@@ -34,8 +34,10 @@ import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 
 /**
+ * 集群调度客户端默认实现。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class DefaultClusterDispatchClient implements ClusterDispatchClient {
   private final BrokerClientImpl brokerClient;

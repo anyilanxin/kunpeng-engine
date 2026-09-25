@@ -27,6 +27,9 @@ import java.util.function.Supplier;
  * 类型化集合值：[count varint][元素 tagless 编码...]（写入侧去重）
  *
  * <p>元素槽位池化复用。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class SetValue<T extends BaseValue> extends BaseValue implements Iterable<T> {
 

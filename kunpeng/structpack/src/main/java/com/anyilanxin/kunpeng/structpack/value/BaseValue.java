@@ -23,6 +23,9 @@ import com.anyilanxin.kunpeng.structpack.PackerWriter;
  * 值载体基类：只管数据与 structpack 编解码，不管 key/默认值/isSet（那是 {@code BaseProperty} 的职责）。
  *
  * <p>所有实现遵循：预分配复用（{@link #reset()} 后可重读）、读路径零分配（字符串/二进制为零拷贝视图）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public abstract class BaseValue {
 

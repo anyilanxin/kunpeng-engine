@@ -25,7 +25,12 @@ import com.anyilanxin.kunpeng.scheduler.startup.StartupStep;
 import java.util.function.BiConsumer;
 import org.slf4j.Logger;
 
-/** broker 启动步骤的抽象基类，为基于 future 的启动/关闭流程提供公共辅助方法。 */
+/**
+ * broker 启动步骤的抽象基类，为基于 future 的启动/关闭流程提供公共辅助方法。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public abstract class AbstractBrokerStartupStep implements StartupStep<BrokerStartupContext> {
   protected static final Logger LOGGER = BrokerLoggers.BROKER_LOGGER;
 

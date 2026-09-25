@@ -17,8 +17,10 @@
 package com.anyilanxin.kunpeng.protocol.admin;
 
 /**
+ * 管理协议值类型枚举。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public enum AdminValueType {
   // 协议值必须全局唯一：AdminValueType.valueOf(short) 按声明顺序返回第一个匹配，

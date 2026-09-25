@@ -18,7 +18,12 @@ package com.anyilanxin.kunpeng.kvstore.types;
 
 import java.util.Collection;
 
-/** 表示对象中包含外键（{@link ForeignKeyType}），供一致性校验时收集引用关系 */
+/**
+ * 表示对象中包含外键（{@link ForeignKeyType}），供一致性校验时收集引用关系。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface ContainsForeignKeys {
 
   /**

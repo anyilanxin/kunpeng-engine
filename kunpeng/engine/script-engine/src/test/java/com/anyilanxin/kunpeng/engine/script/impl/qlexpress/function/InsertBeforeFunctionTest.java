@@ -26,6 +26,9 @@ import org.junit.jupiter.api.Test;
  * <p><b>BUG MARKER</b>：FEEL 规范定义 {@code insertBefore(list, position, item)} 的位置从 <b>1</b> 开始
  * （例：{@code insertBefore([1,3], 1, 2) -> [2, 1, 3]}），但当前实现 {@link InsertBeforeFunction}
  * 用 0 基索引（{@code insertBefore([1,3], 1, 2) -> [1, 2, 3]}）。下方断言按 FEEL 规范写，预期 fail。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 class InsertBeforeFunctionTest extends FunctionTestBase {
 

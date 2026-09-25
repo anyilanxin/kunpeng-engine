@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.scheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** 统一 logger 命名 */
+/**
+ * 统一 logger 命名。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class SchedulerLoggers {
   public static final Logger ACTOR_LOGGER =
       LoggerFactory.getLogger("com.anyilanxin.kunpeng.scheduler.actor");

@@ -21,9 +21,13 @@ import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
 import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
 import com.anyilanxin.kunpeng.configuration.cluster.ClusterCfg;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
+import com.anyilanxin.kunpeng.sink.config.SinksConfig;
+import com.anyilanxin.kunpeng.sink.registry.SinkLoadException;
+import com.anyilanxin.kunpeng.sink.registry.SinkRegistry;
 import com.anyilanxin.kunpeng.utils.LogUtil;
 import com.anyilanxin.kunpeng.utils.VersionUtil;
 import com.anyilanxin.kunpeng.utils.exception.UncheckedExecutionException;
+import com.anyilanxin.kunpeng.utils.jar.ExternalJarLoadException;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.util.Collections;
 import java.util.Map;
@@ -31,7 +35,12 @@ import java.util.concurrent.CompletableFuture;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.BeanFactory;
 
-/** Broker 核心类，负责组装并启动 broker 所需的各种组件，并管理其启动与关闭生命周期。 */
+/**
+ * Broker 核心类，负责组装并启动 broker 所需的各种组件，并管理其启动与关闭生命周期。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class Broker implements AutoCloseable {
   private static final String BROKER_ID_LOG_PROPERTY = "broker-id";
   private static final Logger LOGGER = BrokerLoggers.BROKER_LOGGER;
@@ -39,8 +48,7 @@ public final class Broker implements AutoCloseable {
   private boolean isClosed = false;
   private CompletableFuture<Broker> startFuture;
   private final BrokerStartupActor brokerStartupActor;
-  private final BrokerCfg brokerCfg;
-  private final ClusterCfg clusterCfg;
+  private final String brokerId;
   private final BrokerContext brokerContext;
 
   public Broker(
@@ -50,13 +58,19 @@ public final class Broker implements AutoCloseable {
       final BrokerCfg brokerCfg,
       final AtomixCluster atomixCluster,
       final MeterRegistry meterRegistry) {
-    this.clusterCfg = clusterCfg;
-    this.brokerCfg = brokerCfg;
+    brokerId = clusterCfg.getNodeId();
+    final SinksConfig sinksConfig = buildSinksConfig(brokerCfg);
     final String brokerId = String.format("Broker-%s", clusterCfg.getNodeId());
     diagnosticContext = Collections.singletonMap(BROKER_ID_LOG_PROPERTY, brokerId);
     brokerContext =
         new BrokerContextImpl(
-            atomixCluster, brokerCfg, clusterCfg, schedulingService, meterRegistry);
+            atomixCluster,
+            brokerCfg,
+            clusterCfg,
+            schedulingService,
+            meterRegistry,
+            beanFactory,
+            sinksConfig);
     brokerStartupActor = new BrokerStartupActor(brokerContext);
     schedulingService.submitActor(brokerStartupActor);
   }
@@ -72,8 +86,7 @@ public final class Broker implements AutoCloseable {
 
   private void logBrokerStart() {
     if (LOGGER.isInfoEnabled()) {
-      LOGGER.info(
-          "Starting broker {} version {}", clusterCfg.getNodeId(), VersionUtil.getVersion());
+      LOGGER.info("Starting broker {} version {}", brokerId, VersionUtil.getVersion());
     }
   }
 
@@ -82,12 +95,28 @@ public final class Broker implements AutoCloseable {
       brokerStartupActor.start().join();
       startFuture.complete(this);
     } catch (final Exception bootStrapException) {
-      LOGGER.error("Failed to start broker {}!", clusterCfg.getNodeId(), bootStrapException);
+      LOGGER.error("Failed to start broker {}!", brokerId, bootStrapException);
       final UncheckedExecutionException exception =
           new UncheckedExecutionException("Failed to start broker", bootStrapException);
       startFuture.completeExceptionally(exception);
       throw exception;
     }
+  }
+
+  private SinksConfig buildSinksConfig(final BrokerCfg cfg) {
+    final var sinkEntries = cfg.getSinks().entrySet();
+    final SinkRegistry sinkRegistry = new SinkRegistry();
+    // load and validate sinks
+    for (final var sinkEntry : sinkEntries) {
+      final var id = sinkEntry.getKey();
+      final var sinkCfg = sinkEntry.getValue();
+      try {
+        sinkRegistry.load(id, sinkCfg);
+      } catch (final SinkLoadException | ExternalJarLoadException e) {
+        throw new IllegalStateException("Failed to load sink with configuration: " + sinkCfg, e);
+      }
+    }
+    return new SinksConfig(cfg.isEnableDebugSink(), sinkRegistry);
   }
 
   public BrokerContext getBrokerContext() {

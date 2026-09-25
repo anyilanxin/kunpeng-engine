@@ -27,6 +27,12 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.Objects;
 
+/**
+ * cron 定时器：按 cron 表达式计算触发时间。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class CronTimer implements Timer {
 
   private final Cron cron;

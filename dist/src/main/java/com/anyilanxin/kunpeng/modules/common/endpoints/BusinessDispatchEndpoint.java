@@ -24,7 +24,7 @@ import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
  * 业务面调度查询 Actuator 端点（/actuator/businessDispatch）：查询业务集群元数据。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @Endpoint(id = "businessDispatch")
 public class BusinessDispatchEndpoint {

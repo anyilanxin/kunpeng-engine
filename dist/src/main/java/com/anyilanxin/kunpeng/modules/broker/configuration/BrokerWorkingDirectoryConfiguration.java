@@ -29,6 +29,12 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
 
+/**
+ * broker 工作目录配置。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @Configuration(proxyBeanMethods = false)
 @Profile(value = {"broker", "restore"})
 public class BrokerWorkingDirectoryConfiguration {

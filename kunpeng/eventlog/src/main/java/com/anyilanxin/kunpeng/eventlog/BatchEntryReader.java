@@ -18,7 +18,12 @@ package com.anyilanxin.kunpeng.eventlog;
 
 import java.util.Iterator;
 
-/** 按源 position 聚合的批读（回放/重建场景）：同一 sourcePosition 的连续条目归为一个 {@link Batch}，批间按 sourcePosition 严格递增。 */
+/**
+ * 按源 position 聚合的批读（回放/重建场景）：同一 sourcePosition 的连续条目归为一个 {@link Batch}，批间按 sourcePosition 严格递增。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface BatchEntryReader extends Iterator<BatchEntryReader.Batch>, AutoCloseable {
 
   @Override

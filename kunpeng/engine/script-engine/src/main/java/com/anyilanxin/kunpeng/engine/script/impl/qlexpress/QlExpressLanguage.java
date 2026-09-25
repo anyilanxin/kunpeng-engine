@@ -35,7 +35,7 @@ import org.springframework.beans.factory.BeanFactory;
  * al express language
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public final class QlExpressLanguage implements ScriptLanguage {
   private final BeanFactory beanFactory;

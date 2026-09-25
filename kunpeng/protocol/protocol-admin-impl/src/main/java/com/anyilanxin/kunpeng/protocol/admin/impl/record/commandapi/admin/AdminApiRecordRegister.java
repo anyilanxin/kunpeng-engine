@@ -25,8 +25,10 @@ import com.anyilanxin.kunpeng.protocol.admin.record.RecordValueMapperRegister;
 import com.anyilanxin.kunpeng.protocol.admin.record.commandapi.admin.AdminDispatchApiValueLifeCycle;
 
 /**
+ * 管理面 API Record 注册器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class AdminApiRecordRegister {
   private AdminApiRecordRegister() {}

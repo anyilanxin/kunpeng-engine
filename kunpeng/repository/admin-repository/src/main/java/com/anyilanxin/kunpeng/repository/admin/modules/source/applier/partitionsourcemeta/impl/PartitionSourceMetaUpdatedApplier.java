@@ -19,15 +19,17 @@ package com.anyilanxin.kunpeng.repository.admin.modules.source.applier.partition
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.source.PartitionSourceMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.source.PartitionSourceMetaLifeCycle;
 import com.anyilanxin.kunpeng.repository.admin.AdminRepository;
-import com.anyilanxin.kunpeng.repository.admin.modules.source.MutableRepositorySource;
+import com.anyilanxin.kunpeng.repository.admin.modules.source.MutableSourceRepository;
 import com.anyilanxin.kunpeng.repository.admin.modules.source.applier.partitionsourcemeta.PartitionSourceMetaApplier;
 
 /**
+ * 分区 source 元数据更新事件应用器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class PartitionSourceMetaUpdatedApplier implements PartitionSourceMetaApplier {
-  private final MutableRepositorySource repositorySource;
+  private final MutableSourceRepository repositorySource;
 
   public PartitionSourceMetaUpdatedApplier(final AdminRepository repository) {
     repositorySource = repository.sourceRepository();

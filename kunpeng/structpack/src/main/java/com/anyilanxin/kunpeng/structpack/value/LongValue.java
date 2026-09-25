@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.structpack.value;
 import com.anyilanxin.kunpeng.structpack.PackerReader;
 import com.anyilanxin.kunpeng.structpack.PackerWriter;
 
-/** long 值：zigzag varint 编码（常见小值 1-2 字节） */
+/**
+ * long 值：zigzag varint 编码（常见小值 1-2 字节）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class LongValue extends BaseValue {
 
   private long value;

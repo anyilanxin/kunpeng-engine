@@ -27,7 +27,7 @@ import lombok.ToString;
  * 固定分区配置，定义分区 ID 及其包含的 raft 节点列表。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @Getter
 @Setter

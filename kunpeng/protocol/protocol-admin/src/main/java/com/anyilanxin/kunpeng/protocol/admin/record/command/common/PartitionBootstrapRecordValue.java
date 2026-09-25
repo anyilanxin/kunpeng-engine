@@ -23,7 +23,7 @@ import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionInfoMetaRec
  * 分区引导命令记录契约，描述初始化目标分区组所需的拓扑元数据。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface PartitionBootstrapRecordValue extends PartitionExecutionRecordValue {
   /** 引导期分区拓扑（主成员单节点起步，其余成员由 JOIN 明细补齐） */

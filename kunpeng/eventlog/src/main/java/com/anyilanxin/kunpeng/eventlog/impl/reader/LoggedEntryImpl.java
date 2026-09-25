@@ -20,7 +20,12 @@ import com.anyilanxin.kunpeng.eventlog.LoggedEntry;
 import com.anyilanxin.kunpeng.eventlog.serialize.BatchFrameDecoder;
 import org.agrona.DirectBuffer;
 
-/** 读侧条目视图实现：从解码器当前条目拷贝标量与区间（视图零拷贝，实例复用） */
+/**
+ * 读侧条目视图实现：从解码器当前条目拷贝标量与区间（视图零拷贝，实例复用）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class LoggedEntryImpl implements LoggedEntry {
 
   private DirectBuffer block;

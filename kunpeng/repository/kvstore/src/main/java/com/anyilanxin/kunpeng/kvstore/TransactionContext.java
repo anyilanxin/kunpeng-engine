@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.kvstore;
 
-/** 表示在事务中与数据库交互的事务上下文 */
+/**
+ * 表示在事务中与数据库交互的事务上下文。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface TransactionContext {
 
   /**

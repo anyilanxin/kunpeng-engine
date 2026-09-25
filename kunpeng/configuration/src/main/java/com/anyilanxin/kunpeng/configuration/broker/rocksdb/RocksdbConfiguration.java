@@ -22,7 +22,7 @@ import java.util.Properties;
  * RocksDB 运行时配置，供 rocksdb 模块构建 DB/列族 Options 使用。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public final class RocksdbConfiguration {
 

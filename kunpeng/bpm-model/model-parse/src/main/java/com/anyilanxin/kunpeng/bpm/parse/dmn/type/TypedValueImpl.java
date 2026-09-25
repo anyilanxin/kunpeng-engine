@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.bpm.parse.dmn.type;
 
 import java.util.Objects;
 
-/** {@link TypedValue} 的不可变实现，同时持有实际值与其 {@link ValueType}。 */
+/**
+ * {@link TypedValue} 的不可变实现，同时持有实际值与其 {@link ValueType}。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 final class TypedValueImpl implements TypedValue {
   private final Object value;
   private final ValueType type;

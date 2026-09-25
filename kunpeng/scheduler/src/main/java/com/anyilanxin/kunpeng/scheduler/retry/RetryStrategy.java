@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.scheduler.retry;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 import java.util.function.BooleanSupplier;
 
-/** 重试策略 */
+/**
+ * 重试策略。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface RetryStrategy {
 
   ActorFuture<Boolean> runWithRetry(OperationToRetry callable);

@@ -31,6 +31,9 @@ import org.slf4j.LoggerFactory;
  * ExternalJarClassLoader}；移除路径时仅当该加载器不再被任何路径引用才真正关闭。
  *
  * <p>实例方法均线程安全（方法级同步）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class ExternalJarRepository implements AutoCloseable {
 

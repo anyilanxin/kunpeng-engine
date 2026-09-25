@@ -28,7 +28,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.stream.Collectors;
 
-/** 集群配置工厂，将 ClusterCfg 映射为集群运行时所需的 ClusterConfig。 */
+/**
+ * 集群配置工厂，将 ClusterCfg 映射为集群运行时所需的 ClusterConfig。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class ClusterConfigFactory {
 
   public ClusterConfig mapConfiguration(final ClusterCfg cluster, final boolean broker) {

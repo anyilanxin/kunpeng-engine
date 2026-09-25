@@ -25,8 +25,10 @@ import java.util.Map;
 import java.util.Set;
 
 /**
+ * 脚本表达式接口：单条表达式的编译产物与求值。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface ScriptExpression {
 

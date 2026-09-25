@@ -18,7 +18,12 @@ package com.anyilanxin.kunpeng.bpm.parse.bpmn.element;
 
 import com.anyilanxin.kunpeng.engine.script.ScriptExpression;
 
-/** 中间抛出事件的运行时模型：支持无操作、消息抛出（任务型或发布型）、链接、升级、信号与补偿抛出。 */
+/**
+ * 中间抛出事件的运行时模型：支持无操作、消息抛出（任务型或发布型）、链接、升级、信号与补偿抛出。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class BpmnIntermediateThrowEvent extends BpmnFlowNode {
   /** 任务属性（任务型消息抛出），未声明为 null */
   private BpmnJobProperties jobProperties;

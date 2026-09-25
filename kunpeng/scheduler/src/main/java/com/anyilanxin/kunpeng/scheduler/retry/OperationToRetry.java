@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.scheduler.retry;
 
-/** 可重试操作 */
+/**
+ * 可重试操作。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface OperationToRetry {
   boolean run() throws Exception;
 }

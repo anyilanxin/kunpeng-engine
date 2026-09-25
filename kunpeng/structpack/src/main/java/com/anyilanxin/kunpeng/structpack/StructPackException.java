@@ -18,6 +18,12 @@ package com.anyilanxin.kunpeng.structpack;
 
 import com.anyilanxin.kunpeng.structpack.value.StringValue;
 
+/**
+ * structpack 序列化异常。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class StructPackException extends RuntimeException {
 
   public StructPackException(final String message) {

@@ -23,8 +23,10 @@ import com.anyilanxin.kunpeng.structpack.buffer.BufferReader;
 import org.agrona.DirectBuffer;
 
 /**
+ * API 请求读取器：从二进制缓冲解码 API 请求。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface ApiRequestReader extends BufferReader {
 

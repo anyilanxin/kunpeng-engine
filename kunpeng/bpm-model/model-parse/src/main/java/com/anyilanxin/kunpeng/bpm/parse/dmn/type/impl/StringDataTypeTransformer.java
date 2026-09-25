@@ -25,6 +25,7 @@ import com.anyilanxin.kunpeng.bpm.parse.dmn.type.Variables;
  * 将 {@link Object} 类型的值转换为 {@link StringValue}。
  *
  * @author Philipp Ossler
+ * @since 2026.9.0
  */
 public class StringDataTypeTransformer implements DmnDataTypeTransformer {
 

@@ -36,7 +36,7 @@ import org.agrona.DirectBuffer;
  * 分区离开命令记录，携带分区类型、执行类型、发起执行的节点 ID 及目标分区组与分区 ID。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @AutoDeclareProperties
 public class PartitionStopRecord extends UnifiedRecordValue<PartitionStopRecord>

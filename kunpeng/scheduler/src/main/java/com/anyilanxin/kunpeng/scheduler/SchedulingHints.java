@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.scheduler;
 
-/** 调度提示：决定 actor 的线程组（值序与线程命名兼容） */
+/**
+ * 调度提示：决定 actor 的线程组（值序与线程命名兼容）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public enum SchedulingHints {
   CPU_BOUND,
   IO_BOUND,

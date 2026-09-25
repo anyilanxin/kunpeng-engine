@@ -22,6 +22,8 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BpmnModelElementInstance;
  * BPMN 模型元素转换器：负责一种模型元素类型到运行时元素的转换。
  *
  * @param <T> 本转换器处理的模型元素类型
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface ElementTransformer<T extends BpmnModelElementInstance> {
 

@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.structpack.value;
 import com.anyilanxin.kunpeng.structpack.PackerReader;
 import com.anyilanxin.kunpeng.structpack.PackerWriter;
 
-/** int 值：zigzag varint 编码 */
+/**
+ * int 值：zigzag varint 编码。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class IntegerValue extends BaseValue {
 
   private int value;

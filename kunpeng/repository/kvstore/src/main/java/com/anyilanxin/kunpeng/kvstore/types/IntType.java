@@ -24,6 +24,7 @@ import org.agrona.MutableDirectBuffer;
  * int 类型的 key/value，按大端序 4 字节读写
  *
  * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class IntType implements StoreKey, StoreValue {
 

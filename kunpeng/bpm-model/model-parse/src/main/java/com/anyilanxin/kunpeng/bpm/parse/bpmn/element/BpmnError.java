@@ -18,7 +18,12 @@ package com.anyilanxin.kunpeng.bpm.parse.bpmn.element;
 
 import com.anyilanxin.kunpeng.engine.script.ScriptExpression;
 
-/** 错误的运行时模型：错误码以表达式承载，静态表达式可提前解析为常量。 */
+/**
+ * 错误的运行时模型：错误码以表达式承载，静态表达式可提前解析为常量。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class BpmnError extends BpmnFlowElement {
   /** 已解析的静态错误码（含 errorRef 缺省时的空串），未解析为 null */
   private String errorCode;

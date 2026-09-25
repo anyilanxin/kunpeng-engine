@@ -18,6 +18,12 @@ package com.anyilanxin.kunpeng.configuration.broker.backpressure;
 
 import com.anyilanxin.kunpeng.configuration.broker.ConfigurationEntry;
 
+/**
+ * 备份流控配置。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class BackupCfg implements ConfigurationEntry {
 
   private boolean continuousBackups = false;

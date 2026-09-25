@@ -22,8 +22,10 @@ import io.micrometer.core.instrument.MeterRegistry;
 import java.util.Set;
 
 /**
+ * RocksDB 管理面仓储工厂。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public final class RocksdbAdminRepositoryFactory implements AdminRepositoryFactory {
   private final KvStore<AdminRepositoryColumnFamilies> db;

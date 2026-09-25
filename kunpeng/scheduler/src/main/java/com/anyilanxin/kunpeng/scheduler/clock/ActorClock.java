@@ -20,7 +20,12 @@ import com.anyilanxin.kunpeng.scheduler.core.CarrierContext;
 import java.time.Instant;
 import java.time.InstantSource;
 
-/** actor 时钟：由载体线程持有; 毫秒值每毫秒至多采样一次（由 update 推进）, 亚毫秒查询直接走 nanoTime */
+/**
+ * actor 时钟：由载体线程持有; 毫秒值每毫秒至多采样一次（由 update 推进）, 亚毫秒查询直接走 nanoTime。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface ActorClock extends InstantSource {
 
   /**

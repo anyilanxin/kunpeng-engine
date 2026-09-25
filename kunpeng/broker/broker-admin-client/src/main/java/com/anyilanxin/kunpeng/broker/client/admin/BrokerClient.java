@@ -22,8 +22,10 @@ import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 
 /**
+ * broker 客户端：网关与 broker 间请求-应答通信的统一入口。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
 public interface BrokerClient extends AutoCloseable {

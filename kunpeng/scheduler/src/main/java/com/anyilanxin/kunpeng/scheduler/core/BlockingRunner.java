@@ -22,7 +22,12 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-/** 阻塞动作外包池（cached pool; runBlocking 语义） */
+/**
+ * 阻塞动作外包池（cached pool; runBlocking 语义）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class BlockingRunner {
 
   private static final long DEFAULT_SHUTDOWN_SECONDS = 300;

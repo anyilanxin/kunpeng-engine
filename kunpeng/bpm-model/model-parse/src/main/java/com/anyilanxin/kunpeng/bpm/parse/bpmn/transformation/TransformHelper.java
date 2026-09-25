@@ -28,7 +28,12 @@ import java.time.Period;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 
-/** 转换辅助工具：把定时事件的三种表达式（时长/周期/时间点）编译为延迟到运行期执行的定时构建工厂。 */
+/**
+ * 转换辅助工具：把定时事件的三种表达式（时长/周期/时间点）编译为延迟到运行期执行的定时构建工厂。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class TransformHelper {
 
   private TransformHelper() {}

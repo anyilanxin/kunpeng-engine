@@ -28,6 +28,9 @@ import org.agrona.DirectBuffer;
  *
  * <p>游标不变量：{@code peeked == true ⟺ entry 视图 == 解码器当前条目}。 peekNext 惰性推进解码器并装载视图；next 消费视图（peeked 置
  * false，解码器原地不动）； 下一次 peekNext 再推进。返回的视图实例复用，仅到下一次 next 前有效。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class EventLogReaderImpl implements EventLogReader {
 
@@ -91,7 +94,7 @@ public final class EventLogReaderImpl implements EventLogReader {
     checkOpen();
     if (position < 0) {
       // 负哨兵: 从头开始即恢复成功——空日志下等待新事件即可, 不视为致命错误（与旧实现一致,
-      // 否则新数据目录启动时 Exporter 恢复直接失败）
+      // 否则新数据目录启动时 Sink 恢复直接失败）
       seekToFirstEntry();
       return true;
     }

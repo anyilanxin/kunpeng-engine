@@ -41,8 +41,10 @@ import com.anyilanxin.kunpeng.protocol.admin.record.command.source.PartitionSour
 import com.anyilanxin.kunpeng.protocol.admin.record.command.source.PartitionSourceMetaLifeCycle;
 
 /**
+ * 管理协议命令 Record 注册器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class CommandRecordRegister {
   private CommandRecordRegister() {}

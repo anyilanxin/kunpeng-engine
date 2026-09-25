@@ -18,11 +18,38 @@ plugins {
     id 'kunpeng.build-publish'
 }
 
-description = "Gateway Grpc"
+description = "Kunpeng Gateway Grpc"
 
 configure(jarInfo) {
     archiveName = "kunpeng-gateway-grpc"
 }
-dependencies {
 
+
+dependencies {
+    api project(':kunpeng:gateway:gateway-protocol')
+    api project(':kunpeng:gateway:gateway-job')
+    api project(':kunpeng:cluster:cluster')
+    implementation project(':kunpeng:cluster:cluster-config')
+    api project(':kunpeng:broker:broker-client')
+    implementation project(':kunpeng:configuration')
+    implementation project(':kunpeng:structpack')
+    implementation project(':kunpeng:scheduler')
+    implementation project(':kunpeng:protocol:protocol-business')
+    implementation project(':kunpeng:protocol:protocol-business-impl')
+    implementation project(':kunpeng:utils')
+
+    implementation 'org.agrona:agrona'
+    implementation 'tools.jackson.core:jackson-core'
+    implementation 'net.jcip:jcip-annotations'
+    implementation 'org.springframework:spring-core'
+    implementation 'org.apache.commons:commons-lang3'
+    implementation 'io.micrometer:micrometer-core'
+    implementation 'io.micrometer:micrometer-commons'
+    implementation 'io.grpc:grpc-api'
+    implementation 'io.grpc:grpc-netty'
+    implementation 'io.grpc:grpc-stub'
+    implementation 'io.grpc:grpc-protobuf'
+    implementation 'io.grpc:grpc-services'
+    implementation 'com.google.protobuf:protobuf-java'
+    implementation 'com.google.api.grpc:proto-google-common-protos'
 }

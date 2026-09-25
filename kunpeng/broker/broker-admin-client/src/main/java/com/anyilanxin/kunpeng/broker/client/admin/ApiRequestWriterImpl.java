@@ -26,8 +26,10 @@ import org.agrona.DirectBuffer;
 import org.agrona.MutableDirectBuffer;
 
 /**
+ * API 请求写入器默认实现。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class ApiRequestWriterImpl implements ApiRequestWriter {
   private final AdminApiRequestEncoder encoder = new AdminApiRequestEncoder();

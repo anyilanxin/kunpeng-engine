@@ -22,6 +22,9 @@ import org.slf4j.Logger;
 /**
  * 处理所有 Throwable，并在遇到 {@link VirtualMachineError} 时退出 JVM。它也可作为 {@link UncaughtExceptionHandler
  * 未捕获异常处理器}使用，例如用作 {@link Thread#setDefaultUncaughtExceptionHandler 默认未捕获异常处理器}。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class VirtualMachineErrorHandler
     implements FatalErrorHandler, UncaughtExceptionHandler {

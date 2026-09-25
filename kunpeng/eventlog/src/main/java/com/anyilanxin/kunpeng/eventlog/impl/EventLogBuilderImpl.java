@@ -24,7 +24,12 @@ import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Clock;
 import java.util.Objects;
 
-/** {@link com.anyilanxin.kunpeng.eventlog.EventLogBuilder} 默认实现 */
+/**
+ * {@link com.anyilanxin.kunpeng.eventlog.EventLogBuilder} 默认实现。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class EventLogBuilderImpl implements EventLogBuilder {
 
   private EventStore store;

@@ -29,7 +29,7 @@ import org.springframework.boot.context.properties.NestedConfigurationProperty;
  * 集群网络信息配置，定义起始端口、端口偏移、优先地址及各类消息配置。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @Getter
 @Setter

@@ -21,7 +21,12 @@ import static org.assertj.core.api.Assertions.within;
 
 import org.junit.jupiter.api.Test;
 
-/** 通过表达式引擎端到端测试 {@code log()} 函数（自然对数）。 */
+/**
+ * 通过表达式引擎端到端测试 {@code log()} 函数（自然对数）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class LogFunctionTest extends FunctionTestBase {
 
   @Test

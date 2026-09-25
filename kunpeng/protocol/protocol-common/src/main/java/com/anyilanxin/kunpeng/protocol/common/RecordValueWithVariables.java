@@ -18,7 +18,12 @@ package com.anyilanxin.kunpeng.protocol.common;
 
 import java.util.Map;
 
-/** 所有包含变量文档（variables document）的 RecordValue 的共享行为。 */
+/**
+ * 所有包含变量文档（variables document）的 RecordValue 的共享行为。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface RecordValueWithVariables extends RecordValue {
 
   /**

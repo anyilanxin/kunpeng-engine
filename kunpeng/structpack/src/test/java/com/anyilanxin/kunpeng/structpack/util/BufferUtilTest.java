@@ -21,7 +21,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/** BufferUtil 测试 */
+/**
+ * BufferUtil 测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @DisplayName("BufferUtil buffer 工具")
 class BufferUtilTest {
 

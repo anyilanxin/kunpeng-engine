@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
  * 年-月持续时间类型（yearMonthDuration）的一元测试转换器：区间语法转 between，比较运算符开头转比较表达式，其余转相等判断。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class YearMonthDurationTransform implements ExpressTransformer {
   private static final Pattern COMPARISON_PATTERN = Pattern.compile("^(==|>=|<=|>|<).+$");

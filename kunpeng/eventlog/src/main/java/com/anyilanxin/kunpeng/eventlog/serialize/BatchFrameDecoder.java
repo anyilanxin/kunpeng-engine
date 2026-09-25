@@ -24,6 +24,9 @@ import org.agrona.DirectBuffer;
  *
  * <p>校验策略 fail-fast：坏 magic/版本/长度前缀与 {@link #nextEntry()} 越界立即抛 {@link
  * IllegalArgumentException}（调用方包装为存储损坏异常）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class BatchFrameDecoder {
 

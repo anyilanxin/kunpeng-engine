@@ -24,7 +24,12 @@ import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnProcess;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.BpmnTransformContext;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.ElementTransformer;
 
-/** 边界事件转换器：推导事件语义并挂载到 attachedToRef 指向的宿主活动。 */
+/**
+ * 边界事件转换器：推导事件语义并挂载到 attachedToRef 指向的宿主活动。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class BoundaryEventTransformer implements ElementTransformer<BoundaryEvent> {
 
   /** 返回本转换器处理的模型元素类型。 */

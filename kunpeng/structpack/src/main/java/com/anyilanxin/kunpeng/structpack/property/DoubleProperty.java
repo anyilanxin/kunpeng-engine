@@ -18,6 +18,12 @@ package com.anyilanxin.kunpeng.structpack.property;
 
 import com.anyilanxin.kunpeng.structpack.value.DoubleValue;
 
+/**
+ * 双精度属性：structpack double 字段的编解码。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class DoubleProperty extends BaseProperty<DoubleValue> {
 
   public double getValue() {

@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.eventlog;
 
-/** 读过滤谓词（回放/导出场景跳过部分条目） */
+/**
+ * 读过滤谓词（回放/导出场景跳过部分条目）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @FunctionalInterface
 public interface EntryFilter {
 

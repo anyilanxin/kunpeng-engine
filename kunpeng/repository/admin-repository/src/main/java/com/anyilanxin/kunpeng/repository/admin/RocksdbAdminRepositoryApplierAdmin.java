@@ -26,8 +26,10 @@ import com.anyilanxin.kunpeng.repository.admin.modules.delayed.applier.Repositor
 import com.anyilanxin.kunpeng.repository.admin.modules.source.applier.RepositorySourceApplierRegister;
 
 /**
+ * RocksDB 管理面应用器集合实现：按 Record 类型分发应用器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
 final class RocksdbAdminRepositoryApplierAdmin implements AdminRegisterRepositoryAppliers {

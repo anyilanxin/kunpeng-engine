@@ -27,7 +27,7 @@ import org.springframework.boot.context.properties.NestedConfigurationProperty;
  * 网络信息配置基类，包含端口、主机地址与安全配置。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @Getter
 @Setter

@@ -26,7 +26,12 @@ import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 
-/** 测试用 jar 夹具：运行期编译简单源码并打包为仅含单个类的 jar */
+/**
+ * 测试用 jar 夹具：运行期编译简单源码并打包为仅含单个类的 jar。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 final class TestJars {
 
   static final String FIXTURE_CLASS = "demo.Hello";

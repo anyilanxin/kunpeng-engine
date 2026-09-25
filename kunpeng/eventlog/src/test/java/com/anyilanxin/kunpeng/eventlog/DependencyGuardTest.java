@@ -30,6 +30,9 @@ import org.junit.jupiter.api.Test;
 /**
  * 依赖护栏：扫描编译产物常量池，断言无 io.camunda / netflix / guava 引用——
  * 机器保证本模块与 Zeebe 衍生构件及被替换的流控库零耦合。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 @DisplayName("依赖护栏: 无 io.camunda / netflix / guava")
 class DependencyGuardTest {

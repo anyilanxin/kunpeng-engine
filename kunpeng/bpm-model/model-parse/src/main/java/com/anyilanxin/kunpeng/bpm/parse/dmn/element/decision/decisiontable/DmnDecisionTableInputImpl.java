@@ -21,7 +21,12 @@ import com.anyilanxin.kunpeng.bpm.parse.dmn.element.DmnElement;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.ElementType;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.common.DmnExpressionImpl;
 
-/** 决策表输入列（Input）的内存模型，持有输入表达式与输入变量名。 */
+/**
+ * 决策表输入列（Input）的内存模型，持有输入表达式与输入变量名。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class DmnDecisionTableInputImpl implements DmnElement {
 
   /** 未显式指定输入变量名时使用的默认变量名 */

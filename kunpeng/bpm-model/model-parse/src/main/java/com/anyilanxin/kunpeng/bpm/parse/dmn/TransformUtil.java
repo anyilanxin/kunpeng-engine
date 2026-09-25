@@ -24,7 +24,7 @@ import java.util.regex.Matcher;
  * FEEL 表达式转换辅助工具类，提供 SimpleUnaryTests 区间表达式的格式化与表达式非空判断等静态方法。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class TransformUtil {
 

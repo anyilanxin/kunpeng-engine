@@ -24,7 +24,12 @@ import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.ElementTransformer;
 import com.anyilanxin.kunpeng.engine.script.ScriptExpression;
 import com.anyilanxin.kunpeng.utils.Either;
 
-/** 流程定义转换器：创建流程运行时元素并解析历史数据存活时长与流程级执行监听器。 */
+/**
+ * 流程定义转换器：创建流程运行时元素并解析历史数据存活时长与流程级执行监听器。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class ProcessTransformer implements ElementTransformer<Process> {
 
   /** 返回本转换器处理的模型元素类型。 */

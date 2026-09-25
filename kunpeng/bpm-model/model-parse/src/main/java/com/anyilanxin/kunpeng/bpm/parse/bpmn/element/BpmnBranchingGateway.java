@@ -24,6 +24,9 @@ import java.util.List;
  * 排他网关与包容网关的共同运行时模型：维护默认流并索引带条件的出边，供运行期选择分支。
  *
  * <p>两类网关仅在分支选择策略上不同、数据结构一致，共用本类以减少重复定义；条件出边索引懒分配。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class BpmnBranchingGateway extends BpmnFlowNode {
   /** 默认流（无条件命中时走），未声明为 null */

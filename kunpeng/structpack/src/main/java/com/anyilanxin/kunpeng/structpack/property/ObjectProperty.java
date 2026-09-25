@@ -22,6 +22,9 @@ import com.anyilanxin.kunpeng.structpack.value.ObjectValue;
  * 嵌套对象属性：value 为完整 structpack 帧（自带 magic/版本），子对象实例复用。
  *
  * <p>与 msgpack ObjectProperty 的 write→buffer→read 桥接不同，这里子对象直接以 structpack 帧内嵌， 读写一次成型（无桥接拷贝）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class ObjectProperty<T extends ObjectValue> extends BaseProperty<T> {
 

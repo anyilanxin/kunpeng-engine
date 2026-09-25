@@ -22,8 +22,10 @@ import com.anyilanxin.kunpeng.structpack.buffer.BufferWriter;
 import org.agrona.DirectBuffer;
 
 /**
+ * API 请求写入器：将 API 请求编码到二进制缓冲。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface ApiRequestWriter extends BufferWriter {
 

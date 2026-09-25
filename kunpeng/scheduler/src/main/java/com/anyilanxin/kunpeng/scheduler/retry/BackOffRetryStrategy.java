@@ -25,7 +25,12 @@ import java.time.Duration;
 import java.util.function.BooleanSupplier;
 import org.slf4j.Logger;
 
-/** 指数退避重试：1s 起步 ×2 封顶 maxBackOff; 异常也退避重试 */
+/**
+ * 指数退避重试：1s 起步 ×2 封顶 maxBackOff; 异常也退避重试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class BackOffRetryStrategy implements RetryStrategy {
 
   private static final Logger LOG = SchedulerLoggers.ACTOR_LOGGER;

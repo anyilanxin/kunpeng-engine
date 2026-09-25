@@ -23,7 +23,12 @@ import java.util.concurrent.TimeUnit;
 import org.agrona.LangUtil;
 import org.slf4j.Logger;
 
-/** future 工具：checked→unchecked；join 禁止在 actor 线程等待未完成 future */
+/**
+ * future 工具：checked→unchecked；join 禁止在 actor 线程等待未完成 future。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class FutureUtil {
 
   private FutureUtil() {}

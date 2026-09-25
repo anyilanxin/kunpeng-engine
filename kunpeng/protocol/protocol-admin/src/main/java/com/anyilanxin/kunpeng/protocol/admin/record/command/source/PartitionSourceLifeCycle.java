@@ -27,7 +27,7 @@ import com.anyilanxin.kunpeng.protocol.admin.record.CommandValueLifeCycle;
  * 业务面分区来源生命周期，描述单条分区来源从应用、转移到完成的状态流转。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public enum PartitionSourceLifeCycle implements CommandValueLifeCycle {
   NULL_VAL((short) -1, NOT_PROCESS_INDEX),

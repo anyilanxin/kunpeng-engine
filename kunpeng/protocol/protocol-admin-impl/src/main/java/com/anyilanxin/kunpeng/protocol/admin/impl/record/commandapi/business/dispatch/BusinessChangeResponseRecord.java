@@ -29,7 +29,7 @@ import com.anyilanxin.kunpeng.structpack.property.ObjectProperty;
  * 业务面调度响应记录，携带生成的调度计划与业务集群元数据快照。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @AutoDeclareProperties
 public class BusinessChangeResponseRecord extends UnifiedRecordValue<BusinessChangeResponseRecord>

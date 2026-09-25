@@ -18,6 +18,12 @@ package com.anyilanxin.kunpeng.configuration.broker.backpressure;
 
 import static com.anyilanxin.kunpeng.configuration.broker.ConfigurationUtil.checkPositive;
 
+/**
+ * 固定窗口流控配置。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class FixedCfg {
 
   private int limit = 20;

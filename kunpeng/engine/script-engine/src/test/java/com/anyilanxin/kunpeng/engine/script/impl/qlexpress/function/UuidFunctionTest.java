@@ -21,7 +21,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
-/** 通过表达式引擎端到端测试 {@code uuid()} 函数。 */
+/**
+ * 通过表达式引擎端到端测试 {@code uuid()} 函数。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class UuidFunctionTest extends FunctionTestBase {
 
   private static final Pattern UUID_PATTERN =

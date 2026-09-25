@@ -20,6 +20,12 @@ import com.anyilanxin.kunpeng.structpack.StructPackException;
 import com.anyilanxin.kunpeng.structpack.value.StringValue;
 import org.agrona.DirectBuffer;
 
+/**
+ * 字符串属性：structpack 字符串字段的编解码。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class StringProperty extends BaseProperty<StringValue> {
 
   /** 零拷贝字节视图（UTF-8 字节） */

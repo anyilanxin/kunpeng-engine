@@ -33,6 +33,7 @@ import io.micrometer.core.instrument.Timer;
  * }</pre>
  *
  * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class CloseableTime implements CloseableSilently {
   private final Timer timer;

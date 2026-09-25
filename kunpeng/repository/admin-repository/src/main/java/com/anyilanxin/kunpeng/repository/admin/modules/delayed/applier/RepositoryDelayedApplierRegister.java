@@ -23,8 +23,10 @@ import com.anyilanxin.kunpeng.repository.admin.modules.delayed.applier.impl.Dela
 import com.anyilanxin.kunpeng.repository.admin.modules.delayed.applier.impl.DelayedTriggeredApplierImpl;
 
 /**
+ * 延迟事件域应用器注册器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class RepositoryDelayedApplierRegister {
 

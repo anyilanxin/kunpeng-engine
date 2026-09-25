@@ -32,6 +32,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Atomix 集群装配配置。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @Configuration(proxyBeanMethods = false)
 public final class AtomixClusterConfiguration {
   private final ClusterConfig config;

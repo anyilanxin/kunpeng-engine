@@ -20,8 +20,10 @@ import com.anyilanxin.kunpeng.protocol.admin.AdminValueLifeCycle;
 import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 
 /**
+ * Record 值映射器接口。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @SuppressWarnings("rawtypes")
 public interface RecordValueMapper<RECORD extends UnifiedRecordValue> {

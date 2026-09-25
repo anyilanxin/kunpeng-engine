@@ -24,7 +24,12 @@ import com.anyilanxin.kunpeng.engine.script.ScriptExpression;
 import lombok.Getter;
 import lombok.Setter;
 
-/** DMN 表达式（Expression）的内存模型，持有表达式语言、表达式文本以及由解析得到的脚本表达式对象。 */
+/**
+ * DMN 表达式（Expression）的内存模型，持有表达式语言、表达式文本以及由解析得到的脚本表达式对象。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @Getter
 @Setter
 public class DmnExpressionImpl implements DmnElement {

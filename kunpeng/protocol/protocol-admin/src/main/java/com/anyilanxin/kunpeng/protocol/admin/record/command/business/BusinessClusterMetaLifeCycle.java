@@ -27,7 +27,7 @@ import com.anyilanxin.kunpeng.protocol.admin.record.CommandValueLifeCycle;
  * 业务面集群元数据生命周期，描述集群元数据从创建、更新到删除的状态流转。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public enum BusinessClusterMetaLifeCycle implements CommandValueLifeCycle {
   NULL_VAL((short) -1, NOT_PROCESS_INDEX),

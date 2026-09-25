@@ -31,7 +31,12 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** {@link ExternalJarClassLoader} 隔离加载器测试 */
+/**
+ * {@link ExternalJarClassLoader} 隔离加载器测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class ExternalJarClassLoaderTest {
 
   @TempDir

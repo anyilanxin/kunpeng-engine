@@ -17,7 +17,12 @@
 
 package com.anyilanxin.kunpeng.bpm.parse.dmn.type;
 
-/** （已移除的）Camunda {@code TypedValue} 的本地替代实现。 */
+/**
+ * （已移除的）Camunda {@code TypedValue} 的本地替代实现。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface TypedValue {
   /**
    * @return 包装的实际值

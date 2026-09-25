@@ -1,0 +1,22 @@
+syntax = 'proto3';
+package gateway_protocol;
+
+option java_multiple_files = false;
+option java_package = "com.anyilanxin.kunpeng.gateway.grpc.service";
+option go_package = "./;pb";
+
+
+message IncidentResolveRequest {
+  int64 incidentId = 1;
+  string tenantId = 2;
+}
+
+message IncidentResolveResponse {
+}
+
+
+
+service IncidentService {
+  rpc IncidentResolve (IncidentResolveRequest) returns (stream IncidentResolveResponse) {
+  }
+}

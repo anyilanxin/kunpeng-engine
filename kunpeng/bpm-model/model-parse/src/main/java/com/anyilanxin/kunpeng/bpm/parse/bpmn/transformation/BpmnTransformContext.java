@@ -34,6 +34,9 @@ import java.util.Map;
  *
  * <p>表达式缓存按源文本去重（{@link ScriptEngine#parse(String)} 每次调用都会重新解析）， 同一模型内重复出现的表达式（如统一的
  * retries、相同的映射源）只解析一次。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class BpmnTransformContext {
   /** 已转换流程注册表（流程 id -> 流程） */

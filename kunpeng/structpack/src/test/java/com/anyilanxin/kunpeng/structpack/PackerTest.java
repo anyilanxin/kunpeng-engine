@@ -25,7 +25,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-/** PackerWriter/PackerReader 原语层测试：varint/zigzag/定长原语/越界/tag 跳过 */
+/**
+ * PackerWriter/PackerReader 原语层测试：varint/zigzag/定长原语/越界/tag 跳过。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @DisplayName("structpack 编解码原语")
 class PackerTest {
 

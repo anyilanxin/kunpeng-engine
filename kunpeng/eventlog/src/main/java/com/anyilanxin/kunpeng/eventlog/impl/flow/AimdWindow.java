@@ -22,6 +22,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  * AIMD 在途窗口（自研，替代外部并发限流库）：RTT 梯度（EMA/minRTT）低于容差线性增， 超限按梯度乘性减；窗口调整按成功次数节流（防振荡）。
  *
  * <p>仅约束 {@code USER_COMMAND}：acquire 在写线程（并发，CAS 计数），onSuccess 在 处理线程（单线程，无竞争）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 final class AimdWindow {
 

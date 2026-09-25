@@ -26,6 +26,9 @@ import org.junit.jupiter.api.Test;
  * <p><b>BUG MARKER</b>：FEEL 规范定义 {@code sublist(list, start)} 的位置从 <b>1</b> 开始
  * （例：{@code sublist([1,2,3], 2) -> [2, 3]}），但当前实现 {@link SublistFunction} 直接用
  * 0 基索引（{@code sublist([1,2,3], 2) -> [3]}）。下方断言按 FEEL 规范写，预期 fail。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 class SublistFunctionTest extends FunctionTestBase {
 

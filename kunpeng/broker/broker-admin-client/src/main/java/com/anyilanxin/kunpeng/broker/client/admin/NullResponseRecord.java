@@ -20,8 +20,10 @@ import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 import com.anyilanxin.kunpeng.structpack.AutoDeclareProperties;
 
 /**
+ * 空响应 Record：无返回体请求的占位响应。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @AutoDeclareProperties
 public class NullResponseRecord extends UnifiedRecordValue {

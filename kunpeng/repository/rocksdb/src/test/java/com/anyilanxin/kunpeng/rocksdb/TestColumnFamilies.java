@@ -22,7 +22,12 @@ import static com.anyilanxin.kunpeng.kvstore.PredefinedColumnFamily.LOCAL_COLUMN
 import com.anyilanxin.kunpeng.kvstore.ColumnFamilies;
 import com.anyilanxin.kunpeng.kvstore.PredefinedColumnFamily;
 
-/** rocksdb 功能测试使用的列族定义：不可迁移的 default 虚拟列族 + 可迁移的 local 虚拟列族 */
+/**
+ * rocksdb 功能测试使用的列族定义：不可迁移的 default 虚拟列族 + 可迁移的 local 虚拟列族。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public enum TestColumnFamilies implements ColumnFamilies {
   DEFAULT(DEFAULT_COLUMN_FAMILY, 0),
   FIRST(DEFAULT_COLUMN_FAMILY, 1),

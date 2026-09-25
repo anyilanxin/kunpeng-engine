@@ -25,7 +25,12 @@ import java.util.concurrent.Callable;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-/** actor 基类：逻辑单线程实体。生命周期钩子由调度器按相位触发；job 失败语义按相位分流。 */
+/**
+ * actor 基类：逻辑单线程实体。生命周期钩子由调度器按相位触发；job 失败语义按相位分流。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public abstract class Actor implements ConcurrencyControl, AsyncClosable, AutoCloseable {
 
   protected final ActorControl actor = new ActorControl(this);

@@ -29,6 +29,9 @@ import java.util.stream.StreamSupport;
  * 类型化数组值：[count varint][元素 tagless 编码...]
  *
  * <p>元素槽位池化复用（{@link #reset()} 归还池），稳态零分配。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class ArrayValue<T extends BaseValue> extends BaseValue implements ValueArray<T> {
 

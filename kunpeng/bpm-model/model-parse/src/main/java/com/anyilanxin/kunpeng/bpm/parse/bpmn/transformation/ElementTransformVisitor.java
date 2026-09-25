@@ -26,6 +26,9 @@ import java.util.Map;
  * 转换遍历访问者：对模型做深度优先遍历，元素类型已注册转换器时触发转换。
  *
  * <p>与 DMN 模块的同名访问者同构：每个转换阶段持有一个访问者实例，按需注册该阶段的元素转换器。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class ElementTransformVisitor extends TypeHierarchyVisitor {
   /** 已注册的元素转换器（以其处理的元素类型为键） */

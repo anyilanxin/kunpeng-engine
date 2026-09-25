@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
  * 数值类型（number）的一元测试转换器，同时承接 integer/long/double 等 DMN 数值 typeRef：比较运算符开头转比较表达式， 其余转相等判断。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class NumberTransform implements ExpressTransformer {
   private static final Pattern COMPARISON_PATTERN = Pattern.compile("^(==|>=|<=|>|<).+$");

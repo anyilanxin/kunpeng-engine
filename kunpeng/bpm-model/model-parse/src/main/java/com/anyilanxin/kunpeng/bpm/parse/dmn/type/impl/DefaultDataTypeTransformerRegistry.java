@@ -26,6 +26,7 @@ import java.util.Map;
  * 面向内置 {@link DmnDataTypeTransformer} 的 {@link DmnDataTypeTransformerRegistry} 实现。
  *
  * @author Philipp Ossler
+ * @since 2026.9.0
  */
 public class DefaultDataTypeTransformerRegistry implements DmnDataTypeTransformerRegistry {
 

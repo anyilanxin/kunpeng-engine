@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+  ~ Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<sbe:messageSchema xmlns:sbe="http://fixprotocol.io/2016/sbe"
+  xmlns:xi="http://www.w3.org/2001/XInclude" package="com.anyilanxin.kunpeng.protocol.business.record"
+  id="0" version="@protocol.version@" semanticVersion="@protocol.version@"
+  description="Kunpeng Protocol" byteOrder="littleEndian">
+
+  <types>
+    <composite name="messageHeader" description="Message identifiers and length of message root">
+      <type name="blockLength" primitiveType="uint16"/>
+      <type name="templateId" primitiveType="uint16"/>
+      <type name="schemaId" primitiveType="uint16"/>
+      <type name="version" primitiveType="uint16"/>
+    </composite>
+    <composite name="blob">
+      <type name="length" primitiveType="uint32" maxValue="2147483647"/>
+      <type name="varData" primitiveType="uint8" length="0"/>
+    </composite>
+    <composite name="Version" description="Version information">
+      <type name="majorVersion" primitiveType="int32"/>
+      <type name="minorVersion" primitiveType="int32"/>
+      <type name="patchVersion" primitiveType="int32"/>
+    </composite>
+
+    <enum name="RecordType" encodingType="uint8">
+      <validValue name="EVENT">0</validValue>
+      <validValue name="COMMAND">1</validValue>
+      <validValue name="COMMAND_API">2</validValue>
+      <validValue name="QUERY">3</validValue>
+      <validValue name="COMMAND_REJECTION">4</validValue>
+      <validValue name="ADMIN">5</validValue>
+      <validValue name="CLUSTER_LEADER">6</validValue>
+    </enum>
+
+    <enum name="RejectionType" encodingType="uint8">
+      <validValue name="INVALID_ARGUMENT">0</validValue>
+      <validValue name="NOT_FOUND">1</validValue>
+      <validValue name="ALREADY_EXISTS">2</validValue>
+      <validValue name="INVALID_STATE">3</validValue>
+      <validValue name="PROCESSING_ERROR">4</validValue>
+      <validValue name="EXCEEDED_BATCH_RECORD_SIZE">5</validValue>
+      <validValue name="UNAUTHORIZED">6</validValue>
+      <validValue name="FORBIDDEN">7</validValue>
+    </enum>
+    <composite name="varDataEncoding">
+      <type name="length" primitiveType="uint32" maxValue="2147483647"/>
+      <type name="varData" primitiveType="uint8" length="0" characterEncoding="UTF-8"/>
+    </composite>
+    <composite name="groupSizeEncoding" description="Repeating group dimensions">
+      <type name="blockLength" primitiveType="uint16"/>
+      <type name="numInGroup" primitiveType="uint8" semanticType="NumInGroup"/>
+    </composite>
+    <enum name="BooleanType" encodingType="uint8" semanticType="Boolean">
+      <validValue name="FALSE">0</validValue>
+      <validValue name="TRUE">1</validValue>
+    </enum>
+
+    <enum name="BusinessRouteType" encodingType="uint8" description="The type of a record value">
+      <validValue name="MESSAGE">0</validValue>
+      <validValue name="SIGNAL">1</validValue>
+    </enum>
+  </types>
+
+
+  <sbe:message name="RecordMetadata" id="1" description="Descriptor for Record Metadata">
+    <field name="recordType" id="1" type="RecordType"/>
+    <field name="requestStreamId" id="2" type="int32"/>
+    <field name="requestId" id="3" type="uint64"/>
+    <field name="protocolVersion" id="4" type="uint16"/>
+    <field name="valueType" id="5" type="uint8"/>
+    <field name="valueState" id="6" type="uint8"/>
+    <field name="valueFollowState" id="7" type="uint8"/>
+    <field name="brokerVersion" id="8" type="Version" sinceVersion="2" presence="optional"/>
+    <field name="recordVersion" id="9" type="uint16" sinceVersion="3" presence="optional"/>
+    <!-- populated when the client passes an operation reference to the gateway-->
+    <field name="operationReference" id="10" type="uint64" presence="optional" sinceVersion="5"/>
+    <!-- populated when the record was created as part of a batch operation -->
+    <field name="batchOperationReference" id="11" type="uint64" presence="optional" sinceVersion="6"/>
+    <!-- populated when RecordType is COMMAND_REJECTION -->
+    <data name="rejectionType" id="12" type="varDataEncoding"/>
+    <!-- populated when RecordType is COMMAND_REJECTION, UTF-8-encoded String -->
+    <data name="rejectionReason" id="13" type="varDataEncoding"/>
+    <!-- populated when RecordType is COMMAND -->
+  </sbe:message>
+
+
+  <sbe:message name="ApiRequest" id="2" description="Descriptor for Record Metadata">
+    <field name="key" id="1" type="uint64"/>
+    <field name="requestType" id="2" type="RecordType"/>
+    <field name="valueType" id="3" type="uint8"/>
+    <field name="lifeCycle" id="4" type="uint8"/>
+    <field name="resourceId" id="5" type="int32"/>
+    <field name="hasData" id="6" type="BooleanType"/>
+    <field name="requestTime" id="7" type="uint64"/>
+    <data name="data" id="8" type="blob"/>
+  </sbe:message>
+
+
+  <sbe:message name="ApiResponse" id="3" description="Descriptor for Record Metadata">
+    <field name="requestType" id="1" type="RecordType"/>
+    <field name="code" id="2" type="int32"/>
+    <field name="success" id="3" type="BooleanType"/>
+    <field name="valueType" id="4" type="uint8"/>
+    <field name="lifeCycle" id="5" type="uint8"/>
+    <field name="hasData" id="6" type="BooleanType"/>
+    <data name="message" id="7" type="varDataEncoding" semanticType="string"/>
+    <data name="data" id="8" type="blob"/>
+  </sbe:message>
+
+  <sbe:message name="BusinessRouteRequest" id="4" description="Descriptor for Record Metadata">
+    <field name="routeType" id="1" type="BusinessRouteType"/>
+    <data name="businessCode" id="2" type="varDataEncoding" semanticType="string"/>
+  </sbe:message>
+
+  <sbe:message name="BusinessRouteResponse" id="5" description="Descriptor for Record Metadata">
+    <group name="resourceIds" id="1">
+      <field name="resourceId" id="2" type="int32"/>
+    </group>
+  </sbe:message>
+</sbe:messageSchema>

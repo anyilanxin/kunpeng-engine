@@ -22,7 +22,12 @@ import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnUserTask;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.BpmnTransformContext;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.ElementTransformer;
 
-/** 用户任务转换器：装配分配定义扩展（受理人、候选组、候选人，均为表达式）。 */
+/**
+ * 用户任务转换器：装配分配定义扩展（受理人、候选组、候选人，均为表达式）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class UserTaskTransformer implements ElementTransformer<UserTask> {
 
   /** 返回本转换器处理的模型元素类型。 */

@@ -19,6 +19,12 @@ package com.anyilanxin.kunpeng.protocol.common;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
+/**
+ * 版本信息：语义化版本解析与比较。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class VersionInfo {
 
   public static final VersionInfo UNKNOWN = new VersionInfo(0, 0, 0);

@@ -24,6 +24,7 @@ import java.util.Arrays;
  * 预定义根列族：所有数据库实例共有的顶层列族划分，由具体存储实现映射为物理列族
  *
  * @author zxuanhong
+ * @since 2026.9.0
  */
 public enum PredefinedColumnFamily {
   /** 默认列族，数据不可迁移 */

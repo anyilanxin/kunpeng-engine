@@ -16,23 +16,30 @@
  */
 package com.anyilanxin.kunpeng.broker.bootstrap;
 
+import com.anyilanxin.kunpeng.broker.admin.ClusterAdminService;
 import com.anyilanxin.kunpeng.broker.bootstrap.step.adminapi.CommandApiServiceImpl;
 import com.anyilanxin.kunpeng.broker.bootstrap.step.idgenerator.NodeIdGeneratorServiceImpl;
+import com.anyilanxin.kunpeng.broker.business.ClusterBusinessService;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
 import com.anyilanxin.kunpeng.cluster.config.ClusterMetaStore;
 import com.anyilanxin.kunpeng.cluster.config.topology.broker.DefaultClusterSwimTopologyService;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.cluster.dispatch.api.ClusterDispatchClient;
 import com.anyilanxin.kunpeng.cluster.dispatch.scheduling.TimerClock;
-import com.anyilanxin.kunpeng.cluster.manager.admin.ClusterAdminService;
-import com.anyilanxin.kunpeng.cluster.manager.business.ClusterBusinessService;
 import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
 import com.anyilanxin.kunpeng.configuration.cluster.ClusterCfg;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
 import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
+import com.anyilanxin.kunpeng.sink.config.SinksConfig;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.springframework.beans.factory.BeanFactory;
 
-/** BrokerStartupContext 的实现类，承载 broker 启动/关闭所需的配置与依赖。 */
+/**
+ * BrokerStartupContext 的实现类，承载 broker 启动/关闭所需的配置与依赖。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class BrokerStartupContextImpl implements BrokerStartupContext {
   private final BrokerCfg brokerCfg;
   private final ClusterCfg clusterCfg;
@@ -40,12 +47,17 @@ public final class BrokerStartupContextImpl implements BrokerStartupContext {
   private final AtomixCluster atomixCluster;
   private final ConcurrencyControl concurrencyControl;
   private final MeterRegistry meterRegistry;
+  private final BeanFactory beanFactory;
+  private final SinksConfig sinksConfig;
+
   private ClusterAdminService clusterManagerService;
   private ClusterBusinessService clusterBusinessService;
   private CommandApiServiceImpl commandApiService;
   private ClusterMetaStore clusterMetaStore;
   private NodeIdGeneratorServiceImpl idGenerator;
   private ClusterDispatchClient dispatchClient;
+  private com.anyilanxin.kunpeng.broker.jobstream.JobStreamDispatcher jobStreamDispatcher;
+  private com.anyilanxin.kunpeng.broker.commandapi.CommandApiServiceImpl businessCommandApiService;
   private DefaultClusterSwimTopologyService clusterPartitionTopology;
   private ClusterTopologyService clusterTopologyService;
   private TimerClock timerClock;
@@ -56,7 +68,11 @@ public final class BrokerStartupContextImpl implements BrokerStartupContext {
       final ActorSchedulingService schedulingService,
       final AtomixCluster atomixCluster,
       final ConcurrencyControl concurrencyControl,
-      final MeterRegistry meterRegistry) {
+      final MeterRegistry meterRegistry,
+      final BeanFactory beanFactory,
+      final SinksConfig sinksConfig) {
+    this.sinksConfig = sinksConfig;
+    this.beanFactory = beanFactory;
     this.clusterCfg = clusterCfg;
     this.meterRegistry = meterRegistry;
     this.brokerCfg = brokerCfg;
@@ -71,8 +87,13 @@ public final class BrokerStartupContextImpl implements BrokerStartupContext {
   }
 
   @Override
-  public ClusterCfg getClusterConfiguration() {
+  public ClusterCfg getClusterCft() {
     return clusterCfg;
+  }
+
+  @Override
+  public SinksConfig getSinksConfig() {
+    return sinksConfig;
   }
 
   @Override
@@ -156,6 +177,30 @@ public final class BrokerStartupContextImpl implements BrokerStartupContext {
   }
 
   @Override
+  public com.anyilanxin.kunpeng.broker.jobstream.JobStreamDispatcher getJobStreamDispatcher() {
+    return jobStreamDispatcher;
+  }
+
+  @Override
+  public void setJobStreamDispatcher(
+      final com.anyilanxin.kunpeng.broker.jobstream.JobStreamDispatcher jobStreamDispatcher) {
+    this.jobStreamDispatcher = jobStreamDispatcher;
+  }
+
+  @Override
+  public com.anyilanxin.kunpeng.broker.commandapi.CommandApiServiceImpl
+      getBusinessCommandApiService() {
+    return businessCommandApiService;
+  }
+
+  @Override
+  public void setBusinessCommandApiService(
+      final com.anyilanxin.kunpeng.broker.commandapi.CommandApiServiceImpl
+          businessCommandApiService) {
+    this.businessCommandApiService = businessCommandApiService;
+  }
+
+  @Override
   public DefaultClusterSwimTopologyService getClusterPartitionTopology() {
     return clusterPartitionTopology;
   }
@@ -184,5 +229,10 @@ public final class BrokerStartupContextImpl implements BrokerStartupContext {
   @Override
   public void setTimerClock(final TimerClock timerClock) {
     this.timerClock = timerClock;
+  }
+
+  @Override
+  public BeanFactory getBeanFactory() {
+    return beanFactory;
   }
 }

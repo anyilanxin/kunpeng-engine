@@ -24,6 +24,9 @@ import org.agrona.collections.Long2ObjectHashMap;
 /**
  * runner 私有定时轮：Agrona DeadlineTimerWheel(1ms/32 ticks) + 槽位表。 到期置 pending 并唤醒 cell；recurring
  * 到期即重排下一轮（fixed-rate 近似）。 取消跨线程路由到 owner runner 的回调队列。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class TimerHub {
 

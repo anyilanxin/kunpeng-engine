@@ -22,7 +22,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-/** 临时子流程的运行时模型：内部活动可乱序执行，由激活集合表达式与完成条件控制。 */
+/**
+ * 临时子流程的运行时模型：内部活动可乱序执行，由激活集合表达式与完成条件控制。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class BpmnAdHocSubProcess extends BpmnContainer {
   /** 内部实例 id 的固定后缀 */
   private static final String INNER_INSTANCE_ID_POSTFIX = "-inner";

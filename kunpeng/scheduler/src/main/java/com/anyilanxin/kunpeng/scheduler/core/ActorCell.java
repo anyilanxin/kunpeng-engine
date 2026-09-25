@@ -41,6 +41,9 @@ import org.slf4j.Logger;
  * 不因积压静默丢弃）。调度门见 {@link SchedulingGate}——同一 cell 在 runner 队列中至多 一个实例, 物理移除式偷取下天然单线程执行。
  *
  * <p>相位推进发生在排空点（drain 末尾）, 失败语义按相位分流（STARTED 存活 / 其他致死）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class ActorCell {
 

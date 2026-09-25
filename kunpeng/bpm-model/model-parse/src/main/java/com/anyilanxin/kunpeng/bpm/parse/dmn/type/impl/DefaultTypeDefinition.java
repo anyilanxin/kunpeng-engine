@@ -25,6 +25,7 @@ import com.anyilanxin.kunpeng.bpm.parse.dmn.type.Variables;
  * 无类型（untyped）的类型定义：不做类型转换，任何值都直接包装为无类型值。
  *
  * @author Philipp Ossler
+ * @since 2026.9.0
  */
 public class DefaultTypeDefinition implements DmnTypeDefinition {
 

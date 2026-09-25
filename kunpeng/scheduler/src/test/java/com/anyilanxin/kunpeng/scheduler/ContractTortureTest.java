@@ -29,7 +29,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
-/** 契约边界 + 并发拷问（gate storm / close 竞态 / 失败相位分流） */
+/**
+ * 契约边界 + 并发拷问（gate storm / close 竞态 / 失败相位分流）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @DisplayName("scheduler 契约与拷问")
 class ContractTortureTest {
 

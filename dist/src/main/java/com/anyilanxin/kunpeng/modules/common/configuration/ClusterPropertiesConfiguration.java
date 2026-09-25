@@ -22,8 +22,10 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.stereotype.Component;
 
 /**
+ * 集群配置属性装配。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @Component
 @EnableConfigurationProperties({

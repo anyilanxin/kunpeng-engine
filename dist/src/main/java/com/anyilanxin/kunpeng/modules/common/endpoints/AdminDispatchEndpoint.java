@@ -34,7 +34,7 @@ import org.springframework.boot.actuate.endpoint.annotation.WriteOperation;
  * 管理面调度 Actuator 端点（/actuator/adminDispatch）：触发管理面集群调度并查询管理面集群元数据。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @Endpoint(id = "adminDispatch")
 public class AdminDispatchEndpoint {

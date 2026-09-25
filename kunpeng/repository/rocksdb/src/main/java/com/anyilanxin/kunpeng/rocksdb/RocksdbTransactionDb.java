@@ -41,6 +41,7 @@ import org.rocksdb.*;
  * 与数据复制合并能力
  *
  * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class RocksdbTransactionDb<ColumnFamilyType extends ColumnFamilies>
     implements KvStore<ColumnFamilyType> {

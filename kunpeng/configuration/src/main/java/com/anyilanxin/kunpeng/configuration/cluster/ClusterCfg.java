@@ -29,7 +29,7 @@ import org.springframework.boot.context.properties.NestedConfigurationProperty;
  * 集群配置，定义节点 ID、节点类型、集群名、种子节点与成员/网络配置。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @Getter
 @Setter

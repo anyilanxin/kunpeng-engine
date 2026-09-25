@@ -18,6 +18,12 @@ package com.anyilanxin.kunpeng.structpack.property;
 
 import com.anyilanxin.kunpeng.structpack.value.ByteValue;
 
+/**
+ * 字节属性：structpack 单字节字段的编解码。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class ByteProperty extends BaseProperty<ByteValue> {
 
   public byte getValue() {

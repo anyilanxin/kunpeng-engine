@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.scheduler.core;
 
-/** actor 生命周期相位（owner 线程推进, 跨线程读为 volatile） */
+/**
+ * actor 生命周期相位（owner 线程推进, 跨线程读为 volatile）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public enum Phases {
   CREATED,
   STARTING,

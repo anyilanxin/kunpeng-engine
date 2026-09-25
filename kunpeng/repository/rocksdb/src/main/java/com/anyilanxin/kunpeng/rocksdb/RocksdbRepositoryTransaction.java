@@ -25,7 +25,12 @@ import org.rocksdb.RocksObject;
 import org.rocksdb.Status;
 import org.rocksdb.Transaction;
 
-/** RocksDB 事务的仓储级封装，持有当前事务及其 native handle，支持事务的续借、执行、提交与回滚 */
+/**
+ * RocksDB 事务的仓储级封装，持有当前事务及其 native handle，支持事务的续借、执行、提交与回滚。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class RocksdbRepositoryTransaction implements RepositoryTransaction, AutoCloseable {
 
   private static final Field NATIVE_HANDLE_FIELD;

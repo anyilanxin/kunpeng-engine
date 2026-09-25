@@ -25,7 +25,12 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-/** {@link ThreadContextUtil} 线程上下文类加载器切换测试 */
+/**
+ * {@link ThreadContextUtil} 线程上下文类加载器切换测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class ThreadContextUtilTest {
 
   private ClassLoader original;

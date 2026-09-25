@@ -25,7 +25,12 @@ import org.agrona.concurrent.UnsafeBuffer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/** SampleRecord 端到端：常规往返 + 含已删除字段(id=3)的旧数据经 ghost 重放 */
+/**
+ * SampleRecord 端到端：常规往返 + 含已删除字段(id=3)的旧数据经 ghost 重放。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @DisplayName("SampleRecord 使用样例")
 class SampleRecordTest {
 

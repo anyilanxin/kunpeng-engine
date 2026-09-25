@@ -17,8 +17,10 @@
 package com.anyilanxin.kunpeng.protocol.admin.record.command;
 
 /**
+ * 调度计划状态枚举。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public enum DispatchPlanState {
   UNKNOW,

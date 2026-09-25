@@ -35,7 +35,12 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/** 端到端集成：写→提交通知→awaiter 回调→读往返 / 重开恢复 / 双写者并发 */
+/**
+ * 端到端集成：写→提交通知→awaiter 回调→读往返 / 重开恢复 / 双写者并发。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @DisplayName("EventLog 端到端集成")
 class EventLogIntegrationTest {
 

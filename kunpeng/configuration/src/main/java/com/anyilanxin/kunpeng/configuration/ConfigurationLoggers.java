@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** 集中管理各子系统的日志器（Logger）实例。 */
+/**
+ * 集中管理各子系统的日志器（Logger）实例。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class ConfigurationLoggers {
   public static final Logger CONFIGURATION_LOGGER =
       LoggerFactory.getLogger("com.anyilanxin.kunpeng.configuration");

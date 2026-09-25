@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.scheduler.core;
 
-/** 定时器订阅：到期由 TimerHub 置 pending 并唤醒 cell；recurring 到期即重排下一轮 */
+/**
+ * 定时器订阅：到期由 TimerHub 置 pending 并唤醒 cell；recurring 到期即重排下一轮。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class TimerSlot extends SubscriptionSlot {
 
   private volatile boolean pending;

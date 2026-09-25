@@ -23,6 +23,12 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * 版本工具类：从构建属性读取版本信息。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class VersionUtil {
 
   public static final Logger LOG = LoggerFactory.getLogger("com.anyilanxin.kunpeng.utils");

@@ -24,6 +24,7 @@ import org.agrona.MutableDirectBuffer;
  * short 类型的 key/value，按大端序 2 字节读写
  *
  * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class ShortType implements StoreKey, StoreValue {
 

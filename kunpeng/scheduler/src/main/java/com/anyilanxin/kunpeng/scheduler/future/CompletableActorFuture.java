@@ -39,6 +39,9 @@ import org.slf4j.Logger;
 /**
  * 可完成 future：VarHandle 单次完成状态机；actor 线程未完成 get() 抛 {@link IllegalStateException}（非阻塞纪律）；close()
  * 后可复用。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 @SuppressWarnings("NullableProblems")
 public class CompletableActorFuture<V> implements ActorFuture<V> {

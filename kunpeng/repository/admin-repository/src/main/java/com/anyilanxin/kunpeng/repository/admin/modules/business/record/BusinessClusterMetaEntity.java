@@ -33,7 +33,7 @@ import org.agrona.concurrent.UnsafeBuffer;
  * 业务集群元数据实体，记录业务集群配置版本号、期望与当前副本因子、创建与更新时间， 以及当前与上一版的分区组拓扑列表。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @AutoDeclareProperties
 public class BusinessClusterMetaEntity extends UnpackedObject implements StoreValue {

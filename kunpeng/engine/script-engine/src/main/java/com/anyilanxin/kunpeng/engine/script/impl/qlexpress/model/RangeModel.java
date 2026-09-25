@@ -21,8 +21,10 @@ import lombok.Getter;
 import lombok.ToString;
 
 /**
+ * 区间模型：range 表达式的区间数据载体。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @Getter
 @ToString

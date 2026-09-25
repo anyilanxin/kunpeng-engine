@@ -18,7 +18,12 @@ package com.anyilanxin.kunpeng.scheduler.startup;
 
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 
-/** 启动步骤：context 在步骤间传递变换 */
+/**
+ * 启动步骤：context 在步骤间传递变换。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface StartupStep<CONTEXT> {
 
   String getName();

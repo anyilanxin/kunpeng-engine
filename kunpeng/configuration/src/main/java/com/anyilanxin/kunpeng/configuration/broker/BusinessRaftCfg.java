@@ -26,7 +26,7 @@ import org.springframework.boot.context.properties.NestedConfigurationProperty;
  * 业务 raft 分区配置
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @Getter
 @Setter

@@ -18,7 +18,12 @@ package com.anyilanxin.kunpeng.configuration.gateway;
 
 import java.util.Objects;
 
-/** 长轮询配置，定义是否启用长轮询、超时时间与空响应阈值等。 */
+/**
+ * 长轮询配置，定义是否启用长轮询、超时时间与空响应阈值等。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class LongPollingCfg {
 
   private boolean enabled = ConfigurationDefaults.DEFAULT_LONG_POLLING_ENABLED;

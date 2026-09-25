@@ -20,6 +20,12 @@ import com.anyilanxin.kunpeng.configuration.broker.backpressure.limit.RateLimit;
 import java.time.Duration;
 import java.util.Objects;
 
+/**
+ * 速率限制配置。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class RateLimitCfg {
   private boolean enabled = false;
   private int limit;

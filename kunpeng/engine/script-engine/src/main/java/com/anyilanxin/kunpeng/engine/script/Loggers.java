@@ -19,6 +19,12 @@ package com.anyilanxin.kunpeng.engine.script;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * 脚本引擎日志器集合。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class Loggers {
   public static final Logger CLUSTERING_LOGGER =
       LoggerFactory.getLogger("com.anyilanxin.kunpeng.broker.clustering");
@@ -26,8 +32,6 @@ public final class Loggers {
       LoggerFactory.getLogger("com.anyilanxin.kunpeng.broker.system");
   public static final Logger SYSTEM_PROCESS_STATE_MACHINE_LOGGER =
       LoggerFactory.getLogger("com.anyilanxin.kunpeng.broker.state.machine.processing");
-  public static final Logger SYSTEM_EXPORTER_STATE_MACHINE_LOGGER =
-      LoggerFactory.getLogger("com.anyilanxin.kunpeng.broker.state.machine.exporter");
   public static final Logger SYSTEM_REPOSITOR_STATE_MACHINE_LOGGER =
       LoggerFactory.getLogger("com.anyilanxin.kunpeng.broker.state.machine.repositor");
   public static final Logger TRANSPORT_LOGGER =
@@ -37,15 +41,7 @@ public final class Loggers {
   public static final Logger LOGSTREAMS_LOGGER =
       LoggerFactory.getLogger("com.anyilanxin.kunpeng.broker.logstreams");
 
-  public static final Logger EXPORTER_LOGGER =
-      LoggerFactory.getLogger("com.anyilanxin.kunpeng.broker.exporter");
   public static final Logger RAFT = LoggerFactory.getLogger("com.anyilanxin.kunpeng.broker.raft");
   public static final Logger SNAPSHOT_LOGGER =
       LoggerFactory.getLogger("com.anyilanxin.kunpeng.logstreams.snapshot");
-
-  public static Logger getExporterLogger(final String exporterId) {
-    final String loggerName =
-        String.format("com.anyilanxin.kunpeng.broker.exporter.%s", exporterId);
-    return LoggerFactory.getLogger(loggerName);
-  }
 }

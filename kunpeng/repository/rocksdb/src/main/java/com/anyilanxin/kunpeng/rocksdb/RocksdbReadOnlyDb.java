@@ -37,6 +37,7 @@ import org.rocksdb.*;
  * 只读 RocksDB 数据库实现，仅用于创建 snapshot 与校验和，不支持事务与写入操作
  *
  * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class RocksdbReadOnlyDb<ColumnFamilyType extends ColumnFamilies>
     implements KvStore<ColumnFamilyType> {

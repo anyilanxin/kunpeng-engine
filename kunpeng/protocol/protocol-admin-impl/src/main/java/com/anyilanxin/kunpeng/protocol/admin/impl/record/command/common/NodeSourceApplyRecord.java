@@ -31,7 +31,7 @@ import org.agrona.DirectBuffer;
  * 节点来源应用记录，携带目标节点成员 ID 与为其分配的来源 ID，由调度侧下发给对应节点。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @AutoDeclareProperties
 public class NodeSourceApplyRecord extends UnifiedRecordValue<NodeSourceApplyRecord>

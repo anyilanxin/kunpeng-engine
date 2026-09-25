@@ -29,7 +29,7 @@ import com.anyilanxin.kunpeng.structpack.property.LongProperty;
  * 延迟调度记录实体，描述延迟条目 ID、分区类型、到期时间、延迟类型与关联的计划/执行 ID。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @AutoDeclareProperties
 public class DelayedRecordEntity extends UnpackedObject implements StoreValue {

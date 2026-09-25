@@ -23,6 +23,9 @@ import org.agrona.DirectBuffer;
  * 存储读游标：按块迭代（块 = 批帧字节，载荷不透明）。
  *
  * <p>{@code next()} 返回的 buffer 视图仅保证到下一次 {@code next()} 前有效。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface EventStoreReader extends Iterator<DirectBuffer>, AutoCloseable {
 

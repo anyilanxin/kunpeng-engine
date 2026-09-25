@@ -20,7 +20,7 @@ package com.anyilanxin.kunpeng.protocol.admin.record.command;
  * 管理分区扩缩容执行类型枚举，作为管理 Raft 执行服务消息处理的操作标识。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public enum PartitionType {
   /** 管理分区 */

@@ -27,6 +27,9 @@ import org.agrona.concurrent.UnsafeBuffer;
  * 未声明属性：wire 形态为 {@code KEY_LEN + KEY + 带 tag VALUE}。
  *
  * <p>key 与 tagged value 均拷贝进自有存储——源 buffer 回收/复用后仍可安全写回（生命周期安全）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class UndeclaredProperty extends PackedProperty {
 

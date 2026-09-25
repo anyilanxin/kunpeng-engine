@@ -31,7 +31,7 @@ import org.agrona.DirectBuffer;
  * 节点来源记录，描述来源节点成员 ID 与来源 ID。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @AutoDeclareProperties
 public class NodeSourceRecord extends UnifiedRecordValue<NodeSourceRecord>

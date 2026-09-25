@@ -16,6 +16,12 @@
  */
 package com.anyilanxin.kunpeng.broker.client.admin;
 
+/**
+ * broker 错误响应 record：错误码与消息。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public record BrokerError(int code, String message) {
 
   public int getCode() {

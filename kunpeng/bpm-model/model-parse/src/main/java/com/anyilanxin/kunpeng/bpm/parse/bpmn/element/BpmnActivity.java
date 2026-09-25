@@ -24,6 +24,9 @@ import java.util.List;
  * 活动（任务类元素）的运行时基类。
  *
  * <p>可挂载边界事件与事件子流程；{@link #getEvents()} 的顺序定义事件触发优先级：事件子流程的开始事件在前、边界事件在后。三个集合均为懒分配。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class BpmnActivity extends BpmnFlowNode {
   /** 挂载的边界事件，懒分配 */

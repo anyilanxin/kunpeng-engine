@@ -26,7 +26,12 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.NotNull;
 
-/** 并发控制：提交/调用/续接/定时（Actor 与其他持有者共用语义） */
+/**
+ * 并发控制：提交/调用/续接/定时（Actor 与其他持有者共用语义）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface ConcurrencyControl extends Executor {
 
   <T> void runOnCompletion(final ActorFuture<T> future, final BiConsumer<T, Throwable> callback);

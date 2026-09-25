@@ -20,6 +20,7 @@ package com.anyilanxin.kunpeng.kvstore;
  * 列族定义，描述实体列族、虚拟列族的编号、名称等信息
  *
  * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface ColumnFamilies {
   /** 列族 */

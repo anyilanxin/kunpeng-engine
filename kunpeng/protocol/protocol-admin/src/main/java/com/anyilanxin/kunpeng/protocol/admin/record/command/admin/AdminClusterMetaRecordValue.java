@@ -23,7 +23,7 @@ import com.anyilanxin.kunpeng.protocol.common.RecordValue;
  * 集群元数据记录契约，描述集群配置版本号、副本因子、创建与更新时间，以及当前与上一版的分区组拓扑信息。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface AdminClusterMetaRecordValue extends RecordValue {
   int getVersion();

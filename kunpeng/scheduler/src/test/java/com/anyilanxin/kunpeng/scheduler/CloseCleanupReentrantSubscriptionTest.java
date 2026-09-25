@@ -31,6 +31,9 @@ import org.junit.jupiter.api.Timeout;
  * 继续下一步时 runOnCompletion 重入）。迭代器遍历会抛 ConcurrentModificationException 并把
  * actor 打成 FAILED；索引循环可容忍遍历中增删，且尾部新增的订阅同样被兜底异常完成，续接链
  * 不会静默丢失。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 @DisplayName("actor 关闭清理时的重入订阅")
 class CloseCleanupReentrantSubscriptionTest {

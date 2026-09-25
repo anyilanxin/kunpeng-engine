@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.scheduler.core;
 
-/** 载体池统一入口（平台池与虚拟池） */
+/**
+ * 载体池统一入口（平台池与虚拟池）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface CellPool {
   void route(ActorCell cell);
 

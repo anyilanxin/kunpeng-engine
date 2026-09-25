@@ -18,7 +18,12 @@ package com.anyilanxin.kunpeng.rocksdb;
 
 import org.rocksdb.Transaction;
 
-/** 事务消费者函数接口，用于消费事务以确保其处于打开状态 */
+/**
+ * 事务消费者函数接口，用于消费事务以确保其处于打开状态。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @FunctionalInterface
 interface TransactionConsumer {
 

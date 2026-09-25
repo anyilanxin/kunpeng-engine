@@ -36,6 +36,9 @@ import java.util.function.LongSupplier;
  *   <li>{@code onWrite/onCommit/onFailure}：存储回调线程（提交序）
  *   <li>{@code onProcessed}：处理 actor（单线程）
  * </ul>
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class FlowController implements LogFlowControl, EventStore.AppendListener {
 

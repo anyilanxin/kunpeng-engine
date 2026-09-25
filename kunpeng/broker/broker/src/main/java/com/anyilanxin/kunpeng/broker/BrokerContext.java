@@ -21,12 +21,21 @@ import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
 import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
 import com.anyilanxin.kunpeng.configuration.cluster.ClusterCfg;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
+import com.anyilanxin.kunpeng.sink.config.SinksConfig;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.springframework.beans.factory.BeanFactory;
 
-/** 由 Broker 直接管理的组件/actor 的上下文。 */
+/**
+ * 由 Broker 直接管理的组件/actor 的上下文。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface BrokerContext {
 
   AtomixCluster getAtomixCluster();
+
+  BeanFactory getBeanFactory();
 
   MessagingService getApiMessagingService();
 
@@ -39,4 +48,6 @@ public interface BrokerContext {
   MeterRegistry getMeterRegistry();
 
   String getNodeId();
+
+  SinksConfig getSinksConfig();
 }

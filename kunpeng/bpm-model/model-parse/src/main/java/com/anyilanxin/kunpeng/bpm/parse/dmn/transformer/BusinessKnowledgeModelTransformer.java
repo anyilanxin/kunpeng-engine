@@ -31,6 +31,9 @@ import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.TransformContext;
 /**
  * 将 DMN BusinessKnowledgeModel（业务知识模型）转换为运行时 DmnBusinessKnowledge 元素：组装 Variable 信息项与
  * EncapsulatedLogic 决策逻辑，并注册到决策需求图。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class BusinessKnowledgeModelTransformer
     implements ModelElementTransformer<BusinessKnowledgeModel> {

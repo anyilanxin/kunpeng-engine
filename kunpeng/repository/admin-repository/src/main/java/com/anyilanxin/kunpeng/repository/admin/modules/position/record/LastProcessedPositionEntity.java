@@ -22,8 +22,10 @@ import com.anyilanxin.kunpeng.structpack.UnpackedObject;
 import com.anyilanxin.kunpeng.structpack.property.LongProperty;
 
 /**
+ * 最后处理位置 Entity：source 维度已处理日志位置的落库映射。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @AutoDeclareProperties
 public class LastProcessedPositionEntity extends UnpackedObject implements StoreValue {

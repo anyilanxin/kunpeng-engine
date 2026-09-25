@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.kvstore.types;
 import org.agrona.DirectBuffer;
 import org.agrona.MutableDirectBuffer;
 
-/** 仅由 #isEmpty 内部使用的空 key，用于按相同 column family 前缀进行查找 */
+/**
+ * 仅由 #isEmpty 内部使用的空 key，用于按相同 column family 前缀进行查找。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class NullKeyType implements StoreKey {
 
   public static final NullKeyType INSTANCE = new NullKeyType();

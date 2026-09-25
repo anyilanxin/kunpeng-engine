@@ -21,7 +21,12 @@ import com.anyilanxin.kunpeng.structpack.PackerWriter;
 import org.agrona.DirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
 
-/** 不透明子树值：任意字节块透传（内容格式由使用方约定，读方按需再解析） */
+/**
+ * 不透明子树值：任意字节块透传（内容格式由使用方约定，读方按需再解析）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class PackedValue extends BaseValue {
 
   private final UnsafeBuffer bytes = new UnsafeBuffer(0, 0);

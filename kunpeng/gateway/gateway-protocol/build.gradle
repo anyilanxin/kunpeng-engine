@@ -16,13 +16,33 @@
  */
 plugins {
     id 'kunpeng.build-publish'
+    id 'kunpeng.grpc-java'
+    id 'kunpeng.sbe-java'
 }
 
-description = "Gateway Protpcol"
+description = "Kunpeng Gateway Protocol"
 
 configure(jarInfo) {
     archiveName = "kunpeng-gateway-protocol"
 }
-dependencies {
 
+
+sbeGenerator {
+    src {
+        dir = 'src/main/resources/sbe/schemas'
+    }
+    javaOptions = ['sbe.java.generate.interfaces'  : 'true',
+                   'sbe.decode.unknown.enum.values': 'true',
+                   'sbe.validation.stop.on.error'  : 'true'
+    ]
+}
+
+dependencies {
+    implementation 'io.grpc:grpc-api'
+    implementation 'io.grpc:grpc-protobuf'
+    implementation 'io.grpc:grpc-stub'
+    implementation 'com.google.guava:guava'
+    implementation 'com.google.protobuf:protobuf-java'
+    implementation 'org.agrona:agrona'
+    implementation project(':kunpeng:structpack')
 }

@@ -21,7 +21,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-/** gateway 线程配置，定义管理线程数与 gRPC 线程池大小。 */
+/**
+ * gateway 线程配置，定义管理线程数与 gRPC 线程池大小。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @Getter
 @Setter
 @ToString

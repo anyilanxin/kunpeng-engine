@@ -31,6 +31,9 @@ import org.slf4j.LoggerFactory;
  * 内类优先（子优先），找不到再回退父加载器——外部导出器依赖版本与本进程互不干扰，同时 保证引擎自身类使用运行时版本。
  *
  * <p>持有 jar 内容的 SHA-256 校验和（同内容 jar 在仓库层共享同一加载器实例）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class ExternalJarClassLoader extends ClassLoader implements AutoCloseable {
 

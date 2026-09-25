@@ -23,7 +23,7 @@ import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionExecutionRe
  * 调度计划执行明细记录契约，描述所属计划执行 ID、执行顺序、调度起止时间、执行状态与补充说明。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface AdminDispatchPlanExecutionRecordValue extends PartitionExecutionRecordValue {
   long getDueDate();

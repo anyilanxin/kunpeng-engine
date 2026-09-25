@@ -22,8 +22,10 @@ import com.anyilanxin.kunpeng.protocol.admin.record.command.business.BusinessDis
 import com.anyilanxin.kunpeng.repository.admin.AdminApplier;
 
 /**
+ * 业务面调度计划 Record 应用器接口。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface BusinessDispatchPlanApplier extends AdminApplier<BusinessDispatchPlanRecord> {
   @Override

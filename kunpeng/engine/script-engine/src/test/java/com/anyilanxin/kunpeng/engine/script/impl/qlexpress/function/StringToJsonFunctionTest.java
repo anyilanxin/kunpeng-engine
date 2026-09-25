@@ -25,6 +25,9 @@ import org.junit.jupiter.api.Test;
  *
  * <p><b>注意：签名名为 {@code toJson}，但实现实际是 JSON 反序列化到 Map。</b>
  * 这与 FEEL 规范中 {@code toJson(value): string}（序列化）的语义相反。当前测试仅覆盖实现行为。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 class StringToJsonFunctionTest extends FunctionTestBase {
 

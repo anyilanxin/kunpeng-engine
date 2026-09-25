@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
  * 客户端实现
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class BrokerClientImpl extends Actor implements BrokerClient {

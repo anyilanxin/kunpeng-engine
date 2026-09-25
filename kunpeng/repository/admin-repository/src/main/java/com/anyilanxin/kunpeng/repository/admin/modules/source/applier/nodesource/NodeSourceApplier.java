@@ -22,8 +22,10 @@ import com.anyilanxin.kunpeng.protocol.admin.record.command.source.NodeSourceLif
 import com.anyilanxin.kunpeng.repository.admin.AdminApplier;
 
 /**
+ * 节点 source Record 应用器接口。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface NodeSourceApplier extends AdminApplier<NodeSourceRecord> {
   @Override

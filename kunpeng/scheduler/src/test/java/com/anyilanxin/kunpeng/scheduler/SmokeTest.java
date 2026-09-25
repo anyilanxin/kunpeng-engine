@@ -29,7 +29,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
-/** 调度核冒烟：生命周期/内外提交/close/条件/定时器/多 actor 偷取 */
+/**
+ * 调度核冒烟：生命周期/内外提交/close/条件/定时器/多 actor 偷取。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @DisplayName("scheduler 冒烟")
 class SmokeTest {
 

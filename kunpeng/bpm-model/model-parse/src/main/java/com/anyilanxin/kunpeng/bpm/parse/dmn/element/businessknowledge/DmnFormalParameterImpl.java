@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.bpm.parse.dmn.element.businessknowledge;
 
 import com.anyilanxin.kunpeng.bpm.parse.dmn.type.DmnTypeDefinition;
 
-/** 业务知识函数的形式参数（FormalParameter）模型，包含参数名与类型定义。 */
+/**
+ * 业务知识函数的形式参数（FormalParameter）模型，包含参数名与类型定义。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class DmnFormalParameterImpl {
 
   protected String name;

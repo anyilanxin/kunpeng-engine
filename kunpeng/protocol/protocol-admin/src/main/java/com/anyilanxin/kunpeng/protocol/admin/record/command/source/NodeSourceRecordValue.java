@@ -19,8 +19,10 @@ package com.anyilanxin.kunpeng.protocol.admin.record.command.source;
 import com.anyilanxin.kunpeng.protocol.common.RecordValue;
 
 /**
+ * 节点 source Record 值接口。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface NodeSourceRecordValue extends RecordValue {
   String getMemberId();

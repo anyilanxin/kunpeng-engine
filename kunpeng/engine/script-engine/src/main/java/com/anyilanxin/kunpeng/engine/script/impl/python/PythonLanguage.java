@@ -23,8 +23,10 @@ import javax.script.ScriptEngineManager;
 import org.python.jsr223.PyScriptEngine;
 
 /**
+ * Python 脚本语言支持。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public final class PythonLanguage implements ScriptLanguage {
 

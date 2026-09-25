@@ -16,6 +16,12 @@
  */
 package com.anyilanxin.kunpeng.modules;
 
+/**
+ * 启动 profile 类型枚举。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public enum ProfileType {
   // application specific profiles
   BROKER("broker"),

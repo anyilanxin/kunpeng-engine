@@ -22,8 +22,10 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.stereotype.Component;
 
 /**
+ * broker 配置属性装配：将配置文件绑定并构建 broker 启动配置。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @Component
 @EnableConfigurationProperties(BrokerPropertiesConfiguration.BrokerProperties.class)

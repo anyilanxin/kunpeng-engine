@@ -36,6 +36,9 @@ import org.slf4j.Logger;
  *
  * <p>当使用 {@link PartitionScheme#FIXED} 时，需要在 {@link #fixed} 中指定 broker 到分区列表的映射。 该映射以 broker 节点 ID
  * 为键，值为分区 ID 列表。映射必须是完备的，即所有 broker 都应出现， 且所有分区都应按相应的副本因子进行指定。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 @Getter
 @Setter

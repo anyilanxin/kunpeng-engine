@@ -24,7 +24,7 @@ import com.anyilanxin.kunpeng.engine.script.impl.qlexpress.QLFunction;
  * split(string) split(string, separator)
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class StringSplitFunction implements QLFunction {
 

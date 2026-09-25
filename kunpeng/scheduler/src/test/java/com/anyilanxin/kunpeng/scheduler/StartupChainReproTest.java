@@ -27,7 +27,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
-/** 复刻 DefaultBrokerClusterConfigurationService.start() 的链形态定位启动停摆 */
+/**
+ * 复刻 DefaultBrokerClusterConfigurationService.start() 的链形态定位启动停摆。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @DisplayName("启动链形态复现")
 class StartupChainReproTest {
 

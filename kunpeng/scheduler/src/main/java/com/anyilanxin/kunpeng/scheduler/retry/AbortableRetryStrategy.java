@@ -28,6 +28,9 @@ import java.util.function.BooleanSupplier;
  *
  * <p>返回 false 时不立即重入 actor 邮箱，而是按指数退避（10ms 起步、×2、封顶 500ms）调度 下一次尝试，避免下游持续背压时以忙旋占满属主 actor，饿死同 actor
  * 上的其他任务。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class AbortableRetryStrategy implements RetryStrategy {
 

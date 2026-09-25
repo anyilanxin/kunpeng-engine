@@ -25,7 +25,7 @@ import lombok.ToString;
  * raft 节点配置，包含节点 ID 与优先级。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @Getter
 @Setter

@@ -24,6 +24,9 @@ import java.util.Collection;
  * DMN 引擎中的一个 Decision。
  *
  * <p>Decision 可以通过多种方式实现。要检查该 Decision 是否实现为 DecisionTable，请参见 {@link #isDecisionTable()}。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface DmnDecision {
 

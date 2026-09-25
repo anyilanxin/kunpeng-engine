@@ -21,8 +21,10 @@ import com.anyilanxin.kunpeng.scheduler.Actor;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 
 /**
+ * broker 启动 actor：按顺序编排各启动步骤并驱动相位切换。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class BrokerStartupActor extends Actor {
   private final BrokerStartupProcess brokerStartupProcess;
@@ -44,7 +46,9 @@ public class BrokerStartupActor extends Actor {
         brokerContext.getActorSchedulingService(),
         brokerContext.getAtomixCluster(),
         this,
-        brokerContext.getMeterRegistry());
+        brokerContext.getMeterRegistry(),
+        brokerContext.getBeanFactory(),
+        brokerContext.getSinksConfig());
   }
 
   @Override

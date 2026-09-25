@@ -22,7 +22,12 @@ import java.util.ArrayList;
 import java.util.List;
 import org.agrona.concurrent.UnsafeBuffer;
 
-/** 测试条目工厂（跨测试包共享） */
+/**
+ * 测试条目工厂（跨测试包共享）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class TestEntries {
 
   private TestEntries() {}

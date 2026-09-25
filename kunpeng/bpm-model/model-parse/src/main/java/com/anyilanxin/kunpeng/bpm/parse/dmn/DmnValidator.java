@@ -22,7 +22,7 @@ import com.anyilanxin.kunpeng.bpm.model.dmn.DmnModelInstance;
  * DMN 模型校验器，用于对 DMN 模型实例进行校验。当前为占位实现，暂无具体校验逻辑。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public final class DmnValidator {
 

@@ -25,7 +25,7 @@ import java.util.List;
  * 分区组拓扑信息。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public record PartitionInfoMeta(
     String partitionGroup,

@@ -24,6 +24,9 @@ import java.util.List;
  * 流程元素容器（子流程与流程）的运行时基类：收集容器内的开始事件并提供判定方法。
  *
  * <p>容器自身的全部子元素统一登记在流程级注册表中（见 {@link BpmnProcess#getElementById(String)}），容器内不再维护重复索引。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public class BpmnContainer extends BpmnActivity {
   /** 容器内开始事件列表，懒分配 */

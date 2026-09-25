@@ -32,7 +32,7 @@ import org.agrona.DirectBuffer;
  * 节点来源实体，记录来源节点成员 ID 与来源 ID。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @AutoDeclareProperties
 public class NodeSourceEntity extends UnpackedObject implements StoreValue {

@@ -22,8 +22,10 @@ import com.anyilanxin.kunpeng.protocol.admin.record.command.delayed.DelayedLifeC
 import com.anyilanxin.kunpeng.repository.admin.AdminApplier;
 
 /**
+ * 延迟事件 Record 应用器接口。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface DelayedApplier extends AdminApplier<DelayedRecord> {
   @Override

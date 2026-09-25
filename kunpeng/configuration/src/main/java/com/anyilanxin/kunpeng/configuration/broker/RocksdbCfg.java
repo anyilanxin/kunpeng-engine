@@ -32,7 +32,7 @@ import org.springframework.util.unit.DataSize;
  * Broker 的 RocksDB 存储配置项，聚合列族选项、内存与后台线程等参数。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @Getter
 @Setter

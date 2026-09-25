@@ -30,7 +30,12 @@ import org.agrona.concurrent.UnsafeBuffer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/** VarInt + 批帧编解码测试（字节级规范锚点） */
+/**
+ * VarInt + 批帧编解码测试（字节级规范锚点）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @DisplayName("VarInt 与批帧编解码")
 class BatchFrameTest {
 

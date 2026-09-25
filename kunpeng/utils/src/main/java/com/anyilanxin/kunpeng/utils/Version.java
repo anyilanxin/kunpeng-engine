@@ -34,6 +34,9 @@ import java.util.regex.Pattern;
  *   <li>先行版本按点分隔的标识符逐个比较：纯数字标识符按数值比较且低于字母数字标识符， 字母数字标识符按 ASCII 字典序比较；标识符数量多者优先级高；
  *   <li>构建元数据不参与优先级比较，{@link #equals(Object)} 与 {@link #hashCode()} 同样忽略它。
  * </ul>
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class Version implements Comparable<Version> {
 

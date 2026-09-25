@@ -21,8 +21,10 @@ import com.anyilanxin.kunpeng.protocol.admin.AdminValueType;
 import com.anyilanxin.kunpeng.protocol.common.RecordValue;
 
 /**
+ * 管理面仓储应用器集合接口：按 Record 类型获取应用器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface AdminRepositoryAppliers {
   void applyState(

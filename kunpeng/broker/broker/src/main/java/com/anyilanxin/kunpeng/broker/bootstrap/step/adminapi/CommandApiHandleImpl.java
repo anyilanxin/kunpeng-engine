@@ -21,13 +21,13 @@ import com.anyilanxin.kunpeng.broker.bootstrap.step.idgenerator.NodeIdGeneratorS
 import com.anyilanxin.kunpeng.broker.client.admin.*;
 import com.anyilanxin.kunpeng.broker.client.admin.commandapi.CommandApiHandle;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
-import com.anyilanxin.kunpeng.cluster.dispatch.eventlog.RecordAppendEntryFactory;
 import com.anyilanxin.kunpeng.eventlog.AppendEntry;
 import com.anyilanxin.kunpeng.eventlog.AppendResult;
 import com.anyilanxin.kunpeng.eventlog.EventLogWriter;
 import com.anyilanxin.kunpeng.eventlog.WriteContext;
 import com.anyilanxin.kunpeng.protocol.admin.AdminValueType;
 import com.anyilanxin.kunpeng.protocol.admin.impl.AdminRecordMetadata;
+import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.RecordAppendEntryFactory;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.DefaultRecordValueMapper;
 import com.anyilanxin.kunpeng.protocol.admin.record.CommandApiValueLifeCycle;
 import com.anyilanxin.kunpeng.protocol.admin.record.RecordType;
@@ -46,8 +46,10 @@ import org.agrona.concurrent.UnsafeBuffer;
 import org.slf4j.Logger;
 
 /**
+ * 管理面命令 API 处理句柄默认实现：注册命令处理器并静默关闭。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class CommandApiHandleImpl implements CommandApiHandle, CloseableSilently {
   private final MessagingService messagingService;

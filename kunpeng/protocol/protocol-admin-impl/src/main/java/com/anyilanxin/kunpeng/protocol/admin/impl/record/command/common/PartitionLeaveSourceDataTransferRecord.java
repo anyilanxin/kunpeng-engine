@@ -36,7 +36,7 @@ import org.agrona.DirectBuffer;
  * 分区数据合并命令记录，携带分区类型、执行类型、发起执行的节点 ID、目标分区组与分区 ID 及合并目标节点。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @AutoDeclareProperties
 public class PartitionLeaveSourceDataTransferRecord

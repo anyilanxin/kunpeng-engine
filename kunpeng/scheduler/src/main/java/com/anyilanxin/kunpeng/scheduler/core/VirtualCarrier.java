@@ -24,7 +24,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.LockSupport;
 import org.slf4j.MDC;
 
-/** 虚拟线程载体：每 cell 绑定一条虚拟线程, 无偷取。gate WAKING_UP 时接管执行; cell 终态（CLOSED/FAILED）且休眠后退出线程。 */
+/**
+ * 虚拟线程载体：每 cell 绑定一条虚拟线程, 无偷取。gate WAKING_UP 时接管执行; cell 终态（CLOSED/FAILED）且休眠后退出线程。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class VirtualCarrier implements CellRunner, Runnable {
 
   private final VirtualPool pool;

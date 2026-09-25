@@ -25,7 +25,12 @@ import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 import java.nio.file.Path;
 
-/** 集群管理（Cluster Admin）相关的 broker 启动步骤。 */
+/**
+ * 集群配置（Cluster Config）相关的 broker 启动步骤。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class ClusterConfigStep extends AbstractBrokerStartupStep {
 
   @Override

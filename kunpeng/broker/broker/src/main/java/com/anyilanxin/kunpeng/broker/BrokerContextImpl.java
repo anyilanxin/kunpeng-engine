@@ -23,9 +23,16 @@ import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
 import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
 import com.anyilanxin.kunpeng.configuration.cluster.ClusterCfg;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
+import com.anyilanxin.kunpeng.sink.config.SinksConfig;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.springframework.beans.factory.BeanFactory;
 
-/** BrokerContext 的实现类，持有 AtomixCluster 与 API 消息服务。 */
+/**
+ * BrokerContext 的实现类，持有 AtomixCluster 与 API 消息服务。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 final class BrokerContextImpl implements BrokerContext {
 
   private final AtomixCluster atomixCluster;
@@ -34,24 +41,35 @@ final class BrokerContextImpl implements BrokerContext {
   private final ClusterCfg clusterCfg;
   private final ActorSchedulingService schedulingService;
   private final MeterRegistry meterRegistry;
+  private final BeanFactory beanFactory;
+  private final SinksConfig sinksConfig;
 
   BrokerContextImpl(
       final AtomixCluster atomixCluster,
       final BrokerCfg brokerCfg,
       final ClusterCfg clusterCfg,
       final ActorSchedulingService schedulingService,
-      final MeterRegistry meterRegistry) {
+      final MeterRegistry meterRegistry,
+      final BeanFactory beanFactory,
+      final SinksConfig sinksConfig) {
     this.atomixCluster = requireNonNull(atomixCluster);
     apiMessagingService = requireNonNull(atomixCluster.getMessagingService());
     this.brokerCfg = requireNonNull(brokerCfg);
     this.clusterCfg = requireNonNull(clusterCfg);
     this.schedulingService = requireNonNull(schedulingService);
     this.meterRegistry = meterRegistry;
+    this.beanFactory = beanFactory;
+    this.sinksConfig = sinksConfig;
   }
 
   @Override
   public AtomixCluster getAtomixCluster() {
     return atomixCluster;
+  }
+
+  @Override
+  public BeanFactory getBeanFactory() {
+    return beanFactory;
   }
 
   @Override
@@ -81,6 +99,11 @@ final class BrokerContextImpl implements BrokerContext {
 
   @Override
   public String getNodeId() {
-    return "";
+    return clusterCfg.getNodeId();
+  }
+
+  @Override
+  public SinksConfig getSinksConfig() {
+    return sinksConfig;
   }
 }

@@ -19,8 +19,10 @@ package com.anyilanxin.kunpeng.protocol.common.api;
 import com.anyilanxin.kunpeng.structpack.buffer.BufferWriter;
 
 /**
+ * 请求 Record 值接口：请求类 Record 的自序列化契约。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface RequestRecordValue extends BufferWriter {
   default ValidateResult validate() {

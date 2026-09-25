@@ -19,8 +19,10 @@ package com.anyilanxin.kunpeng.broker.client.admin;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 
 /**
+ * 集群调度客户端：聚合管理面与业务面调度请求能力。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface ClusterDispatchClient extends AdminDispatchClient, BusinessDispatchClient {
   ActorFuture<Void> start();

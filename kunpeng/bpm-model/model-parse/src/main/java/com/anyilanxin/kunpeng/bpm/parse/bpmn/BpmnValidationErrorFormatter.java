@@ -24,7 +24,12 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-/** 校验结果格式化器：按「元素定位链 + 结果明细」逐条输出，超出上限时输出省略计数。 */
+/**
+ * 校验结果格式化器：按「元素定位链 + 结果明细」逐条输出，超出上限时输出省略计数。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class BpmnValidationErrorFormatter implements ValidationResultFormatter {
 
   /** 省略结果的后缀模板 */

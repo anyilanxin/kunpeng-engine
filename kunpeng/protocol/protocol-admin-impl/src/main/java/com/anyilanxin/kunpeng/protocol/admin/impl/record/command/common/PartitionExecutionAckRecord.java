@@ -35,7 +35,7 @@ import org.agrona.DirectBuffer;
  * 分区执行确认（ack）记录，携带分区类型、执行类型、执行节点 ID、执行结果与关联的调度计划信息。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @AutoDeclareProperties
 public class PartitionExecutionAckRecord extends UnifiedRecordValue<PartitionExecutionAckRecord>

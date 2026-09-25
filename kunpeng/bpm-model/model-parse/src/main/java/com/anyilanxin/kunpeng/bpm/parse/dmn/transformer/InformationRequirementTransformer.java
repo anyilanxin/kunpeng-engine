@@ -31,6 +31,9 @@ import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.TransformContext;
  * requiredDecisions 逐层先求值子决策。
  *
  * <p>本转换器运行在决策注册（step4）之后，引用目标无论在文档中的先后顺序均可解析。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class InformationRequirementTransformer
     implements ModelElementTransformer<InformationRequirement> {

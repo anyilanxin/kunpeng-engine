@@ -28,6 +28,9 @@ import org.slf4j.Logger;
  * 无限重试：异常也重试（仅记日志）; 终止条件为真时 complete(false)。
  *
  * <p>失败不立即重入邮箱, 而是按指数退避（10ms 起步、×2、封顶 500ms）调度下一次尝试, 避免下游持续 背压时以忙旋占满属主 actor, 饿死同 actor 上的其他任务。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class EndlessRetryStrategy implements RetryStrategy {
 

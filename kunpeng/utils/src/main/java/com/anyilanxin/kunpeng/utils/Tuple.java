@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.utils;
 
-/** 可变二元组 */
+/**
+ * 可变二元组。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class Tuple<L, R> {
   private L left;
   private R right;

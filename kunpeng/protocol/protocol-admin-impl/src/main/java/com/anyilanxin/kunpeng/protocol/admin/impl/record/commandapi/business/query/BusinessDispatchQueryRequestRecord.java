@@ -24,7 +24,7 @@ import com.anyilanxin.kunpeng.structpack.AutoDeclareProperties;
  * 业务面调度查询请求记录，当前无附加查询条件字段。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @AutoDeclareProperties
 public class BusinessDispatchQueryRequestRecord

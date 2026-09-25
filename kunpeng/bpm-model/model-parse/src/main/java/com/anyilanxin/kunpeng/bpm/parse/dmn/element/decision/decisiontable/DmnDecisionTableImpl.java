@@ -27,7 +27,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-/** 决策表（DecisionTable）决策逻辑的内存模型，持有决策表的命中策略、输入列、输出列与规则集合。 */
+/**
+ * 决策表（DecisionTable）决策逻辑的内存模型，持有决策表的命中策略、输入列、输出列与规则集合。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @Getter
 @Setter
 @ToString

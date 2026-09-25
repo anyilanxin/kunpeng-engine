@@ -21,6 +21,12 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import java.time.Duration;
 
+/**
+ * AIMD 流控算法配置。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class AIMDCfg {
 
   private Duration requestTimeout = Duration.ofMillis(200);

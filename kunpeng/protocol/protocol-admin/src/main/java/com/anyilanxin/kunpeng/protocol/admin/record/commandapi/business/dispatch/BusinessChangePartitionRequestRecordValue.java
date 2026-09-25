@@ -20,8 +20,10 @@ import com.anyilanxin.kunpeng.protocol.common.RecordValue;
 import com.anyilanxin.kunpeng.protocol.common.api.RequestRecordValue;
 
 /**
+ * 业务面调度变更分区请求 Record 值接口。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface BusinessChangePartitionRequestRecordValue extends RecordValue, RequestRecordValue {
 

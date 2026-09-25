@@ -22,7 +22,7 @@ import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionExecutionRe
  * 分区数据合并命令记录契约，描述数据合并的目标成员。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface PartitionSourceTransferValue extends PartitionExecutionRecordValue {
   /** 资源标识符 */

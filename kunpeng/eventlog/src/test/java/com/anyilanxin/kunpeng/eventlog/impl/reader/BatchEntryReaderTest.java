@@ -29,7 +29,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/** 按源 position 聚合批读：分组 / head 回卷重放 / seekToNextBatch */
+/**
+ * 按源 position 聚合批读：分组 / head 回卷重放 / seekToNextBatch。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @DisplayName("BatchEntryReader 按源聚合批读")
 class BatchEntryReaderTest {
 

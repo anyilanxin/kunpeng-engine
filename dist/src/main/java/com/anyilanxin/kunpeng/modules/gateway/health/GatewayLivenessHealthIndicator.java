@@ -27,7 +27,7 @@ import org.springframework.stereotype.Component;
  *
  * @author zxuanhong
  * @copyright zhouxuanhong（https://anyilanxin.com）
- * @since 1.0.0
+ * @since 2026.9.0
  */
 @Component
 public final class GatewayLivenessHealthIndicator extends LivenessStateHealthIndicator {

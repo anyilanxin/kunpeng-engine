@@ -26,6 +26,9 @@ package com.anyilanxin.kunpeng.eventlog;
  *   <li>{@link #SCHEDULED}：定时任务触发——不受流控
  *   <li>{@link #INTERNAL}：内部写入（补写/重放等）——永不拒绝
  * </ul>
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public enum WriteContext {
   USER_COMMAND,

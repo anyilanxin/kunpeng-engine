@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.utils.exception;
 
-/** 用于表示执行过程中出现的非预期异常。该异常继承 {@link RuntimeException}，属于非受检异常。 */
+/**
+ * 用于表示执行过程中出现的非预期异常。该异常继承 {@link RuntimeException}，属于非受检异常。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class UncheckedExecutionException extends RuntimeException {
 
   public UncheckedExecutionException(final String message) {

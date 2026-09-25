@@ -25,7 +25,12 @@ import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnSequenceFlow;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.BpmnTransformContext;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.ElementTransformer;
 
-/** 顺序流转换器：解析条件表达式、装配 take 监听器并把顺序流与源/目标节点双向连接。 */
+/**
+ * 顺序流转换器：解析条件表达式、装配 take 监听器并把顺序流与源/目标节点双向连接。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class SequenceFlowTransformer implements ElementTransformer<SequenceFlow> {
 
   /** 返回本转换器处理的模型元素类型。 */

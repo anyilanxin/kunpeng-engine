@@ -26,7 +26,12 @@ import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.BpmnTransformContext
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.ElementTransformer;
 import java.util.Collection;
 
-/** 结束事件转换器：推导事件语义（普通/消息/补偿/终止）。 */
+/**
+ * 结束事件转换器：推导事件语义（普通/消息/补偿/终止）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class EndEventTransformer implements ElementTransformer<EndEvent> {
 
   /** 返回本转换器处理的模型元素类型。 */

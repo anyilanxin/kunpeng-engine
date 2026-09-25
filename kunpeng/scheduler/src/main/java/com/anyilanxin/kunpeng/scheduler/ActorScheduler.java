@@ -23,7 +23,12 @@ import java.time.Duration;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 
-/** 调度器门面：builder 构建, start/submitActor/close */
+/**
+ * 调度器门面：builder 构建, start/submitActor/close。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class ActorScheduler implements ActorSchedulingService {
 
   private final SchedulerImpl impl;

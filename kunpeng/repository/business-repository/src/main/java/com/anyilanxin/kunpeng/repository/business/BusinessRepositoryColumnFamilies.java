@@ -25,6 +25,7 @@ import com.anyilanxin.kunpeng.kvstore.PredefinedColumnFamily;
  * 数据列族
  *
  * @author zxuanhong
+ * @since 2026.9.0
  */
 public enum BusinessRepositoryColumnFamilies implements ColumnFamilies {
   // 本地数据,集群变更不进行数据迁移(仅在本分区存在)
@@ -35,7 +36,7 @@ public enum BusinessRepositoryColumnFamilies implements ColumnFamilies {
   BUSINESS_VALUE_ROUTE_MESSAGE_CORRELATION(DEFAULT_COLUMN_FAMILY, 4),
   BUSINESS_VALUE_ROUTE_SIGN_CORRELATION(DEFAULT_COLUMN_FAMILY, 5),
   BUSINESS_VALUE_ROUTE_LOCK(DEFAULT_COLUMN_FAMILY, 6),
-  EXPORTER(DEFAULT_COLUMN_FAMILY, 7),
+  SINK(DEFAULT_COLUMN_FAMILY, 7),
 
   // 全局数据，引导新分区时迁移(全局分区存在)
   RESOURCE_DEFINITION(GLOBAL_COLUMN_FAMILY, 40),
@@ -93,6 +94,7 @@ public enum BusinessRepositoryColumnFamilies implements ColumnFamilies {
   SIGNAL_SUBSCRIPTION_ACTIVITY_INSTANCE_CORRELATION(LOCAL_COLUMN_FAMILY, 114),
   SIGNAL_CORRELATION(LOCAL_COLUMN_FAMILY, 115),
   SIGNAL_CORRELATION_DETAIL(LOCAL_COLUMN_FAMILY, 116),
+  JOB_DEADLINE(LOCAL_COLUMN_FAMILY, 117),
 
   DISTRIBUTE_SERIAL(LOCAL_COLUMN_FAMILY, 130),
   DISTRIBUTE_SERIAL_INDEX(LOCAL_COLUMN_FAMILY, 131),

@@ -36,7 +36,7 @@ import org.agrona.DirectBuffer;
  * 分区资源标识转移命令记录，携带分区类型、执行类型、发起执行的节点 ID、分区组与分区 ID 及资源来源分区（source 分区）。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @AutoDeclareProperties
 public class PartitionSourceTransferRecord extends UnifiedRecordValue<PartitionSourceTransferRecord>

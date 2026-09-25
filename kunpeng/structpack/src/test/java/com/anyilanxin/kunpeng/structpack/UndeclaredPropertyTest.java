@@ -26,7 +26,12 @@ import org.agrona.concurrent.UnsafeBuffer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/** 未知字段测试：跳过保留语义/自有拷贝生命周期安全/全 tag 形态/池化复用 */
+/**
+ * 未知字段测试：跳过保留语义/自有拷贝生命周期安全/全 tag 形态/池化复用。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 @DisplayName("未知字段(跳过保留)")
 class UndeclaredPropertyTest {
 

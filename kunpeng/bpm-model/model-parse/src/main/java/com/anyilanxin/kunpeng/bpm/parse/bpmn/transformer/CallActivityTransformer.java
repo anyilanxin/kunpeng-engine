@@ -26,6 +26,9 @@ import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.ElementTransformer;
  * 调用活动转换器：装配被调用元素扩展（流程 id 表达式、变量传递策略与绑定方式）。
  *
  * <p>字典序索引由 BpmnTransformer 在全部阶段完成后统一编号。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class CallActivityTransformer implements ElementTransformer<CallActivity> {
 

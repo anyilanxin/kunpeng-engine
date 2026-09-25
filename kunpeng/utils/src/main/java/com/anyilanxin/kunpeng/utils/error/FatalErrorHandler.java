@@ -23,6 +23,8 @@ import org.slf4j.Logger;
  * FatalErrorHandler 用于安全、一致地处理所有 {@link Throwable}。实现类解析 throwable， 并在其被认为是致命错误时采取<i>某种</i>措施。
  *
  * @see VirtualMachineErrorHandler
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public interface FatalErrorHandler {
   /**

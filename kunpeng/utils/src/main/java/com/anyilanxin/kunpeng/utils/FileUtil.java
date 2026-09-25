@@ -45,6 +45,9 @@ import org.agrona.SystemUtil;
  *   <li>建目录：单次 createDirectories（容忍已存在）替代 exists→isDirectory→create 三连 stat
  *   <li>删树：{@link Files#walkFileTree} 后序访问器边走边删（先文件后目录），无路径物化
  * </ul>
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class FileUtil {
 

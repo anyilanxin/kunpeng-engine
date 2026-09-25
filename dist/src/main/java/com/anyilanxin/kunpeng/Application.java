@@ -23,7 +23,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * start
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @SpringBootApplication(proxyBeanMethods = false)
 public class Application {

@@ -22,7 +22,12 @@ import org.agrona.DirectBuffer;
 import org.agrona.MutableDirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
 
-/** 字符串类型的 key/value，序列化格式为 4 字节大端长度前缀加字节内容 */
+/**
+ * 字符串类型的 key/value，序列化格式为 4 字节大端长度前缀加字节内容。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class StringType implements StoreKey, StoreValue {
 
   private final DirectBuffer bytes = new UnsafeBuffer(0, 0);

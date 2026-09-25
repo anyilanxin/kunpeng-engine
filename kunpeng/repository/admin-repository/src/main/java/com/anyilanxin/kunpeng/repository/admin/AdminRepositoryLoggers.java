@@ -19,6 +19,12 @@ package com.anyilanxin.kunpeng.repository.admin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * 管理面仓储日志器集合。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public final class AdminRepositoryLoggers {
   public static final Logger ADMIN_REPOSITORY =
       LoggerFactory.getLogger("com.anyilanxin.kunpeng.repository.admin");

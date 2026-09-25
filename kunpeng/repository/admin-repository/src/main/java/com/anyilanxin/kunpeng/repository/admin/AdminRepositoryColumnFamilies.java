@@ -25,6 +25,7 @@ import com.anyilanxin.kunpeng.kvstore.PredefinedColumnFamily;
  * 数据列族
  *
  * @author zxuanhong
+ * @since 2026.9.0
  */
 public enum AdminRepositoryColumnFamilies implements ColumnFamilies {
   DEFAULT(DEFAULT_COLUMN_FAMILY, 0),

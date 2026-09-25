@@ -19,15 +19,17 @@ package com.anyilanxin.kunpeng.repository.admin.modules.delayed.applier.impl;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.delayed.DelayedRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.delayed.DelayedLifeCycle;
 import com.anyilanxin.kunpeng.repository.admin.AdminRepository;
-import com.anyilanxin.kunpeng.repository.admin.modules.delayed.MutableRepositoryDelayed;
+import com.anyilanxin.kunpeng.repository.admin.modules.delayed.MutableDelayedRepository;
 import com.anyilanxin.kunpeng.repository.admin.modules.delayed.applier.DelayedApplier;
 
 /**
+ * 延迟事件取消事件应用器。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class DelayedCanceledApplierImpl implements DelayedApplier {
-  private final MutableRepositoryDelayed repositoryDelayed;
+  private final MutableDelayedRepository repositoryDelayed;
 
   public DelayedCanceledApplierImpl(final AdminRepository repository) {
     repositoryDelayed = repository.delayedRepository();

@@ -22,7 +22,7 @@ import com.anyilanxin.kunpeng.configuration.NetworkInfo;
  * 集群网络配置，定义端口偏移量及成员、业务、raft 等网络信息。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class ClusterNetworkCfg extends NetworkInfo {
   private int portOffset;

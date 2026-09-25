@@ -138,7 +138,7 @@ public interface ModelInstance {
    *
    * @param validators the validators to execute
    * @return the results of the validation.
-   * @since 7.6
+   * @since 2026.9.0
    */
   ValidationResults validate(Collection<ModelElementValidator<?>> validators);
 }

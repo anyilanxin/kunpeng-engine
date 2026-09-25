@@ -20,8 +20,10 @@ import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.admin.dispat
 import java.util.concurrent.CompletableFuture;
 
 /**
+ * 管理面调度客户端：向 broker 管理分区发起调度变更与查询请求。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface AdminDispatchClient {
   /** 集群修改副本数量 */

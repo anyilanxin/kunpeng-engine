@@ -19,8 +19,10 @@ package com.anyilanxin.kunpeng.protocol.admin.record.command;
 import com.anyilanxin.kunpeng.protocol.common.RecordValue;
 
 /**
+ * 分区执行明细 Record 值接口。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface PartitionExecutionRecordValue extends RecordValue {
   /** 调度计划 id */

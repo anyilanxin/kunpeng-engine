@@ -19,8 +19,10 @@ package com.anyilanxin.kunpeng.repository.admin;
 import com.anyilanxin.kunpeng.kvstore.TransactionContext;
 
 /**
+ * 管理面仓储顶层接口：读写能力与事务上下文的统一入口。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public interface AdminRepository extends AdminMutableRepository, AdminImmutableRepository {
   TransactionContext getContext();

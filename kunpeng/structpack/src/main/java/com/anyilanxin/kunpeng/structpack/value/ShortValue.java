@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.structpack.value;
 import com.anyilanxin.kunpeng.structpack.PackerReader;
 import com.anyilanxin.kunpeng.structpack.PackerWriter;
 
-/** short 值：zigzag varint 编码（常见哨兵 -1/序号 等 1 字节） */
+/**
+ * short 值：zigzag varint 编码（常见哨兵 -1/序号 等 1 字节）。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class ShortValue extends BaseValue {
 
   private short value;

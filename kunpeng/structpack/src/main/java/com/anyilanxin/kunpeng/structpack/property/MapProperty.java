@@ -21,6 +21,12 @@ import com.anyilanxin.kunpeng.structpack.value.MapValue;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
+/**
+ * 映射属性：structpack map 类型字段的编解码。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class MapProperty<K extends BaseValue, V extends BaseValue>
     extends BaseProperty<MapValue<K, V>> {
 

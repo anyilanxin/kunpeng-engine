@@ -21,6 +21,7 @@ package com.anyilanxin.kunpeng.bpm.parse.dmn.type;
  * 为特定的类型名称提供 {@link DmnDataTypeTransformer}。
  *
  * @author Philipp Ossler
+ * @since 2026.9.0
  */
 public interface DmnDataTypeTransformerRegistry {
 

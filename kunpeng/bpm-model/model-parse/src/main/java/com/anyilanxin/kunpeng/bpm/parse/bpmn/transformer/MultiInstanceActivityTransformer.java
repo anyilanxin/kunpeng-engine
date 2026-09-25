@@ -36,6 +36,9 @@ import com.anyilanxin.kunpeng.engine.script.ScriptExpression;
  * 多实例活动转换器：为声明了多实例循环特征的活动构造多实例活动体，并把连线、边界事件、补偿引用等从内部活动迁移到活动体。
  *
  * <p>活动体与内部活动共用同一元素 id 并替换流程注册表中的登记；边界事件与事件子流程改挂到活动体上。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public final class MultiInstanceActivityTransformer implements ElementTransformer<Activity> {
 

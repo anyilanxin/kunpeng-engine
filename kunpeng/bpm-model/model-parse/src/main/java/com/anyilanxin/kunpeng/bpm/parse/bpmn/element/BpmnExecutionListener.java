@@ -25,6 +25,8 @@ import com.anyilanxin.kunpeng.engine.script.ScriptExpression;
  * @param eventType 监听时机
  * @param type 任务类型表达式
  * @param retries 重试次数表达式
+ * @author zxuanhong
+ * @since 2026.9.0
  */
 public record BpmnExecutionListener(
     KunpengExecutionListenerEventType eventType, ScriptExpression type, ScriptExpression retries) {

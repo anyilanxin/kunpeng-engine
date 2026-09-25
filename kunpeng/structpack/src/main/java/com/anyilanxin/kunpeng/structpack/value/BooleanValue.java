@@ -19,7 +19,12 @@ package com.anyilanxin.kunpeng.structpack.value;
 import com.anyilanxin.kunpeng.structpack.PackerReader;
 import com.anyilanxin.kunpeng.structpack.PackerWriter;
 
-/** boolean 值：单字节 */
+/**
+ * boolean 值：单字节。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public class BooleanValue extends BaseValue {
 
   private boolean value;

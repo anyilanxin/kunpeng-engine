@@ -22,8 +22,10 @@ import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.business.dis
 import com.anyilanxin.kunpeng.protocol.admin.record.commandapi.business.BusinessDispatchApiValueLifeCycle;
 
 /**
+ * 业务分区集群再均衡请求。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public class BusinessClusterBalanceRequest
     extends CommandApiBrokerRequest<BusinessClusterBalanceRequestRecord> {

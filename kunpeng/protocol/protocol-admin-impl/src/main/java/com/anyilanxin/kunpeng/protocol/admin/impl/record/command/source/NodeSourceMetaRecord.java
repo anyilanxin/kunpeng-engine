@@ -30,7 +30,7 @@ import java.util.List;
  * 节点来源元数据实体，记录元数据版本号、创建与更新时间，以及节点来源列表。
  *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 @AutoDeclareProperties
 public class NodeSourceMetaRecord extends UnifiedRecordValue<NodeSourceMetaRecord>

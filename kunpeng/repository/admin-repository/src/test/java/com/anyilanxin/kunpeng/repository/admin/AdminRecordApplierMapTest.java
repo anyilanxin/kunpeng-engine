@@ -29,7 +29,12 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/** AdminRecordApplierMap 注册表行为测试 */
+/**
+ * AdminRecordApplierMap 注册表行为测试。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 class AdminRecordApplierMapTest {
 
   private final AdminRecordApplierMap map = new AdminRecordApplierMap();

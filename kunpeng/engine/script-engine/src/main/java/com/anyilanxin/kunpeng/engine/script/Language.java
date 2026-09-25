@@ -17,8 +17,10 @@
 package com.anyilanxin.kunpeng.engine.script;
 
 /**
+ * 脚本语言枚举。
+ *
  * @author zxuanhong
- * @since
+ * @since 2026.9.0
  */
 public enum Language {
   DEFAULT("QL_EXPRESS", "", "ql express引擎"),

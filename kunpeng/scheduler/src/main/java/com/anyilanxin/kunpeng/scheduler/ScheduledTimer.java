@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.scheduler;
 
-/** 定时器句柄 */
+/**
+ * 定时器句柄。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public interface ScheduledTimer extends CloseableSilently {
   void cancel();
 

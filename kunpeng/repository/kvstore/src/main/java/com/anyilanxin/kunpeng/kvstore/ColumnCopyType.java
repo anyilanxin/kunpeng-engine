@@ -16,7 +16,12 @@
  */
 package com.anyilanxin.kunpeng.kvstore;
 
-/** 数据复制方式，用于区分按实体列族还是虚拟列族进行数据复制 */
+/**
+ * 数据复制方式，用于区分按实体列族还是虚拟列族进行数据复制。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
 public enum ColumnCopyType {
   /** 基于实体列族 */
   FAMILY,
