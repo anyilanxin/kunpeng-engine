@@ -308,10 +308,6 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
           if ((recordType == RecordType.COMMAND || recordType == RecordType.COMMAND_API)
               && !loggedEvent.isSkipProcessing()) {
             processEvent(loggedEvent);
-          } else {
-            System.out.println("--metadata--1-" + metadata.getLifeCycle().name());
-            System.out.println("--metadata--2-" + metadata.getValueType().name());
-            System.out.println("--metadata--3-" + loggedEvent.getKey());
           }
           // 处理/跳过即释放: 推进流控在途水位（释放窗口占位与在途环槽位）
           logStream.getFlowControl().onProcessed(processPosition);
