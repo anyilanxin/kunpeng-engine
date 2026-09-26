@@ -115,14 +115,17 @@ subprojects {
 
 		tasks.withType(JavaExec).configureEach {
 			jvmArgs += [
-					"--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED"
+					"--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED",
+					// FFM 本地调用（文件预分配 posix_fallocate 等）需要原生访问授权
+					"--enable-native-access=ALL-UNNAMED"
 			]
 		}
 
 		tasks.withType(Test).configureEach {
 			useJUnitPlatform()
 			jvmArgs += [
-					"--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED"
+					"--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED",
+					"--enable-native-access=ALL-UNNAMED"
 			]
 			// 关闭 jqwik 测试运行数据库（不再生成 .jqwik-database 文件）
 			systemProperty 'jqwik.database', ''

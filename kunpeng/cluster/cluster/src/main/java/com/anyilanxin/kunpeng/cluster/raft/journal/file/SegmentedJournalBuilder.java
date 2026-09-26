@@ -51,7 +51,6 @@ public class SegmentedJournalBuilder {
 
   private @Nullable JournalMetaStore journalMetaStore;
   private final MeterRegistry meterRegistry;
-  private SegmentAllocator segmentAllocator = SegmentAllocator.defaultAllocator();
 
   SegmentedJournalBuilder(final MeterRegistry meterRegistry) {
     this.meterRegistry = meterRegistry;
@@ -149,19 +148,6 @@ public class SegmentedJournalBuilder {
   }
 
   /**
-   * Sets whether segment files are pre-allocated at creation. If true, segment files are
-   * pre-allocated to the maximum segment size (see {@link #withMaxSegmentSize(int)}}) at creation
-   * before any writes happen.
-   *
-   * @param segmentAllocator to use to preallocate files
-   * @return this builder for chaining
-   */
-  public SegmentedJournalBuilder withSegmentAllocator(final SegmentAllocator segmentAllocator) {
-    this.segmentAllocator = segmentAllocator;
-    return this;
-  }
-
-  /**
    * The ID of the partition on which this journal resides. This is used primarily for
    * observability, e.g. in {@link JournalMetrics}.
    *
@@ -185,7 +171,7 @@ public class SegmentedJournalBuilder {
   public SegmentedJournal build() {
     final var journalIndex = new SparseJournalIndex(journalIndexDensity);
     final var journalMetrics = new JournalMetrics(name, meterRegistry);
-    final var segmentLoader = new SegmentLoader(freeDiskSpace, journalMetrics, segmentAllocator);
+    final var segmentLoader = new SegmentLoader(freeDiskSpace, journalMetrics);
     final var metaStore = requireNonNull(journalMetaStore, "must specify a journal meta store");
     final var segmentsManager =
         new SegmentsManager(

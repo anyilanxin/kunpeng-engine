@@ -18,7 +18,6 @@ package com.anyilanxin.kunpeng.cluster.raft.storage.log;
 
 import com.anyilanxin.kunpeng.cluster.raft.journal.Journal;
 import com.anyilanxin.kunpeng.cluster.raft.journal.JournalMetaStore;
-import com.anyilanxin.kunpeng.cluster.raft.journal.file.SegmentAllocator;
 import com.anyilanxin.kunpeng.cluster.raft.journal.file.SegmentedJournal;
 import com.anyilanxin.kunpeng.cluster.raft.journal.file.SegmentedJournalBuilder;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLogFlusher.DirectFlusher;
@@ -127,17 +126,6 @@ public class RaftLogBuilder implements com.anyilanxin.kunpeng.cluster.utils.Buil
    */
   public RaftLogBuilder withVerifyReadChecksum(final boolean verifyReadChecksum) {
     journalBuilder.withVerifyReadChecksum(verifyReadChecksum);
-    return this;
-  }
-
-  /**
-   * Sets the strategy for pre-allocating disk space for new segment files.
-   *
-   * @param segmentAllocator the segment allocator to use
-   * @return this builder for chaining
-   */
-  public RaftLogBuilder withSegmentAllocator(final SegmentAllocator segmentAllocator) {
-    journalBuilder.withSegmentAllocator(segmentAllocator);
     return this;
   }
 

@@ -20,8 +20,8 @@ import static java.util.Objects.requireNonNull;
 
 import com.anyilanxin.kunpeng.cluster.raft.journal.CorruptedJournalException;
 import com.anyilanxin.kunpeng.cluster.raft.journal.JournalException;
+import com.anyilanxin.kunpeng.utils.FilePreallocator;
 import com.anyilanxin.kunpeng.utils.FileUtil;
-import java.io.FileDescriptor;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
@@ -53,15 +53,12 @@ final class SegmentLoader {
   /** segment 全部多字节字段均按小端编码。 */
   private static final ByteOrder SEGMENT_BYTE_ORDER = ByteOrder.LITTLE_ENDIAN;
 
-  private final SegmentAllocator allocator;
   private final long minFreeDiskBytes;
   private final JournalMetrics metrics;
 
-  SegmentLoader(
-      final long minFreeDiskSpace, final JournalMetrics metrics, final SegmentAllocator allocator) {
+  SegmentLoader(final long minFreeDiskSpace, final JournalMetrics metrics) {
     this.minFreeDiskBytes = minFreeDiskSpace;
     this.metrics = metrics;
-    this.allocator = allocator;
   }
 
   /**
@@ -185,8 +182,7 @@ final class SegmentLoader {
 
     try (final var file = new RandomAccessFile(segmentPath.toFile(), "rw");
         final var channel = file.getChannel()) {
-      reserveSpace(segmentBytes, channel, file.getFD());
-      file.setLength(segmentBytes);
+      reserveSpace(segmentPath, segmentBytes);
       return mapSegment(channel, segmentBytes);
     } catch (final IOException e) {
       throw new JournalException(
@@ -206,11 +202,12 @@ final class SegmentLoader {
     }
   }
 
-  private void reserveSpace(
-      final int segmentBytes, final FileChannel channel, final FileDescriptor fileDescriptor)
-      throws IOException {
+  private void reserveSpace(final Path segmentPath, final int segmentBytes) {
     try (final var ignored = metrics.observeSegmentAllocation()) {
-      allocator.allocate(channel, fileDescriptor, segmentBytes);
+      FilePreallocator.preallocate(segmentPath, segmentBytes);
+    } catch (final IOException e) {
+      throw new JournalException(
+          "segment 文件 %s 预分配空间失败（目标 %d 字节）".formatted(segmentPath, segmentBytes), e);
     }
   }
 

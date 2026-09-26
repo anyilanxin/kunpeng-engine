@@ -21,7 +21,6 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.anyilanxin.kunpeng.cluster.raft.journal.file.SegmentAllocator;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.RaftSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLog;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLogFlusher;
@@ -64,7 +63,6 @@ public final class RaftStorage {
   private final long freeDiskSpace;
   private final RaftSnapshotStore persistedSnapshotStore;
   private final int journalIndexDensity;
-  private final SegmentAllocator segmentAllocator;
   private final MeterRegistry meterRegistry;
   private final RaftLogFlusher.Factory flusherFactory;
 
@@ -77,7 +75,6 @@ public final class RaftStorage {
       final RaftLogFlusher.Factory flusherFactory,
       final RaftSnapshotStore persistedSnapshotStore,
       final int journalIndexDensity,
-      final SegmentAllocator segmentAllocator,
       final MeterRegistry meterRegistry) {
     this.prefix = prefix;
     this.partitionId = partitionId;
@@ -87,7 +84,6 @@ public final class RaftStorage {
     this.flusherFactory = flusherFactory;
     this.persistedSnapshotStore = persistedSnapshotStore;
     this.journalIndexDensity = journalIndexDensity;
-    this.segmentAllocator = segmentAllocator;
     this.meterRegistry = meterRegistry;
 
     try {
@@ -206,7 +202,6 @@ public final class RaftStorage {
         .withMaxSegmentSize(maxSegmentSize)
         .withFreeDiskSpace(freeDiskSpace)
         .withJournalIndexDensity(journalIndexDensity)
-        .withSegmentAllocator(segmentAllocator)
         .withMetaStore(metaStore)
         .withFlusher(flusherFactory.createFlusher(threadFactory))
         .build();
@@ -274,7 +269,6 @@ public final class RaftStorage {
     private RaftLogFlusher.Factory flusherFactory = DEFAULT_FLUSHER_FACTORY;
     private RaftSnapshotStore persistedSnapshotStore;
     private int journalIndexDensity = DEFAULT_JOURNAL_INDEX_DENSITY;
-    private SegmentAllocator segmentAllocator = SegmentAllocator.defaultAllocator();
     private int partitionId = DEFAULT_PARTITION_ID;
     private final MeterRegistry meterRegistry;
 
@@ -370,19 +364,6 @@ public final class RaftStorage {
     }
 
     /**
-     * Sets whether segment files are pre-allocated at creation. If true, segment files are
-     * pre-allocated to the maximum segment size (see {@link #withMaxSegmentSize(int)}}) at creation
-     * before any writes happen.
-     *
-     * @param segmentAllocator to use to preallocate files
-     * @return this builder for chaining
-     */
-    public Builder withSegmentAllocator(final SegmentAllocator segmentAllocator) {
-      this.segmentAllocator = segmentAllocator;
-      return this;
-    }
-
-    /**
      * The ID of the partition on which this storage resides.
      *
      * @param partitionId the storage's partition ID
@@ -409,7 +390,6 @@ public final class RaftStorage {
           flusherFactory,
           persistedSnapshotStore,
           journalIndexDensity,
-          segmentAllocator,
           meterRegistry);
     }
   }

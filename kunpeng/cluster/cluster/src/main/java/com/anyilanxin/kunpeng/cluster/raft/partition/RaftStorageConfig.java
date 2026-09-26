@@ -17,7 +17,6 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.partition;
 
-import com.anyilanxin.kunpeng.cluster.raft.journal.file.SegmentAllocator;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLog;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLogFlusher;
 
@@ -34,7 +33,6 @@ public class RaftStorageConfig {
   private RaftLogFlusher.Factory flusherFactory = DEFAULT_FLUSHER_FACTORY;
   private long freeDiskSpace = DEFAULT_FREE_DISK_SPACE;
   private int journalIndexDensity = DEFAULT_JOURNAL_INDEX_DENSITY;
-  private SegmentAllocator segmentAllocator = SegmentAllocator.defaultAllocator();
 
   /**
    * Returns the Raft log segment size.
@@ -120,21 +118,6 @@ public class RaftStorageConfig {
         + freeDiskSpace
         + ", journalIndexDensity="
         + journalIndexDensity
-        + ", segmentAllocator="
-        + segmentAllocator
         + '}';
-  }
-
-  public SegmentAllocator getSegmentAllocator() {
-    return segmentAllocator;
-  }
-
-  /**
-   * Sets the strategy for pre-allocating disk space for new segment files.
-   *
-   * @param segmentAllocator the segment allocator to use
-   */
-  public void setSegmentAllocator(final SegmentAllocator segmentAllocator) {
-    this.segmentAllocator = segmentAllocator;
   }
 }
