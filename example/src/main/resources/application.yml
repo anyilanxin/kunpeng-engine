@@ -1,0 +1,143 @@
+datasource:
+  mysql: ?allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=utf8&useSSL=false&rewriteBatchedStatements=true&allowMultiQueries=true&serverTimezone=Asia/Shanghai
+
+spring:
+  main:
+    allow-bean-definition-overriding: true
+    allow-circular-references: true
+  profiles:
+    active: ${PROFILES_ACTIVE:dev}
+  application:
+    name: example-service
+    version: #@version@#
+    title: #@name@#
+  jackson:
+    time-zone: Asia/Shanghai
+    date-format: yyyy-MM-dd HH:mm:ss
+  datasource:
+    dynamic:
+      primary: master
+      druid:
+        async-init: true
+        # 初始化连接大小
+        initial-size: 20
+        #        validation-query: select '1' from dual
+        # 最小空闲连接数
+        min-idle: 20
+        max-active: 60
+        max-wait: 30000
+        # 可关闭的空闲连接间隔时间
+        time-between-eviction-runs-millis: 60000
+        # 配置连接在池中的最小生存时间
+        min-evictable-idle-time-millis: 300000
+        test-while-idle: true
+        test-on-borrow: false
+        test-on-return: false
+        #关闭长时间不使用的连接
+        remove-abandoned: true
+        log-abandoned: true
+        # 打开PSCache，并且指定每个连接上PSCache的大小
+        pool-prepared-statements: false
+        max-pool-prepared-statement-per-connection-size: 20
+  threads:
+    virtual:
+      enabled: true
+  servlet:
+    encoding:
+      force: true
+      charset: UTF-8
+
+# server配置
+server:
+  shutdown: graceful
+
+# 开启监控
+management:
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  endpoints:
+    jmx:
+      exposure:
+        include: ["prometheus"]
+        exclude: ["shutdown"]
+    web:
+      exposure:
+        include:
+          - prometheus
+          - health
+          - info
+          - metrics
+  info:
+    java:
+      enabled: true
+  health:
+    elasticsearch:
+      enabled: false
+  endpoint:
+    health:
+      show-details: always
+      # k8s环境会自动打开，如果此处为true则强制打开
+      probes:
+        enabled: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+        descriptions: true
+        step: 1m
+
+# 日志
+logging:
+  level:
+    root: ${app.log-root-level:debug}
+    com.anyilanxin.kunpeng: ${app.log-kunpeng-package-level:info}
+    com.anyilanxin: ${app.log-package-level:debug}
+    com.alibaba.nacos: error
+    io.camunda.client.impl.CamundaCallCredentials: error
+  # 生成日志文件路径(注释不会生成)
+  pattern:
+    dateformat: yyyy-MM-dd HH:mm:ss
+  file:
+    name: ./logs/${spring.application.name:anyi}.log
+  logback:
+    rollingpolicy:
+      max-history: 7
+  register-shutdown-hook: true
+debug: true
+
+# api文档配置
+springdoc:
+  version: ${spring.application.version:1.0.0}
+  api-prefix: ${server.servlet.context-path:} # api接口调试地址前缀(不需要写请求协议,浏览器自动拼接)
+  title: ${spring.application.name:anyi}服务
+  contact-email: z7630853@163.com
+  contact-user: zxh
+  api-docs:
+    enabled: ${app.enable-doc:false}
+  packages-to-scan: com.anyilanxin
+  swagger-ui:
+    enabled: ${app.enable-doc:false}
+
+# mybatis
+mybatis-plus:
+  # mapper.xml路径
+  mapper-locations: classpath*:com/anyilanxin/modules/*/mapper/xml/*Mapper.xml
+  # 实体扫描，多个package用逗号或者分号分隔
+  typeAliasesPackage: com.anyilanxin.modules.*.entity
+  global-config:
+    banner: false
+    db-config:
+      # 主键类型(使用snowflake id)
+      id-type: ASSIGN_ID
+      # 字段插入判断策略
+      insert-strategy: not_empty
+      # 字段更新判断策略
+      update-strategy: not_null
+      # 字段查询判断策略
+      where-strategy: not_empty
+  configuration:
+    # 配置数据库驼峰与下划线互转
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

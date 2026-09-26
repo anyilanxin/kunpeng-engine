@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright © 2025 anyilanxin zxh(anyilanxin@aliyun.com)
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anyilanxin.modules.usertask.mapper.UserTaskMapper">
+    <resultMap type="com.anyilanxin.modules.usertask.entity.UserTaskEntity" id="UserTaskMap">
+       <result property="userTaskKey" column="USER_TASK_KEY" jdbcType="INTEGER"/>
+       <result property="elementId" column="ELEMENT_ID" jdbcType="VARCHAR"/>
+       <result property="name" column="NAME" jdbcType="VARCHAR"/>
+       <result property="processDefinitionId" column="PROCESS_DEFINITION_ID" jdbcType="VARCHAR"/>
+       <result property="creationDate" column="CREATION_DATE" jdbcType="TIMESTAMP"/>
+       <result property="completionDate" column="COMPLETION_DATE" jdbcType="TIMESTAMP"/>
+       <result property="assignee" column="ASSIGNEE" jdbcType="VARCHAR"/>
+       <result property="state" column="STATE" jdbcType="VARCHAR"/>
+       <result property="formKey" column="FORM_KEY" jdbcType="INTEGER"/>
+       <result property="processDefinitionKey" column="PROCESS_DEFINITION_KEY" jdbcType="INTEGER"/>
+       <result property="processInstanceKey" column="PROCESS_INSTANCE_KEY" jdbcType="INTEGER"/>
+       <result property="elementInstanceKey" column="ELEMENT_INSTANCE_KEY" jdbcType="INTEGER"/>
+       <result property="dueDate" column="DUE_DATE" jdbcType="TIMESTAMP"/>
+       <result property="followUpDate" column="FOLLOW_UP_DATE" jdbcType="TIMESTAMP"/>
+       <result property="externalFormReference" column="EXTERNAL_FORM_REFERENCE" jdbcType="VARCHAR"/>
+       <result property="processDefinitionVersion" column="PROCESS_DEFINITION_VERSION" jdbcType="INTEGER"/>
+       <result property="customHeaders" column="CUSTOM_HEADERS" jdbcType="VARCHAR"/>
+       <result property="priority" column="PRIORITY" jdbcType="INTEGER"/>
+       <result property="tenantId" column="TENANT_ID" jdbcType="VARCHAR"/>
+       <result property="partitionId" column="PARTITION_ID" jdbcType="OTHER"/>
+       <result property="historyCleanupDate" column="HISTORY_CLEANUP_DATE" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- @formatter:off -->
+    <!--数据库字段-->
+    <sql id="Column_List">
+USER_TASK_KEY, ELEMENT_ID, NAME, PROCESS_DEFINITION_ID, CREATION_DATE, COMPLETION_DATE, ASSIGNEE, STATE, FORM_KEY, PROCESS_DEFINITION_KEY, PROCESS_INSTANCE_KEY, ELEMENT_INSTANCE_KEY, DUE_DATE, FOLLOW_UP_DATE, EXTERNAL_FORM_REFERENCE, PROCESS_DEFINITION_VERSION, CUSTOM_HEADERS, PRIORITY, TENANT_ID, PARTITION_ID, HISTORY_CLEANUP_DATE
+    </sql>
+
+    <!--数据库字段待别名-->
+    <sql id="Column_List_Ali">
+ali.USER_TASK_KEY, ali.ELEMENT_ID, ali.NAME, ali.PROCESS_DEFINITION_ID, ali.CREATION_DATE, ali.COMPLETION_DATE, ali.ASSIGNEE, ali.STATE, ali.FORM_KEY, ali.PROCESS_DEFINITION_KEY, ali.PROCESS_INSTANCE_KEY, ali.ELEMENT_INSTANCE_KEY, ali.DUE_DATE, ali.FOLLOW_UP_DATE, ali.EXTERNAL_FORM_REFERENCE, ali.PROCESS_DEFINITION_VERSION, ali.CUSTOM_HEADERS, ali.PRIORITY, ali.TENANT_ID, ali.PARTITION_ID, ali.HISTORY_CLEANUP_DATE
+    </sql>
+
+     <!--数据库字段-->
+    <sql id="Column_List_Page_Ali">
+ali.USER_TASK_KEY, ali.ELEMENT_ID, ali.NAME, ali.PROCESS_DEFINITION_ID, ali.CREATION_DATE, ali.COMPLETION_DATE, ali.ASSIGNEE, ali.STATE, ali.FORM_KEY, ali.PROCESS_DEFINITION_KEY, ali.PROCESS_INSTANCE_KEY, ali.ELEMENT_INSTANCE_KEY, ali.DUE_DATE, ali.FOLLOW_UP_DATE, ali.EXTERNAL_FORM_REFERENCE, ali.PROCESS_DEFINITION_VERSION, ali.CUSTOM_HEADERS, ali.PRIORITY, ali.TENANT_ID, ali.PARTITION_ID, ali.HISTORY_CLEANUP_DATE
+    </sql>
+
+
+    <!--通过实体作为筛选条件分页查询-->
+    <select id="pageByModel" resultType="com.anyilanxin.modules.usertask.service.vo.UserTaskPageVo">
+        SELECT
+             <include refid="Column_List_Page_Ali"/>
+        FROM ANYI_USER_TASK ali
+        <where>
+             ali.del_flag = 0
+          <if test="query.userTaskKey != null">
+             AND ali.USER_TASK_KEY = #{query.userTaskKey, jdbcType=INTEGER}
+          </if>
+          <if test="query.elementId != null and query.elementId != ''">
+             AND ali.ELEMENT_ID = #{query.elementId, jdbcType=VARCHAR}
+          </if>
+          <if test="query.name != null and query.name != ''">
+             AND ali.NAME = #{query.name, jdbcType=VARCHAR}
+          </if>
+          <if test="query.processDefinitionId != null and query.processDefinitionId != ''">
+             AND ali.PROCESS_DEFINITION_ID = #{query.processDefinitionId, jdbcType=VARCHAR}
+          </if>
+          <if test="query.creationDate != null">
+             AND ali.CREATION_DATE = #{query.creationDate, jdbcType=TIMESTAMP}
+          </if>
+          <if test="query.completionDate != null">
+             AND ali.COMPLETION_DATE = #{query.completionDate, jdbcType=TIMESTAMP}
+          </if>
+          <if test="query.assignee != null and query.assignee != ''">
+             AND ali.ASSIGNEE = #{query.assignee, jdbcType=VARCHAR}
+          </if>
+          <if test="query.state != null and query.state != ''">
+             AND ali.STATE = #{query.state, jdbcType=VARCHAR}
+          </if>
+          <if test="query.formKey != null">
+             AND ali.FORM_KEY = #{query.formKey, jdbcType=INTEGER}
+          </if>
+          <if test="query.processDefinitionKey != null">
+             AND ali.PROCESS_DEFINITION_KEY = #{query.processDefinitionKey, jdbcType=INTEGER}
+          </if>
+          <if test="query.processInstanceKey != null">
+             AND ali.PROCESS_INSTANCE_KEY = #{query.processInstanceKey, jdbcType=INTEGER}
+          </if>
+          <if test="query.elementInstanceKey != null">
+             AND ali.ELEMENT_INSTANCE_KEY = #{query.elementInstanceKey, jdbcType=INTEGER}
+          </if>
+          <if test="query.dueDate != null">
+             AND ali.DUE_DATE = #{query.dueDate, jdbcType=TIMESTAMP}
+          </if>
+          <if test="query.followUpDate != null">
+             AND ali.FOLLOW_UP_DATE = #{query.followUpDate, jdbcType=TIMESTAMP}
+          </if>
+          <if test="query.externalFormReference != null and query.externalFormReference != ''">
+             AND ali.EXTERNAL_FORM_REFERENCE = #{query.externalFormReference, jdbcType=VARCHAR}
+          </if>
+          <if test="query.processDefinitionVersion != null">
+             AND ali.PROCESS_DEFINITION_VERSION = #{query.processDefinitionVersion, jdbcType=INTEGER}
+          </if>
+          <if test="query.customHeaders != null and query.customHeaders != ''">
+             AND ali.CUSTOM_HEADERS = #{query.customHeaders, jdbcType=VARCHAR}
+          </if>
+          <if test="query.priority != null">
+             AND ali.PRIORITY = #{query.priority, jdbcType=INTEGER}
+          </if>
+          <if test="query.tenantId != null and query.tenantId != ''">
+             AND ali.TENANT_ID = #{query.tenantId, jdbcType=VARCHAR}
+          </if>
+          <if test="query.partitionId != null">
+             AND ali.PARTITION_ID = #{query.partitionId, jdbcType=OTHER}
+          </if>
+          <if test="query.historyCleanupDate != null">
+             AND ali.HISTORY_CLEANUP_DATE = #{query.historyCleanupDate, jdbcType=TIMESTAMP}
+          </if>
+        </where>
+    </select>
+
+
+    <!--通过实体作为筛选条件查询-->
+    <select id="selectListByModel" resultType="com.anyilanxin.modules.usertask.service.vo.UserTaskVo" parameterType="com.anyilanxin.modules.usertask.controller.dto.UserTaskQueryDto">
+        SELECT
+            <include refid="Column_List"/>
+        FROM ANYI_USER_TASK
+        <where>
+             del_flag = 0
+         <if test="userTaskKey != null">
+             AND USER_TASK_KEY = #{userTaskKey, jdbcType=INTEGER}
+         </if>
+         <if test="elementId != null and elementId != ''">
+             AND ELEMENT_ID = #{elementId, jdbcType=VARCHAR}
+         </if>
+         <if test="name != null and name != ''">
+             AND NAME = #{name, jdbcType=VARCHAR}
+         </if>
+         <if test="processDefinitionId != null and processDefinitionId != ''">
+             AND PROCESS_DEFINITION_ID = #{processDefinitionId, jdbcType=VARCHAR}
+         </if>
+         <if test="creationDate != null">
+             AND CREATION_DATE = #{creationDate, jdbcType=TIMESTAMP}
+         </if>
+         <if test="completionDate != null">
+             AND COMPLETION_DATE = #{completionDate, jdbcType=TIMESTAMP}
+         </if>
+         <if test="assignee != null and assignee != ''">
+             AND ASSIGNEE = #{assignee, jdbcType=VARCHAR}
+         </if>
+         <if test="state != null and state != ''">
+             AND STATE = #{state, jdbcType=VARCHAR}
+         </if>
+         <if test="formKey != null">
+             AND FORM_KEY = #{formKey, jdbcType=INTEGER}
+         </if>
+         <if test="processDefinitionKey != null">
+             AND PROCESS_DEFINITION_KEY = #{processDefinitionKey, jdbcType=INTEGER}
+         </if>
+         <if test="processInstanceKey != null">
+             AND PROCESS_INSTANCE_KEY = #{processInstanceKey, jdbcType=INTEGER}
+         </if>
+         <if test="elementInstanceKey != null">
+             AND ELEMENT_INSTANCE_KEY = #{elementInstanceKey, jdbcType=INTEGER}
+         </if>
+         <if test="dueDate != null">
+             AND DUE_DATE = #{dueDate, jdbcType=TIMESTAMP}
+         </if>
+         <if test="followUpDate != null">
+             AND FOLLOW_UP_DATE = #{followUpDate, jdbcType=TIMESTAMP}
+         </if>
+         <if test="externalFormReference != null and externalFormReference != ''">
+             AND EXTERNAL_FORM_REFERENCE = #{externalFormReference, jdbcType=VARCHAR}
+         </if>
+         <if test="processDefinitionVersion != null">
+             AND PROCESS_DEFINITION_VERSION = #{processDefinitionVersion, jdbcType=INTEGER}
+         </if>
+         <if test="customHeaders != null and customHeaders != ''">
+             AND CUSTOM_HEADERS = #{customHeaders, jdbcType=VARCHAR}
+         </if>
+         <if test="priority != null">
+             AND PRIORITY = #{priority, jdbcType=INTEGER}
+         </if>
+         <if test="tenantId != null and tenantId != ''">
+             AND TENANT_ID = #{tenantId, jdbcType=VARCHAR}
+         </if>
+         <if test="partitionId != null">
+             AND PARTITION_ID = #{partitionId, jdbcType=OTHER}
+         </if>
+         <if test="historyCleanupDate != null">
+             AND HISTORY_CLEANUP_DATE = #{historyCleanupDate, jdbcType=TIMESTAMP}
+         </if>
+        </where>
+    </select>
+
+    <!-- @formatter:on -->
+</mapper>

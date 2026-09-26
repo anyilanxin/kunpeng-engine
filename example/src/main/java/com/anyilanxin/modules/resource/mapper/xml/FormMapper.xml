@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright © 2025 anyilanxin zxh(anyilanxin@aliyun.com)
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anyilanxin.modules.resource.mapper.FormMapper">
+    <resultMap type="com.anyilanxin.modules.resource.entity.FormEntity" id="FormMap">
+       <result property="formKey" column="FORM_KEY" jdbcType="INTEGER"/>
+       <result property="formId" column="FORM_ID" jdbcType="VARCHAR"/>
+       <result property="tenantId" column="TENANT_ID" jdbcType="VARCHAR"/>
+       <result property="schema" column="SCHEMA" jdbcType="VARCHAR"/>
+       <result property="version" column="VERSION" jdbcType="INTEGER"/>
+       <result property="isDeleted" column="IS_DELETED" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <!-- @formatter:off -->
+    <!--数据库字段-->
+    <sql id="Column_List">
+FORM_KEY, FORM_ID, TENANT_ID, SCHEMA, VERSION, IS_DELETED
+    </sql>
+
+    <!--数据库字段待别名-->
+    <sql id="Column_List_Ali">
+ali.FORM_KEY, ali.FORM_ID, ali.TENANT_ID, ali.SCHEMA, ali.VERSION, ali.IS_DELETED
+    </sql>
+
+     <!--数据库字段-->
+    <sql id="Column_List_Page_Ali">
+ali.FORM_KEY, ali.FORM_ID, ali.TENANT_ID, ali.SCHEMA, ali.VERSION, ali.IS_DELETED
+    </sql>
+
+
+    <!--通过实体作为筛选条件分页查询-->
+    <select id="pageByModel" resultType="com.anyilanxin.modules.resource.service.vo.FormPageVo">
+        SELECT
+             <include refid="Column_List_Page_Ali"/>
+        FROM ANYI_FORM ali
+        <where>
+             ali.del_flag = 0
+          <if test="query.formKey != null">
+             AND ali.FORM_KEY = #{query.formKey, jdbcType=INTEGER}
+          </if>
+          <if test="query.formId != null and query.formId != ''">
+             AND ali.FORM_ID = #{query.formId, jdbcType=VARCHAR}
+          </if>
+          <if test="query.tenantId != null and query.tenantId != ''">
+             AND ali.TENANT_ID = #{query.tenantId, jdbcType=VARCHAR}
+          </if>
+          <if test="query.schema != null and query.schema != ''">
+             AND ali.SCHEMA = #{query.schema, jdbcType=VARCHAR}
+          </if>
+          <if test="query.version != null">
+             AND ali.VERSION = #{query.version, jdbcType=INTEGER}
+          </if>
+          <if test="query.isDeleted != null">
+             AND ali.IS_DELETED = #{query.isDeleted, jdbcType=INTEGER}
+          </if>
+        </where>
+    </select>
+
+
+    <!--通过实体作为筛选条件查询-->
+    <select id="selectListByModel" resultType="com.anyilanxin.modules.resource.service.vo.FormVo" parameterType="com.anyilanxin.modules.resource.controller.dto.FormQueryDto">
+        SELECT
+            <include refid="Column_List"/>
+        FROM ANYI_FORM
+        <where>
+             del_flag = 0
+         <if test="formKey != null">
+             AND FORM_KEY = #{formKey, jdbcType=INTEGER}
+         </if>
+         <if test="formId != null and formId != ''">
+             AND FORM_ID = #{formId, jdbcType=VARCHAR}
+         </if>
+         <if test="tenantId != null and tenantId != ''">
+             AND TENANT_ID = #{tenantId, jdbcType=VARCHAR}
+         </if>
+         <if test="schema != null and schema != ''">
+             AND SCHEMA = #{schema, jdbcType=VARCHAR}
+         </if>
+         <if test="version != null">
+             AND VERSION = #{version, jdbcType=INTEGER}
+         </if>
+         <if test="isDeleted != null">
+             AND IS_DELETED = #{isDeleted, jdbcType=INTEGER}
+         </if>
+        </where>
+    </select>
+
+    <!-- @formatter:on -->
+</mapper>

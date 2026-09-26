@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anyilanxin.modules.resource.mapper.ProcessDefinitionMapper">
+    <resultMap type="com.anyilanxin.modules.resource.entity.ProcessDefinitionEntity" id="ProcessDefinitionMap">
+       <result property="processDefinitionId" column="PROCESS_DEFINITION_ID" jdbcType="INTEGER"/>
+       <result property="processDefinitionKey" column="PROCESS_DEFINITION_KEY" jdbcType="VARCHAR"/>
+       <result property="name" column="NAME" jdbcType="VARCHAR"/>
+       <result property="resourceName" column="RESOURCE_NAME" jdbcType="VARCHAR"/>
+       <result property="bpmnXml" column="BPMN_XML" jdbcType="VARCHAR"/>
+       <result property="tenantId" column="TENANT_ID" jdbcType="VARCHAR"/>
+       <result property="version" column="VERSION" jdbcType="INTEGER"/>
+       <result property="versionTag" column="VERSION_TAG" jdbcType="VARCHAR"/>
+       <result property="formId" column="FORM_ID" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!-- @formatter:off -->
+    <!--数据库字段-->
+    <sql id="Column_List">
+PROCESS_DEFINITION_ID, PROCESS_DEFINITION_KEY, NAME, RESOURCE_NAME, BPMN_XML, TENANT_ID, VERSION, VERSION_TAG, FORM_ID
+    </sql>
+
+    <!--数据库字段待别名-->
+    <sql id="Column_List_Ali">
+ali.PROCESS_DEFINITION_ID, ali.PROCESS_DEFINITION_KEY, ali.NAME, ali.RESOURCE_NAME, ali.BPMN_XML, ali.TENANT_ID, ali.VERSION, ali.VERSION_TAG, ali.FORM_ID
+    </sql>
+
+     <!--数据库字段-->
+    <sql id="Column_List_Page_Ali">
+ali.PROCESS_DEFINITION_ID, ali.PROCESS_DEFINITION_KEY, ali.NAME, ali.RESOURCE_NAME, ali.BPMN_XML, ali.TENANT_ID, ali.VERSION, ali.VERSION_TAG, ali.FORM_ID
+    </sql>
+
+
+    <!--通过实体作为筛选条件分页查询-->
+    <select id="pageByModel" resultType="com.anyilanxin.modules.resource.service.vo.ProcessDefinitionPageVo">
+        SELECT
+             <include refid="Column_List_Page_Ali"/>
+        FROM ANYI_PROCESS_DEFINITION ali
+        <where>
+             ali.del_flag = 0
+          <if test="query.processDefinitionId != null">
+             AND ali.PROCESS_DEFINITION_ID = #{query.processDefinitionId, jdbcType=INTEGER}
+          </if>
+          <if test="query.processDefinitionKey != null and query.processDefinitionKey != ''">
+             AND ali.PROCESS_DEFINITION_KEY = #{query.processDefinitionKey, jdbcType=VARCHAR}
+          </if>
+          <if test="query.name != null and query.name != ''">
+             AND ali.NAME = #{query.name, jdbcType=VARCHAR}
+          </if>
+          <if test="query.resourceName != null and query.resourceName != ''">
+             AND ali.RESOURCE_NAME = #{query.resourceName, jdbcType=VARCHAR}
+          </if>
+          <if test="query.bpmnXml != null and query.bpmnXml != ''">
+             AND ali.BPMN_XML = #{query.bpmnXml, jdbcType=VARCHAR}
+          </if>
+          <if test="query.tenantId != null and query.tenantId != ''">
+             AND ali.TENANT_ID = #{query.tenantId, jdbcType=VARCHAR}
+          </if>
+          <if test="query.version != null">
+             AND ali.VERSION = #{query.version, jdbcType=INTEGER}
+          </if>
+          <if test="query.versionTag != null and query.versionTag != ''">
+             AND ali.VERSION_TAG = #{query.versionTag, jdbcType=VARCHAR}
+          </if>
+          <if test="query.formId != null and query.formId != ''">
+             AND ali.FORM_ID = #{query.formId, jdbcType=VARCHAR}
+          </if>
+        </where>
+    </select>
+
+
+    <!--通过实体作为筛选条件查询-->
+    <select id="selectListByModel" resultType="com.anyilanxin.modules.resource.service.vo.ProcessDefinitionVo" parameterType="com.anyilanxin.modules.resource.controller.dto.ProcessDefinitionQueryDto">
+        SELECT
+            <include refid="Column_List"/>
+        FROM ANYI_PROCESS_DEFINITION
+        <where>
+             del_flag = 0
+         <if test="processDefinitionId != null">
+             AND PROCESS_DEFINITION_ID = #{processDefinitionId, jdbcType=INTEGER}
+         </if>
+         <if test="processDefinitionKey != null and processDefinitionKey != ''">
+             AND PROCESS_DEFINITION_KEY = #{processDefinitionKey, jdbcType=VARCHAR}
+         </if>
+         <if test="name != null and name != ''">
+             AND NAME = #{name, jdbcType=VARCHAR}
+         </if>
+         <if test="resourceName != null and resourceName != ''">
+             AND RESOURCE_NAME = #{resourceName, jdbcType=VARCHAR}
+         </if>
+         <if test="bpmnXml != null and bpmnXml != ''">
+             AND BPMN_XML = #{bpmnXml, jdbcType=VARCHAR}
+         </if>
+         <if test="tenantId != null and tenantId != ''">
+             AND TENANT_ID = #{tenantId, jdbcType=VARCHAR}
+         </if>
+         <if test="version != null">
+             AND VERSION = #{version, jdbcType=INTEGER}
+         </if>
+         <if test="versionTag != null and versionTag != ''">
+             AND VERSION_TAG = #{versionTag, jdbcType=VARCHAR}
+         </if>
+         <if test="formId != null and formId != ''">
+             AND FORM_ID = #{formId, jdbcType=VARCHAR}
+         </if>
+        </where>
+    </select>
+
+    <!-- @formatter:on -->
+</mapper>

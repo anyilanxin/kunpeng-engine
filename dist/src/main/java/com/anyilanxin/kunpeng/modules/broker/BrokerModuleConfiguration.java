@@ -17,6 +17,7 @@
 package com.anyilanxin.kunpeng.modules.broker;
 
 import com.anyilanxin.kunpeng.broker.Broker;
+import com.anyilanxin.kunpeng.broker.client.business.BrokerClient;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
 import com.anyilanxin.kunpeng.modules.broker.configuration.BrokerPropertiesConfiguration;
 import com.anyilanxin.kunpeng.modules.common.configuration.ClusterPropertiesConfiguration;
@@ -51,6 +52,7 @@ public class BrokerModuleConfiguration {
   private final AtomixCluster atomixCluster;
   private final MeterRegistry meterRegistry;
   private final ApplicationContext applicationContext;
+  private final BrokerClient brokerClient;
 
   @Autowired
   public BrokerModuleConfiguration(
@@ -59,7 +61,9 @@ public class BrokerModuleConfiguration {
       final ActorSchedulingService schedulingService,
       final AtomixCluster atomixCluster,
       final MeterRegistry meterRegistry,
+      final BrokerClient brokerClient,
       final ApplicationContext applicationContext) {
+    this.brokerClient = brokerClient;
     this.brokerProperties = brokerProperties;
     this.clusterProperties = clusterProperties;
     this.atomixCluster = atomixCluster;
@@ -77,6 +81,7 @@ public class BrokerModuleConfiguration {
             clusterProperties,
             brokerProperties,
             atomixCluster,
+            brokerClient,
             meterRegistry);
     broker.start();
     return broker;

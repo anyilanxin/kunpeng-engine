@@ -1,0 +1,64 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
+plugins {
+    id 'kunpeng.spring-boot'
+}
+
+description = "AnYi Cloud Auth Service EE"
+
+dependencies {
+    implementation project(':clients:spring-boot-starter-client')
+    implementation 'ch.qos.logback:logback-classic'
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui"
+    implementation 'commons-codec:commons-codec'
+    implementation 'commons-io:commons-io'
+    implementation 'io.netty:netty-common'
+    implementation 'com.google.guava:guava'
+    annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
+    annotationProcessor "org.projectlombok:lombok"
+    annotationProcessor "io.github.linpeilie:mapstruct-plus-processor"
+    annotationProcessor "com.github.therapi:therapi-runtime-javadoc-scribe"
+
+
+    compileOnly "org.springframework.boot:spring-boot-configuration-processor"
+    compileOnly "org.projectlombok:lombok"
+    compileOnly "io.github.linpeilie:mapstruct-plus-processor"
+
+    runtimeOnly "com.github.therapi:therapi-runtime-javadoc"
+
+
+    implementation 'org.springframework.boot:spring-boot-starter'
+
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation "io.github.linpeilie:mapstruct-plus-spring-boot-starter"
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'org.springframework.boot:spring-boot-configuration-processor'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework:spring-context-indexer'
+    implementation "com.baomidou:mybatis-plus-extension"
+    implementation "com.baomidou:mybatis-plus-annotation"
+    implementation "com.baomidou:mybatis-plus-spring-boot4-starter"
+    implementation "com.baomidou:mybatis-plus-jsqlparser"
+    implementation "com.baomidou:dynamic-datasource-spring-boot4-starter"
+    implementation 'com.alibaba:druid-spring-boot-4-starter'
+
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+    implementation 'org.postgresql:postgresql'
+    implementation 'com.oracle.database.jdbc:ojdbc8'
+    implementation 'com.h2database:h2'
+    implementation 'com.microsoft.sqlserver:mssql-jdbc'
+    implementation 'com.mysql:mysql-connector-j'
+
+    testImplementation 'io.github.linpeilie:mapstruct-plus-processor'
+    testImplementation 'org.projectlombok:lombok'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    testAnnotationProcessor 'io.github.linpeilie:mapstruct-plus-processor'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+
+}
+
+

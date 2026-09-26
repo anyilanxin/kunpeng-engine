@@ -1,0 +1,31 @@
+# 数据源配置
+spring:
+  datasource:
+    dynamic:
+      datasource:
+        # 主库数据源
+        master:
+          #          driver-class-name: org.postgresql.Driver
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          url: jdbc:mysql://localhost:3306/kunpeng_process${datasource.mysql}
+          #          url: jdbc:postgresql://localhost:5432/kunpeng_process
+          username: root
+          password: root
+
+app:
+  log-root-level: info
+  log-package-level: debug
+  log-kunpeng-package-level: debug
+  enable-doc: true # 是否打开swagger
+
+# 端口与请求前缀
+server:
+  port: 8004
+  servlet:
+    context-path: /example-api
+
+kunpeng:
+  client:
+    grpc-address: http://127.0.0.1:2024
+    enabled: true
+    plaintext: true

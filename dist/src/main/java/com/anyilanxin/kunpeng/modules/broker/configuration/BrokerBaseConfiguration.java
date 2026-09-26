@@ -19,6 +19,7 @@ package com.anyilanxin.kunpeng.modules.broker.configuration;
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterConfig;
 import com.anyilanxin.kunpeng.configuration.cluster.ClusterConfigFactory;
 import com.anyilanxin.kunpeng.modules.common.actor.ActorSchedulerConfiguration;
+import com.anyilanxin.kunpeng.modules.common.brokerclient.BrokerClientConfiguration;
 import com.anyilanxin.kunpeng.modules.common.configuration.ClusterPropertiesConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -54,6 +55,12 @@ public class BrokerBaseConfiguration {
   public ClusterConfig clusterConfig() {
     final var configFactory = new ClusterConfigFactory();
     return configFactory.mapConfiguration(clusterProperties, true);
+  }
+
+  @Bean
+  public BrokerClientConfiguration.BrokerClientTimeoutConfiguration brokerClientConfig() {
+    return new BrokerClientConfiguration.BrokerClientTimeoutConfiguration(
+        brokerProperties.getGateway().getRequestTimeout());
   }
 
   @Bean

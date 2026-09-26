@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anyilanxin.modules.common.mapper.ExporterPositionMapper">
+    <resultMap type="com.anyilanxin.modules.common.entity.ExporterPositionEntity" id="ExporterPositionMap">
+       <result property="partitionId" column="PARTITION_ID" jdbcType="OTHER"/>
+       <result property="exporter" column="EXPORTER" jdbcType="VARCHAR"/>
+       <result property="lastExportedPosition" column="LAST_EXPORTED_POSITION" jdbcType="INTEGER"/>
+       <result property="created" column="CREATED" jdbcType="TIMESTAMP"/>
+       <result property="lastUpdated" column="LAST_UPDATED" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- @formatter:off -->
+    <!--数据库字段-->
+    <sql id="Column_List">
+PARTITION_ID, EXPORTER, LAST_EXPORTED_POSITION, CREATED, LAST_UPDATED
+    </sql>
+
+    <!--数据库字段待别名-->
+    <sql id="Column_List_Ali">
+ali.PARTITION_ID, ali.EXPORTER, ali.LAST_EXPORTED_POSITION, ali.CREATED, ali.LAST_UPDATED
+    </sql>
+
+     <!--数据库字段-->
+    <sql id="Column_List_Page_Ali">
+ali.PARTITION_ID, ali.EXPORTER, ali.LAST_EXPORTED_POSITION, ali.CREATED, ali.LAST_UPDATED
+    </sql>
+
+
+    <!--通过实体作为筛选条件分页查询-->
+    <select id="pageByModel" resultType="com.anyilanxin.modules.common.service.vo.ExporterPositionPageVo">
+        SELECT
+             <include refid="Column_List_Page_Ali"/>
+        FROM ANYI_EXPORTER_POSITION ali
+        <where>
+             ali.del_flag = 0
+          <if test="query.partitionId != null">
+             AND ali.PARTITION_ID = #{query.partitionId, jdbcType=OTHER}
+          </if>
+          <if test="query.exporter != null and query.exporter != ''">
+             AND ali.EXPORTER = #{query.exporter, jdbcType=VARCHAR}
+          </if>
+          <if test="query.lastExportedPosition != null">
+             AND ali.LAST_EXPORTED_POSITION = #{query.lastExportedPosition, jdbcType=INTEGER}
+          </if>
+          <if test="query.created != null">
+             AND ali.CREATED = #{query.created, jdbcType=TIMESTAMP}
+          </if>
+          <if test="query.lastUpdated != null">
+             AND ali.LAST_UPDATED = #{query.lastUpdated, jdbcType=TIMESTAMP}
+          </if>
+        </where>
+    </select>
+
+
+    <!--通过实体作为筛选条件查询-->
+    <select id="selectListByModel" resultType="com.anyilanxin.modules.common.service.vo.ExporterPositionVo" parameterType="com.anyilanxin.modules.common.controller.dto.ExporterPositionQueryDto">
+        SELECT
+            <include refid="Column_List"/>
+        FROM ANYI_EXPORTER_POSITION
+        <where>
+             del_flag = 0
+         <if test="partitionId != null">
+             AND PARTITION_ID = #{partitionId, jdbcType=OTHER}
+         </if>
+         <if test="exporter != null and exporter != ''">
+             AND EXPORTER = #{exporter, jdbcType=VARCHAR}
+         </if>
+         <if test="lastExportedPosition != null">
+             AND LAST_EXPORTED_POSITION = #{lastExportedPosition, jdbcType=INTEGER}
+         </if>
+         <if test="created != null">
+             AND CREATED = #{created, jdbcType=TIMESTAMP}
+         </if>
+         <if test="lastUpdated != null">
+             AND LAST_UPDATED = #{lastUpdated, jdbcType=TIMESTAMP}
+         </if>
+        </where>
+    </select>
+
+    <!-- @formatter:on -->
+</mapper>

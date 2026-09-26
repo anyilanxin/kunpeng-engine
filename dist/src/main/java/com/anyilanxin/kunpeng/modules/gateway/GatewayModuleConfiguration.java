@@ -19,7 +19,7 @@ package com.anyilanxin.kunpeng.modules.gateway;
 import com.anyilanxin.kunpeng.broker.client.business.BrokerClient;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
 import com.anyilanxin.kunpeng.cluster.cluster.leaderfound.ClusterLeaderFoundService;
-import com.anyilanxin.kunpeng.cluster.config.BrokerTopologyManager;
+import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.configuration.gateway.GatewayCfg;
 import com.anyilanxin.kunpeng.gateway.Gateway;
 import com.anyilanxin.kunpeng.gateway.SpringGatewayBridge;
@@ -56,7 +56,7 @@ public class GatewayModuleConfiguration {
   private final ClusterLeaderFoundService leaderService;
   private final BrokerClient brokerClient;
   private final MeterRegistry meterRegistry;
-  private final BrokerTopologyManager topologyManager;
+  private final ClusterTopologyService topologyManager;
   private final SpringGatewayBridge gatewayBridge;
 
   @Autowired
@@ -67,7 +67,7 @@ public class GatewayModuleConfiguration {
       final ClusterLeaderFoundService leaderService,
       final BrokerClient brokerClient,
       final MeterRegistry meterRegistry,
-      final BrokerTopologyManager topologyManager,
+      final ClusterTopologyService topologyManager,
       final SpringGatewayBridge gatewayBridge) {
     this.schedulingService = schedulingService;
     this.gatewayCfg = gatewayCfg;

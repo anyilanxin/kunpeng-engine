@@ -22,6 +22,7 @@ import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologySer
 import com.anyilanxin.kunpeng.configuration.cluster.ClusterConfigFactory;
 import com.anyilanxin.kunpeng.gateway.SpringGatewayBridge;
 import com.anyilanxin.kunpeng.modules.common.actor.ActorSchedulerConfiguration;
+import com.anyilanxin.kunpeng.modules.common.brokerclient.BrokerClientConfiguration;
 import com.anyilanxin.kunpeng.modules.common.configuration.ClusterPropertiesConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -66,6 +67,12 @@ public class GatewayBaseConfiguration {
   @Bean
   public SpringGatewayBridge springGatewayBridge() {
     return new SpringGatewayBridge();
+  }
+
+  @Bean
+  public BrokerClientConfiguration.BrokerClientTimeoutConfiguration brokerClientConfig() {
+    return new BrokerClientConfiguration.BrokerClientTimeoutConfiguration(
+        gatewayProperties.getRequestTimeout());
   }
 
   @Bean
