@@ -30,6 +30,8 @@ spotless {
     }
     json {
         target '**/*.json'
+        // .mimosa/hook-state 是安全扫描 hook 自己的运行时状态(每次执行都会重写为单行 json), 已被 gitignore, 不参与格式化门禁
+        targetExclude '**/.mimosa/**'
         simple()
     }
     yaml {
