@@ -19,7 +19,7 @@ package com.anyilanxin.kunpeng.gateway;
 import com.anyilanxin.kunpeng.broker.client.business.BrokerClient;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
 import com.anyilanxin.kunpeng.cluster.cluster.leaderfound.ClusterLeaderFoundService;
-import com.anyilanxin.kunpeng.cluster.config.BrokerTopologyManager;
+import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.configuration.gateway.GatewayCfg;
 import com.anyilanxin.kunpeng.configuration.gateway.GatewayGrpcNetworkCfg;
 import com.anyilanxin.kunpeng.gateway.grpc.GatewayGrpcService;
@@ -58,7 +58,7 @@ public class Gateway implements CloseableSilently {
   private final GatewayInfo localGateway;
   private final BrokerClient brokerClient;
   private final GatewayGrpcService gatewayGrpcService;
-  private final BrokerTopologyManager topologyManager;
+  private final ClusterTopologyService topologyManager;
   private final GatewayTopologyManagerImpl gatewayTopologyManager;
   private final GatewayJobHub jobHub;
   private final GatewayJobStreamClient jobStreamClient;
@@ -71,7 +71,7 @@ public class Gateway implements CloseableSilently {
       final MeterRegistry meterRegistry,
       final ClusterLeaderFoundService leaderService,
       final BrokerClient brokerClient,
-      final BrokerTopologyManager topologyManager) {
+      final ClusterTopologyService topologyManager) {
     this.schedulingService = schedulingService;
     this.gatewayCfg = gatewayCfg;
     this.atomixCluster = atomixCluster;

@@ -19,7 +19,7 @@ package com.anyilanxin.kunpeng.broker.gateway;
 import com.anyilanxin.kunpeng.broker.client.business.BrokerClient;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
 import com.anyilanxin.kunpeng.cluster.cluster.leaderfound.ClusterLeaderFoundService;
-import com.anyilanxin.kunpeng.cluster.config.BrokerTopologyManager;
+import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
 import com.anyilanxin.kunpeng.gateway.Gateway;
 import com.anyilanxin.kunpeng.protocol.gateway.GatewayLoggers;
@@ -50,7 +50,7 @@ public final class EmbeddedGatewayService implements AutoCloseable {
       final MeterRegistry meterRegistry,
       final AtomixCluster atomixCluster,
       final ClusterLeaderFoundService leaderService,
-      final BrokerTopologyManager topologyManager) {
+      final ClusterTopologyService topologyManager) {
     this.concurrencyControl = concurrencyControl;
     this.brokerClient = brokerClient;
     gateway =

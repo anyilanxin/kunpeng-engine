@@ -21,6 +21,8 @@ import com.anyilanxin.kunpeng.broker.bootstrap.step.adminapi.CommandApiServiceIm
 import com.anyilanxin.kunpeng.broker.bootstrap.step.idgenerator.NodeIdGeneratorService;
 import com.anyilanxin.kunpeng.broker.bootstrap.step.idgenerator.NodeIdGeneratorServiceImpl;
 import com.anyilanxin.kunpeng.broker.business.ClusterBusinessService;
+import com.anyilanxin.kunpeng.broker.client.business.BrokerClient;
+import com.anyilanxin.kunpeng.broker.gateway.EmbeddedGatewayService;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
 import com.anyilanxin.kunpeng.cluster.config.ClusterMetaStore;
 import com.anyilanxin.kunpeng.cluster.config.topology.broker.DefaultClusterSwimTopologyService;
@@ -45,6 +47,8 @@ public interface BrokerStartupContext {
   BrokerCfg getBrokerConfiguration();
 
   BeanFactory getBeanFactory();
+
+  BrokerClient getBrokerClient();
 
   ClusterCfg getClusterCft();
 
@@ -106,4 +110,8 @@ public interface BrokerStartupContext {
   TimerClock getTimerClock();
 
   void setTimerClock(TimerClock timerClock);
+
+  void setEmbeddedGatewayService(EmbeddedGatewayService embeddedGatewayService);
+
+  EmbeddedGatewayService getEmbeddedGatewayService();
 }

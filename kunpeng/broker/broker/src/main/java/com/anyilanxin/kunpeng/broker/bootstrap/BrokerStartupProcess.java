@@ -62,6 +62,7 @@ public final class BrokerStartupProcess {
     result.add(new JobStreamBootstrapStep());
     result.add(new ClusterRaftStep());
     result.add(new ClusterAdminStep());
+    result.add(new EmbeddedGatewayServiceStep());
     return result;
   }
 

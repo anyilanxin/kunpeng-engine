@@ -19,7 +19,7 @@ package com.anyilanxin.kunpeng.gateway.grpc;
 import com.anyilanxin.kunpeng.broker.client.business.BrokerClient;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationService;
-import com.anyilanxin.kunpeng.cluster.config.BrokerTopologyManager;
+import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.cluster.utils.TlsConfigUtil;
 import com.anyilanxin.kunpeng.configuration.SecurityCfg;
 import com.anyilanxin.kunpeng.configuration.gateway.GatewayCfg;
@@ -66,7 +66,7 @@ public class GatewayGrpcService extends Actor {
   private final GatewayCfg gatewayCfg;
   private final MeterRegistry meterRegistry;
   private final BrokerClient brokerClient;
-  private final BrokerTopologyManager topologyManager;
+  private final ClusterTopologyService topologyManager;
   private final GatewayTopologyManager gatewayTopologyManager;
   private final GatewayJobHub jobHub;
   private final ClusterCommunicationService communicationService;
@@ -80,7 +80,7 @@ public class GatewayGrpcService extends Actor {
       final GatewayCfg gatewayCfg,
       final MeterRegistry meterRegistry,
       final BrokerClient brokerClient,
-      final BrokerTopologyManager topologyManager,
+      final ClusterTopologyService topologyManager,
       final GatewayTopologyManager gatewayTopologyManager,
       final GatewayJobHub jobHub,
       final AtomixCluster atomixCluster) {

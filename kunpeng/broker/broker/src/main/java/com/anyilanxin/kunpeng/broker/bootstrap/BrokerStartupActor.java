@@ -41,6 +41,7 @@ public class BrokerStartupActor extends Actor {
 
   private BrokerStartupContext createBrokerStartup() {
     return new BrokerStartupContextImpl(
+        brokerContext.getBrokerClient(),
         brokerContext.getBrokerCfg(),
         brokerContext.getClusterCfg(),
         brokerContext.getActorSchedulingService(),

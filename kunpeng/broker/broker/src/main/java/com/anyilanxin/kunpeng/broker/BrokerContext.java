@@ -16,6 +16,7 @@
  */
 package com.anyilanxin.kunpeng.broker;
 
+import com.anyilanxin.kunpeng.broker.client.business.BrokerClient;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
 import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
@@ -32,6 +33,7 @@ import org.springframework.beans.factory.BeanFactory;
  * @since 2026.9.0
  */
 public interface BrokerContext {
+  BrokerClient getBrokerClient();
 
   AtomixCluster getAtomixCluster();
 

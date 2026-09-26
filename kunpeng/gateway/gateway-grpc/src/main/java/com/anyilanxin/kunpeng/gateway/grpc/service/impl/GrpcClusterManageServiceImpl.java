@@ -23,6 +23,7 @@ import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationServ
 import com.anyilanxin.kunpeng.cluster.config.BrokerClusterState;
 import com.anyilanxin.kunpeng.cluster.config.BrokerTopologyManager;
 import com.anyilanxin.kunpeng.cluster.config.ClusterResourceInfo;
+import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.gateway.grpc.GrpcErrorHandle;
 import com.anyilanxin.kunpeng.gateway.grpc.gatewaydiscover.GatewayTopologyManager;
 import com.anyilanxin.kunpeng.gateway.grpc.health.ActiveConnectionCounter;
@@ -51,16 +52,17 @@ public class GrpcClusterManageServiceImpl
   private static final Duration FORWARD_TIMEOUT = Duration.ofSeconds(8);
 
   private final BrokerClient brokerClient;
-  private final BrokerTopologyManager topologyManager;
+  private final ClusterTopologyService topologyManager;
   private final GrpcErrorHandle handle;
   final GatewayTopologyManager gatewayTopologyManager;
   final ActiveConnectionCounter connectionCounter;
   final ClusterCommunicationService communicationService;
+  private final BrokerTopologyManager brokerTopologyManager;
 
   public GrpcClusterManageServiceImpl(
       final BrokerClient brokerClient,
       final GrpcErrorHandle handle,
-      final BrokerTopologyManager topologyManager,
+      final ClusterTopologyService topologyManager,
       final GatewayTopologyManager gatewayTopologyManager,
       final ActiveConnectionCounter connectionCounter,
       final ClusterCommunicationService communicationService) {
@@ -70,6 +72,7 @@ public class GrpcClusterManageServiceImpl
     this.gatewayTopologyManager = gatewayTopologyManager;
     this.connectionCounter = connectionCounter;
     this.communicationService = communicationService;
+    brokerTopologyManager = new BrokerTopologyManager(topologyManager);
   }
 
   @Override
@@ -82,8 +85,8 @@ public class GrpcClusterManageServiceImpl
       final ClusterManageServiceOuterClass.ClusterTopologyRequest request,
       final StreamObserver<ClusterManageServiceOuterClass.ClusterTopologyResponse>
           responseObserver) {
-    final BrokerClusterState topology = topologyManager.getTopology();
-    final ClusterResourceInfo clusterResourceInfo = to(topologyManager.getTopology());
+    final BrokerClusterState topology = brokerTopologyManager.getTopology();
+    final ClusterResourceInfo clusterResourceInfo = to(brokerTopologyManager.getTopology());
     final Set<ClusterResourceInfo.MemberInfo> brokers = clusterResourceInfo.brokers();
     final ClusterManageServiceOuterClass.ClusterTopologyResponse.Builder builder =
         ClusterManageServiceOuterClass.ClusterTopologyResponse.newBuilder();

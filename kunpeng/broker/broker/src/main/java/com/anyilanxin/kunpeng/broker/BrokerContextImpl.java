@@ -18,6 +18,7 @@ package com.anyilanxin.kunpeng.broker;
 
 import static java.util.Objects.requireNonNull;
 
+import com.anyilanxin.kunpeng.broker.client.business.BrokerClient;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
 import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
@@ -43,8 +44,10 @@ final class BrokerContextImpl implements BrokerContext {
   private final MeterRegistry meterRegistry;
   private final BeanFactory beanFactory;
   private final SinksConfig sinksConfig;
+  private final BrokerClient brokerClient;
 
   BrokerContextImpl(
+      final BrokerClient brokerClient,
       final AtomixCluster atomixCluster,
       final BrokerCfg brokerCfg,
       final ClusterCfg clusterCfg,
@@ -52,6 +55,7 @@ final class BrokerContextImpl implements BrokerContext {
       final MeterRegistry meterRegistry,
       final BeanFactory beanFactory,
       final SinksConfig sinksConfig) {
+    this.brokerClient = requireNonNull(brokerClient);
     this.atomixCluster = requireNonNull(atomixCluster);
     apiMessagingService = requireNonNull(atomixCluster.getMessagingService());
     this.brokerCfg = requireNonNull(brokerCfg);
@@ -105,5 +109,10 @@ final class BrokerContextImpl implements BrokerContext {
   @Override
   public SinksConfig getSinksConfig() {
     return sinksConfig;
+  }
+
+  @Override
+  public BrokerClient getBrokerClient() {
+    return brokerClient;
   }
 }

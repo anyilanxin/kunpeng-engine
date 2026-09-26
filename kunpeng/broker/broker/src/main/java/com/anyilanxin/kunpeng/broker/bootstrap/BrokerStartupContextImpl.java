@@ -20,6 +20,8 @@ import com.anyilanxin.kunpeng.broker.admin.ClusterAdminService;
 import com.anyilanxin.kunpeng.broker.bootstrap.step.adminapi.CommandApiServiceImpl;
 import com.anyilanxin.kunpeng.broker.bootstrap.step.idgenerator.NodeIdGeneratorServiceImpl;
 import com.anyilanxin.kunpeng.broker.business.ClusterBusinessService;
+import com.anyilanxin.kunpeng.broker.client.business.BrokerClient;
+import com.anyilanxin.kunpeng.broker.gateway.EmbeddedGatewayService;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
 import com.anyilanxin.kunpeng.cluster.config.ClusterMetaStore;
 import com.anyilanxin.kunpeng.cluster.config.topology.broker.DefaultClusterSwimTopologyService;
@@ -49,7 +51,9 @@ public final class BrokerStartupContextImpl implements BrokerStartupContext {
   private final MeterRegistry meterRegistry;
   private final BeanFactory beanFactory;
   private final SinksConfig sinksConfig;
+  private final BrokerClient brokerClient;
 
+  private EmbeddedGatewayService embeddedGatewayService;
   private ClusterAdminService clusterManagerService;
   private ClusterBusinessService clusterBusinessService;
   private CommandApiServiceImpl commandApiService;
@@ -63,6 +67,7 @@ public final class BrokerStartupContextImpl implements BrokerStartupContext {
   private TimerClock timerClock;
 
   public BrokerStartupContextImpl(
+      final BrokerClient brokerClient,
       final BrokerCfg brokerCfg,
       final ClusterCfg clusterCfg,
       final ActorSchedulingService schedulingService,
@@ -71,6 +76,7 @@ public final class BrokerStartupContextImpl implements BrokerStartupContext {
       final MeterRegistry meterRegistry,
       final BeanFactory beanFactory,
       final SinksConfig sinksConfig) {
+    this.brokerClient = brokerClient;
     this.sinksConfig = sinksConfig;
     this.beanFactory = beanFactory;
     this.clusterCfg = clusterCfg;
@@ -232,7 +238,22 @@ public final class BrokerStartupContextImpl implements BrokerStartupContext {
   }
 
   @Override
+  public void setEmbeddedGatewayService(final EmbeddedGatewayService embeddedGatewayService) {
+    this.embeddedGatewayService = embeddedGatewayService;
+  }
+
+  @Override
+  public EmbeddedGatewayService getEmbeddedGatewayService() {
+    return embeddedGatewayService;
+  }
+
+  @Override
   public BeanFactory getBeanFactory() {
     return beanFactory;
+  }
+
+  @Override
+  public BrokerClient getBrokerClient() {
+    return brokerClient;
   }
 }

@@ -17,6 +17,7 @@
 package com.anyilanxin.kunpeng.broker;
 
 import com.anyilanxin.kunpeng.broker.bootstrap.BrokerStartupActor;
+import com.anyilanxin.kunpeng.broker.client.business.BrokerClient;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
 import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
 import com.anyilanxin.kunpeng.configuration.cluster.ClusterCfg;
@@ -50,6 +51,7 @@ public final class Broker implements AutoCloseable {
   private final BrokerStartupActor brokerStartupActor;
   private final String brokerId;
   private final BrokerContext brokerContext;
+  private final BrokerClient brokerClient;
 
   public Broker(
       final BeanFactory beanFactory,
@@ -57,13 +59,16 @@ public final class Broker implements AutoCloseable {
       final ClusterCfg clusterCfg,
       final BrokerCfg brokerCfg,
       final AtomixCluster atomixCluster,
+      final BrokerClient brokerClient,
       final MeterRegistry meterRegistry) {
     brokerId = clusterCfg.getNodeId();
     final SinksConfig sinksConfig = buildSinksConfig(brokerCfg);
     final String brokerId = String.format("Broker-%s", clusterCfg.getNodeId());
     diagnosticContext = Collections.singletonMap(BROKER_ID_LOG_PROPERTY, brokerId);
+    this.brokerClient = brokerClient;
     brokerContext =
         new BrokerContextImpl(
+            brokerClient,
             atomixCluster,
             brokerCfg,
             clusterCfg,
