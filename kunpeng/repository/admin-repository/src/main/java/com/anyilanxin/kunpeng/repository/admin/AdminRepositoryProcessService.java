@@ -16,6 +16,8 @@
  */
 package com.anyilanxin.kunpeng.repository.admin;
 
+import com.anyilanxin.kunpeng.cluster.business.step.RaftPartitionSource;
+import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
 import com.anyilanxin.kunpeng.eventlog.BatchEntryReader;
 import com.anyilanxin.kunpeng.eventlog.EventLog;
 import com.anyilanxin.kunpeng.eventlog.LoggedEntry;
@@ -28,13 +30,11 @@ import com.anyilanxin.kunpeng.protocol.admin.impl.AdminRecordMetadata;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.DefaultRecordValueMapper;
 import com.anyilanxin.kunpeng.protocol.admin.record.RecordType;
 import com.anyilanxin.kunpeng.protocol.admin.record.RecordValueMapper;
-import com.anyilanxin.kunpeng.protocol.common.PartitionSourceMetadata;
 import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 import com.anyilanxin.kunpeng.repository.admin.modules.key.MutableKeyRepository;
 import com.anyilanxin.kunpeng.repository.admin.modules.position.MutablePositionRepository;
 import com.anyilanxin.kunpeng.scheduler.Actor;
 import io.micrometer.core.instrument.MeterRegistry;
-import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,9 +54,8 @@ public class AdminRepositoryProcessService extends Actor implements RecordAvaila
   private MutableKeyRepository repositoryKey;
   private final AdminRecordMetadata metadata = new AdminRecordMetadata();
   private RepositoryTransaction currentTransaction;
-  private final int sourceId;
-  private final Set<Integer> agentSourceIds;
-  private final int partitionId;
+  private final RaftPartitionSource partitionSource;
+  private final PartitionId partitionId;
   private final AdminRepositoryAppliers applier;
   private final AdminRepository repository;
   private final RecordValueMapper valueMapper;
@@ -66,7 +65,8 @@ public class AdminRepositoryProcessService extends Actor implements RecordAvaila
   public AdminRepositoryProcessService(
       final EventLog logStream,
       final AdminRepository repository,
-      final PartitionSourceMetadata partitionSourceMetadata,
+      final PartitionId partitionId,
+      final RaftPartitionSource partitionSource,
       final MeterRegistry meterRegistry) {
     this.meterRegistry = meterRegistry;
     applier = repository.getAppliers();
@@ -74,9 +74,8 @@ public class AdminRepositoryProcessService extends Actor implements RecordAvaila
     this.logStream = logStream;
     this.repository = repository;
     context = repository.getContext();
-    sourceId = partitionSourceMetadata.sourceId();
-    agentSourceIds = partitionSourceMetadata.agentSourceIds();
-    partitionId = partitionSourceMetadata.partitionId();
+    this.partitionId = partitionId;
+    this.partitionSource = partitionSource;
   }
 
   @Override

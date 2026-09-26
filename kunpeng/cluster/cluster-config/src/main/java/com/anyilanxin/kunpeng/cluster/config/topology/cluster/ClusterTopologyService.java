@@ -21,6 +21,7 @@ import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
 import com.anyilanxin.kunpeng.cluster.config.topology.PartitionMemberInfo;
 import java.util.List;
 import java.util.Map;
+import org.agrona.collections.IntHashSet;
 
 /**
  * 集群拓扑服务接口。
@@ -38,4 +39,6 @@ public interface ClusterTopologyService {
 
   /** 全集群按成员维度的分区拓扑视图：member -> 其广播的分区状态列表 */
   Map<MemberId, List<PartitionMemberInfo>> getMemberPartitions();
+
+  IntHashSet getActivitySourceIds();
 }

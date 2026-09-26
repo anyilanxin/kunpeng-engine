@@ -16,6 +16,7 @@
  */
 package com.anyilanxin.kunpeng.repository.admin;
 
+import com.anyilanxin.kunpeng.cluster.business.step.RaftPartitionSource;
 import com.anyilanxin.kunpeng.kvstore.KvStore;
 import com.anyilanxin.kunpeng.kvstore.TransactionContext;
 import com.anyilanxin.kunpeng.repository.admin.modules.admin.AdminRepository;
@@ -31,7 +32,6 @@ import com.anyilanxin.kunpeng.repository.admin.modules.position.PositionReposito
 import com.anyilanxin.kunpeng.repository.admin.modules.source.MutableSourceRepository;
 import com.anyilanxin.kunpeng.repository.admin.modules.source.SourceRepository;
 import io.micrometer.core.instrument.MeterRegistry;
-import java.util.Set;
 
 /**
  * RocksDB 管理面仓储实现。
@@ -49,21 +49,21 @@ final class RocksdbAdminRepository
   private final MutableDelayedRepository repositoryDelayed;
   private final MutableSourceRepository repositorySource;
   private final AdminRepositoryAppliers appliers;
+  private final RaftPartitionSource partitionSource;
 
   public RocksdbAdminRepository(
-      final int positionId,
-      final Set<Integer> resourceIds,
+      final RaftPartitionSource partitionSource,
       final KvStore<AdminRepositoryColumnFamilies> db,
       final MeterRegistry meterRegistry) {
-    this(positionId, resourceIds, db, db.createTransactionContext(), meterRegistry);
+    this(partitionSource, db, db.createTransactionContext(), meterRegistry);
   }
 
   public RocksdbAdminRepository(
-      final int positionId,
-      final Set<Integer> resourceIds,
+      final RaftPartitionSource partitionSource,
       final KvStore<AdminRepositoryColumnFamilies> db,
       final TransactionContext transaction,
       final MeterRegistry meterRegistry) {
+    this.partitionSource = partitionSource;
     this.transaction = transaction;
     repositoryAdmin = new AdminRepository(db, transaction);
     repositoryBusiness = new BusinessRepository(db, transaction);

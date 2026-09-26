@@ -17,7 +17,7 @@
 package com.anyilanxin.kunpeng.broker.admin.raft.step.transition;
 
 import com.anyilanxin.kunpeng.broker.admin.raft.AdminPartitionStartupContext;
-import com.anyilanxin.kunpeng.broker.admin.raft.step.transition.apicommand.CommandApiServiceTransitionStep;
+import com.anyilanxin.kunpeng.broker.admin.raft.step.transition.apicommand.AdminCommandApiServiceTransitionStep;
 import com.anyilanxin.kunpeng.broker.admin.raft.step.transition.dispatch.DispatchProcessServiceTransitionStep;
 import com.anyilanxin.kunpeng.broker.admin.raft.step.transition.logstorage.AdminLogStoragePartitionTransitionStep;
 import com.anyilanxin.kunpeng.broker.admin.raft.step.transition.logstream.AdminLogStreamPartitionTransitionStep;
@@ -48,7 +48,7 @@ public final class AdminPartitionTransitionStep
           new RocksdbPartitionTransitionStep(),
           new RepositoryProcessServiceTransitionStep(),
           new DispatchProcessServiceTransitionStep(),
-          new CommandApiServiceTransitionStep());
+          new AdminCommandApiServiceTransitionStep());
 
   @Override
   public String getName() {
@@ -68,6 +68,7 @@ public final class AdminPartitionTransitionStep
         partitionManagementService.getMembershipService();
     final AdminTransitionContent transitionContent =
         new AdminTransitionContent(
+            context.getPartitionSource(),
             context.getClusterMetaStore(),
             context.getSnapshotProvider(),
             context.getMeterRegistry(),

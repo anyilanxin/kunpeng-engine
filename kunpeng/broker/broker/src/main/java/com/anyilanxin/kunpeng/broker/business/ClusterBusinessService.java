@@ -26,7 +26,6 @@ import com.anyilanxin.kunpeng.broker.business.raft.BusinessPartitionStartupConte
 import com.anyilanxin.kunpeng.broker.business.raft.BusinessRaftSnapshotProvider;
 import com.anyilanxin.kunpeng.broker.commandapi.CommandApiServiceImpl;
 import com.anyilanxin.kunpeng.broker.jobstream.JobStreamDispatcher;
-import com.anyilanxin.kunpeng.broker.topology.PartitionTopologyNotifier;
 import com.anyilanxin.kunpeng.cluster.business.PartitionService;
 import com.anyilanxin.kunpeng.cluster.business.RaftPartitionFactory;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
@@ -40,6 +39,7 @@ import com.anyilanxin.kunpeng.cluster.config.ClusterMetaStore;
 import com.anyilanxin.kunpeng.cluster.config.ClusterRaftConfiguration;
 import com.anyilanxin.kunpeng.cluster.config.DispatchMeta;
 import com.anyilanxin.kunpeng.cluster.config.topology.broker.DefaultClusterSwimTopologyService;
+import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.cluster.dispatch.api.ClusterDispatchClient;
 import com.anyilanxin.kunpeng.cluster.dispatch.scheduling.TimerClock;
 import com.anyilanxin.kunpeng.cluster.raft.partition.PartitionManagementService;
@@ -97,7 +97,7 @@ public class ClusterBusinessService extends Actor
   private final SinksConfig sinksConfig;
   private final JobStreamDispatcher jobStreamDispatcher;
   private final CommandApiServiceImpl commandApiService;
-  private final PartitionTopologyNotifier topologyNotifier;
+  private final ClusterTopologyService topologyService;
 
   /** 已执行的 ack 重试次数 */
   private int ackRetryAttempts;
@@ -112,16 +112,16 @@ public class ClusterBusinessService extends Actor
       final MeterRegistry meterRegistry,
       final ClusterDispatchClient dispatchClient,
       final DefaultClusterSwimTopologyService clusterPartitionTopology,
+      final ClusterTopologyService topologyService,
       final BeanFactory beanFactory,
       final SinksConfig sinksConfig,
       final JobStreamDispatcher jobStreamDispatcher,
       final CommandApiServiceImpl commandApiService) {
+    this.topologyService = topologyService;
     this.sinksConfig = sinksConfig;
     this.beanFactory = beanFactory;
     this.jobStreamDispatcher = jobStreamDispatcher;
     this.commandApiService = commandApiService;
-    this.topologyNotifier =
-        new PartitionTopologyNotifier(clusterPartitionTopology, java.time.Duration.ofSeconds(1));
     this.timerClock = timerClock;
     this.brokerCfg = brokerCfg;
     this.meterRegistry = meterRegistry;
@@ -145,8 +145,6 @@ public class ClusterBusinessService extends Actor
     actor.submit(
         () -> {
           register();
-          // 拓扑通知器作为独立 actor 提交统一调度（周期比对各分区 leader 并通知路由方）
-          actorSchedulingService.submitActor(topologyNotifier);
           // 等待全部已有分区启动完成后再重放调度，调度重放时能看到分区的最终占位状态
           startBusinessRaft()
               .onComplete(
@@ -169,7 +167,6 @@ public class ClusterBusinessService extends Actor
     actor.submit(
         () -> {
           unregister();
-          topologyNotifier.closeAsync();
           closeBusinessRaft()
               .onComplete(
                   (_, throwable) -> {
@@ -270,12 +267,7 @@ public class ClusterBusinessService extends Actor
         sinksConfig,
         jobStreamDispatcher,
         commandApiService,
-        topologyNotifier);
-  }
-
-  /** 分区拓扑通知器（分区间命令发送器等路由方经此感知各分区 leader 变化） */
-  public PartitionTopologyNotifier getTopologyNotifier() {
-    return topologyNotifier;
+        topologyService);
   }
 
   @Override

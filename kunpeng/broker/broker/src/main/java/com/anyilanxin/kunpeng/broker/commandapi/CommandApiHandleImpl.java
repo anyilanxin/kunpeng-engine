@@ -23,6 +23,7 @@ import com.anyilanxin.kunpeng.broker.client.business.ApiResponseWriterImpl;
 import com.anyilanxin.kunpeng.broker.client.business.BrokerResponseWriter;
 import com.anyilanxin.kunpeng.broker.client.business.TopicUtils;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.CommandApiHandle;
+import com.anyilanxin.kunpeng.cluster.business.step.RaftPartitionSource;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
 import com.anyilanxin.kunpeng.eventlog.AppendEntry;
 import com.anyilanxin.kunpeng.eventlog.AppendResult;
@@ -35,7 +36,6 @@ import com.anyilanxin.kunpeng.protocol.business.impl.record.DefaultRecordValueMa
 import com.anyilanxin.kunpeng.protocol.business.record.RecordType;
 import com.anyilanxin.kunpeng.protocol.business.record.RecordValueMapper;
 import com.anyilanxin.kunpeng.protocol.business.record.commandapi.CommandApiValueLifeCycle;
-import com.anyilanxin.kunpeng.protocol.common.PartitionSourceMetadata;
 import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 import com.anyilanxin.kunpeng.protocol.common.VersionInfo;
 import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
@@ -114,27 +114,27 @@ public class CommandApiHandleImpl implements CommandApiHandle, CloseableSilently
   }
 
   private void addRequestHandlers(
-      final PartitionSourceMetadata sourceMetadata, final EventLogWriter logStreamWriter) {
-    final int partitionId = sourceMetadata.partitionId();
+      final RaftPartitionSource partitionSource, final EventLogWriter logStreamWriter) {
+    final int partitionId = partitionSource.getPartitionId().id();
     final var topicName = TopicUtils.getTopicName(RecordType.COMMAND_API, partitionId);
     LOG.info("subscribe from topic {}", topicName);
     messagingService.registerHandler(
-        topicName, (sender, request) -> handleRequest(request, sourceMetadata, logStreamWriter));
+        topicName, (sender, request) -> handleRequest(request, partitionSource, logStreamWriter));
   }
 
   void registerHandlers(
-      final PartitionSourceMetadata sourceMetadata, final EventLogWriter logStreamWriter) {
+      final RaftPartitionSource partitionSource, final EventLogWriter logStreamWriter) {
     actor.run(
         () -> {
           partitionsRequestMap.computeIfAbsent(
-              sourceMetadata.partitionId(), id -> new Long2ObjectHashMap<>());
-          addRequestHandlers(sourceMetadata, logStreamWriter);
+              partitionSource.getPartitionId().id(), _ -> new Long2ObjectHashMap<>());
+          addRequestHandlers(partitionSource, logStreamWriter);
         });
   }
 
   private CompletableFuture<byte[]> handleRequest(
       final byte[] requestBytes,
-      final PartitionSourceMetadata sourceMetadata,
+      final RaftPartitionSource partitionSource,
       final EventLogWriter logStreamWriter) {
     final var completableFuture = new CompletableFuture<byte[]>();
     actor.run(
@@ -145,10 +145,11 @@ public class CommandApiHandleImpl implements CommandApiHandle, CloseableSilently
             return;
           }
           final long requestId = idGenerator.nextId();
-          final var requestMap = partitionsRequestMap.get(sourceMetadata.partitionId());
+          final var requestMap = partitionsRequestMap.get(partitionSource.getPartitionId().id());
           if (requestMap == null) {
             final var errorMsg =
-                String.format(ERROR_MSG_MISSING_PARTITON_MAP, sourceMetadata.partitionId());
+                String.format(
+                    ERROR_MSG_MISSING_PARTITON_MAP, partitionSource.getPartitionId().id());
             LOG.trace(errorMsg);
             completableFuture.completeExceptionally(new IllegalStateException(errorMsg));
             return;
@@ -166,13 +167,13 @@ public class CommandApiHandleImpl implements CommandApiHandle, CloseableSilently
                   completableFuture, requestReader.requestType(), requestReader.valueType()));
 
           // 数据写入日志中
-          writeCommand(sourceMetadata, requestId, logStreamWriter, requestReader);
+          writeCommand(partitionSource, requestId, logStreamWriter, requestReader);
         });
     return completableFuture;
   }
 
   private void writeCommand(
-      final PartitionSourceMetadata sourceMetadata,
+      final RaftPartitionSource partitionSource,
       final long requestId,
       final EventLogWriter logStreamWriter,
       final ApiRequestReader requestReader) {
@@ -196,10 +197,10 @@ public class CommandApiHandleImpl implements CommandApiHandle, CloseableSilently
     if (logStreamWriter.canAppend(1, appendEntry.getLength())) {
       final AppendResult result = logStreamWriter.tryAppend(WriteContext.USER_COMMAND, appendEntry);
       if (result instanceof AppendResult.Rejected) {
-        errorResponse(0, null, sourceMetadata, requestId);
+        errorResponse(0, null, partitionSource, requestId);
       }
     } else {
-      errorResponse(0, null, sourceMetadata, requestId);
+      errorResponse(0, null, partitionSource, requestId);
     }
   }
 
@@ -207,7 +208,7 @@ public class CommandApiHandleImpl implements CommandApiHandle, CloseableSilently
       final int code,
       final long key,
       final DirectBuffer directBuffer,
-      final PartitionSourceMetadata sourceMetadata,
+      final RaftPartitionSource partitionSource,
       final long requestId) {
     actor.run(
         () -> {
@@ -222,9 +223,9 @@ public class CommandApiHandleImpl implements CommandApiHandle, CloseableSilently
   void errorResponse(
       final int code,
       final DirectBuffer directBuffer,
-      final PartitionSourceMetadata sourceMetadata,
+      final RaftPartitionSource partitionSource,
       final long requestId) {
-    errorResponse(code, 0L, directBuffer, sourceMetadata, requestId);
+    errorResponse(code, 0L, directBuffer, partitionSource, requestId);
   }
 
   @Override
@@ -284,8 +285,8 @@ public class CommandApiHandleImpl implements CommandApiHandle, CloseableSilently
         });
   }
 
-  public void unregisterHandlers(final PartitionSourceMetadata sourceMetadata) {
-    removeRequestHandlers(sourceMetadata.partitionId());
+  public void unregisterHandlers(final RaftPartitionSource partitionSource) {
+    removeRequestHandlers(partitionSource.getPartitionId().id());
   }
 
   void onDiskSpaceNotAvailable() {

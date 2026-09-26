@@ -34,6 +34,7 @@ dependencies {
     implementation project(':kunpeng:scheduler')
     implementation project(':kunpeng:structpack')
     implementation 'com.google.guava:guava'
+    implementation 'org.agrona:agrona'
     implementation 'io.micrometer:micrometer-core'
     implementation 'io.micrometer:micrometer-commons'
     implementation 'org.springframework:spring-core'

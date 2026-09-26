@@ -19,9 +19,7 @@ package com.anyilanxin.kunpeng.broker.business.raft.step.transition.apicommand;
 import com.anyilanxin.kunpeng.broker.business.raft.step.transition.BusinessTransitionContent;
 import com.anyilanxin.kunpeng.broker.commandapi.CommandApiServiceImpl;
 import com.anyilanxin.kunpeng.cluster.business.step.transition.TransitionStep;
-import com.anyilanxin.kunpeng.protocol.common.PartitionSourceMetadata;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
-import com.google.common.collect.ImmutableSet;
 
 /**
  * 业务命令 API 的分区 transition 步骤：leader 分区把命令接收 handler 绑定到本分区事件日志（client 命令经 commandapi 直写 leader 日志）；
@@ -39,10 +37,8 @@ public class CommandApiServiceTransitionStep implements TransitionStep<BusinessT
     if (commandApiService == null) {
       return null;
     }
-    final int partitionId = context.getRaftPartitionId().id();
     return commandApiService.registerHandlers(
-        new PartitionSourceMetadata(partitionId, partitionId, ImmutableSet.of()),
-        context.getEventLog());
+        context.getRaftPartitionSource(), context.getEventLog());
   }
 
   @Override
@@ -62,9 +58,7 @@ public class CommandApiServiceTransitionStep implements TransitionStep<BusinessT
     if (commandApiService == null) {
       return null;
     }
-    final int partitionId = context.getRaftPartitionId().id();
-    return commandApiService.unregisterHandlers(
-        new PartitionSourceMetadata(partitionId, partitionId, ImmutableSet.of()));
+    return commandApiService.unregisterHandlers(context.getRaftPartitionSource());
   }
 
   @Override

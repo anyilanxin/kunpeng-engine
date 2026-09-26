@@ -16,15 +16,13 @@
  */
 package com.anyilanxin.kunpeng.broker.business.raft.step.transition.apipartition.impl;
 
-import com.anyilanxin.kunpeng.broker.topology.TopologyPartitionListener;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationService;
-import com.anyilanxin.kunpeng.cluster.config.topology.PartitionMemberInfo;
+import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.engine.bpmn.InterPartitionCommandSender;
 import com.anyilanxin.kunpeng.protocol.business.ValueLifeCycle;
-import com.anyilanxin.kunpeng.protocol.common.PartitionSourceMetadata;
 import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 import com.anyilanxin.kunpeng.scheduler.Actor;
-import java.util.Set;
+import org.agrona.collections.IntHashSet;
 
 /**
  * 跨分区命令发送服务。
@@ -33,15 +31,16 @@ import java.util.Set;
  * @since 2026.9.0
  */
 public final class InterPartitionCommandSenderService extends Actor
-    implements InterPartitionCommandSender, TopologyPartitionListener {
+    implements InterPartitionCommandSender {
 
-  final InterPartitionCommandSenderImpl commandSender;
-  final int partitionId;
+  private final InterPartitionCommandSenderImpl commandSender;
+  private final ClusterTopologyService topologyService;
 
   public InterPartitionCommandSenderService(
-      final ClusterCommunicationService communicationService, final int partitionId) {
-    commandSender = new InterPartitionCommandSenderImpl(communicationService);
-    this.partitionId = partitionId;
+      final ClusterCommunicationService communicationService,
+      final ClusterTopologyService topologyService) {
+    commandSender = new InterPartitionCommandSenderImpl(communicationService, topologyService);
+    this.topologyService = topologyService;
   }
 
   @Override
@@ -76,19 +75,7 @@ public final class InterPartitionCommandSenderService extends Actor
   }
 
   @Override
-  public void onPartitionLeaderUpdated(
-      final PartitionSourceMetadata sourceMetadata, final PartitionMemberInfo member) {
-    actor.submit(
-        () ->
-            commandSender.setCurrentLeader(
-                sourceMetadata.partitionId(),
-                sourceMetadata.sourceId(),
-                sourceMetadata.agentSourceIds(),
-                member.getMemberId()));
-  }
-
-  @Override
-  public Set<Integer> getActivitySourceIds() {
+  public IntHashSet getActivitySourceIds() {
     return commandSender.getActivitySourceIds();
   }
 }

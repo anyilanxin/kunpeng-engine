@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -40,7 +41,7 @@ public abstract class Actor implements ConcurrencyControl, AsyncClosable, AutoCl
   private volatile Map<String, String> context;
 
   protected Actor() {
-    this.name = getClass().getSimpleName();
+    name = getClass().getSimpleName();
   }
 
   // ===== 生命周期钩子（调度器触发） =====
@@ -144,7 +145,7 @@ public abstract class Actor implements ConcurrencyControl, AsyncClosable, AutoCl
     }
 
     public ActorBuilder actorStartedHandler(final Consumer<ActorControl> handler) {
-      this.startedHandler = handler;
+      startedHandler = handler;
       return this;
     }
 
@@ -181,6 +182,7 @@ public abstract class Actor implements ConcurrencyControl, AsyncClosable, AutoCl
 
   // ===== 提交（任意线程） =====
 
+  @Override
   public ActorFuture<Void> run(final Runnable action) {
     return actor.run(action);
   }
@@ -189,26 +191,31 @@ public abstract class Actor implements ConcurrencyControl, AsyncClosable, AutoCl
     return actor.submit(action);
   }
 
+  @Override
   public <T> ActorFuture<T> call(final Callable<T> callable) {
     return actor.call(callable);
   }
 
+  @Override
   public <T> void runOnCompletion(
       final ActorFuture<T> future, final BiConsumer<T, Throwable> callback) {
     actor.runOnCompletion(future, callback);
   }
 
+  @Override
   public <T> void runOnCompletion(
       final Collection<ActorFuture<T>> futures, final Consumer<Throwable> callback) {
     actor.runOnCompletion(futures, callback);
   }
 
+  @Override
   public ScheduledTimer schedule(final Duration delay, final Runnable runnable) {
     return actor.schedule(delay, runnable);
   }
 
   // ===== 关闭 =====
 
+  @Override
   public ActorFuture<Void> closeAsync() {
     return actor.close();
   }
@@ -221,7 +228,7 @@ public abstract class Actor implements ConcurrencyControl, AsyncClosable, AutoCl
   @Override
   public void close() {
     try {
-      closeAsync().get(300, java.util.concurrent.TimeUnit.SECONDS);
+      closeAsync().get(300, TimeUnit.SECONDS);
     } catch (final Exception e) {
       final var cause = e.getCause() != null ? e.getCause() : e;
       throw new RuntimeException("关闭 actor " + name + " 失败", cause);

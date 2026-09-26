@@ -18,6 +18,7 @@ package com.anyilanxin.kunpeng.broker.admin.raft.step.transition;
 
 import com.anyilanxin.kunpeng.broker.admin.raft.step.transition.logstorage.AdminRaftEventStore;
 import com.anyilanxin.kunpeng.broker.client.admin.commandapi.CommandApiService;
+import com.anyilanxin.kunpeng.cluster.business.step.RaftPartitionSource;
 import com.anyilanxin.kunpeng.cluster.business.step.transition.TransitionContent;
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
 import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
@@ -61,6 +62,7 @@ public class AdminTransitionContent
   private final ClusterMembershipService membershipService;
   private final ClusterDispatchClient dispatchClient;
   private final ClusterTopologyService clusterTopologyService;
+  private final RaftPartitionSource partitionSource;
 
   private long currentTerm;
   private RaftServer.Role currentRole;
@@ -73,6 +75,7 @@ public class AdminTransitionContent
   private ConcurrencyControl concurrencyControl;
 
   public AdminTransitionContent(
+      final RaftPartitionSource partitionSource,
       final ClusterMetaStore clusterMetaStore,
       final RaftSnapshotProvider<KvStore<AdminRepositoryColumnFamilies>> snapshotProvider,
       final MeterRegistry meterRegistry,
@@ -86,6 +89,7 @@ public class AdminTransitionContent
       final ClusterDispatchClient dispatchClient,
       final ClusterTopologyService clusterTopologyService) {
     this.clock = clock;
+    this.partitionSource = partitionSource;
     this.dispatchClient = dispatchClient;
     this.membershipService = membershipService;
     this.clusterTopologyService = clusterTopologyService;
@@ -228,6 +232,10 @@ public class AdminTransitionContent
 
   public ClusterDispatchClient getDispatchClient() {
     return dispatchClient;
+  }
+
+  public RaftPartitionSource getPartitionSource() {
+    return partitionSource;
   }
 
   public ClusterTopologyService getClusterTopologyService() {

@@ -16,6 +16,7 @@
  */
 package com.anyilanxin.kunpeng.repository.business;
 
+import com.anyilanxin.kunpeng.cluster.business.step.RaftPartitionSource;
 import com.anyilanxin.kunpeng.kvstore.KvStore;
 import com.anyilanxin.kunpeng.kvstore.TransactionContext;
 import com.anyilanxin.kunpeng.repository.business.modules.activityinstance.ActivityInstanceRepository;
@@ -64,7 +65,6 @@ import com.anyilanxin.kunpeng.repository.business.modules.variable.MutableVariab
 import com.anyilanxin.kunpeng.repository.business.modules.variable.VariableRepository;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.util.List;
-import java.util.Set;
 import org.springframework.beans.factory.BeanFactory;
 
 /**
@@ -99,23 +99,23 @@ final class RocksdbBusinessRepository implements BusinessRepository {
   private final TimerEventRepository timerEventRepository;
   private final UserTaskRepository userTaskRepository;
   private final VariableRepository variableRepository;
+  private final RaftPartitionSource partitionSource;
 
   public RocksdbBusinessRepository(
-      final int positionId,
-      final Set<Integer> resourceIds,
+      final RaftPartitionSource partitionSource,
       final KvStore<BusinessRepositoryColumnFamilies> db,
       final BeanFactory beanFactory,
       final MeterRegistry meterRegistry) {
-    this(positionId, resourceIds, db, db.createTransactionContext(), beanFactory, meterRegistry);
+    this(partitionSource, db, db.createTransactionContext(), beanFactory, meterRegistry);
   }
 
   public RocksdbBusinessRepository(
-      final int positionId,
-      final Set<Integer> resourceIds,
+      final RaftPartitionSource partitionSource,
       final KvStore<BusinessRepositoryColumnFamilies> db,
       final TransactionContext transaction,
       final BeanFactory beanFactory,
       final MeterRegistry meterRegistry) {
+    this.partitionSource = partitionSource;
     this.transaction = transaction;
     splitRegister = new DataSplitRegister();
     appliers = new RocksdbBusinessRepositoryApplier(this);

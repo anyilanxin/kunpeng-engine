@@ -29,6 +29,7 @@ configure(jarInfo) {
 dependencies {
     implementation  project(':kunpeng:scheduler')
     implementation project(':kunpeng:cluster:cluster')
+    implementation project(':kunpeng:cluster:cluster-raft')
     implementation project(':kunpeng:cluster:cluster-config')
     implementation project(':kunpeng:eventlog')
     implementation project(':kunpeng:structpack')

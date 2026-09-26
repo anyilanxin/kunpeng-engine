@@ -26,7 +26,8 @@ import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
  * @author zxuanhong
  * @since 2026.9.0
  */
-public class CommandApiServiceTransitionStep implements TransitionStep<AdminTransitionContent> {
+public class AdminCommandApiServiceTransitionStep
+    implements TransitionStep<AdminTransitionContent> {
 
   @Override
   public String getName() {

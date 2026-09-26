@@ -56,6 +56,7 @@ public final class ClusterRaftStep extends AbstractBrokerStartupStep {
             brokerStartupContext.getMeterRegistry(),
             brokerStartupContext.getClusterDispatchClient(),
             brokerStartupContext.getClusterPartitionTopology(),
+            brokerStartupContext.getClusterTopologyService(),
             brokerStartupContext.getBeanFactory(),
             brokerStartupContext.getSinksConfig(),
             brokerStartupContext.getJobStreamDispatcher(),

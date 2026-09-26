@@ -21,6 +21,7 @@ import com.anyilanxin.kunpeng.broker.admin.raft.step.transition.AdminTransitionC
 import com.anyilanxin.kunpeng.broker.client.admin.commandapi.CommandApiService;
 import com.anyilanxin.kunpeng.cluster.business.PartitionStartupContext;
 import com.anyilanxin.kunpeng.cluster.business.RaftPartitionFactory;
+import com.anyilanxin.kunpeng.cluster.business.step.RaftPartitionSource;
 import com.anyilanxin.kunpeng.cluster.business.step.transition.PartitionTransition;
 import com.anyilanxin.kunpeng.cluster.config.ClusterMetaStore;
 import com.anyilanxin.kunpeng.cluster.config.topology.broker.DefaultClusterSwimTopologyService;
@@ -57,15 +58,16 @@ public class AdminPartitionStartupContext
   private final BrokerCfg brokerCfg;
   private final CommandApiService commandApiHandle;
   private final TimerClock timerClock;
+  private final ClusterMetaStore clusterMetaStore;
+  private final ClusterDispatchClient dispatchClient;
+  private final DefaultClusterSwimTopologyService brokerTopologyService;
+  private final ClusterTopologyService clusterTopologyService;
 
   private PartitionTransition<AdminTransitionContent> partitionTransition;
   private Path partitionDirectory;
   private RaftPartition raftPartition;
   private DefaultClusterLeaderManageService clusterLeaderManageService;
-  private final ClusterMetaStore clusterMetaStore;
-  private final ClusterDispatchClient dispatchClient;
-  private final DefaultClusterSwimTopologyService brokerTopologyService;
-  private final ClusterTopologyService clusterTopologyService;
+  private RaftPartitionSource partitionSource;
 
   public AdminPartitionStartupContext(
       final ClusterMetaStore clusterMetaStore,
@@ -200,6 +202,14 @@ public class AdminPartitionStartupContext
 
   public DefaultClusterSwimTopologyService getBrokerTopologyService() {
     return brokerTopologyService;
+  }
+
+  public void setPartitionSource(final RaftPartitionSource partitionSource) {
+    this.partitionSource = partitionSource;
+  }
+
+  public RaftPartitionSource getPartitionSource() {
+    return partitionSource;
   }
 
   public ClusterTopologyService getClusterTopologyService() {

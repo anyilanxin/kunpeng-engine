@@ -16,6 +16,7 @@
  */
 package com.anyilanxin.kunpeng.cluster.dispatch;
 
+import com.anyilanxin.kunpeng.cluster.business.step.RaftPartitionSource;
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
 import com.anyilanxin.kunpeng.cluster.config.ClusterMetaStore;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
@@ -31,7 +32,6 @@ import com.anyilanxin.kunpeng.protocol.admin.impl.record.DefaultRecordValueMappe
 import com.anyilanxin.kunpeng.protocol.admin.record.CommandApiValueLifeCycle;
 import com.anyilanxin.kunpeng.protocol.admin.record.RecordType;
 import com.anyilanxin.kunpeng.protocol.admin.record.RecordValueMapper;
-import com.anyilanxin.kunpeng.protocol.common.PartitionSourceMetadata;
 import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 import com.anyilanxin.kunpeng.protocol.common.VersionInfo;
 import com.anyilanxin.kunpeng.repository.admin.AdminImmutableRepository;
@@ -55,9 +55,8 @@ public class LogEventWriter {
   public static final VersionInfo BROKER_VERSION = VersionInfo.parse(VersionUtil.getVersion());
   private final AdminRepository repository;
   private final ProcessingCollectSupplier collectSupplier;
-  private final int sourceId;
+  private final RaftPartitionSource partitionSource;
   private final ImmutableKeyRepository repositoryKey;
-  private final List<Integer> agentSourceIds;
   private final MeterRegistry meterRegistry;
   private final RecordValueMapper valueMapper = DefaultRecordValueMapper.getInstance();
   private final TimerClock clock;
@@ -75,7 +74,7 @@ public class LogEventWriter {
       final TimerClock clock,
       final AdminRepository repository,
       final ProcessingCollectSupplier collectSupplier,
-      final PartitionSourceMetadata partitionSourceMetadata,
+      final RaftPartitionSource partitionSource,
       final MeterRegistry meterRegistry,
       final ClusterMetaStore clusterMetaStore,
       final ClusterMembershipService membershipService,
@@ -92,8 +91,7 @@ public class LogEventWriter {
     this.repositoryFactory = repositoryFactory;
     this.clock = clock;
     this.collectSupplier = collectSupplier;
-    sourceId = partitionSourceMetadata.sourceId();
-    agentSourceIds = new ArrayList<>(partitionSourceMetadata.agentSourceIds());
+    this.partitionSource = partitionSource;
 
     initCheckerAware(repositoryFactory);
     repositoryKey = repository.keyRepository();

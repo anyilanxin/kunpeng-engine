@@ -19,12 +19,10 @@ package com.anyilanxin.kunpeng.broker.admin.raft.step.transition.repository;
 import com.anyilanxin.kunpeng.broker.admin.raft.step.transition.AdminTransitionContent;
 import com.anyilanxin.kunpeng.cluster.business.step.transition.TransitionStep;
 import com.anyilanxin.kunpeng.eventlog.EventLog;
-import com.anyilanxin.kunpeng.protocol.common.PartitionSourceMetadata;
 import com.anyilanxin.kunpeng.repository.admin.AdminRepositoryProcessService;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
 import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
-import com.google.common.collect.ImmutableSet;
 
 /**
  * 管理面仓储服务分区迁移步骤。
@@ -83,7 +81,8 @@ public final class RepositoryProcessServiceTransitionStep
                 new AdminRepositoryProcessService(
                     logStream,
                     context.getRepositoryFactory().create(),
-                    new PartitionSourceMetadata(1, 1, ImmutableSet.<Integer>builder().build()),
+                    context.getRaftPartitionId(),
+                    context.getPartitionSource(),
                     context.getMeterRegistry());
             schedulingService
                 .submitActor(applierService)

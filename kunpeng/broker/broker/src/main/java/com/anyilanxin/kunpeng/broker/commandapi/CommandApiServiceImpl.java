@@ -19,10 +19,10 @@ package com.anyilanxin.kunpeng.broker.commandapi;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.CommandApiHandle;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.CommandApiService;
 import com.anyilanxin.kunpeng.broker.monitoring.DiskSpaceUsageListener;
+import com.anyilanxin.kunpeng.cluster.business.step.RaftPartitionSource;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
 import com.anyilanxin.kunpeng.eventlog.EventLog;
 import com.anyilanxin.kunpeng.eventlog.EventLogWriter;
-import com.anyilanxin.kunpeng.protocol.common.PartitionSourceMetadata;
 import com.anyilanxin.kunpeng.scheduler.Actor;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 import org.agrona.collections.Int2ObjectHashMap;
@@ -73,23 +73,23 @@ public class CommandApiServiceImpl extends Actor
 
   @Override
   public ActorFuture<Void> registerHandlers(
-      final PartitionSourceMetadata sourceMetadata, final EventLog logStream) {
+      final RaftPartitionSource partitionSource, final EventLog logStream) {
     final var future = actor.<Void>createFuture();
     actor.run(
         () -> {
           final var logStreamWriter = logStream.newWriter();
-          handle.registerHandlers(sourceMetadata, logStreamWriter);
+          handle.registerHandlers(partitionSource, logStreamWriter);
           future.complete(null);
         });
     return future;
   }
 
   @Override
-  public ActorFuture<Void> unregisterHandlers(final PartitionSourceMetadata sourceMetadata) {
+  public ActorFuture<Void> unregisterHandlers(final RaftPartitionSource partitionSource) {
     final var future = actor.<Void>createFuture();
     actor.run(
         () -> {
-          handle.unregisterHandlers(sourceMetadata);
+          handle.unregisterHandlers(partitionSource);
           future.complete(null);
         });
     return future;

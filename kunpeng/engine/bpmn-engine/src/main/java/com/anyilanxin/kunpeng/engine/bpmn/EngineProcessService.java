@@ -17,6 +17,8 @@
 package com.anyilanxin.kunpeng.engine.bpmn;
 
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.CommandApiHandle;
+import com.anyilanxin.kunpeng.cluster.business.step.RaftPartitionSource;
+import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
 import com.anyilanxin.kunpeng.engine.bpmn.exception.EngineErrorHandleException;
 import com.anyilanxin.kunpeng.engine.bpmn.exception.EngineRollbackException;
 import com.anyilanxin.kunpeng.engine.bpmn.scheduling.*;
@@ -32,7 +34,6 @@ import com.anyilanxin.kunpeng.protocol.business.impl.record.DefaultRecordValueMa
 import com.anyilanxin.kunpeng.protocol.business.record.RecordType;
 import com.anyilanxin.kunpeng.protocol.business.record.RecordValueMapper;
 import com.anyilanxin.kunpeng.protocol.business.record.command.job.JobLifeCycle;
-import com.anyilanxin.kunpeng.protocol.common.PartitionSourceMetadata;
 import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 import com.anyilanxin.kunpeng.repository.business.BusinessRepository;
 import com.anyilanxin.kunpeng.repository.business.BusinessRepositoryAppliers;
@@ -46,7 +47,6 @@ import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.BeanFactory;
 
@@ -68,9 +68,6 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
   private MutableProcessedPositionRepository mutableProcessedPosition;
   private final CommandApiHandle commandApiHandle;
   private final RecordMetadata metadata = new RecordMetadata();
-  private final int sourceId;
-  private final Set<Integer> agentSourceIds;
-  private final int partitionId;
   private ImmutableKeyGeneratorRepository keyGenerator;
   private MutableKeyGeneratorRepository mutableKeyGenerator;
   private OrderedTimerScheduler primaryScheduler;
@@ -81,8 +78,9 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
   private BpmnEngine bpmnEngine;
   private BatchProcessingCollect processingCollect;
   private final LogEventProcessors logEventProcessors;
-  private final PartitionSourceMetadata partitionSourceMetadata;
-  final InterPartitionCommandSender commandSender;
+  private final RaftPartitionSource partitionSource;
+  private final PartitionId partitionId;
+  private final InterPartitionCommandSender commandSender;
   private final int maxBatch;
   private LanePool lanePool;
   private final BusinessRepositoryAppliers appliers;
@@ -112,11 +110,13 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
       final EventLog logStream,
       final BusinessRepositoryFactory repositoryFactory,
       final CommandApiHandle commandApiHandle,
-      final PartitionSourceMetadata partitionSourceMetadata,
+      final RaftPartitionSource partitionSource,
       final InterPartitionCommandSender commandSender,
       final MeterRegistry meterRegistry,
       final TimerClock clock,
       final ActorSchedulingService actorSchedulingService) {
+    this.partitionSource = partitionSource;
+    partitionId = partitionSource.getPartitionId();
     this.meterRegistry = meterRegistry;
     this.jobDeliveryPort = jobDeliveryPort;
     this.commandSender = commandSender;
@@ -130,11 +130,7 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
     context = repository.getContext();
     appliers = repository.getAppliers();
     this.commandApiHandle = commandApiHandle;
-    sourceId = partitionSourceMetadata.sourceId();
-    agentSourceIds = partitionSourceMetadata.agentSourceIds();
-    partitionId = partitionSourceMetadata.partitionId();
     logEventProcessors = new LogEventProcessors();
-    this.partitionSourceMetadata = partitionSourceMetadata;
     maxBatch = DEFAULT_MAX_BATCH;
   }
 
@@ -166,7 +162,7 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
             metrics);
 
     primaryScheduler = schedulerFactory.create();
-    lanePool = new LanePool(actorSchedulingService, schedulerFactory, partitionId);
+    lanePool = new LanePool(actorSchedulingService, schedulerFactory, partitionId.id());
     // 车道失败自愈: 池内原子重建失败车道; 失败即上报不健康, 重建完成后重振全部 checker 并恢复健康
     lanePool.setFailureListener(
         new LaneFailureListener() {
@@ -199,7 +195,7 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
         });
     // alwaysAsync 形态(沿用历史命名): 所有调度任务经车道执行, 主 actor 零调度负载
     scheduleService = AsyncTimerRouter.alwaysAsync(primaryScheduler, lanePool);
-    schedulerContext = new SchedulerContext(scheduleService, partitionId, clock);
+    schedulerContext = new SchedulerContext(scheduleService, partitionId.id(), clock);
   }
 
   private void initProcessPosition() {
@@ -214,7 +210,8 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
             clock,
             repository,
             collectSupplier,
-            partitionSourceMetadata,
+            partitionSource,
+            partitionId.id(),
             beanFactory,
             commandSender,
             jobDeliveryPort,
@@ -224,13 +221,13 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
         new BpmnEngine(
             logEventProcessors,
             repository,
-            partitionSourceMetadata,
+            partitionSource,
             beanFactory,
             commandSender,
             meterRegistry,
             logEventWriter,
             collectSupplier);
-    processingCollect = new BatchProcessingCollect(commandApiHandle, appliers, partitionId);
+    processingCollect = new BatchProcessingCollect(commandApiHandle, appliers, partitionId.id());
     logStreamReader.seekToNextEntry(processPosition);
   }
 
@@ -330,7 +327,7 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
               final ValueLifeCycle lifeCycle = metadata.getLifeCycle();
               final UnifiedRecordValue recordValue = recordValueMapper.getCacheValue(lifeCycle);
               loggedEvent.readValue(recordValue);
-              final TypedRecordReader initialCommand = new TypedRecordReader(partitionId);
+              final TypedRecordReader initialCommand = new TypedRecordReader(partitionId.id());
               initialCommand.wrap(loggedEvent, metadata, recordValue);
               processingCollect.addInitCommand(initialCommand);
               while (processingCollect.hasNext()) {

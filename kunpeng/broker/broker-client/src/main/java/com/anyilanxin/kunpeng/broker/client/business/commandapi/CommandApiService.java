@@ -16,8 +16,8 @@
  */
 package com.anyilanxin.kunpeng.broker.client.business.commandapi;
 
+import com.anyilanxin.kunpeng.cluster.business.step.RaftPartitionSource;
 import com.anyilanxin.kunpeng.eventlog.EventLog;
-import com.anyilanxin.kunpeng.protocol.common.PartitionSourceMetadata;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 
 /**
@@ -38,9 +38,9 @@ public interface CommandApiService {
   void onPausedResource(final int resourceId);
 
   ActorFuture<Void> registerHandlers(
-      final PartitionSourceMetadata sourceMetadata, final EventLog logStream);
+      final RaftPartitionSource partitionSource, final EventLog logStream);
 
-  ActorFuture<Void> unregisterHandlers(final PartitionSourceMetadata sourceMetadata);
+  ActorFuture<Void> unregisterHandlers(final RaftPartitionSource partitionSource);
 
   CommandApiHandle gettCommandApiHandle();
 }

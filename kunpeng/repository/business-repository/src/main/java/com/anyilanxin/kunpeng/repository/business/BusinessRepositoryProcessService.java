@@ -16,6 +16,8 @@
  */
 package com.anyilanxin.kunpeng.repository.business;
 
+import com.anyilanxin.kunpeng.cluster.business.step.RaftPartitionSource;
+import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
 import com.anyilanxin.kunpeng.eventlog.BatchEntryReader;
 import com.anyilanxin.kunpeng.eventlog.EventLog;
 import com.anyilanxin.kunpeng.eventlog.LoggedEntry;
@@ -28,13 +30,11 @@ import com.anyilanxin.kunpeng.protocol.business.impl.RecordMetadata;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.DefaultRecordValueMapper;
 import com.anyilanxin.kunpeng.protocol.business.record.RecordType;
 import com.anyilanxin.kunpeng.protocol.business.record.RecordValueMapper;
-import com.anyilanxin.kunpeng.protocol.common.PartitionSourceMetadata;
 import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 import com.anyilanxin.kunpeng.repository.business.modules.key.MutableKeyGeneratorRepository;
 import com.anyilanxin.kunpeng.repository.business.modules.position.MutableProcessedPositionRepository;
 import com.anyilanxin.kunpeng.scheduler.Actor;
 import io.micrometer.core.instrument.MeterRegistry;
-import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,9 +54,8 @@ public class BusinessRepositoryProcessService extends Actor implements RecordAva
   private MutableKeyGeneratorRepository repositoryKey;
   private final RecordMetadata metadata = new RecordMetadata();
   private RepositoryTransaction currentTransaction;
-  private final int sourceId;
-  private final Set<Integer> agentSourceIds;
-  private final int partitionId;
+  private final RaftPartitionSource partitionSource;
+  private final PartitionId partitionId;
   private final BusinessRepositoryAppliers applier;
   private final BusinessRepository repository;
   private final RecordValueMapper valueMapper;
@@ -66,7 +65,7 @@ public class BusinessRepositoryProcessService extends Actor implements RecordAva
   public BusinessRepositoryProcessService(
       final EventLog logStream,
       final BusinessRepository repository,
-      final PartitionSourceMetadata partitionSourceMetadata,
+      final RaftPartitionSource partitionSource,
       final MeterRegistry meterRegistry) {
     this.meterRegistry = meterRegistry;
     applier = repository.getAppliers();
@@ -74,9 +73,8 @@ public class BusinessRepositoryProcessService extends Actor implements RecordAva
     this.logStream = logStream;
     this.repository = repository;
     context = repository.getContext();
-    sourceId = partitionSourceMetadata.sourceId();
-    agentSourceIds = partitionSourceMetadata.agentSourceIds();
-    partitionId = partitionSourceMetadata.partitionId();
+    this.partitionSource = partitionSource;
+    partitionId = partitionSource.getPartitionId();
   }
 
   @Override

@@ -16,10 +16,10 @@
  */
 package com.anyilanxin.kunpeng.engine.bpmn;
 
+import com.anyilanxin.kunpeng.cluster.business.step.RaftPartitionSource;
 import com.anyilanxin.kunpeng.engine.bpmn.command.CommandProcessorRegister;
 import com.anyilanxin.kunpeng.engine.bpmn.commandapi.ApiCommandProcessorRegister;
 import com.anyilanxin.kunpeng.protocol.business.impl.eventlog.BusinessLogRecord;
-import com.anyilanxin.kunpeng.protocol.common.PartitionSourceMetadata;
 import com.anyilanxin.kunpeng.repository.business.BusinessRepository;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.util.ArrayList;
@@ -35,23 +35,32 @@ import org.springframework.beans.factory.BeanFactory;
 public class BpmnEngine {
 
   private final LogEventProcessors processors;
-
+  private final RaftPartitionSource partitionSource;
   private final ProcessingCollectSupplier collectSupplier;
   private final LogEventWriter writer;
+  private final BeanFactory beanFactory;
+  private final BusinessRepository repository;
+  private final InterPartitionCommandSender commandSender;
+  private final MeterRegistry meterRegistry;
   private final List<SchedulerCheckerAware> schedulerCheckerAwares = new ArrayList<>();
 
   public BpmnEngine(
       final LogEventProcessors processors,
       final BusinessRepository repository,
-      final PartitionSourceMetadata partitionSourceMetadata,
+      final RaftPartitionSource partitionSource,
       final BeanFactory beanFactory,
       final InterPartitionCommandSender commandSender,
       final MeterRegistry meterRegistry,
       final LogEventWriter logEventWriter,
       final ProcessingCollectSupplier collectSupplier) {
+    this.meterRegistry = meterRegistry;
     this.processors = processors;
-    this.collectSupplier = collectSupplier;
+    this.repository = repository;
+    this.partitionSource = partitionSource;
+    this.commandSender = commandSender;
+    this.beanFactory = beanFactory;
     writer = logEventWriter;
+    this.collectSupplier = collectSupplier;
     init();
   }
 

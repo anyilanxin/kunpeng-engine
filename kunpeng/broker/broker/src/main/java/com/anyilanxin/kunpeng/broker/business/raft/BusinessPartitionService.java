@@ -106,6 +106,10 @@ public final class BusinessPartitionService
       final BusinessPartitionStartupContext context) {
     final List<RaftBusinessMetaListener> businessMetaListeners = new CopyOnWriteArrayList<>();
     businessMetaListeners.add(context.getBrokerTopologyService());
+    final BusinessRaftPartitionSource partitionSource =
+        new BusinessRaftPartitionSource(() -> context.getRaftPartition().id());
+    context.setPartitionSource(partitionSource);
+    businessMetaListeners.add(partitionSource);
     return new BusinessBusinessMetaListenerStep(businessMetaListeners);
   }
 }

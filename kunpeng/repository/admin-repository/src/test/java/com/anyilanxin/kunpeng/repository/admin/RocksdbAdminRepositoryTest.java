@@ -26,7 +26,6 @@ import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.source.NodeSour
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.source.PartitionSourceRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionType;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.delayed.DelayedType;
-import com.anyilanxin.kunpeng.protocol.common.PartitionSourceMetadata;
 import com.google.common.collect.ImmutableSet;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.nio.file.Path;

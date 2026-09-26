@@ -28,6 +28,7 @@ dependencies {
     implementation project(':kunpeng:utils')
     implementation project(':kunpeng:eventlog')
     implementation project(':kunpeng:cluster:cluster')
+    implementation project(':kunpeng:cluster:cluster-raft')
     implementation project(':kunpeng:protocol:protocol-common')
     implementation project(':kunpeng:protocol:protocol-business')
     implementation project(':kunpeng:protocol:protocol-business-impl')

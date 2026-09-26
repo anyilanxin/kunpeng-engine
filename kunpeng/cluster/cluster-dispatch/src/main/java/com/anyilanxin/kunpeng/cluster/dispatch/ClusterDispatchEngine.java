@@ -16,10 +16,10 @@
  */
 package com.anyilanxin.kunpeng.cluster.dispatch;
 
+import com.anyilanxin.kunpeng.cluster.business.step.RaftPartitionSource;
 import com.anyilanxin.kunpeng.cluster.dispatch.command.CommandProcessorRegister;
 import com.anyilanxin.kunpeng.cluster.dispatch.commandapi.ApiCommandProcessorRegister;
 import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
-import com.anyilanxin.kunpeng.protocol.common.PartitionSourceMetadata;
 import com.anyilanxin.kunpeng.repository.admin.AdminRepository;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.util.ArrayList;
@@ -42,7 +42,7 @@ public class ClusterDispatchEngine {
   public ClusterDispatchEngine(
       final LogEventProcessors processors,
       final AdminRepository repository,
-      final PartitionSourceMetadata partitionSourceMetadata,
+      final RaftPartitionSource partitionSource,
       final MeterRegistry meterRegistry,
       final LogEventWriter logEventWriter,
       final ProcessingCollectSupplier collectSupplier) {

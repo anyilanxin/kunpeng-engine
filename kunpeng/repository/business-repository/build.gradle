@@ -32,6 +32,7 @@ dependencies {
     implementation project(':kunpeng:repository:rocksdb')
     implementation project(':kunpeng:eventlog')
     implementation project(':kunpeng:cluster:cluster')
+    implementation project(':kunpeng:cluster:cluster-raft')
     implementation project(':kunpeng:structpack')
     implementation project(':kunpeng:protocol:protocol-common')
     implementation project(':kunpeng:protocol:protocol-business')

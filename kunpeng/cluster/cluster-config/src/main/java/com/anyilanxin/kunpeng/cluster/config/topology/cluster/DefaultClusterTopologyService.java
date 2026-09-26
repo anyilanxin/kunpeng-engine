@@ -23,6 +23,7 @@ import com.anyilanxin.kunpeng.cluster.config.topology.AbstractSwimTopologyServic
 import com.anyilanxin.kunpeng.cluster.config.topology.PartitionMemberInfo;
 import java.util.List;
 import java.util.Map;
+import org.agrona.collections.IntHashSet;
 
 /**
  * 网关端集群分区拓扑服务：只读汇聚各成员经 SWIM 广播的分区拓扑数据，供 broker-client 路由与查询使用。
@@ -55,5 +56,10 @@ public class DefaultClusterTopologyService extends AbstractSwimTopologyService
   @Override
   public Map<MemberId, List<PartitionMemberInfo>> getMemberPartitions() {
     return memberPartitionsView();
+  }
+
+  @Override
+  public IntHashSet getActivitySourceIds() {
+    return super.getActivitySourceIds();
   }
 }

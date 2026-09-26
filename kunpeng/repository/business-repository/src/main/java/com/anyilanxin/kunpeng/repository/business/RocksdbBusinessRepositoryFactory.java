@@ -16,10 +16,9 @@
  */
 package com.anyilanxin.kunpeng.repository.business;
 
+import com.anyilanxin.kunpeng.cluster.business.step.RaftPartitionSource;
 import com.anyilanxin.kunpeng.kvstore.KvStore;
-import com.anyilanxin.kunpeng.protocol.common.PartitionSourceMetadata;
 import io.micrometer.core.instrument.MeterRegistry;
-import java.util.Set;
 import org.springframework.beans.factory.BeanFactory;
 
 /**
@@ -30,28 +29,23 @@ import org.springframework.beans.factory.BeanFactory;
  */
 public final class RocksdbBusinessRepositoryFactory implements BusinessRepositoryFactory {
   private final KvStore<BusinessRepositoryColumnFamilies> db;
-  private final PartitionSourceMetadata partitionSourceMetadata;
+  private final RaftPartitionSource partitionSource;
   private final BeanFactory beanFactory;
   private final MeterRegistry meterRegistry;
 
   public RocksdbBusinessRepositoryFactory(
       final KvStore<BusinessRepositoryColumnFamilies> db,
-      final PartitionSourceMetadata partitionSourceMetadata,
+      final RaftPartitionSource partitionSource,
       final BeanFactory beanFactory,
       final MeterRegistry meterRegistry) {
     this.db = db;
-    this.partitionSourceMetadata = partitionSourceMetadata;
+    this.partitionSource = partitionSource;
     this.beanFactory = beanFactory;
     this.meterRegistry = meterRegistry;
   }
 
   @Override
   public BusinessRepository create() {
-    return new RocksdbBusinessRepository(
-        partitionSourceMetadata.partitionId(),
-        Set.of(partitionSourceMetadata.sourceId()),
-        db,
-        beanFactory,
-        meterRegistry);
+    return new RocksdbBusinessRepository(partitionSource, db, beanFactory, meterRegistry);
   }
 }

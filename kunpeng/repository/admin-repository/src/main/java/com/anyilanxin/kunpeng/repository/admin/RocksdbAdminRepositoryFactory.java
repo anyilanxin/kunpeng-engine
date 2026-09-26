@@ -16,10 +16,9 @@
  */
 package com.anyilanxin.kunpeng.repository.admin;
 
+import com.anyilanxin.kunpeng.cluster.business.step.RaftPartitionSource;
 import com.anyilanxin.kunpeng.kvstore.KvStore;
-import com.anyilanxin.kunpeng.protocol.common.PartitionSourceMetadata;
 import io.micrometer.core.instrument.MeterRegistry;
-import java.util.Set;
 
 /**
  * RocksDB 管理面仓储工厂。
@@ -29,24 +28,20 @@ import java.util.Set;
  */
 public final class RocksdbAdminRepositoryFactory implements AdminRepositoryFactory {
   private final KvStore<AdminRepositoryColumnFamilies> db;
-  private final PartitionSourceMetadata partitionSourceMetadata;
+  private final RaftPartitionSource partitionSource;
   private final MeterRegistry meterRegistry;
 
   public RocksdbAdminRepositoryFactory(
       final KvStore<AdminRepositoryColumnFamilies> db,
-      final PartitionSourceMetadata partitionSourceMetadata,
+      final RaftPartitionSource partitionSource,
       final MeterRegistry meterRegistry) {
     this.db = db;
-    this.partitionSourceMetadata = partitionSourceMetadata;
+    this.partitionSource = partitionSource;
     this.meterRegistry = meterRegistry;
   }
 
   @Override
   public AdminRepository create() {
-    return new RocksdbAdminRepository(
-        partitionSourceMetadata.partitionId(),
-        Set.of(partitionSourceMetadata.sourceId()),
-        db,
-        meterRegistry);
+    return new RocksdbAdminRepository(partitionSource, db, meterRegistry);
   }
 }

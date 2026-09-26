@@ -25,6 +25,7 @@ import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.BpmnTransformer;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.DmnFactory;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.DmnValidator;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.DmnTransformer;
+import com.anyilanxin.kunpeng.cluster.business.step.RaftPartitionSource;
 import com.anyilanxin.kunpeng.engine.bpmn.command.behavior.Behavior;
 import com.anyilanxin.kunpeng.engine.bpmn.command.behavior.impl.BehaviorImpl;
 import com.anyilanxin.kunpeng.engine.bpmn.command.distribute.parallel.DistributeParallelChecker;
@@ -45,7 +46,6 @@ import com.anyilanxin.kunpeng.protocol.business.record.RecordType;
 import com.anyilanxin.kunpeng.protocol.business.record.RecordValueMapper;
 import com.anyilanxin.kunpeng.protocol.business.record.commandapi.CommandApiValueLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.record.commandapi.record.empty.CommandApiEmptyValueLifeCycle;
-import com.anyilanxin.kunpeng.protocol.common.PartitionSourceMetadata;
 import com.anyilanxin.kunpeng.protocol.common.Protocol;
 import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 import com.anyilanxin.kunpeng.protocol.common.VersionInfo;
@@ -58,7 +58,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+import org.agrona.collections.IntHashSet;
 import org.springframework.beans.factory.BeanFactory;
 
 /**
@@ -74,9 +74,8 @@ public class LogEventWriter {
 
   private final BusinessRepository repository;
   private final ProcessingCollectSupplier collectSupplier;
-  private final int sourceId;
   private final int partitionId;
-  private final List<Integer> agentSourceIds;
+  private final RaftPartitionSource partitionSource;
   private final BeanFactory beanFactory;
   private final BpmnTransformer bpmnTransformer;
   private final BpmnValidator bpmnValidator;
@@ -100,20 +99,20 @@ public class LogEventWriter {
       final TimerClock clock,
       final BusinessRepository repository,
       final ProcessingCollectSupplier collectSupplier,
-      final PartitionSourceMetadata partitionSourceMetadata,
+      final RaftPartitionSource partitionSource,
+      final int partitionId,
       final BeanFactory beanFactory,
       final InterPartitionCommandSender commandSender,
       final JobDeliveryPort deliveryPort,
       final MeterRegistry meterRegistry) {
+    this.partitionSource = partitionSource;
     this.repository = repository;
     this.deliveryPort = deliveryPort;
     this.meterRegistry = meterRegistry;
     this.repositoryFactory = repositoryFactory;
     this.clock = clock;
     this.collectSupplier = collectSupplier;
-    sourceId = partitionSourceMetadata.sourceId();
-    partitionId = partitionSourceMetadata.partitionId();
-    agentSourceIds = new ArrayList<>(partitionSourceMetadata.agentSourceIds());
+    this.partitionId = partitionId;
     this.beanFactory = beanFactory;
     final ScriptEngine expressionLanguage = BpmnFactory.createExpressionLanguage(beanFactory);
     bpmnTransformer = BpmnFactory.createTransformer(expressionLanguage);
@@ -132,7 +131,7 @@ public class LogEventWriter {
     keyGenerator = repository.keyGeneratorRepository();
 
     behavior = new BehaviorImpl(this, timerChecker, commandSender);
-    isLeaderPartition = partitionSourceMetadata.partitionId() == DEPLOYMENT_PARTITION;
+    isLeaderPartition = partitionId == DEPLOYMENT_PARTITION;
   }
 
   private void initCheckerAware(final BusinessRepositoryFactory repositoryFactory) {
@@ -292,7 +291,7 @@ public class LogEventWriter {
   }
 
   public int getSourceId() {
-    return sourceId;
+    return partitionSource.getSource();
   }
 
   /** 本分区编号（job 可消费广播等按分区寻址的出口使用） */
@@ -300,8 +299,8 @@ public class LogEventWriter {
     return partitionId;
   }
 
-  public List<Integer> getAgentSourceId() {
-    return agentSourceIds;
+  public IntHashSet getAgentSourceId() {
+    return partitionSource.getAgentSources();
   }
 
   public BeanFactory getBeanFactory() {
@@ -328,7 +327,7 @@ public class LogEventWriter {
     return dmnEngine;
   }
 
-  public Set<Integer> getActivitySourceIds() {
+  public IntHashSet getActivitySourceIds() {
     return commandSender.getActivitySourceIds();
   }
 

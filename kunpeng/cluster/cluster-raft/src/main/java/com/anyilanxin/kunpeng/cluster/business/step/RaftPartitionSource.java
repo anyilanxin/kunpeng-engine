@@ -14,24 +14,20 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.anyilanxin.kunpeng.broker.business.raft.step.transition;
+package com.anyilanxin.kunpeng.cluster.business.step;
 
-import com.anyilanxin.kunpeng.eventlog.EventLog;
-import com.anyilanxin.kunpeng.protocol.common.PartitionSourceMetadata;
+import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
+import org.agrona.collections.IntHashSet;
 
 /**
- * Raft 角色迁移监听器：分区 leader/follower 变化、分区移除与 source 元数据变化时回调。
- *
  * @author zxuanhong
- * @since 2026.9.0
+ * @since
+ * @date 2026-09-26 17:30
  */
-public interface TransitionRaftListener {
+public interface RaftPartitionSource {
+  int getSource();
 
-  void onBecomingLeader(PartitionSourceMetadata sourceMetadata, EventLog logStream, long term);
+  IntHashSet getAgentSources();
 
-  void onBecomingFollower(PartitionSourceMetadata sourceMetadata, long term);
-
-  void onPartitionRemove(int partitionId);
-
-  void onSourceMetadataChanged(PartitionSourceMetadata sourceMetadata);
+  PartitionId getPartitionId();
 }

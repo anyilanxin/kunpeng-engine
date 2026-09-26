@@ -17,7 +17,6 @@
 package com.anyilanxin.kunpeng.cluster.business.step;
 
 import com.anyilanxin.kunpeng.cluster.business.PartitionStartupContext;
-import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
 import com.anyilanxin.kunpeng.cluster.raft.RaftBusinessMetaListener;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartition;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
@@ -49,7 +48,6 @@ public abstract class RaftBusinessMetaListenerStep<CONTENT extends PartitionStar
           new RuntimeException("当前组件比如在RaftBootstrapStep或RaftJoinStep之后执行"));
       return result;
     }
-    final PartitionId partitionId = raftPartition.id();
     content
         .getConcurrencyControl()
         .run(

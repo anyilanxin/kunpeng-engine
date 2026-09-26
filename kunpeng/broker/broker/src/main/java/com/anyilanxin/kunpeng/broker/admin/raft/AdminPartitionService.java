@@ -97,6 +97,10 @@ public final class AdminPartitionService extends PartitionService<AdminPartition
       final AdminPartitionStartupContext context) {
     final List<RaftBusinessMetaListener> businessMetaListeners = new CopyOnWriteArrayList<>();
     businessMetaListeners.add(context.getBrokerTopologyService());
+    final AdminRaftPartitionSource partitionSource =
+        new AdminRaftPartitionSource(() -> context.getRaftPartition().id());
+    context.setPartitionSource(partitionSource);
+    businessMetaListeners.add(partitionSource);
     return new AdminBusinessMetaListenerStep(businessMetaListeners);
   }
 }

@@ -20,7 +20,6 @@ import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.PARTI
 
 import com.anyilanxin.kunpeng.cluster.raft.metadata.PartitionBusinessMeta;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartition;
-import com.anyilanxin.kunpeng.protocol.common.PartitionSourceMeta;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;

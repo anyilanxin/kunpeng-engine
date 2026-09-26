@@ -77,6 +77,7 @@ public final class BusinessPartitionTransitionStep
             partitionManagementService.getMembershipService().getLocalMember().id());
     final BusinessTransitionContent transitionContent =
         new BusinessTransitionContent(
+            context.getPartitionSource(),
             partitionMessagingService,
             context.getSnapshotProvider(),
             context.getMeterRegistry(),
@@ -90,7 +91,7 @@ public final class BusinessPartitionTransitionStep
             context.getJobStreamDispatcher(),
             context.getCommandApiService(),
             context.getPartitionManagementService().getCommunicationService(),
-            context.getTopologyNotifier());
+            context.getTopologyService());
     final PartitionTransition<BusinessTransitionContent> transition =
         new PartitionTransition<>(transitionService, context.getRaftPartition(), transitionContent);
     context.getActorSchedulingService().submitActor(transition);

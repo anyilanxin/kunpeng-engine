@@ -20,12 +20,10 @@ import com.anyilanxin.kunpeng.broker.admin.raft.step.transition.AdminTransitionC
 import com.anyilanxin.kunpeng.cluster.business.step.transition.TransitionStep;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.RaftSnapshotProvider;
 import com.anyilanxin.kunpeng.kvstore.KvStore;
-import com.anyilanxin.kunpeng.protocol.common.PartitionSourceMetadata;
 import com.anyilanxin.kunpeng.repository.admin.AdminRepositoryColumnFamilies;
 import com.anyilanxin.kunpeng.repository.admin.RocksdbAdminRepositoryFactory;
 import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
-import com.google.common.collect.ImmutableSet;
 
 /**
  * 管理面 RocksDB 分区迁移步骤。
@@ -89,9 +87,7 @@ public final class RocksdbPartitionTransitionStep
               context.setRocksdb(db);
               context.setRepositoryFactory(
                   new RocksdbAdminRepositoryFactory(
-                      db,
-                      new PartitionSourceMetadata(1, 1, ImmutableSet.<Integer>builder().build()),
-                      context.getMeterRegistry()));
+                      db, context.getPartitionSource(), context.getMeterRegistry()));
               transitionFuture.complete(null);
             }
           });

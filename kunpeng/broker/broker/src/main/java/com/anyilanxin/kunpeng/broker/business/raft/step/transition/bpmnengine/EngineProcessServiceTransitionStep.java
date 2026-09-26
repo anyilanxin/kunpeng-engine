@@ -20,10 +20,8 @@ import com.anyilanxin.kunpeng.broker.business.raft.step.transition.BusinessTrans
 import com.anyilanxin.kunpeng.broker.jobstream.JobStreamDispatcher;
 import com.anyilanxin.kunpeng.cluster.business.step.transition.TransitionStep;
 import com.anyilanxin.kunpeng.engine.bpmn.EngineProcessService;
-import com.anyilanxin.kunpeng.protocol.common.PartitionSourceMetadata;
 import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
-import com.google.common.collect.ImmutableSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,7 +75,7 @@ public final class EngineProcessServiceTransitionStep
                   context.getEventLog(),
                   context.getRepositoryFactory(),
                   commandApiService.gettCommandApiHandle(),
-                  new PartitionSourceMetadata(partitionId, partitionId, ImmutableSet.of()),
+                  context.getRaftPartitionSource(),
                   commandSender,
                   context.getMeterRegistry(),
                   com.anyilanxin.kunpeng.engine.bpmn.scheduling.TimerClock.passthrough(

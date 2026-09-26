@@ -100,18 +100,13 @@ public final class InterPartitionCommandServiceStep
   private ActorFuture<Void> installSender(final BusinessTransitionContent context) {
     final var sender =
         new InterPartitionCommandSenderService(
-            context.getCommunicationService(), context.getRaftPartitionId().id());
+            context.getCommunicationService(), context.getTopologyService());
     return context
         .getSchedulingService()
         .submitActor(sender)
         .thenApply(
             ignored -> {
               context.setPartitionCommandSender(sender);
-              // 挂接分区拓扑通知：leader 变化即刷新 sender 路由（setCurrentLeader）
-              final var notifier = context.getTopologyNotifier();
-              if (notifier != null) {
-                notifier.addListener(sender);
-              }
               return null;
             });
   }
@@ -121,35 +116,22 @@ public final class InterPartitionCommandServiceStep
     final ActorFuture<Void> future = concurrencyControl.createFuture();
     concurrencyControl.run(
         () -> {
-          final var notifier = context.getTopologyNotifier();
-          final var receiver = context.getPartitionCommandReceiver();
-          final var sender = context.getPartitionCommandSender();
-          if (notifier != null && sender != null) {
-            notifier.removeListener(sender);
-          }
-          final ActorFuture<Void> receiverClosed =
-              receiver == null
-                  ? concurrencyControl.<Void>createCompletedFuture()
-                  : receiver.closeAsync();
-          final ActorFuture<Void> senderClosed =
-              sender == null
-                  ? concurrencyControl.<Void>createCompletedFuture()
-                  : sender.closeAsync();
-          receiverClosed.onComplete(
-              (ignored, error) -> {
-                context.setPartitionCommandReceiver(null);
-                senderClosed.onComplete(
-                    (ignored2, error2) -> {
-                      context.setPartitionCommandSender(null);
-                      if (error != null) {
-                        future.completeExceptionally(error);
-                      } else if (error2 != null) {
-                        future.completeExceptionally(error2);
+          final InterPartitionCommandReceiverActor receiverActor =
+              context.getPartitionCommandReceiver();
+          if (receiverActor != null) {
+            receiverActor
+                .closeAsync()
+                .onComplete(
+                    (unused, throwable) -> {
+                      if (throwable != null) {
+                        future.completeExceptionally(throwable);
                       } else {
                         future.complete(null);
                       }
                     });
-              });
+          } else {
+            future.complete(null);
+          }
         });
     return future;
   }

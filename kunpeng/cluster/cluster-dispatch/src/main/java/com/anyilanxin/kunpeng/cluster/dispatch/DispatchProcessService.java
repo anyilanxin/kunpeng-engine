@@ -20,7 +20,9 @@ import static com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter.BROKER_VERS
 import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.*;
 
 import com.anyilanxin.kunpeng.broker.client.admin.commandapi.CommandApiHandle;
+import com.anyilanxin.kunpeng.cluster.business.step.RaftPartitionSource;
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
+import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
 import com.anyilanxin.kunpeng.cluster.config.ClusterAdminConfiguration;
 import com.anyilanxin.kunpeng.cluster.config.ClusterMetaStore;
@@ -65,7 +67,6 @@ import com.anyilanxin.kunpeng.protocol.admin.record.command.source.NodeSourceLif
 import com.anyilanxin.kunpeng.protocol.admin.record.command.source.NodeSourceMetaLifeCycle;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.source.PartitionSourceLifeCycle;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.source.PartitionSourceMetaLifeCycle;
-import com.anyilanxin.kunpeng.protocol.common.PartitionSourceMetadata;
 import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 import com.anyilanxin.kunpeng.repository.admin.AdminRepository;
 import com.anyilanxin.kunpeng.repository.admin.AdminRepositoryAppliers;
@@ -80,7 +81,6 @@ import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import org.slf4j.Logger;
 
 /**
@@ -100,9 +100,8 @@ public class DispatchProcessService extends Actor implements RecordAvailableList
   private ImmutablePositionRepository immutableRepositoryPosition;
   private final CommandApiHandle commandApiHandle;
   private final AdminRecordMetadata metadata = new AdminRecordMetadata();
-  private final int sourceId;
-  private final Set<Integer> agentSourceIds;
-  private final int partitionId;
+  private final RaftPartitionSource partitionSource;
+  private final PartitionId partitionId;
   private ImmutableKeyRepository keyGenerator;
   private MutableKeyRepository mutableKeyGenerator;
   private OrderedTimerScheduler primaryScheduler;
@@ -112,7 +111,6 @@ public class DispatchProcessService extends Actor implements RecordAvailableList
   private ClusterDispatchEngine bpmnEngine;
   private BatchProcessingCollect processingCollect;
   private final LogEventProcessors logEventProcessors;
-  private final PartitionSourceMetadata partitionSourceMetadata;
   private final int maxBatch = 200;
   private LanePool lanePool;
   private final AdminRepositoryAppliers appliers;
@@ -151,7 +149,8 @@ public class DispatchProcessService extends Actor implements RecordAvailableList
       final EventLog logStream,
       final AdminRepositoryFactory repositoryFactory,
       final CommandApiHandle commandApiHandle,
-      final PartitionSourceMetadata partitionSourceMetadata,
+      final RaftPartitionSource partitionSource,
+      final PartitionId partitionId,
       final MeterRegistry meterRegistry,
       final TimerClock clock,
       final ActorSchedulingService actorSchedulingService,
@@ -161,6 +160,8 @@ public class DispatchProcessService extends Actor implements RecordAvailableList
       final BrokerCfg brokerCfg,
       final ClusterTopologyService clusterTopologyService) {
     this.brokerCfg = brokerCfg;
+    this.partitionSource = partitionSource;
+    this.partitionId = partitionId;
     this.clusterMetaStore = clusterMetaStore;
     this.dispatchClient = dispatchClient;
     this.membershipService = membershipService;
@@ -176,11 +177,7 @@ public class DispatchProcessService extends Actor implements RecordAvailableList
     context = repository.getContext();
     appliers = repository.getAppliers();
     this.commandApiHandle = commandApiHandle;
-    sourceId = partitionSourceMetadata.sourceId();
-    agentSourceIds = partitionSourceMetadata.agentSourceIds();
-    partitionId = partitionSourceMetadata.partitionId();
     logEventProcessors = new LogEventProcessors();
-    this.partitionSourceMetadata = partitionSourceMetadata;
   }
 
   @Override
@@ -210,7 +207,7 @@ public class DispatchProcessService extends Actor implements RecordAvailableList
             metrics);
 
     primaryScheduler = schedulerFactory.create();
-    lanePool = new LanePool(actorSchedulingService, schedulerFactory, partitionId);
+    lanePool = new LanePool(actorSchedulingService, schedulerFactory, partitionId.id());
     // 车道失败自愈: 池内原子重建失败车道; 失败即上报不健康, 重建完成后重振全部 checker 并恢复健康
     lanePool.setFailureListener(
         new LaneFailureListener() {
@@ -243,7 +240,7 @@ public class DispatchProcessService extends Actor implements RecordAvailableList
         });
     // alwaysAsync 形态(沿用历史命名): 所有调度任务经车道执行, 主 actor 零调度负载
     scheduleService = AsyncTimerRouter.alwaysAsync(primaryScheduler, lanePool);
-    schedulerContext = new SchedulerContext(scheduleService, partitionId, clock);
+    schedulerContext = new SchedulerContext(scheduleService, partitionId.id(), clock);
   }
 
   private void initProcessPosition() {
@@ -259,7 +256,7 @@ public class DispatchProcessService extends Actor implements RecordAvailableList
             clock,
             repository,
             collectSupplier,
-            partitionSourceMetadata,
+            partitionSource,
             meterRegistry,
             clusterMetaStore,
             membershipService,
@@ -271,11 +268,11 @@ public class DispatchProcessService extends Actor implements RecordAvailableList
         new ClusterDispatchEngine(
             logEventProcessors,
             repository,
-            partitionSourceMetadata,
+            partitionSource,
             meterRegistry,
             logEventWriter,
             collectSupplier);
-    processingCollect = new BatchProcessingCollect(commandApiHandle, appliers, partitionId);
+    processingCollect = new BatchProcessingCollect(commandApiHandle, appliers, partitionId.id());
     logStreamReader.seekToNextEntry(processPosition);
   }
 
@@ -370,7 +367,7 @@ public class DispatchProcessService extends Actor implements RecordAvailableList
               final AdminValueLifeCycle lifeCycle = metadata.getLifeCycle();
               final UnifiedRecordValue recordValue = recordValueMapper.getCacheValue(lifeCycle);
               loggedEvent.readValue(recordValue);
-              final TypedRecordReader initialCommand = new TypedRecordReader(partitionId);
+              final TypedRecordReader initialCommand = new TypedRecordReader(partitionId.id());
               initialCommand.wrap(loggedEvent, metadata, recordValue);
               processingCollect.addInitCommand(initialCommand);
               while (processingCollect.hasNext()) {

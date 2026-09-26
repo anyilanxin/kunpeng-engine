@@ -21,8 +21,10 @@ import com.anyilanxin.kunpeng.broker.commandapi.CommandApiServiceImpl;
 import com.anyilanxin.kunpeng.broker.jobstream.JobStreamDispatcher;
 import com.anyilanxin.kunpeng.cluster.business.PartitionStartupContext;
 import com.anyilanxin.kunpeng.cluster.business.RaftPartitionFactory;
+import com.anyilanxin.kunpeng.cluster.business.step.RaftPartitionSource;
 import com.anyilanxin.kunpeng.cluster.business.step.transition.PartitionTransition;
 import com.anyilanxin.kunpeng.cluster.config.topology.broker.DefaultClusterSwimTopologyService;
+import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.cluster.dispatch.scheduling.TimerClock;
 import com.anyilanxin.kunpeng.cluster.raft.logentry.EntryValidator;
 import com.anyilanxin.kunpeng.cluster.raft.partition.PartitionManagementService;
@@ -59,10 +61,11 @@ public class BusinessPartitionStartupContext
   private final SinksConfig sinksConfig;
   private final JobStreamDispatcher jobStreamDispatcher;
   private final CommandApiServiceImpl commandApiService;
-  private final com.anyilanxin.kunpeng.broker.topology.PartitionTopologyNotifier topologyNotifier;
+  private final ClusterTopologyService topologyService;
 
   private PartitionTransition<BusinessTransitionContent> partitionTransition;
   private Path partitionDirectory;
+  private RaftPartitionSource partitionSource;
   private RaftPartition raftPartition;
   private final DefaultClusterSwimTopologyService brokerTopologyService;
 
@@ -81,12 +84,11 @@ public class BusinessPartitionStartupContext
       final SinksConfig sinksConfig,
       final JobStreamDispatcher jobStreamDispatcher,
       final CommandApiServiceImpl commandApiService,
-      final com.anyilanxin.kunpeng.broker.topology.PartitionTopologyNotifier topologyNotifier) {
+      final ClusterTopologyService topologyService) {
     this.beanFactory = beanFactory;
     this.sinksConfig = sinksConfig;
     this.jobStreamDispatcher = jobStreamDispatcher;
     this.commandApiService = commandApiService;
-    this.topologyNotifier = topologyNotifier;
     this.timerClock = timerClock;
     this.brokerCfg = brokerCfg;
     this.schedulingService = schedulingService;
@@ -97,6 +99,7 @@ public class BusinessPartitionStartupContext
     this.meterRegistry = meterRegistry;
     this.managementService = managementService;
     this.brokerTopologyService = brokerTopologyService;
+    this.topologyService = topologyService;
   }
 
   @Override
@@ -174,10 +177,6 @@ public class BusinessPartitionStartupContext
     return timerClock;
   }
 
-  public com.anyilanxin.kunpeng.broker.topology.PartitionTopologyNotifier getTopologyNotifier() {
-    return topologyNotifier;
-  }
-
   public CommandApiServiceImpl getCommandApiService() {
     return commandApiService;
   }
@@ -197,6 +196,18 @@ public class BusinessPartitionStartupContext
 
   public BeanFactory getBeanFactory() {
     return beanFactory;
+  }
+
+  public void setPartitionSource(final RaftPartitionSource partitionSource) {
+    this.partitionSource = partitionSource;
+  }
+
+  public RaftPartitionSource getPartitionSource() {
+    return partitionSource;
+  }
+
+  public ClusterTopologyService getTopologyService() {
+    return topologyService;
   }
 
   public DefaultClusterSwimTopologyService getBrokerTopologyService() {

@@ -14,15 +14,19 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.anyilanxin.kunpeng.protocol.common;
+package com.anyilanxin.kunpeng.cluster.config;
 
-import com.google.common.collect.ImmutableSet;
+import java.util.Set;
 
 /**
- * 分区 source 元数据 record：不可变集合形式的 source 详情。
+ * 分区 source 元数据 record：source ID 与代理 source 集合。
  *
  * @author zxuanhong
  * @since 2026.9.0
  */
-public record PartitionSourceMetadata(
-    int partitionId, int sourceId, ImmutableSet<Integer> agentSourceIds) {}
+public record PartitionSourceMeta(int sourceId, Set<Integer> agentSourceIds) {
+
+  public static PartitionSourceMeta createDefault() {
+    return new PartitionSourceMeta(-1, Set.of());
+  }
+}

@@ -20,11 +20,9 @@ import com.anyilanxin.kunpeng.broker.admin.raft.step.transition.AdminTransitionC
 import com.anyilanxin.kunpeng.broker.client.admin.commandapi.CommandApiHandle;
 import com.anyilanxin.kunpeng.cluster.business.step.transition.TransitionStep;
 import com.anyilanxin.kunpeng.cluster.dispatch.DispatchProcessService;
-import com.anyilanxin.kunpeng.protocol.common.PartitionSourceMetadata;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
 import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
-import com.google.common.collect.ImmutableSet;
 
 /**
  * 管理面调度服务分区迁移步骤。
@@ -90,7 +88,8 @@ public final class DispatchProcessServiceTransitionStep
                   context.getEventLog(),
                   context.getRepositoryFactory(),
                   commandApiHandle,
-                  new PartitionSourceMetadata(1, 1, ImmutableSet.<Integer>builder().build()),
+                  context.getPartitionSource(),
+                  context.getRaftPartitionId(),
                   context.getMeterRegistry(),
                   context.getStreamClock(),
                   context.getSchedulingService(),

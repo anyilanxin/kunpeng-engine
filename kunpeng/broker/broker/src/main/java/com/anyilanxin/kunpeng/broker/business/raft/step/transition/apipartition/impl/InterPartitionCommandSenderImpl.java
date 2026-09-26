@@ -16,14 +16,12 @@
  */
 package com.anyilanxin.kunpeng.broker.business.raft.step.transition.apipartition.impl;
 
-import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.CLUSTER_LEADER_PARTITION;
-import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.PARTITION_GLOBAL_SOURCE;
-
 import com.anyilanxin.kunpeng.broker.BrokerLoggers;
 import com.anyilanxin.kunpeng.broker.protocol.InterPartitionMessageEncoder;
 import com.anyilanxin.kunpeng.broker.protocol.MessageHeaderEncoder;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationService;
+import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.cluster.utils.serializer.serializers.DefaultSerializers;
 import com.anyilanxin.kunpeng.engine.bpmn.InterPartitionCommandSender;
 import com.anyilanxin.kunpeng.protocol.business.ValueLifeCycle;
@@ -32,8 +30,6 @@ import com.anyilanxin.kunpeng.protocol.business.impl.record.DefaultRecordValueMa
 import com.anyilanxin.kunpeng.protocol.business.record.RecordValueMapper;
 import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 import com.anyilanxin.kunpeng.structpack.buffer.BufferWriter;
-import java.util.HashSet;
-import java.util.Set;
 import org.agrona.collections.IntHashSet;
 import org.agrona.concurrent.UnsafeBuffer;
 import org.slf4j.Logger;
@@ -47,14 +43,10 @@ import org.slf4j.Logger;
 final class InterPartitionCommandSenderImpl implements InterPartitionCommandSender {
   private final RecordValueMapper valueMapper = DefaultRecordValueMapper.getInstance();
   public static final String TOPIC_PREFIX = "inter-partition-";
-
   private static final Logger LOG = BrokerLoggers.TRANSPORT_LOGGER;
   private final ClusterCommunicationService communicationService;
-  private final IntHashSet activitySources = new IntHashSet(-1);
+  private final ClusterTopologyService topologyService;
   private final PartitionRouteService routeService = new PartitionRouteService();
-  // Reused per send — safe because all entry points are dispatched through the sender actor
-  // (single-threaded). Only the byte[] backing the message buffer is allocated per call, since
-  // ownership is handed off to the cluster communication service.
   private final MessageHeaderEncoder reusableHeaderEncoder = new MessageHeaderEncoder();
   private final InterPartitionMessageEncoder reusableBodyEncoder =
       new InterPartitionMessageEncoder();
@@ -62,8 +54,11 @@ final class InterPartitionCommandSenderImpl implements InterPartitionCommandSend
   private final UnsafeBuffer reusableMessageBuffer = new UnsafeBuffer(0, 0);
   private byte[] reusableCommandBytes = new byte[0];
 
-  public InterPartitionCommandSenderImpl(final ClusterCommunicationService communicationService) {
+  public InterPartitionCommandSenderImpl(
+      final ClusterCommunicationService communicationService,
+      final ClusterTopologyService topologyService) {
     this.communicationService = communicationService;
+    this.topologyService = topologyService;
   }
 
   @Override
@@ -90,8 +85,7 @@ final class InterPartitionCommandSenderImpl implements InterPartitionCommandSend
       final Long recordKey,
       final Long operationReference,
       final UnifiedRecordValue command) {
-
-    if (!activitySources.contains(receiverResourceId)) {
+    if (!topologyService.getActivitySourceIds().contains(receiverResourceId)) {
       LOG.warn(
           "Not sending command {} {} to {}, no known leader for this partition",
           lifeCycle.getValueType(),
@@ -125,27 +119,6 @@ final class InterPartitionCommandSenderImpl implements InterPartitionCommandSend
         DefaultSerializers.BASIC::encode,
         MemberId.from(partitionLeader),
         true);
-  }
-
-  void setCurrentLeader(
-      final int partitionId,
-      final int resourceId,
-      final Set<Integer> agentResourceIds,
-      final String currentLeader) {
-    LOG.debug(
-        "setCurrentLeader resourceId={} partitionId={} leader={}",
-        resourceId,
-        partitionId,
-        currentLeader);
-    for (final int agentResourceId : agentResourceIds) {
-      routeService.add(agentResourceId, partitionId, currentLeader);
-    }
-    routeService.add(resourceId, partitionId, currentLeader);
-    if (partitionId == CLUSTER_LEADER_PARTITION) {
-      routeService.add(PARTITION_GLOBAL_SOURCE, partitionId, currentLeader);
-      activitySources.add(PARTITION_GLOBAL_SOURCE);
-    }
-    activitySources.add(resourceId);
   }
 
   private byte[] encode(
@@ -184,9 +157,7 @@ final class InterPartitionCommandSenderImpl implements InterPartitionCommandSend
   }
 
   @Override
-  public Set<Integer> getActivitySourceIds() {
-    final Set<Integer> result = new HashSet<>(activitySources.size());
-    activitySources.forEach(value -> result.add(value));
-    return result;
+  public IntHashSet getActivitySourceIds() {
+    return topologyService.getActivitySourceIds();
   }
 }

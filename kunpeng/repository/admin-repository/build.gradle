@@ -30,6 +30,7 @@ dependencies {
     implementation project(':kunpeng:repository:kvstore')
     implementation project(':kunpeng:eventlog')
     implementation project(':kunpeng:cluster:cluster')
+    implementation project(':kunpeng:cluster:cluster-raft')
     implementation project(':kunpeng:protocol:protocol-common')
     implementation project(':kunpeng:protocol:protocol-admin')
     implementation project(':kunpeng:protocol:protocol-admin-impl')

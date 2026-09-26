@@ -20,12 +20,10 @@ import com.anyilanxin.kunpeng.broker.business.raft.step.transition.BusinessTrans
 import com.anyilanxin.kunpeng.cluster.business.step.transition.TransitionStep;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.RaftSnapshotProvider;
 import com.anyilanxin.kunpeng.kvstore.KvStore;
-import com.anyilanxin.kunpeng.protocol.common.PartitionSourceMetadata;
 import com.anyilanxin.kunpeng.repository.business.BusinessRepositoryColumnFamilies;
 import com.anyilanxin.kunpeng.repository.business.RocksdbBusinessRepositoryFactory;
 import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
-import com.google.common.collect.ImmutableSet;
 
 /**
  * 业务面 RocksDB 分区迁移步骤。
@@ -91,7 +89,7 @@ public final class RocksdbPartitionTransitionStep
               context.setRepositoryFactory(
                   new RocksdbBusinessRepositoryFactory(
                       db,
-                      new PartitionSourceMetadata(1, 1, ImmutableSet.<Integer>builder().build()),
+                      context.getRaftPartitionSource(),
                       context.getBeanFactory(),
                       context.getMeterRegistry()));
               transitionFuture.complete(null);

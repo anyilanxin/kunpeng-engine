@@ -18,7 +18,7 @@ package com.anyilanxin.kunpeng.engine.bpmn;
 
 import com.anyilanxin.kunpeng.protocol.business.ValueLifeCycle;
 import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
-import java.util.Set;
+import org.agrona.collections.IntHashSet;
 
 /**
  * 支持向其他分区发送任意命令。发送可能不可靠且静默失败，调用方需自行检测并重试。
@@ -57,5 +57,5 @@ public interface InterPartitionCommandSender {
       final Long operationReference,
       final UnifiedRecordValue command);
 
-  Set<Integer> getActivitySourceIds();
+  IntHashSet getActivitySourceIds();
 }

@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import org.agrona.collections.Int2ObjectHashMap;
+import org.agrona.collections.IntHashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,6 +58,9 @@ public abstract class AbstractSwimTopologyService extends Actor
 
   /** 分区 Leader 专表：partition -> 当前认定的 Leader 状态，高频查询走 O(1) 读取 */
   private final Map<PartitionId, PartitionMemberInfo> partitionLeaders = new ConcurrentHashMap<>();
+
+  private final Int2ObjectHashMap<PartitionId> partitionSourceIds = new Int2ObjectHashMap<>();
+  private final IntHashSet partitionSources = new IntHashSet();
 
   protected AbstractSwimTopologyService(final ClusterMembershipService membershipService) {
     this.membershipService = membershipService;
@@ -132,10 +137,20 @@ public abstract class AbstractSwimTopologyService extends Actor
     return snapshot;
   }
 
+  protected IntHashSet getActivitySourceIds() {
+    return partitionSources;
+  }
+
+  protected Int2ObjectHashMap<PartitionId> getPartitionSourceIds() {
+    return partitionSourceIds;
+  }
+
   /** 以 memberPartitionInfos 为准重建分区视图与 Leader 专表，避免残留成员已不再持有的分区旧状态 */
   private void rebuildPartitionViews() {
     partitionMemberInfos.clear();
     partitionLeaders.clear();
+    partitionSourceIds.clear();
+    partitionSources.clear();
     memberPartitionInfos.forEach(
         (memberId, infos) ->
             infos.forEach(
@@ -151,6 +166,16 @@ public abstract class AbstractSwimTopologyService extends Actor
                         info,
                         (current, candidate) ->
                             candidate.getTerm() > current.getTerm() ? candidate : current);
+                    partitionSourceIds.put(info.getSourceId(), info.getPartitionId());
+                    partitionSources.add(info.getSourceId());
+                    if (info.getAgentSourceIds() != null) {
+                      info.getAgentSourceIds()
+                          .forEach(
+                              v -> {
+                                partitionSources.add(info.getSourceId());
+                                partitionSourceIds.put(v, info.getPartitionId());
+                              });
+                    }
                   }
                 }));
   }

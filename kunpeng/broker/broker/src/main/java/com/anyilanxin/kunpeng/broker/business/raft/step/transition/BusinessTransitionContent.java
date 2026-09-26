@@ -21,12 +21,13 @@ import com.anyilanxin.kunpeng.broker.business.raft.step.transition.apipartition.
 import com.anyilanxin.kunpeng.broker.business.raft.step.transition.logstorage.BusinessRaftEventStore;
 import com.anyilanxin.kunpeng.broker.commandapi.CommandApiServiceImpl;
 import com.anyilanxin.kunpeng.broker.jobstream.JobStreamDispatcher;
-import com.anyilanxin.kunpeng.broker.topology.PartitionTopologyNotifier;
+import com.anyilanxin.kunpeng.cluster.business.step.RaftPartitionSource;
 import com.anyilanxin.kunpeng.cluster.business.step.transition.TransitionContent;
 import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationService;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
 import com.anyilanxin.kunpeng.cluster.config.messaging.PartitionMessagingService;
+import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.cluster.dispatch.scheduling.TimerClock;
 import com.anyilanxin.kunpeng.cluster.raft.RaftServer;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartition;
@@ -66,8 +67,9 @@ public class BusinessTransitionContent
   private final JobStreamDispatcher jobStreamDispatcher;
   private final CommandApiServiceImpl commandApiService;
   private final ClusterCommunicationService communicationService;
-  private final PartitionTopologyNotifier topologyNotifier;
+  private final ClusterTopologyService topologyService;
   private final PartitionMessagingService partitionCommunicationService;
+  private final RaftPartitionSource partitionSource;
 
   // 分区级有状态组件（transition 过程中构建/关闭，引擎与分区命令服务持有）
   private InterPartitionCommandSenderService partitionCommandSender;
@@ -85,6 +87,7 @@ public class BusinessTransitionContent
   private SinkService sinkService;
 
   public BusinessTransitionContent(
+      final RaftPartitionSource partitionSource,
       final PartitionMessagingService partitionCommunicationService,
       final RaftSnapshotProvider<KvStore<BusinessRepositoryColumnFamilies>> snapshotProvider,
       final MeterRegistry meterRegistry,
@@ -98,7 +101,8 @@ public class BusinessTransitionContent
       final JobStreamDispatcher jobStreamDispatcher,
       final CommandApiServiceImpl commandApiService,
       final ClusterCommunicationService communicationService,
-      final PartitionTopologyNotifier topologyNotifier) {
+      final ClusterTopologyService topologyService) {
+    this.partitionSource = partitionSource;
     this.partitionCommunicationService = partitionCommunicationService;
     this.clock = clock;
     this.sinksConfig = sinksConfig;
@@ -111,7 +115,7 @@ public class BusinessTransitionContent
     this.jobStreamDispatcher = jobStreamDispatcher;
     this.commandApiService = commandApiService;
     this.communicationService = communicationService;
-    this.topologyNotifier = topologyNotifier;
+    this.topologyService = topologyService;
     this.raftPartition = raftPartition;
     maxFragmentSize = (int) brokerCfg.getRaft().getMaxMessageSizeInBytes();
   }
@@ -169,8 +173,8 @@ public class BusinessTransitionContent
     return commandApiService;
   }
 
-  public com.anyilanxin.kunpeng.broker.topology.PartitionTopologyNotifier getTopologyNotifier() {
-    return topologyNotifier;
+  public ClusterTopologyService getTopologyService() {
+    return topologyService;
   }
 
   public ClusterCommunicationService getCommunicationService() {
@@ -266,6 +270,10 @@ public class BusinessTransitionContent
 
   public SinkService getSinkService() {
     return sinkService;
+  }
+
+  public RaftPartitionSource getRaftPartitionSource() {
+    return partitionSource;
   }
 
   public void setSinkService(final SinkService sinkService) {
