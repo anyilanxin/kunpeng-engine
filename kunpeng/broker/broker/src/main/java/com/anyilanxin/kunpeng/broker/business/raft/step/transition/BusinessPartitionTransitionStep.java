@@ -17,10 +17,21 @@
 package com.anyilanxin.kunpeng.broker.business.raft.step.transition;
 
 import com.anyilanxin.kunpeng.broker.business.raft.BusinessPartitionStartupContext;
+import com.anyilanxin.kunpeng.broker.business.raft.step.transition.apibackup.BackupApiServiceTransitionStep;
+import com.anyilanxin.kunpeng.broker.business.raft.step.transition.apicommand.CommandApiServiceTransitionStep;
+import com.anyilanxin.kunpeng.broker.business.raft.step.transition.apipartition.InterPartitionCommandServiceStep;
+import com.anyilanxin.kunpeng.broker.business.raft.step.transition.bpmnengine.EngineProcessServiceTransitionStep;
+import com.anyilanxin.kunpeng.broker.business.raft.step.transition.logstorage.BusinessLogStoragePartitionTransitionStep;
+import com.anyilanxin.kunpeng.broker.business.raft.step.transition.logstream.BusinessLogStreamPartitionTransitionStep;
+import com.anyilanxin.kunpeng.broker.business.raft.step.transition.repository.RepositoryProcessServiceTransitionStep;
+import com.anyilanxin.kunpeng.broker.business.raft.step.transition.rocksdb.RocksdbPartitionTransitionStep;
+import com.anyilanxin.kunpeng.broker.business.raft.step.transition.sink.SinkServiceTransitionStep;
 import com.anyilanxin.kunpeng.cluster.business.step.transition.AbstractPartitionTransitionStep;
 import com.anyilanxin.kunpeng.cluster.business.step.transition.DefaultPartitionTransitionService;
 import com.anyilanxin.kunpeng.cluster.business.step.transition.PartitionTransition;
 import com.anyilanxin.kunpeng.cluster.business.step.transition.TransitionStep;
+import com.anyilanxin.kunpeng.cluster.config.messaging.PartitionMessagingService;
+import com.anyilanxin.kunpeng.cluster.raft.partition.PartitionManagementService;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 import java.util.List;
 
@@ -33,17 +44,16 @@ import java.util.List;
 public final class BusinessPartitionTransitionStep
     extends AbstractPartitionTransitionStep<BusinessPartitionStartupContext> {
   private static final List<TransitionStep<BusinessTransitionContent>> TRANSITION_STEPS =
-      //      List.of(
-      //          new BusinessLogStoragePartitionTransitionStep(),
-      //          new BusinessLogStreamPartitionTransitionStep(),
-      //          new BackupApiServiceTransitionStep(),
-      //          new CommandApiServiceTransitionStep(),
-      //          new InterPartitionCommandServiceStep(),
-      //          new RocksdbPartitionTransitionStep(),
-      //          new RepositoryProcessServiceTransitionStep(),
-      //          new EngineProcessServiceTransitionStep(),
-      //          new SinkServiceTransitionStep());
-      List.of();
+      List.of(
+          new BusinessLogStoragePartitionTransitionStep(),
+          new BusinessLogStreamPartitionTransitionStep(),
+          new BackupApiServiceTransitionStep(),
+          new CommandApiServiceTransitionStep(),
+          new InterPartitionCommandServiceStep(),
+          new RocksdbPartitionTransitionStep(),
+          new RepositoryProcessServiceTransitionStep(),
+          new EngineProcessServiceTransitionStep(),
+          new SinkServiceTransitionStep());
 
   @Override
   public String getName() {
@@ -57,8 +67,17 @@ public final class BusinessPartitionTransitionStep
         context.getConcurrencyControl().<BusinessPartitionStartupContext>createFuture();
     final DefaultPartitionTransitionService<BusinessTransitionContent> transitionService =
         new DefaultPartitionTransitionService<>(TRANSITION_STEPS);
+    final PartitionManagementService partitionManagementService =
+        context.getPartitionManagementService();
+    final PartitionMessagingService partitionMessagingService =
+        new PartitionMessagingService(
+            partitionManagementService.getCommunicationService(),
+            context.getBrokerTopologyService(),
+            context.getPartitionMetadata().id(),
+            partitionManagementService.getMembershipService().getLocalMember().id());
     final BusinessTransitionContent transitionContent =
         new BusinessTransitionContent(
+            partitionMessagingService,
             context.getSnapshotProvider(),
             context.getMeterRegistry(),
             context.getRaftPartition(),

@@ -61,8 +61,9 @@ public final class SinkServiceTransitionStep implements TransitionStep<BusinessT
               final SinkService sinkService = context.getSinkService();
               if (sinkService == null) {
                 openSink(context, future, true);
+              } else {
+                future.complete(null);
               }
-              future.complete(null);
             });
     return future;
   }
@@ -78,8 +79,9 @@ public final class SinkServiceTransitionStep implements TransitionStep<BusinessT
               final SinkService sinkService = context.getSinkService();
               if (sinkService == null) {
                 openSink(context, future, false);
+              } else {
+                future.complete(null);
               }
-              future.complete(null);
             });
     return future;
   }
@@ -123,6 +125,7 @@ public final class SinkServiceTransitionStep implements TransitionStep<BusinessT
               .eventLog(context.getEventLog())
               .repository(context.getRepositoryFactory().create())
               .sinks(sinkDescriptors)
+              .messaging(context.getPartitionMessagingService())
               .role(isLeader ? SinkRole.LEADER : SinkRole.FOLLOWER)
               .positionsToSkip(sinkFilter)
               .meterRegistry(context.getMeterRegistry());

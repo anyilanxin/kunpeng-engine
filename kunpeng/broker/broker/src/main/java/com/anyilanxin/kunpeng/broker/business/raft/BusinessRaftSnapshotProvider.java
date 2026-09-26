@@ -191,6 +191,6 @@ public class BusinessRaftSnapshotProvider
 
   @Override
   public ActorFuture<Void> mergeSnapshot(final Path snapshotDirectory) {
-    return null;
+    return concurrencyControl.createCompletedFuture();
   }
 }

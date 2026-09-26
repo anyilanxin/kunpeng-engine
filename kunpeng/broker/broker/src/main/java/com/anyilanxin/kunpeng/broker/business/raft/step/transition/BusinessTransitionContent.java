@@ -21,10 +21,12 @@ import com.anyilanxin.kunpeng.broker.business.raft.step.transition.apipartition.
 import com.anyilanxin.kunpeng.broker.business.raft.step.transition.logstorage.BusinessRaftEventStore;
 import com.anyilanxin.kunpeng.broker.commandapi.CommandApiServiceImpl;
 import com.anyilanxin.kunpeng.broker.jobstream.JobStreamDispatcher;
+import com.anyilanxin.kunpeng.broker.topology.PartitionTopologyNotifier;
 import com.anyilanxin.kunpeng.cluster.business.step.transition.TransitionContent;
 import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationService;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
+import com.anyilanxin.kunpeng.cluster.config.messaging.PartitionMessagingService;
 import com.anyilanxin.kunpeng.cluster.dispatch.scheduling.TimerClock;
 import com.anyilanxin.kunpeng.cluster.raft.RaftServer;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartition;
@@ -64,7 +66,8 @@ public class BusinessTransitionContent
   private final JobStreamDispatcher jobStreamDispatcher;
   private final CommandApiServiceImpl commandApiService;
   private final ClusterCommunicationService communicationService;
-  private final com.anyilanxin.kunpeng.broker.topology.PartitionTopologyNotifier topologyNotifier;
+  private final PartitionTopologyNotifier topologyNotifier;
+  private final PartitionMessagingService partitionCommunicationService;
 
   // 分区级有状态组件（transition 过程中构建/关闭，引擎与分区命令服务持有）
   private InterPartitionCommandSenderService partitionCommandSender;
@@ -82,6 +85,7 @@ public class BusinessTransitionContent
   private SinkService sinkService;
 
   public BusinessTransitionContent(
+      final PartitionMessagingService partitionCommunicationService,
       final RaftSnapshotProvider<KvStore<BusinessRepositoryColumnFamilies>> snapshotProvider,
       final MeterRegistry meterRegistry,
       final RaftPartition raftPartition,
@@ -94,7 +98,8 @@ public class BusinessTransitionContent
       final JobStreamDispatcher jobStreamDispatcher,
       final CommandApiServiceImpl commandApiService,
       final ClusterCommunicationService communicationService,
-      final com.anyilanxin.kunpeng.broker.topology.PartitionTopologyNotifier topologyNotifier) {
+      final PartitionTopologyNotifier topologyNotifier) {
+    this.partitionCommunicationService = partitionCommunicationService;
     this.clock = clock;
     this.sinksConfig = sinksConfig;
     this.beanFactory = beanFactory;
@@ -182,7 +187,7 @@ public class BusinessTransitionContent
   }
 
   public void setPartitionCommandSender(final InterPartitionCommandSenderService sender) {
-    this.partitionCommandSender = sender;
+    partitionCommandSender = sender;
   }
 
   public InterPartitionCommandReceiverActor getPartitionCommandReceiver() {
@@ -190,7 +195,7 @@ public class BusinessTransitionContent
   }
 
   public void setPartitionCommandReceiver(final InterPartitionCommandReceiverActor receiver) {
-    this.partitionCommandReceiver = receiver;
+    partitionCommandReceiver = receiver;
   }
 
   public EngineProcessService getEngineProcessService() {
@@ -265,6 +270,10 @@ public class BusinessTransitionContent
 
   public void setSinkService(final SinkService sinkService) {
     this.sinkService = sinkService;
+  }
+
+  public PartitionMessagingService getPartitionMessagingService() {
+    return partitionCommunicationService;
   }
 
   @Override

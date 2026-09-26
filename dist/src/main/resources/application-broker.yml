@@ -13,7 +13,7 @@ kunpeng:
   broker:
     raft:
       partitioning:
-        partitions-count: 4
+        partitions-count: 1
         replication-factor: 1
     manage:
       init-broker-id: node01
