@@ -100,12 +100,15 @@ public final class RocksdbRepositoryTransaction implements RepositoryTransaction
   }
 
   /**
-   * 提交当前事务，无论成败都会重置当前事务标记
+   * 提交当前事务，无论成败都会重置当前事务标记；事务已随库关闭被释放时直接抛出 {@link IllegalStateException}
    *
    * @throws RocksDBException RocksDB 提交失败时抛出
    */
   @Override
   public void commit() throws RocksDBException {
+    if (!transaction.isOwningHandle()) {
+      throw new IllegalStateException("RocksDB transaction is already closed; commit is discarded");
+    }
     try {
       transaction.commit();
     } catch (final RocksDBException rdbex) {
@@ -125,14 +128,17 @@ public final class RocksdbRepositoryTransaction implements RepositoryTransaction
   }
 
   /**
-   * 回滚当前事务，无论成败都会重置当前事务标记
+   * 回滚当前事务，无论成败都会重置当前事务标记；事务已随库关闭被释放时视为已隐式回滚，直接跳过
    *
    * @throws RocksDBException RocksDB 回滚失败时抛出
    */
   @Override
   public void rollback() throws RocksDBException {
     try {
-      transaction.rollback();
+      // 库关闭会先于 DB 释放事务句柄(置 0), 此时关闭即隐式回滚, 跳过 native 调用避免空句柄崩溃
+      if (transaction.isOwningHandle()) {
+        transaction.rollback();
+      }
     } catch (final RocksDBException rdbex) {
       final String errorMessage = "Unexpected error occurred during RocksDB transaction rollback.";
       if (isRocksDbExceptionRecoverable(rdbex)) {

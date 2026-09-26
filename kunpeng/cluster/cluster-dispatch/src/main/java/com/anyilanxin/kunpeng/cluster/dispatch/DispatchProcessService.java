@@ -124,6 +124,9 @@ public class DispatchProcessService extends Actor implements RecordAvailableList
   /** 流处理相位（执行门判据）：当前恒为 RUNNING；暂停/恢复能力落地时切换此值即可扣住定时任务。 */
   private final ExecutionPhase streamProcessorPhase = ExecutionPhase.RUNNING;
 
+  /** 定时任务中止信号：close() 开始即置位，拦截车道 actor 中已入队但尚未执行的定时任务。 */
+  private volatile boolean schedulerAborted = false;
+
   private AsyncTimerRouter scheduleService;
   private LogEventWriter logEventWriter;
   private SchedulerContext schedulerContext;
@@ -195,11 +198,12 @@ public class DispatchProcessService extends Actor implements RecordAvailableList
         BoundedPendingCommandRegistry.forIntents(
             new RegistryMetrics.BoundedRegistryMetrics(meterRegistry), DelayedLifeCycle.TRIGGER);
     // 相位判据仅 RUNNING 放行; 当前恒为 RUNNING, 暂停能力落地时切 streamProcessorPhase 即生效;
+    // 中止信号接 close() 置位: 存储先于车道排空被关闭时, 已入队的定时任务不再触碰仓储;
     // 定时任务统一经车道 actor 执行, 与主处理隔离; 扫描间隔 250ms 保证到期执行的及时性上界
     final var schedulerFactory =
         new TimerSchedulerFactory(
             () -> streamProcessorPhase,
-            () -> false,
+            () -> schedulerAborted,
             logStream::newWriter,
             registry,
             clock,
@@ -310,6 +314,7 @@ public class DispatchProcessService extends Actor implements RecordAvailableList
 
   @Override
   public void close() {
+    schedulerAborted = true;
     dispatchService.stop();
     logStream.removeRecordAvailableListener(this);
     logEventWriter.schedulerCheckerAwares().forEach(SchedulerCheckerAware::onClose);

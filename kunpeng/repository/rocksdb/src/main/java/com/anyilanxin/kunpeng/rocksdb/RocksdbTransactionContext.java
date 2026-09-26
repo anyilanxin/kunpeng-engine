@@ -85,8 +85,9 @@ public final class RocksdbTransactionContext implements TransactionContext {
   }
 
   private void runInNewTransaction(final TransactionOperation operations) throws Exception {
+    // 开新事务失败(如库已关闭)时没有可回滚的事务, 置于 try 之外, 避免失败路径再触碰已释放的句柄
+    transaction.resetTransaction();
     try {
-      transaction.resetTransaction();
       operations.run();
       transaction.commit();
     } catch (final Exception e) {
