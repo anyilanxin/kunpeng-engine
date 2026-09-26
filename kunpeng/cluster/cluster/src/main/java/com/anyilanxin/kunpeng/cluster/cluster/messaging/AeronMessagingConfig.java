@@ -67,6 +67,14 @@ public class AeronMessagingConfig implements Config {
   /** 驱动线程模式：SHARED / SHARED_NETWORK / DEDICATED。 */
   private String driverThreadingMode = "DEDICATED";
 
+  /**
+   * Media Driver keepalive 超时（毫秒）；0 表示跟随 Aeron 缺省（10s）。
+   *
+   * <p>客户端 conductor 据此判定驱动存活：全进程停顿（调试器断点、长 GC、宿主机 CPU 饥饿）超过该值即判定驱动死亡并 终止客户端，进而触发 broker fail-fast
+   * 关闭。生产保持缺省即可；开发/调试环境建议 30-60s，避免断点暂停引爆集群。 内嵌驱动模式该值经 cnc 对客户端自动生效；外置驱动模式仅作用于客户端侧，需与外部驱动自身配置对齐。
+   */
+  private long driverTimeoutMs = 10_000;
+
   /** sendAsync 的投递截止（发布通道迟迟未连接或持续背压时按连接失败完成 future）。 */
   private Duration connectTimeout = Duration.ofSeconds(5);
 
@@ -159,6 +167,15 @@ public class AeronMessagingConfig implements Config {
 
   public AeronMessagingConfig setDriverThreadingMode(final String driverThreadingMode) {
     this.driverThreadingMode = driverThreadingMode;
+    return this;
+  }
+
+  public long getDriverTimeoutMs() {
+    return driverTimeoutMs;
+  }
+
+  public AeronMessagingConfig setDriverTimeoutMs(final long driverTimeoutMs) {
+    this.driverTimeoutMs = driverTimeoutMs;
     return this;
   }
 

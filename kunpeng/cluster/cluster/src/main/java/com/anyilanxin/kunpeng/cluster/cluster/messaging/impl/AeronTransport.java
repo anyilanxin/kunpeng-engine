@@ -298,10 +298,17 @@ public final class AeronTransport {
                   Math.max(Math.max(messagingConfig.getSocketSendBuffer(), 0), windowLength))
               .dirDeleteOnStart(true)
               .dirDeleteOnShutdown(true);
+      if (config.getDriverTimeoutMs() > 0) {
+        context.driverTimeoutMs(config.getDriverTimeoutMs());
+      }
       driver = MediaDriver.launch(context);
     }
 
-    aeron = Aeron.connect(new Aeron.Context().aeronDirectoryName(dir));
+    final Aeron.Context clientContext = new Aeron.Context().aeronDirectoryName(dir);
+    if (config.getDriverTimeoutMs() > 0) {
+      clientContext.driverTimeoutMs(config.getDriverTimeoutMs());
+    }
+    aeron = Aeron.connect(clientContext);
     messagingSubscription = aeron.addSubscription(bindChannel, config.getStreamId());
     unicastSubscription = aeron.addSubscription(bindChannel, config.getUnicastStreamId());
 
