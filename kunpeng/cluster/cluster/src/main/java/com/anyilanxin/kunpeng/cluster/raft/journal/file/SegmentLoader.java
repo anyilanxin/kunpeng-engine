@@ -53,6 +53,9 @@ final class SegmentLoader {
   /** segment 全部多字节字段均按小端编码。 */
   private static final ByteOrder SEGMENT_BYTE_ORDER = ByteOrder.LITTLE_ENDIAN;
 
+  /** 建段时同名残留文件“删除后重建”的最大尝试次数；目录锁已排除并发写者，超限视为病态场景直接失败。 */
+  private static final int MAX_RECREATE_ATTEMPTS = 3;
+
   private final long minFreeDiskBytes;
   private final JournalMetrics metrics;
 
@@ -162,13 +165,17 @@ final class SegmentLoader {
     final int segmentBytes = descriptor.maxSegmentSize();
     checkDiskSpace(segmentPath, segmentBytes);
 
-    // 残留同名文件只可能是上次未及清理的产物，删除后重试即可
+    // 残留同名文件只可能是上次未及清理的产物；上界防御病态重建场景（NFS silly-rename、备份进程等），避免无界自旋
+    int recreateAttempts = 0;
     while (true) {
       try {
         Files.createFile(segmentPath);
         break;
       } catch (final FileAlreadyExistsException e) {
-        LOG.warn("segment 文件 {} 已存在，按残留文件删除后重建", segmentPath, e);
+        if (++recreateAttempts > MAX_RECREATE_ATTEMPTS) {
+          throw new JournalException("segment 文件 %s 删除后仍反复存在，疑似目录锁之外的写者".formatted(segmentPath), e);
+        }
+        LOG.warn("segment 文件 {} 已存在，按残留文件删除后重建（第 {} 次尝试）", segmentPath, recreateAttempts, e);
         try {
           Files.delete(segmentPath);
         } catch (final IOException deleteFailure) {
