@@ -42,7 +42,6 @@ import org.agrona.DirectBuffer;
 public class MessageCorrelationRequestRecord
     extends UnifiedRecordValue<MessageCorrelationRequestRecord>
     implements MessageCorrelationRequestRecordValue {
-  // structpack-ids[MessageCorrelationRequestRecord]: 1,2,3,4,5
   private final StringProperty messageNameProp = new StringProperty(1, "MESSAGE_NAME");
   private final StringProperty correlationKeyProp = new StringProperty(2, "CORRELATION_KEY", "");
   private final LongProperty processInstanceIdProp = new LongProperty(3, PROCESS_INSTANCE_ID, -1);

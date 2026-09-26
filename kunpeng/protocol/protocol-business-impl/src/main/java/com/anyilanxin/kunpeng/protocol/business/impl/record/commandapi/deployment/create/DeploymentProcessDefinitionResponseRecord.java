@@ -46,7 +46,6 @@ import org.agrona.concurrent.UnsafeBuffer;
 public class DeploymentProcessDefinitionResponseRecord
     extends UnifiedRecordValue<DeploymentProcessDefinitionResponseRecord>
     implements DeploymentProcessDefinitionResponseRecordValue {
-  // structpack-ids[DeploymentProcessDefinitionResponseRecord]: 1,2,3,4,5,6,7,8,9,10,11,12,13
   private final LongProperty processDefinitionIdProp =
       new LongProperty(9, PROCESS_DEFINITION_ID, -1);
   private final StringProperty processDefinitionNameProp =

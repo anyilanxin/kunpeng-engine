@@ -35,7 +35,6 @@ import com.anyilanxin.kunpeng.structpack.property.ObjectProperty;
 public class BusinessDispatchQueryResponseRecord
     extends UnifiedRecordValue<BusinessDispatchQueryResponseRecord>
     implements BusinessDispatchQueryResponseRecordValue {
-  // structpack-ids[BusinessDispatchQueryResponseRecord]: 1,2
   private final ObjectProperty<BusinessDispatchPlanRecord> dispatchPlanProp =
       new ObjectProperty<>(1, "DISPATCH_PLAN", new BusinessDispatchPlanRecord());
   private final ObjectProperty<BusinessClusterMetaRecord> clusterMetaProp =

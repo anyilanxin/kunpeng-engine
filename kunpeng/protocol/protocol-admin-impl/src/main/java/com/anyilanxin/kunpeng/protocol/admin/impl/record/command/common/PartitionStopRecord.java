@@ -41,8 +41,6 @@ import org.agrona.DirectBuffer;
 @AutoDeclareProperties
 public class PartitionStopRecord extends UnifiedRecordValue<PartitionStopRecord>
     implements PartitionStopRecordValue {
-  // structpack-ids[PartitionStopRecord]: 1,2,3,4,5,6,7
-  // structpack-ids[PartitionLeaveRecord]: 1,2,3,4,5,6,7
   private final EnumProperty<PartitionType> partitionTypeProp =
       new EnumProperty<>(1, "PARTITION_TYPE", PartitionType.class, PartitionType.ADMIN);
   private final EnumProperty<PartitionExecutionType> executionTypeProp =

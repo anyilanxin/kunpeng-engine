@@ -41,7 +41,6 @@ import org.agrona.concurrent.UnsafeBuffer;
 public class DeploymentDecisionDefinitionResponseRecord
     extends UnifiedRecordValue<DeploymentDecisionDefinitionResponseRecord>
     implements DeploymentDecisionDefinitionResponseRecordValue {
-  // structpack-ids[DeploymentDecisionDefinitionResponseRecord]: 1,2,3,4,5,6,7,8,9,10,11
   private final LongProperty decisionDefinitionIdProp =
       new LongProperty(1, "DECISION_DEFINITION_ID", -1);
   private final StringProperty decisionDefinitionKeyProp =

@@ -32,7 +32,6 @@ import com.anyilanxin.kunpeng.structpack.property.IntegerProperty;
 public class AdminChangeReplicationRequestRecord
     extends UnifiedRecordValue<AdminChangeReplicationRequestRecord>
     implements AdminChangeReplicationRequestRecordValue {
-  // structpack-ids[AdminChangeReplicationRequestRecord]: 2,5
   private final BooleanProperty applyPlanProp = new BooleanProperty(2, "APPLY_PLAN", false);
   private final IntegerProperty expectReplicationFactorProp =
       new IntegerProperty(5, "EXPECT_REPLICATION_FACTOR", 0);

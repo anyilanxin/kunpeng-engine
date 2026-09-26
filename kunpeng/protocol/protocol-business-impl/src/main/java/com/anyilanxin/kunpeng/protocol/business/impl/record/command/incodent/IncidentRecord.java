@@ -43,7 +43,6 @@ import org.agrona.DirectBuffer;
 @AutoDeclareProperties
 public class IncidentRecord extends UnifiedRecordValue<IncidentRecord>
     implements IncidentRecordValue {
-  // structpack-ids[IncidentRecord]: 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16
   private final LongProperty incidentIdProp = new LongProperty(1, "INCIDENT_ID", -1);
   private final EnumProperty<IncidentType> incidentTypeProp =
       new EnumProperty<>(2, "INCIDENT_TYPE", IncidentType.class);

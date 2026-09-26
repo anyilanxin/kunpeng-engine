@@ -47,7 +47,6 @@ import org.agrona.DirectBuffer;
 public class DeploymentCreateResponseRecord
     extends UnifiedRecordValue<DeploymentCreateResponseRecord>
     implements DeploymentCreateResponseRecordValue {
-  // structpack-ids[DeploymentCreateResponseRecord]: 1,2,3,4,5,6,7,8,9
   private final LongProperty deploymentIdProp = new LongProperty(8, DEPLOYMENT_ID, -1);
   private final StringProperty deploymentNameProp = new StringProperty(1, "DEPLOYMENT_NAME", "");
   private final LongProperty deploymentTimeProp = new LongProperty(2, "DEPLOYMENT_TIME", -1);

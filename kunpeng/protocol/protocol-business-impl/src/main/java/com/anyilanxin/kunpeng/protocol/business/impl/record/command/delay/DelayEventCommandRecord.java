@@ -44,7 +44,6 @@ import org.agrona.concurrent.UnsafeBuffer;
 @AutoDeclareProperties
 public class DelayEventCommandRecord extends UnifiedRecordValue<DelayEventCommandRecord>
     implements DelayEventCommandRecordValue {
-  // structpack-ids[DelayEventCommandRecord]: 1,2,3,4,5,6,7,8,9,10,11
   private final LongProperty delayIdProp = new LongProperty(1, "DELAY_ID", -1);
   private final EnumProperty<DelayState> stateProp = new EnumProperty<>(7, STATE, DelayState.class);
   private final LongProperty startTimeProp = new LongProperty(8, START_TIME, -1);

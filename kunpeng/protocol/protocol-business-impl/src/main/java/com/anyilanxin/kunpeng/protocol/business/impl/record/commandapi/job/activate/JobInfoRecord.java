@@ -40,7 +40,6 @@ import org.agrona.DirectBuffer;
  */
 @AutoDeclareProperties
 public class JobInfoRecord extends UnifiedRecordValue<JobInfoRecord> implements JobInfoRecordValue {
-  // structpack-ids[JobInfoRecord]: 1,2,3,4,5,6,7,8,9,10,11,12,13,14
   private final LongProperty jobIdProp = new LongProperty(1, "JOB_ID", -1);
   private final StringProperty jobTypeProp = new StringProperty(2, "JOB_TYPE");
   private final IntegerProperty retriesProp = new IntegerProperty(3, "RETRIES", -1);

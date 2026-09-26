@@ -33,7 +33,6 @@ import org.agrona.DirectBuffer;
 @AutoDeclareProperties
 public class VariableUpdateRequestRecord extends UnifiedRecordValue<VariableUpdateRequestRecord>
     implements VariableUpdateRequestRecordValue {
-  // structpack-ids[VariableUpdateRequestRecord]: 1,2,3,4
 
   private final LongProperty processInstanceIdProp = new LongProperty(1, PROCESS_INSTANCE_ID, -1);
   private final LongProperty activityInstanceIdProp = new LongProperty(2, ACTIVITY_INSTANCE_ID, -1);

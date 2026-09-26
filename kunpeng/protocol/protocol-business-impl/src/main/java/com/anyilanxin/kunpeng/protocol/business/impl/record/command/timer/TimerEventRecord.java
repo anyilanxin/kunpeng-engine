@@ -39,7 +39,6 @@ import org.agrona.DirectBuffer;
 @AutoDeclareProperties
 public class TimerEventRecord extends UnifiedRecordValue<TimerEventRecord>
     implements TimerEventRecordValue {
-  // structpack-ids[TimerEventRecord]: 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17
   private final LongProperty timerIdProp = new LongProperty(1, "TIMER_ID", -1);
   private final LongProperty dueDateProp = new LongProperty(2, "DUE_DATE", 0);
   private final IntegerProperty repetitionsProp = new IntegerProperty(3, "REPETITIONS", 0);

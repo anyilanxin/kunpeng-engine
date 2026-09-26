@@ -45,7 +45,6 @@ import org.agrona.DirectBuffer;
 @AutoDeclareProperties
 public class JobBatchRecord extends UnifiedRecordValue<JobBatchRecord>
     implements JobBatchRecordValue {
-  // structpack-ids[JobBatchRecord]: 1,2,3,4,5,6,7,8
   private final LongProperty batchJobIdProp = new LongProperty(1, "BATCH_JOB_ID", -1);
   private final LongProperty timeoutProp = new LongProperty(2, "TIMEOUT_KEY", -1);
   private final StringProperty workerProp = new StringProperty(3, "WORKER", "");

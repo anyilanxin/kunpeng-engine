@@ -40,7 +40,6 @@ import org.agrona.DirectBuffer;
 @AutoDeclareProperties
 public class PartitionExecutionAckRecord extends UnifiedRecordValue<PartitionExecutionAckRecord>
     implements PartitionExecutionAckRecordValue {
-  // structpack-ids[PartitionExecutionAckRecord]: 1,2,3,4,5,6,7
   private final EnumProperty<PartitionType> partitionTypeProp =
       new EnumProperty<>(1, "PARTITION_TYPE", PartitionType.class, PartitionType.ADMIN);
   private final EnumProperty<PartitionExecutionType> executionTypeProp =

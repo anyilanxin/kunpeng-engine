@@ -36,7 +36,6 @@ import org.agrona.DirectBuffer;
 @AutoDeclareProperties
 public class NodeSourceRecord extends UnifiedRecordValue<NodeSourceRecord>
     implements NodeSourceRecordValue {
-  // structpack-ids[NodeSourceRecord]: 1,2
   private final StringProperty memberIdProp = new StringProperty(1, "MEMBER_ID");
   private final IntegerProperty sourceIdProp = new IntegerProperty(2, "SOURCE_ID", -1);
 

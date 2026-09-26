@@ -51,17 +51,16 @@ import org.gradle.api.tasks.TaskAction
  *
  * <p>structpack 模式（类 import 含 {@code com.anyilanxin.kunpeng.structpack}）额外执行
  * id 身份管理：id 直接生成进源码 —— 字段初始化器 {@code new XxxProperty(id, key, ...)}
- * 首参，与 key/类型/默认值同在一行；并用 {@code // structpack-ids: 1,2,...} 标记注释
- * 记录该类历史上用过的全部 id（删除检测的源码内账本）：
+ * 首参，与 key/类型/默认值同在一行。无源码内 id 账本, 只看当前字段状态：
  *
  * <ul>
- *   <li>新字段（初始化器无 id）→ 分配最小未用正整数并插入首参
- *   <li>删除字段 → 直接删行, 零额外动作: 标记注释自动退休该 id（永不复用）,
- *       旧数据由读方按值长度跳过
- *   <li>id 重复 / id &gt; 127（1 字节保证）→ 构建失败
+ *   <li>新字段（初始化器无 id）→ 取 [1,127] 内最小空闲 id（空洞先回填, 紧凑时即 max+1
+ *       递增——两端序号都用起来, 避免一味增大越过 127）
+ *   <li>重复 id / id &lt; 1（默认最小 1）→ 按声明顺序保留首个合法值, 其余同样取最小空闲重排
+ *   <li>id &gt; 127（1 字节保证）/ 可用 id 耗尽 → 构建失败
  * </ul>
  *
- * <p>无 property 字段的类不生成标记注释, 已存在的空标记会被自动移除。
+ * <p>历史构建生成的 {@code structpack-ids} 标记注释已废弃, 任务遇到时整块移除。
  */
 class AutoDeclarePropertiesTask extends DefaultTask {
 
@@ -112,21 +111,13 @@ class AutoDeclarePropertiesTask extends DefaultTask {
     LexicalPreservingPrinter.setup(cu)
 
     final boolean structPackMode = usesStructPack(cu)
-    final Map<String, Set<Integer>> markers = structPackMode ? scanMarkers(file.text) : null
-    final Map<String, Set<Integer>> finalIds = structPackMode ? new LinkedHashMap<>() : null
     boolean modified = false
     cu.findAll(ClassOrInterfaceDeclaration).each { typeDecl ->
       if (hasAnnotation(typeDecl, 'AutoDeclareProperties')) {
         if (structPackMode) {
-          final Set<Integer> markerIds =
-              markers.getOrDefault(typeDecl.nameAsString, java.util.Collections.emptySet())
-          if (processTypeIdMode(typeDecl, markerIds)) {
+          if (processTypeIdMode(typeDecl)) {
             modified = true
           }
-          // 累积合并: 历史 ∪ 当前 —— 删除的 id 永久留在标记中（永不复用）
-          final Set<Integer> merged = new TreeSet<>(markerIds)
-          merged.addAll(collectCurrentIds(typeDecl))
-          finalIds.put(typeDecl.nameAsString, merged)
         } else if (processType(typeDecl)) {
           modified = true
         }
@@ -143,70 +134,24 @@ class AutoDeclarePropertiesTask extends DefaultTask {
       logger.lifecycle("Auto-declared properties in ${file.path}")
     }
     if (structPackMode) {
-      syncIdMarkers(file, finalIds)
+      stripIdMarkers(file)
     }
-  }
-
-  /** 当前类全部占用 id（声明 + ghost），按升序 */
-  static Set<Integer> collectCurrentIds(final ClassOrInterfaceDeclaration typeDecl) {
-    final Set<Integer> ids = new TreeSet<>()
-    collectPropertyFields(typeDecl).each { fieldDecl ->
-      final def initializer = fieldDecl.variables.empty
-          ? null
-          : fieldDecl.variables[0].initializer.orElse(null)
-      if (initializer instanceof ObjectCreationExpr
-          && !((ObjectCreationExpr) initializer).arguments.isEmpty()
-          && ((ObjectCreationExpr) initializer).arguments[0] instanceof IntegerLiteralExpr) {
-        ids.add(Integer.parseInt(
-            ((IntegerLiteralExpr) ((ObjectCreationExpr) initializer).arguments[0]).value))
-      }
-    }
-    return ids
   }
 
   /**
-   * 文本同步 id 标记注释(累积制): 存在则只增不减, 缺失则插到类声明之后（幂等）。
-   * 空 id 集合（无 property 字段）不生成标记, 已存在的空标记行会被移除——
-   * 空标记不参与 id 退休账本, 且模板拼接产生的尾随空格会与 Spotless 持续冲突。
+   * 移除历史构建生成的 structpack-ids 标记块（id 账本机制已废弃）。
+   * 整块匹配: 名称行 + 连续纯 id 续行, 连同行尾换行一并删除。
    */
-  static void syncIdMarkers(final File file, final Map<String, Set<Integer>> finalIds) {
-    if (finalIds == null || finalIds.isEmpty()) {
+  static void stripIdMarkers(final File file) {
+    final String text = file.text
+    if (!text.contains(MARKER_PREFIX)) {
       return
     }
-    String text = file.text
-    boolean changed = false
-    finalIds.each { className, ids ->
-      final String linePattern =
-          "\\/\\/\\s*structpack-ids\\[" + java.util.regex.Pattern.quote(className) + "\\]:[^\\n]*"
-      if (ids.isEmpty()) {
-        final java.util.regex.Matcher empty = text =~ linePattern
-        if (empty.find()) {
-          text = text.replaceFirst("[ \\t]*" + linePattern + "\\n?", '')
-          changed = true
-        }
-        return
-      }
-      final String expected = "// structpack-ids[${className}]: ${ids.join(',')}"
-      final java.util.regex.Matcher existing = text =~ linePattern
-      if (existing.find()) {
-        if (existing.group(0) != expected) {
-          text = text.replaceFirst(linePattern, java.util.regex.Matcher.quoteReplacement(expected))
-          changed = true
-        }
-      } else {
-        final String declPattern =
-            "(class\\s+" + java.util.regex.Pattern.quote(className) + "\\b[^{]*\\{)"
-        final java.util.regex.Matcher decl = text =~ declPattern
-        if (decl.find()) {
-          text = text.replaceFirst(
-              declPattern,
-              java.util.regex.Matcher.quoteReplacement(decl.group(1) + "\n  " + expected))
-          changed = true
-        }
-      }
-    }
-    if (changed) {
-      file.text = text
+    final String stripped = text.replaceAll(
+        "(?m)^[ \\t]*\\/\\/\\s*structpack-ids\\[[^\\]\\n]*\\]:[^\\n]*" +
+        "(?:\\r?\\n[ \\t]*\\/\\/[ \\t0-9,\\r]+(?![^\\n]))*(?:\\r?\\n)?", '')
+    if (stripped != text) {
+      file.text = stripped
     }
   }
 
@@ -423,36 +368,36 @@ class AutoDeclarePropertiesTask extends DefaultTask {
 
   static final String MARKER_PREFIX = 'structpack-ids'
 
-  /** 文本预扫描: 提取文件中各类的 id 标记注释 `// structpack-ids[ClassName]: 1,2` */
-  static Map<String, Set<Integer>> scanMarkers(final String text) {
-    final Map<String, Set<Integer>> markers = [:]
-    final def m = text =~ /\/\/\s*structpack-ids\[([\w.$]+)\]:\s*([0-9,\s]*)/
-    while (m.find()) {
-      final Set<Integer> ids = new TreeSet<>()
-      m.group(2).split(',').each { token ->
-        final String trimmed = token.trim()
-        if (!trimmed.isEmpty()) {
-          ids.add(Integer.parseInt(trimmed))
-        }
-      }
-      markers.put(m.group(1), ids)
+  /** 表达式整型字面量值（含一元负号）; 非整型字面量返回 null。 */
+  static Integer literalInt(final Expression expr) {
+    if (expr instanceof IntegerLiteralExpr) {
+      return Integer.parseInt(((IntegerLiteralExpr) expr).value)
     }
-    return markers
+    if (expr instanceof UnaryExpr
+        && ((UnaryExpr) expr).operator == UnaryExpr.Operator.MINUS
+        && ((UnaryExpr) expr).expression instanceof IntegerLiteralExpr) {
+      return -Integer.parseInt(((IntegerLiteralExpr) ((UnaryExpr) expr).expression).value)
+    }
+    return null
   }
 
   /**
    * structpack id 身份管理：向初始化器插入/校验 id, 生成构造器链（保留 declareGhost）。
    *
-   * @return {@code true} 表示源码被修改（调用方负责写回与标记注释更新）
+   * <p>无源码内账本, 只看当前字段状态: id 默认最小 1, 分配取 [1,127] 内最小空闲 id
+   * （空洞先回填, 紧凑时即 max+1 递增）; 重复或 &lt;1 的 id 按声明顺序保留首个合法值,
+   * 其余摘除后同新字段一起重排。
+   *
+   * @return {@code true} 表示源码被修改（调用方负责写回）
    */
-  boolean processTypeIdMode(
-      final ClassOrInterfaceDeclaration typeDecl, final Set<Integer> markerIds) {
+  boolean processTypeIdMode(final ClassOrInterfaceDeclaration typeDecl) {
     final List<FieldDeclaration> propertyFields = collectPropertyFields(typeDecl)
     if (propertyFields.isEmpty()) {
       return false
     }
 
-    // 1. 收集现有 id（初始化器首参为整型字面量）与待分配字段
+    // 1. 收集现有 id; id 默认最小 1 —— 重复或 <1 一律摘除首参转为待分配重排
+    boolean modified = false
     final Set<Integer> usedIds = new TreeSet<>()
     final List<ObjectCreationExpr> unassigned = []
     propertyFields.each { fieldDecl ->
@@ -463,8 +408,16 @@ class AutoDeclarePropertiesTask extends DefaultTask {
         return
       }
       final def args = ((ObjectCreationExpr) initializer).arguments
-      if (!args.isEmpty() && args[0] instanceof IntegerLiteralExpr) {
-        usedIds.add(Integer.parseInt(((IntegerLiteralExpr) args[0]).value))
+      final Integer id = args.isEmpty() ? null : literalInt(args[0])
+      if (id != null) {
+        if (id >= 1 && !usedIds.contains(id)) {
+          usedIds.add(id)
+        } else {
+          ((ObjectCreationExpr) initializer).arguments.remove(0)
+          unassigned.add(initializer)
+          modified = true
+          logger.lifecycle("${typeDecl.nameAsString}: ${id < 1 ? '非法' : '重复'} id=${id} 待重排")
+        }
       } else if (!args.isEmpty() && (args[0] instanceof StringLiteralExpr
           || args[0] instanceof NameExpr)) {
         // 首参为 key（字符串字面量或静态导入常量）→ 无 id, 待分配
@@ -472,48 +425,29 @@ class AutoDeclarePropertiesTask extends DefaultTask {
       }
     }
 
-    // 2. marker 历史 id 永不复用（已删字段自动退休）
-    usedIds.addAll(markerIds)
-
-    // 3. id 守卫: 重复 / 超过 127（1 字节保证）
-    final List<Integer> declaredList = []
-    propertyFields.each { fieldDecl ->
-      final def initializer = fieldDecl.variables.empty
-          ? null
-          : fieldDecl.variables[0].initializer.orElse(null)
-      if (initializer instanceof ObjectCreationExpr
-          && !((ObjectCreationExpr) initializer).arguments.isEmpty()
-          && ((ObjectCreationExpr) initializer).arguments[0] instanceof IntegerLiteralExpr) {
-        declaredList.add(Integer.parseInt(
-            ((IntegerLiteralExpr) ((ObjectCreationExpr) initializer).arguments[0]).value))
-      }
-    }
-    if (declaredList.toSet().size() != declaredList.size()) {
-      throw new GradleException("${typeDecl.nameAsString}: 字段 id 重复 —— id 严禁重复")
-    }
-    // id 强制存在且合法: 1..127（0/负数为手写错误, 构建期直接失败）
+    // 2. id 上界守卫: 127（1 字节保证; 下界 1 由收集阶段保证, 非法值已转待重排）
     usedIds.each { id ->
-      if (id < 1 || id > 127) {
+      if (id > 127) {
         throw new GradleException(
-            "${typeDecl.nameAsString}: id ${id} 非法（必须 1..127, 每字段 1 字节保证）—— 请手写 new XxxProperty(id, key, ...)")
+            "${typeDecl.nameAsString}: id ${id} 超上界（必须 ≤127, 每字段 1 字节保证）—— 请手写修正")
       }
     }
 
-    // 4. 分配: 最小未用正整数插入初始化器首参
-    boolean modified = false
+    // 3. 分配: 取 [1,127] 内最小空闲 id —— 空洞先回填（低位空洞/删除遗留）,
+    //    紧凑无洞时即 max+1 递增, 两端序号都用起来, 避免一味增大越过 127
     unassigned.each { creation ->
       int candidate = 1
-      while (usedIds.contains(candidate)) {
+      while (candidate <= 127 && usedIds.contains(candidate)) {
         candidate++
       }
       if (candidate > 127) {
         throw new GradleException(
-            "${typeDecl.nameAsString}: 可用 id 耗尽（>127, 1 字节保证）—— 请整理历史 id")
+            "${typeDecl.nameAsString}: 可用 id 耗尽（>127, 1 字节保证）—— 请整理现有 id")
       }
       usedIds.add(candidate)
       ((ObjectCreationExpr) creation).arguments.addFirst(new IntegerLiteralExpr(candidate))
       modified = true
-      logger.lifecycle("${typeDecl.nameAsString}: 新字段分配 id=${candidate}")
+      logger.lifecycle("${typeDecl.nameAsString}: 分配 id=${candidate}")
     }
 
     // 4. 构造器链

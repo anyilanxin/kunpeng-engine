@@ -40,7 +40,6 @@ import org.agrona.DirectBuffer;
 public class ProcessInstanceCancelRequestRecord
     extends UnifiedRecordValue<ProcessInstanceCancelRequestRecord>
     implements ProcessInstanceCancelRequestRecordValue {
-  // structpack-ids[ProcessInstanceCancelRequestRecord]: 1,2
   private final LongProperty processInstanceIdProp = new LongProperty(1, PROCESS_INSTANCE_ID, -1);
   private final StringProperty tenantIdProp =
       new StringProperty(2, TENANT_ID, TenantOwned.DEFAULT_TENANT_IDENTIFIER);

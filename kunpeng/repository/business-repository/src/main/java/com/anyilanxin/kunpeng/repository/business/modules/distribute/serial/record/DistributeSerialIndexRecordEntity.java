@@ -35,7 +35,6 @@ import java.util.stream.StreamSupport;
  */
 @AutoDeclareProperties
 public class DistributeSerialIndexRecordEntity extends UnpackedObject implements StoreValue {
-  // structpack-ids[DistributeSerialIndexRecordEntity]: 1,2
   private final LongProperty distributeIdProp = new LongProperty(1, "DISTRIBUTE_ID", -1);
   private final ArrayProperty<IntegerValue> distributeIndexProp =
       new ArrayProperty<>(2, "DISTRIBUTE_INDEX", IntegerValue::new);

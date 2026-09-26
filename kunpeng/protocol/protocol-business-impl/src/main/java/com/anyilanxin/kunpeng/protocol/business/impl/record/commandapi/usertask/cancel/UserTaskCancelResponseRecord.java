@@ -32,7 +32,6 @@ import com.anyilanxin.kunpeng.structpack.property.LongProperty;
 @AutoDeclareProperties
 public class UserTaskCancelResponseRecord extends UnifiedRecordValue<UserTaskCancelResponseRecord>
     implements UserTaskCancelResponseRecordValue {
-  // structpack-ids[UserTaskCancelResponseRecord]: 1
   private final LongProperty taskIdProp = new LongProperty(1, TASK_ID, -1);
 
   public UserTaskCancelResponseRecord() {

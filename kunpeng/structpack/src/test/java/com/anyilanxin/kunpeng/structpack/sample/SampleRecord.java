@@ -28,15 +28,14 @@ import com.anyilanxin.kunpeng.structpack.property.LongProperty;
  * {@code autoDeclareProperties} 任务自动向初始化器分配冻结 id，并生成 declareProperty 链。
  * id 与 key 同行定义，新增/删除/改名字段与声明顺序无关。
  *
- * <p>删除零动作演示：历史字段 STATE(id=3) 已被直接删行 —— id 由 structpack-ids 标记注释
- * 自动退休（永不复用），存量 Raft 日志/RocksDB 中的旧数据被读方按值长度直接跳过。
+ * <p>删除零动作演示：历史字段 STATE(id=3) 已被直接删行 —— 后续新字段从当前最大 id
+ * 之上分配（单调递增不复用），存量 Raft 日志/RocksDB 中的旧数据被读方按值长度直接跳过。
  *
  * @author zxuanhong
  * @since 2026.9.0
  */
 @AutoDeclareProperties
 public class SampleRecord extends UnpackedObject {
-  // structpack-ids[SampleRecord]: 1,2,3
 
   final LongProperty orderId = new LongProperty(1, "ORDER_ID", -1);
   final DoubleProperty amount = new DoubleProperty(2, "AMOUNT", 0);

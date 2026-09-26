@@ -45,7 +45,6 @@ import org.agrona.concurrent.UnsafeBuffer;
  */
 @AutoDeclareProperties
 public class DelayEventCommandEntity extends UnpackedObject implements StoreValue {
-  // structpack-ids[DelayEventCommandEntity]: 1,2,3,4,5,6,7,8,9,10,11
   private final LongProperty delayIdProp = new LongProperty(1, "DELAY_ID", -1);
   private final EnumProperty<DelayState> stateProp = new EnumProperty<>(2, STATE, DelayState.class);
   private final LongProperty startTimeProp = new LongProperty(3, START_TIME, -1);

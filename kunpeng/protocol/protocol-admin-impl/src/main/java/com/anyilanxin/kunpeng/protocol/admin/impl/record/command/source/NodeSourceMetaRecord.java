@@ -35,7 +35,6 @@ import java.util.List;
 @AutoDeclareProperties
 public class NodeSourceMetaRecord extends UnifiedRecordValue<NodeSourceMetaRecord>
     implements NodeSourceMetaRecordValue {
-  // structpack-ids[NodeSourceMetaRecord]: 1,2,3,4,5
   private final IntegerProperty versionProp = new IntegerProperty(1, "VERSION", 0);
   private final LongProperty createTimeProp = new LongProperty(2, "CREATE_TIME", -1);
   private final LongProperty updateTimeProp = new LongProperty(3, "UPDATE_TIME", -1);

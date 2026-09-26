@@ -27,7 +27,6 @@ import com.anyilanxin.kunpeng.structpack.AutoDeclareProperties;
  */
 @AutoDeclareProperties
 public class NullResponseRecord extends UnifiedRecordValue {
-  // structpack-ids[NullResponseRecord]:
   public NullResponseRecord() {
     super(0);
   }

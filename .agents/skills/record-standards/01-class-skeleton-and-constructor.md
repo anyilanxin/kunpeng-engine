@@ -22,7 +22,6 @@ public class XxxRecord extends UnifiedRecordValue<XxxRecord>
 所有 Property 字段都是 **`private final`**，命名以 `Prop` 结尾，构造器**首参为 id**（强制，1..127）：
 
 ```java
-// structpack-ids[XxxRecord]: 1,2,3          ← 标记注释由构建任务维护（历史 id 账本, 只增不减）
 private final LongProperty processDefinitionIdProp =
     new LongProperty(1, PROCESS_DEFINITION_ID, -1);
 private final StringProperty processDefinitionNameProp =
@@ -30,7 +29,7 @@ private final StringProperty processDefinitionNameProp =
 private final BinaryProperty checksumProp = new BinaryProperty(3, "CHECKSUM", new UnsafeBuffer());
 ```
 
-- **id 规则**：同一 Record 内严禁重复、永不复用（删除字段的 id 由标记注释自动退休）；新字段可以**不写 id**（`new LongProperty(PROCESS_DEFINITION_ID, -1)`），构建任务自动分配最小未用正整数插入首参
+- **id 规则**：同一 Record 内严禁重复；新字段可以**不写 id**（`new LongProperty(PROCESS_DEFINITION_ID, -1)`），构建任务从当前最大 id 之上分配（max+1 起步单调递增）插入首参
 - 字段类型按 [02-Property-字段类型.md](./02-property-field-types.md) 选
 - key 按 [03-Key-常量使用.md](./03-key-constants.md) 写
 - 默认值尽量有语义：long 用 `-1`（表示未设置），String 用 `""`，boolean 看业务，集合用对应默认空值
@@ -92,7 +91,6 @@ import org.agrona.DirectBuffer;
 public class XxxRecord extends UnifiedRecordValue<XxxRecord>
   implements XxxRecordValue {
 
-  // structpack-ids[XxxRecord]: 1,2,3
   private final LongProperty idProp = new LongProperty(1, "ID", -1);
   private final StringProperty nameProp = new StringProperty(2, "NAME", "");
   private final StringProperty tenantIdProp =

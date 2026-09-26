@@ -41,7 +41,6 @@ import org.agrona.DirectBuffer;
 public class ProcessInstanceCreateRequestRecord
     extends UnifiedRecordValue<ProcessInstanceCreateRequestRecord>
     implements ProcessInstanceCreateRequestRecordValue {
-  // structpack-ids[ProcessInstanceCreateRequestRecord]: 1,2,3,4,5,6,7
   private final StringProperty processDefinitionKeyProp =
       new StringProperty(2, PROCESS_DEFINITION_KEY, "");
   private final IntegerProperty processDefinitionVersionProp =

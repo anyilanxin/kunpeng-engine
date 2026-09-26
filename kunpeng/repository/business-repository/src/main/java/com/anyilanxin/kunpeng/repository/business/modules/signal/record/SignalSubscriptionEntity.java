@@ -41,7 +41,6 @@ import org.agrona.DirectBuffer;
  */
 @AutoDeclareProperties
 public class SignalSubscriptionEntity extends UnpackedObject implements StoreValue {
-  // structpack-ids[SignalSubscriptionEntity]: 1,2,3,4,5,6,7,8,9,10
   private final LongProperty signalSubscriptionIdProp =
       new LongProperty(1, "SIGNAL_SUBSCRIPTION_ID", -1);
   private final StringProperty signalNameProp = new StringProperty(2, "SIGNAL_NAME", "");

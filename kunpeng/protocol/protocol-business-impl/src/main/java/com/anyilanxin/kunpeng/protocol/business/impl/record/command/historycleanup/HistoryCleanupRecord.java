@@ -38,7 +38,6 @@ import org.agrona.DirectBuffer;
 @AutoDeclareProperties
 public class HistoryCleanupRecord extends UnifiedRecordValue<HistoryCleanupRecord>
     implements HistoryCleanupRecordValue {
-  // structpack-ids[HistoryCleanupRecord]: 1,2,3,4,5,6,7,8,9,10
   private final LongProperty historyCleanupIdProp = new LongProperty(1, "HISTORY_CLEANUP_ID", -1);
   private final LongProperty processInstanceIdProp = new LongProperty(3, PROCESS_INSTANCE_ID, -1);
   private final StringProperty processDefinitionNameProp =

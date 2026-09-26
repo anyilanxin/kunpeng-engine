@@ -42,8 +42,6 @@ import org.agrona.DirectBuffer;
 @AutoDeclareProperties
 public class PartitionInfoMetaRecord extends UnifiedRecordValue<PartitionInfoMetaRecord>
     implements PartitionInfoMetaRecordValue {
-  // structpack-ids[PartitionInfoMetaRecord]: 1,2,3,4,5,6,7
-  // structpack-ids[PartitionLeaveRecord]: 1,2,3,4,5
   private final StringProperty partitionGroupProp = new StringProperty(1, "PARTITION_GROUP", "");
   private final IntegerProperty partitionIdProp = new IntegerProperty(2, "PARTITION_ID", -1);
   private final IntegerProperty targetPriorityProp = new IntegerProperty(3, "TARGET_PRIORITY", -1);

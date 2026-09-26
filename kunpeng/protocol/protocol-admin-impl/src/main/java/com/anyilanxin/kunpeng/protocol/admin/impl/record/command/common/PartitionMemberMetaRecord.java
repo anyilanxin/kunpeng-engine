@@ -36,7 +36,6 @@ import org.agrona.DirectBuffer;
 @AutoDeclareProperties
 public class PartitionMemberMetaRecord extends UnifiedRecordValue<PartitionMemberMetaRecord>
     implements PartitionMemberMetaRecordValue {
-  // structpack-ids[PartitionMemberMetaRecord]: 1,3
   private final StringProperty memberIdProp = new StringProperty(1, "MEMBER_ID", "");
   private final IntegerProperty priorityProp = new IntegerProperty(3, "PRIORITY", -1);
 

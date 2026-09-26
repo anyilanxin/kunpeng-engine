@@ -47,7 +47,6 @@ import org.agrona.DirectBuffer;
  */
 @AutoDeclareProperties
 public class SignalDistributeCorrelateEntity extends UnpackedObject implements StoreValue {
-  // structpack-ids[SignalDistributeCorrelateEntity]: 1,2,3,4,5,6
 
   private final LongProperty distributeSignalSubscriptionIdProp =
       new LongProperty(1, "DISTRIBUTE_SIGNAL_SUBSCRIPTION_ID", -1);

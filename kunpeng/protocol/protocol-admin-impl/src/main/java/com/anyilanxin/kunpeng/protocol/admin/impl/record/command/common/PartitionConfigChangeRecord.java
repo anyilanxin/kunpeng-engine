@@ -44,7 +44,6 @@ import org.agrona.DirectBuffer;
 @AutoDeclareProperties
 public class PartitionConfigChangeRecord extends UnifiedRecordValue<PartitionConfigChangeRecord>
     implements PartitionConfigChangeRecordValue {
-  // structpack-ids[PartitionConfigChangeRecord]: 1,2,3,4,5,6,7,8,9
   private final EnumProperty<PartitionType> partitionTypeProp =
       new EnumProperty<>(1, "PARTITION_TYPE", PartitionType.class, PartitionType.ADMIN);
   private final EnumProperty<PartitionExecutionType> executionTypeProp =

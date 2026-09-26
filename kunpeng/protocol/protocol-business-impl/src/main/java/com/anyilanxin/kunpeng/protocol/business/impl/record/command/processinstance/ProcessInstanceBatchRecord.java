@@ -41,7 +41,6 @@ import org.agrona.DirectBuffer;
 @AutoDeclareProperties
 public class ProcessInstanceBatchRecord extends UnifiedRecordValue<ProcessInstanceBatchRecord>
     implements ProcessInstanceBatchRecordValue {
-  // structpack-ids[ProcessInstanceBatchRecord]: 1,2,3,4,5,6,7,8,9,10,11,12,13,14
   private final LongProperty batchIdProp = new LongProperty(1, "BATCH_ID");
   private final LongProperty requestIdProp = new LongProperty(2, "REQUEST_ID");
   private final EnumProperty<ValueType> batchValueTypeProp =

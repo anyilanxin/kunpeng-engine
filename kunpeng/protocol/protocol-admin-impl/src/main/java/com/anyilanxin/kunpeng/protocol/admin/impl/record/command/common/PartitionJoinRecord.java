@@ -39,7 +39,6 @@ import org.agrona.DirectBuffer;
 @AutoDeclareProperties
 public class PartitionJoinRecord extends UnifiedRecordValue<PartitionJoinRecord>
     implements PartitionJoinRecordValue {
-  // structpack-ids[PartitionJoinRecord]: 1,2,3,4,5,6
   private final EnumProperty<PartitionType> partitionTypeProp =
       new EnumProperty<>(1, "PARTITION_TYPE", PartitionType.class, PartitionType.ADMIN);
   private final EnumProperty<PartitionExecutionType> executionTypeProp =

@@ -32,7 +32,6 @@ import com.anyilanxin.kunpeng.structpack.property.IntegerProperty;
 public class BusinessChangePartitionRequestRecord
     extends UnifiedRecordValue<BusinessChangePartitionRequestRecord>
     implements BusinessChangePartitionRequestRecordValue {
-  // structpack-ids[BusinessChangePartitionRequestRecord]: 2,5
   private final BooleanProperty applyPlanProp = new BooleanProperty(2, "APPLY_PLAN", false);
   private final IntegerProperty expectPartitionsCountProp =
       new IntegerProperty(5, "EXPECT_PARTITIONS_COUNT", 0);

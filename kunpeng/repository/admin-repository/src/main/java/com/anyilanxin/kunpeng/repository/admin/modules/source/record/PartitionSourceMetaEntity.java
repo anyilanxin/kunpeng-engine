@@ -31,7 +31,6 @@ import com.anyilanxin.kunpeng.structpack.property.LongProperty;
  */
 @AutoDeclareProperties
 public class PartitionSourceMetaEntity extends UnpackedObject implements StoreValue {
-  // structpack-ids[PartitionSourceMetaRecord]: 1,2,3,5
   private final IntegerProperty versionProp = new IntegerProperty(1, "VERSION", 0);
   private final LongProperty createTimeProp = new LongProperty(2, "CREATE_TIME", -1);
   private final LongProperty updateTimeProp = new LongProperty(3, "UPDATE_TIME", -1);

@@ -39,7 +39,6 @@ import org.agrona.concurrent.UnsafeBuffer;
 @AutoDeclareProperties
 public class ResourceRecord extends UnifiedRecordValue<ResourceRecord>
     implements ResourceRecordValue {
-  // structpack-ids[ResourceRecord]: 1,2,3
   private final StringProperty resourceNameProp = new StringProperty(1, "RESOURCE_NAME", "");
   private final EnumProperty<ResourceType> resourceTypeProp =
       new EnumProperty<>(2, "RESOURCE_TYPE", ResourceType.class, ResourceType.NULL_VAL);

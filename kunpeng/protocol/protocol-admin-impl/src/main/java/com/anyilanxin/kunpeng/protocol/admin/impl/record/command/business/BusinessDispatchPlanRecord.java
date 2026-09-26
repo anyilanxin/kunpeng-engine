@@ -41,7 +41,6 @@ import org.agrona.concurrent.UnsafeBuffer;
 @AutoDeclareProperties
 public class BusinessDispatchPlanRecord extends UnifiedRecordValue<BusinessDispatchPlanRecord>
     implements BusinessDispatchPlanRecordValue {
-  // structpack-ids[BusinessDispatchPlanRecord]: 1,2,3,4,5,6,7,8,9,10,11,12,13
   private final LongProperty dispatchPlanIdProp = new LongProperty(1, "DISPATCH_PLAN_ID", -1);
   private final ArrayProperty<BusinessDispatchPlanExecutionRecord> executionPlanProp =
       new ArrayProperty<>(2, "EXECUTION_PLAN", BusinessDispatchPlanExecutionRecord::new);

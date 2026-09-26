@@ -30,7 +30,6 @@ import com.anyilanxin.kunpeng.structpack.property.LongProperty;
 @AutoDeclareProperties
 public class DeploymentDeleteRequestRecord extends UnifiedRecordValue<DeploymentDeleteRequestRecord>
     implements DeploymentDeleteRequestRecordValue {
-  // structpack-ids[DeploymentDeleteRequestRecord]: 1
   private final LongProperty deploymentIdProp = new LongProperty(1, "deployment_Id");
 
   public DeploymentDeleteRequestRecord() {

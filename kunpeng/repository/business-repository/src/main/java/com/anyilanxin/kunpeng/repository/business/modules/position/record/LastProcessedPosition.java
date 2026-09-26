@@ -29,7 +29,6 @@ import com.anyilanxin.kunpeng.structpack.property.LongProperty;
  */
 @AutoDeclareProperties
 public class LastProcessedPosition extends UnpackedObject implements StoreValue {
-  // structpack-ids[LastProcessedPosition]: 1
   private final LongProperty positionProp = new LongProperty(1, "lastProcessPosition");
 
   public LastProcessedPosition() {

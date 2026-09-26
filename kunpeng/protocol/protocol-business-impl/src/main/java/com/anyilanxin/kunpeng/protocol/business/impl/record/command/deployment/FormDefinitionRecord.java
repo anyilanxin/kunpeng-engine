@@ -40,7 +40,6 @@ import org.agrona.concurrent.UnsafeBuffer;
 @AutoDeclareProperties
 public class FormDefinitionRecord extends UnifiedRecordValue<FormDefinitionRecord>
     implements FormDefinitionRecordValue {
-  // structpack-ids[FormDefinitionRecord]: 1,2,3,4,5,6,7
   private final LongProperty decisionDefinitionIdProp =
       new LongProperty(1, "DECISION_DEFINITION_ID");
   private final IntegerProperty revProp = new IntegerProperty(6, BusinessRecordConstant.VERSION, 0);

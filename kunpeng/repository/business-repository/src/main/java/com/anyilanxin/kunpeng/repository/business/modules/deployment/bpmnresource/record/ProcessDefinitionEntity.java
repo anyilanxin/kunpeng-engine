@@ -42,7 +42,6 @@ import org.agrona.DirectBuffer;
  */
 @AutoDeclareProperties
 public class ProcessDefinitionEntity extends UnpackedObject implements StoreValue {
-  // structpack-ids[ProcessDefinitionEntity]: 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15
   private final LongProperty processDefinitionIdProp =
       new LongProperty(1, PROCESS_DEFINITION_ID, -1);
   private final StringProperty processDefinitionNameProp =

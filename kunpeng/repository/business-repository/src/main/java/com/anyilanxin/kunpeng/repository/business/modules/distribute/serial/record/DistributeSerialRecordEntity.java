@@ -46,7 +46,6 @@ import org.agrona.concurrent.UnsafeBuffer;
  */
 @AutoDeclareProperties
 public class DistributeSerialRecordEntity extends UnpackedObject implements StoreValue {
-  // structpack-ids[DistributeSerialRecordEntity]: 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16
   private final LongProperty distributeIdProp = new LongProperty(1, "DISTRIBUTE_ID", -1);
   private final EnumProperty<DistributeSerialState> stateProp =
       new EnumProperty<>(2, STATE, DistributeSerialState.class, DistributeSerialState.ACTIVATED);

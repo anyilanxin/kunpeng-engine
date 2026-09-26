@@ -39,7 +39,6 @@ import org.agrona.concurrent.UnsafeBuffer;
  */
 @AutoDeclareProperties
 public class BusinessDispatchPlanExecutionEntity extends UnpackedObject implements StoreValue {
-  // structpack-ids[BusinessDispatchPlanExecutionRecord]: 1,2,3,4,5,6,7,8,9,10,11,12,13,14
   private final LongProperty dispatchPlanExecutionIdProp =
       new LongProperty(1, "DISPATCH_PLAN_EXECUTION_ID", -1);
   private final IntegerProperty executionOrderProp = new IntegerProperty(2, "EXECUTION_ORDER", -1);

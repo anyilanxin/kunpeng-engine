@@ -29,7 +29,6 @@ public class DecisionRequirementDefinitionRecord
   extends UnifiedRecordValue<DecisionRequirementDefinitionRecord>
   implements DecisionRequirementDefinitionRecordValue {
 
-  // structpack-ids[DecisionRequirementDefinitionRecord]: 1,2,3,4,5,6,7,8,9
   private final LongProperty decisionRequirementDefinitionIdProp =
     new LongProperty(1, "DECISION_REQUIREMENT_DEFINITION_ID", -1);
   private final StringProperty decisionRequirementDefinitionKeyProp =

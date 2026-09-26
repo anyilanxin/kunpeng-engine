@@ -38,7 +38,6 @@ import java.util.List;
 @AutoDeclareProperties
 public class AdminDispatchPlanRecord extends UnifiedRecordValue<AdminDispatchPlanRecord>
     implements AdminDispatchPlanRecordValue {
-  // structpack-ids[AdminDispatchPlanRecord]: 1,2,3,4,5,6,7,8,9,10
   private final LongProperty dispatchPlanIdProp = new LongProperty(1, "DISPATCH_PLAN_ID", -1);
   private final ArrayProperty<AdminDispatchPlanExecutionRecord> executionPlanProp =
       new ArrayProperty<>(2, "EXECUTION_PLAN", AdminDispatchPlanExecutionRecord::new);

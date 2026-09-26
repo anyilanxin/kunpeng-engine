@@ -30,7 +30,6 @@ import com.anyilanxin.kunpeng.structpack.property.LongProperty;
 @AutoDeclareProperties
 public class EmptyResponseRecord extends UnifiedRecordValue<EmptyResponseRecord>
     implements EmptyResponseRecordValue {
-  // structpack-ids[EmptyResponseRecord]: 1
   private final LongProperty keyProp = new LongProperty(1, "KEY", -1);
 
   public EmptyResponseRecord() {

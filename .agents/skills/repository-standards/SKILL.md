@@ -40,7 +40,6 @@ admin-repository 中 Entity（`*Entity extends UnpackedObject implements DbValue
 ```java
 @AutoDeclareProperties
 public class DelayedRecordEntity extends UnpackedObject implements DbValue {
-  // structpack-ids[DelayedRecordEntity]: 1,2,3,4,5,6
   private final LongProperty delayedIdProp = new LongProperty(1, "DELAYED_ID", -1);
   // ... 其余字段与 DelayedRecord 一一对应
 

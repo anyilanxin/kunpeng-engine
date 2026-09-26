@@ -31,7 +31,6 @@ import com.anyilanxin.kunpeng.structpack.property.BooleanProperty;
 public class BusinessClusterBalanceRequestRecord
     extends UnifiedRecordValue<BusinessClusterBalanceRequestRecord>
     implements BusinessClusterBalanceRequestRecordValue {
-  // structpack-ids[BusinessClusterBalanceRequestRecord]: 2
   private final BooleanProperty applyPlanProp = new BooleanProperty(2, "APPLY_PLAN", false);
 
   public BusinessClusterBalanceRequestRecord() {

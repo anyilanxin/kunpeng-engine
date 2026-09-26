@@ -40,7 +40,6 @@ import org.agrona.DirectBuffer;
 @AutoDeclareProperties
 public class PartitionSourceRecord extends UnifiedRecordValue<PartitionSourceRecord>
     implements PartitionSourceRecordValue {
-  // structpack-ids[PartitionSourceRecord]: 1,2,3,4,5,6
   private final StringProperty partitionGroupProp = new StringProperty(1, "PARTITION_GROUP", "");
   private final IntegerProperty partitionIdProp = new IntegerProperty(2, "PARTITION_ID", -1);
   private final IntegerProperty sourceIdProp = new IntegerProperty(3, "SOURCE_ID", -1);

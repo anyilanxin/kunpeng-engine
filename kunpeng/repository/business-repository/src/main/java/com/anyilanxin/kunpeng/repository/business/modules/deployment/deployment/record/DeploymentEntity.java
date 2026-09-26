@@ -38,7 +38,6 @@ import org.agrona.DirectBuffer;
  */
 @AutoDeclareProperties
 public class DeploymentEntity extends UnpackedObject implements StoreValue {
-  // structpack-ids[DeploymentEntity]: 1,2,3,4,5
   private final LongProperty deploymentIdProp = new LongProperty(1, DEPLOYMENT_ID, -1);
   private final StringProperty deploymentNameProp = new StringProperty(2, "DEPLOYMENT_NAME", "");
   private final LongProperty deploymentTimeProp = new LongProperty(3, "DEPLOYMENT_TIME", -1);

@@ -35,7 +35,6 @@ import com.anyilanxin.kunpeng.structpack.property.ObjectProperty;
 public class AdminDispatchQueryResponseRecord
     extends UnifiedRecordValue<AdminDispatchQueryResponseRecord>
     implements AdminDispatchQueryResponseRecordValue {
-  // structpack-ids[AdminDispatchQueryResponseRecord]: 1,2
   private final ObjectProperty<AdminDispatchPlanRecord> dispatchPlanProp =
       new ObjectProperty<>(1, "DISPATCH_PLAN", new AdminDispatchPlanRecord());
   private final ObjectProperty<AdminClusterMetaRecord> clusterMetaProp =

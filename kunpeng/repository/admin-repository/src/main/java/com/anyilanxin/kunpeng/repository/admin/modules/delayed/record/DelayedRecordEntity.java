@@ -33,7 +33,6 @@ import com.anyilanxin.kunpeng.structpack.property.LongProperty;
  */
 @AutoDeclareProperties
 public class DelayedRecordEntity extends UnpackedObject implements StoreValue {
-  // structpack-ids[DelayedRecordEntity]: 1,2,3,4,5,6
   private final LongProperty delayedIdProp = new LongProperty(1, "DELAYED_ID", -1);
   private final EnumProperty<PartitionType> partitionTypeProp =
       new EnumProperty<>(2, "PARTITION_TYPE", PartitionType.class);

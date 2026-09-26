@@ -40,7 +40,6 @@ import org.agrona.DirectBuffer;
 @AutoDeclareProperties
 public class JobCompleteRequestRecord extends UnifiedRecordValue<JobCompleteRequestRecord>
     implements JobCompleteRequestRecordValue {
-  // structpack-ids[JobCompleteRequestRecord]: 1,2,3
   private final LongProperty jobIdProp = new LongProperty(1, "JOB_ID");
   private final DocumentProperty variablesProperty = new DocumentProperty(2, VARIABLES);
   private final DocumentProperty localVariablesProperty = new DocumentProperty(3, LOCAL_VARIABLES);

@@ -42,7 +42,6 @@ import org.agrona.DirectBuffer;
 public class PartitionSourceDataTransferRecord
     extends UnifiedRecordValue<PartitionSourceDataTransferRecord>
     implements PartitionSourceDataTransferRecordValue {
-  // structpack-ids[PartitionSourceDataTransferRecord]: 1,2,3,4,5,6,7,8,9,10
   private final EnumProperty<PartitionType> partitionTypeProp =
       new EnumProperty<>(1, "PARTITION_TYPE", PartitionType.class, PartitionType.ADMIN);
   private final EnumProperty<PartitionExecutionType> executionTypeProp =

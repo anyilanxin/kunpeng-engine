@@ -38,7 +38,6 @@ import org.agrona.DirectBuffer;
  */
 @AutoDeclareProperties
 public class HistoryCleanupEntity extends UnpackedObject implements StoreValue {
-  // structpack-ids[HistoryCleanupEntity]: 1,2,3,4,5,6,7,8,9,10
   private final LongProperty historyCleanupIdProp = new LongProperty(1, "HISTORY_CLEANUP_ID", -1);
   private final LongProperty processInstanceIdProp = new LongProperty(2, PROCESS_INSTANCE_ID, -1);
   private final StringProperty processDefinitionNameProp =

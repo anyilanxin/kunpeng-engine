@@ -38,7 +38,6 @@ import org.agrona.DirectBuffer;
 @AutoDeclareProperties
 public class IncidentResolveRequestRecord extends UnifiedRecordValue<IncidentResolveRequestRecord>
     implements IncidentResolveRequestRecordValue {
-  // structpack-ids[IncidentResolveRequestRecord]: 1,2
   private final LongProperty incidentIdProp = new LongProperty(1, "INCIDENT_ID");
   private final StringProperty tenantIdProp =
       new StringProperty(2, TENANT_ID, TenantOwned.DEFAULT_TENANT_IDENTIFIER);

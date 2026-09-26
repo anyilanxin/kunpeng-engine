@@ -43,7 +43,6 @@ import org.agrona.DirectBuffer;
 @AutoDeclareProperties
 public class VariableRecord extends UnifiedRecordValue<VariableRecord>
     implements VariableRecordValue {
-  // structpack-ids[VariableRecord]: 1,2,3,4,5,6,7
   private final LongProperty scopIdProp = new LongProperty(1, "SCOP_ID");
   private final LongProperty parentScopIdProp = new LongProperty(2, "PARENT_SCOPE_ID", -1);
   private final IntegerProperty revProp = new IntegerProperty(3, BusinessRecordConstant.VERSION, 0);

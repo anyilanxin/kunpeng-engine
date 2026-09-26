@@ -37,7 +37,6 @@ import java.util.List;
 @AutoDeclareProperties
 public class BusinessClusterMetaRecord extends UnifiedRecordValue<BusinessClusterMetaRecord>
     implements BusinessClusterMetaRecordValue {
-  // structpack-ids[BusinessClusterMetaRecord]: 1,2,3,4,5,6,7,8
   private final IntegerProperty versionProp = new IntegerProperty(1, "VERSION", 0);
   private final IntegerProperty replicationFactorProp =
       new IntegerProperty(2, "REPLICATION_FACTOR", 0);

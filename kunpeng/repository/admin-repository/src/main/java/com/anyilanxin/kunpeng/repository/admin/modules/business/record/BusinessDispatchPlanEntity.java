@@ -37,7 +37,6 @@ import org.agrona.concurrent.UnsafeBuffer;
  */
 @AutoDeclareProperties
 public class BusinessDispatchPlanEntity extends UnpackedObject implements StoreValue {
-  // structpack-ids[BusinessDispatchPlanEntity]: 1,3,4,5,6,7,8,9,10,11,12,13
   private final LongProperty dispatchPlanIdProp = new LongProperty(1, "DISPATCH_PLAN_ID", -1);
   private final ArrayProperty<PartitionInfoMetaRecord> metaProp =
       new ArrayProperty<>(3, "META", PartitionInfoMetaRecord::new);

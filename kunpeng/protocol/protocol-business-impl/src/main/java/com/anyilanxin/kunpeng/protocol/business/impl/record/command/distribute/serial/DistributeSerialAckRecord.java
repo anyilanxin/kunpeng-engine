@@ -40,7 +40,6 @@ import org.agrona.concurrent.UnsafeBuffer;
 @AutoDeclareProperties
 public class DistributeSerialAckRecord extends UnifiedRecordValue<DistributeSerialAckRecord>
     implements DistributeSerialAckRecordValue {
-  // structpack-ids[DistributeSerialAckRecord]: 1,2,3,4
 
   private final LongProperty idProp = new LongProperty(1, "ID", -1);
   private final ShortProperty recordLifeCycleProp =

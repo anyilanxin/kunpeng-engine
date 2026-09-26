@@ -39,7 +39,6 @@ import org.agrona.concurrent.UnsafeBuffer;
 public class JobBatchActivateResponseRecord
     extends UnifiedRecordValue<JobBatchActivateResponseRecord>
     implements JobBatchActivateResponseRecordValue {
-  // structpack-ids[JobBatchActivateResponseRecord]: 1,2,3
   private final ArrayProperty<JobInfoRecord> jobsProp =
       new ArrayProperty<>(1, "JOB_KEYS_KEY", JobInfoRecord::new);
   private final ArrayProperty<LongValue> jobKeysProp =

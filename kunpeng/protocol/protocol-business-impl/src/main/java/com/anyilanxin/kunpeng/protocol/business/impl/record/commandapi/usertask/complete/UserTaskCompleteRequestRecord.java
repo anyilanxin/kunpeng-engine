@@ -41,7 +41,6 @@ import org.agrona.DirectBuffer;
 @AutoDeclareProperties
 public class UserTaskCompleteRequestRecord extends UnifiedRecordValue<UserTaskCompleteRequestRecord>
     implements UserTaskCompleteRequestRecordValue {
-  // structpack-ids[UserTaskCompleteRequestRecord]: 1,2,3,4
   private final LongProperty taskIdProp = new LongProperty(2, TASK_ID);
   private final DocumentProperty variablesProperty = new DocumentProperty(3, VARIABLES);
   private final DocumentProperty localVariablesProperty =

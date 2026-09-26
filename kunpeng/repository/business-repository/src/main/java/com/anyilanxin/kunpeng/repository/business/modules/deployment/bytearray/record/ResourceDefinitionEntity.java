@@ -42,7 +42,6 @@ import org.agrona.concurrent.UnsafeBuffer;
  */
 @AutoDeclareProperties
 public class ResourceDefinitionEntity extends UnpackedObject implements StoreValue {
-  // structpack-ids[ResourceDefinitionEntity]: 1,2,3,4,5,6,7,8
   private final LongProperty resourceDefinitionIdProp =
       new LongProperty(1, "RESOURCE_DEFINITION_ID", -1);
   private final StringProperty resourceDefinitionNameProp =

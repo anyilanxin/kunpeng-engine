@@ -40,7 +40,6 @@ import org.agrona.DirectBuffer;
  */
 @AutoDeclareProperties
 public class JobEntity extends UnpackedObject implements StoreValue {
-  // structpack-ids[JobEntity]: 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25
   private final LongProperty jobIdProp = new LongProperty(1, "JOB_ID", -1);
   private final StringProperty jobTypeProp = new StringProperty(2, "JOB_TYPE");
   private final EnumProperty<JobKindType> jobKindProp =

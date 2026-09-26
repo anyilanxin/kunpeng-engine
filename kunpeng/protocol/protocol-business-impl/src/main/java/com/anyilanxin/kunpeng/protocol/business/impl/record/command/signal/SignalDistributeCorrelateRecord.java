@@ -44,7 +44,6 @@ import org.agrona.DirectBuffer;
 public final class SignalDistributeCorrelateRecord
     extends UnifiedRecordValue<SignalDistributeCorrelateRecord>
     implements SignalDistributeCorrelateRecordValue {
-  // structpack-ids[SignalDistributeCorrelateRecord]: 1,2,3,4,5,6
 
   private final LongProperty distributeSignalSubscriptionIdProp =
       new LongProperty(1, "DISTRIBUTE_SIGNAL_SUBSCRIPTION_ID", -1);

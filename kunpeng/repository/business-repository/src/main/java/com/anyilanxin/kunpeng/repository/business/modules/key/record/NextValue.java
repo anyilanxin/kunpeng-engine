@@ -29,7 +29,6 @@ import com.anyilanxin.kunpeng.structpack.property.LongProperty;
  */
 @AutoDeclareProperties
 public class NextValue extends UnpackedObject implements StoreValue {
-  // structpack-ids[NextValue]: 1
   private final LongProperty nextValueProp = new LongProperty(1, "nextValue", -1L);
 
   public NextValue() {

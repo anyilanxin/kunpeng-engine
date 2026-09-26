@@ -34,8 +34,6 @@ import com.anyilanxin.kunpeng.structpack.property.ObjectProperty;
 @AutoDeclareProperties
 public class AdminChangeResponseRecord extends UnifiedRecordValue<AdminChangeResponseRecord>
     implements AdminChangeResponseRecordValue {
-  // structpack-ids[AdminChangeResponseRecord]: 1,2
-  // structpack-ids[AdminChangeReplicationResponseRecord]: 1,2
   private final ObjectProperty<AdminDispatchPlanRecord> dispatchPlanProp =
       new ObjectProperty<>(1, "DISPATCH_PLAN", new AdminDispatchPlanRecord());
   private final ObjectProperty<AdminClusterMetaRecord> clusterMetaProp =

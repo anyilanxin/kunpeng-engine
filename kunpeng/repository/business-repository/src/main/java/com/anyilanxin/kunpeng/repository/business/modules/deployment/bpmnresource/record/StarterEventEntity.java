@@ -37,7 +37,6 @@ import org.agrona.DirectBuffer;
  */
 @AutoDeclareProperties
 public class StarterEventEntity extends UnpackedObject {
-  // structpack-ids[StarterEventEntity]: 1,2,3,4
   private final LongProperty startEventIdProp = new LongProperty(1, "START_EVENT_ID", -1);
   private final StringProperty startEventNameProp = new StringProperty(2, "START_EVENT_NAME", "");
   private final StringProperty activityDefinitionKeyProp =

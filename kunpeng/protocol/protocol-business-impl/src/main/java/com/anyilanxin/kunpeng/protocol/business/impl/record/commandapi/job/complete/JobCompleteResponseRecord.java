@@ -30,7 +30,6 @@ import com.anyilanxin.kunpeng.structpack.property.LongProperty;
 @AutoDeclareProperties
 public class JobCompleteResponseRecord extends UnifiedRecordValue<JobCompleteResponseRecord>
     implements JobCompleteResponseRecordValue {
-  // structpack-ids[JobCompleteResponseRecord]: 1
   private final LongProperty jobIdProp = new LongProperty(1, "JOB_ID", -1);
 
   public JobCompleteResponseRecord() {

@@ -38,7 +38,6 @@ import org.agrona.DirectBuffer;
 @AutoDeclareProperties
 public class DeploymentCreateRequestRecord extends UnifiedRecordValue<DeploymentCreateRequestRecord>
     implements DeploymentCreateRequestRecordValue {
-  // structpack-ids[DeploymentCreateRequestRecord]: 1,2,3,4
   private final StringProperty deploymentNameProp = new StringProperty(1, "DEPLOYMENT_NAME", "");
   private final LongProperty processDefinitionsActivateProp =
       new LongProperty(2, "PROCESS_DEFINITIONS_ACTIVATE", -1);

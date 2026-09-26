@@ -34,7 +34,6 @@ import com.anyilanxin.kunpeng.structpack.property.ShortProperty;
 @AutoDeclareProperties
 public class AsyncRequestRecord extends UnifiedRecordValue<AsyncRequestRecord>
     implements AsyncRequestRecordValue {
-  // structpack-ids[AsyncRequestRecord]: 1,2,3,4
   private final LongProperty keyProp = new LongProperty(1, "KEY_");
   private final LongProperty requestIdProp = new LongProperty(2, "REQUEST_ID_");
   private final EnumProperty<ValueType> valueTypeProp =

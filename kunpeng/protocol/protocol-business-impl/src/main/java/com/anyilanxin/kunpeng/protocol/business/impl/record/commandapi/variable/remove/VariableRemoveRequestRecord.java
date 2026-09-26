@@ -34,7 +34,6 @@ import java.util.stream.StreamSupport;
 @AutoDeclareProperties
 public class VariableRemoveRequestRecord extends UnifiedRecordValue<VariableRemoveRequestRecord>
     implements VariableRemoveRequestRecordValue {
-  // structpack-ids[VariableRemoveRequestRecord]: 1,2,3,4,5
   private final LongProperty processInstanceIdProp = new LongProperty(3, PROCESS_INSTANCE_ID, -1);
   private final LongProperty activityInstanceIdProp = new LongProperty(4, ACTIVITY_INSTANCE_ID, -1);
   private final LongProperty taskIdProp = new LongProperty(5, TASK_ID, -1);

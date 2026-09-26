@@ -43,7 +43,6 @@ import org.agrona.concurrent.UnsafeBuffer;
 public class DeploymentResourceDefinitionResponseRecord
     extends UnifiedRecordValue<DeploymentResourceDefinitionResponseRecord>
     implements DeploymentResourceDefinitionResponseRecordValue {
-  // structpack-ids[DeploymentResourceDefinitionResponseRecord]: 1,2,3,4,5,6
   private final LongProperty resourceDefinitionIdProp =
       new LongProperty(1, "RESOURCE_DEFINITION_ID", -1);
   private final StringProperty resourceDefinitionNameProp =

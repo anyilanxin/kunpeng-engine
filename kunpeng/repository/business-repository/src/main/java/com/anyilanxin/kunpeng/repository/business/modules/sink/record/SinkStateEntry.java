@@ -33,7 +33,6 @@ import org.agrona.concurrent.UnsafeBuffer;
  */
 @AutoDeclareProperties
 public class SinkStateEntry extends UnpackedObject implements StoreValue {
-  // structpack-ids[SinkStateEntry]: 1,2,3
 
   private static final UnsafeBuffer EMPTY_METADATA = new UnsafeBuffer();
 

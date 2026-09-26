@@ -39,7 +39,6 @@ import org.agrona.DirectBuffer;
 public class SignalCorrelationResponseRecord
     extends UnifiedRecordValue<SignalCorrelationResponseRecord>
     implements SignalCorrelationResponseRecordValue {
-  // structpack-ids[SignalCorrelationResponseRecord]: 1,2,3,4,5
   private final StringProperty signalNameProp = new StringProperty(1, "SIGNAL_NAME", "");
   private final LongProperty signalSubscriptionIdProp =
       new LongProperty(2, "SIGNAL_SUBSCRIPTION_ID", -1);
