@@ -80,7 +80,7 @@ public final class PartitionMessagingService {
   public void broadcast(final String topic, final ByteBuffer payload) {
     final var recipientIds = partitionMembersExcludingSelf();
     if (recipientIds.isEmpty()) {
-      LOG.warn(
+      LOG.debug(
           "No other members found for partition {}, skipping broadcast on topic {}",
           partitionId,
           topic);
