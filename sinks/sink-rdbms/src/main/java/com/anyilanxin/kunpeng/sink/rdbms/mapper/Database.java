@@ -1,0 +1,173 @@
+/*
+ * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package com.anyilanxin.kunpeng.sink.rdbms.mapper;
+
+import com.anyilanxin.kunpeng.sink.rdbms.RdbmsSinkSettings;
+import org.apache.ibatis.builder.xml.XMLMapperBuilder;
+import org.apache.ibatis.io.Resources;
+import org.apache.ibatis.mapping.Environment;
+import org.apache.ibatis.session.Configuration;
+import org.apache.ibatis.session.ExecutorType;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
+import org.apache.ibatis.type.JdbcType;
+
+/**
+ * 一个 sink 实例持有的数据库句柄：共享连接池 + 按方言装配的 MyBatis 会话工厂 + 迁移入口。
+ *
+ * <p>会话工厂使用批处理执行器（{@link ExecutorType#BATCH}），映射层的每次调用只入队语句， 真正的批量网络往返发生在 {@link
+ * SqlSession#commit()} 时。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
+public final class Database implements AutoCloseable {
+
+  private final ConnectionPool.PooledDataSource pool;
+  private final Dialect dialect;
+  private final SqlSessionFactory sessionFactory;
+
+  private Database(
+      final ConnectionPool.PooledDataSource pool,
+      final Dialect dialect,
+      final SqlSessionFactory sessionFactory) {
+    this.pool = pool;
+    this.dialect = dialect;
+    this.sessionFactory = sessionFactory;
+  }
+
+  /**
+   * 打开（或复用）指向目标库的句柄。
+   *
+   * @param settings sink 配置
+   * @return 数据库句柄
+   */
+  public static Database open(final RdbmsSinkSettings settings) {
+    final var dialect = settings.resolvedDialect();
+    final var pool =
+        ConnectionPool.acquire(
+            settings.getUrl(),
+            settings.getUserName(),
+            settings.getPassword(),
+            settings.getMaxPoolSize());
+    final var sessionFactory = buildSessionFactory(pool, settings.getTablePrefix());
+    return new Database(pool, dialect, sessionFactory);
+  }
+
+  private static SqlSessionFactory buildSessionFactory(
+      final ConnectionPool.PooledDataSource pool, final String tablePrefix) {
+    final var configuration = new Configuration();
+    // 表名前缀：mapper XML 里的 ${prefix} 变量在解析期由此替换
+    configuration.getVariables().setProperty("prefix", tablePrefix);
+    configuration.setEnvironment(
+        new Environment("kunpeng-sink-rdbms", new JdbcTransactionFactory(), pool.dataSource()));
+    // 方言识别：MyBatis 的 databaseId 机制，产品名 -> id 的映射来自 db/vendor-properties/*.properties，
+    // XML 里同一语句 id 按 databaseId 取匹配版本
+    final var databaseIdProvider = new org.apache.ibatis.mapping.VendorDatabaseIdProvider();
+    databaseIdProvider.setProperties(VendorDatabaseIds.load());
+    try {
+      configuration.setDatabaseId(databaseIdProvider.getDatabaseId(pool.dataSource()));
+    } catch (final Exception e) {
+      throw new IllegalStateException("Failed to detect database id for rdbms sink", e);
+    }
+    // 批处理执行器：映射调用累积为 statement batch，commit 时统一发送
+    configuration.setDefaultExecutorType(ExecutorType.BATCH);
+    // 各库对 setNull(OTHER) 兼容性差，统一按 NULL 类型绑定空值
+    configuration.setJdbcTypeForNull(JdbcType.NULL);
+
+    // 每个实体一份接口 + XML（约定路径 mapper/<简单名>.xml）
+    for (final var mapperInterface : SinkMappers.mapperInterfaces()) {
+      configuration.addMapper(mapperInterface);
+      parseMapper(configuration, SinkMappers.mapperResource(mapperInterface));
+    }
+
+    return new SqlSessionFactoryBuilder().build(configuration);
+  }
+
+  private static void parseMapper(final Configuration configuration, final String resource) {
+    try (final var input = Resources.getResourceAsStream(resource)) {
+      new XMLMapperBuilder(input, configuration, resource, configuration.getSqlFragments()).parse();
+    } catch (final Exception e) {
+      throw new IllegalStateException("Failed to load mapper resource " + resource, e);
+    }
+  }
+
+  /**
+   * @return 目标库方言
+   */
+  public Dialect dialect() {
+    return dialect;
+  }
+
+  /** 打开一个手动提交的批处理会话；调用方负责提交/回滚与关闭。 */
+  public SqlSession openSession() {
+    return sessionFactory.openSession(false);
+  }
+
+  /** 执行建表迁移（幂等；Liquibase 负责版本登记与并发锁）。 */
+  public void migrate(final String tablePrefix) {
+    try (final var connection = pool.dataSource().getConnection()) {
+      SchemaMigration.run(connection, tablePrefix);
+    } catch (final Exception e) {
+      throw new IllegalStateException("Failed to acquire connection for schema migration", e);
+    }
+  }
+
+  /** 清空本 sink 管理的全部表（集群级清理）。 */
+  public void purge() {
+    try (final var session = openSession()) {
+      final var mappers = SinkMappers.from(session);
+      mappers.processDefinition().clearAll();
+      mappers.processInstance().clearAll();
+      mappers.activityInstance().clearAll();
+      mappers.variable().clearAll();
+      mappers.userTask().clearAll();
+      mappers.job().clearAll();
+      mappers.incident().clearAll();
+      mappers.timer().clearAll();
+      mappers.messageSubscription().clearAll();
+      mappers.signalSubscription().clearAll();
+      session.commit();
+    }
+  }
+
+  /** 删除仅属于某个分区（resource）的业务数据（分区从集群移除时）。 */
+  public void removePartitionData(final int resourceId) {
+    try (final var session = openSession()) {
+      final var mappers = SinkMappers.from(session);
+      mappers.processDefinition().removePartition(resourceId);
+      mappers.processInstance().removePartition(resourceId);
+      mappers.activityInstance().removePartition(resourceId);
+      mappers.variable().removePartition(resourceId);
+      mappers.userTask().removePartition(resourceId);
+      mappers.job().removePartition(resourceId);
+      mappers.incident().removePartition(resourceId);
+      mappers.timer().removePartition(resourceId);
+      mappers.messageSubscription().removePartition(resourceId);
+      mappers.signalSubscription().removePartition(resourceId);
+      session.commit();
+    }
+  }
+
+  /** 释放本句柄对共享连接池的引用。 */
+  @Override
+  public void close() {
+    pool.release();
+  }
+}

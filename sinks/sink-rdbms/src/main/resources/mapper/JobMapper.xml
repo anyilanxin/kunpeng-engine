@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  ~ Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<mapper namespace="com.anyilanxin.kunpeng.sink.rdbms.mapper.JobMapper">
+
+  <insert id="insert" parameterType="com.anyilanxin.kunpeng.sink.rdbms.model.JobDbModel">
+    INSERT INTO ${prefix}job (
+      job_id, job_type, job_kind, state, retries, retry_backoff, priority, due_time, lock_owner,
+      lock_expire_time, process_instance_id, activity_instance_id, process_definition_id,
+      definition_key, activity_key, task_id, incident_id, denied_reason, start_time, end_time,
+      duration, variables_json, local_variables_json, revision, resource_id
+    ) VALUES (
+      #{jobId}, #{jobType}, #{jobKind}, #{state}, #{retries}, #{retryBackoff}, #{priority},
+      #{dueTime,jdbcType=TIMESTAMP}, #{lockOwner}, #{lockExpireTime,jdbcType=TIMESTAMP},
+      #{processInstanceId}, #{activityInstanceId}, #{processDefinitionId}, #{definitionKey},
+      #{activityKey}, #{taskId}, #{incidentId}, #{deniedReason}, #{startTime,jdbcType=TIMESTAMP},
+      #{endTime,jdbcType=TIMESTAMP}, #{duration}, #{variablesJson}, #{localVariablesJson},
+      #{revision}, #{resourceId}
+    )
+  </insert>
+
+  <!-- 只更新可变列：start_time / job_type 等创建期列不被任何后续事件覆盖 -->
+  <update id="update" parameterType="com.anyilanxin.kunpeng.sink.rdbms.model.JobDbModel">
+    UPDATE ${prefix}job
+    SET state = #{state},
+        retries = #{retries},
+        retry_backoff = #{retryBackoff},
+        priority = #{priority},
+        due_time = #{dueTime,jdbcType=TIMESTAMP},
+        lock_owner = #{lockOwner},
+        lock_expire_time = #{lockExpireTime,jdbcType=TIMESTAMP},
+        denied_reason = #{deniedReason},
+        incident_id = #{incidentId},
+        end_time = #{endTime,jdbcType=TIMESTAMP},
+        duration = #{duration},
+        variables_json = #{variablesJson},
+        local_variables_json = #{localVariablesJson},
+        revision = #{revision}
+    WHERE job_id = #{jobId}
+  </update>
+
+  <delete id="removePartition">
+    DELETE FROM ${prefix}job WHERE resource_id = #{resourceId}
+  </delete>
+
+  <delete id="clearAll">DELETE FROM ${prefix}job</delete>
+
+</mapper>

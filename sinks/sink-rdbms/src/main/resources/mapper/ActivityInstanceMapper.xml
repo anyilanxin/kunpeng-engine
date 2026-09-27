@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  ~ Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<mapper namespace="com.anyilanxin.kunpeng.sink.rdbms.mapper.ActivityInstanceMapper">
+
+  <insert id="insert" parameterType="com.anyilanxin.kunpeng.sink.rdbms.model.ActivityInstanceDbModel">
+    INSERT INTO ${prefix}activity_instance (
+      activity_instance_id, process_instance_id, root_process_instance_id,
+      parent_activity_instance_id, call_process_instance_id, process_definition_id,
+      definition_key, activity_key, activity_name, activity_type, task_id, assignee, state,
+      incident_id, sequence_counter, start_time, end_time, duration, revision, resource_id
+    ) VALUES (
+      #{activityInstanceId}, #{processInstanceId}, #{rootProcessInstanceId},
+      #{parentActivityInstanceId}, #{callProcessInstanceId}, #{processDefinitionId},
+      #{definitionKey}, #{activityKey}, #{activityName}, #{activityType}, #{taskId}, #{assignee},
+      #{state}, #{incidentId}, #{sequenceCounter}, #{startTime,jdbcType=TIMESTAMP},
+      #{endTime,jdbcType=TIMESTAMP}, #{duration}, #{revision}, #{resourceId}
+    )
+  </insert>
+
+  <!-- 只更新可变列：start_time 等创建期列不被任何后续事件覆盖 -->
+  <update id="update" parameterType="com.anyilanxin.kunpeng.sink.rdbms.model.ActivityInstanceDbModel">
+    UPDATE ${prefix}activity_instance
+    SET task_id = #{taskId},
+        assignee = #{assignee},
+        state = #{state},
+        incident_id = #{incidentId},
+        end_time = #{endTime,jdbcType=TIMESTAMP},
+        duration = #{duration},
+        revision = #{revision}
+    WHERE activity_instance_id = #{activityInstanceId}
+  </update>
+
+  <delete id="cleanupHistory">
+    DELETE FROM ${prefix}activity_instance WHERE process_instance_id = #{processInstanceId}
+  </delete>
+
+  <delete id="removePartition">
+    DELETE FROM ${prefix}activity_instance WHERE resource_id = #{resourceId}
+  </delete>
+
+  <delete id="clearAll">DELETE FROM ${prefix}activity_instance</delete>
+
+</mapper>

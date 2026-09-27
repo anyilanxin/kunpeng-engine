@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  ~ Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<mapper namespace="com.anyilanxin.kunpeng.sink.rdbms.mapper.ProcessDefinitionMapper">
+
+  <insert id="insert" parameterType="com.anyilanxin.kunpeng.sink.rdbms.model.ProcessDefinitionDbModel">
+    INSERT INTO ${prefix}process_definition (
+      process_definition_id, definition_key, definition_name, version, version_tag,
+      history_time_to_live, deployment_id, resource_definition_id, resource_name, checksum,
+      starter_events, candidate_starter_groups, candidate_starter_users, resource_content,
+      resource_id
+    ) VALUES (
+      #{processDefinitionId}, #{definitionKey}, #{definitionName}, #{version}, #{versionTag},
+      #{historyTimeToLive}, #{deploymentId}, #{resourceDefinitionId}, #{resourceName}, #{checksum},
+      #{starterEvents}, #{candidateStarterGroups}, #{candidateStarterUsers}, #{resourceContent},
+      #{resourceId}
+    )
+  </insert>
+
+  <delete id="removePartition">
+    DELETE FROM ${prefix}process_definition WHERE resource_id = #{resourceId}
+  </delete>
+
+  <delete id="clearAll">DELETE FROM ${prefix}process_definition</delete>
+
+</mapper>

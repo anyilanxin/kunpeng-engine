@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  ~ Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<mapper namespace="com.anyilanxin.kunpeng.sink.rdbms.mapper.VariableMapper">
+
+  <insert id="insert" parameterType="com.anyilanxin.kunpeng.sink.rdbms.model.VariableDbModel">
+    INSERT INTO ${prefix}variable (
+      scope_id, name, parent_scope_id, process_instance_id, process_definition_id, value_json,
+      revision, resource_id
+    ) VALUES (
+      #{scopeId}, #{name}, #{parentScopeId}, #{processInstanceId}, #{processDefinitionId},
+      #{valueJson}, #{revision}, #{resourceId}
+    )
+  </insert>
+
+  <update id="update" parameterType="com.anyilanxin.kunpeng.sink.rdbms.model.VariableDbModel">
+    UPDATE ${prefix}variable
+    SET value_json = #{valueJson},
+        revision = #{revision}
+    WHERE scope_id = #{scopeId} AND name = #{name}
+  </update>
+
+  <delete id="cleanupHistory">
+    DELETE FROM ${prefix}variable WHERE process_instance_id = #{processInstanceId}
+  </delete>
+
+  <delete id="removePartition">
+    DELETE FROM ${prefix}variable WHERE resource_id = #{resourceId}
+  </delete>
+
+  <delete id="clearAll">DELETE FROM ${prefix}variable</delete>
+
+</mapper>

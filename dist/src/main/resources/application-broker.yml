@@ -25,3 +25,14 @@ kunpeng:
       network:
         host: 127.0.0.1
         port: 2024
+    sinks:
+      dbms:
+        className: com.anyilanxin.kunpeng.sink.rdbms.RdbmsSink
+        args:
+          url: jdbc:mysql://localhost:3306/kunpeng_process?allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=utf8&useSSL=false&rewriteBatchedStatement=true&serverTimezone=Asia/Shanghai
+          #          url: jdbc:postgresql://localhost:5432/kunpeng_process
+          password: root
+          userName: root
+          tablePrefix: ANYI_
+          caseSensitive: true
+          autoDdl: true

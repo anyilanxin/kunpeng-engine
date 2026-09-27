@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <!-- 2026.9.0 基线：10 张业务表 + 索引。表名统一 ${tablePrefix}xxx（运行期注入）；列定义必须与 Tables.java 保持一致。 -->
+
+  <changeSet id="2026.9.0-create-process-definition" author="anyilanxin">
+    <createTable tableName="${tablePrefix}process_definition">
+      <column name="process_definition_id" type="BIGINT">
+        <constraints primaryKey="true" nullable="false"/>
+      </column>
+      <column name="definition_key" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="definition_name" type="VARCHAR(255)"/>
+      <column name="version" type="INT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="version_tag" type="VARCHAR(255)"/>
+      <column name="history_time_to_live" type="INT"/>
+      <column name="deployment_id" type="BIGINT"/>
+      <column name="resource_definition_id" type="BIGINT"/>
+      <column name="resource_name" type="VARCHAR(255)"/>
+      <column name="checksum" type="VARCHAR(128)"/>
+      <column name="starter_events" type="${text.type}"/>
+      <column name="candidate_starter_groups" type="${text.type}"/>
+      <column name="candidate_starter_users" type="${text.type}"/>
+      <column name="resource_content" type="${large.type}"/>
+      <column name="resource_id" type="INT"/>
+    </createTable>
+    <createIndex tableName="${tablePrefix}process_definition" indexName="${tablePrefix}idx_pd_key">
+      <column name="definition_key"/>
+      <column name="version"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet id="2026.9.0-create-process-instance" author="anyilanxin">
+    <createTable tableName="${tablePrefix}process_instance">
+      <column name="process_instance_id" type="BIGINT">
+        <constraints primaryKey="true" nullable="false"/>
+      </column>
+      <column name="parent_process_instance_id" type="BIGINT"/>
+      <column name="root_process_instance_id" type="BIGINT"/>
+      <column name="business_key" type="VARCHAR(255)"/>
+      <column name="process_definition_id" type="BIGINT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="definition_key" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="definition_name" type="VARCHAR(255)"/>
+      <column name="start_user" type="VARCHAR(255)"/>
+      <column name="state" type="VARCHAR(32)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="start_time" type="${ts.type}"/>
+      <column name="end_time" type="${ts.type}"/>
+      <column name="revision" type="INT"/>
+      <column name="resource_id" type="INT"/>
+    </createTable>
+    <createIndex tableName="${tablePrefix}process_instance" indexName="${tablePrefix}idx_pi_definition">
+      <column name="process_definition_id"/>
+    </createIndex>
+    <createIndex tableName="${tablePrefix}process_instance" indexName="${tablePrefix}idx_pi_parent">
+      <column name="parent_process_instance_id"/>
+    </createIndex>
+    <createIndex tableName="${tablePrefix}process_instance" indexName="${tablePrefix}idx_pi_root">
+      <column name="root_process_instance_id"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet id="2026.9.0-create-activity-instance" author="anyilanxin">
+    <createTable tableName="${tablePrefix}activity_instance">
+      <column name="activity_instance_id" type="BIGINT">
+        <constraints primaryKey="true" nullable="false"/>
+      </column>
+      <column name="process_instance_id" type="BIGINT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="root_process_instance_id" type="BIGINT"/>
+      <column name="parent_activity_instance_id" type="BIGINT"/>
+      <column name="call_process_instance_id" type="BIGINT"/>
+      <column name="process_definition_id" type="BIGINT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="definition_key" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="activity_key" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="activity_name" type="VARCHAR(255)"/>
+      <column name="activity_type" type="VARCHAR(64)"/>
+      <column name="task_id" type="BIGINT"/>
+      <column name="assignee" type="VARCHAR(255)"/>
+      <column name="state" type="VARCHAR(32)"/>
+      <column name="incident_id" type="BIGINT"/>
+      <column name="sequence_counter" type="BIGINT"/>
+      <column name="start_time" type="${ts.type}"/>
+      <column name="end_time" type="${ts.type}"/>
+      <column name="duration" type="BIGINT"/>
+      <column name="revision" type="INT"/>
+      <column name="resource_id" type="INT"/>
+    </createTable>
+    <createIndex tableName="${tablePrefix}activity_instance" indexName="${tablePrefix}idx_ai_instance">
+      <column name="process_instance_id"/>
+    </createIndex>
+    <createIndex tableName="${tablePrefix}activity_instance" indexName="${tablePrefix}idx_ai_task">
+      <column name="task_id"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet id="2026.9.0-create-variable" author="anyilanxin">
+    <createTable tableName="${tablePrefix}variable">
+      <column name="scope_id" type="BIGINT">
+        <constraints primaryKey="true" nullable="false"/>
+      </column>
+      <column name="name" type="VARCHAR(255)">
+        <constraints primaryKey="true" nullable="false"/>
+      </column>
+      <column name="parent_scope_id" type="BIGINT"/>
+      <column name="process_instance_id" type="BIGINT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="process_definition_id" type="BIGINT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="value_json" type="${text.type}"/>
+      <column name="revision" type="INT"/>
+      <column name="resource_id" type="INT"/>
+    </createTable>
+    <createIndex tableName="${tablePrefix}variable" indexName="${tablePrefix}idx_var_instance">
+      <column name="process_instance_id"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet id="2026.9.0-create-user-task" author="anyilanxin">
+    <createTable tableName="${tablePrefix}user_task">
+      <column name="task_id" type="BIGINT">
+        <constraints primaryKey="true" nullable="false"/>
+      </column>
+      <column name="activity_instance_id" type="BIGINT"/>
+      <column name="process_instance_id" type="BIGINT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="business_key" type="VARCHAR(255)"/>
+      <column name="process_definition_id" type="BIGINT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="definition_key" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="task_definition_key" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="task_name" type="VARCHAR(255)"/>
+      <column name="assignee" type="VARCHAR(255)"/>
+      <column name="owner" type="VARCHAR(255)"/>
+      <column name="priority" type="INT"/>
+      <column name="due_time" type="${ts.type}"/>
+      <column name="follow_up_time" type="${ts.type}"/>
+      <column name="state" type="VARCHAR(32)"/>
+      <column name="candidate_groups" type="${text.type}"/>
+      <column name="candidate_users" type="${text.type}"/>
+      <column name="start_time" type="${ts.type}"/>
+      <column name="end_time" type="${ts.type}"/>
+      <column name="duration" type="BIGINT"/>
+      <column name="revision" type="INT"/>
+      <column name="resource_id" type="INT"/>
+    </createTable>
+    <createIndex tableName="${tablePrefix}user_task" indexName="${tablePrefix}idx_ut_instance">
+      <column name="process_instance_id"/>
+    </createIndex>
+    <createIndex tableName="${tablePrefix}user_task" indexName="${tablePrefix}idx_ut_assignee">
+      <column name="assignee"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet id="2026.9.0-create-job" author="anyilanxin">
+    <createTable tableName="${tablePrefix}job">
+      <column name="job_id" type="BIGINT">
+        <constraints primaryKey="true" nullable="false"/>
+      </column>
+      <column name="job_type" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="job_kind" type="VARCHAR(64)"/>
+      <column name="state" type="VARCHAR(32)"/>
+      <column name="retries" type="INT"/>
+      <column name="retry_backoff" type="INT"/>
+      <column name="priority" type="INT"/>
+      <column name="due_time" type="${ts.type}"/>
+      <column name="lock_owner" type="VARCHAR(255)"/>
+      <column name="lock_expire_time" type="${ts.type}"/>
+      <column name="process_instance_id" type="BIGINT"/>
+      <column name="activity_instance_id" type="BIGINT"/>
+      <column name="process_definition_id" type="BIGINT"/>
+      <column name="definition_key" type="VARCHAR(255)"/>
+      <column name="activity_key" type="VARCHAR(255)"/>
+      <column name="task_id" type="BIGINT"/>
+      <column name="incident_id" type="BIGINT"/>
+      <column name="denied_reason" type="VARCHAR(1024)"/>
+      <column name="start_time" type="${ts.type}"/>
+      <column name="end_time" type="${ts.type}"/>
+      <column name="duration" type="BIGINT"/>
+      <column name="variables_json" type="${text.type}"/>
+      <column name="local_variables_json" type="${text.type}"/>
+      <column name="revision" type="INT"/>
+      <column name="resource_id" type="INT"/>
+    </createTable>
+    <createIndex tableName="${tablePrefix}job" indexName="${tablePrefix}idx_job_instance">
+      <column name="process_instance_id"/>
+    </createIndex>
+    <createIndex tableName="${tablePrefix}job" indexName="${tablePrefix}idx_job_state_due">
+      <column name="state"/>
+      <column name="due_time"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet id="2026.9.0-create-incident" author="anyilanxin">
+    <createTable tableName="${tablePrefix}incident">
+      <column name="incident_id" type="BIGINT">
+        <constraints primaryKey="true" nullable="false"/>
+      </column>
+      <column name="incident_type" type="VARCHAR(64)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="incident_message" type="${text.type}"/>
+      <column name="process_instance_id" type="BIGINT"/>
+      <column name="activity_instance_id" type="BIGINT"/>
+      <column name="process_definition_id" type="BIGINT"/>
+      <column name="definition_key" type="VARCHAR(255)"/>
+      <column name="activity_key" type="VARCHAR(255)"/>
+      <column name="task_id" type="BIGINT"/>
+      <column name="job_id" type="BIGINT"/>
+      <column name="related_value_type" type="VARCHAR(64)"/>
+      <column name="related_lifecycle" type="VARCHAR(64)"/>
+      <column name="state" type="VARCHAR(32)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="created_time" type="${ts.type}"/>
+      <column name="resolved_time" type="${ts.type}"/>
+      <column name="resource_id" type="INT"/>
+    </createTable>
+    <createIndex tableName="${tablePrefix}incident" indexName="${tablePrefix}idx_inc_instance">
+      <column name="process_instance_id"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet id="2026.9.0-create-timer" author="anyilanxin">
+    <createTable tableName="${tablePrefix}timer">
+      <column name="timer_id" type="BIGINT">
+        <constraints primaryKey="true" nullable="false"/>
+      </column>
+      <column name="due_time" type="${ts.type}"/>
+      <column name="repetitions" type="INT"/>
+      <column name="process_instance_id" type="BIGINT"/>
+      <column name="activity_instance_id" type="BIGINT"/>
+      <column name="process_definition_id" type="BIGINT"/>
+      <column name="definition_key" type="VARCHAR(255)"/>
+      <column name="activity_key" type="VARCHAR(255)"/>
+      <column name="timer_element_type" type="VARCHAR(64)"/>
+      <column name="timer_type" type="VARCHAR(64)"/>
+      <column name="timer_content" type="VARCHAR(1024)"/>
+      <column name="state" type="VARCHAR(32)"/>
+      <column name="resource_id" type="INT"/>
+    </createTable>
+    <createIndex tableName="${tablePrefix}timer" indexName="${tablePrefix}idx_timer_due">
+      <column name="state"/>
+      <column name="due_time"/>
+    </createIndex>
+    <createIndex tableName="${tablePrefix}timer" indexName="${tablePrefix}idx_timer_instance">
+      <column name="process_instance_id"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet id="2026.9.0-create-message-subscription" author="anyilanxin">
+    <createTable tableName="${tablePrefix}message_subscription">
+      <column name="message_subscription_id" type="BIGINT">
+        <constraints primaryKey="true" nullable="false"/>
+      </column>
+      <column name="message_name" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="message_type" type="VARCHAR(64)"/>
+      <column name="correlation_key" type="VARCHAR(255)"/>
+      <column name="process_instance_id" type="BIGINT"/>
+      <column name="activity_instance_id" type="BIGINT"/>
+      <column name="correlation_activity_instance_id" type="BIGINT"/>
+      <column name="correlation_process_instance_id" type="BIGINT"/>
+      <column name="process_definition_id" type="BIGINT"/>
+      <column name="definition_key" type="VARCHAR(255)"/>
+      <column name="activity_key" type="VARCHAR(255)"/>
+      <column name="state" type="VARCHAR(32)"/>
+      <column name="resource_id" type="INT"/>
+    </createTable>
+    <createIndex tableName="${tablePrefix}message_subscription" indexName="${tablePrefix}idx_ms_instance">
+      <column name="process_instance_id"/>
+    </createIndex>
+    <createIndex tableName="${tablePrefix}message_subscription" indexName="${tablePrefix}idx_ms_name">
+      <column name="message_name"/>
+      <column name="correlation_key"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet id="2026.9.0-create-signal-subscription" author="anyilanxin">
+    <createTable tableName="${tablePrefix}signal_subscription">
+      <column name="signal_subscription_id" type="BIGINT">
+        <constraints primaryKey="true" nullable="false"/>
+      </column>
+      <column name="signal_name" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="signal_type" type="VARCHAR(64)"/>
+      <column name="process_instance_id" type="BIGINT"/>
+      <column name="activity_instance_id" type="BIGINT"/>
+      <column name="process_definition_id" type="BIGINT"/>
+      <column name="definition_key" type="VARCHAR(255)"/>
+      <column name="activity_key" type="VARCHAR(255)"/>
+      <column name="state" type="VARCHAR(32)"/>
+      <column name="resource_id" type="INT"/>
+    </createTable>
+    <createIndex tableName="${tablePrefix}signal_subscription" indexName="${tablePrefix}idx_ss_name">
+      <column name="signal_name"/>
+    </createIndex>
+    <createIndex tableName="${tablePrefix}signal_subscription" indexName="${tablePrefix}idx_ss_instance">
+      <column name="process_instance_id"/>
+    </createIndex>
+  </changeSet>
+
+</databaseChangeLog>

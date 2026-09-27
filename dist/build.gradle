@@ -23,6 +23,7 @@ plugins {
 }
 
 dependencies {
+    implementation project(':sinks:sink-rdbms')
     implementation project(':kunpeng:cluster:cluster')
     implementation project(':kunpeng:cluster:cluster-config')
     implementation project(':kunpeng:broker:broker')

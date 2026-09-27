@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <!--
+    跨方言列类型变量：时间列在 MySQL/MariaDB 上用 DATETIME(3)（规避 TIMESTAMP 的 2038 上限），
+    大文本列按各方言的可用类型。后续加字段/加表请按版本号追加 changesets/<版本>.xml 并在此 include。
+  -->
+  <property name="ts.type" value="DATETIME(3)" dbms="mysql,mariadb"/>
+  <property name="ts.type" value="TIMESTAMP(3)" dbms="postgresql,h2"/>
+  <property name="text.type" value="CLOB" dbms="h2"/>
+  <property name="text.type" value="TEXT" dbms="postgresql,mysql,mariadb"/>
+  <property name="large.type" value="LONGTEXT" dbms="mysql,mariadb"/>
+  <property name="large.type" value="TEXT" dbms="postgresql"/>
+  <property name="large.type" value="CLOB" dbms="h2"/>
+
+  <include file="changesets/2026.9.0.xml" relativeToChangelogFile="true"/>
+
+</databaseChangeLog>

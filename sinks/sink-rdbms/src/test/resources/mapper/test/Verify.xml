@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  ~ Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<mapper namespace="com.anyilanxin.kunpeng.sink.rdbms.VerificationMapper">
+
+  <select id="totalRows" resultType="long">
+    SELECT
+      (SELECT COUNT(*) FROM kp_process_definition)
+      + (SELECT COUNT(*) FROM kp_process_instance)
+      + (SELECT COUNT(*) FROM kp_activity_instance)
+      + (SELECT COUNT(*) FROM kp_variable)
+      + (SELECT COUNT(*) FROM kp_user_task)
+      + (SELECT COUNT(*) FROM kp_job)
+      + (SELECT COUNT(*) FROM kp_incident)
+      + (SELECT COUNT(*) FROM kp_timer)
+      + (SELECT COUNT(*) FROM kp_message_subscription)
+      + (SELECT COUNT(*) FROM kp_signal_subscription)
+  </select>
+
+  <select id="instanceRow" resultType="map">
+    SELECT * FROM kp_process_instance
+  </select>
+
+  <select id="variableRows" resultType="map">
+    SELECT scope_id, name, CAST(value_json AS VARCHAR) AS value_json FROM kp_variable ORDER BY name
+  </select>
+
+  <select id="userTaskRow" resultType="map">
+    SELECT * FROM kp_user_task
+  </select>
+
+</mapper>

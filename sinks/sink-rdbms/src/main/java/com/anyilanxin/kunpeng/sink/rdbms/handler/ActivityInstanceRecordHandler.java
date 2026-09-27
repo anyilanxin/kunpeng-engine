@@ -1,0 +1,125 @@
+/*
+ * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package com.anyilanxin.kunpeng.sink.rdbms.handler;
+
+import static com.anyilanxin.kunpeng.sink.rdbms.mapper.Tables.ACTIVITY_INSTANCE;
+
+import com.anyilanxin.kunpeng.protocol.business.BusinessEventRecord;
+import com.anyilanxin.kunpeng.protocol.business.ValueLifeCycle;
+import com.anyilanxin.kunpeng.protocol.business.ValueType;
+import com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance.ActivityInstanceLifeCycle;
+import com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance.ActivityInstanceRecordValue;
+import com.anyilanxin.kunpeng.sink.rdbms.model.ActivityInstanceDbModel;
+import com.anyilanxin.kunpeng.sink.rdbms.write.ChangeBuffer;
+import com.anyilanxin.kunpeng.sink.rdbms.write.RowChange;
+import java.util.List;
+import java.util.Set;
+
+/**
+ * 活动实例（流程节点执行轨迹）：激活类事件保存全量行（值自带 {@code start_time}），流动/完成/终止类事件只更新可变列。
+ *
+ * @author zxuanhong
+ * @since 2026.9.0
+ */
+public final class ActivityInstanceRecordHandler implements RecordModelHandler {
+
+  private static final Set<ValueLifeCycle> START_EVENTS =
+      Set.of(
+          ActivityInstanceLifeCycle.ACTIVATING,
+          ActivityInstanceLifeCycle.ACTIVATING_AFTER,
+          ActivityInstanceLifeCycle.ACTIVATED);
+
+  private static final Set<ValueLifeCycle> EXPORTABLE =
+      Set.of(
+          ActivityInstanceLifeCycle.ACTIVATING,
+          ActivityInstanceLifeCycle.ACTIVATING_AFTER,
+          ActivityInstanceLifeCycle.ACTIVATED,
+          ActivityInstanceLifeCycle.TAKING,
+          ActivityInstanceLifeCycle.TAKEN,
+          ActivityInstanceLifeCycle.COMPLETING,
+          ActivityInstanceLifeCycle.COMPLETING_AFTER,
+          ActivityInstanceLifeCycle.COMPLETED,
+          ActivityInstanceLifeCycle.TERMINATING,
+          ActivityInstanceLifeCycle.TERMINATING_AFTER,
+          ActivityInstanceLifeCycle.TERMINATED);
+
+  @Override
+  public ValueType valueType() {
+    return ValueType.ACTIVITY;
+  }
+
+  @Override
+  public boolean accepts(final ValueLifeCycle lifecycle) {
+    return EXPORTABLE.contains(lifecycle);
+  }
+
+  @Override
+  public void transition(final BusinessEventRecord<?> record, final ChangeBuffer buffer) {
+    final ActivityInstanceRecordValue value = (ActivityInstanceRecordValue) record.getValue();
+    if (START_EVENTS.contains(record.getValueState())) {
+      buffer.offer(
+          RowChange.insert(
+              ACTIVITY_INSTANCE, List.of(value.getActivityInstanceId()), full(value, record)));
+      return;
+    }
+    final var model = new ActivityInstanceDbModel();
+    model.setActivityInstanceId(value.getActivityInstanceId());
+    model.setTaskId(positive(value.getTaskId()));
+    model.setAssignee(value.getAssignee());
+    model.setState(nameOf(value.getState()));
+    model.setIncidentId(positive(value.getIncidentId()));
+    model.setEndTime(RecordModelHandler.at(value.getEndTime()));
+    model.setDuration(positive(value.getDuration()));
+    model.setRevision(value.getRev());
+    buffer.offer(
+        RowChange.update(ACTIVITY_INSTANCE, List.of(value.getActivityInstanceId()), model));
+  }
+
+  private static ActivityInstanceDbModel full(
+      final ActivityInstanceRecordValue value, final BusinessEventRecord<?> record) {
+    final var model = new ActivityInstanceDbModel();
+    model.setActivityInstanceId(value.getActivityInstanceId());
+    model.setProcessInstanceId(value.getProcessInstanceId());
+    model.setRootProcessInstanceId(positive(value.getRootProcessInstanceId()));
+    model.setParentActivityInstanceId(positive(value.getParentActivityInstanceId()));
+    model.setCallProcessInstanceId(positive(value.getCallProcessInstanceId()));
+    model.setProcessDefinitionId(value.getProcessDefinitionId());
+    model.setDefinitionKey(value.getProcessDefinitionKey());
+    model.setActivityKey(value.getActivityDefinitionKey());
+    model.setActivityName(value.getActivityDefinitionName());
+    model.setActivityType(nameOf(value.getActivityDefinitionType()));
+    model.setTaskId(positive(value.getTaskId()));
+    model.setAssignee(value.getAssignee());
+    model.setState(nameOf(value.getState()));
+    model.setIncidentId(positive(value.getIncidentId()));
+    model.setSequenceCounter(value.getSequenceCounter());
+    model.setStartTime(RecordModelHandler.at(value.getStartTime()));
+    model.setEndTime(RecordModelHandler.at(value.getEndTime()));
+    model.setDuration(positive(value.getDuration()));
+    model.setRevision(value.getRev());
+    model.setResourceId(record.getResourceId());
+    return model;
+  }
+
+  private static Long positive(final long id) {
+    return id > 0 ? id : null;
+  }
+
+  private static String nameOf(final Enum<?> state) {
+    return state == null ? null : state.name();
+  }
+}
