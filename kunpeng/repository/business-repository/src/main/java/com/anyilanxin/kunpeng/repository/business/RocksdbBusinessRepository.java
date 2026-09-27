@@ -118,7 +118,6 @@ final class RocksdbBusinessRepository implements BusinessRepository {
     this.partitionSource = partitionSource;
     this.transaction = transaction;
     splitRegister = new DataSplitRegister();
-    appliers = new RocksdbBusinessRepositoryApplier(this);
     instanceRepository = new ActivityInstanceRepository(db, transaction, splitRegister);
     asyncRepository = new AsyncRepository(db, transaction, splitRegister);
     batchRepository = new BatchRepository(db, transaction, splitRegister);
@@ -144,6 +143,7 @@ final class RocksdbBusinessRepository implements BusinessRepository {
     timerEventRepository = new TimerEventRepository(db, transaction, splitRegister);
     userTaskRepository = new UserTaskRepository(db, transaction, splitRegister);
     variableRepository = new VariableRepository(db, transaction, splitRegister);
+    appliers = new RocksdbBusinessRepositoryApplier(this);
   }
 
   @Override

@@ -383,7 +383,7 @@ public final class BpmnResourceRepository implements MutableBpmnResourceReposito
         bpmnTransformer.transformDefinitions(record.getResource());
     final Optional<BpmnProcess> first =
         executableProcesses.stream()
-            .filter(v -> v.getId().equals(record.getProcessDefinitionKeyBuffer()))
+            .filter(v -> v.getId().equals(record.getProcessDefinitionKey()))
             .findFirst();
     if (first.isPresent()) {
       final ProcessDefinitionRuntime runtime = new ProcessDefinitionRuntime(first.get(), record);
