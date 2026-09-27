@@ -38,7 +38,7 @@ public final class ActivateJobsCommandImpl
         ActivateJobsCommandStep1.ActivateJobsCommandStep2,
         ActivateJobsCommandStep1.ActivateJobsCommandStep3 {
 
-  /** gRPC 调用截止在请求超时基础上追加的余量，给服务端留出组装响应的时间 */
+  /** gRPC 调用截止（在“请求超时与长轮询挂起窗口二者较大值”基础上追加）的余量，给服务端留出组装响应的时间 */
   private static final Duration CALL_GRACE = Duration.ofSeconds(10);
 
   private final JobServiceGrpc.JobServiceStub stub;
@@ -140,8 +140,11 @@ public final class ActivateJobsCommandImpl
   private void invokePull(
       final JobServiceOuterClass.PullRequest request,
       final StreamObserver<JobServiceOuterClass.PullResponse> observer) {
-    stub.withDeadlineAfter(requestTimeout.plus(CALL_GRACE).toMillis(), TimeUnit.MILLISECONDS)
-        .pullJobs(request, observer);
+    // 长轮询调用的截止必须覆盖服务端挂起窗口(deadlineMs): 无任务时由服务端到期回空批, 而不是客户端先超时把正常空轮误判为失败
+    final long deadlineMillis =
+        Math.max(requestTimeout.toMillis(), Math.max(request.getDeadlineMs(), 0))
+            + CALL_GRACE.toMillis();
+    stub.withDeadlineAfter(deadlineMillis, TimeUnit.MILLISECONDS).pullJobs(request, observer);
   }
 
   @Override

@@ -24,7 +24,9 @@ import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 import org.slf4j.Logger;
 
-/** PULL 模式单轮拉取执行器：发起一次批量激活长轮询，逐条回调消费、空批即到期；失败仅在 worker 仍开放时上抛。 */
+/**
+ * PULL 模式单轮拉取执行器：发起一次批量激活长轮询，逐条回调消费、空批即到期；拉取不存在失败语义——拉到就消费，没拉到（空批或窗口耗尽）就跳过，仅真实故障在 worker 仍开放时上抛。
+ */
 public final class JobPollerImpl implements JobPoller {
 
   private static final Logger LOG = ClientLoggers.JOB_POLLER_LOGGER;
@@ -79,12 +81,19 @@ public final class JobPollerImpl implements JobPoller {
         .whenComplete(
             (response, error) -> {
               if (error != null) {
-                if (openSupplier.getAsBoolean()) {
-                  try {
-                    reportFailure(error);
-                  } finally {
-                    errorCallback.accept(error);
-                  }
+                if (!openSupplier.getAsBoolean()) {
+                  return;
+                }
+                if (isDeadlineExceeded(error)) {
+                  // 挂起窗口耗尽仍未等到任务: 等效空批, 走正常续拉路径而非失败——拉取本来就不保证有任务
+                  LOG.trace("本轮拉取窗口到期未取到任务（等效空批） [worker: {}, type: {}]", workerName, jobType);
+                  doneCallback.accept(0);
+                  return;
+                }
+                try {
+                  reportFailure(error);
+                } finally {
+                  errorCallback.accept(error);
                 }
                 return;
               }
@@ -114,6 +123,11 @@ public final class JobPollerImpl implements JobPoller {
       command.fetchVariables(fetchVariables);
     }
     return command;
+  }
+
+  private static boolean isDeadlineExceeded(final Throwable error) {
+    return error instanceof final StatusRuntimeException statusError
+        && statusError.getStatus().getCode() == Status.Code.DEADLINE_EXCEEDED;
   }
 
   private void reportFailure(final Throwable error) {
