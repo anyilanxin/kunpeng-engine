@@ -134,44 +134,44 @@ public class JobServiceImpl extends ServiceImpl<JobMapper, JobEntity> implements
     client.newCompleteCommand(dto.getJobId()).send().join();
   }
 
-  //  @JobWorker(type = "process_start_one", name = "sdfsdfsdf")
-  //  public void processStartOne(final ActivatedJob job, final JobClient jobClient) {
-  //    System.out.println("-processStartOne-收到 work---" + job.getProcessInstanceId());
-  //    jobClient.newCompleteCommand(job).send().join();
-  //  }
-  //
-  //  @JobWorker(type = "process_start_two", name = "sdfsdfsdf")
-  //  public void processStartWto(final ActivatedJob job, final JobClient jobClient) {
-  //    System.out.println("-processStartWto-收到 work---" + job.getProcessInstanceId());
-  //    jobClient.newCompleteCommand(job).send().join();
-  //  }
-  //
-  //  @JobWorker(type = "process_end", name = "sdfsdfsdf")
-  //  public void processEnd(final ActivatedJob job, final JobClient jobClient) {
-  //    System.out.println("-processEnd-收到 work---" + job.getProcessInstanceId());
-  //    jobClient.newCompleteCommand(job).send().join();
-  //  }
-  //
-  //  @JobWorker(
-  //      type = "execution_start",
-  //      name = "sdfsdfsdf",
-  //      fetchVariables = {"OutputVariable_0o9ajkh"})
-  //  public void activityStart(final ActivatedJob job, final JobClient jobClient) {
-  //    System.out.println("-activityStart-收到 work-instance--" + job.getProcessInstanceId());
-  //    System.out.println("-activityStart-收到 work--fetchVariable-" + job.getVariablesAsMap());
-  //    jobClient.newCompleteCommand(job).send().join();
-  //  }
-  //
-  //  @JobWorker(
-  //      streamEnabled = true,
-  //      type = "execution_end",
-  //      name = "sdfsdfsdf",
-  //      fetchVariables = {"OutputVariable_0o9ajkh"})
-  //  public void activityEnd(final ActivatedJob job, final JobClient jobClient) {
-  //    System.out.println("-activityEnd-收到 work-instance--" + job.getProcessInstanceId());
-  //    System.out.println("-activityEnd-收到 work--fetchVariable-" + job.getVariablesAsMap());
-  //    jobClient.newCompleteCommand(job).send().join();
-  //  }
+    @JobWorker(type = "process_start_one", name = "sdfsdfsdf")
+    public void processStartOne(final ActivatedJob job, final JobClient jobClient) {
+      System.out.println("-processStartOne-收到 work---" + job.getProcessInstanceId());
+      jobClient.newCompleteCommand(job).send().join();
+    }
+
+    @JobWorker(type = "process_start_two", name = "sdfsdfsdf")
+    public void processStartWto(final ActivatedJob job, final JobClient jobClient) {
+      System.out.println("-processStartWto-收到 work---" + job.getProcessInstanceId());
+      jobClient.newCompleteCommand(job).send().join();
+    }
+
+    @JobWorker(type = "process_end", name = "sdfsdfsdf")
+    public void processEnd(final ActivatedJob job, final JobClient jobClient) {
+      System.out.println("-processEnd-收到 work---" + job.getProcessInstanceId());
+      jobClient.newCompleteCommand(job).send().join();
+    }
+
+    @JobWorker(
+        type = "execution_start",
+        name = "sdfsdfsdf",
+        fetchVariables = {"OutputVariable_0o9ajkh"})
+    public void activityStart(final ActivatedJob job, final JobClient jobClient) {
+      System.out.println("-activityStart-收到 work-instance--" + job.getProcessInstanceId());
+      System.out.println("-activityStart-收到 work--fetchVariable-" + job.getVariablesAsMap());
+      jobClient.newCompleteCommand(job).send().join();
+    }
+
+    @JobWorker(
+        streamEnabled = true,
+        type = "execution_end",
+        name = "sdfsdfsdf",
+        fetchVariables = {"OutputVariable_0o9ajkh"})
+    public void activityEnd(final ActivatedJob job, final JobClient jobClient) {
+      System.out.println("-activityEnd-收到 work-instance--" + job.getProcessInstanceId());
+      System.out.println("-activityEnd-收到 work--fetchVariable-" + job.getVariablesAsMap());
+      jobClient.newCompleteCommand(job).send().join();
+    }
 
   @JobWorker(
       type = "register_user",
