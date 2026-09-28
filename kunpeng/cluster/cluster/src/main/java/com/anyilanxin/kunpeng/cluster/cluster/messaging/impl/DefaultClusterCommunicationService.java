@@ -195,11 +195,23 @@ public class DefaultClusterCommunicationService implements ManagedClusterCommuni
       final boolean reliable) {
     final Member member = membershipService.getMember(toMemberId);
     if (member == null) {
+      log.warn("Not sending message with subject {} to {}, no known member", subject, toMemberId);
       return;
     }
 
     if (reliable) {
-      messagingService.sendAsync(member.address(), subject, payload);
+      messagingService
+          .sendAsync(member.address(), subject, payload)
+          .whenComplete(
+              (ignored, error) -> {
+                if (error != null) {
+                  log.warn(
+                      "Failed to send message with subject {} to member {}",
+                      subject,
+                      toMemberId,
+                      error);
+                }
+              });
     } else {
       unicastService.unicast(member.address(), subject, payload);
     }

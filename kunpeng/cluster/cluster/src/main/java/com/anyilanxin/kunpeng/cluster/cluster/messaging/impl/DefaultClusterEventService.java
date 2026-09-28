@@ -44,10 +44,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -76,6 +78,7 @@ public class DefaultClusterEventService
   private final MemberId localMemberId;
   private final Map<String, InternalTopic> topics = Maps.newConcurrentMap();
   private final Map<MemberId, Set<String>> remoteMemberSubscriptions = Maps.newConcurrentMap();
+  private final Map<String, Long> noSubscriberWarnNs = new ConcurrentHashMap<>();
   private final AtomicBoolean started = new AtomicBoolean();
   private ScheduledExecutorService eventServiceExecutor;
 
@@ -100,7 +103,21 @@ public class DefaultClusterEventService
                 targets.add(member.address());
               }
             });
+    if (targets.isEmpty()) {
+      warnNoSubscribers(topic);
+    }
     messagingService.sendAsync(targets, topic, payload);
+  }
+
+  /** 无订阅者（或订阅者全部不可达）时群发是静默空操作——不留痕事件链路断流难定位； 同主题按分钟节流，避免网关未订阅期间的高频广播刷屏。 */
+  private void warnNoSubscribers(final String topic) {
+    final long now = System.nanoTime();
+    final long last = noSubscriberWarnNs.getOrDefault(topic, 0L);
+    if (now - last < TimeUnit.MINUTES.toNanos(1)) {
+      return;
+    }
+    noSubscriberWarnNs.put(topic, now);
+    LOGGER.warn("事件广播无可用订阅者, 本次消息被丢弃: topic={}", topic);
   }
 
   @Override

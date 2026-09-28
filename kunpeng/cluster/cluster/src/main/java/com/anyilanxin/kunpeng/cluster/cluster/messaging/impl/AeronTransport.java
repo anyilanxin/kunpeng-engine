@@ -96,6 +96,7 @@ public final class AeronTransport {
 
   private final ConcurrentLinkedQueue<SendTask> sendQueue = new ConcurrentLinkedQueue<>();
   private final ConcurrentLinkedQueue<BroadcastTask> broadcastQueue = new ConcurrentLinkedQueue<>();
+  private long lastBroadcastDropWarnNs; // agent 线程独占：广播超时丢弃的节流留痕时间戳
   private final List<Tickable> tickables = new CopyOnWriteArrayList<>();
   private volatile FrameListener messagingListener = (buffer, offset, length) -> {};
   private volatile FrameListener unicastListener = (buffer, offset, length) -> {};
@@ -360,6 +361,15 @@ public final class AeronTransport {
     }
   }
 
+  /** 广播超时丢弃的节流留痕（10s 窗口一次）：completion 无人消费时这是唯一的丢包可观测点。 */
+  private void warnBroadcastDropThrottled(final BroadcastTask task, final long nowNs) {
+    if (nowNs - lastBroadcastDropWarnNs < TimeUnit.SECONDS.toNanos(10)) {
+      return;
+    }
+    lastBroadcastDropWarnNs = nowNs;
+    LOGGER.warn("广播投递超时被丢弃(目的地未连接或持续背压): stream={} 目的地={}", task.streamId, task.destinationUris);
+  }
+
   private void failPendingSends(final Throwable error) {
     SendTask task;
     while ((task = sendQueue.poll()) != null) {
@@ -526,6 +536,10 @@ public final class AeronTransport {
         final SendTask current = it.next();
         if (nowNs >= current.deadlineNs) {
           it.remove();
+          if (current.completion == null) {
+            // 尽力而为任务无完成回调可通知, 超时丢弃必须留痕
+            LOGGER.warn("尽力而为帧投递超时被丢弃(发布通道未连接或持续背压): {}", current.channelUri);
+          }
           current.fail(new ConnectException("投递超时(发布通道未连接或持续背压): " + current.channelUri));
           continue;
         }
@@ -600,6 +614,13 @@ public final class AeronTransport {
         final BroadcastTask current = it.next();
         if (nowNs >= current.deadlineNs) {
           it.remove();
+          if (current.completion == null) {
+            // 尽力而为任务无完成回调可通知, 超时丢弃必须留痕
+            LOGGER.warn("尽力而为广播投递超时被丢弃(目的地未连接或持续背压): {}", current.destinationUris);
+          } else {
+            // completion 无人消费（事件广播不持有 future），不节流会在断连态按广播频率刷 WARN
+            warnBroadcastDropThrottled(current, nowNs);
+          }
           current.fail(new ConnectException("广播投递超时(目的地未连接或持续背压): " + current.destinationUris));
           continue;
         }

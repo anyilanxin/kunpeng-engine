@@ -284,7 +284,16 @@ public final class AeronMessagingService implements ManagedMessagingService {
   private void onReply(final AeronFrameCodec.IncomingFrame frame) {
     final PendingRequest pending = pendingRequests.remove(frame.correlationId);
     if (pending == null) {
-      LOGGER.debug("丢弃迟到或未知的回复: correlationId={}", frame.correlationId);
+      if (frame.status == AeronFrameCodec.STATUS_NO_HANDLER) {
+        // 单向消息的对端回包: 无人订阅该主题(旧节点回包无 subject, 降级显示)
+        final String subject =
+            frame.payload == null || frame.payload.length == 0
+                ? "(未知)"
+                : new String(frame.payload, StandardCharsets.UTF_8);
+        LOGGER.warn("对端无处理器, 单向消息未被接收: subject={}, correlationId={}", subject, frame.correlationId);
+      } else {
+        LOGGER.debug("丢弃迟到或未知的回复: correlationId={}", frame.correlationId);
+      }
       return;
     }
     switch (frame.status) {
@@ -302,7 +311,12 @@ public final class AeronMessagingService implements ManagedMessagingService {
   private void onRequest(final AeronFrameCodec.IncomingFrame frame) {
     final RegisteredHandler handler = handlers.get(frame.subject);
     if (handler == null) {
-      reply(frame.sender, frame.correlationId, AeronFrameCodec.STATUS_NO_HANDLER, null);
+      // 回包携带 subject(对齐原 Netty ProtocolReply.ERROR_NO_HANDLER 行为), 供发送端对单向消息点名告警
+      reply(
+          frame.sender,
+          frame.correlationId,
+          AeronFrameCodec.STATUS_NO_HANDLER,
+          frame.subject.getBytes(StandardCharsets.UTF_8));
       return;
     }
     switch (handler.variant) {
