@@ -110,13 +110,15 @@ public final class JobStreamWireCodec {
     final var buffer = new UnsafeBuffer(bytes);
     final var decoder = new StreamPushDecoder();
     decoder.wrapAndApplyHeader(buffer, 0, new MessageHeaderDecoder());
+    // SBE 变长字段按声明序消费：必须先读 worker 推进 limit，wrapRecord 才落在 record 段（跳过会把 worker 字节当 record）
+    final String worker = decoder.worker();
     final var recordView = new UnsafeBuffer();
     decoder.wrapRecord(recordView);
     final var record = new JobRecord();
     record.wrap(recordView, 0, recordView.capacity());
     return new StreamPush(
         decoder.sessionId(),
-        decoder.worker(),
+        worker,
         decoder.jobKey(),
         decoder.partitionId(),
         decoder.deadline(),
@@ -135,8 +137,9 @@ public final class JobStreamWireCodec {
   public static PushResult decodeResult(final byte[] bytes) {
     final var decoder = new PushResultDecoder();
     decoder.wrapAndApplyHeader(new UnsafeBuffer(bytes), 0, new MessageHeaderDecoder());
-    return new PushResult(
-        decoder.delivered() == 1, decoder.reason().isEmpty() ? null : decoder.reason());
+    // 变长字段访问器每次调用都会消费推进 limit，reason 只能读一次
+    final String reason = decoder.reason();
+    return new PushResult(decoder.delivered() == 1, reason.isEmpty() ? null : reason);
   }
 
   private static byte[] copyOut(final ExpandableArrayBuffer buffer, final int encodedLength) {
