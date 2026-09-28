@@ -34,6 +34,10 @@ class TableNameTest {
     assertEquals("KP_USER_TASK", TableName.USER_TASK.physicalName("KP_", TableNameCase.UPPER));
     assertEquals("kp_user_task", TableName.USER_TASK.physicalName("kp_", TableNameCase.LOWER));
     assertEquals(
+        "KP_SINK_POSITION", TableName.SINK_POSITION.physicalName("KP_", TableNameCase.UPPER));
+    assertEquals(
+        "kp_sink_position", TableName.SINK_POSITION.physicalName("kp_", TableNameCase.LOWER));
+    assertEquals(
         "KP_DATABASECHANGELOG",
         TableName.DATABASECHANGELOG.physicalName("KP_", TableNameCase.UPPER));
     assertEquals(
@@ -50,6 +54,7 @@ class TableNameTest {
     TableName.registerAll(variables::setProperty, "KP_", TableNameCase.UPPER);
     assertEquals("KP_USER_TASK", variables.getProperty("table.user_task"));
     assertEquals("KP_IDX_UT_INSTANCE", variables.getProperty("table.idx_ut_instance"));
+    assertEquals("KP_SINK_POSITION", variables.getProperty("table.sink_position"));
     assertEquals("KP_DATABASECHANGELOG", variables.getProperty("table.databasechangelog"));
     assertEquals("KP_DATABASECHANGELOGLOCK", variables.getProperty("table.databasechangeloglock"));
   }

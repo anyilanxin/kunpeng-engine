@@ -347,4 +347,29 @@
     </createIndex>
   </changeSet>
 
+  <!-- 补齐活动实例的起点信息（流程实例迁移/改单场景的起始来源）；独立 changeset 保证已建库不因基线改动校验和失配 -->
+  <changeSet id="2026.9.0-add-activity-start-columns" author="anyilanxin">
+    <addColumn tableName="${table.activity_instance}">
+      <column name="start_activity_definition_key" type="VARCHAR(255)"/>
+      <column name="start_activity_instance_id" type="BIGINT"/>
+    </addColumn>
+  </changeSet>
+
+  <!-- sink 自身的导出位置：与数据同事务提交，是业务端权威续传锚点（引擎侧位置只作压缩门槛与投递游标） -->
+  <changeSet id="2026.9.0-create-sink-position" author="anyilanxin">
+    <createTable tableName="${table.sink_position}">
+      <column name="partition_id" type="INT">
+        <constraints primaryKey="true" nullable="false"/>
+      </column>
+      <column name="sink" type="VARCHAR(100)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="exported_position" type="BIGINT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="created_time" type="${ts.type}"/>
+      <column name="update_time" type="${ts.type}"/>
+    </createTable>
+  </changeSet>
+
 </databaseChangeLog>

@@ -500,7 +500,9 @@ final class Fakes {
     long processInstanceId = 2001;
     long activityDefinitionKey;
     String activityName = "Pick Items";
-    String activityType = "SERVICE_TASK";
+    BpmnElementType activityElementType = BpmnElementType.SERVICE_TASK;
+    String startActivityDefinitionKey;
+    long startActivityInstanceId;
     long startTime = 1_000;
     long endTime;
     long duration;
@@ -557,7 +559,7 @@ final class Fakes {
 
     @Override
     public BpmnElementType getActivityDefinitionType() {
-      return BpmnElementType.SERVICE_TASK;
+      return activityElementType;
     }
 
     @Override
@@ -572,12 +574,12 @@ final class Fakes {
 
     @Override
     public String getStartActivityDefinitionKey() {
-      return null;
+      return startActivityDefinitionKey;
     }
 
     @Override
     public long getStartActivityInstanceId() {
-      return 0;
+      return startActivityInstanceId;
     }
 
     @Override

@@ -85,6 +85,8 @@ public final class Tables {
               "activity_type",
               "task_id",
               "assignee",
+              "start_activity_definition_key",
+              "start_activity_instance_id",
               "state",
               "incident_id",
               "sequence_counter",

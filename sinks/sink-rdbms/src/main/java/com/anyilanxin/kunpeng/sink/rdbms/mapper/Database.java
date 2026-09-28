@@ -132,7 +132,7 @@ public final class Database implements AutoCloseable {
     }
   }
 
-  /** 清空本 sink 管理的全部表（集群级清理）。 */
+  /** 清空本 sink 管理的全部表（集群级清理；位置行一并清空——集群清理时引擎侧位置同样重置，重导出从 0 开始）。 */
   public void purge() {
     try (final var session = openSession()) {
       final var mappers = SinkMappers.from(session);
@@ -146,6 +146,7 @@ public final class Database implements AutoCloseable {
       mappers.timer().clearAll();
       mappers.messageSubscription().clearAll();
       mappers.signalSubscription().clearAll();
+      mappers.sinkPosition().clearAll();
       session.commit();
     }
   }
@@ -164,6 +165,7 @@ public final class Database implements AutoCloseable {
       mappers.timer().removePartition(resourceId);
       mappers.messageSubscription().removePartition(resourceId);
       mappers.signalSubscription().removePartition(resourceId);
+      mappers.sinkPosition().removePartition(resourceId);
       session.commit();
     }
   }

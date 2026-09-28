@@ -35,15 +35,19 @@ import com.anyilanxin.kunpeng.sink.rdbms.handler.TimerRecordHandler;
 import com.anyilanxin.kunpeng.sink.rdbms.handler.UserTaskRecordHandler;
 import com.anyilanxin.kunpeng.sink.rdbms.handler.VariableRecordHandler;
 import com.anyilanxin.kunpeng.sink.rdbms.mapper.Database;
+import com.anyilanxin.kunpeng.sink.rdbms.mapper.SinkMappers;
+import com.anyilanxin.kunpeng.sink.rdbms.model.SinkPositionDbModel;
 import com.anyilanxin.kunpeng.sink.rdbms.write.BatchFlusher;
 import com.anyilanxin.kunpeng.sink.rdbms.write.ChangeBuffer;
 import com.anyilanxin.kunpeng.sink.rdbms.write.RowChange;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Timer;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.Duration;
 import java.util.EnumMap;
 import java.util.Map;
+import org.apache.ibatis.session.SqlSession;
 import org.slf4j.Logger;
 
 /**
@@ -53,12 +57,17 @@ import org.slf4j.Logger;
  * ChangeBuffer}；缓冲按「形态 + 主键」收敛（同一窗口内同主键的连续 update 只剩最后一笔， insert 与 update
  * 保持先后、同事务内自然合并），刷盘时整窗进入同一个事务批量提交，成功后才向引擎确认位置。 任意一步失败则整体回滚，依赖引擎重投递收敛。
  *
+ * <p>位置分两级：引擎侧确认位置只作压缩门槛与投递游标；本 sink 在目标库维护自己的权威位置行（位置行与数据同事务提交），
+ * 启动时与引擎位置对账——位置行领先则反推引擎，低于位置行的重放记录直接跳过不落库。
+ *
  * <p>配置项见 {@link RdbmsSinkSettings}；建表默认自动迁移。
  *
  * @author zxuanhong
  * @since 2026.9.0
  */
 public final class RdbmsSink implements RecordSink {
+
+  private static final String SINK_NAME = "rdbms";
 
   private RdbmsSinkSettings settings;
   private Database database;
@@ -72,6 +81,7 @@ public final class RdbmsSink implements RecordSink {
   private Counter flushFailures;
   private int partitionId = SinkContext.PARTITION_ID_UNSET;
   private long ackedPosition = -1L;
+  private long ownPosition = -1L;
 
   @Override
   public void initialize(final SinkContext context) {
@@ -101,12 +111,18 @@ public final class RdbmsSink implements RecordSink {
   @Override
   public void start(final SinkController controller) {
     this.controller = controller;
+    recoverOwnPosition();
     scheduleFlush();
   }
 
   @Override
   public void sink(final BusinessEventRecord<?> record) {
-    buffer.advancePosition(record.getPosition());
+    final long position = record.getPosition();
+    buffer.advancePosition(position);
+    if (position <= ownPosition) {
+      // 低于权威位置的重放记录：数据已随位置行同事务落库，跳过转换；位置照常推进让确认追平
+      return;
+    }
     final var mapper = routes.get(record.getValueType());
     if (mapper != null && mapper.accepts(record.getValueState())) {
       mapper.transition(record, buffer);
@@ -140,6 +156,9 @@ public final class RdbmsSink implements RecordSink {
   @Override
   public void purge() {
     database.purge();
+    // 集群级清理：引擎侧位置同样重置，权威位置归零并重建位置行（保持「活跃分区必有位置行」不变量）
+    ownPosition = -1L;
+    insertOwnPositionRow();
   }
 
   @Override
@@ -152,12 +171,14 @@ public final class RdbmsSink implements RecordSink {
   }
 
   /**
-   * 刷盘：整窗变更单事务提交（save 走 insert、update 走 update、清理走 delete），成功后确认位置。
+   * 刷盘：整窗变更与位置行单事务提交（save 走 insert、update 走 update、清理走 delete），成功后确认位置。
    * 失败时抛出——调用方若在记录处理路径上，引擎将重投递当前记录；缓冲内容未动，重试基于同一份快照。
    */
   void flush() {
     final var position = buffer.lastPosition();
     if (buffer.isEmpty()) {
+      // 纯跳过/无变更窗口：数据无写入，但位置行仍要与确认点保持一致
+      writeOwnPositionRow(position);
       acknowledge(position);
       return;
     }
@@ -165,13 +186,16 @@ public final class RdbmsSink implements RecordSink {
     try {
       try (final var session = database.openSession()) {
         flusher.enqueue(session, buffer.view());
+        advanceOwnPosition(session, position);
         session.commit();
       } catch (final Exception e) {
         if (!isIntegrityConstraintViolation(e)) {
           throw e;
         }
         recoverWindow();
+        writeOwnPositionRow(position);
       }
+      ownPosition = Math.max(ownPosition, position);
     } catch (final Exception e) {
       flushFailures.increment();
       throw new IllegalStateException("Rdbms sink failed to flush at position " + position, e);
@@ -227,6 +251,64 @@ public final class RdbmsSink implements RecordSink {
       ackedPosition = position;
       controller.updatePosition(position);
     }
+  }
+
+  /** 启动对账：读取（或首启创建）本分区的位置行。位置行领先引擎侧位置时反推引擎—— 引擎位置只来自最后确认点，快照回退/重启后可能落后于实际落库进度。 */
+  private void recoverOwnPosition() {
+    final var row = findOwnPositionRow();
+    if (row == null) {
+      insertOwnPositionRow();
+      return;
+    }
+    ownPosition = row.getExportedPosition();
+    if (ownPosition > -1L) {
+      // updatePosition 单调不回退：引擎位置领先时是无害空操作
+      controller.updatePosition(ownPosition);
+    }
+    log.info("Rdbms sink partition {} resumed from exported position {}", partitionId, ownPosition);
+  }
+
+  private SinkPositionDbModel findOwnPositionRow() {
+    try (final var session = database.openSession()) {
+      return SinkMappers.from(session).sinkPosition().findOne(partitionId);
+    }
+  }
+
+  private void insertOwnPositionRow() {
+    try (final var session = database.openSession()) {
+      SinkMappers.from(session).sinkPosition().insert(positionRow(-1L));
+      session.commit();
+    }
+  }
+
+  /** 位置行推进，入队到调用方会话（与数据同事务提交）；位置不前进则不动。 */
+  private void advanceOwnPosition(final SqlSession session, final long position) {
+    if (position > ownPosition) {
+      SinkMappers.from(session).sinkPosition().update(positionRow(position));
+    }
+  }
+
+  /** 独立会话补写位置行：空窗口推进、恢复路径逐行提交后的收尾。 */
+  private void writeOwnPositionRow(final long position) {
+    if (position <= ownPosition) {
+      return;
+    }
+    try (final var session = database.openSession()) {
+      advanceOwnPosition(session, position);
+      session.commit();
+    }
+    ownPosition = position;
+  }
+
+  private SinkPositionDbModel positionRow(final long position) {
+    final var row = new SinkPositionDbModel();
+    row.setPartitionId(partitionId);
+    row.setSink(SINK_NAME);
+    row.setExportedPosition(position);
+    final var now = new Timestamp(System.currentTimeMillis());
+    row.setCreatedTime(now);
+    row.setUpdateTime(now);
+    return row;
   }
 
   private void scheduleFlush() {

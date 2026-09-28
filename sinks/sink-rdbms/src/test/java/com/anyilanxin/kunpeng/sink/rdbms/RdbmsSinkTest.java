@@ -18,6 +18,7 @@ package com.anyilanxin.kunpeng.sink.rdbms;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnElementType;
 import com.anyilanxin.kunpeng.protocol.business.ValueLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.ValueType;
 import com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance.ActivityInstanceLifeCycle;
@@ -54,10 +55,15 @@ class RdbmsSinkTest {
   private SqlSessionFactory verifyFactory;
   private RdbmsSink sink;
   private Fakes.RecordingController controller;
+  private String jdbcUrl;
 
   @BeforeEach
   void setUp() throws Exception {
-    final var jdbcUrl = "jdbc:h2:mem:sinkrdbms_" + UUID.randomUUID().toString().replace("-", "");
+    // DB_CLOSE_DELAY=-1：重启用例里首个 sink 关闭会使连接池归零关池，内存库需跨连接存活到用例结束
+    jdbcUrl =
+        "jdbc:h2:mem:sinkrdbms_"
+            + UUID.randomUUID().toString().replace("-", "")
+            + ";DB_CLOSE_DELAY=-1";
     final var args =
         Map.<String, Object>of(
             "url", jdbcUrl,
@@ -81,7 +87,10 @@ class RdbmsSinkTest {
     var position = 0L;
     position = emit(position, ValueType.PROCESS_DEFINITION, ProcessDefinitionLifeCycle.CREATED, new Fakes.ProcessDefinitionValue());
     position = emit(position, ValueType.PROCESS_INSTANCE, ProcessInstanceLifeCycle.ACTIVATED, new Fakes.ProcessInstanceValue());
-    position = emit(position, ValueType.ACTIVITY, ActivityInstanceLifeCycle.ACTIVATED, new Fakes.ActivityInstanceValue());
+    final var activity = new Fakes.ActivityInstanceValue();
+    activity.startActivityDefinitionKey = "start-gateway";
+    activity.startActivityInstanceId = 777;
+    position = emit(position, ValueType.ACTIVITY, ActivityInstanceLifeCycle.ACTIVATED, activity);
     final var variables = new Fakes.VariableValue();
     variables.variables.put("amount", 10);
     variables.variables.put("currency", "EUR");
@@ -101,6 +110,10 @@ class RdbmsSinkTest {
       assertThat(mapper.totalRows()).isEqualTo(11L);
       assertThat(mapper.instanceRow()).containsEntry("STATE", "ACTIVATED");
       assertThat(mapper.userTaskRow()).containsEntry("ASSIGNEE", "bob");
+      // 活动实例起点信息（迁移/改单场景的起始来源）随创建事件落库
+      assertThat(mapper.activityInstanceRow())
+          .containsEntry("START_ACTIVITY_DEFINITION_KEY", "start-gateway")
+          .containsEntry("START_ACTIVITY_INSTANCE_ID", 777L);
       assertThat(mapper.variableRows())
           .extracting(row -> row.get("VALUE_JSON"))
           .containsExactly("10", "\"EUR\"");
@@ -229,6 +242,91 @@ class RdbmsSinkTest {
 
     sink.flush();
     assertThat(controller.getPosition()).isEqualTo(1L);
+  }
+
+  @Test
+  void shouldInsertRowForSequenceFlowTaking() {
+    // 连线实例的首事件是 TAKING（非 ACTIVATING），必须建行而不是走 update 静默丢行
+    final var flow = new Fakes.ActivityInstanceValue();
+    flow.activityInstanceId = 3002;
+    flow.activityElementType = BpmnElementType.SEQUENCE_FLOW;
+    flow.startActivityInstanceId = 3001;
+    emit(1L, ValueType.ACTIVITY, ActivityInstanceLifeCycle.TAKING, flow);
+
+    sink.flush();
+
+    try (var session = verifyFactory.openSession()) {
+      final var mapper = session.getMapper(VerificationMapper.class);
+      assertThat(mapper.totalRows()).isOne();
+      assertThat(mapper.activityInstanceRow())
+          .containsEntry("ACTIVITY_TYPE", "SEQUENCE_FLOW")
+          .containsEntry("START_ACTIVITY_INSTANCE_ID", 3001L);
+    }
+    assertThat(controller.getPosition()).isEqualTo(1L);
+  }
+
+  @Test
+  void shouldWriteOwnPositionRowOnFlush() {
+    emit(1L, ValueType.PROCESS_INSTANCE, ProcessInstanceLifeCycle.ACTIVATED, new Fakes.ProcessInstanceValue());
+    emit(2L, ValueType.PROCESS_INSTANCE, ProcessInstanceLifeCycle.COMPLETED, new Fakes.ProcessInstanceValue());
+
+    sink.flush();
+
+    // 位置行与数据同事务落库，行值即本窗确认点
+    try (var session = verifyFactory.openSession()) {
+      assertThat(session.getMapper(VerificationMapper.class).sinkPositionRow()).isEqualTo(2L);
+    }
+  }
+
+  @Test
+  void shouldResumeFromOwnPositionRowAfterRestart() {
+    emit(1L, ValueType.PROCESS_INSTANCE, ProcessInstanceLifeCycle.ACTIVATED, new Fakes.ProcessInstanceValue());
+    sink.flush();
+
+    // 重启：新实例、新引擎位置（-1），start() 从位置行对账并反推
+    sink.close();
+    final var args =
+        Map.<String, Object>of(
+            "url", jdbcUrl, "userName", "sa", "password", "", "flushInterval", 0L);
+    sink = new RdbmsSink();
+    sink.initialize(Fakes.context(args));
+    controller = new Fakes.RecordingController();
+    sink.start(controller);
+    assertThat(controller.getPosition()).isEqualTo(1L);
+
+    // 引擎侧位置丢失后的重放：同位置记录再送一遍，低于权威位置直接跳过，不产生重复行
+    emit(1L, ValueType.PROCESS_INSTANCE, ProcessInstanceLifeCycle.ACTIVATED, new Fakes.ProcessInstanceValue());
+    sink.flush();
+    try (var session = verifyFactory.openSession()) {
+      assertThat(session.getMapper(VerificationMapper.class).totalRows()).isOne();
+    }
+
+    // 权威位置之后的记录正常落库
+    final var finished = new Fakes.ProcessInstanceValue();
+    finished.state = ProcessInstanceState.COMPLETED;
+    emit(2L, ValueType.PROCESS_INSTANCE, ProcessInstanceLifeCycle.COMPLETED, finished);
+    sink.flush();
+    try (var session = verifyFactory.openSession()) {
+      assertThat(session.getMapper(VerificationMapper.class).instanceRow())
+          .containsEntry("STATE", "COMPLETED");
+      assertThat(session.getMapper(VerificationMapper.class).sinkPositionRow()).isEqualTo(2L);
+    }
+    assertThat(controller.getPosition()).isEqualTo(2L);
+  }
+
+  @Test
+  void shouldResetOwnPositionRowOnPurge() {
+    emit(1L, ValueType.PROCESS_INSTANCE, ProcessInstanceLifeCycle.ACTIVATED, new Fakes.ProcessInstanceValue());
+    sink.flush();
+
+    sink.purge();
+
+    // 集群级清理：数据与位置行一并清空并重建 -1 行，重导出从 0 开始
+    try (var session = verifyFactory.openSession()) {
+      final var mapper = session.getMapper(VerificationMapper.class);
+      assertThat(mapper.totalRows()).isZero();
+      assertThat(mapper.sinkPositionRow()).isEqualTo(-1L);
+    }
   }
 
   private long emit(

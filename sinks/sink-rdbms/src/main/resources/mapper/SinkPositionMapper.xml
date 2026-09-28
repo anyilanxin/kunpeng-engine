@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  ~ Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  -->
+<mapper namespace="com.anyilanxin.kunpeng.sink.rdbms.mapper.SinkPositionMapper">
+
+  <resultMap id="sinkPositionRow" type="com.anyilanxin.kunpeng.sink.rdbms.model.SinkPositionDbModel">
+    <id property="partitionId" column="partition_id"/>
+    <result property="sink" column="sink"/>
+    <result property="exportedPosition" column="exported_position"/>
+    <result property="createdTime" column="created_time"/>
+    <result property="updateTime" column="update_time"/>
+  </resultMap>
+
+  <select id="findOne" resultMap="sinkPositionRow">
+    SELECT partition_id, sink, exported_position, created_time, update_time
+    FROM ${table.sink_position}
+    WHERE partition_id = #{partitionId}
+  </select>
+
+  <insert id="insert" parameterType="com.anyilanxin.kunpeng.sink.rdbms.model.SinkPositionDbModel">
+    INSERT INTO ${table.sink_position} (
+      partition_id, sink, exported_position, created_time, update_time
+    ) VALUES (
+      #{partitionId}, #{sink}, #{exportedPosition},
+      #{createdTime,jdbcType=TIMESTAMP}, #{updateTime,jdbcType=TIMESTAMP}
+    )
+  </insert>
+
+  <!-- 只推进位置与更新时间；sink / created_time 是创建期列不被覆盖 -->
+  <update id="update" parameterType="com.anyilanxin.kunpeng.sink.rdbms.model.SinkPositionDbModel">
+    UPDATE ${table.sink_position}
+    SET exported_position = #{exportedPosition},
+        update_time = #{updateTime,jdbcType=TIMESTAMP}
+    WHERE partition_id = #{partitionId}
+  </update>
+
+  <delete id="removePartition">
+    DELETE FROM ${table.sink_position} WHERE partition_id = #{partitionId}
+  </delete>
+
+  <delete id="clearAll">DELETE FROM ${table.sink_position}</delete>
+
+</mapper>

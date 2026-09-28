@@ -37,6 +37,8 @@ public class ActivityInstanceDbModel {
   private String activityType;
   private Long taskId;
   private String assignee;
+  private String startActivityDefinitionKey;
+  private Long startActivityInstanceId;
   private String state;
   private Long incidentId;
   private Long sequenceCounter;

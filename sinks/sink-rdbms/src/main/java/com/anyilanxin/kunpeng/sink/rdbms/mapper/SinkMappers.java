@@ -35,7 +35,8 @@ public record SinkMappers(
     IncidentMapper incident,
     TimerMapper timer,
     MessageSubscriptionMapper messageSubscription,
-    SignalSubscriptionMapper signalSubscription) {
+    SignalSubscriptionMapper signalSubscription,
+    SinkPositionMapper sinkPosition) {
 
   /**
    * @return 全部映射器接口，注册与加载 XML 时使用
@@ -51,7 +52,8 @@ public record SinkMappers(
         IncidentMapper.class,
         TimerMapper.class,
         MessageSubscriptionMapper.class,
-        SignalSubscriptionMapper.class);
+        SignalSubscriptionMapper.class,
+        SinkPositionMapper.class);
   }
 
   /**
@@ -73,6 +75,7 @@ public record SinkMappers(
         session.getMapper(IncidentMapper.class),
         session.getMapper(TimerMapper.class),
         session.getMapper(MessageSubscriptionMapper.class),
-        session.getMapper(SignalSubscriptionMapper.class));
+        session.getMapper(SignalSubscriptionMapper.class),
+        session.getMapper(SinkPositionMapper.class));
   }
 }

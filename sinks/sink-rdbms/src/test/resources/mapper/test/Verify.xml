@@ -44,4 +44,12 @@
     SELECT * FROM kp_user_task
   </select>
 
+  <select id="activityInstanceRow" resultType="map">
+    SELECT * FROM kp_activity_instance
+  </select>
+
+  <select id="sinkPositionRow" resultType="long">
+    SELECT exported_position FROM kp_sink_position WHERE partition_id = 1
+  </select>
+
 </mapper>

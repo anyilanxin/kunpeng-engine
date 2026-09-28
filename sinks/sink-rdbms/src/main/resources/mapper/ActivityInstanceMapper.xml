@@ -22,13 +22,15 @@
     INSERT INTO ${table.activity_instance} (
       activity_instance_id, process_instance_id, root_process_instance_id,
       parent_activity_instance_id, call_process_instance_id, process_definition_id,
-      definition_key, activity_key, activity_name, activity_type, task_id, assignee, state,
+      definition_key, activity_key, activity_name, activity_type, task_id, assignee,
+      start_activity_definition_key, start_activity_instance_id, state,
       incident_id, sequence_counter, start_time, end_time, duration, revision, resource_id
     ) VALUES (
       #{activityInstanceId}, #{processInstanceId}, #{rootProcessInstanceId},
       #{parentActivityInstanceId}, #{callProcessInstanceId}, #{processDefinitionId},
       #{definitionKey}, #{activityKey}, #{activityName}, #{activityType}, #{taskId}, #{assignee},
-      #{state}, #{incidentId}, #{sequenceCounter}, #{startTime,jdbcType=TIMESTAMP},
+      #{startActivityDefinitionKey}, #{startActivityInstanceId}, #{state},
+      #{incidentId}, #{sequenceCounter}, #{startTime,jdbcType=TIMESTAMP},
       #{endTime,jdbcType=TIMESTAMP}, #{duration}, #{revision}, #{resourceId}
     )
   </insert>

@@ -32,6 +32,9 @@ import java.util.Set;
 /**
  * 活动实例（流程节点执行轨迹）：激活类事件保存全量行（值自带 {@code start_time}），流动/完成/终止类事件只更新可变列。
  *
+ * <p>连线（SEQUENCE_FLOW）实例的首事件是 TAKING 而非 ACTIVATING（见引擎 SequenceFlowBehavior）， TAKING 也走保存建行； 连线的
+ * {@code start_activity_instance_id} 即流出节点实例，是其起点语义的承载。
+ *
  * @author zxuanhong
  * @since 2026.9.0
  */
@@ -41,7 +44,8 @@ public final class ActivityInstanceRecordHandler implements RecordModelHandler {
       Set.of(
           ActivityInstanceLifeCycle.ACTIVATING,
           ActivityInstanceLifeCycle.ACTIVATING_AFTER,
-          ActivityInstanceLifeCycle.ACTIVATED);
+          ActivityInstanceLifeCycle.ACTIVATED,
+          ActivityInstanceLifeCycle.TAKING);
 
   private static final Set<ValueLifeCycle> EXPORTABLE =
       Set.of(
@@ -104,6 +108,8 @@ public final class ActivityInstanceRecordHandler implements RecordModelHandler {
     model.setActivityType(nameOf(value.getActivityDefinitionType()));
     model.setTaskId(positive(value.getTaskId()));
     model.setAssignee(value.getAssignee());
+    model.setStartActivityDefinitionKey(blankToNull(value.getStartActivityDefinitionKey()));
+    model.setStartActivityInstanceId(positive(value.getStartActivityInstanceId()));
     model.setState(nameOf(value.getState()));
     model.setIncidentId(positive(value.getIncidentId()));
     model.setSequenceCounter(value.getSequenceCounter());
@@ -117,6 +123,10 @@ public final class ActivityInstanceRecordHandler implements RecordModelHandler {
 
   private static Long positive(final long id) {
     return id > 0 ? id : null;
+  }
+
+  private static String blankToNull(final String value) {
+    return value == null || value.isBlank() ? null : value;
   }
 
   private static String nameOf(final Enum<?> state) {
