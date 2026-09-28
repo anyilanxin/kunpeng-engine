@@ -20,6 +20,7 @@ import com.anyilanxin.kunpeng.broker.BrokerLoggers;
 import com.anyilanxin.kunpeng.broker.protocol.InterPartitionMessageEncoder;
 import com.anyilanxin.kunpeng.broker.protocol.MessageHeaderEncoder;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationService;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.cluster.utils.serializer.serializers.DefaultSerializers;
@@ -46,7 +47,6 @@ final class InterPartitionCommandSenderImpl implements InterPartitionCommandSend
   private static final Logger LOG = BrokerLoggers.TRANSPORT_LOGGER;
   private final ClusterCommunicationService communicationService;
   private final ClusterTopologyService topologyService;
-  private final PartitionRouteService routeService = new PartitionRouteService();
   private final MessageHeaderEncoder reusableHeaderEncoder = new MessageHeaderEncoder();
   private final InterPartitionMessageEncoder reusableBodyEncoder =
       new InterPartitionMessageEncoder();
@@ -85,7 +85,8 @@ final class InterPartitionCommandSenderImpl implements InterPartitionCommandSend
       final Long recordKey,
       final Long operationReference,
       final UnifiedRecordValue command) {
-    if (!topologyService.getActivitySourceIds().contains(receiverResourceId)) {
+    final PartitionId partitionId = topologyService.getPartitionBySourceId(receiverResourceId);
+    if (partitionId == null) {
       LOG.warn(
           "Not sending command {} {} to {}, no known leader for this partition",
           lifeCycle.getValueType(),
@@ -93,10 +94,7 @@ final class InterPartitionCommandSenderImpl implements InterPartitionCommandSend
           receiverResourceId);
       return;
     }
-    final PartitionRouteInfo routeInfo = routeService.getRouteInfo(receiverResourceId);
-
-    final String partitionLeader = routeInfo.leaderMemberId();
-    final int partitionId = routeInfo.partitionId();
+    final MemberId partitionLeader = topologyService.getPartitionLeader(partitionId);
     LOG.info(
         "Sending command {} {} to partition {}, leader {}",
         lifeCycle.getValueType(),
@@ -117,7 +115,7 @@ final class InterPartitionCommandSenderImpl implements InterPartitionCommandSend
         TOPIC_PREFIX + partitionId,
         message,
         DefaultSerializers.BASIC::encode,
-        MemberId.from(partitionLeader),
+        partitionLeader,
         true);
   }
 

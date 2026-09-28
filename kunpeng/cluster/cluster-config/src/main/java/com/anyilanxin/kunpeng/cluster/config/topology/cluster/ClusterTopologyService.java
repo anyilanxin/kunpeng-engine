@@ -41,4 +41,6 @@ public interface ClusterTopologyService {
   Map<MemberId, List<PartitionMemberInfo>> getMemberPartitions();
 
   IntHashSet getActivitySourceIds();
+
+  PartitionId getPartitionBySourceId(final int sourceId);
 }

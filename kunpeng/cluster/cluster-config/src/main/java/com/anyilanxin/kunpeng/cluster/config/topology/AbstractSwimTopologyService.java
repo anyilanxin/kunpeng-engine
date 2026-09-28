@@ -141,6 +141,14 @@ public abstract class AbstractSwimTopologyService extends Actor
     return partitionSources;
   }
 
+  public PartitionId getPartitionBySourceId(final int sourceId) {
+    return partitionSourceIds.get(sourceId);
+  }
+
+  public MemberId getPartitionLeader(final PartitionId partitionId) {
+    return findPartitionLeader(partitionId);
+  }
+
   protected Int2ObjectHashMap<PartitionId> getPartitionSourceIds() {
     return partitionSourceIds;
   }
@@ -188,7 +196,7 @@ public abstract class AbstractSwimTopologyService extends Actor
   /** 查询分区当前的 Leader（主成员），分区未知或暂无主时返回 null；多成员自称 Leader 时取 term 最大者 */
   protected MemberId findPartitionLeader(final PartitionId partitionId) {
     final PartitionMemberInfo leader = partitionLeaders.get(partitionId);
-    return leader == null ? null : MemberId.from(leader.getMemberId());
+    return leader == null ? null : leader.getMemberId();
   }
 
   /** 查询分区各成员的拓扑状态 */

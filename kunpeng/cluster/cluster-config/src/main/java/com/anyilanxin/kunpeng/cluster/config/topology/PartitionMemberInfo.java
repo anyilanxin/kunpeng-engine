@@ -16,6 +16,7 @@
  */
 package com.anyilanxin.kunpeng.cluster.config.topology;
 
+import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
 import java.io.Serial;
 import java.io.Serializable;
@@ -36,7 +37,7 @@ import lombok.ToString;
 @ToString
 public class PartitionMemberInfo implements Serializable {
   @Serial private static final long serialVersionUID = 1788311783333L;
-  private String MemberId;
+  private MemberId MemberId;
   private PartitionHealth health = PartitionHealth.UNKNOWN;
   private PartitionRole role = PartitionRole.UNKNOWN;
   private PartitionId partitionId;

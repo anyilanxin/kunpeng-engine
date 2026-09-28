@@ -107,7 +107,6 @@ public final class PartitionMessagingService {
     return memberInfos.stream()
         .map(PartitionMemberInfo::getMemberId)
         .filter(Objects::nonNull)
-        .map(MemberId::from)
         .filter(memberId -> !memberId.equals(localMemberId))
         .collect(Collectors.toSet());
   }

@@ -127,7 +127,7 @@ public class DefaultClusterSwimTopologyService extends AbstractSwimTopologyServi
       return existing;
     }
     final PartitionMemberInfo created = new PartitionMemberInfo();
-    created.setMemberId(localMember.id().id());
+    created.setMemberId(localMember.id());
     created.setPartitionId(partitionId);
     swimPartitionMemberInfo.add(created);
     registerHealthGauge(partitionId, created);
