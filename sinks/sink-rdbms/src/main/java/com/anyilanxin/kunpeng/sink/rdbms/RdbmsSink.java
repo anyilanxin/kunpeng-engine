@@ -80,8 +80,8 @@ public final class RdbmsSink implements RecordSink {
     partitionId = context.getPartitionId();
     log = context.getLogger();
     database = Database.open(settings);
-    if (settings.isMigrateSchema()) {
-      database.migrate(settings.getTablePrefix());
+    if (settings.isAutoDdl()) {
+      database.migrate(settings);
     }
     flusher = new BatchFlusher();
     buffer = new ChangeBuffer();

@@ -19,7 +19,7 @@
 <mapper namespace="com.anyilanxin.kunpeng.sink.rdbms.mapper.VariableMapper">
 
   <insert id="insert" parameterType="com.anyilanxin.kunpeng.sink.rdbms.model.VariableDbModel">
-    INSERT INTO ${prefix}variable (
+    INSERT INTO ${table.variable} (
       scope_id, name, parent_scope_id, process_instance_id, process_definition_id, value_json,
       revision, resource_id
     ) VALUES (
@@ -29,20 +29,20 @@
   </insert>
 
   <update id="update" parameterType="com.anyilanxin.kunpeng.sink.rdbms.model.VariableDbModel">
-    UPDATE ${prefix}variable
+    UPDATE ${table.variable}
     SET value_json = #{valueJson},
         revision = #{revision}
     WHERE scope_id = #{scopeId} AND name = #{name}
   </update>
 
   <delete id="cleanupHistory">
-    DELETE FROM ${prefix}variable WHERE process_instance_id = #{processInstanceId}
+    DELETE FROM ${table.variable} WHERE process_instance_id = #{processInstanceId}
   </delete>
 
   <delete id="removePartition">
-    DELETE FROM ${prefix}variable WHERE resource_id = #{resourceId}
+    DELETE FROM ${table.variable} WHERE resource_id = #{resourceId}
   </delete>
 
-  <delete id="clearAll">DELETE FROM ${prefix}variable</delete>
+  <delete id="clearAll">DELETE FROM ${table.variable}</delete>
 
 </mapper>

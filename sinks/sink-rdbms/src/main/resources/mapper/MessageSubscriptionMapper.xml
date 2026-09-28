@@ -19,7 +19,7 @@
 <mapper namespace="com.anyilanxin.kunpeng.sink.rdbms.mapper.MessageSubscriptionMapper">
 
   <insert id="insert" parameterType="com.anyilanxin.kunpeng.sink.rdbms.model.MessageSubscriptionDbModel">
-    INSERT INTO ${prefix}message_subscription (
+    INSERT INTO ${table.message_subscription} (
       message_subscription_id, message_name, message_type, correlation_key,
       process_instance_id, activity_instance_id, correlation_activity_instance_id,
       correlation_process_instance_id, process_definition_id, definition_key, activity_key,
@@ -33,19 +33,19 @@
   </insert>
 
   <update id="update" parameterType="com.anyilanxin.kunpeng.sink.rdbms.model.MessageSubscriptionDbModel">
-    UPDATE ${prefix}message_subscription
+    UPDATE ${table.message_subscription}
     SET state = #{state}
     WHERE message_subscription_id = #{messageSubscriptionId}
   </update>
 
   <delete id="cleanupHistory">
-    DELETE FROM ${prefix}message_subscription WHERE process_instance_id = #{processInstanceId}
+    DELETE FROM ${table.message_subscription} WHERE process_instance_id = #{processInstanceId}
   </delete>
 
   <delete id="removePartition">
-    DELETE FROM ${prefix}message_subscription WHERE resource_id = #{resourceId}
+    DELETE FROM ${table.message_subscription} WHERE resource_id = #{resourceId}
   </delete>
 
-  <delete id="clearAll">DELETE FROM ${prefix}message_subscription</delete>
+  <delete id="clearAll">DELETE FROM ${table.message_subscription}</delete>
 
 </mapper>

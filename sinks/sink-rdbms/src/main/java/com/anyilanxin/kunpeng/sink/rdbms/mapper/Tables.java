@@ -19,8 +19,8 @@ package com.anyilanxin.kunpeng.sink.rdbms.mapper;
 import java.util.List;
 
 /**
- * sink 使用的全部表定义。这里登记的是不带前缀的逻辑表名，实际表名 = 配置的 {@code tablePrefix}（默认 {@code kp_}）+ 逻辑名，在 mapper XML 与
- * Liquibase changelog 中均以变量拼接。
+ * sink 使用的全部表定义。这里登记的是不带前缀的逻辑表名（变量注册与大小写渲染见 {@link TableName} 枚举）， 实际表名 = 配置的 {@code
+ * tablePrefix}（默认 {@code KP_}）+ 按 {@code tableNameCase}（默认大写）渲染的逻辑名。
  *
  * <p>设计取向：只存引擎记录里真实存在的字段；展示用的冗余（例如实例行上的流程定义名称）交给查询侧 JOIN，换取更小的写放大。
  *

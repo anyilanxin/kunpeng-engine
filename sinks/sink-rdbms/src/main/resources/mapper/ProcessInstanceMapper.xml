@@ -19,7 +19,7 @@
 <mapper namespace="com.anyilanxin.kunpeng.sink.rdbms.mapper.ProcessInstanceMapper">
 
   <insert id="insert" parameterType="com.anyilanxin.kunpeng.sink.rdbms.model.ProcessInstanceDbModel">
-    INSERT INTO ${prefix}process_instance (
+    INSERT INTO ${table.process_instance} (
       process_instance_id, parent_process_instance_id, root_process_instance_id, business_key,
       process_definition_id, definition_key, definition_name, start_user, state, start_time,
       end_time, revision, resource_id
@@ -32,7 +32,7 @@
 
   <!-- 只更新可变列：start_time / start_user 等创建期列不被任何后续事件覆盖 -->
   <update id="update" parameterType="com.anyilanxin.kunpeng.sink.rdbms.model.ProcessInstanceDbModel">
-    UPDATE ${prefix}process_instance
+    UPDATE ${table.process_instance}
     SET state = #{state},
         end_time = #{endTime,jdbcType=TIMESTAMP},
         revision = #{revision}
@@ -40,13 +40,13 @@
   </update>
 
   <delete id="cleanupHistory">
-    DELETE FROM ${prefix}process_instance WHERE process_instance_id = #{processInstanceId}
+    DELETE FROM ${table.process_instance} WHERE process_instance_id = #{processInstanceId}
   </delete>
 
   <delete id="removePartition">
-    DELETE FROM ${prefix}process_instance WHERE resource_id = #{resourceId}
+    DELETE FROM ${table.process_instance} WHERE resource_id = #{resourceId}
   </delete>
 
-  <delete id="clearAll">DELETE FROM ${prefix}process_instance</delete>
+  <delete id="clearAll">DELETE FROM ${table.process_instance}</delete>
 
 </mapper>

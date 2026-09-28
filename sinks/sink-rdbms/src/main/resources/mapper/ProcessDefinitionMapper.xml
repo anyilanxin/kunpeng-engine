@@ -19,7 +19,7 @@
 <mapper namespace="com.anyilanxin.kunpeng.sink.rdbms.mapper.ProcessDefinitionMapper">
 
   <insert id="insert" parameterType="com.anyilanxin.kunpeng.sink.rdbms.model.ProcessDefinitionDbModel">
-    INSERT INTO ${prefix}process_definition (
+    INSERT INTO ${table.process_definition} (
       process_definition_id, definition_key, definition_name, version, version_tag,
       history_time_to_live, deployment_id, resource_definition_id, resource_name, checksum,
       starter_events, candidate_starter_groups, candidate_starter_users, resource_content,
@@ -33,9 +33,9 @@
   </insert>
 
   <delete id="removePartition">
-    DELETE FROM ${prefix}process_definition WHERE resource_id = #{resourceId}
+    DELETE FROM ${table.process_definition} WHERE resource_id = #{resourceId}
   </delete>
 
-  <delete id="clearAll">DELETE FROM ${prefix}process_definition</delete>
+  <delete id="clearAll">DELETE FROM ${table.process_definition}</delete>
 
 </mapper>

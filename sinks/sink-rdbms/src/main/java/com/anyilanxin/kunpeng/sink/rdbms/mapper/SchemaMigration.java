@@ -16,10 +16,11 @@
  */
 package com.anyilanxin.kunpeng.sink.rdbms.mapper;
 
+import com.anyilanxin.kunpeng.sink.rdbms.RdbmsSinkSettings;
 import java.sql.Connection;
 import liquibase.Contexts;
 import liquibase.Liquibase;
-import liquibase.database.Database;
+import liquibase.database.AbstractJdbcDatabase;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
 import liquibase.resource.ClassLoaderResourceAccessor;
@@ -40,15 +41,29 @@ final class SchemaMigration {
 
   private SchemaMigration() {}
 
-  static void run(final Connection connection, final String tablePrefix) {
+  static void run(final Connection connection, final RdbmsSinkSettings settings) {
     try {
-      final Database database =
-          DatabaseFactory.getInstance()
-              .findCorrectDatabaseImplementation(new JdbcConnection(connection));
+      // findCorrectDatabaseImplementation 对 JDBC 连接只会返回 AbstractJdbcDatabase 实现
+      final AbstractJdbcDatabase database =
+          (AbstractJdbcDatabase)
+              DatabaseFactory.getInstance()
+                  .findCorrectDatabaseImplementation(new JdbcConnection(connection));
+      // 元数据对象名比较是否区分大小写，透传给 Liquibase（与参考实现行为一致）
+      database.setCaseSensitive(settings.isCaseSensitive());
+      // Liquibase 簿记表同样走前缀 + 大小写策略，与业务表命名一致（也避免与同库其他 Liquibase 使用者冲突）
+      database.setDatabaseChangeLogTableName(
+          TableName.DATABASECHANGELOG.physicalName(
+              settings.getTablePrefix(), settings.resolvedTableNameCase()));
+      database.setDatabaseChangeLogLockTableName(
+          TableName.DATABASECHANGELOGLOCK.physicalName(
+              settings.getTablePrefix(), settings.resolvedTableNameCase()));
       try (final var liquibase =
           new Liquibase(CHANGELOG, new ClassLoaderResourceAccessor(), database)) {
-        // changelog 里的表名统一写 ${tablePrefix}xxx，同一份脚本适配任意前缀
-        liquibase.getChangeLogParameters().set("tablePrefix", tablePrefix);
+        // changelog 里的标识符统一写 ${table.x}：完整物理名（前缀 + 大小写渲染）运行期注入
+        TableName.registerAll(
+            liquibase.getChangeLogParameters()::set,
+            settings.getTablePrefix(),
+            settings.resolvedTableNameCase());
         liquibase.update(new Contexts());
       }
     } catch (final Exception e) {

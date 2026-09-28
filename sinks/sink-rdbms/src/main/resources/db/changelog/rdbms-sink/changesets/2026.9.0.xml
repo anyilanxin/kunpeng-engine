@@ -21,10 +21,10 @@
   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
-  <!-- 2026.9.0 基线：10 张业务表 + 索引。表名统一 ${tablePrefix}xxx（运行期注入）；列定义必须与 Tables.java 保持一致。 -->
+  <!-- 2026.9.0 基线：10 张业务表 + 索引。标识符统一 ${table.x}（变量值=完整物理名：前缀+大小写策略运行期注入，索引逻辑名须同步登记到 Tables.INDEXES）；列定义必须与 Tables.java 保持一致。 -->
 
   <changeSet id="2026.9.0-create-process-definition" author="anyilanxin">
-    <createTable tableName="${tablePrefix}process_definition">
+    <createTable tableName="${table.process_definition}">
       <column name="process_definition_id" type="BIGINT">
         <constraints primaryKey="true" nullable="false"/>
       </column>
@@ -47,14 +47,14 @@
       <column name="resource_content" type="${large.type}"/>
       <column name="resource_id" type="INT"/>
     </createTable>
-    <createIndex tableName="${tablePrefix}process_definition" indexName="${tablePrefix}idx_pd_key">
+    <createIndex tableName="${table.process_definition}" indexName="${table.idx_pd_key}">
       <column name="definition_key"/>
       <column name="version"/>
     </createIndex>
   </changeSet>
 
   <changeSet id="2026.9.0-create-process-instance" author="anyilanxin">
-    <createTable tableName="${tablePrefix}process_instance">
+    <createTable tableName="${table.process_instance}">
       <column name="process_instance_id" type="BIGINT">
         <constraints primaryKey="true" nullable="false"/>
       </column>
@@ -77,19 +77,19 @@
       <column name="revision" type="INT"/>
       <column name="resource_id" type="INT"/>
     </createTable>
-    <createIndex tableName="${tablePrefix}process_instance" indexName="${tablePrefix}idx_pi_definition">
+    <createIndex tableName="${table.process_instance}" indexName="${table.idx_pi_definition}">
       <column name="process_definition_id"/>
     </createIndex>
-    <createIndex tableName="${tablePrefix}process_instance" indexName="${tablePrefix}idx_pi_parent">
+    <createIndex tableName="${table.process_instance}" indexName="${table.idx_pi_parent}">
       <column name="parent_process_instance_id"/>
     </createIndex>
-    <createIndex tableName="${tablePrefix}process_instance" indexName="${tablePrefix}idx_pi_root">
+    <createIndex tableName="${table.process_instance}" indexName="${table.idx_pi_root}">
       <column name="root_process_instance_id"/>
     </createIndex>
   </changeSet>
 
   <changeSet id="2026.9.0-create-activity-instance" author="anyilanxin">
-    <createTable tableName="${tablePrefix}activity_instance">
+    <createTable tableName="${table.activity_instance}">
       <column name="activity_instance_id" type="BIGINT">
         <constraints primaryKey="true" nullable="false"/>
       </column>
@@ -121,16 +121,16 @@
       <column name="revision" type="INT"/>
       <column name="resource_id" type="INT"/>
     </createTable>
-    <createIndex tableName="${tablePrefix}activity_instance" indexName="${tablePrefix}idx_ai_instance">
+    <createIndex tableName="${table.activity_instance}" indexName="${table.idx_ai_instance}">
       <column name="process_instance_id"/>
     </createIndex>
-    <createIndex tableName="${tablePrefix}activity_instance" indexName="${tablePrefix}idx_ai_task">
+    <createIndex tableName="${table.activity_instance}" indexName="${table.idx_ai_task}">
       <column name="task_id"/>
     </createIndex>
   </changeSet>
 
   <changeSet id="2026.9.0-create-variable" author="anyilanxin">
-    <createTable tableName="${tablePrefix}variable">
+    <createTable tableName="${table.variable}">
       <column name="scope_id" type="BIGINT">
         <constraints primaryKey="true" nullable="false"/>
       </column>
@@ -148,13 +148,13 @@
       <column name="revision" type="INT"/>
       <column name="resource_id" type="INT"/>
     </createTable>
-    <createIndex tableName="${tablePrefix}variable" indexName="${tablePrefix}idx_var_instance">
+    <createIndex tableName="${table.variable}" indexName="${table.idx_var_instance}">
       <column name="process_instance_id"/>
     </createIndex>
   </changeSet>
 
   <changeSet id="2026.9.0-create-user-task" author="anyilanxin">
-    <createTable tableName="${tablePrefix}user_task">
+    <createTable tableName="${table.user_task}">
       <column name="task_id" type="BIGINT">
         <constraints primaryKey="true" nullable="false"/>
       </column>
@@ -187,16 +187,16 @@
       <column name="revision" type="INT"/>
       <column name="resource_id" type="INT"/>
     </createTable>
-    <createIndex tableName="${tablePrefix}user_task" indexName="${tablePrefix}idx_ut_instance">
+    <createIndex tableName="${table.user_task}" indexName="${table.idx_ut_instance}">
       <column name="process_instance_id"/>
     </createIndex>
-    <createIndex tableName="${tablePrefix}user_task" indexName="${tablePrefix}idx_ut_assignee">
+    <createIndex tableName="${table.user_task}" indexName="${table.idx_ut_assignee}">
       <column name="assignee"/>
     </createIndex>
   </changeSet>
 
   <changeSet id="2026.9.0-create-job" author="anyilanxin">
-    <createTable tableName="${tablePrefix}job">
+    <createTable tableName="${table.job}">
       <column name="job_id" type="BIGINT">
         <constraints primaryKey="true" nullable="false"/>
       </column>
@@ -227,17 +227,17 @@
       <column name="revision" type="INT"/>
       <column name="resource_id" type="INT"/>
     </createTable>
-    <createIndex tableName="${tablePrefix}job" indexName="${tablePrefix}idx_job_instance">
+    <createIndex tableName="${table.job}" indexName="${table.idx_job_instance}">
       <column name="process_instance_id"/>
     </createIndex>
-    <createIndex tableName="${tablePrefix}job" indexName="${tablePrefix}idx_job_state_due">
+    <createIndex tableName="${table.job}" indexName="${table.idx_job_state_due}">
       <column name="state"/>
       <column name="due_time"/>
     </createIndex>
   </changeSet>
 
   <changeSet id="2026.9.0-create-incident" author="anyilanxin">
-    <createTable tableName="${tablePrefix}incident">
+    <createTable tableName="${table.incident}">
       <column name="incident_id" type="BIGINT">
         <constraints primaryKey="true" nullable="false"/>
       </column>
@@ -261,13 +261,13 @@
       <column name="resolved_time" type="${ts.type}"/>
       <column name="resource_id" type="INT"/>
     </createTable>
-    <createIndex tableName="${tablePrefix}incident" indexName="${tablePrefix}idx_inc_instance">
+    <createIndex tableName="${table.incident}" indexName="${table.idx_inc_instance}">
       <column name="process_instance_id"/>
     </createIndex>
   </changeSet>
 
   <changeSet id="2026.9.0-create-timer" author="anyilanxin">
-    <createTable tableName="${tablePrefix}timer">
+    <createTable tableName="${table.timer}">
       <column name="timer_id" type="BIGINT">
         <constraints primaryKey="true" nullable="false"/>
       </column>
@@ -284,17 +284,17 @@
       <column name="state" type="VARCHAR(32)"/>
       <column name="resource_id" type="INT"/>
     </createTable>
-    <createIndex tableName="${tablePrefix}timer" indexName="${tablePrefix}idx_timer_due">
+    <createIndex tableName="${table.timer}" indexName="${table.idx_timer_due}">
       <column name="state"/>
       <column name="due_time"/>
     </createIndex>
-    <createIndex tableName="${tablePrefix}timer" indexName="${tablePrefix}idx_timer_instance">
+    <createIndex tableName="${table.timer}" indexName="${table.idx_timer_instance}">
       <column name="process_instance_id"/>
     </createIndex>
   </changeSet>
 
   <changeSet id="2026.9.0-create-message-subscription" author="anyilanxin">
-    <createTable tableName="${tablePrefix}message_subscription">
+    <createTable tableName="${table.message_subscription}">
       <column name="message_subscription_id" type="BIGINT">
         <constraints primaryKey="true" nullable="false"/>
       </column>
@@ -313,17 +313,17 @@
       <column name="state" type="VARCHAR(32)"/>
       <column name="resource_id" type="INT"/>
     </createTable>
-    <createIndex tableName="${tablePrefix}message_subscription" indexName="${tablePrefix}idx_ms_instance">
+    <createIndex tableName="${table.message_subscription}" indexName="${table.idx_ms_instance}">
       <column name="process_instance_id"/>
     </createIndex>
-    <createIndex tableName="${tablePrefix}message_subscription" indexName="${tablePrefix}idx_ms_name">
+    <createIndex tableName="${table.message_subscription}" indexName="${table.idx_ms_name}">
       <column name="message_name"/>
       <column name="correlation_key"/>
     </createIndex>
   </changeSet>
 
   <changeSet id="2026.9.0-create-signal-subscription" author="anyilanxin">
-    <createTable tableName="${tablePrefix}signal_subscription">
+    <createTable tableName="${table.signal_subscription}">
       <column name="signal_subscription_id" type="BIGINT">
         <constraints primaryKey="true" nullable="false"/>
       </column>
@@ -339,10 +339,10 @@
       <column name="state" type="VARCHAR(32)"/>
       <column name="resource_id" type="INT"/>
     </createTable>
-    <createIndex tableName="${tablePrefix}signal_subscription" indexName="${tablePrefix}idx_ss_name">
+    <createIndex tableName="${table.signal_subscription}" indexName="${table.idx_ss_name}">
       <column name="signal_name"/>
     </createIndex>
-    <createIndex tableName="${tablePrefix}signal_subscription" indexName="${tablePrefix}idx_ss_instance">
+    <createIndex tableName="${table.signal_subscription}" indexName="${table.idx_ss_instance}">
       <column name="process_instance_id"/>
     </createIndex>
   </changeSet>

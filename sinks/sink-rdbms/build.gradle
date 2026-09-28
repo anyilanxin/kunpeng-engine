@@ -40,4 +40,7 @@ dependencies {
     implementation 'org.postgresql:postgresql'
     implementation 'com.mysql:mysql-connector-j'
     implementation 'com.h2database:h2'
+
+    // 配置绑定测试走生产同款 MapSinkConfig（broker 运行期传入的 SinkConfiguration 实现）
+    testImplementation project(':kunpeng:sink:sink')
 }

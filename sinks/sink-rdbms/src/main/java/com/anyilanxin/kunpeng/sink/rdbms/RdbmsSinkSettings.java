@@ -43,8 +43,14 @@ public class RdbmsSinkSettings {
   /** 显式指定方言（h2/postgresql/mysql）；留空表示按 url 推断。 */
   private String dialect = "";
 
-  /** 表名前缀（mapper XML 与 Liquibase changelog 里的 {@code ${prefix}} / {@code ${tablePrefix}} 变量）。 */
-  private String tablePrefix = "kp_";
+  /** 表名前缀，与逻辑名拼接成完整物理名注入 {@code ${table.x}} 变量。 */
+  private String tablePrefix = "KP_";
+
+  /** 逻辑表名/索引名的大小写渲染（UPPER/LOWER），与前缀配合保证标识符风格统一；默认大写。 */
+  private String tableNameCase = "UPPER";
+
+  /** Liquibase 元数据对象名比较是否区分大小写（透传 {@code AbstractJdbcDatabase#setCaseSensitive}）。 */
+  private boolean caseSensitive = false;
 
   /** 共享连接池的最大连接数。 */
   private int maxPoolSize = DEFAULT_MAX_POOL_SIZE;
@@ -55,8 +61,8 @@ public class RdbmsSinkSettings {
   /** 待写变更数达到该阈值时在处理线程内立即触发一次刷盘（背压上限）。 */
   private int flushThreshold = DEFAULT_FLUSH_THRESHOLD;
 
-  /** 启动时是否自动补齐建表脚本。 */
-  private boolean migrateSchema = true;
+  /** 启动时是否自动执行 Liquibase 建表（沿用参考实现的配置键名，老配置可直接迁移）。 */
+  private boolean autoDdl = true;
 
   public void validate() {
     if (url == null || url.isBlank()) {
@@ -66,6 +72,14 @@ public class RdbmsSinkSettings {
     if (tablePrefix == null || !tablePrefix.matches("[A-Za-z0-9_]*") || tablePrefix.isBlank()) {
       throw new IllegalArgumentException(
           "tablePrefix must match [A-Za-z0-9_]* and not be blank but was '" + tablePrefix + "'");
+    }
+    if (tableNameCase != null && !tableNameCase.isBlank()) {
+      try {
+        TableNameCase.valueOf(tableNameCase.trim().toUpperCase());
+      } catch (final IllegalArgumentException e) {
+        throw new IllegalArgumentException(
+            "tableNameCase must be UPPER or LOWER but was '" + tableNameCase + "'");
+      }
     }
     if (maxPoolSize < 1) {
       throw new IllegalArgumentException("maxPoolSize must be >= 1 but was " + maxPoolSize);
@@ -83,6 +97,22 @@ public class RdbmsSinkSettings {
       return Dialect.valueOf(dialect.trim().toUpperCase());
     }
     return Dialect.fromUrl(url);
+  }
+
+  /**
+   * @return 解析后的表名大小写渲染策略
+   */
+  public TableNameCase resolvedTableNameCase() {
+    if (tableNameCase != null && !tableNameCase.isBlank()) {
+      return TableNameCase.valueOf(tableNameCase.trim().toUpperCase());
+    }
+    return TableNameCase.UPPER;
+  }
+
+  /** 表名/索引名的大小写渲染策略 */
+  public enum TableNameCase {
+    UPPER,
+    LOWER
   }
 
   public String getUrl() {
@@ -125,6 +155,14 @@ public class RdbmsSinkSettings {
     this.tablePrefix = tablePrefix;
   }
 
+  public String getTableNameCase() {
+    return tableNameCase;
+  }
+
+  public void setTableNameCase(final String tableNameCase) {
+    this.tableNameCase = tableNameCase;
+  }
+
   public int getMaxPoolSize() {
     return maxPoolSize;
   }
@@ -149,11 +187,19 @@ public class RdbmsSinkSettings {
     this.flushThreshold = flushThreshold;
   }
 
-  public boolean isMigrateSchema() {
-    return migrateSchema;
+  public boolean isCaseSensitive() {
+    return caseSensitive;
   }
 
-  public void setMigrateSchema(final boolean migrateSchema) {
-    this.migrateSchema = migrateSchema;
+  public void setCaseSensitive(final boolean caseSensitive) {
+    this.caseSensitive = caseSensitive;
+  }
+
+  public boolean isAutoDdl() {
+    return autoDdl;
+  }
+
+  public void setAutoDdl(final boolean autoDdl) {
+    this.autoDdl = autoDdl;
   }
 }

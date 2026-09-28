@@ -66,15 +66,18 @@ public final class Database implements AutoCloseable {
             settings.getUserName(),
             settings.getPassword(),
             settings.getMaxPoolSize());
-    final var sessionFactory = buildSessionFactory(pool, settings.getTablePrefix());
+    final var sessionFactory = buildSessionFactory(pool, settings);
     return new Database(pool, dialect, sessionFactory);
   }
 
   private static SqlSessionFactory buildSessionFactory(
-      final ConnectionPool.PooledDataSource pool, final String tablePrefix) {
+      final ConnectionPool.PooledDataSource pool, final RdbmsSinkSettings settings) {
     final var configuration = new Configuration();
-    // 表名前缀：mapper XML 里的 ${prefix} 变量在解析期由此替换
-    configuration.getVariables().setProperty("prefix", tablePrefix);
+    // 标识符变量值=完整物理名（前缀 + 大小写渲染）：mapper XML 里的 ${table.x} 即整个表名
+    TableName.registerAll(
+        configuration.getVariables()::setProperty,
+        settings.getTablePrefix(),
+        settings.resolvedTableNameCase());
     configuration.setEnvironment(
         new Environment("kunpeng-sink-rdbms", new JdbcTransactionFactory(), pool.dataSource()));
     // 方言识别：MyBatis 的 databaseId 机制，产品名 -> id 的映射来自 db/vendor-properties/*.properties，
@@ -121,9 +124,9 @@ public final class Database implements AutoCloseable {
   }
 
   /** 执行建表迁移（幂等；Liquibase 负责版本登记与并发锁）。 */
-  public void migrate(final String tablePrefix) {
+  public void migrate(final RdbmsSinkSettings settings) {
     try (final var connection = pool.dataSource().getConnection()) {
-      SchemaMigration.run(connection, tablePrefix);
+      SchemaMigration.run(connection, settings);
     } catch (final Exception e) {
       throw new IllegalStateException("Failed to acquire connection for schema migration", e);
     }

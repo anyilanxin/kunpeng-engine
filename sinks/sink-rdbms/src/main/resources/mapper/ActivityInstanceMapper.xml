@@ -19,7 +19,7 @@
 <mapper namespace="com.anyilanxin.kunpeng.sink.rdbms.mapper.ActivityInstanceMapper">
 
   <insert id="insert" parameterType="com.anyilanxin.kunpeng.sink.rdbms.model.ActivityInstanceDbModel">
-    INSERT INTO ${prefix}activity_instance (
+    INSERT INTO ${table.activity_instance} (
       activity_instance_id, process_instance_id, root_process_instance_id,
       parent_activity_instance_id, call_process_instance_id, process_definition_id,
       definition_key, activity_key, activity_name, activity_type, task_id, assignee, state,
@@ -35,7 +35,7 @@
 
   <!-- 只更新可变列：start_time 等创建期列不被任何后续事件覆盖 -->
   <update id="update" parameterType="com.anyilanxin.kunpeng.sink.rdbms.model.ActivityInstanceDbModel">
-    UPDATE ${prefix}activity_instance
+    UPDATE ${table.activity_instance}
     SET task_id = #{taskId},
         assignee = #{assignee},
         state = #{state},
@@ -47,13 +47,13 @@
   </update>
 
   <delete id="cleanupHistory">
-    DELETE FROM ${prefix}activity_instance WHERE process_instance_id = #{processInstanceId}
+    DELETE FROM ${table.activity_instance} WHERE process_instance_id = #{processInstanceId}
   </delete>
 
   <delete id="removePartition">
-    DELETE FROM ${prefix}activity_instance WHERE resource_id = #{resourceId}
+    DELETE FROM ${table.activity_instance} WHERE resource_id = #{resourceId}
   </delete>
 
-  <delete id="clearAll">DELETE FROM ${prefix}activity_instance</delete>
+  <delete id="clearAll">DELETE FROM ${table.activity_instance}</delete>
 
 </mapper>
