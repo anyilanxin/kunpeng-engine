@@ -23,9 +23,9 @@ import com.anyilanxin.kunpeng.protocol.business.record.commandapi.CommandApiValu
  * @since 2026.9.0
  */
 public enum CommandApiJobValueLifeCycle implements CommandApiValueLifeCycle {
-  COMPLETE_REQUEST((short) 1, PROCESS_INDEX_135, RECORD_INDEX_57),
+  COMPLETE_REQUEST((short) 1, PROCESS_INDEX_139, RECORD_INDEX_57),
   COMPLETE_RESPONSE((short) 2, NOT_PROCESS_INDEX, RECORD_INDEX_58),
-  FAIL_REQUEST((short) 3, PROCESS_INDEX_136, RECORD_INDEX_59),
+  FAIL_REQUEST((short) 3, PROCESS_INDEX_140, RECORD_INDEX_59),
   FAIL_RESPONSE((short) 4, NOT_PROCESS_INDEX, RECORD_INDEX_60);
 
   private final short value;

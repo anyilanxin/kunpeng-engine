@@ -28,11 +28,11 @@ import com.anyilanxin.kunpeng.protocol.business.record.commandapi.CommandApiValu
  * @since 2026.9.0
  */
 public enum CommandApiProcessInstanceValueLifeCycle implements CommandApiValueLifeCycle {
-  CANCEL_REQUEST((short) 0, PROCESS_INDEX_40, RECORD_INDEX_15),
+  CANCEL_REQUEST((short) 0, PROCESS_INDEX_44, RECORD_INDEX_15),
   CANCEL_RESPONSE((short) 1, NOT_PROCESS_INDEX, RECORD_INDEX_16),
-  CREATE_REQUEST((short) 2, PROCESS_INDEX_41, RECORD_INDEX_17),
+  CREATE_REQUEST((short) 2, PROCESS_INDEX_45, RECORD_INDEX_17),
   CREATE_RESPONSE((short) 3, NOT_PROCESS_INDEX, RECORD_INDEX_18),
-  CREATE_AND_RESULT_REQUEST((short) 4, PROCESS_INDEX_42, RECORD_INDEX_19),
+  CREATE_AND_RESULT_REQUEST((short) 4, PROCESS_INDEX_46, RECORD_INDEX_19),
   CREATE_AND_RESULT_RESPONSE((short) 5, NOT_PROCESS_INDEX, RECORD_INDEX_20);
 
   private final short value;

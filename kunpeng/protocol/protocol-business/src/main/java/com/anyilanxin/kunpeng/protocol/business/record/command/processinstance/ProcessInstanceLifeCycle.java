@@ -24,18 +24,18 @@ import com.anyilanxin.kunpeng.protocol.business.ValueType;
  */
 public enum ProcessInstanceLifeCycle implements ValueLifeCycle {
   NULL_VAL((short) -1, NOT_PROCESS_INDEX),
-  ACTIVATING((short) 1, PROCESS_INDEX_43),
-  ACTIVATED((short) 2, PROCESS_INDEX_44),
-  SUSPENDED((short) 3, PROCESS_INDEX_45),
-  COMPLETING((short) 4, PROCESS_INDEX_46),
-  COMPLETED((short) 5, PROCESS_INDEX_47),
-  CANCEL((short) 6, PROCESS_INDEX_48),
-  CANCELED((short) 7, PROCESS_INDEX_49),
-  TERMINATING((short) 8, PROCESS_INDEX_50),
-  TERMINATED((short) 9, PROCESS_INDEX_51),
-  LISTENER_CREATE((short) 10, PROCESS_INDEX_52),
-  LISTENER_COMPLETED((short) 11, PROCESS_INDEX_53),
-  LISTENER_DENY((short) 12, PROCESS_INDEX_54);
+  ACTIVATING((short) 1, PROCESS_INDEX_47),
+  ACTIVATED((short) 2, PROCESS_INDEX_48),
+  SUSPENDED((short) 3, PROCESS_INDEX_49),
+  COMPLETING((short) 4, PROCESS_INDEX_50),
+  COMPLETED((short) 5, PROCESS_INDEX_51),
+  CANCEL((short) 6, PROCESS_INDEX_52),
+  CANCELED((short) 7, PROCESS_INDEX_53),
+  TERMINATING((short) 8, PROCESS_INDEX_54),
+  TERMINATED((short) 9, PROCESS_INDEX_55),
+  LISTENER_CREATE((short) 10, PROCESS_INDEX_56),
+  LISTENER_COMPLETED((short) 11, PROCESS_INDEX_57),
+  LISTENER_DENY((short) 12, PROCESS_INDEX_58);
 
   private final short value;
   private final short processIndex;

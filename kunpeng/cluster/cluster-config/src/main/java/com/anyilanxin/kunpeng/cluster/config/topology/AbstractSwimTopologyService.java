@@ -16,6 +16,7 @@
  */
 package com.anyilanxin.kunpeng.cluster.config.topology;
 
+import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.ADMIN_RAFT_GROUP;
 import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.TOPOLOGY_PROPERTY_KEY;
 
 import com.anyilanxin.kunpeng.cluster.cluster.*;
@@ -61,6 +62,7 @@ public abstract class AbstractSwimTopologyService extends Actor
 
   private final Int2ObjectHashMap<PartitionId> partitionSourceIds = new Int2ObjectHashMap<>();
   private final IntHashSet partitionSources = new IntHashSet();
+  private final IntHashSet businessPartitions = new IntHashSet();
 
   protected AbstractSwimTopologyService(final ClusterMembershipService membershipService) {
     this.membershipService = membershipService;
@@ -141,8 +143,17 @@ public abstract class AbstractSwimTopologyService extends Actor
     return partitionSources;
   }
 
+  protected IntHashSet getActivityPartitionIds() {
+    return businessPartitions;
+  }
+
   public PartitionId getPartitionBySourceId(final int sourceId) {
     return partitionSourceIds.get(sourceId);
+  }
+
+  public int getPartitionSource(final PartitionId partitionId) {
+    final PartitionMemberInfo partitionMemberInfo = partitionLeaders.get(partitionId);
+    return partitionMemberInfo.getSourceId();
   }
 
   public MemberId getPartitionLeader(final PartitionId partitionId) {
@@ -159,6 +170,7 @@ public abstract class AbstractSwimTopologyService extends Actor
     partitionLeaders.clear();
     partitionSourceIds.clear();
     partitionSources.clear();
+    businessPartitions.clear();
     memberPartitionInfos.forEach(
         (memberId, infos) ->
             infos.forEach(
@@ -176,6 +188,9 @@ public abstract class AbstractSwimTopologyService extends Actor
                             candidate.getTerm() > current.getTerm() ? candidate : current);
                     partitionSourceIds.put(info.getSourceId(), info.getPartitionId());
                     partitionSources.add(info.getSourceId());
+                    if (!ADMIN_RAFT_GROUP.equalsIgnoreCase(info.getPartitionId().group())) {
+                      businessPartitions.add(info.getPartitionId().id());
+                    }
                     if (info.getAgentSourceIds() != null) {
                       info.getAgentSourceIds()
                           .forEach(

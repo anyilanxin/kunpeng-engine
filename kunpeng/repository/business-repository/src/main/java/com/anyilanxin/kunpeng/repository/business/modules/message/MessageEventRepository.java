@@ -16,7 +16,7 @@
  */
 package com.anyilanxin.kunpeng.repository.business.modules.message;
 
-import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.BUSINESS_RAFT_ONE_SOURCE;
+import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.BUSINESS_RAFT_GLOBAL_SOURCE;
 
 import com.anyilanxin.kunpeng.kvstore.ColumnFamily;
 import com.anyilanxin.kunpeng.kvstore.KvStore;
@@ -215,7 +215,7 @@ public class MessageEventRepository
   public void delete(final long key) {
     messageSubscriptionIdDbKey.wrapLong(key);
     entityDbValue.reset();
-    if (Protocol.decodeResourceId(key) == BUSINESS_RAFT_ONE_SOURCE) {
+    if (Protocol.decodeResourceId(key) == BUSINESS_RAFT_GLOBAL_SOURCE) {
       if (startEventSessageSubscriptionColumnFamily.get(messageSubscriptionIdDbKey) != null) {
         processDefinitionKeyDbKey.wrapString(entityDbValue.getProcessDefinitionKey());
         startEventSessageSubscriptionColumnFamily.delete(messageSubscriptionIdDbKey);
@@ -315,7 +315,7 @@ public class MessageEventRepository
   public Optional<MessageSubscriptionRecord> query(final long key) {
     messageSubscriptionIdDbKey.wrapLong(key);
     entityDbValue.reset();
-    if (Protocol.decodeResourceId(key) == BUSINESS_RAFT_ONE_SOURCE) {
+    if (Protocol.decodeResourceId(key) == BUSINESS_RAFT_GLOBAL_SOURCE) {
       return Optional.ofNullable(
               startEventSessageSubscriptionColumnFamily.get(messageSubscriptionIdDbKey))
           .map(v -> v.unwrap(recordBuffer));

@@ -18,6 +18,7 @@ package com.anyilanxin.kunpeng.cluster.config.topology;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
 import com.anyilanxin.kunpeng.cluster.config.ClusterAdminSerializer;
 import com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant;
@@ -53,7 +54,7 @@ class SwimPartitionMemberInfoSerializationTest {
 
     final PartitionMemberInfo p1 = decoded.getInfoMap().get(PartitionId.from("raft-partition", 1));
     assertThat(p1).isNotNull();
-    assertThat(p1.getMemberId()).isEqualTo("member-0");
+    assertThat(p1.getMemberId()).isEqualTo(MemberId.from("member-0"));
     assertThat(p1.getRole()).isEqualTo(PartitionRole.LEADER);
     assertThat(p1.getHealth()).isEqualTo(PartitionHealth.HEALTHY);
     assertThat(p1.getTerm()).isEqualTo(3L);
@@ -72,7 +73,7 @@ class SwimPartitionMemberInfoSerializationTest {
   private PartitionMemberInfo info(
       final int partition, final PartitionRole role, final PartitionHealth health, final long term) {
     final PartitionMemberInfo info = new PartitionMemberInfo();
-    info.setMemberId("member-0");
+    info.setMemberId(MemberId.from("member-0"));
     info.setPartitionId(PartitionId.from("raft-partition", partition));
     info.setRole(role);
     info.setHealth(health);

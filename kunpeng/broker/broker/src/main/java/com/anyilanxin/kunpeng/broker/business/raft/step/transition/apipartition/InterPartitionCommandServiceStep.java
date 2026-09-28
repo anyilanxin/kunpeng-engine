@@ -83,7 +83,7 @@ public final class InterPartitionCommandServiceStep
   private ActorFuture<Void> installReceiver(final BusinessTransitionContent context) {
     final var receiver =
         new InterPartitionCommandReceiverActor(
-            context.getRaftPartitionId().id(),
+            context.getRaftPartitionId(),
             context.getCommunicationService(),
             context.getEventLog().newWriter(),
             DefaultRecordValueMapper.getInstance());

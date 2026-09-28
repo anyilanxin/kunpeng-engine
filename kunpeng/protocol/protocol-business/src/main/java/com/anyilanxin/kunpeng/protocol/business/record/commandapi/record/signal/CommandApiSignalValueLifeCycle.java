@@ -15,7 +15,7 @@ package com.anyilanxin.kunpeng.protocol.business.record.commandapi.record.signal
 import static com.anyilanxin.kunpeng.protocol.business.RecordMappingIndex.RECORD_INDEX_83;
 import static com.anyilanxin.kunpeng.protocol.business.RecordMappingIndex.RECORD_INDEX_84;
 import static com.anyilanxin.kunpeng.protocol.business.RecordProcessIndex.NOT_PROCESS_INDEX;
-import static com.anyilanxin.kunpeng.protocol.business.RecordProcessIndex.PROCESS_INDEX_222;
+import static com.anyilanxin.kunpeng.protocol.business.RecordProcessIndex.PROCESS_INDEX_226;
 
 import com.anyilanxin.kunpeng.protocol.business.ValueType;
 import com.anyilanxin.kunpeng.protocol.business.record.commandapi.CommandApiValueLifeCycle;
@@ -25,7 +25,7 @@ import com.anyilanxin.kunpeng.protocol.business.record.commandapi.CommandApiValu
  * @since 2026.9.0
  */
 public enum CommandApiSignalValueLifeCycle implements CommandApiValueLifeCycle {
-  CORRELATION_REQUEST((short) 0, PROCESS_INDEX_222, RECORD_INDEX_83),
+  CORRELATION_REQUEST((short) 0, PROCESS_INDEX_226, RECORD_INDEX_83),
   CORRELATION_RESPONSE((short) 1, NOT_PROCESS_INDEX, RECORD_INDEX_84);
 
   private final short value;

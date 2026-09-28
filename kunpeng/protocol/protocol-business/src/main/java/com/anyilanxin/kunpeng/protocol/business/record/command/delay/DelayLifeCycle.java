@@ -25,8 +25,8 @@ import com.anyilanxin.kunpeng.protocol.business.record.command.CommandValueLifeC
  */
 public enum DelayLifeCycle implements CommandValueLifeCycle {
   NULL_VAL((short) -1, NOT_PROCESS_INDEX),
-  CREATE((short) 0, PROCESS_INDEX_177),
-  CONSUME((short) 1, PROCESS_INDEX_178),
+  CREATE((short) 0, PROCESS_INDEX_181),
+  CONSUME((short) 1, PROCESS_INDEX_182),
   ;
 
   private final short value;

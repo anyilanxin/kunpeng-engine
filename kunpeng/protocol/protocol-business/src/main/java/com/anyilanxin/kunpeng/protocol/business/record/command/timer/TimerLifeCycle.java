@@ -24,12 +24,12 @@ import com.anyilanxin.kunpeng.protocol.business.ValueType;
  */
 public enum TimerLifeCycle implements ValueLifeCycle {
   NULL_VAL((short) -1, NOT_PROCESS_INDEX),
-  CREATING((short) 1, PROCESS_INDEX_167),
-  CREATED((short) 2, PROCESS_INDEX_168),
-  TRIGGER((short) 3, PROCESS_INDEX_169),
-  TRIGGERED((short) 4, PROCESS_INDEX_170),
-  CANCEL((short) 5, PROCESS_INDEX_171),
-  CANCELED((short) 6, PROCESS_INDEX_172),
+  CREATING((short) 1, PROCESS_INDEX_171),
+  CREATED((short) 2, PROCESS_INDEX_172),
+  TRIGGER((short) 3, PROCESS_INDEX_173),
+  TRIGGERED((short) 4, PROCESS_INDEX_174),
+  CANCEL((short) 5, PROCESS_INDEX_175),
+  CANCELED((short) 6, PROCESS_INDEX_176),
   ;
 
   private final short value;

@@ -33,18 +33,12 @@ public interface ClusterCommonConstant {
   String NODE_SOURCE_PROPERTY_KEY = "cluster.topology.nodesource";
 
   int INITIAL_NODE_SOURCE = 0;
-  int INITIAL_PARTITION_SOURCE = 0;
+  int INITIAL_PARTITION_SOURCE = 1;
   String MANAGE_RAFT = ADMIN_RAFT_GROUP + "-1";
   String BUSINESS_PARTITION_ONE_RAFT = BUSINESS_RAFT_GROUP + "-1";
 
-  int ADMIN_PARTITION_SOURCE = 1;
-  int BUSINESS_RAFT_ONE_SOURCE = INITIAL_PARTITION_SOURCE + 2;
-
-  /** 集群 leader 所在分区（与 ClientRequest.LEADER_PARTITION 一致，指向首个分区） */
-  int CLUSTER_LEADER_PARTITION = 1;
-
-  /** 未绑定具体分区的全局伪 source：命令路由到集群 leader 所在分区（真实分区 source 从 2 开始分配） */
-  int PARTITION_GLOBAL_SOURCE = INITIAL_PARTITION_SOURCE;
+  int ADMIN_PARTITION_SOURCE = 2;
+  int BUSINESS_RAFT_GLOBAL_SOURCE = INITIAL_PARTITION_SOURCE;
 
   String NODE_SOURCE_TOPIC = "NODE-SOURCE";
 

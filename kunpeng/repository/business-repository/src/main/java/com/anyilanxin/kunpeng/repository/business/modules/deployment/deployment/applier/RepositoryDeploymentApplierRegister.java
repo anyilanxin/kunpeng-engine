@@ -19,7 +19,9 @@ package com.anyilanxin.kunpeng.repository.business.modules.deployment.deployment
 import com.anyilanxin.kunpeng.repository.business.BusinessRepository;
 import com.anyilanxin.kunpeng.repository.business.EnableRegisterRepositoryAppliers;
 import com.anyilanxin.kunpeng.repository.business.modules.deployment.bpmnresource.applier.impl.*;
+import com.anyilanxin.kunpeng.repository.business.modules.deployment.bytearray.applier.impl.RocksdbRepositoryCreatedDistributeResourceDefinitionApplierImpl;
 import com.anyilanxin.kunpeng.repository.business.modules.deployment.bytearray.applier.impl.RocksdbRepositoryCreatedResourceDefinitionApplierImpl;
+import com.anyilanxin.kunpeng.repository.business.modules.deployment.bytearray.applier.impl.RocksdbRepositoryDeletedDistributeResourceDefinitionApplierImpl;
 import com.anyilanxin.kunpeng.repository.business.modules.deployment.bytearray.applier.impl.RocksdbRepositoryDeletedResourceDefinitionApplierImpl;
 import com.anyilanxin.kunpeng.repository.business.modules.deployment.deployment.applier.impl.RocksdbRepositoryDeploymentCreateApplierImpl;
 import com.anyilanxin.kunpeng.repository.business.modules.deployment.deployment.applier.impl.RocksdbRepositoryDeploymentDeleteApplierImpl;
@@ -35,8 +37,10 @@ public class RepositoryDeploymentApplierRegister {
   public static void register(
       final EnableRegisterRepositoryAppliers appliers, final BusinessRepository repository) {
     appliers
+        .register(new RocksdbRepositoryCreatedDistributeResourceDefinitionApplierImpl(repository))
         .register(new RocksdbRepositoryCreatedResourceDefinitionApplierImpl(repository))
         .register(new RocksdbRepositoryDeletedResourceDefinitionApplierImpl(repository))
+        .register(new RocksdbRepositoryDeletedDistributeResourceDefinitionApplierImpl(repository))
         .register(new RocksdbRepositoryActivateProcessDefinitionApplierImpl(repository))
         .register(
             new RocksdbRepositoryFromDistributeActivateProcessDefinitionApplierImpl(repository))

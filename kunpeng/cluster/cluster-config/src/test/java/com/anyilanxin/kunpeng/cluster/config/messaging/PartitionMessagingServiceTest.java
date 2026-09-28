@@ -147,7 +147,7 @@ final class PartitionMessagingServiceTest {
             .map(
                 memberId -> {
                   final var info = new PartitionMemberInfo();
-                  info.setMemberId(memberId);
+                  info.setMemberId(MemberId.from(memberId));
                   return info;
                 })
             .toList();

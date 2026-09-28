@@ -24,10 +24,10 @@ import com.anyilanxin.kunpeng.protocol.business.record.query.QueryApiValueLifeCy
  * @since 2026.9.0
  */
 public enum BusinessRouteApiLifeCycle implements QueryApiValueLifeCycle {
-  MESSAGE_REQUEST((short) 0, PROCESS_INDEX_183, RECORD_INDEX_72),
+  MESSAGE_REQUEST((short) 0, PROCESS_INDEX_187, RECORD_INDEX_72),
   MESSAGE_RESPONSE((short) 1, NOT_PROCESS_INDEX, RECORD_INDEX_73),
 
-  SIGNAL_REQUEST((short) 2, PROCESS_INDEX_184, RECORD_INDEX_74),
+  SIGNAL_REQUEST((short) 2, PROCESS_INDEX_188, RECORD_INDEX_74),
   SIGNAL_RESPONSE((short) 3, NOT_PROCESS_INDEX, RECORD_INDEX_75),
   ;
 

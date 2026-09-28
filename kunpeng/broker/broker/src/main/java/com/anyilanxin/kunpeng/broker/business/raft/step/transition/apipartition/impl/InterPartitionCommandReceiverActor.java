@@ -16,9 +16,12 @@
  */
 package com.anyilanxin.kunpeng.broker.business.raft.step.transition.apipartition.impl;
 
+import static com.anyilanxin.kunpeng.broker.business.raft.step.transition.apipartition.impl.InterPartitionCommandSenderImpl.TOPIC_PREFIX;
+
 import com.anyilanxin.kunpeng.broker.BrokerLoggers;
 import com.anyilanxin.kunpeng.broker.monitoring.DiskSpaceUsageListener;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationService;
 import com.anyilanxin.kunpeng.cluster.utils.serializer.serializers.DefaultSerializers;
 import com.anyilanxin.kunpeng.eventlog.EventLogWriter;
@@ -41,24 +44,24 @@ public final class InterPartitionCommandReceiverActor extends Actor
   private static final Logger LOG = BrokerLoggers.TRANSPORT_LOGGER;
   private final String actorName;
   private final ClusterCommunicationService communicationService;
-  private final int partitionId;
+  private final PartitionId partitionId;
   private final InterPartitionCommandReceiverImpl receiver;
 
   public InterPartitionCommandReceiverActor(
-      final int partitionId,
+      final PartitionId partitionId,
       final ClusterCommunicationService communicationService,
       final EventLogWriter logStreamWriter,
       final RecordValueMapper valueMapper) {
     this.partitionId = partitionId;
     this.communicationService = communicationService;
     receiver = new InterPartitionCommandReceiverImpl(logStreamWriter, valueMapper);
-    actorName = buildActorName(getClass().getSimpleName(), partitionId);
+    actorName = buildActorName(getClass().getSimpleName(), partitionId.toString());
   }
 
   @Override
   protected Map<String, String> createContext() {
     final var context = super.createContext();
-    context.put("partitionId", Integer.toString(partitionId));
+    context.put("partitionId", partitionId.toString());
     return context;
   }
 
@@ -69,8 +72,9 @@ public final class InterPartitionCommandReceiverActor extends Actor
 
   @Override
   protected void onActorStarting() {
+    System.out.println("----TOPIC_PREFIX + partitionId------" + (TOPIC_PREFIX + partitionId));
     communicationService.consume(
-        InterPartitionCommandSenderImpl.TOPIC_PREFIX + partitionId,
+        TOPIC_PREFIX + partitionId,
         DefaultSerializers.BASIC::decode,
         this::tryHandleMessage,
         actor::run);
@@ -78,7 +82,7 @@ public final class InterPartitionCommandReceiverActor extends Actor
 
   @Override
   protected void onActorClosing() {
-    communicationService.unsubscribe(InterPartitionCommandSenderImpl.TOPIC_PREFIX + partitionId);
+    communicationService.unsubscribe(TOPIC_PREFIX + partitionId);
   }
 
   @Override

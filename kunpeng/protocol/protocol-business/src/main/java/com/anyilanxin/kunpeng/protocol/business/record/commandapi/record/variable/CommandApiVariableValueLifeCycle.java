@@ -23,9 +23,9 @@ import com.anyilanxin.kunpeng.protocol.business.record.commandapi.CommandApiValu
  * @since 2026.9.0
  */
 public enum CommandApiVariableValueLifeCycle implements CommandApiValueLifeCycle {
-  UPDATE_REQUEST((short) 0, PROCESS_INDEX_89, RECORD_INDEX_25),
+  UPDATE_REQUEST((short) 0, PROCESS_INDEX_93, RECORD_INDEX_25),
   UPDATE_RESPONSE((short) 1, NOT_PROCESS_INDEX, RECORD_INDEX_26),
-  DELETE_REQUEST((short) 2, PROCESS_INDEX_91, RECORD_INDEX_29),
+  DELETE_REQUEST((short) 2, PROCESS_INDEX_95, RECORD_INDEX_29),
   DELETE_RESPONSE((short) 3, NOT_PROCESS_INDEX, RECORD_INDEX_30);
 
   private final short value;

@@ -24,7 +24,7 @@ import com.anyilanxin.kunpeng.protocol.business.record.commandapi.CommandApiValu
  * @since 2026.9.0
  */
 public enum CommandApiIncidentValueLifeCycle implements CommandApiValueLifeCycle {
-  RESOLVE_REQUEST((short) 0, PROCESS_INDEX_126, RECORD_INDEX_51),
+  RESOLVE_REQUEST((short) 0, PROCESS_INDEX_130, RECORD_INDEX_51),
   RESOLVE_RESPONSE((short) 1, NOT_PROCESS_INDEX, RECORD_INDEX_52);
 
   private final short value;

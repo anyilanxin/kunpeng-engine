@@ -62,4 +62,14 @@ public class DefaultClusterTopologyService extends AbstractSwimTopologyService
   public IntHashSet getActivitySourceIds() {
     return super.getActivitySourceIds();
   }
+
+  @Override
+  public IntHashSet getActivityPartitionIds() {
+    return super.getActivityPartitionIds();
+  }
+
+  @Override
+  public int getPartitionSource(final PartitionId partitionId) {
+    return super.getPartitionSource(partitionId);
+  }
 }

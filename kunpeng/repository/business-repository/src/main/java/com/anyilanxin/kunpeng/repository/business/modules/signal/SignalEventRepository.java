@@ -16,7 +16,7 @@
  */
 package com.anyilanxin.kunpeng.repository.business.modules.signal;
 
-import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.BUSINESS_RAFT_ONE_SOURCE;
+import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.BUSINESS_RAFT_GLOBAL_SOURCE;
 
 import com.anyilanxin.kunpeng.kvstore.ColumnFamily;
 import com.anyilanxin.kunpeng.kvstore.KvStore;
@@ -208,7 +208,7 @@ public class SignalEventRepository implements MutableSignalEventRepository, Rock
   public void delete(final long key) {
     signalIdDbKey.wrapLong(key);
     entityDbValue.reset();
-    if (Protocol.decodeResourceId(key) == BUSINESS_RAFT_ONE_SOURCE) {
+    if (Protocol.decodeResourceId(key) == BUSINESS_RAFT_GLOBAL_SOURCE) {
       if (startEventSignColumnFamily.get(signalIdDbKey) != null) {
         processDefinitionKeyDbKey.wrapString(entityDbValue.getProcessDefinitionKey());
         tenantIdDbKey.wrapString(entityDbValue.getTenantId());
@@ -322,7 +322,7 @@ public class SignalEventRepository implements MutableSignalEventRepository, Rock
   public Optional<SignalSubscriptionRecord> query(final long key) {
     signalIdDbKey.wrapLong(key);
     entityDbValue.reset();
-    if (Protocol.decodeResourceId(key) == BUSINESS_RAFT_ONE_SOURCE) {
+    if (Protocol.decodeResourceId(key) == BUSINESS_RAFT_GLOBAL_SOURCE) {
       return Optional.ofNullable(startEventSignColumnFamily.get(signalIdDbKey))
           .map(v -> v.unwrap(recordBuffer));
     } else {

@@ -24,17 +24,17 @@ import com.anyilanxin.kunpeng.protocol.business.ValueType;
  */
 public enum JobLifeCycle implements ValueLifeCycle {
   NULL_VAL((short) -1, NOT_PROCESS_INDEX),
-  CREATING((short) 1, PROCESS_INDEX_137),
-  CREATED((short) 2, PROCESS_INDEX_138),
-  COMPLETING((short) 3, PROCESS_INDEX_139),
-  COMPLETED((short) 4, PROCESS_INDEX_140),
-  UPDATING((short) 5, PROCESS_INDEX_141),
-  UPDATED((short) 6, PROCESS_INDEX_142),
-  REFUSING((short) 8, PROCESS_INDEX_143),
-  REFUSED((short) 9, PROCESS_INDEX_144),
-  WITHDRAW((short) 10, PROCESS_INDEX_145),
-  TIME_OUT((short) 11, PROCESS_INDEX_146),
-  TIMED_OUT((short) 12, PROCESS_INDEX_147),
+  CREATING((short) 1, PROCESS_INDEX_141),
+  CREATED((short) 2, PROCESS_INDEX_142),
+  COMPLETING((short) 3, PROCESS_INDEX_143),
+  COMPLETED((short) 4, PROCESS_INDEX_144),
+  UPDATING((short) 5, PROCESS_INDEX_145),
+  UPDATED((short) 6, PROCESS_INDEX_146),
+  REFUSING((short) 8, PROCESS_INDEX_147),
+  REFUSED((short) 9, PROCESS_INDEX_148),
+  WITHDRAW((short) 10, PROCESS_INDEX_149),
+  TIME_OUT((short) 11, PROCESS_INDEX_150),
+  TIMED_OUT((short) 12, PROCESS_INDEX_151),
   ;
 
   private final short value;

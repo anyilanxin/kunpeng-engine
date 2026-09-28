@@ -24,7 +24,7 @@ import com.anyilanxin.kunpeng.protocol.business.record.command.distribute.parall
 import com.anyilanxin.kunpeng.protocol.business.record.command.distribute.serial.DistributeSerialLifeCycle;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+import org.agrona.collections.IntHashSet;
 
 /**
  * 并行分发创建命令处理器。
@@ -44,21 +44,18 @@ public class DistributeParallelCreateProcessor extends AbstractDistributeParalle
     final DistributeParallelRecord value = record.getValue();
     value.setDistributeId(writer.nextCurrentSourceKey());
     value.setStartTime(writer.millis());
-    final int currentSourceId = writer.getSourceId();
-    final Set<Integer> sourceIds = writer.getActivitySourceIds();
-    final List<Integer> activitySourceIds = new ArrayList<>(sourceIds.size());
-    for (final Integer sourceId : sourceIds) {
-      if (sourceId != currentSourceId && sourceId != 1) {
-        activitySourceIds.add(sourceId);
-      }
-    }
-    value.setDistributeIndex(activitySourceIds);
+    final int partitionId = writer.getPartitionId();
+    final IntHashSet activityPartitionIds = writer.getActivityPartitionIds();
+    final List<Integer> distributeIndexSet =
+        new ArrayList<>(activityPartitionIds.stream().toList());
+    distributeIndexSet.remove((Integer) partitionId);
+    value.setDistributeIndex(distributeIndexSet);
     writer.addEvent(
         value.getDistributeId(),
         DistributeParallelLifeCycle.CREATE_DISTRIBUTED,
         record.getRequestId(),
         value);
-    if (activitySourceIds.isEmpty()) {
+    if (distributeIndexSet.isEmpty()) {
       if (value.isHaveFollowUp()) {
         writer.addCommand(
             value.getDistributeRecordId(),

@@ -24,14 +24,14 @@ import com.anyilanxin.kunpeng.protocol.business.ValueType;
  */
 public enum SignalSubscriptionLifeCycle implements ValueLifeCycle {
   NULL_VAL((short) -1, NOT_PROCESS_INDEX),
-  CREATING((short) 1, PROCESS_INDEX_159),
-  CREATED((short) 2, PROCESS_INDEX_160),
-  DISTRIBUTE_CREATED((short) 3, PROCESS_INDEX_161),
-  CORRELATE((short) 4, PROCESS_INDEX_162),
-  CORRELATED((short) 5, PROCESS_INDEX_163),
-  CANCEL((short) 6, PROCESS_INDEX_164),
-  CANCELED((short) 7, PROCESS_INDEX_165),
-  DISTRIBUTE_CANCELED((short) 8, PROCESS_INDEX_166),
+  CREATING((short) 1, PROCESS_INDEX_163),
+  CREATED((short) 2, PROCESS_INDEX_164),
+  DISTRIBUTE_CREATED((short) 3, PROCESS_INDEX_165),
+  CORRELATE((short) 4, PROCESS_INDEX_166),
+  CORRELATED((short) 5, PROCESS_INDEX_167),
+  CANCEL((short) 6, PROCESS_INDEX_168),
+  CANCELED((short) 7, PROCESS_INDEX_169),
+  DISTRIBUTE_CANCELED((short) 8, PROCESS_INDEX_170),
   ;
 
   private final short value;

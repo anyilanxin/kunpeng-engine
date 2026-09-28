@@ -42,5 +42,9 @@ public interface ClusterTopologyService {
 
   IntHashSet getActivitySourceIds();
 
+  IntHashSet getActivityPartitionIds();
+
   PartitionId getPartitionBySourceId(final int sourceId);
+
+  int getPartitionSource(PartitionId partitionId);
 }

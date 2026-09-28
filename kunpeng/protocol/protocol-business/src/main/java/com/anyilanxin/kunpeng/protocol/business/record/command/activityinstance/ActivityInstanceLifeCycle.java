@@ -26,32 +26,32 @@ import com.anyilanxin.kunpeng.protocol.business.record.command.CommandValueLifeC
 public enum ActivityInstanceLifeCycle implements CommandValueLifeCycle {
   NULL_VAL((short) -1, NOT_PROCESS_INDEX),
 
-  ACTIVATING((short) 1, PROCESS_INDEX_74),
+  ACTIVATING((short) 1, PROCESS_INDEX_78),
 
-  ACTIVATING_AFTER((short) 2, PROCESS_INDEX_75),
+  ACTIVATING_AFTER((short) 2, PROCESS_INDEX_79),
 
-  ACTIVATED((short) 3, PROCESS_INDEX_76),
+  ACTIVATED((short) 3, PROCESS_INDEX_80),
 
-  OCCURRED((short) 4, PROCESS_INDEX_77),
+  OCCURRED((short) 4, PROCESS_INDEX_81),
 
-  TAKING((short) 5, PROCESS_INDEX_78),
+  TAKING((short) 5, PROCESS_INDEX_82),
 
-  TAKEN((short) 6, PROCESS_INDEX_79),
+  TAKEN((short) 6, PROCESS_INDEX_83),
 
-  COMPLETING((short) 7, PROCESS_INDEX_80),
+  COMPLETING((short) 7, PROCESS_INDEX_84),
 
-  COMPLETING_AFTER((short) 8, PROCESS_INDEX_81),
+  COMPLETING_AFTER((short) 8, PROCESS_INDEX_85),
 
-  COMPLETED((short) 9, PROCESS_INDEX_82),
-  TERMINATING((short) 10, PROCESS_INDEX_83),
+  COMPLETED((short) 9, PROCESS_INDEX_86),
+  TERMINATING((short) 10, PROCESS_INDEX_87),
 
-  TERMINATING_AFTER((short) 11, PROCESS_INDEX_84),
+  TERMINATING_AFTER((short) 11, PROCESS_INDEX_88),
 
-  TERMINATED((short) 12, PROCESS_INDEX_85),
-  LISTENER_CREATE((short) 13, PROCESS_INDEX_86),
-  LISTENER_COMPLETED((short) 14, PROCESS_INDEX_87),
+  TERMINATED((short) 12, PROCESS_INDEX_89),
+  LISTENER_CREATE((short) 13, PROCESS_INDEX_90),
+  LISTENER_COMPLETED((short) 14, PROCESS_INDEX_91),
 
-  LISTENER_DENY((short) 15, PROCESS_INDEX_88);
+  LISTENER_DENY((short) 15, PROCESS_INDEX_92);
 
   private final short value;
   private final short processIndex;

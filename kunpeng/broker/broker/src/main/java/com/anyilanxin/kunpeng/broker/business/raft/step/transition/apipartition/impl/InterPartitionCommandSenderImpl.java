@@ -16,6 +16,8 @@
  */
 package com.anyilanxin.kunpeng.broker.business.raft.step.transition.apipartition.impl;
 
+import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.BUSINESS_RAFT_GROUP;
+
 import com.anyilanxin.kunpeng.broker.BrokerLoggers;
 import com.anyilanxin.kunpeng.broker.protocol.InterPartitionMessageEncoder;
 import com.anyilanxin.kunpeng.broker.protocol.MessageHeaderEncoder;
@@ -110,7 +112,6 @@ final class InterPartitionCommandSenderImpl implements InterPartitionCommandSend
             lifeCycle,
             recordKey,
             valueMapper.copyValue(lifeCycle, command));
-
     communicationService.unicast(
         TOPIC_PREFIX + partitionId,
         message,
@@ -157,5 +158,15 @@ final class InterPartitionCommandSenderImpl implements InterPartitionCommandSend
   @Override
   public IntHashSet getActivitySourceIds() {
     return topologyService.getActivitySourceIds();
+  }
+
+  @Override
+  public IntHashSet getActivityPartitionIds() {
+    return topologyService.getActivityPartitionIds();
+  }
+
+  @Override
+  public int getPartitionSource(final int partitionId) {
+    return topologyService.getPartitionSource(PartitionId.from(BUSINESS_RAFT_GROUP, partitionId));
   }
 }

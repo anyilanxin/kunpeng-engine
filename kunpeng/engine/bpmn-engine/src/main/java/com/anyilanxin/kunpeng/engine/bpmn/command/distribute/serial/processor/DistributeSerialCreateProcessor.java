@@ -23,7 +23,7 @@ import com.anyilanxin.kunpeng.protocol.business.impl.record.command.distribute.s
 import com.anyilanxin.kunpeng.protocol.business.record.command.distribute.serial.DistributeSerialLifeCycle;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+import org.agrona.collections.IntHashSet;
 
 /**
  * 串行分发创建命令处理器。
@@ -43,21 +43,18 @@ public class DistributeSerialCreateProcessor extends AbstractDistributeSerialPro
     final DistributeSerialRecord value = record.getValue();
     value.setDistributeId(writer.nextCurrentSourceKey());
     value.setStartTime(writer.millis());
-    final int currentSourceId = writer.getSourceId();
-    final Set<Integer> sourceIds = writer.getActivitySourceIds();
-    final List<Integer> activitySourceIds = new ArrayList<>(sourceIds.size());
-    for (final Integer sourceId : sourceIds) {
-      if (sourceId != currentSourceId && sourceId != 1) {
-        activitySourceIds.add(sourceId);
-      }
-    }
-    value.setDistributeSourceId(activitySourceIds);
+    final int partitionId = writer.getPartitionId();
+    final IntHashSet activityPartitionIds = writer.getActivityPartitionIds();
+    final List<Integer> distributeIndexSet =
+        new ArrayList<>(activityPartitionIds.stream().toList());
+    distributeIndexSet.remove(partitionId);
+    value.setDistributeSourceId(distributeIndexSet);
     writer.addEvent(
         value.getDistributeId(),
         DistributeSerialLifeCycle.CREATE_DISTRIBUTED,
         record.getRequestId(),
         value);
-    if (activitySourceIds.isEmpty()) {
+    if (distributeIndexSet.isEmpty()) {
       writer.addCommand(
           value.getDistributeId(),
           DistributeSerialLifeCycle.DISTRIBUTE_COMPLETE,

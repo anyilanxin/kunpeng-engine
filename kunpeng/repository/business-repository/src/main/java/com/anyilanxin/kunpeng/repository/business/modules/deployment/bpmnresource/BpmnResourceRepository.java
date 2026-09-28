@@ -140,6 +140,7 @@ public final class BpmnResourceRepository implements MutableBpmnResourceReposito
 
   @Override
   public void save(final long key, final ProcessDefinitionRecord record) {
+    System.out.println("-----key---------" + key);
     tenantIdDbKey.wrapString(record.getTenantId());
     processDefinitionKeyDbKey.wrapString(record.getProcessDefinitionKey());
     processDefinitionIdDbKey.wrapLong(key);

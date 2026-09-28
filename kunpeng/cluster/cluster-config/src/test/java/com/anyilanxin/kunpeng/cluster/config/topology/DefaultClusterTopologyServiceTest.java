@@ -137,7 +137,7 @@ class DefaultClusterTopologyServiceTest {
   private Member memberBroadcast(
       final String memberId, final PartitionRole role, final long term) {
     final PartitionMemberInfo info = new PartitionMemberInfo();
-    info.setMemberId(memberId);
+    info.setMemberId(MemberId.from(memberId));
     info.setPartitionId(PARTITION);
     info.setRole(role);
     info.setTerm(term);

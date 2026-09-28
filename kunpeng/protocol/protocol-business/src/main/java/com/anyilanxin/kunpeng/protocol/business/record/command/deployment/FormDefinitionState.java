@@ -25,8 +25,8 @@ import com.anyilanxin.kunpeng.protocol.business.record.command.CommandValueLifeC
  */
 public enum FormDefinitionState implements CommandValueLifeCycle {
   NULL_VAL((short) -1, NOT_PROCESS_INDEX),
-  CREATED((short) 0, PROCESS_INDEX_38),
-  DELETED((short) 1, PROCESS_INDEX_39);
+  CREATED((short) 0, PROCESS_INDEX_42),
+  DELETED((short) 1, PROCESS_INDEX_43);
 
   private final short value;
   private final short processIndex;

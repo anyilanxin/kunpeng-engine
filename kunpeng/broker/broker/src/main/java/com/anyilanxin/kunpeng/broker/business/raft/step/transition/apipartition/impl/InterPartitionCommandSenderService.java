@@ -78,4 +78,14 @@ public final class InterPartitionCommandSenderService extends Actor
   public IntHashSet getActivitySourceIds() {
     return commandSender.getActivitySourceIds();
   }
+
+  @Override
+  public IntHashSet getActivityPartitionIds() {
+    return commandSender.getActivityPartitionIds();
+  }
+
+  @Override
+  public int getPartitionSource(final int partitionId) {
+    return commandSender.getPartitionSource(partitionId);
+  }
 }

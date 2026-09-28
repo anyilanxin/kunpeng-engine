@@ -28,6 +28,7 @@ import com.anyilanxin.kunpeng.bpm.parse.dmn.element.DmnDecision;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.DmnDecisionRequirementsGraph;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.DmnTransformer;
 import com.anyilanxin.kunpeng.engine.bpmn.LogEventWriter;
+import com.anyilanxin.kunpeng.engine.bpmn.Loggers;
 import com.anyilanxin.kunpeng.engine.bpmn.command.LogEventDistributeProcessor;
 import com.anyilanxin.kunpeng.engine.bpmn.command.behavior.Behavior;
 import com.anyilanxin.kunpeng.engine.bpmn.command.behavior.impl.CatchEventBehavior;
@@ -49,7 +50,6 @@ import com.anyilanxin.kunpeng.structpack.value.ValueArray;
 import java.util.List;
 import org.agrona.DirectBuffer;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 部署创建命令处理器：解析流程定义并分发至各分区。
@@ -58,7 +58,7 @@ import org.slf4j.LoggerFactory;
  * @since 2026.9.0
  */
 public class DeploymentCreateProcessor extends LogEventDistributeProcessor<DeploymentRecord> {
-  private static final Logger LOG = LoggerFactory.getLogger(DeploymentCreateProcessor.class);
+  private static final Logger LOG = Loggers.BPMN_LOGGER;
   final LogEventWriter writer;
   private final BpmnTransformer bpmnTransformer;
   private final BpmnValidator bpmnValidator;
@@ -133,6 +133,7 @@ public class DeploymentCreateProcessor extends LogEventDistributeProcessor<Deplo
   @Override
   public void processRecordDistribute(final BusinessLogRecord<DeploymentRecord> record) {
     LOG.debug("processRecordDistribute source {}", writer.getSourceId());
+    System.out.println("-------processRecordDistribute----------");
     final DeploymentRecord deploymentRecord = record.getValue();
     writer.addEvent(
         deploymentRecord.getDeploymentId(),
@@ -186,14 +187,15 @@ public class DeploymentCreateProcessor extends LogEventDistributeProcessor<Deplo
    */
   private void processDeployment(
       final boolean distribute, final long requestId, final DeploymentRecord deploymentRecord) {
-    processResource(requestId, deploymentRecord.resourceDefinitions());
+    processResource(distribute, requestId, deploymentRecord.resourceDefinitions());
     processBpmn(
         distribute,
         requestId,
         deploymentRecord.getActivateProcessDefinitionsOn(),
         deploymentRecord.processDefinitions());
-    processDmnDecision(requestId, deploymentRecord.decisionDefinitions());
-    processDmnDecisionRequirement(requestId, deploymentRecord.decisionRequirementDefinitions());
+    processDmnDecision(distribute, requestId, deploymentRecord.decisionDefinitions());
+    processDmnDecisionRequirement(
+        distribute, requestId, deploymentRecord.decisionRequirementDefinitions());
   }
 
   /**
@@ -203,11 +205,15 @@ public class DeploymentCreateProcessor extends LogEventDistributeProcessor<Deplo
    * @param resourceDefinitionRecords
    */
   private void processResource(
-      final long requestId, final ValueArray<ResourceDefinitionRecord> resourceDefinitionRecords) {
+      final boolean distribute,
+      final long requestId,
+      final ValueArray<ResourceDefinitionRecord> resourceDefinitionRecords) {
     for (final ResourceDefinitionRecord resourceDefinition : resourceDefinitionRecords) {
       writer.addEvent(
           resourceDefinition.getResourceDefinitionId(),
-          ResourceDefinitionLifeCycle.CREATED,
+          distribute
+              ? ResourceDefinitionLifeCycle.CREATED_DISTRIBUTE
+              : ResourceDefinitionLifeCycle.CREATED,
           requestId,
           resourceDefinition);
     }
@@ -226,9 +232,16 @@ public class DeploymentCreateProcessor extends LogEventDistributeProcessor<Deplo
       final long activateProcessDefinitionsOn,
       final ValueArray<ProcessDefinitionRecord> processDefinitionRecords) {
     for (final ProcessDefinitionRecord processDefinition : processDefinitionRecords) {
+      System.out.println(
+          "----processDefinition.getProcessDefinitionId()------distribute---" + distribute);
+      System.out.println(
+          "----processDefinition.getProcessDefinitionId()----id-----"
+              + processDefinition.getProcessDefinitionId());
       writer.addEvent(
           processDefinition.getProcessDefinitionId(),
-          ProcessDefinitionLifeCycle.CREATED,
+          distribute
+              ? ProcessDefinitionLifeCycle.CREATED_DISTRIBUTE
+              : ProcessDefinitionLifeCycle.CREATED,
           requestId,
           processDefinition);
       processDefinitionBehavior.cancelRegisterStartEvent(distribute, processDefinition);
@@ -237,7 +250,9 @@ public class DeploymentCreateProcessor extends LogEventDistributeProcessor<Deplo
       if (activation) {
         writer.addEvent(
             processDefinition.getProcessDefinitionId(),
-            ProcessDefinitionLifeCycle.ACTIVATED,
+            distribute
+                ? ProcessDefinitionLifeCycle.ACTIVATED_DISTRIBUTE
+                : ProcessDefinitionLifeCycle.ACTIVATED,
             requestId,
             processDefinition);
         final ProcessDefinitionRuntime executableProcess =
@@ -261,11 +276,15 @@ public class DeploymentCreateProcessor extends LogEventDistributeProcessor<Deplo
    * @param processDefinitionRecords
    */
   private void processDmnDecision(
-      final long requestId, final ValueArray<DecisionDefinitionRecord> processDefinitionRecords) {
+      final boolean distribute,
+      final long requestId,
+      final ValueArray<DecisionDefinitionRecord> processDefinitionRecords) {
     for (final DecisionDefinitionRecord decisionDefinition : processDefinitionRecords) {
       writer.addEvent(
           decisionDefinition.getDecisionDefinitionId(),
-          DecisionDefinitionLifeCycle.CREATED,
+          distribute
+              ? DecisionDefinitionLifeCycle.CREATED_DISTRIBUTE
+              : DecisionDefinitionLifeCycle.CREATED,
           requestId,
           decisionDefinition);
     }
@@ -278,13 +297,16 @@ public class DeploymentCreateProcessor extends LogEventDistributeProcessor<Deplo
    * @param processDefinitionRecords
    */
   private void processDmnDecisionRequirement(
+      final boolean distribute,
       final long requestId,
       final ValueArray<DecisionRequirementDefinitionRecord> processDefinitionRecords) {
     for (final DecisionRequirementDefinitionRecord decisionRequirementDefinition :
         processDefinitionRecords) {
       writer.addEvent(
           decisionRequirementDefinition.getDecisionRequirementDefinitionId(),
-          DecisionRequirementDefinitionLifeCycle.CREATED,
+          distribute
+              ? DecisionRequirementDefinitionLifeCycle.CREATED_DISTRIBUTE
+              : DecisionRequirementDefinitionLifeCycle.CREATED,
           requestId,
           decisionRequirementDefinition);
     }

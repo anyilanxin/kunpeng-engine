@@ -90,7 +90,7 @@ public class BrokerClientImpl extends Actor implements BrokerClient {
     this.membershipService = membershipService;
     this.leaderFoundService = leaderFoundService;
     this.requestTimeout = requestTimeout;
-    this.topologyManager = new BrokerTopologyManager(topologyService);
+    topologyManager = new BrokerTopologyManager(topologyService);
   }
 
   @Override
@@ -150,7 +150,6 @@ public class BrokerClientImpl extends Actor implements BrokerClient {
     final SendAddress address;
     switch (requestType) {
       case COMMAND_API -> address = getCommandApiAddress(request, responseFuture);
-      case ADMIN, CLUSTER_LEADER -> address = getAdminAddress(request, responseFuture);
       case QUERY -> address = getQueryAddress(request, responseFuture);
       default -> {
         responseFuture.completeExceptionally(new BrokerException(10, "Unexpected request type"));
@@ -303,19 +302,6 @@ public class BrokerClientImpl extends Actor implements BrokerClient {
       return partitionAddress(partition, responseFuture);
     }
     return partitionAddress(PartitionId.from(BUSINESS_RAFT_GROUP, partitionId), responseFuture);
-  }
-
-  private <Request extends RequestRecordValue, Response extends ResponseRecordValue>
-      SendAddress getAdminAddress(
-          final BrokerRequest<Request> request,
-          final CompletableFuture<BrokerResponse<Response>> responseFuture) {
-    final Address apiAddress = leaderFoundService.getLeaderAddress();
-    final MemberId leaderMemberId = leaderFoundService.getLeader();
-    if (apiAddress == null || leaderMemberId == null) {
-      responseFuture.completeExceptionally(new BrokerException(10, "Cluster leader not found"));
-      return null;
-    }
-    return new SendAddress(leaderMemberId.id(), apiAddress);
   }
 
   private <Request extends RequestRecordValue, Response extends ResponseRecordValue>

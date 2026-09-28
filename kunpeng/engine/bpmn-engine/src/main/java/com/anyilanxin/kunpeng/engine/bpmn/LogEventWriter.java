@@ -16,7 +16,7 @@
  */
 package com.anyilanxin.kunpeng.engine.bpmn;
 
-import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.BUSINESS_RAFT_ONE_SOURCE;
+import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.BUSINESS_RAFT_GLOBAL_SOURCE;
 import static com.anyilanxin.kunpeng.protocol.common.Protocol.DEPLOYMENT_PARTITION;
 
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.BpmnFactory;
@@ -331,8 +331,12 @@ public class LogEventWriter {
     return commandSender.getActivitySourceIds();
   }
 
+  public IntHashSet getActivityPartitionIds() {
+    return commandSender.getActivityPartitionIds();
+  }
+
   public long nextGlobalKey() {
-    return keyGenerator.nextKey(BUSINESS_RAFT_ONE_SOURCE);
+    return keyGenerator.nextKey(BUSINESS_RAFT_GLOBAL_SOURCE);
   }
 
   public long nextKey(final int resourceId) {

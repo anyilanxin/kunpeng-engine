@@ -56,10 +56,10 @@ public class DistributeParallelDistributeStartProcessor
     final int currentIndex = value.getCurrentDistributeIndex();
     Integer first = null;
     boolean hasMore = false;
-    for (final Integer sourceId : value.getDistributeIndex()) {
-      if (sourceId > currentIndex) {
+    for (final Integer partitionId : value.getDistributeIndex()) {
+      if (partitionId > currentIndex) {
         if (first == null) {
-          first = sourceId;
+          first = partitionId;
         } else {
           hasMore = true;
           break;
@@ -69,7 +69,6 @@ public class DistributeParallelDistributeStartProcessor
     if (first != null) {
       value.setCurrentDistributeIndex(first);
       distributeParallelBehavior.distributeParallel(value, first);
-
       writer.addEvent(
           value.getDistributeId(),
           DistributeParallelLifeCycle.DISTRIBUTE_CONTINUED,

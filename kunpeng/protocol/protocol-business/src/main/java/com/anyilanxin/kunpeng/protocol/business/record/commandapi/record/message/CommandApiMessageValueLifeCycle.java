@@ -24,7 +24,7 @@ import com.anyilanxin.kunpeng.protocol.business.record.commandapi.CommandApiValu
  * @since 2026.9.0
  */
 public enum CommandApiMessageValueLifeCycle implements CommandApiValueLifeCycle {
-  CORRELATION_REQUEST((short) 0, PROCESS_INDEX_150, RECORD_INDEX_65),
+  CORRELATION_REQUEST((short) 0, PROCESS_INDEX_154, RECORD_INDEX_65),
   CORRELATION_RESPONSE((short) 1, NOT_PROCESS_INDEX, RECORD_INDEX_66);
 
   private final short value;

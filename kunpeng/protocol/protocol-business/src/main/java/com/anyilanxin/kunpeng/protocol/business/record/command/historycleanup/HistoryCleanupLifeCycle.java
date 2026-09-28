@@ -24,10 +24,10 @@ import com.anyilanxin.kunpeng.protocol.business.ValueType;
  */
 public enum HistoryCleanupLifeCycle implements ValueLifeCycle {
   NULL_VAL((short) -1, NOT_PROCESS_INDEX),
-  CREATE((short) 1, PROCESS_INDEX_179),
-  CREATED((short) 2, PROCESS_INDEX_180),
-  TRIGGER((short) 3, PROCESS_INDEX_181),
-  TRIGGERED((short) 4, PROCESS_INDEX_182);
+  CREATE((short) 1, PROCESS_INDEX_183),
+  CREATED((short) 2, PROCESS_INDEX_184),
+  TRIGGER((short) 3, PROCESS_INDEX_185),
+  TRIGGERED((short) 4, PROCESS_INDEX_186);
 
   private final short value;
   private final short processIndex;

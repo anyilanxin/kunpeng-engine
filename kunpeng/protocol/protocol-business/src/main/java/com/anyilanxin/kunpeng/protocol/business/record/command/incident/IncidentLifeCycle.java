@@ -26,17 +26,17 @@ import com.anyilanxin.kunpeng.protocol.business.record.command.CommandValueLifeC
 public enum IncidentLifeCycle implements CommandValueLifeCycle {
   NULL_VAL((short) -1, NOT_PROCESS_INDEX),
 
-  CREATING((short) 1, PROCESS_INDEX_127),
+  CREATING((short) 1, PROCESS_INDEX_131),
 
-  CREATED((short) 2, PROCESS_INDEX_128),
+  CREATED((short) 2, PROCESS_INDEX_132),
 
-  RESOLVE((short) 3, PROCESS_INDEX_129),
+  RESOLVE((short) 3, PROCESS_INDEX_133),
 
-  RESOLVED((short) 4, PROCESS_INDEX_130),
+  RESOLVED((short) 4, PROCESS_INDEX_134),
 
-  DELETE((short) 5, PROCESS_INDEX_131),
+  DELETE((short) 5, PROCESS_INDEX_135),
 
-  DELETED((short) 6, PROCESS_INDEX_132);
+  DELETED((short) 6, PROCESS_INDEX_136);
 
   private final short value;
   private final short processIndex;

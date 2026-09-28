@@ -15,7 +15,7 @@ package com.anyilanxin.kunpeng.protocol.business.record.commandapi.record.job;
 import static com.anyilanxin.kunpeng.protocol.business.RecordMappingIndex.RECORD_INDEX_62;
 import static com.anyilanxin.kunpeng.protocol.business.RecordMappingIndex.RECORD_INDEX_63;
 import static com.anyilanxin.kunpeng.protocol.business.RecordProcessIndex.NOT_PROCESS_INDEX;
-import static com.anyilanxin.kunpeng.protocol.business.RecordProcessIndex.PROCESS_INDEX_147;
+import static com.anyilanxin.kunpeng.protocol.business.RecordProcessIndex.PROCESS_INDEX_151;
 
 import com.anyilanxin.kunpeng.protocol.business.ValueType;
 import com.anyilanxin.kunpeng.protocol.business.record.commandapi.CommandApiValueLifeCycle;
@@ -25,7 +25,7 @@ import com.anyilanxin.kunpeng.protocol.business.record.commandapi.CommandApiValu
  * @since 2026.9.0
  */
 public enum CommandApiJobBatchValueLifeCycle implements CommandApiValueLifeCycle {
-  ACTIVATE_REQUEST((short) 0, PROCESS_INDEX_147, RECORD_INDEX_62),
+  ACTIVATE_REQUEST((short) 0, PROCESS_INDEX_151, RECORD_INDEX_62),
   ACTIVATE_RESPONSE((short) 1, NOT_PROCESS_INDEX, RECORD_INDEX_63),
   ;
   private final short value;

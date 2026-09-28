@@ -47,9 +47,9 @@ public class DistributeParallelDistributeAfterStartProcessor
   @Override
   public void processRecord(final BusinessLogRecord<DistributeParallelRecord> record) {
     final DistributeParallelRecord value = record.getValue();
-    final List<Integer> activitySourceIds = new ArrayList<>(writer.getActivitySourceIds());
-    Collections.shuffle(activitySourceIds);
-    value.setDistributeAfterIndex(activitySourceIds.getFirst());
+    final List<Integer> activityPartitionIds = new ArrayList<>(writer.getActivityPartitionIds());
+    Collections.shuffle(activityPartitionIds);
+    value.setDistributeAfterIndex(activityPartitionIds.getFirst());
     value.setLifeCycle(DistributeParallelLifeCycle.DISTRIBUTE_AFTER_STARTED);
     writer.addEvent(
         value.getDistributeId(),

@@ -25,8 +25,8 @@ import com.anyilanxin.kunpeng.protocol.business.record.command.CommandValueLifeC
  */
 public enum JobBatchLifeCycle implements CommandValueLifeCycle {
   NULL_VAL((short) -1, NOT_PROCESS_INDEX),
-  ACTIVATE((short) 1, PROCESS_INDEX_148),
-  ACTIVATED((short) 2, PROCESS_INDEX_149),
+  ACTIVATE((short) 1, PROCESS_INDEX_152),
+  ACTIVATED((short) 2, PROCESS_INDEX_153),
   ;
   private final short value;
   private final short processIndex;

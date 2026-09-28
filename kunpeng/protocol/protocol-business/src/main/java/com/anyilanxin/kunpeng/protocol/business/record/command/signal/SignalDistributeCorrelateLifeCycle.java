@@ -25,21 +25,21 @@ import com.anyilanxin.kunpeng.protocol.business.ValueType;
 public enum SignalDistributeCorrelateLifeCycle implements ValueLifeCycle {
   NULL_VAL((short) -1, NOT_PROCESS_INDEX),
 
-  CREATE((short) 2, PROCESS_INDEX_214),
+  CREATE((short) 2, PROCESS_INDEX_218),
 
-  CREATED((short) 2, PROCESS_INDEX_215),
+  CREATED((short) 2, PROCESS_INDEX_219),
 
-  CORRELATE_DISTRIBUTE((short) 3, PROCESS_INDEX_216),
+  CORRELATE_DISTRIBUTE((short) 3, PROCESS_INDEX_220),
 
-  CORRELATE_CONFIRM((short) 4, PROCESS_INDEX_217),
+  CORRELATE_CONFIRM((short) 4, PROCESS_INDEX_221),
 
-  CORRELATE_COMPLETE_CONFIRM((short) 5, PROCESS_INDEX_218),
+  CORRELATE_COMPLETE_CONFIRM((short) 5, PROCESS_INDEX_222),
 
-  CORRELATE_CONFIRMED((short) 4, PROCESS_INDEX_219),
+  CORRELATE_CONFIRMED((short) 4, PROCESS_INDEX_223),
 
-  CORRELATED((short) 6, PROCESS_INDEX_220),
+  CORRELATED((short) 6, PROCESS_INDEX_224),
 
-  FAILED((short) 7, PROCESS_INDEX_221),
+  FAILED((short) 7, PROCESS_INDEX_225),
   ;
 
   private final short value;

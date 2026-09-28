@@ -25,8 +25,8 @@ import com.anyilanxin.kunpeng.protocol.business.record.command.CommandValueLifeC
  */
 public enum AsyncRequestLifeCycle implements CommandValueLifeCycle {
   NULL_VAL((short) -1, NOT_PROCESS_INDEX),
-  CREATED((short) 1, PROCESS_INDEX_133),
-  COMPLETED((short) 2, PROCESS_INDEX_134);
+  CREATED((short) 1, PROCESS_INDEX_137),
+  COMPLETED((short) 2, PROCESS_INDEX_138);
 
   private final short value;
   private final short processIndex;

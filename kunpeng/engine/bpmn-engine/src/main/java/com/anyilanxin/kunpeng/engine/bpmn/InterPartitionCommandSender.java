@@ -58,4 +58,8 @@ public interface InterPartitionCommandSender {
       final UnifiedRecordValue command);
 
   IntHashSet getActivitySourceIds();
+
+  IntHashSet getActivityPartitionIds();
+
+  int getPartitionSource(final int partitionId);
 }

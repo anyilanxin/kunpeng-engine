@@ -25,13 +25,13 @@ import com.anyilanxin.kunpeng.protocol.business.record.command.CommandValueLifeC
  */
 public enum VariableLifeCycle implements CommandValueLifeCycle {
   NULL_VAL((short) -1, NOT_PROCESS_INDEX),
-  CREATE((short) 0, PROCESS_INDEX_92),
-  CREATED((short) 1, PROCESS_INDEX_93),
-  UPDATE((short) 2, PROCESS_INDEX_94),
-  UPDATED((short) 3, PROCESS_INDEX_95),
-  REMOVE((short) 4, PROCESS_INDEX_96),
-  REMOVED((short) 5, PROCESS_INDEX_90),
-  HISTORY((short) 6, PROCESS_INDEX_213),
+  CREATE((short) 0, PROCESS_INDEX_96),
+  CREATED((short) 1, PROCESS_INDEX_97),
+  UPDATE((short) 2, PROCESS_INDEX_98),
+  UPDATED((short) 3, PROCESS_INDEX_99),
+  REMOVE((short) 4, PROCESS_INDEX_100),
+  REMOVED((short) 5, PROCESS_INDEX_94),
+  HISTORY((short) 6, PROCESS_INDEX_217),
   ;
 
   private final short value;

@@ -26,7 +26,9 @@ import com.anyilanxin.kunpeng.protocol.business.record.command.CommandValueLifeC
 public enum DecisionDefinitionLifeCycle implements CommandValueLifeCycle {
   NULL_VAL((short) -1, NOT_PROCESS_INDEX),
   CREATED((short) 0, PROCESS_INDEX_34),
-  DELETED((short) 1, PROCESS_INDEX_35);
+  DELETED((short) 1, PROCESS_INDEX_35),
+  CREATED_DISTRIBUTE((short) 2, PROCESS_INDEX_36),
+  DELETED_DISTRIBUTE((short) 3, PROCESS_INDEX_37);
 
   private final short value;
   private final short processIndex;
@@ -65,6 +67,8 @@ public enum DecisionDefinitionLifeCycle implements CommandValueLifeCycle {
     return switch (value) {
       case 0 -> CREATED;
       case 1 -> DELETED;
+      case 2 -> CREATED_DISTRIBUTE;
+      case 3 -> DELETED_DISTRIBUTE;
       default -> UNKNOWN;
     };
   }
@@ -73,7 +77,9 @@ public enum DecisionDefinitionLifeCycle implements CommandValueLifeCycle {
     return switch (value) {
       case 0 -> CREATED;
       case 1 -> DELETED;
-      default -> CREATED;
+      case 2 -> CREATED_DISTRIBUTE;
+      case 3 -> DELETED_DISTRIBUTE;
+      default -> NULL_VAL;
     };
   }
 }

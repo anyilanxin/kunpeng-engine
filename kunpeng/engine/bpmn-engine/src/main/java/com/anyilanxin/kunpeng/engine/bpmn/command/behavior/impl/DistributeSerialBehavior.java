@@ -110,9 +110,10 @@ public class DistributeSerialBehavior {
         distributeRecord);
   }
 
-  public void distributeSerial(final DistributeSerialRecord record, final int sourceId) {
+  public void distributeSerial(final DistributeSerialRecord record, final int partitionId) {
+    final int partitionSource = commandSender.getPartitionSource(partitionId);
     commandSender.sendCommand(
-        sourceId,
+        partitionSource,
         record.getDistributeRecordLifeCycle(),
         record.getDistributeRecordId(),
         record.getDistributeId(),

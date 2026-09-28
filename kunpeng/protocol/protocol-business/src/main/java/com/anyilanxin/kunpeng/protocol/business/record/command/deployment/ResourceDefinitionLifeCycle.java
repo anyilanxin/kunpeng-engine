@@ -25,8 +25,10 @@ import com.anyilanxin.kunpeng.protocol.business.record.command.CommandValueLifeC
  */
 public enum ResourceDefinitionLifeCycle implements CommandValueLifeCycle {
   NULL_VAL((short) -1, NOT_PROCESS_INDEX),
-  CREATED((short) 0, PROCESS_INDEX_185),
-  DELETED((short) 1, PROCESS_INDEX_186);
+  CREATED((short) 0, PROCESS_INDEX_189),
+  DELETED((short) 1, PROCESS_INDEX_190),
+  CREATED_DISTRIBUTE((short) 2, PROCESS_INDEX_191),
+  DELETED_DISTRIBUTE((short) 3, PROCESS_INDEX_192);
 
   private final short value;
   private final short processIndex;
@@ -65,6 +67,8 @@ public enum ResourceDefinitionLifeCycle implements CommandValueLifeCycle {
     return switch (value) {
       case 0 -> CREATED;
       case 1 -> DELETED;
+      case 2 -> CREATED_DISTRIBUTE;
+      case 3 -> DELETED_DISTRIBUTE;
       default -> UNKNOWN;
     };
   }
@@ -73,7 +77,9 @@ public enum ResourceDefinitionLifeCycle implements CommandValueLifeCycle {
     return switch (value) {
       case 0 -> CREATED;
       case 1 -> DELETED;
-      default -> CREATED;
+      case 2 -> CREATED_DISTRIBUTE;
+      case 3 -> DELETED_DISTRIBUTE;
+      default -> NULL_VAL;
     };
   }
 }

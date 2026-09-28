@@ -90,18 +90,21 @@ public class DistributeParallelBehavior {
         distributeRecord);
   }
 
-  public void distributeParallel(final DistributeParallelRecord record, final int sourceId) {
+  public void distributeParallel(final DistributeParallelRecord record, final int partitionId) {
+    final int partitionSource = commandSender.getPartitionSource(partitionId);
     commandSender.sendCommand(
-        sourceId,
+        partitionSource,
         record.getDistributeRecordLifeCycle(),
         record.getDistributeRecordId(),
         record.getDistributeId(),
         record.getDistributeRecord());
   }
 
-  public void distributeParallelAfter(final DistributeParallelRecord record, final int sourceId) {
+  public void distributeParallelAfter(
+      final DistributeParallelRecord record, final int partitionId) {
+    final int partitionSource = commandSender.getPartitionSource(partitionId);
     commandSender.sendCommand(
-        sourceId,
+        partitionSource,
         record.getFollowUpLifeCycle(),
         record.getDistributeRecordId(),
         record.getDistributeId(),
