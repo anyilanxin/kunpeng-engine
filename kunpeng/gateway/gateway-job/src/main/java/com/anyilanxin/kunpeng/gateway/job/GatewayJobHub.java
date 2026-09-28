@@ -32,6 +32,7 @@ import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -102,11 +103,14 @@ public final class GatewayJobHub {
       final String jobType,
       final String worker,
       final int capacity,
+      final List<String> tenantIds,
+      final List<String> fetchVariables,
       final StreamObserver<JobDelivery> observer) {
     final long streamId = streamIdGenerator.incrementAndGet();
     final String workerName = (worker == null || worker.isEmpty()) ? "stream-" + streamId : worker;
     final DeliveryStream handle =
-        new DeliveryStream(streamId, jobType, workerName, capacity, observer);
+        new DeliveryStream(
+            streamId, jobType, workerName, capacity, tenantIds, fetchVariables, observer);
     streams.put(streamId, handle);
     streamsByType.computeIfAbsent(jobType, key -> new ConcurrentHashMap<>()).put(streamId, handle);
     generation.incrementAndGet();
@@ -115,6 +119,31 @@ public final class GatewayJobHub {
         "Job stream registered [type: {}, worker: {}, stream: {}]", jobType, workerName, streamId);
     return streamId;
   }
+
+  /** 全量流注册明细（观测用，含 wire 快照不携带的容量与偏好字段） */
+  public List<StreamInfo> describe() {
+    return streams.values().stream()
+        .map(
+            stream ->
+                new StreamInfo(
+                    stream.jobType(),
+                    stream.streamId(),
+                    stream.worker(),
+                    stream.capacity(),
+                    stream.tenantIds(),
+                    stream.fetchVariables()))
+        .sorted(Comparator.comparingLong(StreamInfo::streamId))
+        .toList();
+  }
+
+  /** 一条流注册的完整明细（观测视图；wire 快照只携带 sessionId/worker，容量与偏好仅网关本地可得） */
+  public record StreamInfo(
+      String jobType,
+      long streamId,
+      String worker,
+      int capacity,
+      List<String> tenantIds,
+      List<String> fetchVariables) {}
 
   /** 流关闭（client 断开/完成/出错）：摘除会话（只删自身项、快照重发），未送达的 job 由 broker WITHDRAW 回退重派 */
   public void deregisterStream(final long streamId, final String cause) {

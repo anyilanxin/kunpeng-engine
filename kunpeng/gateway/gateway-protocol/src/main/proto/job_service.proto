@@ -220,6 +220,10 @@ message StreamRegister {
   string worker = 2;
   // 容量（可选轻量背压：WAITING 条目数超容量时 broker 跳派）
   int32 capacity = 3;
+  // 租户范围（当前用于注册观测展示；派发侧过滤生效与否另行决策）
+  repeated string tenantIds = 4;
+  // 期望接收的变量名（当前用于注册观测展示；推送仍直传全量变量）
+  repeated string fetchVariables = 5;
 }
 
 // 推送给 worker 的 job 载荷

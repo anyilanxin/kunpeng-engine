@@ -18,9 +18,11 @@ package com.anyilanxin.kunpeng.broker;
 
 import com.anyilanxin.kunpeng.broker.bootstrap.BrokerStartupActor;
 import com.anyilanxin.kunpeng.broker.client.business.BrokerClient;
+import com.anyilanxin.kunpeng.broker.jobstream.JobStreamDispatcher;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
 import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
 import com.anyilanxin.kunpeng.configuration.cluster.ClusterCfg;
+import com.anyilanxin.kunpeng.gateway.job.GatewayJobHub;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
 import com.anyilanxin.kunpeng.sink.config.SinksConfig;
 import com.anyilanxin.kunpeng.sink.registry.SinkLoadException;
@@ -32,6 +34,7 @@ import com.anyilanxin.kunpeng.utils.jar.ExternalJarLoadException;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.BeanFactory;
@@ -126,6 +129,16 @@ public final class Broker implements AutoCloseable {
 
   public BrokerContext getBrokerContext() {
     return brokerContext;
+  }
+
+  /** broker 侧 job 流派发器（观测用；job 流启动步骤尚未执行时为空） */
+  public Optional<JobStreamDispatcher> getJobStreamDispatcher() {
+    return brokerStartupActor.getJobStreamDispatcher();
+  }
+
+  /** 内嵌网关订阅中心（观测用；未启用内嵌网关时为空） */
+  public Optional<GatewayJobHub> getEmbeddedGatewayJobHub() {
+    return brokerStartupActor.getEmbeddedGatewayJobHub();
   }
 
   @Override

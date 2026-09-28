@@ -17,8 +17,11 @@
 package com.anyilanxin.kunpeng.broker.bootstrap;
 
 import com.anyilanxin.kunpeng.broker.BrokerContext;
+import com.anyilanxin.kunpeng.broker.jobstream.JobStreamDispatcher;
+import com.anyilanxin.kunpeng.gateway.job.GatewayJobHub;
 import com.anyilanxin.kunpeng.scheduler.Actor;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
+import java.util.Optional;
 
 /**
  * broker 启动 actor：按顺序编排各启动步骤并驱动相位切换。
@@ -50,6 +53,17 @@ public class BrokerStartupActor extends Actor {
         brokerContext.getMeterRegistry(),
         brokerContext.getBeanFactory(),
         brokerContext.getSinksConfig());
+  }
+
+  /** broker 侧 job 流派发器（观测用；对应启动步骤尚未执行时为空） */
+  public Optional<JobStreamDispatcher> getJobStreamDispatcher() {
+    return Optional.ofNullable(brokerStartup.getJobStreamDispatcher());
+  }
+
+  /** 内嵌网关订阅中心（观测用；未启用内嵌网关时为空） */
+  public Optional<GatewayJobHub> getEmbeddedGatewayJobHub() {
+    return Optional.ofNullable(brokerStartup.getEmbeddedGatewayService())
+        .map(service -> service.get().jobHub());
   }
 
   @Override

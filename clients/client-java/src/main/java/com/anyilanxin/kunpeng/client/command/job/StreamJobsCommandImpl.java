@@ -83,6 +83,9 @@ public final class StreamJobsCommandImpl
 
   @Override
   public KunpengFuture<StreamJobsResponse> send() {
+    // 租户合并语义与拉取一致：显式指定优先，否则回退 client 默认租户
+    final var effectiveTenantIds = customTenantIds.isEmpty() ? defaultTenantIds : customTenantIds;
+    builder.clearTenantIds().addAllTenantIds(effectiveTenantIds);
     final JobServiceOuterClass.StreamRegister register = builder.build();
     final var future =
         new RetriableStreamingFutureImpl<StreamJobsResponse, JobServiceOuterClass.JobDelivery>(
@@ -136,7 +139,8 @@ public final class StreamJobsCommandImpl
   @Override
   public StreamJobsCommandStep1.StreamJobsCommandStep3 fetchVariables(
       final List<String> fetchVariables) {
-    // 变量裁剪由 broker 侧派发时决定；当前 wire 协议直传全量变量
+    // 随注册上行供网关观测展示；推送当前仍直传全量变量，裁剪生效另行决策
+    builder.clearFetchVariables().addAllFetchVariables(fetchVariables);
     return this;
   }
 

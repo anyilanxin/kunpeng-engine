@@ -20,6 +20,7 @@ import com.anyilanxin.kunpeng.gateway.grpc.service.JobServiceOuterClass.JobDeliv
 import com.anyilanxin.kunpeng.protocol.gateway.GatewayLoggers;
 import io.grpc.stub.ServerCallStreamObserver;
 import io.grpc.stub.StreamObserver;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 
@@ -38,6 +39,8 @@ public final class DeliveryStream {
   private final String jobType;
   private final String worker;
   private final int capacity;
+  private final List<String> tenantIds;
+  private final List<String> fetchVariables;
   private final StreamObserver<JobDelivery> observer;
   private final AtomicBoolean open = new AtomicBoolean(true);
 
@@ -46,11 +49,15 @@ public final class DeliveryStream {
       final String jobType,
       final String worker,
       final int capacity,
+      final List<String> tenantIds,
+      final List<String> fetchVariables,
       final StreamObserver<JobDelivery> observer) {
     this.streamId = streamId;
     this.jobType = jobType;
     this.worker = worker;
     this.capacity = capacity;
+    this.tenantIds = tenantIds == null ? List.of() : List.copyOf(tenantIds);
+    this.fetchVariables = fetchVariables == null ? List.of() : List.copyOf(fetchVariables);
     this.observer = observer;
   }
 
@@ -68,6 +75,14 @@ public final class DeliveryStream {
 
   public int capacity() {
     return capacity;
+  }
+
+  public List<String> tenantIds() {
+    return tenantIds;
+  }
+
+  public List<String> fetchVariables() {
+    return fetchVariables;
   }
 
   /** 流是否仍可写出（未关闭且 gRPC 流控就绪） */

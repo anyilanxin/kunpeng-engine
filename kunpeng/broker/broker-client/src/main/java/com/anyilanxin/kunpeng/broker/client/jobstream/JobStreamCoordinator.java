@@ -151,6 +151,11 @@ public final class JobStreamCoordinator extends Actor {
 
   // ===== 引擎线程调用（无锁读 + 非阻塞投递） =====
 
+  /** 只读观测视图：jobType → 跨网关合并的会话推送点列表（不可变快照，任意线程安全读取）。 */
+  public Map<String, List<PushPoint>> mergedByType() {
+    return byType;
+  }
+
   /**
    * 单游标轮转选点：jobType 直接索引到跨网关合并的扁平会话列表，一次取模定位。 选定即绑定归属（会话的 worker）——引擎侧按它落 lockOwner，推送时随载荷下发同一会话 ID
    * 供网关 map O(1) 定位。

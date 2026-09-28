@@ -123,6 +123,8 @@ public class GrpcJobServiceImpl extends JobServiceGrpc.JobServiceImplBase implem
                     message.getRegister().getType(),
                     message.getRegister().getWorker(),
                     message.getRegister().getCapacity(),
+                    message.getRegister().getTenantIdsList(),
+                    message.getRegister().getFetchVariablesList(),
                     responseObserver);
             streamId.set(id);
           }

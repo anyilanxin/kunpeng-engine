@@ -36,6 +36,7 @@ dependencies {
     implementation project(':kunpeng:scheduler')
     implementation project(':kunpeng:utils')
     implementation project(':kunpeng:gateway:gateway')
+    implementation project(':kunpeng:gateway:gateway-job')
     implementation project(':kunpeng:scheduler')
     implementation project(':kunpeng:structpack')
 
