@@ -19,6 +19,7 @@ package com.anyilanxin.kunpeng.engine.bpmn.command.distribute.parallel;
 import com.anyilanxin.kunpeng.engine.bpmn.LogEventWriter;
 import com.anyilanxin.kunpeng.engine.bpmn.SchedulerCheckerAware;
 import com.anyilanxin.kunpeng.engine.bpmn.scheduling.SchedulerContext;
+import com.anyilanxin.kunpeng.engine.bpmn.scheduling.TimerScheduler;
 import com.anyilanxin.kunpeng.protocol.business.record.command.distribute.parallel.DistributeParallelLifeCycle;
 import com.anyilanxin.kunpeng.repository.business.modules.distribute.parallel.ImmutableDistributeParallelRepository;
 import java.time.Duration;
@@ -34,6 +35,14 @@ public class DistributeParallelChecker implements SchedulerCheckerAware {
   private final LogEventWriter writer;
   public static final Duration COMMAND_REDISTRIBUTION_INTERVAL = Duration.ofSeconds(10);
 
+  /** 是否继续执行周期任务；关闭/失败期间置否，恢复后重新置真 */
+  private volatile boolean running = false;
+
+  /** 两个周期重试链的句柄；关闭/失败时取消，阻止停排后继续触碰仓库 */
+  private volatile TimerScheduler.TimerHandle retryCycle;
+
+  private volatile TimerScheduler.TimerHandle retryAfterCycle;
+
   public DistributeParallelChecker(
       final ImmutableDistributeParallelRepository distribute, final LogEventWriter writer) {
     this.distribute = distribute;
@@ -42,16 +51,45 @@ public class DistributeParallelChecker implements SchedulerCheckerAware {
 
   @Override
   public void onRecovered(final SchedulerContext context) {
-    context
-        .scheduler()
-        .scheduleEvery(COMMAND_REDISTRIBUTION_INTERVAL, this::runRetryDistributionCycle);
+    running = true;
+    retryCycle =
+        context
+            .scheduler()
+            .scheduleEvery(COMMAND_REDISTRIBUTION_INTERVAL, this::runRetryDistributionCycle);
+    retryAfterCycle =
+        context
+            .scheduler()
+            .scheduleEvery(COMMAND_REDISTRIBUTION_INTERVAL, this::runRetryDistributionAfterCycle);
+  }
 
-    context
-        .scheduler()
-        .scheduleEvery(COMMAND_REDISTRIBUTION_INTERVAL, this::runRetryDistributionAfterCycle);
+  @Override
+  public void onClose() {
+    stop();
+  }
+
+  @Override
+  public void onFailed() {
+    stop();
+  }
+
+  private void stop() {
+    running = false;
+    cancelPending(retryCycle);
+    cancelPending(retryAfterCycle);
+    retryCycle = null;
+    retryAfterCycle = null;
+  }
+
+  private static void cancelPending(final TimerScheduler.TimerHandle handle) {
+    if (handle != null) {
+      handle.cancel();
+    }
   }
 
   public void runRetryDistributionCycle() {
+    if (!running) {
+      return;
+    }
     distribute.foreachRetriableDistribution(
         (distributionKey, distributeRecord) -> {
           writer.addCommand(
@@ -64,6 +102,9 @@ public class DistributeParallelChecker implements SchedulerCheckerAware {
   }
 
   public void runRetryDistributionAfterCycle() {
+    if (!running) {
+      return;
+    }
     distribute.foreachRetriableDistributionAfter(
         (distributionKey, distributeRecord) -> {
           writer.addCommand(

@@ -75,23 +75,29 @@ public class TimerDueDateChecker implements SchedulerCheckerAware {
 
   @Override
   public void onClose() {
-    shouldRescheduleChecker = false;
+    stopScheduling();
   }
 
   @Override
   public void onFailed() {
-    shouldRescheduleChecker = false;
+    stopScheduling();
   }
 
   @Override
   public void onPaused() {
-    shouldRescheduleChecker = false;
+    stopScheduling();
   }
 
   @Override
   public void onResumed() {
     shouldRescheduleChecker = true;
     schedule(-1);
+  }
+
+  /** 停排：阻止重排并取消当前已排队的执行，兜住取消与到期执行间的窗口竞态。 */
+  private void stopScheduling() {
+    shouldRescheduleChecker = false;
+    nextExecution.getAndSet(new NextExecution.None()).cancel();
   }
 
   /**
@@ -157,6 +163,10 @@ public class TimerDueDateChecker implements SchedulerCheckerAware {
   }
 
   CommandBatch execute(final CommandCollector output) {
+    if (!shouldRescheduleChecker) {
+      // 停排后仍在飞行的当次执行：跳过仓库扫描
+      return output.build();
+    }
     // 存在一个良性边界情况：这里本不应把 nextExecution 置回 None——若本次执行因更早的执行
     // 被排程而本应取消，nextExecution 里已经是那个更早的执行；我们仍然覆写为 None，等于
     // 忘记了已有排程。下次排程时会观察到 None，从而直接新建排程而不取消现存排程。虽然尽量

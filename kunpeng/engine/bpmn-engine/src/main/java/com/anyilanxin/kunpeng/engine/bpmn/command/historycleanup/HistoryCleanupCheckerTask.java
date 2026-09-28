@@ -50,6 +50,12 @@ public final class HistoryCleanupCheckerTask implements TimerJob {
   /** 跟踪用于与清理 deadline 比对的时间戳。 */
   private long currentTimestamp = -1;
 
+  /** 是否继续排期；关闭/失败期间置否 */
+  private volatile boolean schedulable = true;
+
+  /** 当前已排队的执行拍次；停排时取消，兜住取消与到期执行间的窗口竞态 */
+  private volatile TimerScheduler.TimerHandle pending;
+
   private final InstantSource clock;
   private ImmutableHistoryCleanupRepository.Index lastIndex;
 
@@ -69,6 +75,10 @@ public final class HistoryCleanupCheckerTask implements TimerJob {
 
   @Override
   public CommandBatch run(final CommandCollector output) {
+    if (!schedulable) {
+      // 停排后仍在飞行的当次执行：不再触碰仓库与命令批次
+      return output.build();
+    }
     if (currentTimestamp == -1) {
       currentTimestamp = clock.millis();
     }
@@ -103,8 +113,26 @@ public final class HistoryCleanupCheckerTask implements TimerJob {
     return output.build();
   }
 
+  /** 首次排期入口；由 checker 在恢复回调后调用。 */
+  void kickoff(final Duration delay) {
+    reschedule(delay);
+  }
+
+  /** 停排：取消排队条目并阻止后续重排。 */
+  void stop() {
+    schedulable = false;
+    final TimerScheduler.TimerHandle current = pending;
+    pending = null;
+    if (current != null) {
+      current.cancel();
+    }
+  }
+
   private void reschedule(final Duration idleInterval) {
+    if (!schedulable) {
+      return;
+    }
     final var timestamp = clock.millis() + idleInterval.toMillis();
-    scheduleService.scheduleAt(timestamp, this);
+    pending = scheduleService.scheduleAt(timestamp, this);
   }
 }

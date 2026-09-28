@@ -64,11 +64,21 @@ public final class DispatchProcessServiceTransitionStep
           public void run() {
             final DispatchProcessService dispatchProcessService =
                 context.getDispatchProcessService();
-            if (dispatchProcessService != null) {
-              dispatchProcessService.close();
+            if (dispatchProcessService == null) {
+              future.complete(null);
+              return;
             }
             context.setDispatchProcessService(null);
-            future.complete(null);
+            // 等车道排空（飞行中/已排队的定时任务全部结束）后再放行后续步骤，否则跨越关库窗口的定时任务会撞上已关闭的 RocksDB
+            concurrencyControl.runOnCompletion(
+                dispatchProcessService.closeAsync(),
+                (ignored, error) -> {
+                  if (error != null) {
+                    future.completeExceptionally(error);
+                  } else {
+                    future.complete(null);
+                  }
+                });
           }
         });
     return future;

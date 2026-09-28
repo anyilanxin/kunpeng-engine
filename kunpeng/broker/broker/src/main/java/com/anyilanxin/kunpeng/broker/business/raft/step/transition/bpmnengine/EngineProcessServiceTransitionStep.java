@@ -126,11 +126,21 @@ public final class EngineProcessServiceTransitionStep
             jobStreamDispatcher.fallbackHandler().removeWriter(partitionId);
           }
           final EngineProcessService engineService = context.getEngineProcessService();
-          if (engineService != null) {
-            engineService.close();
-            context.setEngineProcessService(null);
+          if (engineService == null) {
+            future.complete(null);
+            return;
           }
-          future.complete(null);
+          context.setEngineProcessService(null);
+          // 等车道排空（飞行中/已排队的定时任务全部结束）后再放行后续步骤，否则跨越关库窗口的定时任务会撞上已关闭的 RocksDB
+          concurrencyControl.runOnCompletion(
+              engineService.closeAsync(),
+              (ignored, error) -> {
+                if (error != null) {
+                  future.completeExceptionally(error);
+                } else {
+                  future.complete(null);
+                }
+              });
         });
     return future;
   }

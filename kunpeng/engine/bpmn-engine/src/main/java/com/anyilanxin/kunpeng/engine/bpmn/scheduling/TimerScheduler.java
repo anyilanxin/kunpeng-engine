@@ -56,21 +56,28 @@ public interface TimerScheduler {
    */
   TimerHandle scheduleAt(long epochMilli, Runnable action);
 
-  /** 调度周期动作，每次执行后自动重新调度，直到被取消或调度器关闭。 */
-  default void scheduleEvery(final Duration period, final Runnable action) {
-    scheduleAfter(
+  /**
+   * 调度周期动作，每次执行后自动重新调度，直到句柄被取消或调度器关闭。
+   *
+   * @return 可取消整个周期链的句柄
+   */
+  default TimerHandle scheduleEvery(final Duration period, final Runnable action) {
+    return scheduleEvery(
         period,
-        () -> {
-          try {
-            action.run();
-          } finally {
-            scheduleEvery(period, action);
-          }
+        collector -> {
+          action.run();
+          return collector.build();
         });
   }
 
-  /** 调度周期任务。 */
-  void scheduleEvery(Duration period, TimerJob job);
+  /**
+   * 调度周期任务，每次执行后自动重新调度，直到句柄被取消或调度器关闭。
+   *
+   * <p>取消会撤销当前已排队的当次执行；若取消时当次执行已在飞行中无法打断，由任务自身检查关闭标志跳过副作用。
+   *
+   * @return 可取消整个周期链的句柄
+   */
+  TimerHandle scheduleEvery(Duration period, TimerJob job);
 
   /** 已调度工作单元的句柄，可在其执行前取消。 */
   @FunctionalInterface

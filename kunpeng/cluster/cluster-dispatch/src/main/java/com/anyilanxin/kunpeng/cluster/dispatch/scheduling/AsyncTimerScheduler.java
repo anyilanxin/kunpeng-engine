@@ -29,8 +29,12 @@ import java.time.Duration;
  */
 public interface AsyncTimerScheduler extends TimerScheduler {
 
-  /** 在默认异步车道上调度周期任务。 */
-  void scheduleEveryAsync(Duration period, TimerJob job);
+  /**
+   * 在默认异步车道上调度周期任务，每次执行后自动重新调度，直到句柄被取消或调度器关闭。
+   *
+   * @return 可取消整个周期链的句柄
+   */
+  TimerHandle scheduleEveryAsync(Duration period, TimerJob job);
 
   /**
    * 在默认异步车道上调度 {@code delay} 之后执行的任务。
@@ -46,8 +50,12 @@ public interface AsyncTimerScheduler extends TimerScheduler {
    */
   TimerHandle scheduleAtAsync(long epochMilli, TimerJob job);
 
-  /** 在给定异步车道上调度周期任务。 */
-  void scheduleEveryAsync(Duration period, TimerJob job, ExecutionLane lane);
+  /**
+   * 在给定异步车道上调度周期任务，每次执行后自动重新调度，直到句柄被取消或调度器关闭。
+   *
+   * @return 可取消整个周期链的句柄
+   */
+  TimerHandle scheduleEveryAsync(Duration period, TimerJob job, ExecutionLane lane);
 
   /**
    * 在给定异步车道上调度 {@code delay} 之后执行的任务。

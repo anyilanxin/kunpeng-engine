@@ -35,6 +35,9 @@ public class HistoryCleanupDueDateChecker implements SchedulerCheckerAware {
   private final InstantSource clock;
   private final ImmutableHistoryCleanupRepository historyCleanup;
 
+  /** 已启动的清理扫描任务；关闭/失败时停排 */
+  private HistoryCleanupCheckerTask timeToLiveChecker;
+
   public HistoryCleanupDueDateChecker(
       final ImmutableHistoryCleanupRepository historyCleanup, final InstantSource clock) {
     this.historyCleanup = historyCleanup;
@@ -46,16 +49,34 @@ public class HistoryCleanupDueDateChecker implements SchedulerCheckerAware {
     scheduleMessageTtlChecker(context);
   }
 
+  @Override
+  public void onClose() {
+    stop();
+  }
+
+  @Override
+  public void onFailed() {
+    stop();
+  }
+
+  private void stop() {
+    final HistoryCleanupCheckerTask task = timeToLiveChecker;
+    timeToLiveChecker = null;
+    if (task != null) {
+      task.stop();
+    }
+  }
+
   private void scheduleMessageTtlChecker(final SchedulerContext context) {
     final TimerScheduler scheduleService = context.scheduler();
-    final var timestamp = clock.millis() + DEFAULT_MESSAGES_TTL_CHECKER_INTERVAL.toMillis();
-    final var timeToLiveChecker =
+    final var task =
         new HistoryCleanupCheckerTask(
             DEFAULT_MESSAGES_TTL_CHECKER_INTERVAL,
             DEFAULT_MESSAGES_TTL_CHECKER_BATCH_LIMIT,
             scheduleService,
             historyCleanup,
             context.clock());
-    scheduleService.scheduleAt(timestamp, timeToLiveChecker);
+    timeToLiveChecker = task;
+    task.kickoff(DEFAULT_MESSAGES_TTL_CHECKER_INTERVAL);
   }
 }

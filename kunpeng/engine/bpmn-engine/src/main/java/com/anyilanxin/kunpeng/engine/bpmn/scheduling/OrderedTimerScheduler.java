@@ -145,16 +145,8 @@ public final class OrderedTimerScheduler implements TimerScheduler, AutoCloseabl
   }
 
   @Override
-  public void scheduleEvery(final Duration period, final TimerJob job) {
-    scheduleAfter(
-        period,
-        collector -> {
-          try {
-            return job.run(collector);
-          } finally {
-            scheduleEvery(period, job);
-          }
-        });
+  public TimerHandle scheduleEvery(final Duration period, final TimerJob job) {
+    return new PeriodicSchedule(period, job).arm();
   }
 
   private TimerJob jobOf(final Runnable action) {
@@ -242,6 +234,54 @@ public final class OrderedTimerScheduler implements TimerScheduler, AutoCloseabl
       entry.live = false;
       metrics.onDequeue();
       current.submit(entry);
+    }
+  }
+
+  /**
+   * 周期链句柄：持有当次已排队的底层句柄，任务执行完毕后在 finally 中重排下一拍。
+   *
+   * <p>取消即停止重排并撤销当前排队条目；取消与重排存在窗口竞态时，至多多执行一次当次任务，由任务自身检查关闭标志跳过副作用。
+   */
+  private final class PeriodicSchedule implements TimerHandle {
+    private final Duration period;
+    private final TimerJob job;
+    private volatile boolean cancelled;
+    private volatile TimerHandle pending;
+
+    PeriodicSchedule(final Duration period, final TimerJob job) {
+      this.period = period;
+      this.job = job;
+    }
+
+    PeriodicSchedule arm() {
+      rearm();
+      return this;
+    }
+
+    private void rearm() {
+      if (cancelled) {
+        return;
+      }
+      pending =
+          scheduleAfter(
+              period,
+              collector -> {
+                try {
+                  return job.run(collector);
+                } finally {
+                  rearm();
+                }
+              });
+    }
+
+    @Override
+    public void cancel() {
+      cancelled = true;
+      final TimerHandle current = pending;
+      pending = null;
+      if (current != null) {
+        current.cancel();
+      }
     }
   }
 

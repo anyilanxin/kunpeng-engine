@@ -26,6 +26,7 @@ import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -70,8 +71,13 @@ final class PartitionTransitionProcess<CONTENT extends TransitionContent> {
     this.role = requireNonNull(role);
     this.term = term;
     this.pendingSteps = new ArrayList<>(requireNonNull(pendingSteps));
-    totalSteps = pendingSteps.size();
-    pendingSteps.forEach(stepsToPrepare::push);
+    // 关闭类切换按逆序执行：启动按列表正序逐层构建（存储先于服务），关闭必须反方向逐层释放
+    // （服务先于存储），否则引擎定时任务等上层使用者会在存储关闭之后仍被调度执行
+    if (transitionType == TransitionType.TO_INACTIVE) {
+      Collections.reverse(this.pendingSteps);
+    }
+    totalSteps = this.pendingSteps.size();
+    this.pendingSteps.forEach(stepsToPrepare::add);
     this.concurrencyControl = requireNonNull(concurrencyControl);
     this.context = requireNonNull(context);
   }

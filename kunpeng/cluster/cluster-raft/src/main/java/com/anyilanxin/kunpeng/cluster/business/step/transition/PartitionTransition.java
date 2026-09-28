@@ -61,19 +61,23 @@ public class PartitionTransition<CONTENT extends TransitionContent> extends Acto
   public ActorFuture<Void> stop() {
     final ActorFuture<Void> future = actor.createFuture();
     actor.submit(
-        () ->
-            transitionService
-                .awaitTransition()
-                .onComplete(
-                    (_, throwable) -> {
-                      if (throwable != null) {
-                        future.completeExceptionally(throwable);
-                      } else {
-                        raftPartition.removeRoleStateListener(this);
-                        started.set(false);
-                        future.complete(null);
-                      }
-                    }));
+        () -> {
+          // 先落角色门，停机期间 raft 仍在触发角色回调时不再排入新切换
+          started.set(false);
+          // 关机权威路径：先驱动一次 TO_INACTIVE 逐层关闭角色态服务（引擎车道排空→仓储→RocksDB），
+          // 完成后再摘监听。若只等在途切换，角色态服务从不关闭，仍在排期的定时任务会撞上后续关库
+          transitionService
+              .toInactive(transitionContent.getCurrentTerm())
+              .onComplete(
+                  (_, throwable) -> {
+                    raftPartition.removeRoleStateListener(this);
+                    if (throwable != null) {
+                      future.completeExceptionally(throwable);
+                    } else {
+                      future.complete(null);
+                    }
+                  });
+        });
     return future;
   }
 

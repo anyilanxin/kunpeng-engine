@@ -77,17 +77,15 @@ public final class AsyncTimerRouter implements AsyncTimerScheduler {
   }
 
   @Override
-  public void scheduleEvery(final Duration period, final TimerJob job) {
-    if (routeAllToCompute) {
-      computeLane().scheduleEvery(period, job);
-    } else {
-      primary.scheduleEvery(period, job);
-    }
+  public TimerHandle scheduleEvery(final Duration period, final TimerJob job) {
+    return routeAllToCompute
+        ? computeLane().scheduleEvery(period, job)
+        : primary.scheduleEvery(period, job);
   }
 
   @Override
-  public void scheduleEveryAsync(final Duration period, final TimerJob job) {
-    computeLane().scheduleEvery(period, job);
+  public TimerHandle scheduleEveryAsync(final Duration period, final TimerJob job) {
+    return computeLane().scheduleEvery(period, job);
   }
 
   @Override
@@ -101,9 +99,9 @@ public final class AsyncTimerRouter implements AsyncTimerScheduler {
   }
 
   @Override
-  public void scheduleEveryAsync(
+  public TimerHandle scheduleEveryAsync(
       final Duration period, final TimerJob job, final ExecutionLane lane) {
-    lanes.actorFor(lane).scheduler().scheduleEvery(period, job);
+    return lanes.actorFor(lane).scheduler().scheduleEvery(period, job);
   }
 
   @Override

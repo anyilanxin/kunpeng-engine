@@ -75,23 +75,29 @@ public class DelayedDelayChecker implements SchedulerCheckerAware {
 
   @Override
   public void onClose() {
-    shouldRescheduleChecker = false;
+    stopScheduling();
   }
 
   @Override
   public void onFailed() {
-    shouldRescheduleChecker = false;
+    stopScheduling();
   }
 
   @Override
   public void onPaused() {
-    shouldRescheduleChecker = false;
+    stopScheduling();
   }
 
   @Override
   public void onResumed() {
     shouldRescheduleChecker = true;
     schedule(-1);
+  }
+
+  /** 停排：阻止重排并取消当前已排队的执行，兜住取消与到期执行间的窗口竞态。 */
+  private void stopScheduling() {
+    shouldRescheduleChecker = false;
+    nextExecution.getAndSet(new NextExecution.None()).cancel();
   }
 
   /**
@@ -157,6 +163,10 @@ public class DelayedDelayChecker implements SchedulerCheckerAware {
   }
 
   CommandBatch execute(final CommandCollector output) {
+    if (!shouldRescheduleChecker) {
+      // 停排后仍在飞行的当次执行：跳过仓库扫描
+      return output.build();
+    }
     // 这里存在一个无害的边界情况：本不应把 nextExecution 置回 None。若本次执行本应被取消
     // （因为已排程了更早的一次执行），此时 nextExecution 持有的是那次更早的执行；我们仍将其
     // 覆盖为 None，从而"遗忘"了已计划的执行。下一次排程请求会观察到 None，于是排程新的执行

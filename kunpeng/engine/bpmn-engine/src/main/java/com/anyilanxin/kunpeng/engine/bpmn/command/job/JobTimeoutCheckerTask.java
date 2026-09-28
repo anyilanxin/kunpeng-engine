@@ -20,6 +20,7 @@ import com.anyilanxin.kunpeng.engine.bpmn.scheduling.CommandBatch;
 import com.anyilanxin.kunpeng.engine.bpmn.scheduling.CommandCollector;
 import com.anyilanxin.kunpeng.engine.bpmn.scheduling.SchedulerContext;
 import com.anyilanxin.kunpeng.engine.bpmn.scheduling.TimerJob;
+import com.anyilanxin.kunpeng.engine.bpmn.scheduling.TimerScheduler;
 import com.anyilanxin.kunpeng.protocol.business.record.command.job.JobLifeCycle;
 import com.anyilanxin.kunpeng.repository.business.modules.job.ImmutableJobRepository;
 import com.anyilanxin.kunpeng.repository.business.modules.job.record.DeadlineIndex;
@@ -38,7 +39,10 @@ final class JobTimeoutCheckerTask implements TimerJob {
   private static final Logger LOG = LoggerFactory.getLogger(JobTimeoutCheckerTask.class);
 
   /** 是否继续排期；暂停/关闭/失败期间置否，恢复后重新置真 */
-  private boolean schedulable = false;
+  private volatile boolean schedulable = false;
+
+  /** 当前已排队的扫描拍次；停排时取消，兜住取消与到期执行间的窗口竞态 */
+  private volatile TimerScheduler.TimerHandle pending;
 
   /** 本轮扫描的截止水位；跨多次调度扫完同一轮期间保持不变，扫完复位 */
   private long cutoffMillis = -1;
@@ -65,6 +69,10 @@ final class JobTimeoutCheckerTask implements TimerJob {
 
   @Override
   public CommandBatch run(final CommandCollector output) {
+    if (!schedulable) {
+      // 停排后仍在飞行的当次执行：不再触碰仓库与命令批次
+      return output.build();
+    }
     if (cutoffMillis == -1) {
       cutoffMillis = clock.millis();
     }
@@ -107,11 +115,16 @@ final class JobTimeoutCheckerTask implements TimerJob {
 
   void markUnschedulable() {
     schedulable = false;
+    final TimerScheduler.TimerHandle current = pending;
+    pending = null;
+    if (current != null) {
+      current.cancel();
+    }
   }
 
   void kickoff(final Duration delay) {
     if (schedulable) {
-      schedulerContext.scheduler().scheduleAt(clock.millis() + delay.toMillis(), this);
+      pending = schedulerContext.scheduler().scheduleAt(clock.millis() + delay.toMillis(), this);
     }
   }
 }

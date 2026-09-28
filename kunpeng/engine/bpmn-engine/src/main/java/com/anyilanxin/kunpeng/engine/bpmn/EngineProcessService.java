@@ -43,6 +43,8 @@ import com.anyilanxin.kunpeng.repository.business.modules.key.MutableKeyGenerato
 import com.anyilanxin.kunpeng.repository.business.modules.position.MutableProcessedPositionRepository;
 import com.anyilanxin.kunpeng.scheduler.Actor;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
+import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
+import com.anyilanxin.kunpeng.scheduler.future.CompletableActorFuture;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -91,9 +93,6 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
 
   /** 流处理相位（执行门判据）：当前恒为 RUNNING；暂停/恢复能力落地时切换此值即可扣住定时任务。 */
   private final ExecutionPhase streamProcessorPhase = ExecutionPhase.RUNNING;
-
-  /** 定时任务中止信号：close() 开始即置位，拦截车道 actor 中已入队但尚未执行的定时任务。 */
-  private volatile boolean schedulerAborted = false;
 
   private AsyncTimerRouter scheduleService;
   private LogEventWriter logEventWriter;
@@ -153,12 +152,12 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
             new RegistryMetrics.BoundedRegistryMetrics(meterRegistry), JobLifeCycle.TIME_OUT);
 
     // 相位判据仅 RUNNING 放行; 当前恒为 RUNNING, 暂停能力落地时切 streamProcessorPhase 即生效;
-    // 中止信号接 close() 置位: 存储先于车道排空被关闭时, 已入队的定时任务不再触碰仓储;
+    // 中止判据恒 false: 定时任务的关闭权威在各 checker 的 onClose(句柄取消+任务自查), 调度器层不做兜底;
     // 定时任务统一经车道 actor 执行, 与主处理隔离; 扫描间隔 250ms 保证到期执行的及时性上界
     final var schedulerFactory =
         new TimerSchedulerFactory(
             () -> streamProcessorPhase,
-            () -> schedulerAborted,
+            () -> false,
             logStream::newWriter,
             registry,
             clock,
@@ -264,9 +263,13 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
                     }));
   }
 
+  /**
+   * 异步关闭：先经各 checker 的 onClose 取消定时任务并回滚在途事务，随后在引擎 actor 上关闭车道池与主调度器。
+   *
+   * <p>返回的 future 完成即本引擎不再执行任何定时任务（含飞行中任务）——关闭链必须等它完成后再放行后续步骤关闭 RocksDB，否则跨越关库窗口的定时任务会撞上已关闭的存储。
+   */
   @Override
-  public void close() {
-    schedulerAborted = true;
+  public ActorFuture<Void> closeAsync() {
     logStream.removeRecordAvailableListener(this);
     logEventWriter
         .schedulerCheckerAwares()
@@ -282,13 +285,24 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
         throw new RuntimeException(e);
       }
     }
-    if (lanePool != null) {
-      actor.run(
-          () -> {
-            lanePool.shutdown(actor);
-            primaryScheduler.close();
-          });
+    if (lanePool == null) {
+      return CompletableActorFuture.completed();
     }
+    final CompletableActorFuture<Void> drained = new CompletableActorFuture<>();
+    actor.run(
+        () ->
+            lanePool
+                .shutdown(actor)
+                .onComplete(
+                    (ignored, error) -> {
+                      primaryScheduler.close();
+                      if (error != null) {
+                        drained.completeExceptionally(error);
+                      } else {
+                        drained.complete(null);
+                      }
+                    }));
+    return drained;
   }
 
   void processNextEvent() {
