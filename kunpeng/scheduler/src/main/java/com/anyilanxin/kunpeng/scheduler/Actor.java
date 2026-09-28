@@ -33,7 +33,7 @@ import java.util.function.Consumer;
  * @since 2026.9.0
  */
 public abstract class Actor implements ConcurrencyControl, AsyncClosable, AutoCloseable {
-
+  private static final int MAX_CLOSE_TIMEOUT = 400;
   protected final ActorControl actor = new ActorControl(this);
 
   private final String name;
@@ -224,11 +224,11 @@ public abstract class Actor implements ConcurrencyControl, AsyncClosable, AutoCl
     return actor.isClosed();
   }
 
-  /** 同步关闭（最多 300s） */
+  /** 同步关闭（最多 400s） */
   @Override
   public void close() {
     try {
-      closeAsync().get(300, TimeUnit.SECONDS);
+      closeAsync().join(MAX_CLOSE_TIMEOUT, TimeUnit.SECONDS);
     } catch (final Exception e) {
       final var cause = e.getCause() != null ? e.getCause() : e;
       throw new RuntimeException("关闭 actor " + name + " 失败", cause);
