@@ -17,45 +17,23 @@
 package com.anyilanxin.kunpeng.eventlog.impl.flow;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.anyilanxin.kunpeng.eventlog.AppendResult.RejectionReason;
-import com.anyilanxin.kunpeng.eventlog.impl.EventLogMetrics;
 import com.anyilanxin.kunpeng.eventlog.FlowControlParams;
 import com.anyilanxin.kunpeng.eventlog.WriteContext;
-import java.time.Duration;
+import com.anyilanxin.kunpeng.eventlog.impl.EventLogMetrics;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
- * 自研流控测试：令牌桶速率数学 / AIMD 升降 / 三态水位转移 / 拒绝语义 / 失败释放。
+ * 自研流控测试：AIMD 升降 / 三态水位转移 / 拒绝语义 / 失败与准入归还 / 槽位回绕驱逐。
  *
  * @author zxuanhong
  * @since 2026.9.0
  */
-@DisplayName("FlowController 自研流控")
+@DisplayName("FlowController AIMD 流控")
 class FlowControlTest {
-
-  // ===== 令牌桶（虚拟时钟） =====
-
-  @Test
-  @DisplayName("令牌桶: 速率补充 + burst 上限 + 不超发")
-  void tokenBucket() {
-    final AtomicLong clock = new AtomicLong(0);
-    final TokenBucket bucket = new TokenBucket(100, 100, clock::get); // 100/s, burst 100
-
-    assertThat(bucket.tryAcquire(100)).isTrue(); // 突发容量一次耗尽
-    assertThat(bucket.tryAcquire(1)).isFalse();
-
-    clock.addAndGet(1_000_000_000L); // +1s → 补 100
-    assertThat(bucket.tryAcquire(100)).isTrue();
-    assertThat(bucket.tryAcquire(1)).isFalse();
-
-    clock.addAndGet(10_000_000_000L); // +10s → 补 1000, 但 clamp 到 burst
-    assertThat(bucket.tryAcquire(100)).isTrue();
-    assertThat(bucket.tryAcquire(1)).isFalse(); // 上限 100
-  }
 
   // ===== AIMD 窗口 =====
 
@@ -90,11 +68,11 @@ class FlowControlTest {
   @DisplayName("三态水位: append→write→commit→processed 全程推进")
   void lifecycle() {
     final AtomicLong clock = new AtomicLong(1_000_000L);
-    final FlowController controller = new FlowController(FlowControlParams.defaults(),
-        clock::get, EventLogMetrics.noop());
+    final FlowController controller =
+        new FlowController(FlowControlParams.defaults(), clock::get, EventLogMetrics.noop());
 
-    assertThat(controller.tryAcquire(WriteContext.USER_COMMAND, 3)).isNull();
-    controller.onAppend(1, 3, 3);
+    assertThat(controller.tryAcquire(WriteContext.USER_COMMAND)).isNull();
+    controller.onAppend(1, 3, 3, true);
     controller.onWrite(1, 3);
     controller.onCommit(1, 3);
     assertThat(controller.lastWrittenPosition()).isEqualTo(3);
@@ -104,93 +82,84 @@ class FlowControlTest {
     assertThat(controller.lastProcessedPosition()).isEqualTo(3);
 
     // 窗口占位已释放 → 可再次获取
-    assertThat(controller.tryAcquire(WriteContext.USER_COMMAND, 1)).isNull();
-    controller.onAppend(4, 4, 1);
+    assertThat(controller.tryAcquire(WriteContext.USER_COMMAND)).isNull();
+    controller.onAppend(4, 4, 1, true);
     controller.onWrite(4, 4);
     controller.onCommit(4, 4);
     controller.onProcessed(4);
   }
 
   @Test
-  @DisplayName("UserCommand 窗口拒绝; Internal 永不拒绝")
+  @DisplayName("UserCommand 每批一占位占满即拒; Internal 永不拒绝不占位")
   void rejectionSemantics() {
-    final FlowController controller = new FlowController(
-        new FlowControlParams(2, 1, 2, 0.1, -1, 0, 10, 100, Duration.ofSeconds(10)),
-        System::nanoTime, EventLogMetrics.noop());
+    final FlowController controller =
+        new FlowController(
+            new FlowControlParams(2, 1, 2, 0.1), System::nanoTime, EventLogMetrics.noop());
 
-    assertThat(controller.tryAcquire(WriteContext.USER_COMMAND, 1)).isNull();
-    assertThat(controller.tryAcquire(WriteContext.USER_COMMAND, 1)).isNull();
+    assertThat(controller.tryAcquire(WriteContext.USER_COMMAND)).isNull();
+    assertThat(controller.tryAcquire(WriteContext.USER_COMMAND)).isNull();
+    assertThat(controller.windowInflight()).isEqualTo(2);
     // 窗口=2 已占满
-    assertThat(controller.tryAcquire(WriteContext.USER_COMMAND, 1))
+    assertThat(controller.tryAcquire(WriteContext.USER_COMMAND))
         .isEqualTo(RejectionReason.REQUEST_WINDOW_EXHAUSTED);
-    // 非 USER_COMMAND 永不受限
-    assertThat(controller.tryAcquire(WriteContext.INTERNAL, 100)).isNull();
-    assertThat(controller.tryAcquire(WriteContext.PROCESSING_RESULT, 100)).isNull();
-    assertThat(controller.canAcquire(WriteContext.INTERNAL, 100)).isTrue();
-    assertThat(controller.canAcquire(WriteContext.USER_COMMAND, 1)).isFalse();
+    // 非 USER_COMMAND 永不受限、不占窗口
+    assertThat(controller.tryAcquire(WriteContext.INTERNAL)).isNull();
+    assertThat(controller.tryAcquire(WriteContext.PROCESSING_RESULT)).isNull();
+    assertThat(controller.windowInflight()).isEqualTo(2);
+    assertThat(controller.canAcquire(WriteContext.INTERNAL)).isTrue();
+    assertThat(controller.canAcquire(WriteContext.USER_COMMAND)).isFalse();
   }
 
   @Test
-  @DisplayName("写入速率拒绝（虚拟时钟）")
-  void rateRejection() {
-    final AtomicLong clock = new AtomicLong(0);
-    final FlowController controller = new FlowController(
-        new FlowControlParams(100, 10, 1000, 0.1, 10, 10, 1, 100, Duration.ofSeconds(10)),
-        clock::get, EventLogMetrics.noop());
-    assertThat(controller.tryAcquire(WriteContext.USER_COMMAND, 10)).isNull(); // 桶 10 耗尽
-    assertThat(controller.tryAcquire(WriteContext.USER_COMMAND, 1))
-        .isEqualTo(RejectionReason.WRITE_RATE_EXHAUSTED);
-    clock.addAndGet(1_000_000_000L);
-    assertThat(controller.tryAcquire(WriteContext.USER_COMMAND, 10)).isNull();
-  }
-
-  @Test
-  @DisplayName("onFailure 释放占位（窗口可复用）")
+  @DisplayName("onFailure 烧毁占位（窗口可复用）")
   void failureRelease() {
-    final FlowController controller = new FlowController(
-        new FlowControlParams(1, 1, 1, 0.1, -1, 0, 10, 100, Duration.ofSeconds(10)),
-        System::nanoTime, EventLogMetrics.noop());
+    final FlowController controller =
+        new FlowController(
+            new FlowControlParams(1, 1, 2, 0.1), System::nanoTime, EventLogMetrics.noop());
 
-    assertThat(controller.tryAcquire(WriteContext.USER_COMMAND, 2)).isNull();
-    controller.onAppend(1, 2, 2);
+    assertThat(controller.tryAcquire(WriteContext.USER_COMMAND)).isNull();
+    assertThat(controller.tryAcquire(WriteContext.USER_COMMAND))
+        .isEqualTo(RejectionReason.REQUEST_WINDOW_EXHAUSTED);
+    controller.onAppend(1, 2, 2, true);
     controller.onFailure(2, new RuntimeException("raft 拒绝"));
-    // 占位已释放
-    assertThat(controller.tryAcquire(WriteContext.USER_COMMAND, 1)).isNull();
+    // 占位已烧毁释放
+    assertThat(controller.windowInflight()).isZero();
+    assertThat(controller.tryAcquire(WriteContext.USER_COMMAND)).isNull();
   }
 
   @Test
-  @DisplayName("onAppendRolledBack: 定序后回滚烧毁")
-  void rolledBack() {
-    final FlowController controller = new FlowController(
-        new FlowControlParams(1, 1, 1, 0.1, -1, 0, 10, 100, Duration.ofSeconds(10)),
-        System::nanoTime, EventLogMetrics.noop());
-    assertThat(controller.tryAcquire(WriteContext.USER_COMMAND, 5)).isNull();
-    controller.onAppend(1, 5, 5);
-    controller.onAppendRolledBack(1, 5);
-    assertThat(controller.tryAcquire(WriteContext.USER_COMMAND, 1)).isNull();
-    assertThat(controller.lastCommittedPosition()).isZero();
+  @DisplayName("abandonAdmission: 准入放行后未入日志的归还路径")
+  void abandonAdmission() {
+    final FlowController controller =
+        new FlowController(
+            new FlowControlParams(1, 1, 2, 0.1), System::nanoTime, EventLogMetrics.noop());
+
+    assertThat(controller.tryAcquire(WriteContext.USER_COMMAND)).isNull();
+    controller.abandonAdmission(WriteContext.USER_COMMAND);
+    // 临界区内拒绝后占位归还, 不触在途环
+    assertThat(controller.windowInflight()).isZero();
+    assertThat(controller.tryAcquire(WriteContext.USER_COMMAND)).isNull();
   }
+
   @Test
-  @DisplayName("回归: 消费方未释放时陈旧驱逐兜底——跨 1024 回绕不崩溃（线上事故场景）")
-  void staleEvictionPreventsRingCollision() {
-    final AtomicLong clock = new AtomicLong(0);
-    final FlowController controller = new FlowController(FlowControlParams.defaults(),
-        clock::get, EventLogMetrics.noop());
+  @DisplayName("回归: 消费方未释放时槽位回绕驱逐兜底——同槽覆盖并归还被驱逐者占位（线上事故场景）")
+  void slotWraparoundEvictsAndReleasesDisplaced() {
+    final FlowController controller =
+        new FlowController(
+            new FlowControlParams(10, 1, 10, 0.1), System::nanoTime, EventLogMetrics.noop());
 
-    // 模拟线上: 注册后无人调 onProcessed（旧实现为无界表静默泄漏）
-    assertThat(controller.tryAcquire(WriteContext.USER_COMMAND, 1)).isNull();
-    controller.onAppend(1, 1, 1);
-    // 同槽位（1024 后回绕）且未超期 → 仍应显式冲突（真完整性违规）
-    assertThatThrownBy(() -> controller.onAppend(1025, 1025, 1))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessageContaining("复用冲突");
+    // 模拟线上: 注册后无人调 onProcessed（滞留占位）
+    assertThat(controller.tryAcquire(WriteContext.USER_COMMAND)).isNull();
+    controller.onAppend(1, 1, 1, true);
+    assertThat(controller.windowInflight()).isEqualTo(1);
 
-    // 超过 60s 陈旧阈值 → 驱逐兜底而非崩溃, 且窗口占位被释放
-    clock.addAndGet(61_000_000_000L);
-    controller.onAppend(1025, 1025, 1);
-    assertThat(controller.lastWrittenPosition()).isZero();
+    // 同槽位（1024 后回绕）覆盖驱逐而非失败, 被驱逐者占位被归还
+    assertThat(controller.tryAcquire(WriteContext.USER_COMMAND)).isNull();
+    controller.onAppend(1025, 1025, 1, true);
+    assertThat(controller.windowInflight()).isEqualTo(1);
 
-    // 驱逐后窗口可用（释放了滞留占位）
-    assertThat(controller.tryAcquire(WriteContext.USER_COMMAND, 1)).isNull();
+    // 关闭全量释放: 环内滞留批（1025）占位归还
+    controller.releaseAll();
+    assertThat(controller.windowInflight()).isZero();
   }
 }

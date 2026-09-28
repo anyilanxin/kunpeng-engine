@@ -35,7 +35,8 @@ import tools.jackson.databind.json.JsonMapper;
 /**
  * 内置 Sink ：把每条记录以 JSON 写到日志——开发或排障时快速查看事件流的便捷方式。
  *
- * <p>配置项：{@code logLevel}（trace/debug/info/warn/error，默认 debug）与 {@code prettyPrint}（默认 false）。
+ * <p>配置项：{@code logLevel}（trace/debug/info/warn/error，默认 info——运行期 root 日志级别通常为 info，默认 debug
+ * 会被整体过滤导致无输出）与 {@code prettyPrint}（默认 false）。
  *
  * @author zxuanhong
  * @since 2026.9.0
@@ -57,7 +58,7 @@ public final class DebugLogSink implements RecordSink {
 
   /** 本 Sink 的用户配置项。 */
   public static final class Settings {
-    private String logLevel = "debug";
+    private String logLevel = "info";
     private boolean prettyPrint = false;
 
     public String getLogLevel() {

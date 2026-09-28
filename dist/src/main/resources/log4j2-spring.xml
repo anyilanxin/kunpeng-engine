@@ -47,14 +47,13 @@
   <loggers>
     <logger name="org.springframework" level="info"/>
     <logger name="reactor.netty.http.server" level="info"/>
-    <logger name="com.anyilanxin.kunpeng.cluster.raft" level="debug"/>
+    <logger name="com.anyilanxin.kunpeng.cluster" level="debug"/>
     <logger name="reactor.netty" level="info"/>
 
     <root level="debug">
       <appender-ref ref="Console"/>
       <appender-ref ref="RollingFile"/>
       <appender-ref ref="RollingFileError"/>
-      <appender-ref ref="RollingFileTestInfo"/>
     </root>
   </loggers>
 

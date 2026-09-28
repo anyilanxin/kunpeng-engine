@@ -140,6 +140,8 @@ subprojects {
 		dependencies {
 			implementation platform(project(':bom:dependency-bom'))
 			annotationProcessor platform(project(':bom:dependency-bom'))
+			testImplementation platform(project(':bom:dependency-bom'))
+			testAnnotationProcessor platform(project(':bom:dependency-bom'))
 			testFixturesImplementation platform(project(':bom:dependency-bom'))
 
 			implementation 'org.slf4j:slf4j-api'

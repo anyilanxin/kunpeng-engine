@@ -65,7 +65,7 @@ class PositionSequencerTest {
     final FlowController flow = new FlowController(FlowControlParams.disabled(),
         System::nanoTime, EventLogMetrics.noop());
     return new Ctx(new PositionSequencer(store, flow, EventLogMetrics.noop(),
-        1024 * 1024, 64, 1, Clock.systemUTC()), flow);
+        1024 * 1024, 1, Clock.systemUTC()), flow);
   }
 
   @Test
@@ -142,10 +142,11 @@ class PositionSequencerTest {
     assertThat(sequencer.tryAppend(WriteContext.USER_COMMAND, List.of()))
         .isInstanceOf(Rejected.class);
 
+    // maxBatchSize 是整批帧字节上限: 10 字节配额下任何真实批帧必然超限
     final PositionSequencer tiny = new PositionSequencer(store,
         new FlowController(FlowControlParams.disabled(), System::nanoTime,
             EventLogMetrics.noop()),
-        EventLogMetrics.noop(), 10, 64, 1, Clock.systemUTC());
+        EventLogMetrics.noop(), 10, 1, Clock.systemUTC());
     assertThat(tiny.tryAppend(WriteContext.INTERNAL,
         List.of(entry(1, -1, false, "meta-123456", "value-12345678"))))
         .isInstanceOf(Rejected.class);
@@ -172,23 +173,6 @@ class PositionSequencerTest {
     final AppendResult third =
         sequencer.tryAppend(WriteContext.INTERNAL, List.of(simple()));
     assertThat(((Appended) third).firstPosition()).isEqualTo(3);
-    sequencer.close();
-  }
-
-  @Test
-  @Timeout(30)
-  @DisplayName("看门狗: 过期 RESERVED 槽位被烧毁并放行后续批")
-  void watchdogBurn() {
-    final InMemoryEventStore store = new InMemoryEventStore();
-    final PositionSequencer sequencer = sequencer(store).sequencer;
-    sequencer.reserveExpiredSlotForTest(1); // 模拟写线程卡死于 reserve 后
-
-    // 正常批从 2 起号; drain 遇到过期槽 1 → 烧毁推进 → 提交本批
-    final AppendResult result =
-        sequencer.tryAppend(WriteContext.INTERNAL, List.of(simple()));
-    assertThat(result).isInstanceOf(Appended.class);
-    assertThat(((Appended) result).firstPosition()).isEqualTo(2);
-    assertThat(store.appendOrderSnapshot()).containsExactly(2L);
     sequencer.close();
   }
 

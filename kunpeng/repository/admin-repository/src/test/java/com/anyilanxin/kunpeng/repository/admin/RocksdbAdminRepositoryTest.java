@@ -26,7 +26,9 @@ import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.source.NodeSour
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.source.PartitionSourceRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionType;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.delayed.DelayedType;
-import com.google.common.collect.ImmutableSet;
+import com.anyilanxin.kunpeng.cluster.business.step.RaftPartitionSource;
+import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
+import org.agrona.collections.IntHashSet;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.nio.file.Path;
 import java.util.List;
@@ -43,6 +45,28 @@ import org.junit.jupiter.api.io.TempDir;
  * @since 2026.9.0
  */
 class RocksdbAdminRepositoryTest {
+
+  /** 测试用单分区源：source=1、agent 源集合 {1}（旧 PartitionSourceMetadata 类型的最小替身） */
+  private static RaftPartitionSource raftSource() {
+    return new RaftPartitionSource() {
+      @Override
+      public int getSource() {
+        return 1;
+      }
+
+      @Override
+      public IntHashSet getAgentSources() {
+        final var sources = new IntHashSet();
+        sources.add(1);
+        return sources;
+      }
+
+      @Override
+      public PartitionId getPartitionId() {
+        return PartitionId.from("admin", 1);
+      }
+    };
+  }
 
   @TempDir Path tempDir;
 
@@ -62,7 +86,7 @@ class RocksdbAdminRepositoryTest {
     repository =
         new RocksdbAdminRepositoryFactory(
                 db,
-                new PartitionSourceMetadata(1, 1, ImmutableSet.of(1)),
+                raftSource(),
                 new SimpleMeterRegistry())
             .create();
   }
@@ -109,7 +133,7 @@ class RocksdbAdminRepositoryTest {
     final var recreated =
         new RocksdbAdminRepositoryFactory(
                 db,
-                new PartitionSourceMetadata(1, 1, ImmutableSet.of(1)),
+                raftSource(),
                 new SimpleMeterRegistry())
             .create();
     assertThat(recreated.positionRepository().getLastSuccessfulProcessedRecordPosition())
