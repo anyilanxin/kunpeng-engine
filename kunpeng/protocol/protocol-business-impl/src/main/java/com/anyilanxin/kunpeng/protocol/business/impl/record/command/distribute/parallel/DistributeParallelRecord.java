@@ -17,6 +17,7 @@
 package com.anyilanxin.kunpeng.protocol.business.impl.record.command.distribute.parallel;
 
 import static com.anyilanxin.kunpeng.protocol.business.impl.BusinessRecordConstant.*;
+import static com.anyilanxin.kunpeng.structpack.util.BufferUtil.copyInto;
 
 import com.anyilanxin.kunpeng.protocol.business.ValueLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.ValueType;
@@ -35,7 +36,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-import org.agrona.concurrent.UnsafeBuffer;
 
 /**
  * 并行分发 Record。
@@ -238,14 +238,7 @@ public class DistributeParallelRecord extends UnifiedRecordValue<DistributeParal
 
   public DistributeParallelRecord setDistributeRecord(final UnifiedRecordValue distributeRecord) {
     distributeRecordProp.reset();
-    if (distributeRecord == null) {
-      return this;
-    }
-    final var valueBuffer = new UnsafeBuffer(0, 0);
-    final int encodedLength = distributeRecord.getLength();
-    valueBuffer.wrap(new byte[encodedLength]);
-    distributeRecord.write(valueBuffer, 0);
-    distributeRecordProp.read(commandValueReader.wrap(valueBuffer, 0, encodedLength));
+    copyInto(distributeRecord, distributeRecordProp);
     return this;
   }
 

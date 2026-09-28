@@ -78,6 +78,14 @@ public class ObjectValue extends BaseValue {
   private int[] readIds = NO_IDS; // 读入 id 块的复用暂存
   private boolean layoutFrozen;
 
+  /**
+   * 纯容器模式（零声明槽位，如泛型 {@code UnifiedRecordValue} 载体）下保留的完整 structpack 帧（自有拷贝）。
+   *
+   * <p>裸容器没有槽位可派发，按声明路径解析会静默丢弃全部字段；透传模式走查校验帧结构后整帧保留、write 原样回写 （字节级一致，保持规范写出序）。具体类型的还原由上层按
+   * valueType/lifeCycle 走 RecordValueMapper 桥接。
+   */
+  private byte[] passthroughFrame;
+
   public ObjectValue(final int initialCapacity) {
     if (initialCapacity < 0) {
       throw new IllegalArgumentException("非法初始容量: " + initialCapacity);
@@ -130,7 +138,9 @@ public class ObjectValue extends BaseValue {
   }
 
   public boolean isEmpty() {
-    return declaredProperties.isEmpty() && undeclaredProperties.isEmpty();
+    return declaredProperties.isEmpty()
+        && undeclaredProperties.isEmpty()
+        && passthroughFrame == null;
   }
 
   public int undeclaredCount() {
@@ -144,6 +154,7 @@ public class ObjectValue extends BaseValue {
   /** 复用复位：declared 槽位清标志，未声明条目归还池 */
   @Override
   public void reset() {
+    passthroughFrame = null;
     for (final BaseProperty<? extends BaseValue> prop : declaredProperties) {
       prop.reset();
     }
@@ -215,6 +226,10 @@ public class ObjectValue extends BaseValue {
 
   @Override
   public void read(final PackerReader reader) {
+    if (declaredProperties.isEmpty()) {
+      readPassthroughFrame(reader);
+      return;
+    }
     final int magic1 = reader.readByte();
     final int magic2 = reader.readByte();
     if (magic1 != MAGIC_1 || magic2 != MAGIC_2) {
@@ -289,10 +304,62 @@ public class ObjectValue extends BaseValue {
     }
   }
 
+  /**
+   * 纯容器透传读：走查校验帧结构（magic/版本/id 升序/自界定长度）后整帧自有拷贝保留； undeclared 段与声明路径同构解析保留（裸容器本就是泛型吸收者）。
+   * 校验失败的坏帧同样早失败，与具体类型解析的损坏检测一致。
+   */
+  private void readPassthroughFrame(final PackerReader reader) {
+    final int start = reader.getOffset();
+    final int magic1 = reader.readByte();
+    final int magic2 = reader.readByte();
+    if (magic1 != MAGIC_1 || magic2 != MAGIC_2) {
+      throw new StructPackException(
+          "非法 structpack 数据: magic=0x" + Integer.toHexString(magic1) + Integer.toHexString(magic2));
+    }
+    final int version = reader.readByte();
+    if (version != WIRE_VERSION) {
+      throw new StructPackException("不支持的 structpack 版本: " + version);
+    }
+    final int fieldCount = reader.readBoundedVarInt("字段数");
+    int previousId = 0;
+    for (int i = 0; i < fieldCount; i++) {
+      final int id = (int) reader.readVarInt();
+      if (id <= previousId) {
+        throw new StructPackException(
+            getClass().getSimpleName()
+                + ": 字段 id 必须严格升序, 实际 "
+                + previousId
+                + " 后出现 "
+                + id
+                + " —— 数据损坏或非规范写出");
+      }
+      previousId = id;
+    }
+    for (int i = 0; i < fieldCount; i++) {
+      reader.skipBytes(reader.readBoundedVarInt("字段值长度"));
+    }
+    final int undeclaredCount = reader.readBoundedVarInt("未声明字段数");
+    for (int i = 0; i < undeclaredCount; i++) {
+      final UndeclaredProperty prop = newUndeclaredProperty();
+      prop.read(reader);
+      undeclaredProperties.add(prop);
+    }
+    if (fieldCount == 0 && undeclaredCount == 0) {
+      // 空帧不保留：保持空容器语义（isEmpty=true、可再写空帧）
+      return;
+    }
+    final int length = reader.getOffset() - start;
+    passthroughFrame = new byte[length];
+    reader.getBuffer().getBytes(start, passthroughFrame, 0, length);
+  }
+
   // ===== 写 =====
 
   @Override
   public int getEncodedLength() {
+    if (passthroughFrame != null) {
+      return passthroughFrame.length;
+    }
     ensureWritable();
     ensureLayout();
     final int count = declaredProperties.size();
@@ -315,6 +382,11 @@ public class ObjectValue extends BaseValue {
 
   @Override
   public void write(final PackerWriter writer) {
+    if (passthroughFrame != null) {
+      // 透传模式整帧原样回写：字节级一致（保持原帧的规范写出序），不重新编码
+      writer.writeBytes(passthroughFrame, 0, passthroughFrame.length);
+      return;
+    }
     ensureWritable();
     ensureLayout();
     final int count = declaredProperties.size();
