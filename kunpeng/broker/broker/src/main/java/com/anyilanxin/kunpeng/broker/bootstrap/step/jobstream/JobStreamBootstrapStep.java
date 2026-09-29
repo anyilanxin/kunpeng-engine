@@ -23,6 +23,7 @@ import com.anyilanxin.kunpeng.broker.client.jobstream.JobStreamSnapshotProperty;
 import com.anyilanxin.kunpeng.broker.jobstream.CoordinatorJobStreamer;
 import com.anyilanxin.kunpeng.broker.jobstream.JobStreamDispatcher;
 import com.anyilanxin.kunpeng.broker.jobstream.PushFailureFallback;
+import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipEventListener;
 import com.anyilanxin.kunpeng.cluster.cluster.Member;
 import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
@@ -38,7 +39,7 @@ import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
  */
 public final class JobStreamBootstrapStep extends AbstractBrokerStartupStep {
 
-  private com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipEventListener membershipListener;
+  private ClusterMembershipEventListener membershipListener;
 
   @Override
   public String getName() {
@@ -61,7 +62,7 @@ public final class JobStreamBootstrapStep extends AbstractBrokerStartupStep {
         new JobStreamDispatcher(coordinator, streamer, fallbackHandler);
 
     final var membershipListener =
-        (com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipEventListener)
+        (ClusterMembershipEventListener)
             event -> {
               final var subject = event.subject();
               switch (event.type()) {

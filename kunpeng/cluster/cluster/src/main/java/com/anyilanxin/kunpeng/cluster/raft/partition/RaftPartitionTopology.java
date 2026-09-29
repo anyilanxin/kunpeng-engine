@@ -19,32 +19,24 @@ package com.anyilanxin.kunpeng.cluster.raft.partition;
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
 import com.anyilanxin.kunpeng.cluster.cluster.Member;
 import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
-import com.anyilanxin.kunpeng.cluster.raft.RaftServer;
+import com.anyilanxin.kunpeng.protocol.common.encoding.BrokerInfo;
 import java.util.Optional;
 
 /**
- * 集群分区拓扑视图：各节点把自己的分区角色写入成员属性并经成员广播传播（见 RaftPartitionServer 的角色发布），本服务按需在当前成员快照中检索指定分区的 leader 节点。
+ * 集群分区拓扑视图：在当前成员快照中检索指定分区的 leader 节点（快照传输定位源端用）。
  *
- * <p>查询基于 {@link ClusterMembershipService#getMembers()} 的内存视图，无需订阅事件即可获得 最新拓扑；属性 key 统一为 {@value
- * #ROLE_PROPERTY_PREFIX}{分区名}。
+ * <p>查询基于 {@link ClusterMembershipService#getMembers()} 的内存视图，读取各成员属性中的 {@link BrokerInfo}
+ * 实体（分区角色随实体属性由 SWIM 自行传播补全）。
  *
  * @author zxuanhong
  * @since 2026.9.0
  */
 public final class RaftPartitionTopology {
 
-  /** 分区角色在成员属性中的 key 前缀。 */
-  public static final String ROLE_PROPERTY_PREFIX = "raft.partition.";
-
   private final ClusterMembershipService membershipService;
 
   public RaftPartitionTopology(final ClusterMembershipService membershipService) {
     this.membershipService = membershipService;
-  }
-
-  /** 分区角色属性 key。 */
-  public static String rolePropertyKey(final String partitionName) {
-    return ROLE_PROPERTY_PREFIX + partitionName;
   }
 
   /** 与 {@link RaftPartition#name()} 一致的分区名推导，供远端分区定位主题使用。 */
@@ -55,10 +47,20 @@ public final class RaftPartitionTopology {
 
   /** 返回指定分区当前的 leader 成员；拓扑中无该分区 leader 时为空。 */
   public Optional<Member> leaderOf(final PartitionId partitionId) {
-    final String key = rolePropertyKey(partitionNameOf(partitionId));
     return membershipService.getMembers().stream()
         .filter(
-            member -> RaftServer.Role.LEADER.name().equals(member.properties().getProperty(key)))
+            member -> {
+              final BrokerInfo info = BrokerInfo.fromProperties(member.properties());
+              return info != null
+                  && info.getPartitions().stream()
+                      .anyMatch(
+                          entry ->
+                              entry.partitionId == partitionId.id()
+                                  && partitionId.group().equals(entry.groupName)
+                                  && entry.role
+                                      == com.anyilanxin.kunpeng.protocol.common.member.PartitionRole
+                                          .LEADER);
+            })
         .findFirst();
   }
 }

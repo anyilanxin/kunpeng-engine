@@ -19,7 +19,6 @@ package com.anyilanxin.kunpeng.modules.common.brokerclient;
 import com.anyilanxin.kunpeng.broker.client.business.BrokerClient;
 import com.anyilanxin.kunpeng.broker.client.business.impl.BrokerClientImpl;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
-import com.anyilanxin.kunpeng.cluster.cluster.messaging.impl.AeronMessagingService;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.scheduler.ActorScheduler;
 import java.time.Duration;
@@ -33,31 +32,27 @@ public final class BrokerClientConfiguration {
   private final ActorScheduler scheduler;
   private final ClusterTopologyService topologyManager;
   private final BrokerClientTimeoutConfiguration config;
-  private final AeronMessagingService businessMessagingService;
 
   @Autowired
   public BrokerClientConfiguration(
       final BrokerClientTimeoutConfiguration config,
       final AtomixCluster cluster,
       final ActorScheduler scheduler,
-      final ClusterTopologyService topologyManager,
-      final AeronMessagingService businessMessagingService) {
+      final ClusterTopologyService topologyManager) {
     this.cluster = cluster;
     this.scheduler = scheduler;
     this.topologyManager = topologyManager;
     this.config = config;
-    this.businessMessagingService = businessMessagingService;
   }
 
   @Bean(destroyMethod = "close")
   public BrokerClient brokerClient() {
     final var brokerClient =
         new BrokerClientImpl(
-            // 业务命令走业务面消息服务(独立端口), 集群面只承载 SWIM/Raft/快照等集群流量
-            businessMessagingService,
+            // 发送侧直接使用集群面 Atomix 通信组件, 按分区 leader 广播的业务端口寻址(接收端为 broker 业务面独立实例)
+            cluster.getMessagingService(),
             cluster.getEventService(),
             topologyManager,
-            cluster.getMembershipService(),
             cluster.getLeaderFoundService(),
             config.requestTimeout);
     scheduler.submitActor(brokerClient);

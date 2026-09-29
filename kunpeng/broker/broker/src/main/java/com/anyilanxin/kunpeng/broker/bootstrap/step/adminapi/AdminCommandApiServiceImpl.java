@@ -17,8 +17,8 @@
 package com.anyilanxin.kunpeng.broker.bootstrap.step.adminapi;
 
 import com.anyilanxin.kunpeng.broker.bootstrap.step.idgenerator.NodeIdGeneratorService;
-import com.anyilanxin.kunpeng.broker.client.admin.commandapi.CommandApiHandle;
-import com.anyilanxin.kunpeng.broker.client.admin.commandapi.CommandApiService;
+import com.anyilanxin.kunpeng.broker.client.admin.commandapi.AdminCommandApiHandle;
+import com.anyilanxin.kunpeng.broker.client.admin.commandapi.AdminCommandApiService;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
 import com.anyilanxin.kunpeng.eventlog.EventLog;
 import com.anyilanxin.kunpeng.scheduler.Actor;
@@ -30,12 +30,12 @@ import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
  * @author zxuanhong
  * @since 2026.9.0
  */
-public class CommandApiServiceImpl extends Actor implements CommandApiService {
-  private final CommandApiHandleImpl handle;
+public class AdminCommandApiServiceImpl extends Actor implements AdminCommandApiService {
+  private final AdminCommandApiHandleImpl handle;
 
-  public CommandApiServiceImpl(
+  public AdminCommandApiServiceImpl(
       final MessagingService messagingService, final NodeIdGeneratorService idGenerator) {
-    handle = new CommandApiHandleImpl(messagingService, idGenerator, actor);
+    handle = new AdminCommandApiHandleImpl(messagingService, idGenerator, actor);
   }
 
   @Override
@@ -51,7 +51,7 @@ public class CommandApiServiceImpl extends Actor implements CommandApiService {
   public void onPausedResource(final int resourceId) {}
 
   @Override
-  public CommandApiHandle gettCommandApiHandle() {
+  public AdminCommandApiHandle gettCommandApiHandle() {
     return handle;
   }
 

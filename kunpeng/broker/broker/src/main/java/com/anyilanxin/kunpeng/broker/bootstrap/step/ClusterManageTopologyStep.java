@@ -18,22 +18,24 @@ package com.anyilanxin.kunpeng.broker.bootstrap.step;
 
 import com.anyilanxin.kunpeng.broker.bootstrap.AbstractBrokerStartupStep;
 import com.anyilanxin.kunpeng.broker.bootstrap.BrokerStartupContext;
-import com.anyilanxin.kunpeng.cluster.config.topology.broker.DefaultClusterSwimTopologyService;
-import com.anyilanxin.kunpeng.cluster.config.topology.cluster.DefaultClusterTopologyService;
+import com.anyilanxin.kunpeng.broker.topology.TopologyManagerImpl;
+import com.anyilanxin.kunpeng.protocol.common.encoding.BrokerInfo;
 import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 
 /**
- * 集群分区拓扑（Cluster Partition Topology）相关的 broker 启动步骤：创建拓扑服务并注册到上下文。
+ * 集群分区拓扑管理（Cluster Manage Topology）相关的 broker 启动步骤：创建拓扑管理服务并注册到上下文。
+ *
+ * <p>拓扑收集服务（ClusterTopologyService）为双边共用的 dist bean，经 Broker 构造参数注入上下文常驻，此处不再装配。
  *
  * @author zxuanhong
  * @since 2026.9.0
  */
-public final class ClusterTopologyStep extends AbstractBrokerStartupStep {
+public final class ClusterManageTopologyStep extends AbstractBrokerStartupStep {
 
   @Override
   public String getName() {
-    return "Cluster Partition Topology";
+    return "Cluster Manage Topology";
   }
 
   @Override
@@ -41,29 +43,21 @@ public final class ClusterTopologyStep extends AbstractBrokerStartupStep {
       final BrokerStartupContext brokerStartupContext,
       final ConcurrencyControl concurrencyControl,
       final ActorFuture<BrokerStartupContext> startupFuture) {
-    final DefaultClusterSwimTopologyService partitionTopology =
-        new DefaultClusterSwimTopologyService(
+    // 拓扑管理服务（broker 单边）：持有本进程唯一的 broker 传播实体，监听本节点数据变化写入成员属性（不做收集）
+    final TopologyManagerImpl topologyManager =
+        new TopologyManagerImpl(
             brokerStartupContext.getAtomixCluster().getMembershipService(),
-            brokerStartupContext.getMeterRegistry());
-    // 只读视图：汇聚集群各成员广播的分区拓扑，供调度子系统等查询使用
-    final DefaultClusterTopologyService clusterTopologyService =
-        new DefaultClusterTopologyService(
-            brokerStartupContext.getAtomixCluster().getMembershipService());
+            brokerStartupContext.getMeterRegistry(),
+            new BrokerInfo());
     brokerStartupContext
         .getActorSchedulingService()
-        .submitActor(partitionTopology)
-        .thenApply(
-            ignored ->
-                brokerStartupContext
-                    .getActorSchedulingService()
-                    .submitActor(clusterTopologyService))
+        .submitActor(topologyManager)
         .onComplete(
             (_, throwable) -> {
               if (throwable != null) {
                 startupFuture.completeExceptionally(throwable);
               } else {
-                brokerStartupContext.setClusterPartitionTopology(partitionTopology);
-                brokerStartupContext.setClusterTopologyService(clusterTopologyService);
+                brokerStartupContext.setClusterPartitionTopology(topologyManager);
                 startupFuture.complete(brokerStartupContext);
               }
             });
@@ -74,15 +68,10 @@ public final class ClusterTopologyStep extends AbstractBrokerStartupStep {
       final BrokerStartupContext brokerShutdownContext,
       final ConcurrencyControl concurrencyControl,
       final ActorFuture<BrokerStartupContext> shutdownFuture) {
-    final DefaultClusterSwimTopologyService partitionTopology =
-        brokerShutdownContext.getClusterPartitionTopology();
-    final DefaultClusterTopologyService clusterTopologyService =
-        (DefaultClusterTopologyService) brokerShutdownContext.getClusterTopologyService();
-    if (clusterTopologyService != null) {
-      clusterTopologyService.closeAsync();
-    }
-    if (partitionTopology != null) {
-      partitionTopology
+    final TopologyManagerImpl topologyManager =
+        (TopologyManagerImpl) brokerShutdownContext.getClusterPartitionTopology();
+    if (topologyManager != null) {
+      topologyManager
           .closeAsync()
           .onComplete(
               (_, throwable) -> {
@@ -90,7 +79,6 @@ public final class ClusterTopologyStep extends AbstractBrokerStartupStep {
                   shutdownFuture.completeExceptionally(throwable);
                 } else {
                   brokerShutdownContext.setClusterPartitionTopology(null);
-                  brokerShutdownContext.setClusterTopologyService(null);
                   shutdownFuture.complete(brokerShutdownContext);
                 }
               });

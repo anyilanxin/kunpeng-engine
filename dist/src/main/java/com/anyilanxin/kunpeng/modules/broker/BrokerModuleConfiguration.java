@@ -19,6 +19,7 @@ package com.anyilanxin.kunpeng.modules.broker;
 import com.anyilanxin.kunpeng.broker.Broker;
 import com.anyilanxin.kunpeng.broker.client.business.BrokerClient;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
+import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.modules.broker.configuration.BrokerPropertiesConfiguration;
 import com.anyilanxin.kunpeng.modules.common.configuration.ClusterPropertiesConfiguration;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
@@ -53,6 +54,7 @@ public class BrokerModuleConfiguration {
   private final MeterRegistry meterRegistry;
   private final ApplicationContext applicationContext;
   private final BrokerClient brokerClient;
+  private final ClusterTopologyService clusterTopologyService;
 
   @Autowired
   public BrokerModuleConfiguration(
@@ -62,7 +64,8 @@ public class BrokerModuleConfiguration {
       final AtomixCluster atomixCluster,
       final MeterRegistry meterRegistry,
       final BrokerClient brokerClient,
-      final ApplicationContext applicationContext) {
+      final ApplicationContext applicationContext,
+      final ClusterTopologyService clusterTopologyService) {
     this.brokerClient = brokerClient;
     this.brokerProperties = brokerProperties;
     this.clusterProperties = clusterProperties;
@@ -70,6 +73,7 @@ public class BrokerModuleConfiguration {
     this.schedulingService = schedulingService;
     this.meterRegistry = meterRegistry;
     this.applicationContext = applicationContext;
+    this.clusterTopologyService = clusterTopologyService;
   }
 
   @Bean(destroyMethod = "close")
@@ -82,7 +86,8 @@ public class BrokerModuleConfiguration {
             brokerProperties,
             atomixCluster,
             brokerClient,
-            meterRegistry);
+            meterRegistry,
+            clusterTopologyService);
     broker.start();
     return broker;
   }

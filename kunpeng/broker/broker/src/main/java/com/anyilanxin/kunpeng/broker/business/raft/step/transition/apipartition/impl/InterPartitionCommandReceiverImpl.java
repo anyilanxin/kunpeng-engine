@@ -41,7 +41,7 @@ import org.slf4j.Logger;
  * @since 2026.9.0
  */
 final class InterPartitionCommandReceiverImpl {
-  private static final Logger LOG = BrokerLoggers.TRANSPORT_LOGGER;
+  private static final Logger LOG = BrokerLoggers.CLUSTER_BUSINESS;
   private final Decoder decoder = new Decoder();
   private final EventLogWriter logStreamWriter;
   private boolean diskSpaceAvailable = true;
@@ -68,7 +68,7 @@ final class InterPartitionCommandReceiverImpl {
     }
 
     final AppendResult result = writeCommand(decoded);
-    if (result instanceof AppendResult.Rejected rejected) {
+    if (result instanceof final AppendResult.Rejected rejected) {
       logWriteFailure(memberId, decoded, rejected);
     }
   }

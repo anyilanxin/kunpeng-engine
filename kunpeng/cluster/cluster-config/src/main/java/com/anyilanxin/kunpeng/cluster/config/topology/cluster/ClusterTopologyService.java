@@ -19,6 +19,7 @@ package com.anyilanxin.kunpeng.cluster.config.topology.cluster;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
 import com.anyilanxin.kunpeng.cluster.config.topology.PartitionMemberInfo;
+import com.anyilanxin.kunpeng.cluster.utils.net.Address;
 import java.util.List;
 import java.util.Map;
 import org.agrona.collections.IntHashSet;
@@ -39,6 +40,13 @@ public interface ClusterTopologyService {
 
   /** 全集群按成员维度的分区拓扑视图：member -> 其广播的分区状态列表 */
   Map<MemberId, List<PartitionMemberInfo>> getMemberPartitions();
+
+  /**
+   * 查询分区 leader 的业务面通信地址（成员主机 + 其广播的业务端口）。
+   *
+   * @return 分区无 leader、成员离线或其业务端口尚未随元数据落定时返回 {@code null}
+   */
+  Address getPartitionBusinessAddress(PartitionId partitionId);
 
   IntHashSet getActivitySourceIds();
 

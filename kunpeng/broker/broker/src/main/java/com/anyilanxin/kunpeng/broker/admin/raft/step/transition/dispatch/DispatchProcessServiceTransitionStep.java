@@ -17,7 +17,7 @@
 package com.anyilanxin.kunpeng.broker.admin.raft.step.transition.dispatch;
 
 import com.anyilanxin.kunpeng.broker.admin.raft.step.transition.AdminTransitionContent;
-import com.anyilanxin.kunpeng.broker.client.admin.commandapi.CommandApiHandle;
+import com.anyilanxin.kunpeng.broker.client.admin.commandapi.AdminCommandApiHandle;
 import com.anyilanxin.kunpeng.cluster.business.step.transition.TransitionStep;
 import com.anyilanxin.kunpeng.cluster.dispatch.DispatchProcessService;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
@@ -90,7 +90,7 @@ public final class DispatchProcessServiceTransitionStep
     concurrencyControl.run(
         () -> {
           final ActorSchedulingService schedulingService = context.getSchedulingService();
-          final CommandApiHandle commandApiHandle =
+          final AdminCommandApiHandle commandApiHandle =
               context.getCommandApiService().gettCommandApiHandle();
           final DispatchProcessService engineService =
               new DispatchProcessService(

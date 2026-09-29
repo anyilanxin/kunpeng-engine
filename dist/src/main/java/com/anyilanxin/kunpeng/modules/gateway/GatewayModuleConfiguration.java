@@ -19,13 +19,13 @@ package com.anyilanxin.kunpeng.modules.gateway;
 import com.anyilanxin.kunpeng.broker.client.business.BrokerClient;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
 import com.anyilanxin.kunpeng.cluster.cluster.leaderfound.ClusterLeaderFoundService;
-import com.anyilanxin.kunpeng.cluster.cluster.messaging.BusinessMessaging;
-import com.anyilanxin.kunpeng.cluster.cluster.messaging.impl.AeronMessagingService;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.configuration.gateway.GatewayCfg;
 import com.anyilanxin.kunpeng.gateway.Gateway;
 import com.anyilanxin.kunpeng.gateway.SpringGatewayBridge;
+import com.anyilanxin.kunpeng.gateway.topology.GatewayTopologyManager;
 import com.anyilanxin.kunpeng.modules.gateway.configuration.GatewayPropertiesConfiguration;
+import com.anyilanxin.kunpeng.protocol.common.encoding.GatewayInfo;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.util.concurrent.TimeUnit;
@@ -60,7 +60,6 @@ public class GatewayModuleConfiguration {
   private final MeterRegistry meterRegistry;
   private final ClusterTopologyService topologyManager;
   private final SpringGatewayBridge gatewayBridge;
-  private final AeronMessagingService businessMessagingService;
 
   @Autowired
   public GatewayModuleConfiguration(
@@ -71,8 +70,7 @@ public class GatewayModuleConfiguration {
       final BrokerClient brokerClient,
       final MeterRegistry meterRegistry,
       final ClusterTopologyService topologyManager,
-      final SpringGatewayBridge gatewayBridge,
-      final AeronMessagingService businessMessagingService) {
+      final SpringGatewayBridge gatewayBridge) {
     this.schedulingService = schedulingService;
     this.gatewayCfg = gatewayCfg;
     this.atomixCluster = atomixCluster;
@@ -81,15 +79,16 @@ public class GatewayModuleConfiguration {
     this.meterRegistry = meterRegistry;
     this.topologyManager = topologyManager;
     this.gatewayBridge = gatewayBridge;
-    this.businessMessagingService = businessMessagingService;
   }
 
   @Bean(destroyMethod = "close")
   public Gateway gateway() {
     atomixCluster.start();
-    // 网关侧业务面消息服务: 启动独立端口实例并广播端口(对端 broker 经元数据二次拉取补全后可寻址)
-    BusinessMessaging.startAndAdvertise(
-        businessMessagingService, atomixCluster.getMembershipService());
+    // 网关发现管理: client 接入地址写入 GatewayInfo 实体属性(未显式通告主机时空串回落成员主机, 收集侧解析)
+    GatewayInfo.advertise(
+        atomixCluster.getMembershipService().getLocalMember().properties(),
+        gatewayCfg.getNetwork().getGrpcHost(),
+        gatewayCfg.getNetwork().getGrpcPort());
     final Gateway gateway =
         new Gateway(
             schedulingService,
@@ -102,5 +101,14 @@ public class GatewayModuleConfiguration {
     gateway.start().join(30, TimeUnit.SECONDS);
     gatewayBridge.registerJobHub(gateway::jobHub);
     return gateway;
+  }
+
+  /** gateway 地址发现收集服务(gateway 单边): 解析各网关成员的 GatewayInfo 实体汇总 client 接入地址, 供 client 集群网关发现 */
+  @Bean(destroyMethod = "close")
+  public GatewayTopologyManager gatewayTopologyManager() {
+    final GatewayTopologyManager manager =
+        new GatewayTopologyManager(atomixCluster.getMembershipService());
+    schedulingService.submitActor(manager);
+    return manager;
   }
 }

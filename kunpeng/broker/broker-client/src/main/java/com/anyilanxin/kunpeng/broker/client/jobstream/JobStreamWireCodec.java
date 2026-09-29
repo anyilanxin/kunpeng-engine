@@ -18,18 +18,13 @@ package com.anyilanxin.kunpeng.broker.client.jobstream;
 
 import com.anyilanxin.kunpeng.broker.client.jobstream.JobStreamMessages.PushResult;
 import com.anyilanxin.kunpeng.broker.client.jobstream.JobStreamMessages.StreamPush;
-import com.anyilanxin.kunpeng.broker.client.jobstream.JobStreamMessages.SubscriptionSnapshot;
 import com.anyilanxin.kunpeng.broker.client.jobstream.protocol.MessageHeaderDecoder;
 import com.anyilanxin.kunpeng.broker.client.jobstream.protocol.MessageHeaderEncoder;
 import com.anyilanxin.kunpeng.broker.client.jobstream.protocol.PushResultDecoder;
 import com.anyilanxin.kunpeng.broker.client.jobstream.protocol.PushResultEncoder;
 import com.anyilanxin.kunpeng.broker.client.jobstream.protocol.StreamPushDecoder;
 import com.anyilanxin.kunpeng.broker.client.jobstream.protocol.StreamPushEncoder;
-import com.anyilanxin.kunpeng.broker.client.jobstream.protocol.SubscriptionSnapshotDecoder;
-import com.anyilanxin.kunpeng.broker.client.jobstream.protocol.SubscriptionSnapshotEncoder;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.job.JobRecord;
-import java.util.ArrayList;
-import java.util.List;
 import org.agrona.ExpandableArrayBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
 
@@ -46,44 +41,6 @@ public final class JobStreamWireCodec {
   private static final int HEADER_LENGTH = MessageHeaderEncoder.ENCODED_LENGTH;
 
   private JobStreamWireCodec() {}
-
-  // —— SubscriptionSnapshot ——
-
-  public static byte[] encodeSnapshot(final SubscriptionSnapshot snap) {
-    final var buffer = new ExpandableArrayBuffer(256);
-    final var encoder = new SubscriptionSnapshotEncoder();
-    encoder.wrapAndApplyHeader(buffer, 0, new MessageHeaderEncoder());
-    encoder.generation(snap.generation());
-    final var aggregates = encoder.aggregatesCount(snap.aggregates().size());
-    for (final SubscriptionSnapshot.Aggregate aggregate : snap.aggregates()) {
-      final var sessions = aggregates.sessionsCount(aggregate.sessions().size());
-      for (final SubscriptionSnapshot.Session session : aggregate.sessions()) {
-        sessions.next().sessionId(session.sessionId()).worker(session.worker());
-      }
-      aggregates.jobType(aggregate.jobType());
-      aggregates.next();
-    }
-    return copyOut(buffer, encoder.encodedLength());
-  }
-
-  public static SubscriptionSnapshot decodeSnapshot(final byte[] bytes) {
-    final var buffer = new UnsafeBuffer(bytes);
-    final var decoder = new SubscriptionSnapshotDecoder();
-    decoder.wrapAndApplyHeader(buffer, 0, new MessageHeaderDecoder());
-    final var aggregates = decoder.aggregates();
-    final List<SubscriptionSnapshot.Aggregate> out = new ArrayList<>(aggregates.count());
-    while (aggregates.hasNext()) {
-      aggregates.next();
-      final var sessions = aggregates.sessions();
-      final List<SubscriptionSnapshot.Session> members = new ArrayList<>(sessions.count());
-      while (sessions.hasNext()) {
-        sessions.next();
-        members.add(new SubscriptionSnapshot.Session(sessions.sessionId(), sessions.worker()));
-      }
-      out.add(new SubscriptionSnapshot.Aggregate(aggregates.jobType(), members));
-    }
-    return new SubscriptionSnapshot(decoder.generation(), out);
-  }
 
   // —— StreamPush / PushResult ——
 

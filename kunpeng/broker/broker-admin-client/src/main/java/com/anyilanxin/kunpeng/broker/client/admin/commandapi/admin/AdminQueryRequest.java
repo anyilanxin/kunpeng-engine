@@ -16,7 +16,7 @@
  */
 package com.anyilanxin.kunpeng.broker.client.admin.commandapi.admin;
 
-import com.anyilanxin.kunpeng.broker.client.admin.commandapi.CommandApiBrokerRequest;
+import com.anyilanxin.kunpeng.broker.client.admin.commandapi.AdminCommandApiBrokerRequest;
 import com.anyilanxin.kunpeng.protocol.admin.AdminValueType;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.admin.query.AdminDispatchQueryRequestRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.commandapi.admin.AdminDispatchApiValueLifeCycle;
@@ -27,7 +27,8 @@ import com.anyilanxin.kunpeng.protocol.admin.record.commandapi.admin.AdminDispat
  * @author zxuanhong
  * @since 2026.9.0
  */
-public class AdminQueryRequest extends CommandApiBrokerRequest<AdminDispatchQueryRequestRecord> {
+public class AdminQueryRequest
+    extends AdminCommandApiBrokerRequest<AdminDispatchQueryRequestRecord> {
 
   public AdminQueryRequest() {
     super(

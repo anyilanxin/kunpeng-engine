@@ -19,7 +19,7 @@ package com.anyilanxin.kunpeng.broker.bootstrap.step.adminapi;
 import com.anyilanxin.kunpeng.broker.BrokerLoggers;
 import com.anyilanxin.kunpeng.broker.bootstrap.step.idgenerator.NodeIdGeneratorService;
 import com.anyilanxin.kunpeng.broker.client.admin.*;
-import com.anyilanxin.kunpeng.broker.client.admin.commandapi.CommandApiHandle;
+import com.anyilanxin.kunpeng.broker.client.admin.commandapi.AdminCommandApiHandle;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
 import com.anyilanxin.kunpeng.eventlog.AppendEntry;
 import com.anyilanxin.kunpeng.eventlog.AppendResult;
@@ -51,7 +51,7 @@ import org.slf4j.Logger;
  * @author zxuanhong
  * @since 2026.9.0
  */
-public class CommandApiHandleImpl implements CommandApiHandle, CloseableSilently {
+public class AdminCommandApiHandleImpl implements AdminCommandApiHandle, CloseableSilently {
   private final MessagingService messagingService;
   private final boolean isDiskSpaceAvailable = true;
   private final ConcurrencyControl actor;
@@ -72,7 +72,7 @@ public class CommandApiHandleImpl implements CommandApiHandle, CloseableSilently
   private final UnsafeBuffer reusableResponseDataBuffer = new UnsafeBuffer(0, 0);
   private byte[] reusableResponseDataBytes = new byte[0];
 
-  public CommandApiHandleImpl(
+  public AdminCommandApiHandleImpl(
       final MessagingService messagingService,
       final NodeIdGeneratorService idGenerator,
       final ConcurrencyControl actor) {

@@ -22,11 +22,12 @@ import static com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionExec
 import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.ADMIN_PARTITION_SOURCE;
 import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.ADMIN_RAFT_GROUP;
 
-import com.anyilanxin.kunpeng.broker.ClusterAdminLoggers;
+import com.anyilanxin.kunpeng.broker.BrokerLoggers;
 import com.anyilanxin.kunpeng.broker.admin.raft.*;
 import com.anyilanxin.kunpeng.broker.business.raft.BusinessRaftClientService;
 import com.anyilanxin.kunpeng.broker.business.raft.DefaultBusinessRaftClientService;
-import com.anyilanxin.kunpeng.broker.client.admin.commandapi.CommandApiService;
+import com.anyilanxin.kunpeng.broker.client.admin.commandapi.AdminCommandApiService;
+import com.anyilanxin.kunpeng.broker.topology.TopologyManager;
 import com.anyilanxin.kunpeng.cluster.business.RaftPartitionFactory;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
@@ -38,7 +39,6 @@ import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
 import com.anyilanxin.kunpeng.cluster.config.ClusterAdminConfiguration;
 import com.anyilanxin.kunpeng.cluster.config.ClusterMetaStore;
 import com.anyilanxin.kunpeng.cluster.config.DispatchMeta;
-import com.anyilanxin.kunpeng.cluster.config.topology.broker.DefaultClusterSwimTopologyService;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.cluster.dispatch.api.ClusterDispatchClient;
 import com.anyilanxin.kunpeng.cluster.dispatch.scheduling.TimerClock;
@@ -74,7 +74,7 @@ import org.slf4j.Logger;
  * @since 2026.9.0
  */
 public class ClusterAdminService extends Actor implements ClusterAdmin, AdminExecutionService {
-  private static final Logger LOG = ClusterAdminLoggers.CLUSTER_ADMIN;
+  private static final Logger LOG = BrokerLoggers.CLUSTER_ADMIN;
 
   /** ack 重试次数上限 */
   private static final int ACK_RETRY_LIMIT = 10;
@@ -103,9 +103,9 @@ public class ClusterAdminService extends Actor implements ClusterAdmin, AdminExe
   private final PartitionLeaveRecord leaveRecord = new PartitionLeaveRecord();
   private final PartitionConfigChangeRecord configChangeRecord = new PartitionConfigChangeRecord();
   private final ClusterLeaderFoundService leaderFoundService;
-  private final CommandApiService commandApiService;
+  private final AdminCommandApiService commandApiService;
   private final ClusterDispatchClient dispatchClient;
-  private final DefaultClusterSwimTopologyService brokerTopologyService;
+  private final TopologyManager brokerTopologyService;
   private final ClusterTopologyService clusterTopologyService;
   private final TimerClock timerClock;
 
@@ -119,10 +119,10 @@ public class ClusterAdminService extends Actor implements ClusterAdmin, AdminExe
       final MessagingService messagingService,
       final ActorSchedulingService actorSchedulingService,
       final MeterRegistry meterRegistry,
-      final CommandApiService commandApiService,
+      final AdminCommandApiService commandApiService,
       final ClusterMetaStore clusterMetaStore,
       final ClusterDispatchClient dispatchClient,
-      final DefaultClusterSwimTopologyService brokerTopologyService,
+      final TopologyManager brokerTopologyService,
       final ClusterTopologyService clusterTopologyService) {
     this.timerClock = timerClock;
     this.brokerTopologyService = brokerTopologyService;

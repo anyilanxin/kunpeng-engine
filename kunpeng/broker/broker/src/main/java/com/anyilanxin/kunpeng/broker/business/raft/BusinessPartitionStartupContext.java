@@ -19,11 +19,11 @@ package com.anyilanxin.kunpeng.broker.business.raft;
 import com.anyilanxin.kunpeng.broker.business.raft.step.transition.BusinessTransitionContent;
 import com.anyilanxin.kunpeng.broker.commandapi.CommandApiServiceImpl;
 import com.anyilanxin.kunpeng.broker.jobstream.JobStreamDispatcher;
+import com.anyilanxin.kunpeng.broker.topology.TopologyManager;
 import com.anyilanxin.kunpeng.cluster.business.PartitionStartupContext;
 import com.anyilanxin.kunpeng.cluster.business.RaftPartitionFactory;
 import com.anyilanxin.kunpeng.cluster.business.step.RaftPartitionSource;
 import com.anyilanxin.kunpeng.cluster.business.step.transition.PartitionTransition;
-import com.anyilanxin.kunpeng.cluster.config.topology.broker.DefaultClusterSwimTopologyService;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.cluster.dispatch.scheduling.TimerClock;
 import com.anyilanxin.kunpeng.cluster.raft.logentry.EntryValidator;
@@ -67,7 +67,7 @@ public class BusinessPartitionStartupContext
   private Path partitionDirectory;
   private RaftPartitionSource partitionSource;
   private RaftPartition raftPartition;
-  private final DefaultClusterSwimTopologyService brokerTopologyService;
+  private final TopologyManager brokerTopologyService;
 
   public BusinessPartitionStartupContext(
       final ActorSchedulingService schedulingService,
@@ -77,7 +77,7 @@ public class BusinessPartitionStartupContext
       final RaftSnapshotProvider snapshotProvider,
       final MeterRegistry meterRegistry,
       final PartitionManagementService managementService,
-      final DefaultClusterSwimTopologyService brokerTopologyService,
+      final TopologyManager brokerTopologyService,
       final TimerClock timerClock,
       final BrokerCfg brokerCfg,
       final BeanFactory beanFactory,
@@ -210,7 +210,7 @@ public class BusinessPartitionStartupContext
     return topologyService;
   }
 
-  public DefaultClusterSwimTopologyService getBrokerTopologyService() {
+  public TopologyManager getBrokerTopologyService() {
     return brokerTopologyService;
   }
 }

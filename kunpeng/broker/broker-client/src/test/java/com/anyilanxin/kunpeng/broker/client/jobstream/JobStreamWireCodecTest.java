@@ -17,14 +17,19 @@
 package com.anyilanxin.kunpeng.broker.client.jobstream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.anyilanxin.kunpeng.broker.client.jobstream.JobStreamMessages.PushResult;
 import com.anyilanxin.kunpeng.broker.client.jobstream.JobStreamMessages.StreamPush;
 import com.anyilanxin.kunpeng.broker.client.jobstream.JobStreamMessages.SubscriptionSnapshot;
+import com.anyilanxin.kunpeng.cluster.cluster.Member;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.job.JobRecord;
 import com.anyilanxin.kunpeng.protocol.business.record.command.job.JobKindType;
 import com.anyilanxin.kunpeng.protocol.business.record.command.job.JobState;
+import com.anyilanxin.kunpeng.protocol.common.encoding.JobSubscriptionInfo;
 import java.util.List;
+import java.util.Properties;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -90,8 +95,20 @@ class JobStreamWireCodecTest {
                         new SubscriptionSnapshot.Session(12, "other-worker"))),
                 new SubscriptionSnapshot.Aggregate("payment", List.of())));
 
-    final var decoded =
-        JobStreamWireCodec.decodeSnapshot(JobStreamWireCodec.encodeSnapshot(snapshot));
+    // 快照编解码已收编为 protocol 层 JobSubscriptionInfo 实体，经成员属性对称读写验证
+    final Properties properties = new Properties();
+    final JobSubscriptionInfo entity = new JobSubscriptionInfo().setGeneration(snapshot.generation());
+    for (final SubscriptionSnapshot.Aggregate aggregate : snapshot.aggregates()) {
+      final var target = new JobSubscriptionInfo.Aggregate();
+      target.jobType = aggregate.jobType();
+      for (final SubscriptionSnapshot.Session session : aggregate.sessions()) {
+        target.sessions.add(
+            new JobSubscriptionInfo.Session(session.sessionId(), session.worker()));
+      }
+      entity.addAggregate(target);
+    }
+    entity.writeIntoProperties(properties);
+    final var decoded = JobStreamSnapshotProperty.snapshotOf(memberOf(properties));
 
     assertThat(decoded.generation()).isEqualTo(3);
     assertThat(decoded.aggregates())
@@ -101,5 +118,11 @@ class JobStreamWireCodecTest {
         .containsExactly(
             new SubscriptionSnapshot.Session(11, "sdk-worker-1"),
             new SubscriptionSnapshot.Session(12, "other-worker"));
+  }
+
+  private static Member memberOf(final Properties properties) {
+    final Member member = mock(Member.class);
+    when(member.properties()).thenReturn(properties);
+    return member;
   }
 }

@@ -17,7 +17,7 @@
 package com.anyilanxin.kunpeng.cluster.dispatch;
 
 import com.anyilanxin.kunpeng.broker.client.admin.BrokerResponseWriter;
-import com.anyilanxin.kunpeng.broker.client.admin.commandapi.CommandApiHandle;
+import com.anyilanxin.kunpeng.broker.client.admin.commandapi.AdminCommandApiHandle;
 import com.anyilanxin.kunpeng.eventlog.AppendEntry;
 import com.anyilanxin.kunpeng.protocol.admin.impl.AdminRecordMetadata;
 import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
@@ -40,7 +40,7 @@ import java.util.*;
 public class BatchProcessingCollect implements CloseableSilently {
   private final Deque<AdminLogRecord<?>> toProcess = new ArrayDeque<>();
   private final List<AppendEntry> toWrite = new ArrayList<>();
-  private final CommandApiHandle commandApiHandle;
+  private final AdminCommandApiHandle commandApiHandle;
   private Optional<BrokerResponseWriter<UnifiedRecordValue>> responseWriter = Optional.empty();
   private final AdminRepositoryAppliers applier;
   private final int partitionId;
@@ -51,7 +51,7 @@ public class BatchProcessingCollect implements CloseableSilently {
   private final List<SideEffectProducer> sideEffectProducers = new ArrayList<>();
 
   public BatchProcessingCollect(
-      final CommandApiHandle commandApiHandle,
+      final AdminCommandApiHandle commandApiHandle,
       final AdminRepositoryAppliers applier,
       final int partitionId) {
     this.commandApiHandle = commandApiHandle;

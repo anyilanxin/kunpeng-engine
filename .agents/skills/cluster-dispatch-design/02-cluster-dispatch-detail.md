@@ -268,7 +268,7 @@ admin 副本扩展与业务分区全量创建（CHANGE_PARTITION + oldMeta 为�
 
 ### 9.1 commandapi（客户端命令入口）
 
-外部 API 请求以 COMMAND_API 记录进同一日志（经 `CommandApiHandle`/`BatchProcessingCollect` 应答）：
+外部 API 请求以 COMMAND_API 记录进同一日志（经 `AdminCommandApiHandle`/`BatchProcessingCollect` 应答）：
 
 - business 5 个：Balance / ChangePartition / ChangeReplication（校验后发对应类型入口命令）、
   Cancel（→ `CANCELING`）、Query（读仓库应答 `DISPATCH_QUERY_RESPONSE`）；

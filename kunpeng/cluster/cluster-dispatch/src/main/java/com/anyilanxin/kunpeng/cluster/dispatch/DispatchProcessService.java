@@ -19,7 +19,7 @@ package com.anyilanxin.kunpeng.cluster.dispatch;
 import static com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter.BROKER_VERSION;
 import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.*;
 
-import com.anyilanxin.kunpeng.broker.client.admin.commandapi.CommandApiHandle;
+import com.anyilanxin.kunpeng.broker.client.admin.commandapi.AdminCommandApiHandle;
 import com.anyilanxin.kunpeng.cluster.business.step.RaftPartitionSource;
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
 import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
@@ -100,7 +100,7 @@ public class DispatchProcessService extends Actor implements RecordAvailableList
   private long processPosition = -1;
   private MutablePositionRepository mutableRepositoryPosition;
   private ImmutablePositionRepository immutableRepositoryPosition;
-  private final CommandApiHandle commandApiHandle;
+  private final AdminCommandApiHandle commandApiHandle;
   private final AdminRecordMetadata metadata = new AdminRecordMetadata();
   private final RaftPartitionSource partitionSource;
   private final PartitionId partitionId;
@@ -150,7 +150,7 @@ public class DispatchProcessService extends Actor implements RecordAvailableList
       final ClusterMetaStore clusterMetaStore,
       final EventLog logStream,
       final AdminRepositoryFactory repositoryFactory,
-      final CommandApiHandle commandApiHandle,
+      final AdminCommandApiHandle commandApiHandle,
       final RaftPartitionSource partitionSource,
       final PartitionId partitionId,
       final MeterRegistry meterRegistry,

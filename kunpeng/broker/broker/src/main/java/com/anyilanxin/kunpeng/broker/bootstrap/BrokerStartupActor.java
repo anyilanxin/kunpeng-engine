@@ -52,7 +52,8 @@ public class BrokerStartupActor extends Actor {
         this,
         brokerContext.getMeterRegistry(),
         brokerContext.getBeanFactory(),
-        brokerContext.getSinksConfig());
+        brokerContext.getSinksConfig(),
+        brokerContext.getClusterTopologyService());
   }
 
   /** broker 侧 job 流派发器（观测用；对应启动步骤尚未执行时为空） */

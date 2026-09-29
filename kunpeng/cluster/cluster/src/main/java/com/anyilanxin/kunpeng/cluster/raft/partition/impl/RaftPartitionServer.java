@@ -177,7 +177,7 @@ public class RaftPartitionServer implements HealthMonitorable {
   }
 
   private void onPartitionRoleChanged(final RaftServer.Role newRole, final long term) {
-    publishPartitionRole(newRole);
+    // 分区角色经统一拓扑服务写入 broker 实体属性广播（此处不再单独写逐分区 role 属性）
     if (newRole == RaftServer.Role.LEADER) {
       snapshotTransferServer.register();
       if (mergePushServer != null) {
@@ -196,14 +196,6 @@ public class RaftPartitionServer implements HealthMonitorable {
         bootstrapSnapshotServer.unregister();
       }
     }
-  }
-
-  /** 把本分区的最新角色写入本地成员属性，经成员元数据传播机制广播到集群。 */
-  private void publishPartitionRole(final RaftServer.Role role) {
-    membershipService
-        .getLocalMember()
-        .properties()
-        .setProperty(RaftPartitionTopology.rolePropertyKey(partition.name()), role.name());
   }
 
   public CompletableFuture<RaftPartitionServer> bootstrap() {

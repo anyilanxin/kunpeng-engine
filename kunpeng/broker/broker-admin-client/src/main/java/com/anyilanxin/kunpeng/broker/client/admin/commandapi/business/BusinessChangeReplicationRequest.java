@@ -16,7 +16,7 @@
  */
 package com.anyilanxin.kunpeng.broker.client.admin.commandapi.business;
 
-import com.anyilanxin.kunpeng.broker.client.admin.commandapi.CommandApiBrokerRequest;
+import com.anyilanxin.kunpeng.broker.client.admin.commandapi.AdminCommandApiBrokerRequest;
 import com.anyilanxin.kunpeng.protocol.admin.AdminValueType;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.business.dispatch.BusinessChangeReplicationRequestRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.commandapi.business.BusinessDispatchApiValueLifeCycle;
@@ -28,7 +28,7 @@ import com.anyilanxin.kunpeng.protocol.admin.record.commandapi.business.Business
  * @since 2026.9.0
  */
 public class BusinessChangeReplicationRequest
-    extends CommandApiBrokerRequest<BusinessChangeReplicationRequestRecord> {
+    extends AdminCommandApiBrokerRequest<BusinessChangeReplicationRequestRecord> {
 
   public BusinessChangeReplicationRequest() {
     super(

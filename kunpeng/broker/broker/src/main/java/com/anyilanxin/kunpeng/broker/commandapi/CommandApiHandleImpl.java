@@ -65,7 +65,7 @@ public class CommandApiHandleImpl implements CommandApiHandle, CloseableSilently
   private final ConcurrencyControl actor;
   private final Int2ObjectHashMap<Long2ObjectHashMap<PartitionRequest>> partitionsRequestMap;
   private final IdGenerator idGenerator;
-  private static final Logger LOG = BrokerLoggers.TRANSPORT_LOGGER;
+  private static final Logger LOG = BrokerLoggers.CLUSTER_BUSINESS;
   private final RecordValueMapper valueMapper;
   // Parsed once at construction — VersionUtil.getVersion() is a stable string set at build time.
   private final VersionInfo brokerVersion;

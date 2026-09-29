@@ -72,7 +72,7 @@ public final class BusinessPartitionTransitionStep
     final PartitionMessagingService partitionMessagingService =
         new PartitionMessagingService(
             partitionManagementService.getCommunicationService(),
-            context.getBrokerTopologyService(),
+            context.getTopologyService(),
             context.getPartitionMetadata().id(),
             partitionManagementService.getMembershipService().getLocalMember().id());
     final BusinessTransitionContent transitionContent =

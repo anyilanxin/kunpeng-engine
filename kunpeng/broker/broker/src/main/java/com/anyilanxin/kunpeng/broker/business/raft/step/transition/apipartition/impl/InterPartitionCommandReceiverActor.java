@@ -16,7 +16,7 @@
  */
 package com.anyilanxin.kunpeng.broker.business.raft.step.transition.apipartition.impl;
 
-import static com.anyilanxin.kunpeng.broker.business.raft.step.transition.apipartition.impl.InterPartitionCommandSenderImpl.TOPIC_PREFIX;
+import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.INNER_PARTITION_TOPIC_PREFIX;
 
 import com.anyilanxin.kunpeng.broker.BrokerLoggers;
 import com.anyilanxin.kunpeng.broker.monitoring.DiskSpaceUsageListener;
@@ -41,7 +41,7 @@ import org.slf4j.Logger;
  */
 public final class InterPartitionCommandReceiverActor extends Actor
     implements DiskSpaceUsageListener {
-  private static final Logger LOG = BrokerLoggers.TRANSPORT_LOGGER;
+  private static final Logger LOG = BrokerLoggers.CLUSTER_BUSINESS;
   private final String actorName;
   private final ClusterCommunicationService communicationService;
   private final PartitionId partitionId;
@@ -72,9 +72,8 @@ public final class InterPartitionCommandReceiverActor extends Actor
 
   @Override
   protected void onActorStarting() {
-    System.out.println("----TOPIC_PREFIX + partitionId------" + (TOPIC_PREFIX + partitionId));
     communicationService.consume(
-        TOPIC_PREFIX + partitionId,
+        INNER_PARTITION_TOPIC_PREFIX + partitionId,
         DefaultSerializers.BASIC::decode,
         this::tryHandleMessage,
         actor::run);
@@ -82,7 +81,7 @@ public final class InterPartitionCommandReceiverActor extends Actor
 
   @Override
   protected void onActorClosing() {
-    communicationService.unsubscribe(TOPIC_PREFIX + partitionId);
+    communicationService.unsubscribe(INNER_PARTITION_TOPIC_PREFIX + partitionId);
   }
 
   @Override

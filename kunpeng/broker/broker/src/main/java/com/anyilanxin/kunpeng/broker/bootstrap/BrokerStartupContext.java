@@ -17,15 +17,18 @@
 package com.anyilanxin.kunpeng.broker.bootstrap;
 
 import com.anyilanxin.kunpeng.broker.admin.ClusterAdminService;
-import com.anyilanxin.kunpeng.broker.bootstrap.step.adminapi.CommandApiServiceImpl;
+import com.anyilanxin.kunpeng.broker.bootstrap.step.adminapi.AdminCommandApiServiceImpl;
 import com.anyilanxin.kunpeng.broker.bootstrap.step.idgenerator.NodeIdGeneratorService;
 import com.anyilanxin.kunpeng.broker.bootstrap.step.idgenerator.NodeIdGeneratorServiceImpl;
 import com.anyilanxin.kunpeng.broker.business.ClusterBusinessService;
 import com.anyilanxin.kunpeng.broker.client.business.BrokerClient;
+import com.anyilanxin.kunpeng.broker.commandapi.CommandApiServiceImpl;
 import com.anyilanxin.kunpeng.broker.gateway.EmbeddedGatewayService;
+import com.anyilanxin.kunpeng.broker.jobstream.JobStreamDispatcher;
+import com.anyilanxin.kunpeng.broker.topology.TopologyManager;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
+import com.anyilanxin.kunpeng.cluster.cluster.messaging.impl.AeronMessagingService;
 import com.anyilanxin.kunpeng.cluster.config.ClusterMetaStore;
-import com.anyilanxin.kunpeng.cluster.config.topology.broker.DefaultClusterSwimTopologyService;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.cluster.dispatch.api.ClusterDispatchClient;
 import com.anyilanxin.kunpeng.cluster.dispatch.scheduling.TimerClock;
@@ -70,9 +73,9 @@ public interface BrokerStartupContext {
 
   void setClusterBusinessService(ClusterBusinessService clusterBusinessService);
 
-  CommandApiServiceImpl getCommandApiService();
+  AdminCommandApiServiceImpl getCommandApiService();
 
-  void setCommandApiService(CommandApiServiceImpl commandApiService);
+  void setCommandApiService(AdminCommandApiServiceImpl commandApiService);
 
   ClusterMetaStore getClusterMetaStore();
 
@@ -87,33 +90,26 @@ public interface BrokerStartupContext {
   void setClusterDispatchClient(ClusterDispatchClient dispatchClient);
 
   /** broker 层 job 流推送服务件（协调器 + 引擎适配器 + 失败回退）；raft 业务层 transition 消费 */
-  com.anyilanxin.kunpeng.broker.jobstream.JobStreamDispatcher getJobStreamDispatcher();
+  JobStreamDispatcher getJobStreamDispatcher();
 
-  void setJobStreamDispatcher(
-      com.anyilanxin.kunpeng.broker.jobstream.JobStreamDispatcher jobStreamDispatcher);
+  void setJobStreamDispatcher(JobStreamDispatcher jobStreamDispatcher);
 
   /** 业务面消息服务（独立端口）；由 BusinessMessagingServiceStep 启动并广播端口，业务命令 API 在其上注册处理器 */
-  com.anyilanxin.kunpeng.cluster.cluster.messaging.impl.AeronMessagingService
-      getBusinessMessagingService();
+  AeronMessagingService getBusinessMessagingService();
 
-  void setBusinessMessagingService(
-      com.anyilanxin.kunpeng.cluster.cluster.messaging.impl.AeronMessagingService
-          businessMessagingService);
+  void setBusinessMessagingService(AeronMessagingService businessMessagingService);
 
   /** 业务命令 API 服务（business 链 client 命令入口，分区 leader 时经 transition 绑定日志写入器） */
-  com.anyilanxin.kunpeng.broker.commandapi.CommandApiServiceImpl getBusinessCommandApiService();
+  CommandApiServiceImpl getBusinessCommandApiService();
 
-  void setBusinessCommandApiService(
-      com.anyilanxin.kunpeng.broker.commandapi.CommandApiServiceImpl businessCommandApiService);
+  void setBusinessCommandApiService(CommandApiServiceImpl businessCommandApiService);
 
-  DefaultClusterSwimTopologyService getClusterPartitionTopology();
+  TopologyManager getClusterPartitionTopology();
 
-  void setClusterPartitionTopology(DefaultClusterSwimTopologyService clusterPartitionTopology);
+  void setClusterPartitionTopology(TopologyManager clusterPartitionTopology);
 
-  /** 集群分区拓扑只读视图：汇聚各成员经 SWIM 广播的分区状态 */
+  /** 集群分区拓扑只读视图：汇聚各成员经 SWIM 广播的分区状态（构造注入，随上下文常驻） */
   ClusterTopologyService getClusterTopologyService();
-
-  void setClusterTopologyService(ClusterTopologyService clusterTopologyService);
 
   TimerClock getTimerClock();
 

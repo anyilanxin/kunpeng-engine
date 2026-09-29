@@ -20,7 +20,7 @@ import static java.util.Objects.requireNonNull;
 
 import com.anyilanxin.kunpeng.broker.client.business.BrokerClient;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
-import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
+import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
 import com.anyilanxin.kunpeng.configuration.cluster.ClusterCfg;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
@@ -37,7 +37,6 @@ import org.springframework.beans.factory.BeanFactory;
 final class BrokerContextImpl implements BrokerContext {
 
   private final AtomixCluster atomixCluster;
-  private final MessagingService apiMessagingService;
   private final BrokerCfg brokerCfg;
   private final ClusterCfg clusterCfg;
   private final ActorSchedulingService schedulingService;
@@ -45,6 +44,7 @@ final class BrokerContextImpl implements BrokerContext {
   private final BeanFactory beanFactory;
   private final SinksConfig sinksConfig;
   private final BrokerClient brokerClient;
+  private final ClusterTopologyService clusterTopologyService;
 
   BrokerContextImpl(
       final BrokerClient brokerClient,
@@ -54,16 +54,17 @@ final class BrokerContextImpl implements BrokerContext {
       final ActorSchedulingService schedulingService,
       final MeterRegistry meterRegistry,
       final BeanFactory beanFactory,
-      final SinksConfig sinksConfig) {
+      final SinksConfig sinksConfig,
+      final ClusterTopologyService clusterTopologyService) {
     this.brokerClient = requireNonNull(brokerClient);
     this.atomixCluster = requireNonNull(atomixCluster);
-    apiMessagingService = requireNonNull(atomixCluster.getMessagingService());
     this.brokerCfg = requireNonNull(brokerCfg);
     this.clusterCfg = requireNonNull(clusterCfg);
     this.schedulingService = requireNonNull(schedulingService);
     this.meterRegistry = meterRegistry;
     this.beanFactory = beanFactory;
     this.sinksConfig = sinksConfig;
+    this.clusterTopologyService = requireNonNull(clusterTopologyService);
   }
 
   @Override
@@ -74,11 +75,6 @@ final class BrokerContextImpl implements BrokerContext {
   @Override
   public BeanFactory getBeanFactory() {
     return beanFactory;
-  }
-
-  @Override
-  public MessagingService getApiMessagingService() {
-    return apiMessagingService;
   }
 
   @Override
@@ -114,5 +110,10 @@ final class BrokerContextImpl implements BrokerContext {
   @Override
   public BrokerClient getBrokerClient() {
     return brokerClient;
+  }
+
+  @Override
+  public ClusterTopologyService getClusterTopologyService() {
+    return clusterTopologyService;
   }
 }

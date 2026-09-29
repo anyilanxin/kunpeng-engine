@@ -16,21 +16,28 @@
  */
 package com.anyilanxin.kunpeng.broker.client.admin.commandapi;
 
-import com.anyilanxin.kunpeng.broker.client.admin.BrokerResponseWriter;
-import com.anyilanxin.kunpeng.protocol.admin.record.CommandApiValueLifeCycle;
-import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
+import com.anyilanxin.kunpeng.eventlog.EventLog;
+import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 
 /**
- * 命令 API 处理句柄：命令处理器的注册标识与生命周期管理。
+ * 支持向其他分区发送任意命令。发送过程可能不可靠并静默失败，需要由调用方自行检测失败并进行重试。
  *
  * @author zxuanhong
  * @since 2026.9.0
  */
-public interface CommandApiHandle {
+public interface AdminCommandApiService {
 
-  <Response extends UnifiedRecordValue> void sendResponse(
-      final BrokerResponseWriter<Response> response);
+  void onRecovered(final int partitionId);
 
-  <Response extends UnifiedRecordValue> BrokerResponseWriter<Response> newResponse(
-      final CommandApiValueLifeCycle lifeCycle, final long requestId);
+  void onPaused(final int partitionId);
+
+  void onRecoveredResource(final int resourceId);
+
+  void onPausedResource(final int resourceId);
+
+  ActorFuture<Void> registerHandlers(final EventLog logStream);
+
+  ActorFuture<Void> unregisterHandlers();
+
+  AdminCommandApiHandle gettCommandApiHandle();
 }

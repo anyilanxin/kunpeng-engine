@@ -16,15 +16,20 @@
  */
 package com.anyilanxin.kunpeng.broker.bootstrap;
 
+import static java.util.Objects.requireNonNull;
+
 import com.anyilanxin.kunpeng.broker.admin.ClusterAdminService;
-import com.anyilanxin.kunpeng.broker.bootstrap.step.adminapi.CommandApiServiceImpl;
+import com.anyilanxin.kunpeng.broker.bootstrap.step.adminapi.AdminCommandApiServiceImpl;
 import com.anyilanxin.kunpeng.broker.bootstrap.step.idgenerator.NodeIdGeneratorServiceImpl;
 import com.anyilanxin.kunpeng.broker.business.ClusterBusinessService;
 import com.anyilanxin.kunpeng.broker.client.business.BrokerClient;
+import com.anyilanxin.kunpeng.broker.commandapi.CommandApiServiceImpl;
 import com.anyilanxin.kunpeng.broker.gateway.EmbeddedGatewayService;
+import com.anyilanxin.kunpeng.broker.jobstream.JobStreamDispatcher;
+import com.anyilanxin.kunpeng.broker.topology.TopologyManager;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
+import com.anyilanxin.kunpeng.cluster.cluster.messaging.impl.AeronMessagingService;
 import com.anyilanxin.kunpeng.cluster.config.ClusterMetaStore;
-import com.anyilanxin.kunpeng.cluster.config.topology.broker.DefaultClusterSwimTopologyService;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.cluster.dispatch.api.ClusterDispatchClient;
 import com.anyilanxin.kunpeng.cluster.dispatch.scheduling.TimerClock;
@@ -52,20 +57,19 @@ public final class BrokerStartupContextImpl implements BrokerStartupContext {
   private final BeanFactory beanFactory;
   private final SinksConfig sinksConfig;
   private final BrokerClient brokerClient;
+  private final ClusterTopologyService clusterTopologyService;
 
   private EmbeddedGatewayService embeddedGatewayService;
   private ClusterAdminService clusterManagerService;
   private ClusterBusinessService clusterBusinessService;
-  private CommandApiServiceImpl commandApiService;
+  private AdminCommandApiServiceImpl commandApiService;
   private ClusterMetaStore clusterMetaStore;
   private NodeIdGeneratorServiceImpl idGenerator;
   private ClusterDispatchClient dispatchClient;
-  private com.anyilanxin.kunpeng.broker.jobstream.JobStreamDispatcher jobStreamDispatcher;
-  private com.anyilanxin.kunpeng.cluster.cluster.messaging.impl.AeronMessagingService
-      businessMessagingService;
-  private com.anyilanxin.kunpeng.broker.commandapi.CommandApiServiceImpl businessCommandApiService;
-  private DefaultClusterSwimTopologyService clusterPartitionTopology;
-  private ClusterTopologyService clusterTopologyService;
+  private JobStreamDispatcher jobStreamDispatcher;
+  private AeronMessagingService businessMessagingService;
+  private CommandApiServiceImpl businessCommandApiService;
+  private TopologyManager clusterPartitionTopology;
   private TimerClock timerClock;
 
   public BrokerStartupContextImpl(
@@ -77,7 +81,8 @@ public final class BrokerStartupContextImpl implements BrokerStartupContext {
       final ConcurrencyControl concurrencyControl,
       final MeterRegistry meterRegistry,
       final BeanFactory beanFactory,
-      final SinksConfig sinksConfig) {
+      final SinksConfig sinksConfig,
+      final ClusterTopologyService clusterTopologyService) {
     this.brokerClient = brokerClient;
     this.sinksConfig = sinksConfig;
     this.beanFactory = beanFactory;
@@ -87,6 +92,7 @@ public final class BrokerStartupContextImpl implements BrokerStartupContext {
     this.schedulingService = schedulingService;
     this.atomixCluster = atomixCluster;
     this.concurrencyControl = concurrencyControl;
+    this.clusterTopologyService = requireNonNull(clusterTopologyService);
   }
 
   @Override
@@ -145,12 +151,12 @@ public final class BrokerStartupContextImpl implements BrokerStartupContext {
   }
 
   @Override
-  public CommandApiServiceImpl getCommandApiService() {
+  public AdminCommandApiServiceImpl getCommandApiService() {
     return commandApiService;
   }
 
   @Override
-  public void setCommandApiService(final CommandApiServiceImpl commandApiService) {
+  public void setCommandApiService(final AdminCommandApiServiceImpl commandApiService) {
     this.commandApiService = commandApiService;
   }
 
@@ -185,61 +191,48 @@ public final class BrokerStartupContextImpl implements BrokerStartupContext {
   }
 
   @Override
-  public com.anyilanxin.kunpeng.broker.jobstream.JobStreamDispatcher getJobStreamDispatcher() {
+  public JobStreamDispatcher getJobStreamDispatcher() {
     return jobStreamDispatcher;
   }
 
   @Override
-  public void setJobStreamDispatcher(
-      final com.anyilanxin.kunpeng.broker.jobstream.JobStreamDispatcher jobStreamDispatcher) {
+  public void setJobStreamDispatcher(final JobStreamDispatcher jobStreamDispatcher) {
     this.jobStreamDispatcher = jobStreamDispatcher;
   }
 
   @Override
-  public com.anyilanxin.kunpeng.cluster.cluster.messaging.impl.AeronMessagingService
-      getBusinessMessagingService() {
+  public AeronMessagingService getBusinessMessagingService() {
     return businessMessagingService;
   }
 
   @Override
-  public void setBusinessMessagingService(
-      final com.anyilanxin.kunpeng.cluster.cluster.messaging.impl.AeronMessagingService
-          businessMessagingService) {
+  public void setBusinessMessagingService(final AeronMessagingService businessMessagingService) {
     this.businessMessagingService = businessMessagingService;
   }
 
   @Override
-  public com.anyilanxin.kunpeng.broker.commandapi.CommandApiServiceImpl
-      getBusinessCommandApiService() {
+  public CommandApiServiceImpl getBusinessCommandApiService() {
     return businessCommandApiService;
   }
 
   @Override
-  public void setBusinessCommandApiService(
-      final com.anyilanxin.kunpeng.broker.commandapi.CommandApiServiceImpl
-          businessCommandApiService) {
+  public void setBusinessCommandApiService(final CommandApiServiceImpl businessCommandApiService) {
     this.businessCommandApiService = businessCommandApiService;
   }
 
   @Override
-  public DefaultClusterSwimTopologyService getClusterPartitionTopology() {
+  public TopologyManager getClusterPartitionTopology() {
     return clusterPartitionTopology;
   }
 
   @Override
-  public void setClusterPartitionTopology(
-      final DefaultClusterSwimTopologyService clusterPartitionTopology) {
+  public void setClusterPartitionTopology(final TopologyManager clusterPartitionTopology) {
     this.clusterPartitionTopology = clusterPartitionTopology;
   }
 
   @Override
   public ClusterTopologyService getClusterTopologyService() {
     return clusterTopologyService;
-  }
-
-  @Override
-  public void setClusterTopologyService(final ClusterTopologyService clusterTopologyService) {
-    this.clusterTopologyService = clusterTopologyService;
   }
 
   @Override

@@ -17,7 +17,7 @@
 package com.anyilanxin.kunpeng.broker.admin.raft.step.transition;
 
 import com.anyilanxin.kunpeng.broker.admin.raft.step.transition.logstorage.AdminRaftEventStore;
-import com.anyilanxin.kunpeng.broker.client.admin.commandapi.CommandApiService;
+import com.anyilanxin.kunpeng.broker.client.admin.commandapi.AdminCommandApiService;
 import com.anyilanxin.kunpeng.cluster.business.step.RaftPartitionSource;
 import com.anyilanxin.kunpeng.cluster.business.step.transition.TransitionContent;
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
@@ -55,7 +55,7 @@ public class AdminTransitionContent
   private final BrokerCfg brokerCfg;
   private final int maxFragmentSize;
   private final ActorSchedulingService schedulingService;
-  private final CommandApiService commandApiHandle;
+  private final AdminCommandApiService commandApiHandle;
   private final TimerClock clock;
   private final MessagingService messagingService;
   private final ClusterMetaStore clusterMetaStore;
@@ -82,7 +82,7 @@ public class AdminTransitionContent
       final RaftPartition raftPartition,
       final BrokerCfg brokerCfg,
       final ActorSchedulingService schedulingService,
-      final CommandApiService commandApiHandle,
+      final AdminCommandApiService commandApiHandle,
       final TimerClock clock,
       final MessagingService messagingService,
       final ClusterMembershipService membershipService,
@@ -210,7 +210,7 @@ public class AdminTransitionContent
     return dispatchProcessService;
   }
 
-  public CommandApiService getCommandApiService() {
+  public AdminCommandApiService getCommandApiService() {
     return commandApiHandle;
   }
 

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<sbe:messageSchema xmlns:sbe="http://fixprotocol.io/2016/sbe"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://fixprotocol.io/2016/sbe sbe.xsd"
+                   package="com.anyilanxin.kunpeng.protocol.common.member"
+                   id="13"
+                   version="1"
+                   description="SWIM 成员属性承载的业务实体（Base64 后经成员属性传播）：broker 节点信息、jobstream 订阅信息、gateway 发现信息">
+  <types>
+    <composite name="messageHeader" description="标准 SBE 消息头">
+      <type name="blockLength" primitiveType="uint16"/>
+      <type name="templateId" primitiveType="uint16"/>
+      <type name="schemaId" primitiveType="uint16"/>
+      <type name="version" primitiveType="uint16"/>
+    </composite>
+    <composite name="groupSizeEncoding" description="重复组头">
+      <type name="blockLength" primitiveType="uint16"/>
+      <type name="numInGroup" primitiveType="uint16"/>
+    </composite>
+    <composite name="varAsciiEncoding" description="UTF-8 变长字符串">
+      <type name="length" primitiveType="uint16"/>
+      <type name="varData" primitiveType="uint8" length="0" characterEncoding="UTF-8"/>
+    </composite>
+
+    <enum name="CommPortType" encodingType="uint8" description="节点通信端口类型">
+      <validValue name="BUSINESS" description="业务命令面端口">1</validValue>
+    </enum>
+    <enum name="PartitionRole" encodingType="int8" description="分区角色（业务视角）">
+      <validValue name="LEADER" description="领导者">0</validValue>
+      <validValue name="FOLLOWER" description="跟随者">1</validValue>
+      <validValue name="INACTIVE" description="未激活">2</validValue>
+      <validValue name="UNKNOWN" description="未知">3</validValue>
+    </enum>
+    <enum name="PartitionHealth" encodingType="int8" description="分区健康度（值越大越健康）">
+      <validValue name="HEALTHY" description="健康">2</validValue>
+      <validValue name="UNHEALTHY" description="不健康（可自行恢复）">1</validValue>
+      <validValue name="DEAD" description="不可恢复故障">0</validValue>
+      <validValue name="UNKNOWN" description="未知">-1</validValue>
+    </enum>
+  </types>
+
+  <!-- ================ 实体一：broker 节点信息（拓扑处解析汇总） ================ -->
+  <sbe:message name="BrokerInfo" id="1" description="broker 节点实体：端口注册表 + 本成员各分区状态">
+    <group name="ports" id="10" description="通信端口注册表（按端口类型）">
+      <field name="portType" id="11" type="CommPortType"/>
+      <field name="port" id="12" type="uint16"/>
+    </group>
+    <group name="partitions" id="20" description="本成员各分区状态">
+      <field name="partitionId" id="21" type="int32"/>
+      <field name="role" id="22" type="PartitionRole"/>
+      <field name="health" id="23" type="PartitionHealth"/>
+      <field name="term" id="24" type="int64"/>
+      <field name="sourceId" id="25" type="int32"/>
+      <group name="agentSourceIds" id="26" description="分区 agent source 集合">
+        <field name="sourceId" id="27" type="int32"/>
+      </group>
+      <data name="groupName" id="28" type="varAsciiEncoding" description="分区所属 raft 组名"/>
+    </group>
+  </sbe:message>
+
+  <!-- ================ 实体二：jobstream 订阅信息（broker 侧解析） ================ -->
+  <sbe:message name="JobSubscriptionInfo" id="2" description="网关 job 流订阅快照（按 jobType 聚合的会话集合，代次对账）">
+    <field name="generation" id="1" type="int64" description="订阅代次（单调递增，丢弃旧代）"/>
+    <group name="aggregates" id="2" description="聚合注册数组（group 先于 data）">
+      <group name="sessions" id="4" description="会话集合（稳定 ID，下线只删一项）">
+        <field name="sessionId" id="5" type="int64"/>
+        <data name="worker" id="6" type="varAsciiEncoding"/>
+      </group>
+      <data name="jobType" id="3" type="varAsciiEncoding"/>
+    </group>
+  </sbe:message>
+
+  <!-- ================ 实体三：gateway 发现信息（gateway 地址发现处解析汇总，供 client 集群发现） ================ -->
+  <sbe:message name="GatewayInfo" id="3" description="网关发现实体：client 接入地址（host 为空时回落成员主机）">
+    <field name="clientPort" id="1" type="uint16" description="client gRPC 端口"/>
+    <data name="clientHost" id="2" type="varAsciiEncoding" description="对外通告主机（容器/NAT 场景与成员主机不同）"/>
+  </sbe:message>
+</sbe:messageSchema>

@@ -12,6 +12,7 @@
  */
 plugins {
     id 'kunpeng.build-publish'
+    id 'kunpeng.sbe-java'
 }
 
 description = "Kunpeng Protocol"

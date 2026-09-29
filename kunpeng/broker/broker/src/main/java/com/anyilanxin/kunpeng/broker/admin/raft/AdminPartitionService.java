@@ -16,7 +16,7 @@
  */
 package com.anyilanxin.kunpeng.broker.admin.raft;
 
-import com.anyilanxin.kunpeng.broker.ClusterAdminLoggers;
+import com.anyilanxin.kunpeng.broker.BrokerLoggers;
 import com.anyilanxin.kunpeng.broker.admin.raft.step.*;
 import com.anyilanxin.kunpeng.broker.admin.raft.step.clusterleader.ClusterLeaderStep;
 import com.anyilanxin.kunpeng.broker.admin.raft.step.transition.AdminPartitionTransitionStep;
@@ -37,7 +37,7 @@ import org.slf4j.Logger;
  * @since 2026.9.0
  */
 public final class AdminPartitionService extends PartitionService<AdminPartitionStartupContext> {
-  private static final Logger LOGGER = ClusterAdminLoggers.CLUSTER_ADMIN;
+  private static final Logger LOGGER = BrokerLoggers.CLUSTER_ADMIN;
 
   private AdminPartitionService(
       final AdminPartitionStartupContext context,

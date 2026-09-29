@@ -16,7 +16,7 @@
  */
 package com.anyilanxin.kunpeng.broker.business.raft;
 
-import com.anyilanxin.kunpeng.broker.ClusterAdminLoggers;
+import com.anyilanxin.kunpeng.broker.BrokerLoggers;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.RaftSnapshotProvider;
@@ -47,7 +47,7 @@ public class BusinessRaftSnapshotProvider
   private KvStore<BusinessRepositoryColumnFamilies> rocksdbDb;
   private final RocksdbFactory<BusinessRepositoryColumnFamilies> rocksdbFactory;
   private final RocksdbConfiguration rocksdbConfiguration;
-  private static final Logger LOG = ClusterAdminLoggers.CLUSTER_BUSINESS;
+  private static final Logger LOG = BrokerLoggers.CLUSTER_BUSINESS;
   private Path partitionDirectory;
   private Path runtimeDirectory;
   private SnapshotStore snapshotStore;

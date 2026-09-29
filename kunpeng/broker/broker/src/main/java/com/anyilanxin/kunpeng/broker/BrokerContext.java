@@ -18,7 +18,7 @@ package com.anyilanxin.kunpeng.broker;
 
 import com.anyilanxin.kunpeng.broker.client.business.BrokerClient;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
-import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
+import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
 import com.anyilanxin.kunpeng.configuration.cluster.ClusterCfg;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
@@ -39,8 +39,6 @@ public interface BrokerContext {
 
   BeanFactory getBeanFactory();
 
-  MessagingService getApiMessagingService();
-
   BrokerCfg getBrokerCfg();
 
   ClusterCfg getClusterCfg();
@@ -52,4 +50,7 @@ public interface BrokerContext {
   String getNodeId();
 
   SinksConfig getSinksConfig();
+
+  /** 集群分区拓扑收集服务（双边共用的 dist bean，构造注入） */
+  ClusterTopologyService getClusterTopologyService();
 }

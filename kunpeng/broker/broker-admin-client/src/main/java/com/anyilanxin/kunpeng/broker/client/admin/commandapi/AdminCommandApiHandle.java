@@ -16,22 +16,21 @@
  */
 package com.anyilanxin.kunpeng.broker.client.admin.commandapi;
 
-import com.anyilanxin.kunpeng.broker.client.admin.BrokerRequest;
-import com.anyilanxin.kunpeng.protocol.admin.AdminValueType;
+import com.anyilanxin.kunpeng.broker.client.admin.BrokerResponseWriter;
 import com.anyilanxin.kunpeng.protocol.admin.record.CommandApiValueLifeCycle;
-import com.anyilanxin.kunpeng.protocol.common.api.RequestRecordValue;
+import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 
 /**
- * 管理面命令 API broker 请求抽象基类。
+ * 命令 API 处理句柄：命令处理器的注册标识与生命周期管理。
  *
  * @author zxuanhong
  * @since 2026.9.0
  */
-public abstract class CommandApiBrokerRequest<VALUE extends RequestRecordValue>
-    extends BrokerRequest<VALUE> {
+public interface AdminCommandApiHandle {
 
-  public CommandApiBrokerRequest(
-      final AdminValueType valueType, final CommandApiValueLifeCycle lifeCycle, final VALUE value) {
-    super(valueType, lifeCycle, value);
-  }
+  <Response extends UnifiedRecordValue> void sendResponse(
+      final BrokerResponseWriter<Response> response);
+
+  <Response extends UnifiedRecordValue> BrokerResponseWriter<Response> newResponse(
+      final CommandApiValueLifeCycle lifeCycle, final long requestId);
 }

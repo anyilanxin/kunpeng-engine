@@ -18,7 +18,7 @@ package com.anyilanxin.kunpeng.broker.bootstrap;
 
 import com.anyilanxin.kunpeng.broker.BrokerLoggers;
 import com.anyilanxin.kunpeng.broker.bootstrap.step.*;
-import com.anyilanxin.kunpeng.broker.bootstrap.step.adminapi.CommandApiServiceStep;
+import com.anyilanxin.kunpeng.broker.bootstrap.step.adminapi.AdminCommandApiServiceStep;
 import com.anyilanxin.kunpeng.broker.bootstrap.step.commandapi.BusinessCommandApiServiceStep;
 import com.anyilanxin.kunpeng.broker.bootstrap.step.idgenerator.NodeIdGeneratorStep;
 import com.anyilanxin.kunpeng.broker.bootstrap.step.jobstream.JobStreamBootstrapStep;
@@ -54,11 +54,11 @@ public final class BrokerStartupProcess {
     final var result = new ArrayList<StartupStep<BrokerStartupContext>>();
     result.add(new ClusterConfigStep());
     result.add(new ClusterClockStep());
-    result.add(new ClusterTopologyStep());
+    result.add(new ClusterManageTopologyStep());
     result.add(new NodeIdGeneratorStep());
     result.add(new ClusterDispatchClientStep());
     result.add(new BusinessMessagingServiceStep());
-    result.add(new CommandApiServiceStep());
+    result.add(new AdminCommandApiServiceStep());
     result.add(new BusinessCommandApiServiceStep());
     result.add(new JobStreamBootstrapStep());
     result.add(new ClusterRaftStep());

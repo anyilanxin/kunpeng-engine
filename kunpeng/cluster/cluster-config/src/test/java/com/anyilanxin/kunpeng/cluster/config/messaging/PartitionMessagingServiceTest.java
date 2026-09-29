@@ -28,7 +28,7 @@ import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationService;
 import com.anyilanxin.kunpeng.cluster.config.topology.PartitionMemberInfo;
-import com.anyilanxin.kunpeng.cluster.config.topology.broker.ClusterSwimTopologyService;
+import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
@@ -54,8 +54,8 @@ final class PartitionMessagingServiceTest {
 
   private final ClusterCommunicationService communicationService =
       mock(ClusterCommunicationService.class);
-  private final ClusterSwimTopologyService topologyService =
-      mock(ClusterSwimTopologyService.class);
+  private final ClusterTopologyService topologyService =
+      mock(ClusterTopologyService.class);
 
   private PartitionMessagingService messagingService;
 

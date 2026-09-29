@@ -16,28 +16,22 @@
  */
 package com.anyilanxin.kunpeng.broker.client.admin.commandapi;
 
-import com.anyilanxin.kunpeng.eventlog.EventLog;
-import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
+import com.anyilanxin.kunpeng.broker.client.admin.BrokerRequest;
+import com.anyilanxin.kunpeng.protocol.admin.AdminValueType;
+import com.anyilanxin.kunpeng.protocol.admin.record.CommandApiValueLifeCycle;
+import com.anyilanxin.kunpeng.protocol.common.api.RequestRecordValue;
 
 /**
- * 支持向其他分区发送任意命令。发送过程可能不可靠并静默失败，需要由调用方自行检测失败并进行重试。
+ * 管理面命令 API broker 请求抽象基类。
  *
  * @author zxuanhong
  * @since 2026.9.0
  */
-public interface CommandApiService {
+public abstract class AdminCommandApiBrokerRequest<VALUE extends RequestRecordValue>
+    extends BrokerRequest<VALUE> {
 
-  void onRecovered(final int partitionId);
-
-  void onPaused(final int partitionId);
-
-  void onRecoveredResource(final int resourceId);
-
-  void onPausedResource(final int resourceId);
-
-  ActorFuture<Void> registerHandlers(final EventLog logStream);
-
-  ActorFuture<Void> unregisterHandlers();
-
-  CommandApiHandle gettCommandApiHandle();
+  public AdminCommandApiBrokerRequest(
+      final AdminValueType valueType, final CommandApiValueLifeCycle lifeCycle, final VALUE value) {
+    super(valueType, lifeCycle, value);
+  }
 }

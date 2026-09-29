@@ -18,13 +18,13 @@ package com.anyilanxin.kunpeng.broker.admin.raft;
 
 import com.anyilanxin.kunpeng.broker.admin.raft.step.clusterleader.DefaultClusterLeaderManageService;
 import com.anyilanxin.kunpeng.broker.admin.raft.step.transition.AdminTransitionContent;
-import com.anyilanxin.kunpeng.broker.client.admin.commandapi.CommandApiService;
+import com.anyilanxin.kunpeng.broker.client.admin.commandapi.AdminCommandApiService;
+import com.anyilanxin.kunpeng.broker.topology.TopologyManager;
 import com.anyilanxin.kunpeng.cluster.business.PartitionStartupContext;
 import com.anyilanxin.kunpeng.cluster.business.RaftPartitionFactory;
 import com.anyilanxin.kunpeng.cluster.business.step.RaftPartitionSource;
 import com.anyilanxin.kunpeng.cluster.business.step.transition.PartitionTransition;
 import com.anyilanxin.kunpeng.cluster.config.ClusterMetaStore;
-import com.anyilanxin.kunpeng.cluster.config.topology.broker.DefaultClusterSwimTopologyService;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.cluster.dispatch.api.ClusterDispatchClient;
 import com.anyilanxin.kunpeng.cluster.dispatch.scheduling.TimerClock;
@@ -56,11 +56,11 @@ public class AdminPartitionStartupContext
   private final MeterRegistry meterRegistry;
   private final PartitionManagementService managementService;
   private final BrokerCfg brokerCfg;
-  private final CommandApiService commandApiHandle;
+  private final AdminCommandApiService commandApiHandle;
   private final TimerClock timerClock;
   private final ClusterMetaStore clusterMetaStore;
   private final ClusterDispatchClient dispatchClient;
-  private final DefaultClusterSwimTopologyService brokerTopologyService;
+  private final TopologyManager brokerTopologyService;
   private final ClusterTopologyService clusterTopologyService;
 
   private PartitionTransition<AdminTransitionContent> partitionTransition;
@@ -79,9 +79,9 @@ public class AdminPartitionStartupContext
       final MeterRegistry meterRegistry,
       final PartitionManagementService managementService,
       final BrokerCfg brokerCfg,
-      final CommandApiService commandApiHandle,
+      final AdminCommandApiService commandApiHandle,
       final ClusterDispatchClient dispatchClient,
-      final DefaultClusterSwimTopologyService brokerTopologyService,
+      final TopologyManager brokerTopologyService,
       final ClusterTopologyService clusterTopologyService,
       final TimerClock timerClock) {
     this.timerClock = timerClock;
@@ -184,7 +184,7 @@ public class AdminPartitionStartupContext
     return brokerCfg;
   }
 
-  public CommandApiService getCommandApiHandle() {
+  public AdminCommandApiService getCommandApiHandle() {
     return commandApiHandle;
   }
 
@@ -200,7 +200,7 @@ public class AdminPartitionStartupContext
     return dispatchClient;
   }
 
-  public DefaultClusterSwimTopologyService getBrokerTopologyService() {
+  public TopologyManager getBrokerTopologyService() {
     return brokerTopologyService;
   }
 

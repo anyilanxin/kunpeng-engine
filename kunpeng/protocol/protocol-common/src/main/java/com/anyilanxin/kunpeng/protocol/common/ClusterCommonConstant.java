@@ -29,8 +29,15 @@ public interface ClusterCommonConstant {
   String PARTITIONS_DIRECTORY = "partitions";
   String CLUSTER_DISPATCH_TOPIC_ACK = "CLUSTER_DISPATCH_ACK";
   String CLUSTER_NODE_SOURCE_TOPIC = "CLUSTER_NODE_SOURCE";
-  String TOPOLOGY_PROPERTY_KEY = "cluster.topology.partitions";
   String NODE_SOURCE_PROPERTY_KEY = "cluster.topology.nodesource";
+  String INNER_PARTITION_TOPIC_PREFIX = "inter-partition-";
+
+  /** SWIM 成员业务实体的属性键（一个实体一个键，Base64(SBE 帧) 为值） */
+  String BROKER_INFO_PROPERTY = "brokerInfo";
+
+  String JOB_SUBSCRIPTION_INFO_PROPERTY = "jobSubscriptionInfo";
+
+  String GATEWAY_INFO_PROPERTY = "gatewayInfo";
 
   int INITIAL_NODE_SOURCE = 0;
   int INITIAL_PARTITION_SOURCE = 1;

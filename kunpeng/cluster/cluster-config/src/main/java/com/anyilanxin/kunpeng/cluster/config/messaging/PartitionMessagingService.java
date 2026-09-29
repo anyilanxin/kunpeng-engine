@@ -20,7 +20,7 @@ import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationService;
 import com.anyilanxin.kunpeng.cluster.config.topology.PartitionMemberInfo;
-import com.anyilanxin.kunpeng.cluster.config.topology.broker.ClusterSwimTopologyService;
+import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 import java.util.Set;
@@ -33,8 +33,8 @@ import org.slf4j.LoggerFactory;
 /**
  * 分区级消息服务：把 topic 的投递范围限定在当前分区的成员内。
  *
- * <p>成员列表来自 {@link ClusterSwimTopologyService} 的 SWIM 拓扑视图；wire 上的 subject 以分区标识做 命名空间隔离，不同分区的同名
- * topic 互不串扰。广播走不可靠多播：适合周期性幂等快照，丢一轮等下轮。
+ * <p>成员列表来自 {@link ClusterTopologyService} 的 SWIM 拓扑视图；wire 上的 subject 以分区标识做 命名空间隔离，不同分区的同名 topic
+ * 互不串扰。广播走不可靠多播：适合周期性幂等快照，丢一轮等下轮。
  *
  * @author zxuanhong
  * @since 2026.9.0
@@ -44,13 +44,13 @@ public final class PartitionMessagingService {
   private static final Logger LOG = LoggerFactory.getLogger(PartitionMessagingService.class);
 
   private final ClusterCommunicationService communicationService;
-  private final ClusterSwimTopologyService topologyService;
+  private final ClusterTopologyService topologyService;
   private final PartitionId partitionId;
   private final MemberId localMemberId;
 
   public PartitionMessagingService(
       final ClusterCommunicationService communicationService,
-      final ClusterSwimTopologyService topologyService,
+      final ClusterTopologyService topologyService,
       final PartitionId partitionId,
       final MemberId localMemberId) {
     this.communicationService = communicationService;

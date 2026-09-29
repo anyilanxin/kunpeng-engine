@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.anyilanxin.kunpeng.cluster.config.topology;
+package com.anyilanxin.kunpeng.broker.topology;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -24,9 +24,11 @@ import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
 import com.anyilanxin.kunpeng.cluster.cluster.Member;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
-import com.anyilanxin.kunpeng.cluster.config.topology.broker.DefaultClusterSwimTopologyService;
+import com.anyilanxin.kunpeng.broker.topology.TopologyManagerImpl;
+import com.anyilanxin.kunpeng.cluster.config.topology.PartitionHealth;
 import com.anyilanxin.kunpeng.cluster.raft.RaftServer;
 import com.anyilanxin.kunpeng.cluster.utils.health.HealthReport;
+import com.anyilanxin.kunpeng.protocol.common.encoding.BrokerInfo;
 import com.anyilanxin.kunpeng.scheduler.ActorScheduler;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -42,7 +44,7 @@ import org.junit.jupiter.api.Test;
  * @author zxuanhong
  * @since 2026.9.0
  */
-class DefaultClusterSwimTopologyServiceHealthMetricsTest {
+class TopologyManagerImplHealthMetricsTest {
   private static final String METRIC = "kunpeng.engine.partition.health";
 
   private ActorScheduler scheduler;
@@ -57,7 +59,7 @@ class DefaultClusterSwimTopologyServiceHealthMetricsTest {
   @Test
   void shouldRegisterGaugeOnFirstCallbackAndReflectUpdates() {
     final MeterRegistry registry = new SimpleMeterRegistry();
-    final DefaultClusterSwimTopologyService service = startedService(registry);
+    final TopologyManagerImpl service = startedService(registry);
 
     service.onPartitionRoleChanged(
         PartitionId.from("raft-partition", 1), RaftServer.Role.LEADER, 3L);
@@ -86,7 +88,7 @@ class DefaultClusterSwimTopologyServiceHealthMetricsTest {
   @Test
   void shouldExposeSeparateGaugesPerPartition() {
     final MeterRegistry registry = new SimpleMeterRegistry();
-    final DefaultClusterSwimTopologyService service = startedService(registry);
+    final TopologyManagerImpl service = startedService(registry);
 
     service.onPartitionRoleChanged(
         PartitionId.from("raft-partition", 1), RaftServer.Role.LEADER, 1L);
@@ -120,9 +122,9 @@ class DefaultClusterSwimTopologyServiceHealthMetricsTest {
   }
 
   /** 构造并注册到调度器的服务：回调处理经 actor 线程异步执行，未注册时任务只入队不运行 */
-  private DefaultClusterSwimTopologyService startedService(final MeterRegistry registry) {
-    final DefaultClusterSwimTopologyService service =
-        new DefaultClusterSwimTopologyService(membershipService(), registry);
+  private TopologyManagerImpl startedService(final MeterRegistry registry) {
+    final TopologyManagerImpl service =
+        new TopologyManagerImpl(membershipService(), registry, new BrokerInfo());
     scheduler = ActorScheduler.newActorScheduler().setSchedulerName("topology-metrics-test").build();
     scheduler.start();
     scheduler.submitActor(service).join(5, TimeUnit.SECONDS);
@@ -130,7 +132,7 @@ class DefaultClusterSwimTopologyServiceHealthMetricsTest {
   }
 
   /** 投递 no-op 并阻塞其完成：FIFO 队列保证此前提交的回调处理均已执行 */
-  private void awaitEventsProcessed(final DefaultClusterSwimTopologyService service) {
+  private void awaitEventsProcessed(final TopologyManagerImpl service) {
     service.submit(() -> {}).join(5, TimeUnit.SECONDS);
   }
 }

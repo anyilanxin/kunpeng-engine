@@ -22,6 +22,7 @@ import com.anyilanxin.kunpeng.broker.client.jobstream.JobStreamMessages.StreamPu
 import com.anyilanxin.kunpeng.broker.client.jobstream.JobStreamSubjects;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterEventService;
 import com.anyilanxin.kunpeng.engine.bpmn.JobDeliveryPort;
+import com.anyilanxin.kunpeng.protocol.business.impl.record.command.job.JobRecord;
 import java.util.Optional;
 
 /**
@@ -63,10 +64,7 @@ public final class CoordinatorJobStreamer implements JobDeliveryPort {
 
     @Override
     public void push(
-        final long jobKey,
-        final int partitionId,
-        final long deadline,
-        final com.anyilanxin.kunpeng.protocol.business.impl.record.command.job.JobRecord record) {
+        final long jobKey, final int partitionId, final long deadline, final JobRecord record) {
       coordinator.enqueue(
           point.gatewayMemberId(),
           new StreamPush(point.sessionId(), point.worker(), jobKey, partitionId, deadline, record));

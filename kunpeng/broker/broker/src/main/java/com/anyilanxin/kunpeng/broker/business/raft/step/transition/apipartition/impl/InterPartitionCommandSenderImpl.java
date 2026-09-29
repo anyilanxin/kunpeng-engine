@@ -17,6 +17,7 @@
 package com.anyilanxin.kunpeng.broker.business.raft.step.transition.apipartition.impl;
 
 import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.BUSINESS_RAFT_GROUP;
+import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.INNER_PARTITION_TOPIC_PREFIX;
 
 import com.anyilanxin.kunpeng.broker.BrokerLoggers;
 import com.anyilanxin.kunpeng.broker.protocol.InterPartitionMessageEncoder;
@@ -45,8 +46,7 @@ import org.slf4j.Logger;
  */
 final class InterPartitionCommandSenderImpl implements InterPartitionCommandSender {
   private final RecordValueMapper valueMapper = DefaultRecordValueMapper.getInstance();
-  public static final String TOPIC_PREFIX = "inter-partition-";
-  private static final Logger LOG = BrokerLoggers.TRANSPORT_LOGGER;
+  private static final Logger LOG = BrokerLoggers.CLUSTER_BUSINESS;
   private final ClusterCommunicationService communicationService;
   private final ClusterTopologyService topologyService;
   private final MessageHeaderEncoder reusableHeaderEncoder = new MessageHeaderEncoder();
@@ -113,7 +113,7 @@ final class InterPartitionCommandSenderImpl implements InterPartitionCommandSend
             recordKey,
             valueMapper.copyValue(lifeCycle, command));
     communicationService.unicast(
-        TOPIC_PREFIX + partitionId,
+        INNER_PARTITION_TOPIC_PREFIX + partitionId,
         message,
         DefaultSerializers.BASIC::encode,
         partitionLeader,

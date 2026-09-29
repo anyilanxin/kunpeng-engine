@@ -29,6 +29,9 @@ public final class BrokerLoggers {
   public static final Logger BROKER_LOGGER =
       LoggerFactory.getLogger("com.anyilanxin.kunpeng.broker");
 
-  public static final Logger TRANSPORT_LOGGER =
-      LoggerFactory.getLogger("com.anyilanxin.kunpeng.broker.transport");
+  public static final Logger CLUSTER_ADMIN =
+      LoggerFactory.getLogger("com.anyilanxin.kunpeng.broker.admin");
+
+  public static final Logger CLUSTER_BUSINESS =
+      LoggerFactory.getLogger("com.anyilanxin.kunpeng.broker.business");
 }

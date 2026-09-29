@@ -20,12 +20,13 @@ import static com.anyilanxin.kunpeng.cluster.config.BusinessSourceMetaUtils.*;
 import static com.anyilanxin.kunpeng.protocol.admin.impl.record.command.common.ExecutionRecordSerialize.decode;
 import static com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionExecutionType.getTopic;
 
-import com.anyilanxin.kunpeng.broker.ClusterAdminLoggers;
+import com.anyilanxin.kunpeng.broker.BrokerLoggers;
 import com.anyilanxin.kunpeng.broker.business.raft.BusinessPartitionService;
 import com.anyilanxin.kunpeng.broker.business.raft.BusinessPartitionStartupContext;
 import com.anyilanxin.kunpeng.broker.business.raft.BusinessRaftSnapshotProvider;
 import com.anyilanxin.kunpeng.broker.commandapi.CommandApiServiceImpl;
 import com.anyilanxin.kunpeng.broker.jobstream.JobStreamDispatcher;
+import com.anyilanxin.kunpeng.broker.topology.TopologyManager;
 import com.anyilanxin.kunpeng.cluster.business.PartitionService;
 import com.anyilanxin.kunpeng.cluster.business.RaftPartitionFactory;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
@@ -38,7 +39,6 @@ import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
 import com.anyilanxin.kunpeng.cluster.config.ClusterMetaStore;
 import com.anyilanxin.kunpeng.cluster.config.ClusterRaftConfiguration;
 import com.anyilanxin.kunpeng.cluster.config.DispatchMeta;
-import com.anyilanxin.kunpeng.cluster.config.topology.broker.DefaultClusterSwimTopologyService;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.cluster.dispatch.api.ClusterDispatchClient;
 import com.anyilanxin.kunpeng.cluster.dispatch.scheduling.TimerClock;
@@ -74,7 +74,7 @@ import org.springframework.beans.factory.BeanFactory;
  */
 public class ClusterBusinessService extends Actor
     implements ClusterBusiness, BusinessExecutionService {
-  private static final Logger LOG = ClusterAdminLoggers.CLUSTER_BUSINESS;
+  private static final Logger LOG = BrokerLoggers.CLUSTER_BUSINESS;
 
   /** ack 重试次数上限 */
   private static final int ACK_RETRY_LIMIT = 10;
@@ -90,7 +90,7 @@ public class ClusterBusinessService extends Actor
   private final Int2ObjectHashMap<BusinessPartitionService> raftPartitionMap;
   private final ClusterLeaderFoundService leaderFoundService;
   private final ClusterDispatchClient dispatchClient;
-  private final DefaultClusterSwimTopologyService clusterPartitionTopology;
+  private final TopologyManager clusterPartitionTopology;
   private final TimerClock timerClock;
   private final BrokerCfg brokerCfg;
   private final BeanFactory beanFactory;
@@ -111,7 +111,7 @@ public class ClusterBusinessService extends Actor
       final ActorSchedulingService actorSchedulingService,
       final MeterRegistry meterRegistry,
       final ClusterDispatchClient dispatchClient,
-      final DefaultClusterSwimTopologyService clusterPartitionTopology,
+      final TopologyManager clusterPartitionTopology,
       final ClusterTopologyService topologyService,
       final BeanFactory beanFactory,
       final SinksConfig sinksConfig,

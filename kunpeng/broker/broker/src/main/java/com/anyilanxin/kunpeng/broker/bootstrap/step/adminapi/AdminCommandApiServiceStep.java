@@ -29,7 +29,7 @@ import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
  * @author zxuanhong
  * @since 2026.9.0
  */
-public class CommandApiServiceStep extends AbstractBrokerStartupStep {
+public class AdminCommandApiServiceStep extends AbstractBrokerStartupStep {
   @Override
   protected void startupInternal(
       final BrokerStartupContext brokerStartupContext,
@@ -37,8 +37,8 @@ public class CommandApiServiceStep extends AbstractBrokerStartupStep {
       final ActorFuture<BrokerStartupContext> startupFuture) {
     final MessagingService apiMessagingService =
         brokerStartupContext.getAtomixCluster().getMessagingService();
-    final CommandApiServiceImpl service =
-        new CommandApiServiceImpl(
+    final AdminCommandApiServiceImpl service =
+        new AdminCommandApiServiceImpl(
             apiMessagingService, brokerStartupContext.getRequestIdGenerator());
     final ActorSchedulingService actorSchedulingService =
         brokerStartupContext.getActorSchedulingService();
