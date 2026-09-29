@@ -1,0 +1,162 @@
+/*
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+package com.anyilanxin.kunpeng.cluster.raft.logentry;
+
+import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
+import com.anyilanxin.kunpeng.cluster.raft.logentry.util.TestAppender;
+import com.anyilanxin.kunpeng.cluster.raft.logentry.util.KunpengTestHelper;
+import com.anyilanxin.kunpeng.cluster.raft.logentry.util.KunpengTestNode;
+import com.anyilanxin.kunpeng.cluster.raft.partition.impl.RaftPartitionServer;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.IndexedRaftLogEntry;
+import com.google.common.base.Stopwatch;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.jupiter.api.AutoClose;
+import org.junit.rules.TemporaryFolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.nio.ByteBuffer;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * Tests the {@link com.anyilanxin.kunpeng.cluster.raft.roles.LeaderRole} implementation of {@link LogAppender}
+ */
+public class LogAppenderTest {
+  @Rule public final TemporaryFolder temporaryFolder = new TemporaryFolder();
+
+  @AutoClose MeterRegistry meterRegistry = new SimpleMeterRegistry();
+  private final Logger logger = LoggerFactory.getLogger(getClass());
+  private final Stopwatch stopwatch = Stopwatch.createUnstarted();
+  private final TestAppender appenderListener = new TestAppender();
+
+  private KunpengTestNode node;
+  private KunpengTestHelper helper;
+
+  @Before
+  public void setUp() throws Exception {
+    node = new KunpengTestNode(0, temporaryFolder.newFolder("0"), meterRegistry);
+
+    final Set<KunpengTestNode> nodes = Collections.singleton(node);
+    helper = new KunpengTestHelper(nodes);
+
+    node.start(nodes).join();
+    stopwatch.start();
+  }
+
+  @After
+  public void tearDown() {
+    if (stopwatch.isRunning()) {
+      stopwatch.stop();
+    }
+
+    logger.info("Test run time: {}", stopwatch.toString());
+    node.stop().join();
+  }
+
+  @Test
+  public void shouldNotifyOnWrite() {
+    // when
+    append();
+
+    // then
+    final IndexedRaftLogEntry appended = appenderListener.pollWritten();
+    assertThat(appended).isNotNull();
+    assertThat(appenderListener.getErrors().size()).isEqualTo(0);
+  }
+
+  @Test
+  public void shouldNotifyOnCommit() {
+    // when
+    append();
+
+    // then
+    final var committed = appenderListener.pollCommitted();
+    assertThat(committed).isNotNull();
+    assertThat(appenderListener.getErrors().size()).isEqualTo(0);
+  }
+
+  @Test
+  public void shouldNotifyOnError() {
+    // given - a message that cannot be appended because it's too large
+    final ByteBuffer data = ByteBuffer.allocate(2048);
+
+    // when
+    append(data);
+
+    // then
+    final Throwable error = appenderListener.pollError();
+    assertThat(error).isNotNull();
+    assertThat(appenderListener.getWritten().size()).isEqualTo(0L);
+    assertThat(appenderListener.getCommitted().size()).isEqualTo(0L);
+  }
+
+  @Test
+  public void shouldAppendBusinessMetaEntry() {
+    // when - 业务元数据经 RaftContext 内部入口追加（任意线程调用，内部切 raft 线程），不触达 LogAppender SPI
+    final RaftPartitionServer server = helper.awaitLeaderServer(1);
+    final var response = server.appendBusinessMeta(Map.of("sourceId", "5")).join();
+
+    // then - 单成员集群多数派提交后返回成功与提交条目 index
+    assertThat(response.success()).isTrue();
+    assertThat(response.index()).isGreaterThan(0);
+  }
+
+  @Test
+  public void shouldAppendMergeRecordEntry() {
+    // given - 记录追加前提交水位
+    final RaftPartitionServer server = helper.awaitLeaderServer(1);
+    final long commitIndexBefore = server.getCommitIndex();
+
+    // when - 合并记录经 RaftContext 内部入口追加（任意线程调用，内部切 raft 线程），携带源分区身份
+    final long committedIndex =
+        server.appendMergeRecord(PartitionId.from("business", 3)).join();
+
+    // then - 多数派提交后以提交条目 index 完成，且日志水位真实推进（离线副本重上线后据此触发镜像安装追赶）
+    assertThat(committedIndex).isGreaterThan(commitIndexBefore);
+    assertThat(server.getCommitIndex()).isGreaterThanOrEqualTo(committedIndex);
+  }
+
+  @Test
+  public void shouldForceSnapshotReplicationOnDemand() {
+    // given - leader 手动拍摄后强制分发（单成员集群无远程复制目标，分发应为安全空操作）
+    final RaftPartitionServer server = helper.awaitLeaderServer(1);
+
+    // when
+    final long snapshotIndex = server.replicateSnapshotToAll().join();
+
+    // then - 以分发的快照 index 完成（未拍摄过镜像时为 0）
+    assertThat(snapshotIndex).isGreaterThanOrEqualTo(0);
+  }
+
+  private void append() {
+    append(ByteBuffer.allocate(Integer.BYTES).putInt(0, 1));
+  }
+
+  private void append(final ByteBuffer data) {
+    final LogAppender appender = helper.awaitLeaderAppender(1);
+    appender.appendEntry(0, 0, data, appenderListener);
+  }
+}

@@ -1,0 +1,413 @@
+/*
+ * Copyright © 2020 camunda services GmbH (info@camunda.com)
+ * Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.anyilanxin.kunpeng.cluster.raft.storage.serializer;
+
+import static com.anyilanxin.kunpeng.cluster.raft.storage.serializer.SerializerUtil.getRaftMemberType;
+import static com.anyilanxin.kunpeng.cluster.raft.storage.serializer.SerializerUtil.getSBEType;
+
+import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
+import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember;
+import com.anyilanxin.kunpeng.cluster.raft.cluster.impl.DefaultRaftMember;
+import com.anyilanxin.kunpeng.cluster.raft.journal.file.RecordDataEncoder;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ApplicationEntry;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.BusinessMetaEntry;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ConfigurationEntry;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.InitialEntry;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.MergeRecordEntry;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.RaftLogEntry;
+import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.SerializedApplicationEntry;
+import com.anyilanxin.kunpeng.cluster.raft.storage.serializer.BusinessMetaEntryDecoder.ItemsDecoder;
+import com.anyilanxin.kunpeng.cluster.raft.storage.serializer.ConfigurationEntryDecoder.NewMembersDecoder;
+import com.anyilanxin.kunpeng.cluster.raft.storage.serializer.ConfigurationEntryDecoder.OldMembersDecoder;
+import com.anyilanxin.kunpeng.cluster.utils.sbe.SbeUtil;
+import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import org.agrona.DirectBuffer;
+import org.agrona.MutableDirectBuffer;
+import org.agrona.concurrent.UnsafeBuffer;
+
+public class RaftEntrySBESerializer implements RaftEntrySerializer {
+  final MessageHeaderEncoder headerEncoder = new MessageHeaderEncoder();
+  final RaftLogEntryEncoder raftLogEntryEncoder = new RaftLogEntryEncoder();
+  final ApplicationEntryEncoder applicationEntryEncoder = new ApplicationEntryEncoder();
+  final ConfigurationEntryEncoder configurationEntryEncoder = new ConfigurationEntryEncoder();
+  final MessageHeaderDecoder headerDecoder = new MessageHeaderDecoder();
+  final RaftLogEntryDecoder raftLogEntryDecoder = new RaftLogEntryDecoder();
+  final ApplicationEntryDecoder applicationEntryDecoder = new ApplicationEntryDecoder();
+  final ConfigurationEntryDecoder configurationEntryDecoder = new ConfigurationEntryDecoder();
+  final BusinessMetaEntryEncoder businessMetaEntryEncoder = new BusinessMetaEntryEncoder();
+  final BusinessMetaEntryDecoder businessMetaEntryDecoder = new BusinessMetaEntryDecoder();
+  final MergeRecordEntryEncoder mergeRecordEntryEncoder = new MergeRecordEntryEncoder();
+  final MergeRecordEntryDecoder mergeRecordEntryDecoder = new MergeRecordEntryDecoder();
+
+  @Override
+  public int getApplicationEntrySerializedLength(final ApplicationEntry entry) {
+    // raft frame length
+    return headerEncoder.encodedLength()
+        + raftLogEntryEncoder.sbeBlockLength()
+        // + application entry length
+        + headerEncoder.encodedLength()
+        + applicationEntryEncoder.sbeBlockLength()
+        + RecordDataEncoder.dataHeaderLength()
+        + entry.dataWriter().getLength();
+  }
+
+  @Override
+  public int getInitialEntrySerializedLength() {
+    return headerEncoder.encodedLength() + raftLogEntryEncoder.sbeBlockLength();
+  }
+
+  @Override
+  public int getMergeRecordEntrySerializedLength(final MergeRecordEntry entry) {
+    // raft frame length
+    return headerEncoder.encodedLength()
+        + raftLogEntryEncoder.sbeBlockLength()
+        // merge record entry length
+        + headerEncoder.encodedLength()
+        + mergeRecordEntryEncoder.sbeBlockLength()
+        + MergeRecordEntryDecoder.sourcePartitionGroupHeaderLength()
+        + entry.sourcePartition().group().getBytes(StandardCharsets.UTF_8).length;
+  }
+
+  @Override
+  public int writeMergeRecordEntry(
+      final long term,
+      final MergeRecordEntry entry,
+      final MutableDirectBuffer buffer,
+      final int offset) {
+    final int entryOffset = writeRaftFrame(term, EntryType.MergeRecordEntry, buffer, offset);
+
+    headerEncoder
+        .wrap(buffer, offset + entryOffset)
+        .blockLength(mergeRecordEntryEncoder.sbeBlockLength())
+        .templateId(mergeRecordEntryEncoder.sbeTemplateId())
+        .schemaId(mergeRecordEntryEncoder.sbeSchemaId())
+        .version(mergeRecordEntryEncoder.sbeSchemaVersion());
+    mergeRecordEntryEncoder.wrap(buffer, offset + entryOffset + headerEncoder.encodedLength());
+    mergeRecordEntryEncoder
+        .sourcePartitionId(entry.sourcePartition().id())
+        .sourcePartitionGroup(entry.sourcePartition().group());
+
+    return entryOffset + headerEncoder.encodedLength() + mergeRecordEntryEncoder.encodedLength();
+  }
+
+  @Override
+  public int getConfigurationEntrySerializedLength(final ConfigurationEntry entry) {
+    // raft frame length
+    return headerEncoder.encodedLength()
+        + raftLogEntryEncoder.sbeBlockLength()
+        // configuration entry length
+        + headerEncoder.encodedLength()
+        // timestamp
+        + configurationEntryEncoder.sbeBlockLength()
+        // new members header
+        + NewMembersDecoder.sbeHeaderSize()
+        // new member entries
+        + entry.newMembers().stream().mapToInt(this::getNewMemberEntryLength).sum()
+        // old members header
+        + OldMembersDecoder.sbeHeaderSize()
+        // old member entries
+        + entry.oldMembers().stream().mapToInt(this::getOldMemberEntryLength).sum();
+  }
+
+  @Override
+  public int getBusinessMetaEntrySerializedLength(final BusinessMetaEntry entry) {
+    // raft frame length
+    return headerEncoder.encodedLength()
+        + raftLogEntryEncoder.sbeBlockLength()
+        // business meta entry length
+        + headerEncoder.encodedLength()
+        + businessMetaEntryEncoder.sbeBlockLength()
+        // items header
+        + ItemsDecoder.sbeHeaderSize()
+        // item entries
+        + entry.entries().entrySet().stream().mapToInt(this::getBusinessMetaItemLength).sum();
+  }
+
+  private int getBusinessMetaItemLength(final Map.Entry<String, String> item) {
+    return ItemsDecoder.sbeBlockLength()
+        + ItemsDecoder.keyHeaderLength()
+        + item.getKey().getBytes(StandardCharsets.UTF_8).length
+        + ItemsDecoder.valueHeaderLength()
+        + item.getValue().getBytes(StandardCharsets.UTF_8).length;
+  }
+
+  @Override
+  public int writeApplicationEntry(
+      final long term,
+      final ApplicationEntry entry,
+      final MutableDirectBuffer buffer,
+      final int offset) {
+
+    final int entryOffset = writeRaftFrame(term, EntryType.ApplicationEntry, buffer, offset);
+
+    headerEncoder
+        .wrap(buffer, offset + entryOffset)
+        .blockLength(applicationEntryEncoder.sbeBlockLength())
+        .templateId(applicationEntryEncoder.sbeTemplateId())
+        .schemaId(applicationEntryEncoder.sbeSchemaId())
+        .version(applicationEntryEncoder.sbeSchemaVersion());
+    applicationEntryEncoder.wrap(buffer, offset + entryOffset + headerEncoder.encodedLength());
+    applicationEntryEncoder.lowestAsqn(entry.lowestPosition()).highestAsqn(entry.highestPosition());
+    final int newLimit =
+        SbeUtil.writeNested(
+            entry.dataWriter(),
+            ApplicationEntryEncoder.applicationDataHeaderLength(),
+            buffer,
+            applicationEntryEncoder.limit(),
+            ByteOrder.LITTLE_ENDIAN);
+    applicationEntryEncoder.limit(newLimit);
+
+    return entryOffset + headerEncoder.encodedLength() + applicationEntryEncoder.encodedLength();
+  }
+
+  @Override
+  public int writeInitialEntry(
+      final long term,
+      final InitialEntry entry,
+      final MutableDirectBuffer buffer,
+      final int offset) {
+
+    return writeRaftFrame(term, EntryType.InitialEntry, buffer, offset);
+  }
+
+  @Override
+  public int writeConfigurationEntry(
+      final long term,
+      final ConfigurationEntry entry,
+      final MutableDirectBuffer buffer,
+      final int offset) {
+    final int entryOffset = writeRaftFrame(term, EntryType.ConfigurationEntry, buffer, offset);
+
+    headerEncoder
+        .wrap(buffer, offset + entryOffset)
+        .blockLength(configurationEntryEncoder.sbeBlockLength())
+        .templateId(configurationEntryEncoder.sbeTemplateId())
+        .schemaId(configurationEntryEncoder.sbeSchemaId())
+        .version(configurationEntryEncoder.sbeSchemaVersion());
+
+    configurationEntryEncoder.wrap(buffer, offset + entryOffset + headerEncoder.encodedLength());
+
+    configurationEntryEncoder.timestamp(entry.timestamp());
+
+    final var newMembersEncoder =
+        configurationEntryEncoder.newMembersCount(entry.newMembers().size());
+    for (final RaftMember member : entry.newMembers()) {
+      final var memberId = member.memberId().id();
+      newMembersEncoder
+          .next()
+          .memberType(getSBEType(member.getType()))
+          .updated(member.getLastUpdated().toEpochMilli())
+          .memberId(memberId);
+    }
+
+    final var oldMembersEncoder =
+        configurationEntryEncoder.oldMembersCount(entry.oldMembers().size());
+    for (final RaftMember member : entry.oldMembers()) {
+      final var memberId = member.memberId().id();
+      oldMembersEncoder
+          .next()
+          .memberType(getSBEType(member.getType()))
+          .updated(member.getLastUpdated().toEpochMilli())
+          .memberId(memberId);
+    }
+
+    return entryOffset + headerEncoder.encodedLength() + configurationEntryEncoder.encodedLength();
+  }
+
+  @Override
+  public int writeBusinessMetaEntry(
+      final long term,
+      final BusinessMetaEntry entry,
+      final MutableDirectBuffer buffer,
+      final int offset) {
+    final int entryOffset = writeRaftFrame(term, EntryType.BusinessMetaEntry, buffer, offset);
+
+    headerEncoder
+        .wrap(buffer, offset + entryOffset)
+        .blockLength(businessMetaEntryEncoder.sbeBlockLength())
+        .templateId(businessMetaEntryEncoder.sbeTemplateId())
+        .schemaId(businessMetaEntryEncoder.sbeSchemaId())
+        .version(businessMetaEntryEncoder.sbeSchemaVersion());
+    businessMetaEntryEncoder.wrap(buffer, offset + entryOffset + headerEncoder.encodedLength());
+
+    final var itemsEncoder = businessMetaEntryEncoder.itemsCount(entry.entries().size());
+    for (final var item : entry.entries().entrySet()) {
+      final byte[] key = item.getKey().getBytes(StandardCharsets.UTF_8);
+      final byte[] value = item.getValue().getBytes(StandardCharsets.UTF_8);
+      itemsEncoder.next().putKey(key, 0, key.length).putValue(value, 0, value.length);
+    }
+
+    return entryOffset + headerEncoder.encodedLength() + businessMetaEntryEncoder.encodedLength();
+  }
+
+  @Override
+  public RaftLogEntry readRaftLogEntry(final DirectBuffer buffer) {
+    headerDecoder.wrap(buffer, 0);
+    raftLogEntryDecoder.wrap(
+        buffer,
+        headerDecoder.encodedLength(),
+        headerDecoder.blockLength(),
+        headerDecoder.version());
+    final long term = raftLogEntryDecoder.term();
+    final EntryType type = raftLogEntryDecoder.entryType();
+
+    final int entryOffset = headerDecoder.encodedLength() + raftLogEntryDecoder.encodedLength();
+
+    final var entry =
+        switch (type) {
+          case ApplicationEntry -> {
+            headerDecoder.wrap(buffer, entryOffset);
+            yield readApplicationEntry(buffer, entryOffset);
+          }
+          case ConfigurationEntry -> {
+            headerDecoder.wrap(buffer, entryOffset);
+            yield readConfigurationEntry(buffer, entryOffset);
+          }
+          case BusinessMetaEntry -> {
+            headerDecoder.wrap(buffer, entryOffset);
+            yield readBusinessMetaEntry(buffer, entryOffset);
+          }
+          case InitialEntry -> new InitialEntry();
+          case MergeRecordEntry -> {
+            headerDecoder.wrap(buffer, entryOffset);
+            yield readMergeRecordEntry(buffer, entryOffset);
+          }
+          default -> throw new IllegalStateException("Unexpected entry type " + type);
+        };
+
+    return new RaftLogEntry(term, entry);
+  }
+
+  private int getNewMemberEntryLength(final RaftMember raftMember) {
+    final String id = raftMember.memberId().id();
+    return NewMembersDecoder.sbeBlockLength()
+        + NewMembersDecoder.memberIdHeaderLength()
+        + ((null == id || id.isEmpty()) ? 0 : id.length());
+  }
+
+  private int getOldMemberEntryLength(final RaftMember raftMember) {
+    final String id = raftMember.memberId().id();
+    return OldMembersDecoder.sbeBlockLength()
+        + OldMembersDecoder.memberIdHeaderLength()
+        + ((null == id || id.isEmpty()) ? 0 : id.length());
+  }
+
+  private int writeRaftFrame(
+      final long term,
+      final EntryType entryType,
+      final MutableDirectBuffer buffer,
+      final int offset) {
+    headerEncoder
+        .wrap(buffer, offset)
+        .blockLength(raftLogEntryEncoder.sbeBlockLength())
+        .templateId(raftLogEntryEncoder.sbeTemplateId())
+        .schemaId(raftLogEntryEncoder.sbeSchemaId())
+        .version(raftLogEntryEncoder.sbeSchemaVersion());
+    raftLogEntryEncoder.wrap(buffer, offset + headerEncoder.encodedLength());
+    raftLogEntryEncoder.term(term);
+    raftLogEntryEncoder.entryType(entryType);
+
+    return headerEncoder.encodedLength() + raftLogEntryEncoder.encodedLength();
+  }
+
+  private ApplicationEntry readApplicationEntry(final DirectBuffer buffer, final int entryOffset) {
+    applicationEntryDecoder.wrap(
+        buffer,
+        entryOffset + headerDecoder.encodedLength(),
+        headerDecoder.blockLength(),
+        headerDecoder.version());
+
+    final DirectBuffer data = new UnsafeBuffer();
+    applicationEntryDecoder.wrapApplicationData(data);
+
+    return new SerializedApplicationEntry(
+        applicationEntryDecoder.lowestAsqn(), applicationEntryDecoder.highestAsqn(), data);
+  }
+
+  private ConfigurationEntry readConfigurationEntry(
+      final DirectBuffer buffer, final int entryOffset) {
+
+    configurationEntryDecoder.wrap(
+        buffer,
+        entryOffset + headerDecoder.encodedLength(),
+        headerDecoder.blockLength(),
+        headerDecoder.version());
+
+    final long timestamp = configurationEntryDecoder.timestamp();
+
+    final NewMembersDecoder newMembersDecoder = configurationEntryDecoder.newMembers();
+    final ArrayList<RaftMember> newMembers = new ArrayList<>(newMembersDecoder.count());
+    for (final NewMembersDecoder member : newMembersDecoder) {
+      final RaftMember.Type type = getRaftMemberType(member.memberType());
+      final Instant updated = Instant.ofEpochMilli(member.updated());
+      final var memberId = member.memberId();
+      newMembers.add(new DefaultRaftMember(MemberId.from(memberId), type, updated));
+    }
+
+    final OldMembersDecoder oldMembersDecoder = configurationEntryDecoder.oldMembers();
+    final ArrayList<RaftMember> oldMembers = new ArrayList<>(oldMembersDecoder.count());
+    for (final OldMembersDecoder member : oldMembersDecoder) {
+      final RaftMember.Type type = getRaftMemberType(member.memberType());
+      final Instant updated = Instant.ofEpochMilli(member.updated());
+      final var memberId = member.memberId();
+      oldMembers.add(new DefaultRaftMember(MemberId.from(memberId), type, updated));
+    }
+
+    return new ConfigurationEntry(timestamp, newMembers, oldMembers);
+  }
+
+  private BusinessMetaEntry readBusinessMetaEntry(
+      final DirectBuffer buffer, final int entryOffset) {
+    businessMetaEntryDecoder.wrap(
+        buffer,
+        entryOffset + headerDecoder.encodedLength(),
+        headerDecoder.blockLength(),
+        headerDecoder.version());
+
+    final ItemsDecoder itemsDecoder = businessMetaEntryDecoder.items();
+    final Map<String, String> entries = new HashMap<>(itemsDecoder.count());
+    for (final ItemsDecoder item : itemsDecoder) {
+      final byte[] key = new byte[item.keyLength()];
+      item.getKey(key, 0, key.length);
+      final byte[] value = new byte[item.valueLength()];
+      item.getValue(value, 0, value.length);
+      entries.put(
+          new String(key, StandardCharsets.UTF_8), new String(value, StandardCharsets.UTF_8));
+    }
+
+    return new BusinessMetaEntry(entries);
+  }
+
+  private MergeRecordEntry readMergeRecordEntry(final DirectBuffer buffer, final int entryOffset) {
+    mergeRecordEntryDecoder.wrap(
+        buffer,
+        entryOffset + headerDecoder.encodedLength(),
+        headerDecoder.blockLength(),
+        headerDecoder.version());
+
+    return new MergeRecordEntry(
+        PartitionId.from(
+            mergeRecordEntryDecoder.sourcePartitionGroup(),
+            (int) mergeRecordEntryDecoder.sourcePartitionId()));
+  }
+}
