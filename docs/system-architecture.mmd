@@ -1,0 +1,98 @@
+%% Kunpeng Engine 系统架构总览（Mermaid 源，GitHub 直接渲染；与 system-architecture.svg 同源）
+%% 维护：改动架构时同步更新本文件与 svg
+flowchart TB
+
+  %% ==================== 外部接入 ====================
+  subgraph EXT["外部接入"]
+    direction LR
+    APP["业务应用<br/>client-java SDK · spring-boot-starter-client<br/>流程部署 · 实例创建/消息 · 完成/FailJob 命令<br/>Job Worker 双线路：①a PullJobs 长连接拉取 · ①b OpenJobStream 实时流推送"]
+    CONN["Connectors（Camunda fork）<br/>独立 Maven 工程<br/>以 SDK 接入的 Job 连接器生态"]
+  end
+
+  %% ==================== Gateway 进程 ====================
+  subgraph GW["Gateway 进程 ×M（独立部署；或 broker 内嵌 EmbeddedGatewayService 复用同一套）"]
+    direction LR
+    GAPI["gateway-grpc / gateway-rest<br/>API 编排 · 按拓扑路由分区 leader<br/>聚合重试 · 命令转发"]
+    GJOB["gateway-job · GatewayJobStreamClient<br/>OpenJobStream 流注册 · 订阅快照经 SWIM 属性同步 ⑦<br/>PullJobs 长连接挂起 · job-ready 广播唤醒<br/>⑧ 收 broker 推送批次 → JobDelivery 实时下发"]
+    GBC["BrokerClient<br/>业务命令定向分区 leader<br/>② 业务面发送端"]
+  end
+
+  %% ==================== 通信底座 ====================
+  subgraph COMM["通信底座 · Aeron + 内嵌 MediaDriver（生产 broker/gateway 成对共享驱动）"]
+    direction LR
+    BP["业务面 · 独立实例 + 独立端口<br/>仅承载 gateway → broker 业务命令<br/>端口经 MemberNodeInfo 注册表 SBE id=12 广播<br/>SWIM 非白名单 → 二次拉取补全"]
+    CP["集群面<br/>SWIM 成员协议 + 元数据通道 ⑦（白名单内联 /<br/>大属性只带版本，owner 直拉 + 版本仲裁 + 反熵）<br/>承载 ⑤ Raft 复制 · ⑥ 快照 · ③ 跨分区命令 · ⑧ job 流推送（暂）"]
+  end
+  BP -.- CP
+
+  %% ==================== Broker 进程 ====================
+  subgraph BK["Broker 进程 ×N · dist Spring 装配 · 单进程承载多分区"]
+    BOOT["BrokerStartupProcess 启动步骤链<br/>BusinessMessagingServiceStep（业务面起播+端口广播）→ CommandApiServiceStep<br/>→ JobStreamBootstrapStep → EmbeddedGatewayServiceStep → 分区逐个启动"]
+    subgraph PART["分区 0..P-1 · 每个分区 = 一个 Raft 组（跨 broker 选主，leader 处理写）"]
+      direction LR
+      RAFT["Raft leader / follower<br/>复制经集群面 ⑤<br/>cluster-raft"]
+      EL["EventLog<br/>无锁定序 append + AIMD 流控 + EL 批帧<br/>→ mmap journal + 稀疏 .idx"]
+      SP["StreamProcessor<br/>bpmn-engine 命令 → Behavior<br/>BPMN 状态机推进"]
+      RDB["RocksDB · business-repository<br/>部署 / 流程实例 / 变量 快照状态（权威存储）"]
+      JSD["JobStreamDispatcher · job 流推送 ⑧<br/>byType 扁平索引 · 单游标轮转（每会话等份额）· deadline 簿记<br/>快照对账 + 轮转选流 + 请求-应答推送 + job-ready 定向广播"]
+    end
+    IPC["③ 跨分区命令 · InterPartitionCommandSender<br/>DistributeParallel/Serial 等行为触发 · 经统一拓扑路由 · 集群面 unicast<br/>同机 leader 暂无本机短路（完整 Aeron 回环——双分区性能疑点）"]
+    SCHED["scheduler<br/>gate + wakeTickets<br/>分区/引擎/服务全 actor<br/>不自建线程池"]
+    ENG["engine<br/>dmn-engine 决策<br/>script-engine 表达式<br/>（FEEL / QL）"]
+    MODEL["bpm-model<br/>BPMN/DMN/XML 解析<br/>（部署命令时）"]
+    SINK["sink · RecordSink SPI<br/>按位置确认/重试外发<br/>不阻塞主链"]
+  end
+
+  subgraph PEER["其他 Broker ×N-1"]
+    P1["同构进程<br/>各自多分区 + Raft 组"]
+  end
+
+  %% ==================== 集群治理 ====================
+  subgraph GOV["集群治理 · admin 面"]
+    direction LR
+    DISP["cluster-dispatch（集群调度子系统）<br/>拓扑 diff 生成调度计划：扩缩容 · 分区变更 · 再平衡 · 副本变更<br/>明细逐成员下发 + ACK 回流 + 延迟看门狗 · source 治理 · adminInit 初始化"]
+    CCONF["cluster-config<br/>ClusterTopologyService 统一拓扑<br/>（跨分区命令路由事实源）"]
+  end
+
+  %% ==================== 外部系统 ====================
+  subgraph TARGET["外部系统（sink 外发目标，非引擎权威存储）"]
+    RDBMS["RDBMS —— SINK_POSITION 权威位置表 · MQ · ES · 自定义 RecordSink"]
+  end
+
+  %% ==================== 链路 ====================
+  APP ==>|"① gRPC 命令（部署/实例/CompleteJob 等）"| GAPI
+  GJOB ==>|"① job 交付双线路：①a PullJobs 拉取 · ①b OpenJobStream 实时推"| APP
+  CONN -.->|"以 SDK 接入"| GAPI
+  GBC ==>|"② 业务面 Aeron（独立端口）"| BP
+  BP ==>|"② 命令投递 leader 分区（CommandApi）"| PART
+  CP <-->|"⑦ SWIM 探活/元数据"| GW
+  CP <-->|"③⑤⑥⑦⑧ 集群面（双向）"| BK
+  JSD ==>|"⑧ job 流推送（SBE id=11，增量 2 拟迁业务面）"| CP
+  RAFT <-->|"⑤ Raft 复制 · ⑥ 快照（集群面）"| P1
+  IPC -.->|"③ 目标分区可位于其他 broker"| P1
+  SINK ==>|"④ 异步导出（断点续传）"| RDBMS
+  GOV -.->|"admin 计划下发 / ACK 回流"| BK
+
+  %% ==================== 配色 ====================
+  classDef ext fill:#FFF7ED,stroke:#D97706,color:#92400E
+  classDef gw fill:#EFF6FF,stroke:#2563EB,color:#1E40AF
+  classDef comm fill:#F5F3FF,stroke:#7C3AED,color:#5B21B6
+  classDef biz fill:#DBEAFE,stroke:#2563EB,color:#1E40AF
+  classDef clus fill:#EDE9FE,stroke:#7C3AED,color:#5B21B6
+  classDef bk fill:#F0FDF4,stroke:#059669,color:#065F46
+  classDef part fill:#DCFCE7,stroke:#059669,color:#065F46
+  classDef peer fill:#FFFFFF,stroke:#94A3B8,stroke-dasharray:6 4,color:#475569
+  classDef gov fill:#FEF2F2,stroke:#DC2626,color:#991B1B
+  classDef target fill:#F8FAFC,stroke:#64748B,color:#334155
+  classDef inner fill:#FFFFFF,stroke:#059669,color:#1F2937
+  class EXT ext
+  class GW gw
+  class COMM comm
+  class BP biz
+  class CP clus
+  class BK bk
+  class PART,BOOT part
+  class RAFT,EL,SP,RDB,JSD,IPC,SCHED,ENG,MODEL,SINK inner
+  class PEER,P1 peer
+  class GOV,DISP,CCONF gov
+  class TARGET,RDBMS target

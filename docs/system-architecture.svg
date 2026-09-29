@@ -1,0 +1,186 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 1600" width="1240" height="1600">
+  <defs>
+    <marker id="arrAmber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#D97706"/>
+    </marker>
+    <marker id="arrBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2563EB"/>
+    </marker>
+    <marker id="arrPurple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#7C3AED"/>
+    </marker>
+    <marker id="arrGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#059669"/>
+    </marker>
+    <marker id="arrRed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#DC2626"/>
+    </marker>
+  </defs>
+
+  <g font-family="'PingFang SC','Hiragino Sans GB','Microsoft YaHei',system-ui,sans-serif">
+
+    <!-- ======== 标题 ======== -->
+    <text x="40" y="44" font-size="20" font-weight="bold" fill="#0F172A">Kunpeng Engine · 系统架构总览</text>
+    <text x="1200" y="44" text-anchor="end" font-size="11" fill="#64748B">2026-09 · 与 system-architecture.mmd 同源</text>
+
+    <!-- ======== 外部接入 ======== -->
+    <rect x="40" y="76" width="1160" height="124" rx="10" fill="#FFF7ED" stroke="#F59E0B"/>
+    <text x="56" y="100" font-size="15" font-weight="bold" fill="#92400E">外部接入</text>
+    <rect x="56" y="112" width="560" height="80" rx="6" fill="#FFFFFF" stroke="#94A3B8"/>
+    <text x="68" y="132" font-size="13" font-weight="bold" fill="#1E293B">业务应用 · client-java SDK / spring-boot-starter-client</text>
+    <text x="68" y="154" font-size="12.5" fill="#334155">流程部署 · 实例创建/消息 · 完成/FailJob 命令</text>
+    <text x="68" y="174" font-size="12.5" fill="#334155">Job Worker 双线路消费：①a PullJobs 长连接拉取 · ①b OpenJobStream 实时流</text>
+    <rect x="640" y="112" width="544" height="80" rx="6" fill="#FFFFFF" stroke="#94A3B8"/>
+    <text x="652" y="132" font-size="13" font-weight="bold" fill="#1E293B">Connectors（Camunda fork · 独立 Maven 工程）</text>
+    <text x="652" y="154" font-size="12.5" fill="#334155">以 SDK 接入的 Job 连接器生态</text>
+
+    <!-- ① 客户端链路 -->
+    <line x1="200" y1="200" x2="200" y2="244" stroke="#D97706" stroke-width="2" marker-end="url(#arrAmber)"/>
+    <text x="212" y="228" font-size="12" fill="#B45309">① gRPC 命令（部署/实例/CompleteJob 等）</text>
+    <line x1="540" y1="248" x2="540" y2="204" stroke="#D97706" stroke-width="2" marker-end="url(#arrAmber)"/>
+    <text x="552" y="222" font-size="12" fill="#B45309">① job 交付双线路：</text>
+    <text x="552" y="240" font-size="12" fill="#B45309">①a PullJobs 长连接拉取（挂起-唤醒，空批重挂）｜①b OpenJobStream 实时流主动推送</text>
+
+    <!-- ======== Gateway 进程 ======== -->
+    <rect x="40" y="248" width="1160" height="156" rx="10" fill="#EFF6FF" stroke="#3B82F6"/>
+    <text x="56" y="272" font-size="15" font-weight="bold" fill="#1D4ED8">Gateway 进程 ×M · 独立部署；broker 内嵌 EmbeddedGatewayService 复用同一套</text>
+    <rect x="56" y="284" width="352" height="96" rx="6" fill="#FFFFFF" stroke="#94A3B8"/>
+    <text x="68" y="306" font-size="13" font-weight="bold" fill="#1E293B">gateway-grpc / gateway-rest</text>
+    <text x="68" y="328" font-size="12.5" fill="#334155">API 编排 · 按拓扑路由分区 leader</text>
+    <text x="68" y="350" font-size="12.5" fill="#334155">聚合重试 · 命令转发</text>
+    <rect x="424" y="284" width="376" height="96" rx="6" fill="#FFFFFF" stroke="#94A3B8"/>
+    <text x="436" y="306" font-size="13" font-weight="bold" fill="#1E293B">gateway-job · GatewayJobStreamClient</text>
+    <text x="436" y="326" font-size="12.5" fill="#334155">OpenJobStream 流注册 · 订阅快照经 SWIM 属性同步 ⑦</text>
+    <text x="436" y="346" font-size="12.5" fill="#334155">PullJobs 长连接挂起 · job-ready 广播唤醒</text>
+    <text x="436" y="366" font-size="12.5" fill="#334155">⑧ 收 broker 推送批次 → JobDelivery 实时下发</text>
+    <rect x="816" y="284" width="368" height="96" rx="6" fill="#FFFFFF" stroke="#94A3B8"/>
+    <text x="828" y="306" font-size="13" font-weight="bold" fill="#1E293B">BrokerClient</text>
+    <text x="828" y="328" font-size="12.5" fill="#334155">业务命令定向分区 leader</text>
+    <text x="828" y="350" font-size="12.5" fill="#334155">② 业务面发送端</text>
+    <text x="828" y="370" font-size="12.5" fill="#334155">（businessAddressOf 解析对端）</text>
+
+    <!-- ⑦⑧② Gateway 与通信底座之间 -->
+    <line x1="460" y1="408" x2="460" y2="462" stroke="#7C3AED" stroke-width="2" marker-start="url(#arrPurple)" marker-end="url(#arrPurple)"/>
+    <text x="468" y="430" font-size="12" fill="#6D28D9">⑦ SWIM 探活 / 元数据</text>
+    <line x1="612" y1="466" x2="612" y2="408" stroke="#7C3AED" stroke-width="2" marker-end="url(#arrPurple)"/>
+    <text x="620" y="452" font-size="12" fill="#6D28D9">⑧ job 流推送（SBE id=11）</text>
+    <line x1="1000" y1="408" x2="1000" y2="462" stroke="#2563EB" stroke-width="2" marker-end="url(#arrBlue)"/>
+    <text x="992" y="430" text-anchor="end" font-size="12" fill="#1D4ED8">② 业务面 Aeron · 独立端口</text>
+
+    <!-- ======== 通信底座 ======== -->
+    <rect x="40" y="466" width="1160" height="160" rx="10" fill="#F5F3FF" stroke="#8B5CF6"/>
+    <text x="56" y="490" font-size="15" font-weight="bold" fill="#6D28D9">通信底座 · Aeron + 内嵌 MediaDriver（生产 broker / gateway 成对共享驱动）</text>
+    <text x="1184" y="490" text-anchor="end" font-size="11" fill="#6D28D9">两面共性：有界队列（4096）满即拒绝 + 节流告警 · pending 重试</text>
+    <rect x="56" y="502" width="536" height="108" rx="6" fill="#DBEAFE" stroke="#2563EB"/>
+    <text x="68" y="524" font-size="13" font-weight="bold" fill="#1E40AF">业务面 · 独立 AeronMessagingService + 独立端口</text>
+    <text x="68" y="546" font-size="12.5" fill="#1E3A8A">仅承载 gateway → broker 业务命令 ②</text>
+    <text x="68" y="566" font-size="12.5" fill="#1E3A8A">端口经 MemberNodeInfo 注册表（SBE id=12）广播</text>
+    <text x="68" y="586" font-size="12.5" fill="#1E3A8A">SWIM 非白名单键 → 二次拉取补全后才可见</text>
+    <rect x="612" y="502" width="568" height="108" rx="6" fill="#EDE9FE" stroke="#7C3AED"/>
+    <text x="624" y="524" font-size="13" font-weight="bold" fill="#5B21B6">集群面（进程内单实例）</text>
+    <text x="624" y="546" font-size="12.5" fill="#4C1D95">SWIM 成员协议 + 元数据通道 ⑦：白名单键内联；大属性只带版本，</text>
+    <text x="624" y="566" font-size="12.5" fill="#4C1D95">owner 直拉 + 版本仲裁 + 周期反熵</text>
+    <text x="624" y="586" font-size="12.5" fill="#4C1D95">承载 ⑤ Raft 复制 · ⑥ 快照 · ③ 跨分区命令 · ⑧ job 流推送（暂）</text>
+
+    <!-- ②/集群面 通信底座与 Broker 之间 -->
+    <line x1="280" y1="630" x2="280" y2="674" stroke="#2563EB" stroke-width="2" marker-end="url(#arrBlue)"/>
+    <text x="292" y="658" font-size="12" fill="#1D4ED8">② 业务命令投递（CommandApi）</text>
+    <line x1="780" y1="630" x2="780" y2="674" stroke="#7C3AED" stroke-width="2" marker-start="url(#arrPurple)" marker-end="url(#arrPurple)"/>
+    <text x="792" y="658" font-size="12" fill="#6D28D9">③⑤⑥⑦⑧ 集群面（双向）</text>
+
+    <!-- ======== Broker 进程 ======== -->
+    <rect x="40" y="678" width="880" height="546" rx="10" fill="#F0FDF4" stroke="#10B981"/>
+    <text x="56" y="702" font-size="15" font-weight="bold" fill="#047857">Broker 进程 ×N · dist Spring 装配 · 单进程承载多分区</text>
+    <rect x="56" y="714" width="848" height="58" rx="6" fill="#FFFFFF" stroke="#94A3B8"/>
+    <text x="68" y="734" font-size="13" font-weight="bold" fill="#1E293B">BrokerStartupProcess 启动步骤链</text>
+    <text x="68" y="754" font-size="12.5" fill="#334155">BusinessMessagingServiceStep（业务面起播+端口广播）→ CommandApiServiceStep → JobStreamBootstrapStep → EmbeddedGatewayServiceStep → 分区逐个启动</text>
+
+    <rect x="56" y="784" width="848" height="250" rx="6" fill="#DCFCE7" stroke="#059669"/>
+    <text x="68" y="808" font-size="13" font-weight="bold" fill="#065F46">分区 0 .. P-1 · 每个分区 = 一个 Raft 组（跨 broker 选主，leader 处理写）</text>
+    <rect x="68" y="820" width="268" height="94" rx="6" fill="#FFFFFF" stroke="#94A3B8"/>
+    <text x="80" y="842" font-size="13" font-weight="bold" fill="#1E293B">Raft leader / follower</text>
+    <text x="80" y="864" font-size="12.5" fill="#334155">复制经集群面 ⑤</text>
+    <text x="80" y="884" font-size="12.5" fill="#334155">cluster-raft · 跨 broker 选主</text>
+    <rect x="348" y="820" width="280" height="94" rx="6" fill="#FFFFFF" stroke="#94A3B8"/>
+    <text x="360" y="842" font-size="13" font-weight="bold" fill="#1E293B">EventLog</text>
+    <text x="360" y="864" font-size="12.5" fill="#334155">无锁定序 append + AIMD 流控</text>
+    <text x="360" y="884" font-size="12.5" fill="#334155">EL 批帧 → mmap journal + 稀疏 .idx</text>
+    <rect x="640" y="820" width="264" height="94" rx="6" fill="#FFFFFF" stroke="#94A3B8"/>
+    <text x="652" y="842" font-size="13" font-weight="bold" fill="#1E293B">StreamProcessor</text>
+    <text x="652" y="864" font-size="12.5" fill="#334155">bpmn-engine 命令 → Behavior</text>
+    <text x="652" y="884" font-size="12.5" fill="#334155">BPMN 状态机推进</text>
+    <rect x="68" y="922" width="380" height="94" rx="6" fill="#FFFFFF" stroke="#94A3B8"/>
+    <text x="80" y="944" font-size="13" font-weight="bold" fill="#1E293B">RocksDB · business-repository</text>
+    <text x="80" y="966" font-size="12.5" fill="#334155">部署 / 流程实例 / 变量 快照状态（权威存储）</text>
+    <text x="80" y="986" font-size="12.5" fill="#334155">（kvstore / rocksdb 模块）</text>
+    <rect x="460" y="922" width="444" height="94" rx="6" fill="#FFFFFF" stroke="#94A3B8"/>
+    <text x="472" y="944" font-size="13" font-weight="bold" fill="#1E293B">JobStreamDispatcher · job 流推送 ⑧</text>
+    <text x="472" y="966" font-size="12.5" fill="#334155">byType 扁平索引 · 单游标轮转（每会话等份额） · deadline 簿记</text>
+    <text x="472" y="986" font-size="12.5" fill="#334155">快照对账 + 轮转选流 + 请求-应答推送 + job-ready 定向广播</text>
+
+    <rect x="56" y="1050" width="848" height="60" rx="6" fill="#FFFFFF" stroke="#94A3B8"/>
+    <text x="68" y="1070" font-size="13" font-weight="bold" fill="#1E293B">③ 跨分区命令 · InterPartitionCommandSender（经统一拓扑路由 ClusterTopologyService）</text>
+    <text x="68" y="1090" font-size="12.5" fill="#334155">DistributeParallel/Serial 等行为触发 · 集群面 unicast · 同机 leader 暂无本机短路（完整 Aeron 回环——单节点双分区 130→80 实例/s 首要疑点）</text>
+
+    <rect x="56" y="1126" width="200" height="90" rx="6" fill="#FFFFFF" stroke="#94A3B8"/>
+    <text x="68" y="1148" font-size="13" font-weight="bold" fill="#1E293B">scheduler</text>
+    <text x="68" y="1170" font-size="12.5" fill="#334155">gate + wakeTickets</text>
+    <text x="68" y="1188" font-size="12.5" fill="#334155">分区/引擎/服务全 actor</text>
+    <text x="68" y="1206" font-size="12.5" fill="#334155">不自建线程池</text>
+    <rect x="268" y="1126" width="200" height="90" rx="6" fill="#FFFFFF" stroke="#94A3B8"/>
+    <text x="280" y="1148" font-size="13" font-weight="bold" fill="#1E293B">engine</text>
+    <text x="280" y="1170" font-size="12.5" fill="#334155">dmn-engine 决策</text>
+    <text x="280" y="1188" font-size="12.5" fill="#334155">script-engine 表达式</text>
+    <text x="280" y="1206" font-size="12.5" fill="#334155">（FEEL / QL）</text>
+    <rect x="480" y="1126" width="200" height="90" rx="6" fill="#FFFFFF" stroke="#94A3B8"/>
+    <text x="492" y="1148" font-size="13" font-weight="bold" fill="#1E293B">bpm-model</text>
+    <text x="492" y="1170" font-size="12.5" fill="#334155">BPMN/DMN/XML 解析</text>
+    <text x="492" y="1188" font-size="12.5" fill="#334155">（部署命令时）</text>
+    <text x="492" y="1206" font-size="12.5" fill="#334155">model-parse</text>
+    <rect x="692" y="1126" width="212" height="90" rx="6" fill="#FFFFFF" stroke="#94A3B8"/>
+    <text x="704" y="1148" font-size="13" font-weight="bold" fill="#1E293B">sink · RecordSink SPI</text>
+    <text x="704" y="1170" font-size="12.5" fill="#334155">按位置确认 / 重试外发</text>
+    <text x="704" y="1188" font-size="12.5" fill="#334155">不阻塞主链</text>
+    <text x="704" y="1206" font-size="12.5" fill="#334155">sink-rdbms 等</text>
+
+    <!-- 其他 Broker（对端） -->
+    <rect x="972" y="800" width="228" height="180" rx="6" fill="#FFFFFF" stroke="#94A3B8" stroke-dasharray="6 4"/>
+    <text x="984" y="824" font-size="13" font-weight="bold" fill="#334155">其他 Broker 进程</text>
+    <text x="984" y="846" font-size="12.5" fill="#475569">×N-1 · 同构</text>
+    <text x="984" y="866" font-size="12.5" fill="#475569">各自多分区 + Raft 组</text>
+    <text x="984" y="892" font-size="12.5" fill="#7C3AED">⇄ ⑤ Raft 复制</text>
+    <text x="984" y="912" font-size="12.5" fill="#7C3AED">⇄ ⑥ 快照恢复</text>
+    <text x="984" y="932" font-size="12.5" fill="#475569">（均经集群面）</text>
+    <text x="984" y="956" font-size="12.5" fill="#475569">⑦ SWIM 全节点互联</text>
+    <line x1="922" y1="845" x2="970" y2="845" stroke="#7C3AED" stroke-width="2" marker-start="url(#arrPurple)" marker-end="url(#arrPurple)"/>
+    <line x1="922" y1="905" x2="970" y2="905" stroke="#7C3AED" stroke-width="2" marker-start="url(#arrPurple)" marker-end="url(#arrPurple)"/>
+
+    <!-- ④ sink 导出 -->
+    <line x1="798" y1="1224" x2="798" y2="1262" stroke="#059669" stroke-width="2" marker-end="url(#arrGreen)"/>
+    <text x="810" y="1248" font-size="12" fill="#047857">④ 异步导出（断点续传）</text>
+
+    <!-- ======== 外部系统 ======== -->
+    <rect x="40" y="1266" width="880" height="86" rx="10" fill="#F8FAFC" stroke="#64748B"/>
+    <text x="56" y="1290" font-size="15" font-weight="bold" fill="#334155">外部系统（sink 外发目标，非引擎权威存储）</text>
+    <text x="56" y="1318" font-size="12.5" fill="#475569">RDBMS —— SINK_POSITION 权威位置表 · MQ · ES · 自定义 RecordSink</text>
+
+    <!-- ======== 集群治理 ======== -->
+    <rect x="40" y="1384" width="1160" height="140" rx="10" fill="#FEF2F2" stroke="#EF4444"/>
+    <text x="56" y="1408" font-size="15" font-weight="bold" fill="#B91C1C">集群治理 · admin 面（cluster-admin Leader 制定计划，broker-admin-client 执行）</text>
+    <rect x="56" y="1420" width="760" height="74" rx="6" fill="#FFFFFF" stroke="#F87171"/>
+    <text x="68" y="1442" font-size="13" font-weight="bold" fill="#991B1B">cluster-dispatch（集群调度子系统）</text>
+    <text x="68" y="1464" font-size="12.5" fill="#334155">拓扑 diff 生成调度计划：扩缩容 · 分区变更 · 再平衡 · 副本变更</text>
+    <text x="68" y="1484" font-size="12.5" fill="#334155">明细逐成员下发 + ACK 回流 + 延迟看门狗重试 · source 治理 · adminInit 初始化</text>
+    <rect x="832" y="1420" width="352" height="74" rx="6" fill="#FFFFFF" stroke="#F87171"/>
+    <text x="844" y="1442" font-size="13" font-weight="bold" fill="#991B1B">cluster-config</text>
+    <text x="844" y="1464" font-size="12.5" fill="#334155">ClusterTopologyService 统一拓扑</text>
+    <text x="844" y="1484" font-size="12.5" fill="#334155">（跨分区命令路由事实源）</text>
+
+    <line x1="1120" y1="1384" x2="1120" y2="982" stroke="#DC2626" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrRed)"/>
+    <text x="1112" y="1190" text-anchor="end" font-size="11.5" fill="#B91C1C">admin 计划下发 / ACK 回流</text>
+
+    <!-- ======== 横切与原则 ======== -->
+    <text x="40" y="1556" font-size="12.5" fill="#475569">横切层：protocol（Record 定义 + LifeCycle 编号池）· structpack（key-id 自描述帧）· SBE 线上编码：raft id=10 · jobstream id=11 · member-info id=12</text>
+    <text x="40" y="1580" font-size="12.5" fill="#475569">存储原则：无外部权威 DB —— mmap journal + RocksDB 即事实源；RDBMS 仅为 sink 外发目标</text>
+  </g>
+</svg>
