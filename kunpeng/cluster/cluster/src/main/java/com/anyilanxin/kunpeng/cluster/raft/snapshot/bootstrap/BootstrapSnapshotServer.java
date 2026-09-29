@@ -17,6 +17,7 @@
 package com.anyilanxin.kunpeng.cluster.raft.snapshot.bootstrap;
 
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationService;
+import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartition;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.RequestCommand;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChunkReader;
@@ -71,6 +72,7 @@ public final class BootstrapSnapshotServer {
   private final BootstrapSnapshotStore bootstrapSnapshotStore;
   private final LongSupplier commitIndexSupplier;
   private final LongSupplier termSupplier;
+  private final RaftPartition partition;
   private final int maxBatchSize;
   // transferId → 拉取会话（引用计数的最小单元：一个 transferId 即一个请求方）
   private final Map<String, PullSession> sessions = new ConcurrentHashMap<>();
@@ -87,6 +89,7 @@ public final class BootstrapSnapshotServer {
         bootstrapSnapshotStore,
         commitIndexSupplier,
         termSupplier,
+        null,
         DEFAULT_MAX_BATCH_SIZE);
   }
 
@@ -96,12 +99,14 @@ public final class BootstrapSnapshotServer {
       final BootstrapSnapshotStore bootstrapSnapshotStore,
       final LongSupplier commitIndexSupplier,
       final LongSupplier termSupplier,
+      final RaftPartition partition,
       final int maxBatchSize) {
     this.communicator = communicator;
     this.subject = subjectOf(partitionName);
     this.bootstrapSnapshotStore = bootstrapSnapshotStore;
     this.commitIndexSupplier = commitIndexSupplier;
     this.termSupplier = termSupplier;
+    this.partition = partition;
     this.maxBatchSize = maxBatchSize;
   }
 
@@ -156,8 +161,15 @@ public final class BootstrapSnapshotServer {
       return CompletableFuture.failedFuture(
           new SnapshotException("No committed data on partition; cannot take bootstrap snapshot"));
     }
-    return bootstrapSnapshotStore
-        .takeBootstrapSnapshot(commitIndex, term)
+    // 先拍一次 raft 正式镜像（引导裁剪的来源由 provider 自行从最新持久化镜像读取；无分区引用时由 provider 兜底）
+    return (partition == null
+            ? CompletableFuture.<Void>completedFuture(null)
+            : partition.takeSnapshot())
+        .thenCompose(
+            v ->
+                bootstrapSnapshotStore
+                    .takeBootstrapSnapshot(commitIndex, term)
+                    .toCompletableFuture())
         .thenApply(
             snapshot -> {
               final PullSession session = newSession(snapshot);

@@ -166,6 +166,7 @@ public class RaftPartitionServer implements HealthMonitorable {
                 bootstrapSnapshotStore,
                 this::getCommitIndex,
                 this::getTerm,
+                partition,
                 config.getSnapshotTransferMaxBatchSize());
     businessMetaServer = new BusinessMetaServer(clusterCommunicator, this, partition.name());
     businessMetaServer.register();

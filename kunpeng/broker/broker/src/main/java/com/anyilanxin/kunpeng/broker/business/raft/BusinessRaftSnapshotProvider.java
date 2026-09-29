@@ -22,6 +22,7 @@ import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.RaftSnapshotProvider;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.TransferSnapshotProvider;
 import com.anyilanxin.kunpeng.configuration.broker.rocksdb.RocksdbConfiguration;
+import com.anyilanxin.kunpeng.kvstore.ColumnCopyType;
 import com.anyilanxin.kunpeng.kvstore.KvStore;
 import com.anyilanxin.kunpeng.kvstore.exception.KvStoreException;
 import com.anyilanxin.kunpeng.repository.business.BusinessRepositoryColumnFamilies;
@@ -34,6 +35,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Set;
 import org.slf4j.Logger;
 
 /**
@@ -203,7 +205,17 @@ public class BusinessRaftSnapshotProvider
     } catch (final Exception e) {
       LOG.debug("Failed to delete snapshot directory when closing", e);
     }
-    rocksdbDb.createSnapshot(snapshotDirectory.toFile());
+    snapshotStore
+        .getLatestSnapshot()
+        .ifPresent(
+            snapshot -> {
+              rocksdbDb.createCopy(
+                  snapshot.getPath(),
+                  snapshotDirectory,
+                  Set.of(BusinessRepositoryColumnFamilies.DEPLOYMENT),
+                  ColumnCopyType.FAMILY);
+            });
+
     return Map.of("timestamp", System.currentTimeMillis());
   }
 

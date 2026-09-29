@@ -443,7 +443,7 @@ public final class RaftPartition implements Partition, HealthMonitorable {
                                     })));
   }
 
-  /** 拍摄合并镜像：以当前 commit 位点在 merge 存储强制（同位点重试覆盖）拍摄并提交。 */
+  /** 拍摄合并镜像：先拍一次 raft 正式镜像（迁移数据的一致视图来源），再以当前 commit 位点在 merge 存储 强制（同位点重试覆盖）拍摄并提交。 */
   private CompletableFuture<PersistedSnapshot> takeMergeSnapshot(
       final RaftPartitionServer current) {
     final long index = current.getCommitIndex();
@@ -453,9 +453,9 @@ public final class RaftPartition implements Partition, HealthMonitorable {
           new IllegalStateException(
               "partition " + partitionId + " has no committed data to transfer"));
     }
-    return mergeSnapshotStore
-        .newTransientSnapshot(index, term)
-        .toCompletableFuture()
+    return takeSnapshot()
+        .thenCompose(
+            ignored -> mergeSnapshotStore.newTransientSnapshot(index, term).toCompletableFuture())
         .thenCompose(
             pending -> {
               if (pending == null) {
@@ -1069,7 +1069,10 @@ public final class RaftPartition implements Partition, HealthMonitorable {
     return config;
   }
 
-  /** 合并镜像内容直写：委托 {@link TransferSnapshotProvider#takeMergeSnapshot}，业务信息清单随镜像持久化。 */
+  /**
+   * 合并镜像内容直写：委托 {@link TransferSnapshotProvider#takeMergeSnapshot}（迁移来源由 provider 自行读取最新 raft
+   * 镜像），业务信息清单随镜像持久化。
+   */
   private Map<String, Object> takeMergeSnapshotContent(final Path snapshotDirectory) {
     return transferSnapshotProvider.takeMergeSnapshot(snapshotDirectory);
   }

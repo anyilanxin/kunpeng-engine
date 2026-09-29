@@ -34,6 +34,8 @@ public interface TransferSnapshotProvider extends CloseableSilently {
   /**
    * 拍摄引导镜像内容（跨分区引导新分区）：把各分区共有的内容写入 {@code snapshotDirectory}，不含 raft 位点类数据。
    *
+   * <p>实现应以本分区最新持久化 raft 镜像（调用方触发拍摄前已拍好）为一致视图来源裁剪； 只读打开读不到 WAL，不能直接读运行目录。
+   *
    * @param snapshotDirectory 本次拍摄的临时目录
    * @return 业务信息键值清单（随镜像持久化到 snapshot.metadata；可为空/null； key/value 均不得包含 '=' 与换行，值取 {@code
    *     String.valueOf}）
@@ -42,6 +44,8 @@ public interface TransferSnapshotProvider extends CloseableSilently {
 
   /**
    * 拍摄合并镜像内容（分区删除迁移）：把本分区（即将离开）需要迁移的全部数据写入 {@code snapshotDirectory}。
+   *
+   * <p>迁移来源与引导镜像一致：最新持久化 raft 镜像。
    *
    * @param snapshotDirectory 本次拍摄的临时目录
    * @return 业务信息键值清单（随镜像持久化到 snapshot.metadata；可为空/null； key/value 均不得包含 '=' 与换行，值取 {@code
