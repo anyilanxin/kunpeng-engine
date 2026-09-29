@@ -64,6 +64,11 @@ public class BrokerClientImpl extends Actor implements BrokerClient {
   private final ClusterLeaderFoundService leaderFoundService;
   private final BrokerTopologyManager topologyManager;
   private static final Duration RETRY_DELAY = Duration.ofMillis(10);
+
+  /** 远端成员业务地址未就绪时的重解析次数与间隔(有界防打转); 覆盖成员发现与元数据拉取(默认抖动 500ms)间的启动窗口。 */
+  private static final int ADDRESS_RESOLVE_ATTEMPTS = 20;
+
+  private static final Duration ADDRESS_RESOLVE_RETRY_DELAY = Duration.ofMillis(100);
   private final Duration requestTimeout;
   private Subscription jobAvailableSubscription;
   private boolean isClosed;
@@ -147,8 +152,36 @@ public class BrokerClientImpl extends Actor implements BrokerClient {
           final boolean retry,
           final CompletableFuture<BrokerResponse<Response>> responseFuture) {
     final RecordType requestType = request.requestType();
-    // 命令相关接口
+    // 寻址与编码都必须在 actor 线程内执行：sendRequest 由多个 gRPC worker 线程并发调用，
+    // 而 reusableValueBytes/Buffer 是实例字段。在 actor.run 内串行化，
+    // 既消除竞态，又能让池化跨请求真正安全生效；地址暂不可得(元数据未拉取)时可在 actor 上延迟重解析。
+    actor.run(
+        () ->
+            resolveAddressAndSend(
+                request,
+                requestType,
+                retry,
+                requestTimeout,
+                responseFuture,
+                ADDRESS_RESOLVE_ATTEMPTS));
+  }
+
+  /**
+   * 在 actor 线程上解析目标地址并派发请求。
+   *
+   * <p>分区 leader 为远端成员且其业务端口属性尚未随全量元数据拉取落定时，{@link #partitionAddress} 返回 null 且不完结 future——此处按
+   * {@link #ADDRESS_RESOLVE_RETRY_DELAY} 有界重解析，拉取落定即恢复派发， 避免成员发现与元数据拉取之间的启动窗口把请求直接打失败。
+   */
+  private <Request extends RequestRecordValue, Response extends ResponseRecordValue>
+      void resolveAddressAndSend(
+          final BrokerRequest<Request> request,
+          final RecordType requestType,
+          final boolean retry,
+          final Duration requestTimeout,
+          final CompletableFuture<BrokerResponse<Response>> responseFuture,
+          final int attemptsLeft) {
     final SendAddress address;
+    // 命令相关接口
     switch (requestType) {
       case COMMAND_API -> address = getCommandApiAddress(request, responseFuture);
       case QUERY -> address = getQueryAddress(request, responseFuture);
@@ -158,13 +191,26 @@ public class BrokerClientImpl extends Actor implements BrokerClient {
       }
     }
     if (address == null) {
+      // future 已完结说明上游已给出明确失败(无分区/无 leader 等)；未完结则只是地址暂不可得, 有界重解析
+      if (responseFuture.isDone()) {
+        return;
+      }
+      if (attemptsLeft > 0) {
+        actor.schedule(
+            ADDRESS_RESOLVE_RETRY_DELAY,
+            () ->
+                resolveAddressAndSend(
+                    request, requestType, retry, requestTimeout, responseFuture, attemptsLeft - 1));
+        return;
+      }
+      responseFuture.completeExceptionally(
+          new BrokerException(
+              10,
+              "Business messaging address of partition leader not resolvable within retry budget"
+                  + " (member metadata not pulled); retry later"));
       return;
     }
-    // 编码必须在 actor 线程内执行：sendRequest 由多个 gRPC worker 线程并发调用，
-    // 而 reusableValueBytes/Buffer 是实例字段。在 actor.run 内串行化编码，
-    // 既消除竞态，又能让池化跨请求真正安全生效。
-    actor.run(
-        () -> encodeAndSend(request, requestType, address, retry, requestTimeout, responseFuture));
+    encodeAndSend(request, requestType, address, retry, requestTimeout, responseFuture);
   }
 
   private <Request extends RequestRecordValue, Response extends ResponseRecordValue>
@@ -326,21 +372,32 @@ public class BrokerClientImpl extends Actor implements BrokerClient {
           new BrokerException(10, "No leader found for partition " + partitionId));
       return null;
     }
+    // 本节点即 leader: 直读本地成员活属性(业务端口由本进程启动步骤写入, 成员表与其共享同一张属性表),
+    // 不依赖 SWIM 全量元数据二次拉取——本节点数据本地即权威
+    if (leader.equals(membershipService.getLocalMember().id())) {
+      final Address localAddress =
+          BusinessMessaging.businessAddressOf(membershipService.getLocalMember());
+      if (localAddress == null) {
+        responseFuture.completeExceptionally(
+            new BrokerException(
+                10,
+                "Local business messaging port not advertised for partition "
+                    + partitionId
+                    + "; check business messaging startup"));
+        return null;
+      }
+      return new SendAddress(String.valueOf(partitionId.id()), localAddress);
+    }
     final Member member = membershipService.getMember(leader);
     if (member == null) {
       responseFuture.completeExceptionally(
           new BrokerException(10, "No address found for partition leader " + leader.id()));
       return null;
     }
-    // 业务面寻址: 成员主机 + 其广播的业务端口(随 SWIM 全量元数据二次拉取补全); 拉取未完成时按暂不可达失败, 由上层重试
+    // 业务面寻址: 成员主机 + 其广播的业务端口(随 SWIM 全量元数据二次拉取补全);
+    // 拉取未落定时返回 null 且不完结 future, 由 resolveAddressAndSend 有界重解析
     final Address businessAddress = BusinessMessaging.businessAddressOf(member);
     if (businessAddress == null) {
-      responseFuture.completeExceptionally(
-          new BrokerException(
-              10,
-              "Business messaging address of partition leader "
-                  + leader.id()
-                  + " not known yet (member metadata not pulled); retry later"));
       return null;
     }
     return new SendAddress(String.valueOf(partitionId.id()), businessAddress);
