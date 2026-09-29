@@ -22,6 +22,7 @@ import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.RUNTI
 import com.anyilanxin.kunpeng.cluster.raft.logentry.EntryValidator;
 import com.anyilanxin.kunpeng.cluster.raft.partition.*;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.RaftSnapshotProvider;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.TransferSnapshotProvider;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.DelayedFlusher;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLogFlusher;
 import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
@@ -62,7 +63,8 @@ public final class RaftPartitionFactory {
       final PartitionMetadata partitionMetadata,
       final RaftSnapshotProvider snapshotProvider,
       final EntryValidator entryValidator,
-      final MeterRegistry meterRegistry) {
+      final MeterRegistry meterRegistry,
+      final TransferSnapshotProvider transferSnapshotProvider) {
     final var partitionDirectory =
         Paths.get(brokerCfg.getData().getDirectory())
             .resolve(partitionMetadata.id().group())
@@ -95,7 +97,8 @@ public final class RaftPartitionFactory {
         partitionDirectory,
         entryValidator,
         snapshotProvider,
-        meterRegistry);
+        meterRegistry,
+        transferSnapshotProvider);
   }
 
   private RaftPartition createRaftPartition(
@@ -104,7 +107,8 @@ public final class RaftPartitionFactory {
       final Path runtimeDirectory,
       final EntryValidator entryValidator,
       final RaftSnapshotProvider snapshotProvider,
-      final MeterRegistry meterRegistry) {
+      final MeterRegistry meterRegistry,
+      final TransferSnapshotProvider transferSnapshotProvider) {
     final var storageConfig = new RaftStorageConfig();
     final var partitionConfig = new RaftPartitionConfig();
 
@@ -149,7 +153,8 @@ public final class RaftPartitionFactory {
         managementService,
         actorSchedulingService,
         snapshotProvider,
-        new RocksdbSnapshotFileInfoProvider());
+        new RocksdbSnapshotFileInfoProvider(),
+        transferSnapshotProvider);
   }
 
   private RaftLogFlusher.Factory createFlusherFactory(final RaftCfg.FlushConfig config) {

@@ -20,6 +20,7 @@ import com.anyilanxin.kunpeng.broker.BrokerLoggers;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.RaftSnapshotProvider;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.TransferSnapshotProvider;
 import com.anyilanxin.kunpeng.configuration.broker.rocksdb.RocksdbConfiguration;
 import com.anyilanxin.kunpeng.kvstore.KvStore;
 import com.anyilanxin.kunpeng.kvstore.exception.KvStoreException;
@@ -42,7 +43,8 @@ import org.slf4j.Logger;
  * @since 2026.9.0
  */
 public class BusinessRaftSnapshotProvider
-    implements RaftSnapshotProvider<KvStore<BusinessRepositoryColumnFamilies>> {
+    implements RaftSnapshotProvider<KvStore<BusinessRepositoryColumnFamilies>>,
+        TransferSnapshotProvider {
   private final ConcurrencyControl concurrencyControl;
   private KvStore<BusinessRepositoryColumnFamilies> rocksdbDb;
   private final RocksdbFactory<BusinessRepositoryColumnFamilies> rocksdbFactory;
@@ -192,5 +194,21 @@ public class BusinessRaftSnapshotProvider
   @Override
   public ActorFuture<Void> mergeSnapshot(final Path snapshotDirectory) {
     return concurrencyControl.createCompletedFuture();
+  }
+
+  @Override
+  public Map<String, Object> takeBootstrapSnapshot(final Path snapshotDirectory) {
+    try {
+      FileUtil.deleteTreeIfExists(snapshotDirectory);
+    } catch (final Exception e) {
+      LOG.debug("Failed to delete snapshot directory when closing", e);
+    }
+    rocksdbDb.createSnapshot(snapshotDirectory.toFile());
+    return Map.of("timestamp", System.currentTimeMillis());
+  }
+
+  @Override
+  public Map<String, Object> takeMergeSnapshot(final Path snapshotDirectory) {
+    return Map.of();
   }
 }

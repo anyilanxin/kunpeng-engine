@@ -139,11 +139,15 @@ public final class BootstrapSnapshotServer {
     };
   }
 
-  /** 拍摄（或复用）引导镜像并登记 transferId 引用，应答信息分片。 */
+  /**
+   * 拍摄（或复用）引导镜像并登记 transferId 引用，应答信息分片。 信息分片随本应答已发出（{@code infoSent} 置位），客户端随后的 PULL 从首个批开始——否则首个
+   * PULL 会再收到一遍信息分片， 与客户端的批解码错位（Unexpected template id）。
+   */
   private CompletableFuture<byte[]> serveBootstrap(final String transferId) {
     final var existing = sessions.get(transferId);
     if (existing != null) {
       // 同 transferId 重试：直接重发信息分片，不重拍
+      existing.infoSent = true;
       return CompletableFuture.completedFuture(infoChunk(existing.snapshotId.asString()));
     }
     final long commitIndex = commitIndexSupplier.getAsLong();
@@ -156,7 +160,9 @@ public final class BootstrapSnapshotServer {
         .takeBootstrapSnapshot(commitIndex, term)
         .thenApply(
             snapshot -> {
-              sessions.put(transferId, newSession(snapshot));
+              final PullSession session = newSession(snapshot);
+              session.infoSent = true;
+              sessions.put(transferId, session);
               LOGGER.info(
                   "Bootstrap snapshot {} taken for transfer {}", snapshot.snapshotId(), transferId);
               return infoChunk(snapshot.snapshotId().asString());

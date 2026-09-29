@@ -31,6 +31,7 @@ import com.anyilanxin.kunpeng.cluster.raft.partition.PartitionManagementService;
 import com.anyilanxin.kunpeng.cluster.raft.partition.PartitionMetadata;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartition;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.RaftSnapshotProvider;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.TransferSnapshotProvider;
 import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
 import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
@@ -51,7 +52,7 @@ public class BusinessPartitionStartupContext
   private final ActorSchedulingService schedulingService;
   private final RaftPartitionFactory raftPartitionFactory;
   private final PartitionMetadata metadata;
-  private final RaftSnapshotProvider snapshotProvider;
+  private final BusinessRaftSnapshotProvider snapshotProvider;
   private final EntryValidator entryValidator = new BusinessEntryValidator();
   private final MeterRegistry meterRegistry;
   private final PartitionManagementService managementService;
@@ -74,7 +75,7 @@ public class BusinessPartitionStartupContext
       final ConcurrencyControl concurrencyControl,
       final RaftPartitionFactory raftPartitionFactory,
       final PartitionMetadata metadata,
-      final RaftSnapshotProvider snapshotProvider,
+      final BusinessRaftSnapshotProvider snapshotProvider,
       final MeterRegistry meterRegistry,
       final PartitionManagementService managementService,
       final TopologyManager brokerTopologyService,
@@ -212,5 +213,10 @@ public class BusinessPartitionStartupContext
 
   public TopologyManager getBrokerTopologyService() {
     return brokerTopologyService;
+  }
+
+  @Override
+  public TransferSnapshotProvider getTransferSnapshotProvider() {
+    return snapshotProvider;
   }
 }

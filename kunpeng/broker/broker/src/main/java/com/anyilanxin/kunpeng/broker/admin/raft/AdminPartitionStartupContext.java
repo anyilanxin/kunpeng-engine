@@ -33,6 +33,7 @@ import com.anyilanxin.kunpeng.cluster.raft.partition.PartitionManagementService;
 import com.anyilanxin.kunpeng.cluster.raft.partition.PartitionMetadata;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartition;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.RaftSnapshotProvider;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.TransferSnapshotProvider;
 import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
 import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
@@ -214,5 +215,10 @@ public class AdminPartitionStartupContext
 
   public ClusterTopologyService getClusterTopologyService() {
     return clusterTopologyService;
+  }
+
+  @Override
+  public TransferSnapshotProvider getTransferSnapshotProvider() {
+    return null;
   }
 }

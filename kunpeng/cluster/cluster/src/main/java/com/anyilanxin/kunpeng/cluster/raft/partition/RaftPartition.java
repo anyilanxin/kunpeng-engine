@@ -19,6 +19,7 @@ package com.anyilanxin.kunpeng.cluster.raft.partition;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
 
+import com.anyilanxin.kunpeng.cluster.cluster.Member;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
 import com.anyilanxin.kunpeng.cluster.raft.RaftBusinessMetaListener;
@@ -283,11 +284,11 @@ public final class RaftPartition implements Partition, HealthMonitorable {
    * 引用（引用归零时拍摄端删除引导镜像）。中途失败重试本方法：已落地的镜像 以 {@link SnapshotAlreadyExistsException} 暴露，视为已落地直接进入安装。
    *
    * @param sourcePartitionId 引导镜像的源分区
-   * @param sourceAddress 源分区 leader 所在成员地址
+   * @param memberId 源分区 leader 所在成员地址
    * @return 引导完成 future（本节点成为该分区 leader），失败时回收半启动的 server
    */
   public CompletableFuture<RaftPartition> bootstrap(
-      final PartitionId sourcePartitionId, final Address sourceAddress) {
+      final PartitionId sourcePartitionId, final MemberId memberId) {
     if (!partitionMetadata
         .members()
         .contains(managementService.getMembershipService().getLocalMember().id())) {
@@ -297,7 +298,7 @@ public final class RaftPartition implements Partition, HealthMonitorable {
     }
     initServer();
     return startSnapshotStore()
-        .thenCompose(v -> pullBootstrapSnapshot(sourcePartitionId, sourceAddress))
+        .thenCompose(v -> pullBootstrapSnapshot(sourcePartitionId, memberId))
         .thenCompose(v -> startBootstrappedServer())
         .whenComplete(
             (result, error) -> {
@@ -309,13 +310,13 @@ public final class RaftPartition implements Partition, HealthMonitorable {
 
   /** 拉取引导镜像落地到本分区快照存储：崩溃重试时已落地（already-exists）直接沿用。 */
   private CompletableFuture<Void> pullBootstrapSnapshot(
-      final PartitionId sourcePartitionId, final Address sourceAddress) {
-    final var sourceMember = resolveRemoteMember(sourceAddress);
-    if (sourceMember.isEmpty()) {
-      return CompletableFuture.failedFuture(
-          new IllegalStateException(
-              "Cannot resolve member at address " + sourceAddress + " for bootstrap"));
-    }
+      final PartitionId sourcePartitionId, final MemberId memberId) {
+    //    final var sourceMember = resolveRemoteMember(sourceAddress);
+    //    if (sourceMember.isEmpty()) {
+    //      return CompletableFuture.failedFuture(
+    //          new IllegalStateException(
+    //              "Cannot resolve member at address " + sourceAddress + " for bootstrap"));
+    //    }
     final var transfer =
         new DefaultSnapshotTransfer(
             managementService.getMembershipService(),
@@ -325,7 +326,7 @@ public final class RaftPartition implements Partition, HealthMonitorable {
             config.getSnapshotTransferMaxBatchSize());
     actorSchedulingService.submitActor(transfer);
     return transfer
-        .getBootstrapSnapshot(sourcePartitionId, sourceMember.get())
+        .getBootstrapSnapshot(sourcePartitionId, memberId)
         .toCompletableFuture()
         .handle(
             (persisted, error) -> {
@@ -336,7 +337,7 @@ public final class RaftPartition implements Partition, HealthMonitorable {
                       "Failed to pull bootstrap snapshot from partition "
                           + sourcePartitionId
                           + " via "
-                          + sourceAddress,
+                          + memberId,
                       error);
                 }
                 // 上次引导已落地（崩溃重试）：沿用既有镜像进入安装
@@ -581,7 +582,7 @@ public final class RaftPartition implements Partition, HealthMonitorable {
     final var localMemberId = managementService.getMembershipService().getLocalMember().id();
     return managementService.getMembershipService().getMembers().stream()
         .filter(member -> address.equals(member.address()))
-        .map(member -> member.id())
+        .map(Member::id)
         .filter(memberId -> !memberId.equals(localMemberId))
         .findFirst();
   }

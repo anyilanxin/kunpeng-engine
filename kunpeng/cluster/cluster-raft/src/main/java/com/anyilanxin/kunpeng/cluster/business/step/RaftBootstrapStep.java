@@ -40,7 +40,8 @@ public abstract class RaftBootstrapStep<CONTENT extends PartitionStartupContext>
                 context.getPartitionMetadata(),
                 context.getSnapshotProvider(),
                 context.getEntryValidator(),
-                context.getMeterRegistry());
+                context.getMeterRegistry(),
+                context.getTransferSnapshotProvider());
     partition
         .bootstrap()
         .whenComplete(

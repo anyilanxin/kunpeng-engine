@@ -18,6 +18,11 @@ package com.anyilanxin.kunpeng.broker.business.raft.step;
 
 import com.anyilanxin.kunpeng.broker.business.raft.BusinessPartitionStartupContext;
 import com.anyilanxin.kunpeng.cluster.business.step.RaftBootstrapStep;
+import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
+import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartition;
+import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * 业务分区启动流程中的引导（bootstrap）步骤，负责在初始成员上创建并引导业务 Raft 分组。
@@ -27,6 +32,51 @@ import com.anyilanxin.kunpeng.cluster.business.step.RaftBootstrapStep;
  */
 public final class BusinessRaftBootstrapStep
     extends RaftBootstrapStep<BusinessPartitionStartupContext> {
+  private final boolean isBootstrapSnapshot;
+  private final PartitionId sourcePartitionId;
+  private final MemberId memberId;
+
+  public BusinessRaftBootstrapStep(
+      final boolean isBootstrapSnapshot,
+      final PartitionId sourcePartitionId,
+      final MemberId memberId) {
+    this.isBootstrapSnapshot = isBootstrapSnapshot;
+    this.sourcePartitionId = sourcePartitionId;
+    this.memberId = memberId;
+  }
+
+  @Override
+  public ActorFuture<BusinessPartitionStartupContext> startup(
+      final BusinessPartitionStartupContext context) {
+    final var result =
+        context.getConcurrencyControl().<BusinessPartitionStartupContext>createFuture();
+    final var partition =
+        context
+            .getRaftPartitionFactory()
+            .createRaftPartition(
+                context.getPartitionMetadata(),
+                context.getSnapshotProvider(),
+                context.getEntryValidator(),
+                context.getMeterRegistry(),
+                context.getTransferSnapshotProvider());
+    final CompletableFuture<RaftPartition> bootstrap;
+    if (isBootstrapSnapshot) {
+      bootstrap = partition.bootstrap(sourcePartitionId, memberId);
+    } else {
+      bootstrap = partition.bootstrap();
+    }
+    bootstrap.whenComplete(
+        (_, throwable) -> {
+          if (throwable == null) {
+            context.setRaftPartition(partition);
+            result.complete(context);
+          } else {
+            result.completeExceptionally(throwable);
+          }
+        });
+
+    return result;
+  }
 
   @Override
   public String getName() {

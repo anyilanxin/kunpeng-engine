@@ -23,6 +23,7 @@ import com.anyilanxin.kunpeng.cluster.raft.partition.PartitionManagementService;
 import com.anyilanxin.kunpeng.cluster.raft.partition.PartitionMetadata;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartition;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.RaftSnapshotProvider;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.TransferSnapshotProvider;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
 import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -41,6 +42,8 @@ public interface PartitionStartupContext<CONTENT extends TransitionContent> {
   PartitionMetadata getPartitionMetadata();
 
   RaftSnapshotProvider getSnapshotProvider();
+
+  TransferSnapshotProvider getTransferSnapshotProvider();
 
   EntryValidator getEntryValidator();
 

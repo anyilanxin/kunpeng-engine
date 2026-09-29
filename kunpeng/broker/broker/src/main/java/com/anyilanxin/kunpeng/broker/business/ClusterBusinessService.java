@@ -220,7 +220,7 @@ public class ClusterBusinessService extends Actor
     for (final PartitionMetadata partition : partitions) {
       final BusinessPartitionStartupContext content = createContent(partition);
       final BusinessPartitionService bootstrapping =
-          BusinessPartitionService.bootstrapping(content);
+          BusinessPartitionService.bootstrapping(content, false);
       if (raftPartitionMap.putIfAbsent(partition.id().id(), bootstrapping) == null) {
         futures.add(bootstrapping.start());
       }
@@ -351,7 +351,7 @@ public class ClusterBusinessService extends Actor
           final PartitionMetadata targetMetadata = targetMeta.toMetadata();
           final BusinessPartitionStartupContext content = createContent(metadata);
           final BusinessPartitionService bootstrapping =
-              BusinessPartitionService.bootstrapping(content);
+              BusinessPartitionService.bootstrapping(content, record.isBootstrapSnapshot());
           if (raftPartitionMap.putIfAbsent(bootstrapping.id(), bootstrapping) == null) {
             bootstrapping
                 .start()

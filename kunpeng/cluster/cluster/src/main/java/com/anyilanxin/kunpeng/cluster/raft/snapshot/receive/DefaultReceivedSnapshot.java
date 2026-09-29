@@ -35,8 +35,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 文件版接收 pending 镜像：分片逐批写入临时目录，每个文件字节收齐时回读校验整文件 CRC32， 校验信息随写累积；{@link #persist()} 时读取随分片传入的 {@code
- * snapshot.metadata}， 原子 move 到正式目录后由公共存储生成 .sfc 完成提交。
+ * 文件版接收 pending 镜像：分片逐批写入临时目录（分片内容 CRC32 校验传输完整性）， 文件级校验信息（校验提供者语义值）随分片透传累积；{@link #persist()}
+ * 时读取随分片传入的 {@code snapshot.metadata}， 原子 move 到正式目录后由公共存储生成 .sfc 完成提交——文件级校验由恢复期用
+ * 同一校验提供者重算比对，接收端不做裸字节复核。
  *
  * @author zxuanhong
  * @since 2026.9.0
@@ -44,7 +45,6 @@ import org.slf4j.LoggerFactory;
 final class DefaultReceivedSnapshot implements ReceivedSnapshot {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(DefaultReceivedSnapshot.class);
-  private static final int VERIFY_BUFFER_SIZE = 1024 * 1024;
 
   private final SnapshotId snapshotId;
   private final Path directory;
@@ -121,7 +121,7 @@ final class DefaultReceivedSnapshot implements ReceivedSnapshot {
 
     receivedBytes += length;
     if (receivedBytes == expectedFileSize) {
-      verifyWholeFile();
+      // 文件级校验值是校验提供者语义（拍摄端 .sfc 条目原值），透传进接收镜像 .sfc，由恢复期用同一提供者复核
       fileInfos.put(currentFileName, new SnapshotFileInfo(expectedFileChecksum, expectedFileSize));
     }
   }
@@ -169,35 +169,6 @@ final class DefaultReceivedSnapshot implements ReceivedSnapshot {
   private void preAllocate() throws IOException {
     if (expectedFileSize > 0) {
       channel.write(ByteBuffer.wrap(new byte[1]), expectedFileSize - 1);
-    }
-  }
-
-  /** 文件字节收齐后回读全部内容，校验整文件 CRC32 与分片携带的 snapshotChecksum 一致。 */
-  private void verifyWholeFile() {
-    try {
-      channel.force(false);
-      crc.reset();
-      final var buffer =
-          ByteBuffer.allocate((int) Math.clamp(expectedFileSize, 1, VERIFY_BUFFER_SIZE));
-      for (long offset = 0; offset < expectedFileSize; offset += VERIFY_BUFFER_SIZE) {
-        buffer.clear();
-        buffer.limit((int) Math.min(VERIFY_BUFFER_SIZE, expectedFileSize - offset));
-        int read = 0;
-        while (buffer.hasRemaining()) {
-          final int n = channel.read(buffer, offset + read);
-          if (n < 0) {
-            throw new IOException("Unexpected end of file " + currentFileName);
-          }
-          read += n;
-        }
-        buffer.flip();
-        crc.update(buffer);
-      }
-      if (crc.getValue() != expectedFileChecksum) {
-        throw new SnapshotException("Checksum mismatch for file " + currentFileName);
-      }
-    } catch (final IOException e) {
-      throw new UncheckedIOException("Failed to verify file " + currentFileName, e);
     }
   }
 

@@ -40,7 +40,8 @@ public abstract class RaftJoinStep<CONTENT extends PartitionStartupContext>
                 context.getPartitionMetadata(),
                 context.getSnapshotProvider(),
                 context.getEntryValidator(),
-                context.getMeterRegistry());
+                context.getMeterRegistry(),
+                context.getTransferSnapshotProvider());
     partition
         .join()
         .whenComplete(

@@ -16,9 +16,13 @@
  */
 package com.anyilanxin.kunpeng.broker.business.raft;
 
+import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.BUSINESS_RAFT_GROUP;
+
 import com.anyilanxin.kunpeng.broker.business.raft.step.*;
 import com.anyilanxin.kunpeng.broker.business.raft.step.transition.BusinessPartitionTransitionStep;
 import com.anyilanxin.kunpeng.cluster.business.PartitionService;
+import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
 import com.anyilanxin.kunpeng.cluster.raft.RaftBusinessMetaListener;
 import com.anyilanxin.kunpeng.cluster.raft.RaftRoleChangeListener;
 import com.anyilanxin.kunpeng.cluster.utils.health.FailureListener;
@@ -30,7 +34,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 表示 Raft 分区与业务分区的组合。目前构建分区的唯一方式是通过 {@link #bootstrapping(BusinessPartitionStartupContext)} 方法。
+ * 表示 Raft 分区与业务分区的组合。目前构建分区的唯一方式是通过 {@link #bootstrapping(BusinessPartitionStartupContext,boolean)}
+ * 方法。
  *
  * @author zxuanhong
  * @since 2026.9.0
@@ -62,13 +67,22 @@ public final class BusinessPartitionService
    * @return 可启动的分区实例
    */
   public static BusinessPartitionService bootstrapping(
-      final BusinessPartitionStartupContext context) {
+      final BusinessPartitionStartupContext context, final boolean isBootstrapSnapshot) {
+    final BusinessRaftBootstrapStep businessRaftBootstrapStep;
+    if (isBootstrapSnapshot) {
+      final PartitionId partitionId = PartitionId.from(BUSINESS_RAFT_GROUP, 1);
+      final MemberId partitionLeader =
+          context.getTopologyService().getPartitionLeader(PartitionId.from(BUSINESS_RAFT_GROUP, 1));
+      businessRaftBootstrapStep = new BusinessRaftBootstrapStep(true, partitionId, partitionLeader);
+    } else {
+      businessRaftBootstrapStep = new BusinessRaftBootstrapStep(false, null, null);
+    }
     return new BusinessPartitionService(
         context,
         new StartupProcess<>(
             LOGGER,
             List.of(
-                new BusinessRaftBootstrapStep(),
+                businessRaftBootstrapStep,
                 createRaftRoleChangeListenerStep(context),
                 createFailureListenerStep(context),
                 createRaftBusinessMetaListenerStep(context),
