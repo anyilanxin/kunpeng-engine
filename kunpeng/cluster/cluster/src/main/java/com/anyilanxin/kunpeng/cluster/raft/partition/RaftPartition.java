@@ -857,10 +857,9 @@ public final class RaftPartition implements Partition, HealthMonitorable {
     server.removeFailureListener(failureListener);
   }
 
-  /** 强制关闭分区：关闭前先拍一次快照（best-effort）、删除引导/合并镜像（best-effort），再停 raft、关快照 actor。 */
+  /** 强制关闭分区：删除引导/合并镜像（best-effort）后关 provider、停 raft、关快照 actor；关闭前拍镜像不可行——TO_INACTIVE 已先关闭运行库。 */
   public CompletableFuture<Void> close() {
-    return snapshotBeforeClose()
-        .thenCompose(v -> deleteBootstrapSnapshotsBeforeClose())
+    return deleteBootstrapSnapshotsBeforeClose()
         .thenCompose(v -> deleteMergeSnapshotsBeforeClose())
         .thenCompose(v -> closeSnapshotProvider())
         .thenCompose(v -> closeServer())
@@ -907,21 +906,6 @@ public final class RaftPartition implements Partition, HealthMonitorable {
                     "Failed to delete merge snapshots of partition {} before closing",
                     partitionId,
                     error);
-              }
-              return null;
-            });
-  }
-
-  /** 关闭前拍摄一次快照（best-effort）：失败仅记录日志，不阻断关闭。 */
-  private CompletableFuture<Void> snapshotBeforeClose() {
-    if (server == null) {
-      return CompletableFuture.completedFuture(null);
-    }
-    return takeSnapshotInternal(false)
-        .handle(
-            (ignored, error) -> {
-              if (error != null) {
-                LOG.warn("Failed to snapshot before closing partition {}", partitionId, error);
               }
               return null;
             });

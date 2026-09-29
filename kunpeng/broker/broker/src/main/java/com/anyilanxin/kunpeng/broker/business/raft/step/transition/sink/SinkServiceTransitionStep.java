@@ -96,10 +96,21 @@ public final class SinkServiceTransitionStep implements TransitionStep<BusinessT
             () -> {
               final SinkService sinkService = context.getSinkService();
               if (sinkService != null) {
-                sinkService.close();
                 context.setSinkService(null);
+                // 本步骤运行在 transition actor 线程上，同步 close 会 join 未完成 future、违反 actor 非阻塞约束
+                sinkService
+                    .closeAsync()
+                    .onComplete(
+                        (unused, throwable) -> {
+                          if (throwable != null) {
+                            future.completeExceptionally(throwable);
+                          } else {
+                            future.complete(null);
+                          }
+                        });
+              } else {
+                future.complete(null);
               }
-              future.complete(null);
             });
     return future;
   }
