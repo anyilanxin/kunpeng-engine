@@ -34,3 +34,5 @@
 .jqwik-database
 hs_err_pid*.log
 replay_pid*.log
+.zcode/
+docs/smart-socket/
