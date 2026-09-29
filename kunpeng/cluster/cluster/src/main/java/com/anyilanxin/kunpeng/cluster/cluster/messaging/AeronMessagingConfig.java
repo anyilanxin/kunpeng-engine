@@ -82,6 +82,13 @@ public class AeronMessagingConfig implements Config {
   private String idleStrategy = "backoff";
 
   /**
+   * 发送/广播入队队列容量（两条队列各自的上限）。
+   *
+   * <p>入队队列是有界的多生产者→单消费者队列（任意业务线程提交、代理线程单点消费）。代理线程停滞时（如对端不可达、任务滞留重试至投递截止），无界队列会随提交速率无限增长直至内存耗尽；有界队列将该情况转化为显式背压——有完成回调的任务按异常完成，尽力而为任务告警丢弃。
+   */
+  private int sendQueueCapacity = 4096;
+
+  /**
    * 是否启用应用层传输加密（AES-256-GCM 信封，见 {@code AeronFrameCrypto}）。
    *
    * <p>启用后发送侧在投递前整体加密帧、接收侧先解密再解析；线上载荷、共享内存 term buffer 与任何录制文件均为密 文。明文帧首字节为 0x01、密文信封为
@@ -194,6 +201,15 @@ public class AeronMessagingConfig implements Config {
 
   public AeronMessagingConfig setIdleStrategy(final String idleStrategy) {
     this.idleStrategy = idleStrategy;
+    return this;
+  }
+
+  public int getSendQueueCapacity() {
+    return sendQueueCapacity;
+  }
+
+  public AeronMessagingConfig setSendQueueCapacity(final int sendQueueCapacity) {
+    this.sendQueueCapacity = sendQueueCapacity;
     return this;
   }
 

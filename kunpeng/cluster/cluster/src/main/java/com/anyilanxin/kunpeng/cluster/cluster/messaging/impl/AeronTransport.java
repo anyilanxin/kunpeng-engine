@@ -39,10 +39,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 import org.agrona.DirectBuffer;
 import org.agrona.concurrent.Agent;
@@ -50,6 +50,7 @@ import org.agrona.concurrent.AgentRunner;
 import org.agrona.concurrent.BackoffIdleStrategy;
 import org.agrona.concurrent.BusySpinIdleStrategy;
 import org.agrona.concurrent.IdleStrategy;
+import org.agrona.concurrent.ManyToOneConcurrentArrayQueue;
 import org.agrona.concurrent.SleepingMillisIdleStrategy;
 import org.agrona.concurrent.UnsafeBuffer;
 import org.agrona.concurrent.YieldingIdleStrategy;
@@ -60,11 +61,11 @@ import org.slf4j.LoggerFactory;
  * Aeron 传输底座：由 {@link AeronMessagingService} 与 {@link AeronUnicastService} 引用计数共享。
  *
  * <p>职责：内嵌/外部 Media Driver 与 Aeron 客户端生命周期、两条接收流（RPC 与单播）的订阅、单代理线程上的
- * 发送队列（含背压重试与投递截止）、发布通道缓存，以及超时扫描回调。
+ * 发送队列（有界入队、背压重试与投递截止）、发布通道缓存，以及超时扫描回调。
  *
  * <p>替代原 Netty 方案中的：连接池（ChannelPool）、TCP 心跳（HeartbeatHandler，Aeron 驱动的状态报文天然保活）、 协议版本协商（帧内版本字节）。
  *
- * <p>线程模型：{@link #submit(SendTask)} 可任意线程调用；其余状态仅代理线程访问。
+ * <p>线程模型：{@link #submit(SendTask)} 与 {@link #submitBroadcast(BroadcastTask)} 可任意线程调用；其余状态仅代理线程访问（节流留痕时间戳等少量例外已注明）。
  *
  * @author zxuanhong
  * @since 2026.9.0
@@ -94,9 +95,21 @@ public final class AeronTransport {
   private Subscription unicastSubscription;
   private AgentRunner agentRunner;
 
-  private final ConcurrentLinkedQueue<SendTask> sendQueue = new ConcurrentLinkedQueue<>();
-  private final ConcurrentLinkedQueue<BroadcastTask> broadcastQueue = new ConcurrentLinkedQueue<>();
+  /**
+   * 发送入队队列（任意业务线程生产 → 代理线程单点消费）。
+   *
+   * <p>有界（{@link AeronMessagingConfig#getSendQueueCapacity()}）：代理线程停滞（如对端不可达、任务滞留重试至投递截止）时，无界队列会随提交速率无限增长直至内存耗尽；有界将其转化为显式背压拒绝。
+   *
+   * <p>单消费者约束：仅代理线程消费；停机排空（{@link #failPendingSends}）必须在 {@code agentRunner.close()}（阻塞等待代理线程退出）之后执行。
+   */
+  private final ManyToOneConcurrentArrayQueue<SendTask> sendQueue;
+
+  /** 广播入队队列，拓扑与容量语义同 {@link #sendQueue}。 */
+  private final ManyToOneConcurrentArrayQueue<BroadcastTask> broadcastQueue;
+
   private long lastBroadcastDropWarnNs; // agent 线程独占：广播超时丢弃的节流留痕时间戳
+
+  private final AtomicLong lastQueueFullWarnNs = new AtomicLong(); // 任意提交线程：入队背压拒绝的节流留痕时间戳
   private final List<Tickable> tickables = new CopyOnWriteArrayList<>();
   private volatile FrameListener messagingListener = (buffer, offset, length) -> {};
   private volatile FrameListener unicastListener = (buffer, offset, length) -> {};
@@ -109,6 +122,8 @@ public final class AeronTransport {
     this.config = config;
     this.bindEndpoint = endpoint(bindAddress);
     this.bindChannel = "aeron:udp?endpoint=" + bindEndpoint;
+    this.sendQueue = new ManyToOneConcurrentArrayQueue<>(config.getSendQueueCapacity());
+    this.broadcastQueue = new ManyToOneConcurrentArrayQueue<>(config.getSendQueueCapacity());
   }
 
   /** 帧监听器（RPC 流）。 */
@@ -215,16 +230,19 @@ public final class AeronTransport {
     tickables.add(tickable);
   }
 
-  /** 任意线程调用：入队一帧；由代理线程在实际投递成功后完成 future。 */
+  /** 任意线程调用：入队一帧；由代理线程在实际投递成功后完成 future。队列满按背压拒绝。 */
   void submit(final SendTask task) {
     if (!running) {
       task.fail(new IllegalStateException("Aeron transport is not running."));
       return;
     }
-    sendQueue.add(task);
+    if (!sendQueue.offer(task)) {
+      warnQueueFullThrottled(task.channelUri);
+      task.fail(new IllegalStateException("发送队列已满(背压): " + task.channelUri));
+    }
   }
 
-  /** 任意线程调用：入队一次多目的地广播；由代理线程在实际投递成功后完成 future。 */
+  /** 任意线程调用：入队一次多目的地广播；由代理线程在实际投递成功后完成 future。队列满按背压拒绝。 */
   void submitBroadcast(final BroadcastTask task) {
     if (!running) {
       task.fail(new IllegalStateException("Aeron transport is not running."));
@@ -234,7 +252,10 @@ public final class AeronTransport {
       task.succeed();
       return;
     }
-    broadcastQueue.add(task);
+    if (!broadcastQueue.offer(task)) {
+      warnQueueFullThrottled(task.destinationUris.toString());
+      task.fail(new IllegalStateException("广播队列已满(背压): " + task.destinationUris));
+    }
   }
 
   /** 引用计数 +1；0→1 时启动驱动、客户端、订阅与代理线程。 */
@@ -370,6 +391,22 @@ public final class AeronTransport {
     LOGGER.warn("广播投递超时被丢弃(目的地未连接或持续背压): stream={} 目的地={}", task.streamId, task.destinationUris);
   }
 
+  /** 入队背压拒绝的节流留痕（10s 窗口一次）：代理线程停滞时按提交速率拒绝，不节流会刷爆 WARN。 */
+  private void warnQueueFullThrottled(final String destination) {
+    final long nowNs = System.nanoTime();
+    if (nowNs - lastQueueFullWarnNs.get() < TimeUnit.SECONDS.toNanos(10)) {
+      return;
+    }
+    lastQueueFullWarnNs.set(nowNs);
+    LOGGER.warn("发送/广播入队队列已满(背压), 代理线程积压, 最近被拒目的地: {}", destination);
+  }
+
+  /**
+   * 停机排空入队队列。
+   *
+   * <p>单消费者约束：入队队列仅允许代理线程消费，本方法从停机线程 poll 的前提是 {@code agentRunner.close()} 已阻塞等待代理线程退出（见
+   * {@link #stopLockedQuietly} 的调用顺序），该顺序不可颠倒。
+   */
   private void failPendingSends(final Throwable error) {
     SendTask task;
     while ((task = sendQueue.poll()) != null) {
