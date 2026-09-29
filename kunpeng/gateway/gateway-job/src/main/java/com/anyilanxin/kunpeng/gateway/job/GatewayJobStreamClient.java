@@ -18,15 +18,13 @@ package com.anyilanxin.kunpeng.gateway.job;
 
 import com.anyilanxin.kunpeng.broker.client.jobstream.JobStreamMessages.PushResult;
 import com.anyilanxin.kunpeng.broker.client.jobstream.JobStreamMessages.StreamPush;
+import com.anyilanxin.kunpeng.broker.client.jobstream.JobStreamSnapshotProperty;
 import com.anyilanxin.kunpeng.broker.client.jobstream.JobStreamSubjects;
 import com.anyilanxin.kunpeng.broker.client.jobstream.JobStreamWireCodec;
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationService;
-import com.anyilanxin.kunpeng.protocol.gateway.GatewayLoggers;
 import com.anyilanxin.kunpeng.scheduler.Actor;
-import java.util.Base64;
-import org.slf4j.Logger;
 
 /**
  * 网关侧 job 流传输：受理 broker 推送（请求-应答，应答即送达确认）；订阅快照搭车 SWIM 元数据通道扩散——写入本地成员属性（SBE 帧 base64）， 集群按
@@ -39,7 +37,6 @@ import org.slf4j.Logger;
  * @since 2026.9.0
  */
 public final class GatewayJobStreamClient extends Actor {
-  private static final Logger LOG = GatewayLoggers.GATEWAY_LOGGER_JOB;
 
   private final ClusterCommunicationService messaging;
   private final GatewayJobHub hub;
@@ -86,17 +83,6 @@ public final class GatewayJobStreamClient extends Actor {
 
   /** 快照写入本地成员属性：SWIM checkMetadata 检出 diff 后 bump metadataVersion 随 gossip 扩散，broker 按版本经拉取通道直取 */
   private void publishSnapshotProperty() {
-    final String encoded;
-    try {
-      encoded =
-          Base64.getEncoder().encodeToString(JobStreamWireCodec.encodeSnapshot(hub.snapshot()));
-    } catch (final RuntimeException e) {
-      LOG.warn("Job stream snapshot encode failed, skip publish", e);
-      return;
-    }
-    membership
-        .getLocalMember()
-        .properties()
-        .setProperty(JobStreamSubjects.SNAPSHOT_PROPERTY, encoded);
+    JobStreamSnapshotProperty.publish(membership, hub.snapshot());
   }
 }

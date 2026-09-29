@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<sbe:messageSchema xmlns:sbe="http://fixprotocol.io/2016/sbe"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://fixprotocol.io/2016/sbe sbe.xsd"
+                   package="com.anyilanxin.kunpeng.cluster.cluster.messaging.nodeinfo"
+                   id="12"
+                   version="0"
+                   description="节点元数据（SWIM 成员属性承载，经元数据二次拉取传播）">
+  <types>
+    <composite name="messageHeader" description="标准 SBE 消息头">
+      <type name="blockLength" primitiveType="uint16"/>
+      <type name="templateId" primitiveType="uint16"/>
+      <type name="schemaId" primitiveType="uint16"/>
+      <type name="version" primitiveType="uint16"/>
+    </composite>
+    <composite name="groupSizeEncoding" description="重复组头">
+      <type name="blockLength" primitiveType="uint16"/>
+      <type name="numInGroup" primitiveType="uint16"/>
+    </composite>
+  </types>
+
+  <!-- 端口类型为 uint8 编码，枚举语义由 CommPortType 手工维护（避免生成枚举与 API 枚举重复定义） -->
+  <sbe:message name="NodeInfo" id="1" description="节点级元数据：通信端口注册表">
+    <group name="ports" id="1" description="通信端口注册表，每项=端口类型编码+端口">
+      <field name="portType" type="uint8" id="1" description="CommPortType#code()"/>
+      <field name="port" type="uint16" id="2"/>
+    </group>
+  </sbe:message>
+</sbe:messageSchema>

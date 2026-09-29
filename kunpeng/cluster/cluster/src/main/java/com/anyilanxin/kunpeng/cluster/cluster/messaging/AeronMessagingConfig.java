@@ -61,6 +61,13 @@ public class AeronMessagingConfig implements Config {
   /** 是否内嵌启动 Media Driver（同一 JVM 内多个节点必须各自使用独立的 aeronDir）。 */
   private boolean embeddedDriver = true;
 
+  /**
+   * 内嵌驱动是否为进程级共享（引用计数）：集群面/业务面等多个传输实例复用同一驱动，省去每实例一套驱动线程与 CnC 共享内存。
+   *
+   * <p>默认 false（每实例独占驱动）——同 JVM 多节点场景（测试、基准）保持线程并行度不受损；生产装配（集群面+业务面双实例）显式开启。
+   */
+  private boolean sharedDriver = false;
+
   /** Aeron 目录；null 表示自动生成临时目录（内嵌模式）或使用默认目录（外部驱动模式）。 */
   private File aeronDir;
 
@@ -87,6 +94,31 @@ public class AeronMessagingConfig implements Config {
    * <p>入队队列是有界的多生产者→单消费者队列（任意业务线程提交、代理线程单点消费）。代理线程停滞时（如对端不可达、任务滞留重试至投递截止），无界队列会随提交速率无限增长直至内存耗尽；有界队列将该情况转化为显式背压——有完成回调的任务按异常完成，尽力而为任务告警丢弃。
    */
   private int sendQueueCapacity = 4096;
+
+  /**
+   * 单个 Aeron 数据报的最大长度（通道 URI 的 {@code mtu} 参数）。
+   *
+   * <p>超过单帧上限（term/8）的消息由 Aeron 按 MTU 切片传输：报文越大切片数越多，收发两端的逐数据报 固定成本线性增长——大报文吞吐对 MTU 高度敏感（基准探针实测
+   * 1MiB 帧 MTU 4096→8192 提速 2.8 倍）。 默认 8192：在 macOS 发送上限（{@code udp.maxdgram}=9216）内跨平台可用，云 VPC
+   * 普遍支持巨型帧； MTU 为发送侧属性，新旧节点可混布滚动升级。1500 MTU 以太网上 8KB 数据报会引入 IP 分片， 丢包敏感网络可显式调回 4096。
+   */
+  private int mtuLength = 8192;
+
+  /**
+   * 内核发送缓冲（通道 URI 的 {@code so-sndbuf} 参数，字节）；0 表示不设置、沿用内核默认。
+   *
+   * <p>刻意不设大默认值：该缓冲按 socket（每目的地一个发布通道）计，万级成员节点上大默认值 × 海量
+   * 发布通道是不确定的内核内存上界，且探针实测发送缓冲对吞吐贡献最小（接收缓冲才是主项）——留给 部署侧按需显式调优。
+   */
+  private int socketSendBufferBytes = 0;
+
+  /**
+   * 内核接收缓冲（通道 URI 的 {@code so-rcvbuf} 参数，字节）；0 表示不设置、沿用内核默认。
+   *
+   * <p>默认 2MB：突发大报文时接收缓冲不足会丢数据报触发 Aeron NAK 重传，是吞吐长尾的来源之一； 接收 socket 每节点固定两个（消息流 +
+   * 单向流），成本上界确定，可安全设默认。
+   */
+  private int socketReceiveBufferBytes = 2 * 1024 * 1024;
 
   /**
    * 是否启用应用层传输加密（AES-256-GCM 信封，见 {@code AeronFrameCrypto}）。
@@ -136,6 +168,33 @@ public class AeronMessagingConfig implements Config {
     return unicastTermBufferLength;
   }
 
+  public int getMtuLength() {
+    return mtuLength;
+  }
+
+  public AeronMessagingConfig setMtuLength(final int mtuLength) {
+    this.mtuLength = mtuLength;
+    return this;
+  }
+
+  public int getSocketSendBufferBytes() {
+    return socketSendBufferBytes;
+  }
+
+  public AeronMessagingConfig setSocketSendBufferBytes(final int socketSendBufferBytes) {
+    this.socketSendBufferBytes = socketSendBufferBytes;
+    return this;
+  }
+
+  public int getSocketReceiveBufferBytes() {
+    return socketReceiveBufferBytes;
+  }
+
+  public AeronMessagingConfig setSocketReceiveBufferBytes(final int socketReceiveBufferBytes) {
+    this.socketReceiveBufferBytes = socketReceiveBufferBytes;
+    return this;
+  }
+
   public AeronMessagingConfig setUnicastTermBufferLength(final int unicastTermBufferLength) {
     this.unicastTermBufferLength = unicastTermBufferLength;
     return this;
@@ -156,6 +215,15 @@ public class AeronMessagingConfig implements Config {
 
   public AeronMessagingConfig setEmbeddedDriver(final boolean embeddedDriver) {
     this.embeddedDriver = embeddedDriver;
+    return this;
+  }
+
+  public boolean isSharedDriver() {
+    return sharedDriver;
+  }
+
+  public AeronMessagingConfig setSharedDriver(final boolean sharedDriver) {
+    this.sharedDriver = sharedDriver;
     return this;
   }
 

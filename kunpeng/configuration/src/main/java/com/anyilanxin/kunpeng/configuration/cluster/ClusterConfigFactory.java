@@ -52,6 +52,27 @@ public final class ClusterConfigFactory {
         .setProtocolConfig(membership);
   }
 
+  /**
+   * 业务面消息服务（独立端口）的 {@link MessagingConfig}：与集群面隔离，承载 gateway↔broker 业务命令 RPC。
+   *
+   * <p>端口与压缩等取自业务网络配置（{@code network.business}，默认 startPort + 2×portOffset）。
+   */
+  public MessagingConfig businessMessagingConfig(final ClusterCfg cluster) {
+    final RaftNetworkCfg business = cluster.getNetwork().getBusiness();
+    final var messaging =
+        new MessagingConfig()
+            .setCompressionAlgorithm(business.getMessageCompression())
+            .setInterfaces(Collections.singletonList(business.getHost()))
+            .setPort(business.getPort());
+    if (business.getSocketSendBuffer() != null) {
+      messaging.setSocketSendBuffer((int) business.getSocketSendBuffer().toBytes());
+    }
+    if (business.getSocketReceiveBuffer() != null) {
+      messaging.setSocketReceiveBuffer((int) business.getSocketReceiveBuffer().toBytes());
+    }
+    return messaging;
+  }
+
   private MemberConfig memberConfig(
       final NetworkInfoCfg network, final String nodeId, final boolean broker) {
     final MembershipNetworkCfg membershipNetwork = network.getMembership();

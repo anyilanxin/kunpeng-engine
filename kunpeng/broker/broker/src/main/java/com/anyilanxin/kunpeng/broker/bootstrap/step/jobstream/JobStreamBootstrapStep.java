@@ -19,17 +19,13 @@ package com.anyilanxin.kunpeng.broker.bootstrap.step.jobstream;
 import com.anyilanxin.kunpeng.broker.bootstrap.AbstractBrokerStartupStep;
 import com.anyilanxin.kunpeng.broker.bootstrap.BrokerStartupContext;
 import com.anyilanxin.kunpeng.broker.client.jobstream.JobStreamCoordinator;
-import com.anyilanxin.kunpeng.broker.client.jobstream.JobStreamSubjects;
-import com.anyilanxin.kunpeng.broker.client.jobstream.JobStreamWireCodec;
+import com.anyilanxin.kunpeng.broker.client.jobstream.JobStreamSnapshotProperty;
 import com.anyilanxin.kunpeng.broker.jobstream.CoordinatorJobStreamer;
 import com.anyilanxin.kunpeng.broker.jobstream.JobStreamDispatcher;
 import com.anyilanxin.kunpeng.broker.jobstream.PushFailureFallback;
 import com.anyilanxin.kunpeng.cluster.cluster.Member;
 import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
-import java.util.Base64;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * job 流推送服务的 broker 层启动步骤：构建协调器（订阅快照对账 + 轮转选流 + 请求-应答推送）、引擎适配器与 WITHDRAW 失败回退处理器，作为 actor
@@ -41,7 +37,6 @@ import org.slf4j.LoggerFactory;
  * @since 2026.9.0
  */
 public final class JobStreamBootstrapStep extends AbstractBrokerStartupStep {
-  private static final Logger LOG = LoggerFactory.getLogger(JobStreamBootstrapStep.class);
 
   private com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipEventListener membershipListener;
 
@@ -96,15 +91,9 @@ public final class JobStreamBootstrapStep extends AbstractBrokerStartupStep {
   /** 网关成员属性中的订阅快照解析（SWIM 元数据通道到达）——非法帧记日志丢弃，代次幂等由协调器保证 */
   private static void applySnapshotProperty(
       final JobStreamCoordinator coordinator, final Member gateway) {
-    final String encoded = gateway.properties().getProperty(JobStreamSubjects.SNAPSHOT_PROPERTY);
-    if (encoded == null || encoded.isEmpty()) {
-      return;
-    }
-    try {
-      coordinator.applySnapshot(
-          gateway.id(), JobStreamWireCodec.decodeSnapshot(Base64.getDecoder().decode(encoded)));
-    } catch (final RuntimeException e) {
-      LOG.warn("网关 {} 订阅快照属性解析失败, 忽略", gateway.id(), e);
+    final var snapshot = JobStreamSnapshotProperty.snapshotOf(gateway);
+    if (snapshot != null) {
+      coordinator.applySnapshot(gateway.id(), snapshot);
     }
   }
 

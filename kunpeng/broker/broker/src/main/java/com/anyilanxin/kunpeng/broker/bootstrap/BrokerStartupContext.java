@@ -92,6 +92,14 @@ public interface BrokerStartupContext {
   void setJobStreamDispatcher(
       com.anyilanxin.kunpeng.broker.jobstream.JobStreamDispatcher jobStreamDispatcher);
 
+  /** 业务面消息服务（独立端口）；由 BusinessMessagingServiceStep 启动并广播端口，业务命令 API 在其上注册处理器 */
+  com.anyilanxin.kunpeng.cluster.cluster.messaging.impl.AeronMessagingService
+      getBusinessMessagingService();
+
+  void setBusinessMessagingService(
+      com.anyilanxin.kunpeng.cluster.cluster.messaging.impl.AeronMessagingService
+          businessMessagingService);
+
   /** 业务命令 API 服务（business 链 client 命令入口，分区 leader 时经 transition 绑定日志写入器） */
   com.anyilanxin.kunpeng.broker.commandapi.CommandApiServiceImpl getBusinessCommandApiService();
 

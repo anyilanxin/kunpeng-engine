@@ -41,8 +41,8 @@ public final class BusinessCommandApiServiceStep extends AbstractBrokerStartupSt
       final BrokerStartupContext brokerStartupContext,
       final ConcurrencyControl concurrencyControl,
       final ActorFuture<BrokerStartupContext> startupFuture) {
-    final MessagingService apiMessagingService =
-        brokerStartupContext.getAtomixCluster().getMessagingService();
+    // 业务命令处理器注册在业务面消息服务(独立端口)上, 与集群面(SWIM/Raft/快照)隔离
+    final MessagingService apiMessagingService = brokerStartupContext.getBusinessMessagingService();
     final CommandApiServiceImpl service =
         new CommandApiServiceImpl(
             apiMessagingService, brokerStartupContext.getRequestIdGenerator()::nextId);

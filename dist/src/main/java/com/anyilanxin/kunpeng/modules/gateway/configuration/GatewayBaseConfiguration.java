@@ -55,7 +55,10 @@ public class GatewayBaseConfiguration {
   @Bean
   public ClusterConfig clusterConfig() {
     final var configFactory = new ClusterConfigFactory();
-    return configFactory.mapConfiguration(clusterProperties, false);
+    final var config = configFactory.mapConfiguration(clusterProperties, false);
+    // 集群面与业务面双实例共享同一内嵌驱动(测试等多节点同 JVM 场景不经此处, 保持每实例独占)
+    config.getAeronConfig().setSharedDriver(true);
+    return config;
   }
 
   /** 网关侧 broker 拓扑管理：基于 ClusterTopologyService 构建 */

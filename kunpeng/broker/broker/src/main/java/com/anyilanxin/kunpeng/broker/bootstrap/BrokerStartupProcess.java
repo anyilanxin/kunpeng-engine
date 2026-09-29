@@ -57,6 +57,7 @@ public final class BrokerStartupProcess {
     result.add(new ClusterTopologyStep());
     result.add(new NodeIdGeneratorStep());
     result.add(new ClusterDispatchClientStep());
+    result.add(new BusinessMessagingServiceStep());
     result.add(new CommandApiServiceStep());
     result.add(new BusinessCommandApiServiceStep());
     result.add(new JobStreamBootstrapStep());

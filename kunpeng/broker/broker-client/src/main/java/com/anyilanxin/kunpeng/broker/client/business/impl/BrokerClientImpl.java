@@ -26,6 +26,7 @@ import com.anyilanxin.kunpeng.cluster.cluster.Member;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
 import com.anyilanxin.kunpeng.cluster.cluster.leaderfound.ClusterLeaderFoundService;
+import com.anyilanxin.kunpeng.cluster.cluster.messaging.BusinessMessaging;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterEventService;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.Subscription;
@@ -326,12 +327,23 @@ public class BrokerClientImpl extends Actor implements BrokerClient {
       return null;
     }
     final Member member = membershipService.getMember(leader);
-    if (member == null || member.address() == null) {
+    if (member == null) {
       responseFuture.completeExceptionally(
           new BrokerException(10, "No address found for partition leader " + leader.id()));
       return null;
     }
-    return new SendAddress(String.valueOf(partitionId.id()), member.address());
+    // 业务面寻址: 成员主机 + 其广播的业务端口(随 SWIM 全量元数据二次拉取补全); 拉取未完成时按暂不可达失败, 由上层重试
+    final Address businessAddress = BusinessMessaging.businessAddressOf(member);
+    if (businessAddress == null) {
+      responseFuture.completeExceptionally(
+          new BrokerException(
+              10,
+              "Business messaging address of partition leader "
+                  + leader.id()
+                  + " not known yet (member metadata not pulled); retry later"));
+      return null;
+    }
+    return new SendAddress(String.valueOf(partitionId.id()), businessAddress);
   }
 
   private PartitionId partitionBySource(final int sourceId) {

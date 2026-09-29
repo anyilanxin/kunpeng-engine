@@ -61,6 +61,8 @@ public final class BrokerStartupContextImpl implements BrokerStartupContext {
   private NodeIdGeneratorServiceImpl idGenerator;
   private ClusterDispatchClient dispatchClient;
   private com.anyilanxin.kunpeng.broker.jobstream.JobStreamDispatcher jobStreamDispatcher;
+  private com.anyilanxin.kunpeng.cluster.cluster.messaging.impl.AeronMessagingService
+      businessMessagingService;
   private com.anyilanxin.kunpeng.broker.commandapi.CommandApiServiceImpl businessCommandApiService;
   private DefaultClusterSwimTopologyService clusterPartitionTopology;
   private ClusterTopologyService clusterTopologyService;
@@ -191,6 +193,19 @@ public final class BrokerStartupContextImpl implements BrokerStartupContext {
   public void setJobStreamDispatcher(
       final com.anyilanxin.kunpeng.broker.jobstream.JobStreamDispatcher jobStreamDispatcher) {
     this.jobStreamDispatcher = jobStreamDispatcher;
+  }
+
+  @Override
+  public com.anyilanxin.kunpeng.cluster.cluster.messaging.impl.AeronMessagingService
+      getBusinessMessagingService() {
+    return businessMessagingService;
+  }
+
+  @Override
+  public void setBusinessMessagingService(
+      final com.anyilanxin.kunpeng.cluster.cluster.messaging.impl.AeronMessagingService
+          businessMessagingService) {
+    this.businessMessagingService = businessMessagingService;
   }
 
   @Override

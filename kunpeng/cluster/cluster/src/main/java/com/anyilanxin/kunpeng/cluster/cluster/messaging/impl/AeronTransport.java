@@ -24,12 +24,7 @@ import io.aeron.ExclusivePublication;
 import io.aeron.FragmentAssembler;
 import io.aeron.Publication;
 import io.aeron.Subscription;
-import io.aeron.driver.MediaDriver;
-import io.aeron.driver.ThreadingMode;
-import java.io.File;
-import java.io.IOException;
 import java.net.ConnectException;
-import java.nio.file.Files;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.HashMap;
@@ -65,7 +60,8 @@ import org.slf4j.LoggerFactory;
  *
  * <p>替代原 Netty 方案中的：连接池（ChannelPool）、TCP 心跳（HeartbeatHandler，Aeron 驱动的状态报文天然保活）、 协议版本协商（帧内版本字节）。
  *
- * <p>线程模型：{@link #submit(SendTask)} 与 {@link #submitBroadcast(BroadcastTask)} 可任意线程调用；其余状态仅代理线程访问（节流留痕时间戳等少量例外已注明）。
+ * <p>线程模型：{@link #submit(SendTask)} 与 {@link #submitBroadcast(BroadcastTask)}
+ * 可任意线程调用；其余状态仅代理线程访问（节流留痕时间戳等少量例外已注明）。
  *
  * @author zxuanhong
  * @since 2026.9.0
@@ -89,7 +85,7 @@ public final class AeronTransport {
 
   private volatile boolean running;
   private AeronFrameCrypto crypto;
-  private MediaDriver driver;
+  private AeronProcessDriverHolder processDriver;
   private Aeron aeron;
   private Subscription messagingSubscription;
   private Subscription unicastSubscription;
@@ -98,9 +94,11 @@ public final class AeronTransport {
   /**
    * 发送入队队列（任意业务线程生产 → 代理线程单点消费）。
    *
-   * <p>有界（{@link AeronMessagingConfig#getSendQueueCapacity()}）：代理线程停滞（如对端不可达、任务滞留重试至投递截止）时，无界队列会随提交速率无限增长直至内存耗尽；有界将其转化为显式背压拒绝。
+   * <p>有界（{@link
+   * AeronMessagingConfig#getSendQueueCapacity()}）：代理线程停滞（如对端不可达、任务滞留重试至投递截止）时，无界队列会随提交速率无限增长直至内存耗尽；有界将其转化为显式背压拒绝。
    *
-   * <p>单消费者约束：仅代理线程消费；停机排空（{@link #failPendingSends}）必须在 {@code agentRunner.close()}（阻塞等待代理线程退出）之后执行。
+   * <p>单消费者约束：仅代理线程消费；停机排空（{@link #failPendingSends}）必须在 {@code
+   * agentRunner.close()}（阻塞等待代理线程退出）之后执行。
    */
   private final ManyToOneConcurrentArrayQueue<SendTask> sendQueue;
 
@@ -121,9 +119,29 @@ public final class AeronTransport {
     this.messagingConfig = messagingConfig;
     this.config = config;
     this.bindEndpoint = endpoint(bindAddress);
-    this.bindChannel = "aeron:udp?endpoint=" + bindEndpoint;
+    this.bindChannel = "aeron:udp?endpoint=" + bindEndpoint + tuningParams();
     this.sendQueue = new ManyToOneConcurrentArrayQueue<>(config.getSendQueueCapacity());
     this.broadcastQueue = new ManyToOneConcurrentArrayQueue<>(config.getSendQueueCapacity());
+  }
+
+  /**
+   * 通道 URI 的调优参数段（mtu / so-sndbuf / so-rcvbuf；0 值项跳过、沿用内核与驱动默认）。
+   *
+   * <p>大报文吞吐对 MTU 高度敏感（消息按 MTU 切片逐数据报收发），接收缓冲不足则丢包触发 NAK 重传—— 两项此前不可配导致所有部署硬吃 Aeron 默认值（基准探针实测该缺口价值
+   * 6 倍吞吐）。
+   */
+  private String tuningParams() {
+    final StringBuilder params = new StringBuilder();
+    if (config.getMtuLength() > 0) {
+      params.append("|mtu=").append(config.getMtuLength());
+    }
+    if (config.getSocketSendBufferBytes() > 0) {
+      params.append("|so-sndbuf=").append(config.getSocketSendBufferBytes());
+    }
+    if (config.getSocketReceiveBufferBytes() > 0) {
+      params.append("|so-rcvbuf=").append(config.getSocketReceiveBufferBytes());
+    }
+    return params.toString();
   }
 
   /** 帧监听器（RPC 流）。 */
@@ -299,31 +317,18 @@ public final class AeronTransport {
   }
 
   private void startLocked() {
-    final String dir = resolveAeronDir();
+    // 内嵌驱动默认每实例独占(同 JVM 多节点保持线程并行度); sharedDriver 开启时多个传输实例
+    // (集群面/业务面)复用进程级共享驱动, 各自保留独立的端口、订阅、发布通道与代理线程
+    final String dir;
     if (config.isEmbeddedDriver()) {
-      // 流控窗口默认仅 128KB: 单条消息虽可越过窗口, 但后续消息须等接收方 SM 推进——4MiB 快照块会退化为
-      // 逐块串行(实测 ~1-2MiB/s)。窗口对齐单条消息上限(term/8)后大块才能流水线传输;
-      // 驱动校验要求 SO_RCVBUF ≥ 窗口, socket 缓冲不足时一并抬升。
-      final int windowLength =
-          config.getInitialWindowLength() > 0
-              ? config.getInitialWindowLength()
-              : Math.min(config.getTermBufferLength() >> 3, 16 * 1024 * 1024);
-      final MediaDriver.Context context =
-          new MediaDriver.Context()
-              .aeronDirectoryName(dir)
-              .threadingMode(ThreadingMode.valueOf(config.getDriverThreadingMode()))
-              .termBufferSparseFile(true)
-              .initialWindowLength(windowLength)
-              .socketRcvbufLength(
-                  Math.max(Math.max(messagingConfig.getSocketReceiveBuffer(), 0), windowLength))
-              .socketSndbufLength(
-                  Math.max(Math.max(messagingConfig.getSocketSendBuffer(), 0), windowLength))
-              .dirDeleteOnStart(true)
-              .dirDeleteOnShutdown(true);
-      if (config.getDriverTimeoutMs() > 0) {
-        context.driverTimeoutMs(config.getDriverTimeoutMs());
-      }
-      driver = MediaDriver.launch(context);
+      processDriver =
+          config.isSharedDriver()
+              ? AeronProcessDriverHolder.retain(messagingConfig, config)
+              : AeronProcessDriverHolder.exclusive(messagingConfig, config);
+      dir = processDriver.aeronDir();
+    } else {
+      processDriver = null;
+      dir = AeronProcessDriverHolder.externalDir(config);
     }
 
     final Aeron.Context clientContext = new Aeron.Context().aeronDirectoryName(dir);
@@ -376,9 +381,9 @@ public final class AeronTransport {
       aeron.close();
       aeron = null;
     }
-    if (driver != null) {
-      driver.close();
-      driver = null;
+    if (processDriver != null) {
+      processDriver.release();
+      processDriver = null;
     }
   }
 
@@ -404,8 +409,8 @@ public final class AeronTransport {
   /**
    * 停机排空入队队列。
    *
-   * <p>单消费者约束：入队队列仅允许代理线程消费，本方法从停机线程 poll 的前提是 {@code agentRunner.close()} 已阻塞等待代理线程退出（见
-   * {@link #stopLockedQuietly} 的调用顺序），该顺序不可颠倒。
+   * <p>单消费者约束：入队队列仅允许代理线程消费，本方法从停机线程 poll 的前提是 {@code agentRunner.close()} 已阻塞等待代理线程退出（见 {@link
+   * #stopLockedQuietly} 的调用顺序），该顺序不可颠倒。
    */
   private void failPendingSends(final Throwable error) {
     SendTask task;
@@ -422,21 +427,6 @@ public final class AeronTransport {
     LOGGER.error("Aeron transport agent terminated unexpectedly", error);
   }
 
-  private String resolveAeronDir() {
-    final File configured = config.getAeronDir();
-    if (configured != null) {
-      return configured.getAbsolutePath();
-    }
-    if (!config.isEmbeddedDriver()) {
-      return Aeron.Context.AERON_DIR_PROP_DEFAULT;
-    }
-    try {
-      return Files.createTempDirectory("aeron-kunpeng-").toAbsolutePath().toString();
-    } catch (final IOException error) {
-      throw new IllegalStateException("无法创建 Aeron 临时目录", error);
-    }
-  }
-
   private static IdleStrategy idleStrategy(final AeronMessagingConfig config) {
     return switch (config.getIdleStrategy()) {
       case "sleeping" -> new SleepingMillisIdleStrategy(1);
@@ -448,7 +438,11 @@ public final class AeronTransport {
 
   /** 目的地发布通道 URI（每个对端一条独占发布通道，term 长度按流配置）。 */
   String publicationChannel(final Address destination, final int termBufferLength) {
-    return "aeron:udp?endpoint=" + endpoint(destination) + "|term-length=" + termBufferLength;
+    return "aeron:udp?endpoint="
+        + endpoint(destination)
+        + "|term-length="
+        + termBufferLength
+        + tuningParams();
   }
 
   private static String endpoint(final Address address) {
@@ -715,7 +709,12 @@ public final class AeronTransport {
               : config.getUnicastTermBufferLength();
       // MDC 多目的地通道走组播流控族(DriverConductor 判定 isMultiDestination): fc=max 取最快接收者推进,
       // 慢接收者不阻塞广播(掉队由 NAK 重传在 term 窗口内自行追赶), 与事件广播的尽力而为语义一致
-      final String uri = "aeron:udp?control-mode=manual" + "|term-length=" + termLength + "|fc=max";
+      final String uri =
+          "aeron:udp?control-mode=manual"
+              + "|term-length="
+              + termLength
+              + "|fc=max"
+              + tuningParams();
       publication = aeron.addExclusivePublication(uri, streamId);
       LOGGER.info(
           "MDC 广播发布通道已创建: stream={} termLength={} maxMessageLength={}",

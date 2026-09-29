@@ -19,6 +19,8 @@ package com.anyilanxin.kunpeng.modules.gateway;
 import com.anyilanxin.kunpeng.broker.client.business.BrokerClient;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
 import com.anyilanxin.kunpeng.cluster.cluster.leaderfound.ClusterLeaderFoundService;
+import com.anyilanxin.kunpeng.cluster.cluster.messaging.BusinessMessaging;
+import com.anyilanxin.kunpeng.cluster.cluster.messaging.impl.AeronMessagingService;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.configuration.gateway.GatewayCfg;
 import com.anyilanxin.kunpeng.gateway.Gateway;
@@ -58,6 +60,7 @@ public class GatewayModuleConfiguration {
   private final MeterRegistry meterRegistry;
   private final ClusterTopologyService topologyManager;
   private final SpringGatewayBridge gatewayBridge;
+  private final AeronMessagingService businessMessagingService;
 
   @Autowired
   public GatewayModuleConfiguration(
@@ -68,7 +71,8 @@ public class GatewayModuleConfiguration {
       final BrokerClient brokerClient,
       final MeterRegistry meterRegistry,
       final ClusterTopologyService topologyManager,
-      final SpringGatewayBridge gatewayBridge) {
+      final SpringGatewayBridge gatewayBridge,
+      final AeronMessagingService businessMessagingService) {
     this.schedulingService = schedulingService;
     this.gatewayCfg = gatewayCfg;
     this.atomixCluster = atomixCluster;
@@ -77,11 +81,15 @@ public class GatewayModuleConfiguration {
     this.meterRegistry = meterRegistry;
     this.topologyManager = topologyManager;
     this.gatewayBridge = gatewayBridge;
+    this.businessMessagingService = businessMessagingService;
   }
 
   @Bean(destroyMethod = "close")
   public Gateway gateway() {
     atomixCluster.start();
+    // 网关侧业务面消息服务: 启动独立端口实例并广播端口(对端 broker 经元数据二次拉取补全后可寻址)
+    BusinessMessaging.startAndAdvertise(
+        businessMessagingService, atomixCluster.getMembershipService());
     final Gateway gateway =
         new Gateway(
             schedulingService,
