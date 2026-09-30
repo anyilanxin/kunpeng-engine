@@ -54,7 +54,6 @@ public final class KnowledgeRequirementTransformer
     final BusinessKnowledgeModel requiredKnowledge = element.getRequiredKnowledge();
     final String id = requiredKnowledge.getId();
     final ModelElementInstance parentElement = element.getParentElement();
-    System.out.println(parentElement);
 
     final DmnBusinessKnowledge businessKnowledge = context.getBusinessKnowledge(id);
     if (businessKnowledge != null) {

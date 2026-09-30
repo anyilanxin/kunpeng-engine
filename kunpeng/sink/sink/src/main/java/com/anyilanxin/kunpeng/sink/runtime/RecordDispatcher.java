@@ -76,6 +76,13 @@ final class RecordDispatcher {
   }
 
   /**
+   * @return 当前包装的记录是否有可分发的缓存值（无缓存值记录不投递，也不计投递指标）
+   */
+  boolean isDispatchable() {
+    return dispatchable;
+  }
+
+  /**
    * 把已包装的记录分发给所有槽位，从上次失败的那个开始。
    *
    * @return 所有槽位都处理完时返回 true；一旦有槽位失败立即返回 false—— 无需重新 {@link #wrap}，再次调用本方法即可正确续传

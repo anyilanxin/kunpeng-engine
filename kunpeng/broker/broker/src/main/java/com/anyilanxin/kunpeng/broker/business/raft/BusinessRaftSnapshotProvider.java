@@ -80,7 +80,6 @@ public class BusinessRaftSnapshotProvider
     } catch (final Exception e) {
       LOG.debug("Failed to delete snapshot directory when closing", e);
     }
-    System.out.println("---takeSnapshot-----" + partition.partitionMetadata().id());
     rocksdbDb.createSnapshot(snapshotDirectory.toFile());
     return Map.of("timestamp", System.currentTimeMillis());
   }
@@ -240,7 +239,6 @@ public class BusinessRaftSnapshotProvider
   }
 
   private void doMerge(final PersistedSnapshot received, final ActorFuture<Void> future) {
-    System.out.println("----mergeSnapshot-------" + partition.partitionMetadata().id());
     final Path checksumPath = received.getPath();
     rocksdbDb.merge(
         checksumPath,

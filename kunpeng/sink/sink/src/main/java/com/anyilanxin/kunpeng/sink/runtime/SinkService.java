@@ -505,7 +505,9 @@ public final class SinkService extends Actor implements HealthMonitorable, Recor
 
   /** 持续投递记录，直到日志读尽、某条记录需要重试，或批次达到上限而让出线程。 */
   private void drain() {
-    if (!canRead()) {
+    if (!canRead() || dispatchPending) {
+      // dispatchPending：退避重试期间有在途记录，listener 唤醒的 drain 不得越过它
+      // （否则 dispatcher 的复用视图会被下一条记录覆盖，在途记录永久丢失）
       return;
     }
 
@@ -522,11 +524,15 @@ public final class SinkService extends Actor implements HealthMonitorable, Recor
       }
 
       if (++batch >= DRAIN_BATCH_SIZE) {
-        actor.submit(this::drain);
+        // 批次让位：续跑排到外部队列尾部，已排队的控制指令（pause/disableSink 等）得以先行
+        actor.runBehind(this::drain);
         return;
       }
     }
   }
+
+  /** 有记录在退避重试中：dispatcher 复用视图仍被它占用，禁止新 drain。 */
+  private boolean dispatchPending;
 
   private boolean canRead() {
     return started.get() && !idle && phase != SinkPhase.PAUSED && reader != null;
@@ -534,6 +540,10 @@ public final class SinkService extends Actor implements HealthMonitorable, Recor
 
   /**
    * 把一条条目交给所有 Sink 。
+   *
+   * <p>首次分发内联执行（不走 actor.run 排队）：排队窗口内 writer 的 record-available 唤醒可插入新 drain， 其 wrap
+   * 会覆盖排队分发尚未消费的复用视图，导致在途记录被静默丢弃——间歇性丢记录的根因； {@code dispatchPending} 守卫同时拦住退避窗口内的 skipUpTo
+   * 推进越过在途记录。仅当首次分发未成功（槽位失败或分发抛异常） 才移交控制权重试，期间禁止并发 drain 越过在途记录。
    *
    * @return 记录已分发、drain 可以继续时返回 true；控制权交给重试回调或服务失败时返回 false
    */
@@ -546,28 +556,52 @@ public final class SinkService extends Actor implements HealthMonitorable, Recor
       return false;
     }
 
+    boolean delivered;
+    try {
+      delivered = dispatcher.dispatch();
+    } catch (final Exception e) {
+      LOG.warn("Dispatch of record from entry {} failed; will retry", entry, e);
+      delivered = false;
+    }
+    if (delivered) {
+      recordDelivered();
+      return true;
+    }
+
+    dispatchPending = true;
     final var dispatched = dispatchRetry.runWithRetry(dispatcher::dispatch, this::isServiceClosed);
     if (!dispatched.isDone()) {
       actor.runOnCompletion(
           dispatched,
           (ignored, error) -> {
+            dispatchPending = false;
             if (error != null) {
               LOG.error("Processing of record from entry {} aborted", entry, error);
               failService(error);
+            } else if (Boolean.FALSE.equals(ignored)) {
+              // 重试因服务关闭被终止：记录未投出，不计投递、不续跑
             } else {
-              metrics.recordDelivered(dispatcher.getValueType());
+              recordDelivered();
               drain();
             }
           });
       return false;
     }
 
+    dispatchPending = false;
     if (dispatched.isCompletedExceptionally()) {
       failService(dispatched.getException());
       return false;
     }
-    metrics.recordDelivered(dispatcher.getValueType());
+    recordDelivered();
     return true;
+  }
+
+  /** 无缓存值记录不投递（typedRecord 视图停留在上一条），按真实值类型计投递指标。 */
+  private void recordDelivered() {
+    if (dispatcher.isDispatchable()) {
+      metrics.recordDelivered(dispatcher.getValueType());
+    }
   }
 
   private void skipEntry(final LoggedEntry entry) {

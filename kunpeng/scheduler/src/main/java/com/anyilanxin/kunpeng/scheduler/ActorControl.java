@@ -89,6 +89,18 @@ public final class ActorControl implements ConcurrencyControl {
     return run(action);
   }
 
+  /**
+   * 尾续提交：动作排入外部队列尾部，让位于已排队的控制指令之后执行。
+   *
+   * <p>与 {@link #run(Runnable)} 的区别：run 在 actor 线程内调用时走 fast-lane（立即可见、优先执行）；
+   * 本方法始终排到外部队列。适合长批次任务分批让出线程时的续跑——已排队的控制指令得以先行。 owner 线程与外部线程均可调用。
+   *
+   * @return 动作完成 future
+   */
+  public ActorFuture<Void> runBehind(final Runnable action) {
+    return cell.submitExternal(ActorEnvelope.Kind.RUN, action, null).thenApply(ignored -> null);
+  }
+
   /** runUntilDone: runnable 内调用 yieldThread() 请求重跑, 否则结束 */
   public void runUntilDone(final Runnable runnable) {
     cell.submitInternal(ActorEnvelope.Kind.REPEAT, runnable, null);

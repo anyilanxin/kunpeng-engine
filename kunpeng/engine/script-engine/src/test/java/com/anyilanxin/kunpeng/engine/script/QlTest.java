@@ -40,7 +40,6 @@ public class QlTest {
       value.put("orderId", 20);
       return value;
     });
-    System.out.println(stringBooleanEither);
 
   }
 }

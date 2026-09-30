@@ -111,7 +111,6 @@ public class MessageSubscriptionCorrelateProcessor
       messageSubscriptionRecord =
           subscriptionMessage.correlationStartMessage(value.getMessageName(), value.getTenantId());
       if (messageSubscriptionRecord == null) {
-        System.out.println("---未找到任何关联的消息---");
         return;
       }
     } else {
@@ -119,7 +118,6 @@ public class MessageSubscriptionCorrelateProcessor
           subscriptionMessage.correlationMessage(
               value.getMessageName(), value.getCorrelationKey(), value.getTenantId());
       if (messageSubscriptionRecord == null) {
-        System.out.println("--- 未找到任何-进行分发到其他分区--");
         distributeSerialBehavior.addDistributeSerial(
             this,
             value.getDistributeMessageSubscriptionId(),
@@ -169,7 +167,6 @@ public class MessageSubscriptionCorrelateProcessor
         subscriptionMessage.correlationMessage(
             value.getMessageName(), value.getCorrelationKey(), value.getTenantId());
     if (messageSubscriptionRecord == null) {
-      System.out.println("-processRecordDistribute-- 未找到任何-进行分发到其他分区--");
       // ack 没有关联
       distributeSerialBehavior.distributeSerialFailAck(this, record);
       return;
@@ -215,7 +212,6 @@ public class MessageSubscriptionCorrelateProcessor
             subscriptionMessage.correlationStartMessage(
                 correlateRecord.getMessageName(), correlateRecord.getTenantId());
         if (messageSubscriptionRecord == null) {
-          System.out.println("---未找到任何关联的消息---");
           return;
         } else {
           messageSubscriptionRecord.setVariables(correlateRecord.getVariablesBuffer());

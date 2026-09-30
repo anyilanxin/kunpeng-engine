@@ -137,19 +137,16 @@ public class JobServiceImpl extends ServiceImpl<JobMapper, JobEntity> implements
   @JobWorker(type = "process_start_one", name = "sdfsdfsdf")
   public void processStartOne(final ActivatedJob job, final JobClient jobClient) {
     System.out.println("-processStartOne-收到 work---" + job.getProcessInstanceId());
-    jobClient.newCompleteCommand(job).send().join();
   }
 
   @JobWorker(type = "process_start_two", name = "sdfsdfsdf")
   public void processStartWto(final ActivatedJob job, final JobClient jobClient) {
     System.out.println("-processStartWto-收到 work---" + job.getProcessInstanceId());
-    jobClient.newCompleteCommand(job).send().join();
   }
 
   @JobWorker(type = "process_end", name = "sdfsdfsdf")
   public void processEnd(final ActivatedJob job, final JobClient jobClient) {
     System.out.println("-processEnd-收到 work---" + job.getProcessInstanceId());
-    jobClient.newCompleteCommand(job).send().join();
   }
 
   @JobWorker(
@@ -159,7 +156,6 @@ public class JobServiceImpl extends ServiceImpl<JobMapper, JobEntity> implements
   public void activityStart(final ActivatedJob job, final JobClient jobClient) {
     System.out.println("-activityStart-收到 work-instance--" + job.getProcessInstanceId());
     System.out.println("-activityStart-收到 work--fetchVariable-" + job.getVariablesAsMap());
-    jobClient.newCompleteCommand(job).send().join();
   }
 
   @JobWorker(
@@ -170,20 +166,20 @@ public class JobServiceImpl extends ServiceImpl<JobMapper, JobEntity> implements
   public void activityEnd(final ActivatedJob job, final JobClient jobClient) {
     System.out.println("-activityEnd-收到 work-instance--" + job.getProcessInstanceId());
     System.out.println("-activityEnd-收到 work--fetchVariable-" + job.getVariablesAsMap());
-    jobClient.newCompleteCommand(job).send().join();
   }
 
   @JobWorker(
       type = "register_user",
       name = "qwwqw",
       fetchVariables = {"Output_userInfo"},
-      streamEnabled = true)
+      streamEnabled = true,
+      autoComplete = false)
   public void setUserInfo(final ActivatedJob job, final JobClient jobClient) {
     System.out.println("-setUserInfo-收到 work-instance--" + job.getProcessInstanceId());
     jobClient.newCompleteCommand(job).localVariable("userId", "zhouxuanhong111").send().join();
   }
 
-  @JobWorker(type = "message_throw", name = "message", streamEnabled = true)
+  @JobWorker(type = "message_throw", name = "message", streamEnabled = true, autoComplete = false)
   public void messageThrow(final ActivatedJob job, final JobClient jobClient) {
     System.out.println("-message_throw--" + job.getProcessInstanceId());
     final MessageCorrelationCommand messageCorrelationCommand =

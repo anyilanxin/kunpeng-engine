@@ -121,7 +121,7 @@ dependencies {
         api "com.google.cloud:spring-cloud-gcp-logging:8.2.1"
         api "org.apache.commons:commons-collections4:4.6.0"
         api 'commons-codec:commons-codec:1.22.1'
-        api 'org.apache.commons:commons-lang3:3.20.0'
+        api 'org.apache.commons:commons-lang3:3.21.0'
         api 'commons-io:commons-io:2.22.0'
         api "org.wiremock:wiremock-standalone:3.13.2"
         api "org.apache.maven:maven-plugin-api:4.0.0-rc-7"
@@ -138,7 +138,7 @@ dependencies {
         api "org.jdbi:jdbi3-jackson2:3.55.0"
         api 'org.postgresql:postgresql:42.7.13'
         api 'org.mariadb.jdbc:mariadb-java-client:3.5.10'
-        api "org.apache.fory:fory-core:1.7.5"
+        api "org.apache.fory:fory-core:1.7.6"
 
         def mapstructPlus = "1.5.3"
         api "io.github.linpeilie:mapstruct-plus-spring-boot-starter:${mapstructPlus}"
@@ -170,7 +170,7 @@ dependencies {
         api "com.baomidou:mybatis-plus-jsqlparser:${mybatisPlus}"
         api "com.baomidou:dynamic-datasource-spring-boot4-starter:4.5.0"
 
-        def guava = "33.7.1-jre"
+        def guava = "33.7.2-jre"
         api "com.google.guava:guava:$guava"
         api "com.google.guava:guava-testlib:$guava"
 

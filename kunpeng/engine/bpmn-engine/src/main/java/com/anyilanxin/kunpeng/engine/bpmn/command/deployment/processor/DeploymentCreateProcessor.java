@@ -133,7 +133,6 @@ public class DeploymentCreateProcessor extends LogEventDistributeProcessor<Deplo
   @Override
   public void processRecordDistribute(final BusinessLogRecord<DeploymentRecord> record) {
     LOG.debug("processRecordDistribute source {}", writer.getSourceId());
-    System.out.println("-------processRecordDistribute----------");
     final DeploymentRecord deploymentRecord = record.getValue();
     writer.addEvent(
         deploymentRecord.getDeploymentId(),
@@ -232,11 +231,6 @@ public class DeploymentCreateProcessor extends LogEventDistributeProcessor<Deplo
       final long activateProcessDefinitionsOn,
       final ValueArray<ProcessDefinitionRecord> processDefinitionRecords) {
     for (final ProcessDefinitionRecord processDefinition : processDefinitionRecords) {
-      System.out.println(
-          "----processDefinition.getProcessDefinitionId()------distribute---" + distribute);
-      System.out.println(
-          "----processDefinition.getProcessDefinitionId()----id-----"
-              + processDefinition.getProcessDefinitionId());
       writer.addEvent(
           processDefinition.getProcessDefinitionId(),
           distribute

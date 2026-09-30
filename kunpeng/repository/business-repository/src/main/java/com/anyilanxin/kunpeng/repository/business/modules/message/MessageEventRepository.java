@@ -307,7 +307,6 @@ public class MessageEventRepository
 
   @Override
   public void update(final long key, final MessageSubscriptionRecord record) {
-    System.out.println("---update----");
     save(key, record);
   }
 
