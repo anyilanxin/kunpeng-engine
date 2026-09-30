@@ -4,33 +4,7 @@ Kunpeng provides visibility into and control over business processes that span m
 
 ## How it works
 
-```mermaid
-flowchart TB
-  subgraph L1["Client"]
-    CLI["Client ×N<br/>applications · SDK"]
-  end
-  subgraph L2["Gateway — stateless, load-balanced"]
-    GW["Gateway ×M"]
-  end
-  subgraph L3["Broker cluster — distributed, unified coordination"]
-    BK["Broker ×N<br/>partition = Raft group<br/>BPMN 2.0 process engine"]
-  end
-  subgraph L4["Event log"]
-    EL[["append-only log stream<br/>every process step is an event"]]
-  end
-  subgraph L5["Sinks → external stores"]
-    S1["Sink"] --> R1[("RDBMS")]
-    S2["Sink"] --> R2[("Elasticsearch")]
-    S3["Sink"] --> R3[("Message queue")]
-  end
-
-  CLI ==> GW
-  GW ==> BK
-  BK ==> EL
-  EL ==> S1
-  EL ==> S2
-  EL ==> S3
-```
+![How Kunpeng works](docs/readme-overview.svg)
 
 Clients spread load dynamically across stateless gateways, which route each request to the leading partition of a Raft group. There the BPMN 2.0 engine executes processes and appends every step to the partition's event log; the same log fans out through multiple sinks into multiple external stores — resumable, and off the execution path.
 

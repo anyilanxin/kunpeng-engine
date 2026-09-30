@@ -1,0 +1,65 @@
+<!--
+  Kunpeng Engine README overview diagram (hand-maintained).
+  Update together with README.md / README.zh-CN.md when the overview changes.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 690" font-family="-apple-system, 'Helvetica Neue', Arial, 'PingFang SC', sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 9 5 L 0 9 z" fill="#334155"/>
+    </marker>
+  </defs>
+
+  <!-- Client -->
+  <rect x="70" y="16" width="740" height="76" rx="10" fill="#EFF6FF" stroke="#2563EB" stroke-width="2"/>
+  <text x="100" y="47" font-size="18" font-weight="600" fill="#1E40AF">Client</text>
+  <text x="100" y="72" font-size="13" fill="#475569">×N · applications · SDK</text>
+
+  <line x1="440" y1="92" x2="440" y2="118" stroke="#334155" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+  <!-- Gateway -->
+  <rect x="70" y="122" width="740" height="76" rx="10" fill="#DBEAFE" stroke="#2563EB" stroke-width="2"/>
+  <text x="100" y="153" font-size="18" font-weight="600" fill="#1E40AF">Gateway</text>
+  <text x="100" y="178" font-size="13" fill="#475569">×M · stateless · dynamically load-balanced</text>
+
+  <line x1="440" y1="198" x2="440" y2="224" stroke="#334155" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+  <!-- Broker cluster -->
+  <rect x="70" y="228" width="740" height="96" rx="10" fill="#DCFCE7" stroke="#059669" stroke-width="2"/>
+  <text x="100" y="259" font-size="18" font-weight="600" fill="#065F46">Broker cluster</text>
+  <text x="100" y="284" font-size="13" fill="#475569">×N brokers · partition = Raft group · unified coordination</text>
+  <text x="100" y="306" font-size="13" fill="#475569">BPMN 2.0 process engine</text>
+
+  <line x1="440" y1="324" x2="440" y2="350" stroke="#334155" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+  <!-- Event log -->
+  <rect x="70" y="354" width="740" height="76" rx="10" fill="#F5F3FF" stroke="#7C3AED" stroke-width="2"/>
+  <text x="100" y="385" font-size="18" font-weight="600" fill="#5B21B6">Event log</text>
+  <text x="100" y="410" font-size="13" fill="#475569">append-only log stream · every process step is an event</text>
+
+  <line x1="440" y1="430" x2="440" y2="456" stroke="#334155" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+  <!-- Sinks and external stores -->
+  <rect x="70" y="460" width="740" height="210" rx="10" fill="#F8FAFC" stroke="#64748B" stroke-width="2"/>
+  <text x="100" y="488" font-size="15" font-weight="600" fill="#334155">Sinks → external stores</text>
+
+  <!-- column 1 -->
+  <rect x="90" y="502" width="210" height="48" rx="8" fill="#FFFFFF" stroke="#64748B" stroke-width="1.5"/>
+  <text x="195" y="531" font-size="14" font-weight="600" fill="#334155" text-anchor="middle">Sink</text>
+  <line x1="195" y1="550" x2="195" y2="574" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="90" y="578" width="210" height="56" rx="18" fill="#E2E8F0" stroke="#334155" stroke-width="1.5"/>
+  <text x="195" y="611" font-size="14" fill="#1E293B" text-anchor="middle">RDBMS</text>
+
+  <!-- column 2 -->
+  <rect x="335" y="502" width="210" height="48" rx="8" fill="#FFFFFF" stroke="#64748B" stroke-width="1.5"/>
+  <text x="440" y="531" font-size="14" font-weight="600" fill="#334155" text-anchor="middle">Sink</text>
+  <line x1="440" y1="550" x2="440" y2="574" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="335" y="578" width="210" height="56" rx="18" fill="#E2E8F0" stroke="#334155" stroke-width="1.5"/>
+  <text x="440" y="611" font-size="14" fill="#1E293B" text-anchor="middle">Elasticsearch</text>
+
+  <!-- column 3 -->
+  <rect x="580" y="502" width="210" height="48" rx="8" fill="#FFFFFF" stroke="#64748B" stroke-width="1.5"/>
+  <text x="685" y="531" font-size="14" font-weight="600" fill="#334155" text-anchor="middle">Sink</text>
+  <line x1="685" y1="550" x2="685" y2="574" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="580" y="578" width="210" height="56" rx="18" fill="#E2E8F0" stroke="#334155" stroke-width="1.5"/>
+  <text x="685" y="611" font-size="14" fill="#1E293B" text-anchor="middle">Message queue</text>
+</svg>
