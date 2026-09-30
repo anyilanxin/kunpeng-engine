@@ -191,10 +191,39 @@ public class PartitionService<CONTENT extends PartitionStartupContext> {
     return result;
   }
 
-  public ActorFuture<Void> dataMerge(final PartitionId targetPartitionId) {
+  public ActorFuture<Void> pushDataMerge(
+      final PartitionId targetPartitionId, final MemberId targetMemberId) {
     final var concurrencyControl = context.getConcurrencyControl();
     final ActorFuture<Void> future = concurrencyControl.createFuture();
-    future.complete(null);
+    context
+        .getRaftPartition()
+        .pushDataMerge(targetPartitionId, targetMemberId, java.util.Map.of())
+        .whenComplete(
+            (unused, throwable) -> {
+              if (throwable != null) {
+                future.completeExceptionally(throwable);
+              } else {
+                future.complete(null);
+              }
+            });
+    return future;
+  }
+
+  public ActorFuture<Void> pullDataMerge(
+      final PartitionId targetPartitionId, final MemberId targetMemberId) {
+    final var concurrencyControl = context.getConcurrencyControl();
+    final ActorFuture<Void> future = concurrencyControl.createFuture();
+    context
+        .getRaftPartition()
+        .pullDataMerge(targetPartitionId, targetMemberId, java.util.Map.of())
+        .whenComplete(
+            (unused, throwable) -> {
+              if (throwable != null) {
+                future.completeExceptionally(throwable);
+              } else {
+                future.complete(null);
+              }
+            });
     return future;
   }
 

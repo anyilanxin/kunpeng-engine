@@ -568,8 +568,9 @@ public class ClusterBusinessService extends Actor
           if (businessPartitionService != null) {
             final PartitionId targetPartitionId =
                 PartitionId.from(record.getTargetPartitionGroup(), record.getTargetPartitionId());
+            final MemberId partitionLeader = topologyService.getPartitionLeader(targetPartitionId);
             businessPartitionService
-                .dataMerge(targetPartitionId)
+                .pushDataMerge(targetPartitionId, partitionLeader)
                 .onComplete(
                     (unused, throwable) -> {
                       if (throwable != null) {

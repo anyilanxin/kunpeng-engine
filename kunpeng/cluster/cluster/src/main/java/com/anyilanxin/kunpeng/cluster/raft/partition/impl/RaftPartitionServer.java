@@ -41,10 +41,12 @@ import com.anyilanxin.kunpeng.cluster.raft.metrics.RaftStartupMetrics;
 import com.anyilanxin.kunpeng.cluster.raft.partition.*;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.SbeRaftProtocolSerializer;
 import com.anyilanxin.kunpeng.cluster.raft.roles.RaftRole;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.RaftSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.bootstrap.BootstrapSnapshotServer;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.bootstrap.BootstrapSnapshotStore;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.transfer.SnapshotPushServer;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.merge.MergeSnapshotStore;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.merge.SnapshotPullServer;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.merge.SnapshotPushServer;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.raft.RaftSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.transfer.SnapshotTransferServer;
 import com.anyilanxin.kunpeng.cluster.raft.storage.RaftStorage;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLogReader;
@@ -89,6 +91,9 @@ public class RaftPartitionServer implements HealthMonitorable {
    */
   private final SnapshotPushServer mergePushServer;
 
+  /** 传输镜像拉取拍摄端（可空）：配置了 TransferSnapshotProvider 的分区才有——leader 角色时注册， 响应目标分区的拉取拍摄请求。 */
+  private final SnapshotPullServer pullSnapshotServer;
+
   /** 引导镜像拍摄端（可空）：配置了 TransferSnapshotProvider 的分区才有——leader 角色时注册， 接收新分区引导节点的跨分区引导请求。 */
   private final BootstrapSnapshotServer bootstrapSnapshotServer;
 
@@ -130,7 +135,7 @@ public class RaftPartitionServer implements HealthMonitorable {
       final PartitionMetadata partitionMetadata,
       final MeterRegistry meterRegistry,
       final BootstrapSnapshotStore bootstrapSnapshotStore,
-      final RaftSnapshotStore mergeSnapshotStore) {
+      final MergeSnapshotStore mergeSnapshotStore) {
     this.partition = partition;
     this.config = config;
     this.localMemberId = localMemberId;
@@ -151,6 +156,17 @@ public class RaftPartitionServer implements HealthMonitorable {
                 partition.name(),
                 mergeSnapshotStore,
                 partition::mergeReceivedSnapshot);
+    pullSnapshotServer =
+        mergeSnapshotStore == null
+            ? null
+            : new SnapshotPullServer(
+                clusterCommunicator,
+                partition.name(),
+                mergeSnapshotStore,
+                partition,
+                this::getCommitIndex,
+                this::getTerm,
+                config.getSnapshotTransferMaxBatchSize());
     snapshotTransferServer =
         new SnapshotTransferServer(
             clusterCommunicator,
@@ -164,9 +180,9 @@ public class RaftPartitionServer implements HealthMonitorable {
                 clusterCommunicator,
                 partition.name(),
                 bootstrapSnapshotStore,
+                partition,
                 this::getCommitIndex,
                 this::getTerm,
-                partition,
                 config.getSnapshotTransferMaxBatchSize());
     businessMetaServer = new BusinessMetaServer(clusterCommunicator, this, partition.name());
     businessMetaServer.register();
@@ -184,6 +200,9 @@ public class RaftPartitionServer implements HealthMonitorable {
       if (mergePushServer != null) {
         mergePushServer.register();
       }
+      if (pullSnapshotServer != null) {
+        pullSnapshotServer.register();
+      }
       if (bootstrapSnapshotServer != null) {
         bootstrapSnapshotServer.register();
       }
@@ -192,6 +211,9 @@ public class RaftPartitionServer implements HealthMonitorable {
       snapshotTransferServer.unregister();
       if (mergePushServer != null) {
         mergePushServer.unregister();
+      }
+      if (pullSnapshotServer != null) {
+        pullSnapshotServer.unregister();
       }
       if (bootstrapSnapshotServer != null) {
         bootstrapSnapshotServer.unregister();
@@ -257,6 +279,9 @@ public class RaftPartitionServer implements HealthMonitorable {
     snapshotTransferServer.unregister();
     if (mergePushServer != null) {
       mergePushServer.unregister();
+    }
+    if (pullSnapshotServer != null) {
+      pullSnapshotServer.unregister();
     }
     if (bootstrapSnapshotServer != null) {
       bootstrapSnapshotServer.unregister();
@@ -537,7 +562,7 @@ public class RaftPartitionServer implements HealthMonitorable {
         .withMaxSegmentSize((int) storageConfig.getSegmentSize())
         .withFlusherFactory(storageConfig.flusherFactory())
         .withFreeDiskSpace(storageConfig.getFreeDiskSpace())
-        .withSnapshotStore(persistedSnapshotStore)
+        .withSnapshotStores(persistedSnapshotStore, persistedSnapshotStore)
         .withJournalIndexDensity(storageConfig.getJournalIndexDensity())
         .build();
   }

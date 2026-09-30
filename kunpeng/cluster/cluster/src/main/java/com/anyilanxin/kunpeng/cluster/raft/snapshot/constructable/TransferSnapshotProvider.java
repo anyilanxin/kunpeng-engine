@@ -16,7 +16,10 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable;
 
+import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartition;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
 import com.anyilanxin.kunpeng.scheduler.CloseableSilently;
+import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -30,26 +33,47 @@ import java.util.Map;
  * @since 2026.9.0
  */
 public interface TransferSnapshotProvider extends CloseableSilently {
+  void setRaftPartition(RaftPartition partition);
 
   /**
    * 拍摄引导镜像内容（跨分区引导新分区）：把各分区共有的内容写入 {@code snapshotDirectory}，不含 raft 位点类数据。
    *
-   * <p>实现应以本分区最新持久化 raft 镜像（调用方触发拍摄前已拍好）为一致视图来源裁剪； 只读打开读不到 WAL，不能直接读运行目录。
+   * <p>实现应以本分区最新持久化 raft 镜像为一致视图来源裁剪； 只读打开读不到 WAL，不能直接读运行目录。
    *
    * @param snapshotDirectory 本次拍摄的临时目录
+   * @param parameters 拍摄参数（由实现自行解析）
    * @return 业务信息键值清单（随镜像持久化到 snapshot.metadata；可为空/null； key/value 均不得包含 '=' 与换行，值取 {@code
    *     String.valueOf}）
    */
-  Map<String, Object> takeBootstrapSnapshot(Path snapshotDirectory);
+  Map<String, Object> takeBootstrapSnapshot(Path snapshotDirectory, Map<String, String> parameters);
 
   /**
-   * 拍摄合并镜像内容（分区删除迁移）：把本分区（即将离开）需要迁移的全部数据写入 {@code snapshotDirectory}。
+   * 拍摄合并镜像内容（分区迁移）：把本分区需要迁移的数据写入 {@code snapshotDirectory}。
    *
-   * <p>迁移来源与引导镜像一致：最新持久化 raft 镜像。
+   * <p>推送合并的参数由 {@code RaftPartition} 推送入口传入（本地拍摄使用）；拉取合并的参数由对端 {@code RaftPartition}
+   * 拉取入口传入（随拍摄命令带给本端使用）。
    *
    * @param snapshotDirectory 本次拍摄的临时目录
+   * @param parameters 拍摄参数（由实现自行解析）
    * @return 业务信息键值清单（随镜像持久化到 snapshot.metadata；可为空/null； key/value 均不得包含 '=' 与换行，值取 {@code
    *     String.valueOf}）
    */
-  Map<String, Object> takeMergeSnapshot(Path snapshotDirectory);
+  Map<String, Object> takeMergeSnapshot(Path snapshotDirectory, Map<String, String> parameters);
+
+  /**
+   * 合并结果回调（合并执行端，合并流终止时回调一次），返回的 future 完成即业务对结果的处理完成， 整个合并流等待其完成后才向发起方（推送端/拉取方）应答。
+   *
+   * <p>结果回调完成后传输层无论成败都会删除本地落地的合并镜像——失败时业务对镜像的处理（如数据回滚）须在回调内完成。
+   *
+   * @param result 合并结果：true=成功，false=失败
+   * @param message 失败原因描述；成功为 null
+   * @param persistedSnapshot 成功为 null；失败为本次接收的合并镜像（仅在回调期间有效，回调返回后即被传输层删除）
+   * @param parameters 拍摄该镜像时的参数（推送：源端拍摄参数随信息批传至；拉取：发起方传入的拍摄参数）
+   * @return 业务处理完成 future；异常完成即业务处理失败，合并流整体以失败应答
+   */
+  ActorFuture<Void> mergeSnapshotResult(
+      boolean result,
+      String message,
+      PersistedSnapshot persistedSnapshot,
+      Map<String, String> parameters);
 }

@@ -17,6 +17,8 @@
 package com.anyilanxin.kunpeng.cluster.raft.snapshot;
 
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.ConstructableSnapshot;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.ConstructableSnapshotStore;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.receive.ReceiveSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.receive.ReceivedSnapshot;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 import com.anyilanxin.kunpeng.scheduler.future.CompletableActorFuture;
@@ -37,7 +39,7 @@ import java.util.stream.Collectors;
  * @author zxuanhong
  * @since 2026.9.0
  */
-public class TestSnapshotStore implements RaftSnapshotStore {
+public class TestSnapshotStore implements ConstructableSnapshotStore, ReceiveSnapshotStore {
 
   /** 最近一次已提交的快照，可能为 null。 */
   final AtomicReference<InMemorySnapshot> currentPersistedSnapshot;

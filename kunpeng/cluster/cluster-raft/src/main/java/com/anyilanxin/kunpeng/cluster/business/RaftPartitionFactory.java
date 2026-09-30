@@ -91,14 +91,17 @@ public final class RaftPartitionFactory {
     snapshotProvider.setPartitionDirectory(partitionDirectory);
     snapshotProvider.setRuntimeDirectory(partitionRuntimeDirectory);
 
-    return createRaftPartition(
-        partitionMetadata,
-        partitionDirectory,
-        partitionDirectory,
-        entryValidator,
-        snapshotProvider,
-        meterRegistry,
-        transferSnapshotProvider);
+    final RaftPartition raftPartition =
+        createRaftPartition(
+            partitionMetadata,
+            partitionDirectory,
+            partitionDirectory,
+            entryValidator,
+            snapshotProvider,
+            meterRegistry,
+            transferSnapshotProvider);
+    snapshotProvider.setRaftPartition(raftPartition);
+    return raftPartition;
   }
 
   private RaftPartition createRaftPartition(

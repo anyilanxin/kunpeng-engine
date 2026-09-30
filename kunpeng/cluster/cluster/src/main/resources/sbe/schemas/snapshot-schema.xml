@@ -40,8 +40,8 @@
       <type name="varData" primitiveType="uint8" length="0"/>
     </composite>
     <!-- 拉取请求命令：PULL 拉取下一个传输单元；COMPLETE 通知读取完成，可删除对应读取器；
-         BOOTSTRAP 请求拍摄引导镜像（跨分区引导新分区），应答信息分片；RELEASE 释放引导镜像
-         引用（本次引导结束/放弃），服务端按 transferId 引用计数决定是否真正删除镜像 -->
+         BOOTSTRAP 请求拍摄传输镜像（跨分区引导/合并迁移，携带拍摄参数），应答信息分片；RELEASE 释放传输镜像
+         引用（本次传输结束/放弃），服务端按 transferId 引用计数决定是否真正删除镜像 -->
     <enum name="RequestCommand" encodingType="uint8">
       <validValue name="PULL">0</validValue>
       <validValue name="COMPLETE">1</validValue>
@@ -55,10 +55,12 @@
     </enum>
   </types>
 
-  <!-- 分片拉取请求：requestId 标识一次传输，服务端据此找到对应的读取器 -->
+  <!-- 分片拉取请求：requestId 标识一次传输，服务端据此找到对应的读取器；BOOTSTRAP 命令时
+       parameters 携带拍摄参数（逐行 key=value） -->
   <sbe:message name="SnapshotChunkRequest" id="1">
     <field name="command" id="0" type="RequestCommand"/>
     <data name="requestId" id="1" type="varDataEncoding"/>
+    <data name="parameters" id="4" type="varDataEncoding"/>
   </sbe:message>
 
   <!-- 单分片：字段与传输单元的 chunks 条目一致。checksum 为本分片内容 CRC32，snapshotChecksum 与

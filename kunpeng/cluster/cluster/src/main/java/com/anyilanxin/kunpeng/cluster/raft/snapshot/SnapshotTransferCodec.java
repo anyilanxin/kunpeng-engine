@@ -70,18 +70,68 @@ public final class SnapshotTransferCodec {
    * @return 完整的消息 payload
    */
   public static byte[] encodeRequest(final String requestId, final RequestCommand command) {
+    return encode(requestId, command, "");
+  }
+
+  /**
+   * 把一次传输镜像拍摄请求（命令为 {@link RequestCommand#BOOTSTRAP}）编码为 SBE 消息字节数组。
+   *
+   * @param requestId 请求标识
+   * @param parameters 拍摄参数（远程拍摄端解析使用）
+   * @return 完整的消息 payload
+   */
+  public static byte[] encodeTransferBeginRequest(
+      final String requestId, final java.util.Map<String, String> parameters) {
+    return encode(requestId, RequestCommand.BOOTSTRAP, encodeParameters(parameters));
+  }
+
+  private static byte[] encode(
+      final String requestId, final RequestCommand command, final String parameters) {
     final byte[] idBytes = requestId.getBytes(StandardCharsets.UTF_8);
+    final byte[] paramBytes = parameters.getBytes(StandardCharsets.UTF_8);
     final int capacity =
         MessageHeaderEncoder.ENCODED_LENGTH
             + SnapshotChunkRequestEncoder.BLOCK_LENGTH
             + SnapshotChunkRequestEncoder.requestIdHeaderLength()
-            + idBytes.length;
+            + idBytes.length
+            + SnapshotChunkRequestEncoder.parametersHeaderLength()
+            + paramBytes.length;
     final var message = new byte[capacity];
     new SnapshotChunkRequestEncoder()
         .wrapAndApplyHeader(new UnsafeBuffer(message), 0, new MessageHeaderEncoder())
         .command(command)
-        .requestId(requestId);
+        .requestId(requestId)
+        .parameters(parameters);
     return message;
+  }
+
+  /** 拍摄请求的业务参数编码：逐行 {@code key=value}（key/value 均不得含 '=' 与换行）。 */
+  public static String encodeParameters(final java.util.Map<String, String> parameters) {
+    if (parameters == null || parameters.isEmpty()) {
+      return "";
+    }
+    final var builder = new StringBuilder();
+    parameters.forEach((key, value) -> builder.append(key).append('=').append(value).append('\n'));
+    return builder.toString();
+  }
+
+  /** 拍摄请求的业务参数解码（与 {@link #encodeParameters} 对称）。 */
+  public static java.util.Map<String, String> decodeParameters(final String parameters) {
+    final java.util.Map<String, String> result = new java.util.LinkedHashMap<>();
+    if (parameters == null || parameters.isEmpty()) {
+      return result;
+    }
+    for (final String line : parameters.split("\n", -1)) {
+      if (line.isEmpty()) {
+        continue;
+      }
+      final int separator = line.indexOf('=');
+      if (separator <= 0 || separator == line.length() - 1) {
+        throw new IllegalArgumentException("Malformed transfer parameter line: " + line);
+      }
+      result.put(line.substring(0, separator), line.substring(separator + 1));
+    }
+    return result;
   }
 
   /**
@@ -100,7 +150,7 @@ public final class SnapshotTransferCodec {
     }
     final var decoder =
         new SnapshotChunkRequestDecoder().wrapAndApplyHeader(buffer, 0, headerDecoder);
-    return new Request(decoder.requestId(), decoder.command());
+    return new Request(decoder.requestId(), decoder.command(), decoder.parameters());
   }
 
   /**
@@ -273,6 +323,57 @@ public final class SnapshotTransferCodec {
         chunkName, snapshotChecksum, totalLength, checksum, content, fileOffset);
   }
 
-  /** 分片拉取请求：请求标识 + 命令。 */
-  public record Request(String requestId, RequestCommand command) {}
+  /** 分片拉取请求：请求标识 + 命令 + 拍摄参数原始串（拍摄命令使用，其余命令为空）。 */
+  public record Request(String requestId, RequestCommand command, String parameters) {
+
+    /** 简单请求（无拍摄参数）。 */
+    public Request(final String requestId, final RequestCommand command) {
+      this(requestId, command, "");
+    }
+
+    /** 拍摄参数解码（仅拍摄命令有意义）。 */
+    public java.util.Map<String, String> decodeParameters() {
+      return SnapshotTransferCodec.decodeParameters(parameters);
+    }
+  }
+
+  /** 合并结果通知（拉取模式获取方 → 提供方）的编码：拉取会话 id（transferId）+ 结果 + 失败原因 + 拍摄参数。 */
+  public static byte[] encodeMergeResult(
+      final String transferId,
+      final boolean result,
+      final String message,
+      final java.util.Map<String, String> parameters) {
+    try {
+      final var bos = new java.io.ByteArrayOutputStream();
+      final var out = new java.io.DataOutputStream(bos);
+      out.writeUTF(transferId);
+      out.writeBoolean(result);
+      out.writeUTF(message == null ? "" : message);
+      out.writeUTF(encodeParameters(parameters));
+      return bos.toByteArray();
+    } catch (final java.io.IOException e) {
+      throw new IllegalArgumentException("Failed to encode merge result", e);
+    }
+  }
+
+  /** 合并结果通知解码（与 {@link #encodeMergeResult} 对称）。 */
+  public static MergeResult decodeMergeResult(final byte[] payload) {
+    try {
+      final var in = new java.io.DataInputStream(new java.io.ByteArrayInputStream(payload));
+      final String transferId = in.readUTF();
+      final boolean result = in.readBoolean();
+      final String message = in.readUTF();
+      final java.util.Map<String, String> parameters = decodeParameters(in.readUTF());
+      return new MergeResult(transferId, result, message, parameters);
+    } catch (final java.io.IOException e) {
+      throw new IllegalArgumentException("Failed to decode merge result", e);
+    }
+  }
+
+  /** 合并结果通知载体：拉取会话 id（提供方据此做引用释放，归零才真正删除拍摄镜像）+ 结果 + 失败原因 + 拍摄参数。 */
+  public record MergeResult(
+      String transferId,
+      boolean result,
+      String message,
+      java.util.Map<String, String> parameters) {}
 }

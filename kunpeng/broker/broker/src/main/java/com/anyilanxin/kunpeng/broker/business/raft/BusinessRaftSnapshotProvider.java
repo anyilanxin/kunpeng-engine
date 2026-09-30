@@ -17,6 +17,7 @@
 package com.anyilanxin.kunpeng.broker.business.raft;
 
 import com.anyilanxin.kunpeng.broker.BrokerLoggers;
+import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartition;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.RaftSnapshotProvider;
@@ -36,6 +37,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import org.slf4j.Logger;
 
 /**
@@ -56,6 +58,10 @@ public class BusinessRaftSnapshotProvider
   private Path runtimeDirectory;
   private SnapshotStore snapshotStore;
   private final MeterRegistry registry;
+  private RaftPartition partition;
+
+  /** 在途 recover（分区 transition 链打开业务库的 future）：合并镜像早于库打开到达时等待其完成。 */
+  private volatile ActorFuture<KvStore<BusinessRepositoryColumnFamilies>> pendingRecover;
 
   public BusinessRaftSnapshotProvider(
       final ConcurrencyControl concurrencyControl,
@@ -74,6 +80,7 @@ public class BusinessRaftSnapshotProvider
     } catch (final Exception e) {
       LOG.debug("Failed to delete snapshot directory when closing", e);
     }
+    System.out.println("---takeSnapshot-----" + partition.partitionMetadata().id());
     rocksdbDb.createSnapshot(snapshotDirectory.toFile());
     return Map.of("timestamp", System.currentTimeMillis());
   }
@@ -81,6 +88,11 @@ public class BusinessRaftSnapshotProvider
   @Override
   public void setPartitionDirectory(final Path partitionDirectory) {
     this.partitionDirectory = partitionDirectory;
+  }
+
+  @Override
+  public void setRaftPartition(final RaftPartition partition) {
+    this.partition = partition;
   }
 
   @Override
@@ -112,6 +124,7 @@ public class BusinessRaftSnapshotProvider
   public ActorFuture<KvStore<BusinessRepositoryColumnFamilies>> recover() {
     final ActorFuture<KvStore<BusinessRepositoryColumnFamilies>> future =
         concurrencyControl.createFuture();
+    pendingRecover = future;
     concurrencyControl.run(() -> recoverInternal(future));
     return future;
   }
@@ -194,12 +207,63 @@ public class BusinessRaftSnapshotProvider
   }
 
   @Override
-  public ActorFuture<Void> mergeSnapshot(final Path snapshotDirectory) {
-    return concurrencyControl.createCompletedFuture();
+  public ActorFuture<Void> mergeSnapshot(final PersistedSnapshot received) {
+    final ActorFuture<Void> future = concurrencyControl.createFuture();
+    concurrencyControl.run(() -> mergeInternal(received, future));
+    return future;
+  }
+
+  /**
+   * 合并执行前置编排：推送到达可能早于分区 transition 链的 recover（mergePushServer 随 raft 角色变化即注册，业务库由 transition
+   * 链异步打开）——库未开且 recover 在途时等待其完成后续跑合并； 从未发起 recover 则前置不满足，直接失败。
+   */
+  private void mergeInternal(final PersistedSnapshot received, final ActorFuture<Void> future) {
+    if (rocksdbDb == null) {
+      final ActorFuture<KvStore<BusinessRepositoryColumnFamilies>> pending = pendingRecover;
+      if (pending == null) {
+        future.completeExceptionally(
+            new IllegalStateException(
+                "Merge snapshot arrived before partition transition recovered the db"));
+        return;
+      }
+      pending.onComplete(
+          (db, error) -> {
+            if (error != null) {
+              future.completeExceptionally(error);
+            } else {
+              doMerge(received, future);
+            }
+          });
+      return;
+    }
+    doMerge(received, future);
+  }
+
+  private void doMerge(final PersistedSnapshot received, final ActorFuture<Void> future) {
+    System.out.println("----mergeSnapshot-------" + partition.partitionMetadata().id());
+    final Path checksumPath = received.getPath();
+    rocksdbDb.merge(
+        checksumPath,
+        Set.of(BusinessRepositoryColumnFamilies.PROCESS_POSITION),
+        ColumnCopyType.FAMILY);
+    partition
+        .triggerFollowerSnapshotInstall()
+        .whenComplete(
+            new BiConsumer<Long, Throwable>() {
+              @Override
+              public void accept(Long aLong, Throwable throwable) {
+                if (throwable != null) {
+                  future.completeExceptionally(throwable);
+                } else {
+                  future.complete(null);
+                }
+              }
+            });
   }
 
   @Override
-  public Map<String, Object> takeBootstrapSnapshot(final Path snapshotDirectory) {
+  public Map<String, Object> takeBootstrapSnapshot(
+      final Path snapshotDirectory, final Map<String, String> parameters) {
     try {
       FileUtil.deleteTreeIfExists(snapshotDirectory);
     } catch (final Exception e) {
@@ -220,7 +284,28 @@ public class BusinessRaftSnapshotProvider
   }
 
   @Override
-  public Map<String, Object> takeMergeSnapshot(final Path snapshotDirectory) {
+  public ActorFuture<Void> mergeSnapshotResult(
+      final boolean result,
+      final String message,
+      final PersistedSnapshot persistedSnapshot,
+      final Map<String, String> parameters) {
+    // 业务合并结果处理：成功（水位已推进，镜像由传输层删除）/失败（镜像保留在 merge 存储，可据此回滚）
+    return concurrencyControl.createCompletedFuture();
+  }
+
+  @Override
+  public Map<String, Object> takeMergeSnapshot(
+      final Path snapshotDirectory, final Map<String, String> parameters) {
+    snapshotStore
+        .getLatestSnapshot()
+        .ifPresent(
+            snapshot -> {
+              rocksdbDb.createCopy(
+                  snapshot.getPath(),
+                  snapshotDirectory,
+                  Set.of(BusinessRepositoryColumnFamilies.PROCESS_POSITION),
+                  ColumnCopyType.FAMILY);
+            });
     return Map.of();
   }
 }

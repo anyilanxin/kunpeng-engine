@@ -45,8 +45,9 @@ import com.anyilanxin.kunpeng.cluster.raft.protocol.RaftResponse.Builder;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.RaftResponse.Status;
 import com.anyilanxin.kunpeng.cluster.raft.roles.*;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.RaftSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotException;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.ConstructableSnapshotStore;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.receive.ReceiveSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.storage.RaftStorage;
 import com.anyilanxin.kunpeng.cluster.raft.storage.StorageException;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLog;
@@ -132,7 +133,8 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
   private volatile Runnable businessMetaSyncHook;
 
   private final RaftLog raftLog;
-  private final RaftSnapshotStore persistedSnapshotStore;
+  private final ConstructableSnapshotStore persistedSnapshotStore;
+  private final ReceiveSnapshotStore receiveSnapshotStore;
   private final LogCompactor logCompactor;
   private volatile State state = State.ACTIVE;
   // Some fields are read by external threads. To ensure thread-safe access, we can use the lock for
@@ -253,6 +255,7 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
 
     // Open the snapshot store.
     persistedSnapshotStore = storage.getPersistedSnapshotStore();
+    receiveSnapshotStore = storage.getReceiveSnapshotStore();
     persistedSnapshotStore.addSnapshotListener(this::onNewPersistedSnapshot);
     // Update the current snapshot because the listener only notifies when a new snapshot is
     // created.
@@ -977,8 +980,8 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
   }
 
   /**
-   * 把存储内已落地的最新镜像安装为本节点状态（两阶段通知 + 日志对齐），在 raft 线程串行执行—— 阶段一通知复制开始（业务关闭日志消费者，三态视图 INACTIVE），随后把日志重置到
-   * 镜像 index+1（与 follower install 快照一致），对齐当前镜像引用，阶段二通知复制完成（业务可从镜像恢复）。
+   * 把存储内已落地的最新镜像安装为本节点状态（两阶段通知 + 日志对齐），在 raft 线程串行执行—— 阶段一通知复制开始（业务关闭日志消费者，三态视图
+   * INACTIVE），随后把日志重置到镜像 index+1（与 follower install 快照一致），对齐当前镜像引用， 阶段二通知复制完成（业务可从镜像恢复）。
    *
    * <p>两类调用方：跨分区引导新分区（镜像已落地、raft 尚未 bootstrap，安装后单节点 bootstrap 当选 leader， 完成 onInactive → onLeader
    * 闭环）；follower 安装 leader 合并后的镜像（拉取落地后对齐本地状态）。
@@ -1582,8 +1585,17 @@ public class RaftContext implements AutoCloseable, HealthMonitorable {
    *
    * @return The server snapshot store.
    */
-  public RaftSnapshotStore getPersistedSnapshotStore() {
+  public ConstructableSnapshotStore getPersistedSnapshotStore() {
     return persistedSnapshotStore;
+  }
+
+  /**
+   * Returns the receive-side snapshot store used for remote snapshot installation.
+   *
+   * @return The receive-side snapshot store.
+   */
+  public ReceiveSnapshotStore getReceiveSnapshotStore() {
+    return receiveSnapshotStore;
   }
 
   /**

@@ -20,6 +20,7 @@ import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
+import java.util.Map;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -47,23 +48,41 @@ public interface SnapshotTransfer {
       final PartitionId sourcePartitionId, final MemberId sourceMember);
 
   /**
+   * 传输镜像拉取（合并迁移拉模式）：通知源分区成员拍摄合并镜像（源端拍摄前先拍 raft 镜像），逐批拉取到本地接收 store 持久化； 成功/放弃都会通知拍摄端 RELEASE 释放
+   * transferId 引用（引用归零时拍摄端删除镜像）。拉取完成后由调用方触发本地合并。
+   *
+   * @param sourcePartitionId 合并镜像的源分区
+   * @param sourceMember 源分区成员（拍摄端）
+   * @return 持久化完成的合并镜像
+   */
+  ActorFuture<@Nullable PersistedSnapshot> pullTransferSnapshot(
+      final PartitionId sourcePartitionId,
+      final MemberId sourceMember,
+      final String transferId,
+      final Map<String, String> parameters);
+
+  /**
    * 把给定镜像逐批推送到目标分区的 leader（合并转移入口，目标经拓扑解析 leader）。
    *
    * @param sourcePartitionId 合并镜像的源分区（随信息批带给目标端记录合并来源）
-   */
-  ActorFuture<Void> pushSnapshot(
-      final PersistedSnapshot snapshot,
-      final PartitionId sourcePartitionId,
-      final PartitionId targetPartitionId);
-
-  /**
-   * 把给定镜像逐批推送到目标分区的指定成员（合并转移入口，目标成员由调用方给定——分区删除迁移时 目标 leader 地址已知）。
-   *
-   * @param sourcePartitionId 合并镜像的源分区（随信息批带给目标端记录合并来源）
+   * @param parameters 拍摄该镜像时的参数（随信息批传至目标端，合并结果回调时回传业务）
    */
   ActorFuture<Void> pushSnapshot(
       final PersistedSnapshot snapshot,
       final PartitionId sourcePartitionId,
       final PartitionId targetPartitionId,
-      final MemberId targetMember);
+      final Map<String, String> parameters);
+
+  /**
+   * 把给定镜像逐批推送到目标分区的指定成员（合并转移入口，目标成员由调用方给定——分区删除迁移时 目标 leader 地址已知）。
+   *
+   * @param sourcePartitionId 合并镜像的源分区（随信息批带给目标端记录合并来源）
+   * @param parameters 拍摄该镜像时的参数（随信息批传至目标端，合并结果回调时回传业务）
+   */
+  ActorFuture<Void> pushSnapshot(
+      final PersistedSnapshot snapshot,
+      final PartitionId sourcePartitionId,
+      final PartitionId targetPartitionId,
+      final MemberId targetMember,
+      final Map<String, String> parameters);
 }

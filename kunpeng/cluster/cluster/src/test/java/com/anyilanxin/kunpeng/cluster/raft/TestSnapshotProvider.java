@@ -16,6 +16,8 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft;
 
+import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartition;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.RaftSnapshotProvider;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
@@ -30,7 +32,7 @@ import java.util.Map;
  * @since 2026.9.0
  */
 public final class TestSnapshotProvider implements RaftSnapshotProvider<Void> {
-
+private RaftPartition partition;
   /** 内容写入函数：向拍摄目录写文件并返回业务信息键值清单。 */
   @FunctionalInterface
   public interface SnapshotTaker {
@@ -63,7 +65,7 @@ public final class TestSnapshotProvider implements RaftSnapshotProvider<Void> {
 
   /** 测试无合并语义，直接空完成。 */
   @Override
-  public ActorFuture<Void> mergeSnapshot(final Path snapshotDirectory) {
+  public ActorFuture<Void> mergeSnapshot(final PersistedSnapshot received) {
     return CompletableActorFuture.completed(null);
   }
 
@@ -95,6 +97,11 @@ public final class TestSnapshotProvider implements RaftSnapshotProvider<Void> {
   @Override
   public SnapshotStore getSnapshotStore() {
     return snapshotStore;
+  }
+
+  @Override
+  public void setRaftPartition(final RaftPartition partition) {
+this.partition=partition;
   }
 
   @Override

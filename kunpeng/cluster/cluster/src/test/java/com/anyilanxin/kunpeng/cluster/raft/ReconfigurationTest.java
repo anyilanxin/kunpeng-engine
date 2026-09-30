@@ -111,10 +111,11 @@ final class ReconfigurationTest {
       final Path tmp, final MemberId local, final Consumer<RaftPartitionConfig> configTuner,
       final MemberId... others) {
     final var protocol = protocolFactory.newServerProtocol(local);
+    final var testSnapshotStore = new TestSnapshotStore(new AtomicReference<>());
     final var storage =
         RaftStorage.builder(meterRegistry)
             .withDirectory(tmp.resolve(local.toString()).toFile())
-            .withSnapshotStore(new TestSnapshotStore(new AtomicReference<>()))
+            .withSnapshotStores(testSnapshotStore, testSnapshotStore)
             .withMaxSegmentSize(1024 * 10)
             .build();
     final var partitionConfig =

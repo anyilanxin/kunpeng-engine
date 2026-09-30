@@ -22,7 +22,7 @@ import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
 import com.anyilanxin.kunpeng.cluster.cluster.PhysicalTenantIds;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationService;
 import com.anyilanxin.kunpeng.cluster.raft.partition.impl.RaftPartitionServer;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.RaftSnapshotStore;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.raft.RaftSnapshotStore;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.AfterEach;

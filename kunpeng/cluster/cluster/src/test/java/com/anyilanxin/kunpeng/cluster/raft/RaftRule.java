@@ -33,7 +33,7 @@ import com.anyilanxin.kunpeng.cluster.raft.protocol.TestRaftServerProtocol;
 import com.anyilanxin.kunpeng.cluster.raft.roles.LeaderRole;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.InMemorySnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.RaftSnapshotStore;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.ConstructableSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.TestSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.storage.RaftStorage;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.IndexedRaftLogEntry;
@@ -597,7 +597,7 @@ public final class RaftRule extends ExternalResource {
             .withDirectory(memberDirectory)
             .withMaxSegmentSize(maxSegmentSize)
             .withFreeDiskSpace(100)
-            .withSnapshotStore(snapshotStore);
+            .withSnapshotStores(snapshotStore, snapshotStore);
 
     return builder.build();
   }
@@ -693,7 +693,7 @@ public final class RaftRule extends ExternalResource {
     snapshots.remove(node);
   }
 
-  public RaftSnapshotStore getPersistedSnapshotStore(final String followerB) {
+  public ConstructableSnapshotStore getPersistedSnapshotStore(final String followerB) {
     return servers.get(followerB).getContext().getPersistedSnapshotStore();
   }
 

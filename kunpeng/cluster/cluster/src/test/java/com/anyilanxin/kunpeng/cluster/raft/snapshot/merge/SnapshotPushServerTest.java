@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.anyilanxin.kunpeng.cluster.raft.snapshot.transfer;
+package com.anyilanxin.kunpeng.cluster.raft.snapshot.merge;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -30,7 +30,8 @@ import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChunkBatch;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotException;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotId;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotTransferCodec;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.DefaultRaftSnapshotStore;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.transfer.SnapshotChunkBatcher;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.raft.RaftSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.DefaultSimpleFileVerificationStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.DefaultSnapshotFileInfoProvider;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.SnapshotChunkImpl;
@@ -82,17 +83,19 @@ final class SnapshotPushServerTest {
   /** 源端镜像（推送内容来源）。 */
   private PersistedSnapshot sourceSnapshot;
   /** 目标端 merge 目录存储。 */
-  private DefaultRaftSnapshotStore mergeStore;
+  private RaftSnapshotStore mergeStore;
   /** 合并流回调捕获：返回的 future 由测试控制完成时机。 */
   private final AtomicReference<CompletableFuture<Void>> mergeFlowFuture = new AtomicReference<>();
   private PersistedSnapshot mergeReceived;
   private com.anyilanxin.kunpeng.cluster.cluster.PartitionId mergeSourcePartition;
+  private final AtomicReference<java.util.Map<String, String>> mergeParametersRef =
+      new AtomicReference<>();
 
   @BeforeEach
   void setUp(@TempDir final Path dir) throws Exception {
     // 源端：真实拍摄一个镜像并用其读取器产生推送分片
     final var sourceStore =
-        new DefaultRaftSnapshotStore(
+        new RaftSnapshotStore(
             "node-1",
             dir.resolve("source"),
             1,
@@ -109,7 +112,7 @@ final class SnapshotPushServerTest {
 
     // 目标端：merge 目录的接收存储
     mergeStore =
-        new DefaultRaftSnapshotStore(
+        new RaftSnapshotStore(
             "node-1",
             dir.resolve("merge"),
             1,
@@ -127,9 +130,10 @@ final class SnapshotPushServerTest {
             communicator,
             PARTITION_NAME,
             mergeStore,
-            (received, sourcePartition) -> {
+            (received, sourcePartition, mergeParameters) -> {
               mergeReceived = received;
               mergeSourcePartition = sourcePartition;
+              mergeParametersRef.set(mergeParameters);
               final var future = new CompletableFuture<Void>();
               mergeFlowFuture.set(future);
               return future;

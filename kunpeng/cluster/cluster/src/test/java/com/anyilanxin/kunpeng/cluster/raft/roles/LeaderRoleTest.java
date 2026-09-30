@@ -32,7 +32,7 @@ import com.anyilanxin.kunpeng.cluster.raft.logentry.util.TestAppender;
 import com.anyilanxin.kunpeng.cluster.raft.metrics.RaftReplicationMetrics;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.PersistedRaftRecord;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.ReplicatableJournalRecord;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.RaftSnapshotStore;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.raft.RaftSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.storage.RaftStorage;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.IndexedRaftLogEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLog;

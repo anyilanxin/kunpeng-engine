@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package com.anyilanxin.kunpeng.cluster.raft.snapshot.transfer;
+package com.anyilanxin.kunpeng.cluster.raft.snapshot.merge;
 
 import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationService;
@@ -26,6 +26,7 @@ import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotId;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotTransferCodec;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.receive.ReceiveSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.receive.ReceivedSnapshot;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.transfer.DefaultSnapshotTransfer;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -40,8 +41,9 @@ import java.util.function.Function;
  * <p>推送协议（纯 {@link SnapshotChunkBatch}，与 {@link DefaultSnapshotTransfer#pushSnapshot} 对应）：
  *
  * <ul>
- *   <li>首条消息为信息批：单个分片，chunkName 承载镜像 id、content 承载源分区标识（{@link PartitionId#toString()}
- *       格式，目标端据此记录"哪个分区合并进了本分区"）； 据此经 {@link ReceiveSnapshotStore#newReceivedSnapshot} 建接收 pending；
+ *   <li>首条消息为信息批：单个分片，chunkName 承载镜像 id、content 第一行为源分区标识（{@link
+ *       PartitionId#toString()}、其后逐行为拍摄参数（合并结果回调时回传业务） 格式，目标端据此记录"哪个分区合并进了本分区"）； 据此经 {@link
+ *       ReceiveSnapshotStore#newReceivedSnapshot} 建接收 pending；
  *   <li>后续消息为内容批，逐批 {@code write}；
  *   <li>{@code hasMore=false} 的末批写完即 {@code persist} 提交，随后异步触发 {@link MergeFlowRunner} 合并流（两阶段安装 →
  *       业务合并 → 追加合并记录条目，不触发 follower 安装——由调度侧全部合并完成后统一收尾）。
@@ -82,12 +84,15 @@ public final class SnapshotPushServer {
     /**
      * @param received 接收完成的合并镜像
      * @param sourcePartition 源分区（数据从该分区合并进本分区）
+     * @param parameters 源端拍摄该镜像时的参数（随信息批传至，合并结果回调时回传业务）
      * @return 合并流完成 future（异常完成即本次合并失败）
      */
-    CompletableFuture<Void> run(PersistedSnapshot received, PartitionId sourcePartition);
+    CompletableFuture<Void> run(
+        PersistedSnapshot received, PartitionId sourcePartition, Map<String, String> parameters);
   }
 
-  private record PushSession(ReceivedSnapshot pending, PartitionId sourcePartition) {}
+  private record PushSession(
+      ReceivedSnapshot pending, PartitionId sourcePartition, Map<String, String> parameters) {}
 
   public SnapshotPushServer(
       final ClusterCommunicationService communicator,
@@ -95,8 +100,8 @@ public final class SnapshotPushServer {
       final ReceiveSnapshotStore store,
       final MergeFlowRunner mergeFlowRunner) {
     this.communicator = communicator;
-    this.subject = subjectOf(partitionName);
-    this.awaitSubject = awaitSubjectOf(partitionName);
+    subject = subjectOf(partitionName);
+    awaitSubject = awaitSubjectOf(partitionName);
     this.store = store;
     this.mergeFlowRunner = mergeFlowRunner;
   }
@@ -139,7 +144,7 @@ public final class SnapshotPushServer {
     if (batch.chunks().isEmpty()) {
       return new byte[0];
     }
-    final SnapshotChunk first = batch.chunks().get(0);
+    final SnapshotChunk first = batch.chunks().getFirst();
     // 信息批判定：单分片 + totalLength=0 + chunkName 为合法镜像 id（内容分片名含 '@' 被排除）
     final boolean infoBatch =
         batch.chunks().size() == 1
@@ -148,11 +153,11 @@ public final class SnapshotPushServer {
     try {
       if (infoBatch) {
         final String snapshotId = first.getChunkName();
-        final PartitionId sourcePartition = parseSourcePartition(first);
+        final InfoContent info = parseInfoContent(first);
         final ReceivedSnapshot pending = store.newReceivedSnapshot(snapshotId).join();
         // 覆盖旧会话：合并推送一次一个，整体重推时旧 pending 作废
         abortSession();
-        session.set(new PushSession(pending, sourcePartition));
+        session.set(new PushSession(pending, info.sourcePartition(), info.parameters()));
       } else {
         final var current = session.get();
         if (current == null) {
@@ -162,7 +167,7 @@ public final class SnapshotPushServer {
         if (!batch.hasMore()) {
           session.set(null);
           final var persisted = current.pending().persist().join();
-          triggerMergeFlow(persisted, current.sourcePartition());
+          triggerMergeFlow(persisted, current.sourcePartition(), current.parameters());
         }
       }
       return new byte[0];
@@ -172,25 +177,37 @@ public final class SnapshotPushServer {
     }
   }
 
-  /** 信息批 content 承载源分区标识（{@link PartitionId#toString()} 格式），缺失/非法即推送协议错误。 */
-  private PartitionId parseSourcePartition(final SnapshotChunk info) {
+  /**
+   * 信息批 content：第一行为源分区标识（{@link PartitionId#toString()} 格式）、其后逐行为拍摄参数（{@code
+   * key=value}）；源分区缺失/非法即推送协议错误。
+   */
+  private InfoContent parseInfoContent(final SnapshotChunk info) {
     final var content = info.getContent();
     final byte[] bytes = new byte[content.remaining()];
     content.get(bytes);
     final String value = new String(bytes, StandardCharsets.UTF_8);
-    if (value.isEmpty()) {
+    final int lineBreak = value.indexOf('\n');
+    final String sourceText = lineBreak >= 0 ? value.substring(0, lineBreak) : value;
+    final String parametersText = lineBreak >= 0 ? value.substring(lineBreak + 1) : "";
+    if (sourceText.isEmpty()) {
       throw new SnapshotException("Merge push info batch carries no source partition");
     }
-    return PartitionId.parse(value);
+    return new InfoContent(
+        PartitionId.parse(sourceText), SnapshotTransferCodec.decodeParameters(parametersText));
   }
+
+  /** 信息批解析结果：合并来源分区 + 源端拍摄参数。 */
+  private record InfoContent(PartitionId sourcePartition, Map<String, String> parameters) {}
 
   /** 末批提交后触发合并流：登记 pending future 再异步执行，完成等待请求据此应答。 */
   private void triggerMergeFlow(
-      final PersistedSnapshot persisted, final PartitionId sourcePartition) {
+      final PersistedSnapshot persisted,
+      final PartitionId sourcePartition,
+      final Map<String, String> parameters) {
     final var mergeFuture = new CompletableFuture<Void>();
     pendingMerges.put(persisted.snapshotId().asString(), mergeFuture);
     mergeFlowRunner
-        .run(persisted, sourcePartition)
+        .run(persisted, sourcePartition, parameters)
         .whenComplete(
             (v, error) -> {
               pendingMerges.remove(persisted.snapshotId().asString());

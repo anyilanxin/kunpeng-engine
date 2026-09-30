@@ -21,7 +21,8 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.RaftSnapshotStore;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.ConstructableSnapshotStore;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.receive.ReceiveSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLog;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLogFlusher;
 import com.anyilanxin.kunpeng.cluster.raft.storage.system.BusinessMetaStore;
@@ -61,7 +62,8 @@ public final class RaftStorage {
   private final File directory;
   private final int maxSegmentSize;
   private final long freeDiskSpace;
-  private final RaftSnapshotStore persistedSnapshotStore;
+  private final ConstructableSnapshotStore constructableSnapshotStore;
+  private final ReceiveSnapshotStore receiveSnapshotStore;
   private final int journalIndexDensity;
   private final MeterRegistry meterRegistry;
   private final RaftLogFlusher.Factory flusherFactory;
@@ -73,7 +75,8 @@ public final class RaftStorage {
       final int maxSegmentSize,
       final long freeDiskSpace,
       final RaftLogFlusher.Factory flusherFactory,
-      final RaftSnapshotStore persistedSnapshotStore,
+      final ConstructableSnapshotStore constructableSnapshotStore,
+      final ReceiveSnapshotStore receiveSnapshotStore,
       final int journalIndexDensity,
       final MeterRegistry meterRegistry) {
     this.prefix = prefix;
@@ -82,7 +85,8 @@ public final class RaftStorage {
     this.maxSegmentSize = maxSegmentSize;
     this.freeDiskSpace = freeDiskSpace;
     this.flusherFactory = flusherFactory;
-    this.persistedSnapshotStore = persistedSnapshotStore;
+    this.constructableSnapshotStore = constructableSnapshotStore;
+    this.receiveSnapshotStore = receiveSnapshotStore;
     this.journalIndexDensity = journalIndexDensity;
     this.meterRegistry = meterRegistry;
 
@@ -176,8 +180,17 @@ public final class RaftStorage {
    *
    * @return The snapshot store.
    */
-  public RaftSnapshotStore getPersistedSnapshotStore() {
-    return persistedSnapshotStore;
+  public ConstructableSnapshotStore getPersistedSnapshotStore() {
+    return constructableSnapshotStore;
+  }
+
+  /**
+   * Returns the {@link ReceiveSnapshotStore} face of the snapshot store.
+   *
+   * @return The receive-side snapshot store.
+   */
+  public ReceiveSnapshotStore getReceiveSnapshotStore() {
+    return receiveSnapshotStore;
   }
 
   /**
@@ -267,7 +280,8 @@ public final class RaftStorage {
     private int maxSegmentSize = DEFAULT_MAX_SEGMENT_SIZE;
     private long freeDiskSpace = DEFAULT_FREE_DISK_SPACE;
     private RaftLogFlusher.Factory flusherFactory = DEFAULT_FLUSHER_FACTORY;
-    private RaftSnapshotStore persistedSnapshotStore;
+    private ConstructableSnapshotStore constructableSnapshotStore;
+    private ReceiveSnapshotStore receiveSnapshotStore;
     private int journalIndexDensity = DEFAULT_JOURNAL_INDEX_DENSITY;
     private int partitionId = DEFAULT_PARTITION_ID;
     private final MeterRegistry meterRegistry;
@@ -348,13 +362,17 @@ public final class RaftStorage {
     }
 
     /**
-     * Sets the snapshot store to use for remote snapshot installation.
+     * Sets the snapshot store to use for local snapshot taking and remote snapshot installation.
      *
-     * @param persistedSnapshotStore the snapshot store for this Raft
+     * @param constructableSnapshotStore the constructable face of the snapshot store
+     * @param receiveSnapshotStore the receive face of the snapshot store
      * @return the storage builder
      */
-    public Builder withSnapshotStore(final RaftSnapshotStore persistedSnapshotStore) {
-      this.persistedSnapshotStore = persistedSnapshotStore;
+    public Builder withSnapshotStores(
+        final ConstructableSnapshotStore constructableSnapshotStore,
+        final ReceiveSnapshotStore receiveSnapshotStore) {
+      this.constructableSnapshotStore = constructableSnapshotStore;
+      this.receiveSnapshotStore = receiveSnapshotStore;
       return this;
     }
 
@@ -388,7 +406,8 @@ public final class RaftStorage {
           maxSegmentSize,
           freeDiskSpace,
           flusherFactory,
-          persistedSnapshotStore,
+          constructableSnapshotStore,
+          receiveSnapshotStore,
           journalIndexDensity,
           meterRegistry);
     }

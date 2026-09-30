@@ -53,6 +53,7 @@ public class PartitionTransition<CONTENT extends TransitionContent> extends Acto
           raftPartition.addRoleStateListener(this);
           transitionService.updateTransitionContext(transitionContent);
           started.set(true);
+          // addRoleStateListener 注册即回调当前角色，首任角色的转变由此触发，无需补跑
           future.complete(null);
         });
     return future;

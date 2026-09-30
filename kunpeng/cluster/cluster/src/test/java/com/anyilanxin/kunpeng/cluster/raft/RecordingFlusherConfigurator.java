@@ -117,7 +117,7 @@ public final class RecordingFlusherConfigurator implements Configurator {
     builder.withStorage(
         RaftStorage.builder(builder.meterRegistry)
             .withDirectory(original.directory())
-            .withSnapshotStore(original.getPersistedSnapshotStore())
+            .withSnapshotStores(original.getPersistedSnapshotStore(), original.getReceiveSnapshotStore())
             .withFlusherFactory(recordingFlusherFactory(id.id()))
             .build());
   }

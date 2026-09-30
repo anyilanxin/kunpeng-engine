@@ -17,6 +17,7 @@
 package com.anyilanxin.kunpeng.broker.admin.raft;
 
 import com.anyilanxin.kunpeng.broker.BrokerLoggers;
+import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartition;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.RaftSnapshotProvider;
@@ -52,6 +53,7 @@ public class AdminRaftSnapshotProvider
   private Path runtimeDirectory;
   private SnapshotStore snapshotStore;
   private final MeterRegistry registry;
+  private RaftPartition partition;
 
   public AdminRaftSnapshotProvider(
       final ConcurrencyControl concurrencyControl,
@@ -189,7 +191,12 @@ public class AdminRaftSnapshotProvider
   }
 
   @Override
-  public ActorFuture<Void> mergeSnapshot(final Path snapshotDirectory) {
+  public ActorFuture<Void> mergeSnapshot(final PersistedSnapshot received) {
     return null;
+  }
+
+  @Override
+  public void setRaftPartition(final RaftPartition partition) {
+    this.partition = partition;
   }
 }

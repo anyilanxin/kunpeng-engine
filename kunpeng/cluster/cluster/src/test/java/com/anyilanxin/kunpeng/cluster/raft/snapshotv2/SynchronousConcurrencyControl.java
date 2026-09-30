@@ -33,7 +33,7 @@ import java.util.function.Consumer;
  * @author zxuanhong
  * @since 2026.9.0
  */
-final class SynchronousConcurrencyControl implements ConcurrencyControl {
+public final class SynchronousConcurrencyControl implements ConcurrencyControl {
 
   @Override
   public <T> void runOnCompletion(final ActorFuture<T> future, final BiConsumer<T, Throwable> callback) {

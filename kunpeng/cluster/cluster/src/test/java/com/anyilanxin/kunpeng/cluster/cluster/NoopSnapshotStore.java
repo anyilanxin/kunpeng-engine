@@ -18,9 +18,10 @@ package com.anyilanxin.kunpeng.cluster.cluster;
 
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshotListener;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.RaftSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotException;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.ConstructableSnapshot;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.ConstructableSnapshotStore;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.receive.ReceiveSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.receive.ReceivedSnapshot;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 import com.anyilanxin.kunpeng.scheduler.future.CompletableActorFuture;
@@ -34,7 +35,7 @@ import java.util.Optional;
  * @author zxuanhong
  * @since 2026.9.0
  */
-public class NoopSnapshotStore implements RaftSnapshotStore {
+public class NoopSnapshotStore implements ConstructableSnapshotStore, ReceiveSnapshotStore {
 
   @Override
   public Optional<PersistedSnapshot> getLatestSnapshot() {

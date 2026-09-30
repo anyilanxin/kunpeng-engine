@@ -14,11 +14,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.anyilanxin.kunpeng.cluster.raft.snapshotv2;
+package com.anyilanxin.kunpeng.cluster.raft.snapshot.raft;
+
+import com.anyilanxin.kunpeng.cluster.raft.snapshotv2.SynchronousConcurrencyControl;
 
 import com.anyilanxin.kunpeng.cluster.raft.TestSnapshotProvider;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.*;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.DefaultRaftSnapshotStore;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.raft.RaftSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotFileInfo;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotFileInfoProvider;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.DefaultSimpleFileVerificationStore;
@@ -49,7 +51,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * @author zxuanhong
  * @since 2026.9.0
  */
-final class DefaultRaftSnapshotStoreTest {
+final class RaftSnapshotStoreTest {
 
   @TempDir
   Path tmpDir;
@@ -320,16 +322,16 @@ final class DefaultRaftSnapshotStoreTest {
     assertThat(latest.get().getIndex()).isEqualTo(7);
   }
 
-  private DefaultRaftSnapshotStore newStore(final String nodeId, final int maxSnapshotCount) {
+  private RaftSnapshotStore newStore(final String nodeId, final int maxSnapshotCount) {
     return newStore(nodeId, maxSnapshotCount, dir -> writeDataFile(dir, "data"));
   }
 
   /** 指定文件信息提供方构建 store，用于验证加载校验与拍摄算法对称。 */
-  private DefaultRaftSnapshotStore newStoreWithFileInfoProvider(
+  private RaftSnapshotStore newStoreWithFileInfoProvider(
       final String nodeId,
       final int maxSnapshotCount,
       final SnapshotFileInfoProvider fileInfoProvider) {
-    return new DefaultRaftSnapshotStore(
+    return new RaftSnapshotStore(
         nodeId,
         tmpDir,
         maxSnapshotCount,
@@ -343,9 +345,9 @@ final class DefaultRaftSnapshotStoreTest {
         actor);
   }
 
-  private DefaultRaftSnapshotStore newStore(
+  private RaftSnapshotStore newStore(
     final String nodeId, final int maxSnapshotCount, final SnapshotProviderLike provider) {
-    return new DefaultRaftSnapshotStore(
+    return new RaftSnapshotStore(
       nodeId,
       tmpDir,
       maxSnapshotCount,

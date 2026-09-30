@@ -16,6 +16,8 @@
  */
 package com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable;
 
+import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartition;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotStore;
 import com.anyilanxin.kunpeng.scheduler.CloseableSilently;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
@@ -43,19 +45,21 @@ public interface RaftSnapshotProvider<T> extends CloseableSilently {
   Map<String, Object> takeSnapshot(Path snapshotDirectory);
 
   /**
-   * 合并镜像：把接收到的跨分区合并镜像内容（{@code snapshotDirectory} 下的文件）合并进本分区业务状态。
+   * 合并镜像：把接收到的跨分区传输镜像内容合并进本分区业务状态。
    *
-   * <p>分区删除迁移时由源分区推送、本分区（目标分区 leader）接收完成后触发；合并发生在两阶段镜像安装
-   * 之间——开始合并对应安装开始（业务消费者已关闭），合并完成对应安装完成（业务可恢复）。应实现为幂等或 崩溃安全：合并中途失败后源分区会整体重推。
+   * <p>分区迁移时由对端推送/拉取、本分区接收完成后触发；合并发生在两阶段镜像安装之间——开始合并对应安装开始（业务消费者已关闭），合并完成对应安装完成（业务可恢复）。应实现为幂等或
+   * 崩溃安全：合并中途失败后对端会整体重传。
    *
-   * @param snapshotDirectory 接收到的合并镜像目录
+   * @param received 接收完成的传输镜像
    * @return 合并完成 future；异常完成即本次合并失败
    */
-  ActorFuture<Void> mergeSnapshot(Path snapshotDirectory);
+  ActorFuture<Void> mergeSnapshot(PersistedSnapshot received);
 
   void setPartitionDirectory(Path partitionDirectory);
 
   Path getPartitionDirectory();
+
+  void setRaftPartition(RaftPartition partition);
 
   void setRuntimeDirectory(Path runtimeDirectory);
 

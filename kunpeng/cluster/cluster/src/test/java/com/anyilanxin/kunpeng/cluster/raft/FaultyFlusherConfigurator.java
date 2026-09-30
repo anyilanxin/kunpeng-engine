@@ -103,7 +103,7 @@ public record FaultyFlusherConfigurator(
     builder.withStorage(
         RaftStorage.builder(builder.meterRegistry)
             .withDirectory(original.directory())
-            .withSnapshotStore(original.getPersistedSnapshotStore())
+            .withSnapshotStores(original.getPersistedSnapshotStore(), original.getReceiveSnapshotStore())
             .withFlusherFactory(brokenFlusherFactory())
             .build());
   }

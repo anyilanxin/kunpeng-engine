@@ -14,15 +14,18 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.anyilanxin.kunpeng.cluster.raft.snapshot.impl;
+package com.anyilanxin.kunpeng.cluster.raft.snapshot.raft;
 
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.*;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotFileInfoProvider;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.ConstructableSnapshot;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.ConstructableSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.DefaultConstructableSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.RaftSnapshotProvider;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.SnapshotContentWriter;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.DefaultFileSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.receive.DefaultReceiveSnapshotStore;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.receive.ReceiveSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.receive.ReceivedSnapshot;
 import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
@@ -30,20 +33,20 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 /**
- * {@link RaftSnapshotStore} 的默认实现：组合一个共享 {@link DefaultFileSnapshotStore}， 拍摄与接收两个入口分别委托给对应的模块
- * store，二者共享同一持久存储实例。
+ * raft 分区本地镜像存储（snapshots/snapshot/ 目录）：组合一个共享 {@link DefaultFileSnapshotStore}，
+ * 拍摄与接收两个入口分别委托给对应的模块 store，二者共享同一持久存储实例。
  *
  * @author zxuanhong
  * @since 2026.9.0
  */
-public final class DefaultRaftSnapshotStore implements RaftSnapshotStore {
+public final class RaftSnapshotStore implements ConstructableSnapshotStore, ReceiveSnapshotStore {
 
   private final DefaultFileSnapshotStore store;
   private final DefaultConstructableSnapshotStore constructable;
   private final DefaultReceiveSnapshotStore receive;
   private final SnapshotContentWriter contentWriter;
 
-  public DefaultRaftSnapshotStore(
+  public RaftSnapshotStore(
       final String nodeId,
       final Path snapshotPath,
       final int maxSnapshotCount,
@@ -62,7 +65,7 @@ public final class DefaultRaftSnapshotStore implements RaftSnapshotStore {
   }
 
   /** 内容写入器构造：供不走业务 SPI 的存储（如合并镜像存储）直接给定拍法， 免去整接口适配。 */
-  public DefaultRaftSnapshotStore(
+  public RaftSnapshotStore(
       final String nodeId,
       final Path snapshotPath,
       final int maxSnapshotCount,
@@ -89,6 +92,12 @@ public final class DefaultRaftSnapshotStore implements RaftSnapshotStore {
     return constructable.newTransientSnapshot(index, term, false, contentWriter);
   }
 
+  /** 拍摄入口（可强制 + 自定义内容写入器）：供拍摄参数需运行时传入的场景（拉取合并）使用。 */
+  public ActorFuture<ConstructableSnapshot> newTransientSnapshot(
+      final long index, final long term, final boolean force, final SnapshotContentWriter writer) {
+    return constructable.newTransientSnapshot(index, term, force, writer);
+  }
+
   /**
    * 拍摄入口（可强制）：{@code force=true} 时允许与当前最新镜像同 id 重拍覆盖（见 {@link
    * DefaultConstructableSnapshotStore#newTransientSnapshot(long, long, boolean,
@@ -102,6 +111,12 @@ public final class DefaultRaftSnapshotStore implements RaftSnapshotStore {
   @Override
   public ActorFuture<ReceivedSnapshot> newReceivedSnapshot(final String snapshotId) {
     return receive.newReceivedSnapshot(snapshotId);
+  }
+
+  /** 删除指定镜像（供外部流程管控生命周期的存储使用）；不存在时静默完成。 */
+  public ActorFuture<Void> deleteSnapshot(
+      final com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotId snapshotId) {
+    return store.deleteSnapshot(snapshotId);
   }
 
   @Override

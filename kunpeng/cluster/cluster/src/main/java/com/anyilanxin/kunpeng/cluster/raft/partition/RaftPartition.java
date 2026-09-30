@@ -31,18 +31,20 @@ import com.anyilanxin.kunpeng.cluster.raft.metadata.BusinessMetaUpdateResponse;
 import com.anyilanxin.kunpeng.cluster.raft.metadata.PartitionBusinessMeta;
 import com.anyilanxin.kunpeng.cluster.raft.partition.impl.RaftPartitionServer;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.RaftSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotException.SnapshotAlreadyExistsException;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotFileInfoProvider;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotTransferCodec;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotType;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.bootstrap.BootstrapSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.RaftSnapshotProvider;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.TransferSnapshotProvider;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.DefaultRaftSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.DefaultSimpleFileVerificationStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.DefaultSnapshotFileInfoProvider;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.merge.MergeSnapshotStore;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.merge.SnapshotPullServer;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.merge.SnapshotPushServer;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.raft.RaftSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.transfer.DefaultSnapshotTransfer;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.transfer.SnapshotPushServer;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.MergeRecordEntry;
 import com.anyilanxin.kunpeng.cluster.utils.health.FailureListener;
 import com.anyilanxin.kunpeng.cluster.utils.health.HealthMonitorable;
@@ -61,6 +63,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -94,7 +97,7 @@ public final class RaftPartition implements Partition, HealthMonitorable {
   private final ActorSchedulingService actorSchedulingService;
 
   /** 快照内容拍摄/合并 SPI，构造时注入（仅 raft 类型使用）。 */
-  private final RaftSnapshotProvider snapshotProvider;
+  private final RaftSnapshotProvider<?> snapshotProvider;
 
   /**
    * 跨分区转移镜像拍摄 SPI（可空），构造时注入：非空时本分区同时具备 引导拍摄端（leader 时响应 BOOTSTRAP 请求，见 {@link
@@ -106,14 +109,11 @@ public final class RaftPartition implements Partition, HealthMonitorable {
   /** 本分区的快照存储，启动时内部构建。 */
   private RaftSnapshotStore snapshotStore;
 
-  /** 引导镜像拍摄端存储（transferSnapshotProvider 为空时不创建）。 */
+  /** 引导镜像拍摄端存储（{@code snapshots/bootstrap}，transferSnapshotProvider 为空时不创建）。 */
   private BootstrapSnapshotStore bootstrapSnapshotStore;
 
-  /**
-   * 合并镜像存储（{@code snapshots/merge}，transferSnapshotProvider 为空时不创建）： 源分区侧经 {@link #transferData}
-   * 拍摄合并镜像，目标分区侧接收源分区推送的合并镜像，两端共用同一类型目录。
-   */
-  private DefaultRaftSnapshotStore mergeSnapshotStore;
+  /** 合并镜像存储（{@code snapshots/merge}，transferSnapshotProvider 为空时不创建）： 拉取/推送合并的拍摄与接收共用。 */
+  private MergeSnapshotStore mergeSnapshotStore;
 
   /** 本分区的快照 actor，承载 store 状态串行与周期拍摄。 */
   private Actor snapshotActor;
@@ -132,7 +132,7 @@ public final class RaftPartition implements Partition, HealthMonitorable {
       final MeterRegistry meterRegistry,
       final PartitionManagementService managementService,
       final ActorSchedulingService actorSchedulingService,
-      final RaftSnapshotProvider snapshotProvider,
+      final RaftSnapshotProvider<?> snapshotProvider,
       final SnapshotFileInfoProvider snapshotFileInfoProvider) {
     this(
         partitionMetadata,
@@ -159,7 +159,7 @@ public final class RaftPartition implements Partition, HealthMonitorable {
       final MeterRegistry meterRegistry,
       final PartitionManagementService managementService,
       final ActorSchedulingService actorSchedulingService,
-      final RaftSnapshotProvider snapshotProvider,
+      final RaftSnapshotProvider<?> snapshotProvider,
       final SnapshotFileInfoProvider snapshotFileInfoProvider,
       final TransferSnapshotProvider transferSnapshotProvider) {
     partitionId = partitionMetadata.id();
@@ -173,6 +173,12 @@ public final class RaftPartition implements Partition, HealthMonitorable {
     this.snapshotProvider = snapshotProvider;
     this.snapshotFileInfoProvider = snapshotFileInfoProvider;
     this.transferSnapshotProvider = transferSnapshotProvider;
+    if (snapshotProvider != null) {
+      snapshotProvider.setRaftPartition(this);
+    }
+    if (transferSnapshotProvider != null) {
+      transferSnapshotProvider.setRaftPartition(this);
+    }
   }
 
   public RaftPartition(
@@ -277,8 +283,7 @@ public final class RaftPartition implements Partition, HealthMonitorable {
    * 跨分区引导新分区：从源分区拉取引导镜像落地为本分区首个快照，再触发两阶段镜像安装并 单节点 bootstrap。
    *
    * <p>流程：请求源分区指定成员（其 leader）拍摄引导镜像 → 逐批拉取落地到本分区快照存储 （{@code snapshots/snapshot}，与 follower
-   * 接收镜像同路）→ 两阶段安装（复制开始通知 → 日志对齐 镜像 index → 复制完成通知）→ 单节点 bootstrap 当选 leader。成功返回后由调用方再逐个 join
-   * 其余副本。
+   * 接收镜像同路）→ 两阶段安装（复制开始通知 → 日志对齐镜像 index → 复制完成通知）→ 单节点 bootstrap 当选 leader。成功返回后由调用方再逐个 join 其余副本。
    *
    * <p>约束：仅用于新分区首个节点（本节点须是分区成员且本地无既有状态）；引导节点收到/放弃镜像后 都会通知拍摄端释放 transferId
    * 引用（引用归零时拍摄端删除引导镜像）。中途失败重试本方法：已落地的镜像 以 {@link SnapshotAlreadyExistsException} 暴露，视为已落地直接进入安装。
@@ -388,17 +393,26 @@ public final class RaftPartition implements Partition, HealthMonitorable {
    * 分区删除前的数据迁移（合并快照源端）：把本分区全部数据经合并镜像转移到目标分区， 目标分区确认合并完成后 future 完成，调用方随后执行 leave()/delete()
    * 关停并删除本分区。
    *
-   * <p>流程：本分区（须为 leader 且已配置 TransferSnapshotProvider）以当前 commit 位点拍摄合并镜像 （{@code
-   * snapshots/merge}，经 {@link TransferSnapshotProvider#takeMergeSnapshot}）→ 逐批推送到目标分区 leader →
+   * <p>流程：本分区（须为 leader 且已配置 TransferSnapshotProvider）以当前 commit 位点按拍摄请求生成传输镜像 （{@code
+   * snapshots/merge}，经 {@link TransferSnapshotProvider#takeTransferSnapshot}）→ 逐批推送到目标分区 leader →
    * 发送合并完成等待请求，目标分区完成整个合并流（接收→两阶段安装合并→追加合并记录条目并提交， 不触发 follower 安装——由调度侧在全部合并完成后经 {@link
    * #triggerFollowerSnapshotInstall()} 统一收尾）后应答 → 删除本地合并镜像。 失败可重试：同位点重试复用上次拍摄残留，位点推进则重拍（保留策略自动清旧）。
    *
    * @param targetPartitionId 数据迁入的目标分区
-   * @param targetAddress 目标分区 leader 所在成员地址
+   * @param targetMemberId 目标分区 leader 所在成员地址
    * @return 迁移完成 future（目标分区已确认合并完成），完成后调用方再执行 leave()/delete()； 失败时由调用方决定重试或放弃迁移
    */
-  public CompletableFuture<Void> transferData(
-      final PartitionId targetPartitionId, final Address targetAddress) {
+  /**
+   * 推送数据合并：先拍一次 raft 正式镜像 → 本地拍摄合并镜像（{@link TransferSnapshotProvider#takeMergeSnapshot}）→
+   * 逐批推送给目标分区成员 → 等待目标端合并流完成。失败可重试：同位点重试复用上次拍摄残留，位点推进则重拍。
+   *
+   * @param targetPartitionId 数据迁入的目标分区
+   * @param targetMember 目标分区成员
+   */
+  public CompletableFuture<Void> pushDataMerge(
+      final PartitionId targetPartitionId,
+      final MemberId targetMember,
+      final Map<String, String> parameters) {
     final RaftPartitionServer current = server;
     if (current == null) {
       return CompletableFuture.failedFuture(
@@ -416,36 +430,158 @@ public final class RaftPartition implements Partition, HealthMonitorable {
                   + partitionId
                   + " is not led by this member; transfer from leader only"));
     }
-    final var targetMember = resolveRemoteMember(targetAddress);
-    if (targetMember.isEmpty()) {
-      return CompletableFuture.failedFuture(
-          new IllegalStateException(
-              "Cannot resolve member at address " + targetAddress + " for data transfer"));
-    }
-    return takeMergeSnapshot(current)
+    return takeMergeSnapshot(current, parameters)
         .thenCompose(
             snapshot ->
-                pushMergeSnapshot(snapshot, targetPartitionId, targetMember.get())
+                pushMergeSnapshot(snapshot, targetPartitionId, targetMember, parameters)
                     .thenCompose(
-                        v -> awaitMergeCompletion(snapshot, targetPartitionId, targetMember.get()))
+                        v -> awaitMergeCompletion(snapshot, targetPartitionId, targetMember))
+                    // 推送方结果处理：成功先删除本地拍摄的合并镜像（失败保留，供同位点重试复用上次拍摄残留），
+                    // 最后回调业务 mergeSnapshotResult（成功失败都回调）
                     .whenComplete(
-                        (v, error) ->
+                        (v, error) -> {
+                          if (error == null) {
                             mergeSnapshotStore
                                 .deleteAllSnapshots()
-                                .toCompletableFuture()
-                                .exceptionally(
-                                    deleteError -> {
-                                      LOG.warn(
-                                          "Failed to delete local merge snapshot of partition {}",
-                                          partitionId,
-                                          deleteError);
-                                      return null;
-                                    })));
+                                .onComplete(
+                                    (unused, deleteError) -> {
+                                      if (deleteError != null) {
+                                        LOG.warn(
+                                            "Failed to delete local merge snapshot of partition {}",
+                                            partitionId,
+                                            deleteError);
+                                      }
+                                      notifyPushMergeResult(
+                                          error == null, null, snapshot, parameters);
+                                    });
+                          } else {
+                            notifyPushMergeResult(false, errorMessage(error), snapshot, parameters);
+                          }
+                        }));
   }
 
-  /** 拍摄合并镜像：先拍一次 raft 正式镜像（迁移数据的一致视图来源），再以当前 commit 位点在 merge 存储 强制（同位点重试覆盖）拍摄并提交。 */
+  /**
+   * 拉取数据合并：通知源分区成员拍摄合并镜像（源端拍摄前先拍 raft 镜像）→ 逐批拉取到本地 merge 存储 → 触发本地合并流； 传输层在成功/放弃时自动向源端 RELEASE
+   * 释放引用（引用归零时源端删除镜像）。
+   *
+   * @param sourcePartitionId 数据迁出的源分区
+   * @param sourceMember 源分区成员（拍摄端）
+   */
+  public CompletableFuture<Void> pullDataMerge(
+      final PartitionId sourcePartitionId,
+      final MemberId sourceMember,
+      final Map<String, String> parameters) {
+    final RaftPartitionServer current = server;
+    if (current == null) {
+      return CompletableFuture.failedFuture(
+          new IllegalStateException("partition " + partitionId + " is not started"));
+    }
+    if (mergeSnapshotStore == null) {
+      return CompletableFuture.failedFuture(
+          new IllegalStateException(
+              "partition " + partitionId + " has no TransferSnapshotProvider; cannot transfer"));
+    }
+    final var transfer =
+        new DefaultSnapshotTransfer(
+            managementService.getMembershipService(),
+            managementService.getCommunicationService(),
+            mergeSnapshotStore,
+            config.getSnapshotRequestTimeout(),
+            config.getSnapshotTransferMaxBatchSize());
+    actorSchedulingService.submitActor(transfer);
+    final String transferId = java.util.UUID.randomUUID().toString();
+    return transfer
+        .pullTransferSnapshot(sourcePartitionId, sourceMember, transferId, parameters)
+        .toCompletableFuture()
+        .thenCompose(
+            received -> {
+              if (received == null) {
+                return CompletableFuture.failedFuture(
+                    new IllegalStateException(
+                        "Pull merge snapshot of partition "
+                            + sourcePartitionId
+                            + " returned no snapshot"));
+              }
+              return mergeReceivedSnapshot(received, sourcePartitionId, parameters);
+            })
+        .whenComplete(
+            (v, error) -> {
+              // 结果通知提供方（成功失败都）：提供方回调业务结果，成功时删除其拍摄的合并镜像（失败保留供重拉复用）
+              notifyPullMergeResult(
+                  sourcePartitionId, sourceMember, transferId, error == null, error, parameters);
+              transfer
+                  .closeAsync()
+                  .toCompletableFuture()
+                  .exceptionally(
+                      closeError -> {
+                        LOG.warn(
+                            "Failed to close pull transfer of partition {}",
+                            partitionId,
+                            closeError);
+                        return null;
+                      });
+            });
+  }
+
+  /**
+   * 拉取合并的结果通知：向提供方（拍摄端）发送合并结果（成功失败都发）。 成功时提供方删除本次拍摄的合并镜像，失败保留供重拉复用；两端业务各自经 {@link
+   * TransferSnapshotProvider#mergeSnapshotResult} 得到结果回调。
+   */
+  private void notifyPullMergeResult(
+      final PartitionId sourcePartitionId,
+      final MemberId sourceMember,
+      final String transferId,
+      final boolean result,
+      final Throwable error,
+      final Map<String, String> parameters) {
+    managementService
+        .getCommunicationService()
+        .send(
+            SnapshotPullServer.resultSubjectOf(
+                RaftPartitionTopology.partitionNameOf(sourcePartitionId)),
+            SnapshotTransferCodec.encodeMergeResult(
+                transferId, result, result ? null : errorMessage(error), parameters),
+            Function.identity(),
+            Function.identity(),
+            sourceMember,
+            config.getSnapshotMergeAwaitTimeout())
+        .whenComplete(
+            (ignored, sendError) -> {
+              if (sendError != null) {
+                LOG.warn(
+                    "Failed to notify merge result to provider of partition {}",
+                    sourcePartitionId,
+                    sendError);
+              }
+            });
+  }
+
+  /** 推送方合并结果回调（先删镜像后回调的收尾步骤）。 */
+  private void notifyPushMergeResult(
+      final boolean result,
+      final String message,
+      final PersistedSnapshot snapshot,
+      final Map<String, String> parameters) {
+    transferSnapshotProvider
+        .mergeSnapshotResult(result, message, result ? null : snapshot, parameters)
+        .onComplete(
+            (ignored, callbackError) -> {
+              if (callbackError != null) {
+                LOG.warn(
+                    "Push merge result callback failed for partition {}",
+                    partitionId,
+                    callbackError);
+              }
+            });
+  }
+
+  private static String errorMessage(final Throwable error) {
+    return error.getMessage() != null ? error.getMessage() : error.toString();
+  }
+
+  /** 拍摄合并镜像：先拍一次 raft 正式镜像（迁移数据的一致视图来源），再以当前 commit 位点按拍摄参数在 merge 存储拍摄并提交。 */
   private CompletableFuture<PersistedSnapshot> takeMergeSnapshot(
-      final RaftPartitionServer current) {
+      final RaftPartitionServer current, final Map<String, String> parameters) {
     final long index = current.getCommitIndex();
     final long term = current.getTerm();
     if (index <= 0) {
@@ -455,27 +591,18 @@ public final class RaftPartition implements Partition, HealthMonitorable {
     }
     return takeSnapshot()
         .thenCompose(
-            ignored -> mergeSnapshotStore.newTransientSnapshot(index, term).toCompletableFuture())
-        .thenCompose(
-            pending -> {
-              if (pending == null) {
-                // 同位点已拍（上次尝试残留）：直接取现有镜像推送
-                final var latest = mergeSnapshotStore.getLatestSnapshot();
-                if (latest.isPresent()) {
-                  return CompletableFuture.completedFuture(latest.get());
-                }
-                return CompletableFuture.failedFuture(
-                    new IllegalStateException("Merge snapshot disappeared before persist"));
-              }
-              return pending.persist().toCompletableFuture();
-            });
+            ignored ->
+                mergeSnapshotStore
+                    .takeMergeSnapshot(index, term, parameters)
+                    .toCompletableFuture());
   }
 
   /** 推送合并镜像到目标分区 leader（目标端接收进其 snapshots/merge 后启动合并流）。 */
   private CompletableFuture<Void> pushMergeSnapshot(
       final PersistedSnapshot snapshot,
       final PartitionId targetPartitionId,
-      final MemberId targetMember) {
+      final MemberId targetMember,
+      final Map<String, String> parameters) {
     final var transfer =
         new DefaultSnapshotTransfer(
             managementService.getMembershipService(),
@@ -485,7 +612,7 @@ public final class RaftPartition implements Partition, HealthMonitorable {
             config.getSnapshotTransferMaxBatchSize());
     actorSchedulingService.submitActor(transfer);
     return transfer
-        .pushSnapshot(snapshot, partitionId, targetPartitionId, targetMember)
+        .pushSnapshot(snapshot, partitionId, targetPartitionId, targetMember, parameters)
         .toCompletableFuture()
         .whenComplete(
             (v, error) ->
@@ -521,35 +648,86 @@ public final class RaftPartition implements Partition, HealthMonitorable {
   }
 
   /**
-   * 目标端合并流（目标分区 leader 收完合并镜像后触发，见 {@code SnapshotPushServer}）： 两阶段镜像安装包裹业务合并—— 开始安装通知（业务关闭消费者）→
-   * {@link RaftSnapshotProvider#mergeSnapshot} 合并 → 完成安装通知（业务恢复）→ 追加一条内部合并记录条目 （{@link
+   * 目标端合并流（目标分区 leader 收完合并镜像后触发，见 {@code SnapshotPushServer}）： {@link
+   * RaftSnapshotProvider#mergeSnapshot} 合并 → 追加一条内部合并记录条目（{@link
    * MergeRecordEntry}，记录源分区身份）并等待多数派提交。
+   *
+   * <p>合并不触发镜像安装两阶段通知（不经三态聚合派发 INACTIVE 转变）：合并是源分区 key 空间的增量数据入库， 业务库必须保持打开，与本地日志消费者无冲突——INACTIVE
+   * 转变语义（停消费者并关库）只属于 install 安装与分区下线。
    *
    * <p>合并记录条目推进日志水位但<b>不触发 follower 安装</b>：分区删减常为多个分区依次合并到同一保留分区， 逐次安装会放大整体耗时——follower
    * 安装统一由调度侧在最后一个合并完成后经 {@link #triggerFollowerSnapshotInstall()} 收尾一次。 记录条目保证每次合并后 leader
    * 日志水位真实推进：在线 follower 经正常复制跟上；离线副本无法通知，重新上线后发现日志偏离过远， 走 raft 标准的镜像安装追赶，整体闭环。
    *
+   * <p>合并流终止（结果回调完成）后无论成败都删除本地落地的合并镜像：失败回调已把镜像引用交给业务，业务处理在其回调内完成。
+   *
    * @param received 接收完成的合并镜像（位于本分区 snapshots/merge）
    * @param sourcePartition 源分区（数据从该分区合并进本分区，随合并记录条目留痕）
-   * @return 合并流完成 future（合并记录条目已提交；异常完成即本次合并失败，源分区会整体重推）
+   * @param parameters 拍摄该镜像时的参数（推送：随信息批传至；拉取：发起方传入），合并结果回调时原样回传业务
+   * @return 合并流完成 future（合并记录条目已提交、结果回调已完成；异常完成即本次合并失败，源分区会整体重推）
    */
   public CompletableFuture<Void> mergeReceivedSnapshot(
-      final PersistedSnapshot received, final PartitionId sourcePartition) {
+      final PersistedSnapshot received,
+      final PartitionId sourcePartition,
+      final Map<String, String> parameters) {
     final RaftPartitionServer current = server;
     if (current == null) {
       return CompletableFuture.failedFuture(
           new IllegalStateException("partition " + partitionId + " is not started"));
     }
-    final var context = current.getContext();
-    // 阶段一：安装开始（快照复制开始通知，业务关闭日志消费者）
-    context.notifySnapshotReplicationStarted();
+    // 合并失败标记：区分"合并/水位推进失败"与"成功回调自身失败"，保证结果回调恰好一次
+    final var mergeFailure = new AtomicReference<Throwable>();
     return snapshotProvider
-        .mergeSnapshot(received.getPath())
+        .mergeSnapshot(received)
         .toCompletableFuture()
-        .thenRun(context::notifySnapshotReplicationCompleted)
-        // 阶段二完成后：追加合并记录条目（源分区身份）并等待多数派提交，推进日志水位（不触发 follower 安装）
+        // 合并成功后：追加合并记录条目（源分区身份）并等待多数派提交，推进日志水位（不触发 follower 安装）
         .thenCompose(v -> current.appendMergeRecord(sourcePartition))
-        .thenApply(ignored -> null);
+        .whenComplete(
+            (ignored, error) -> {
+              if (error != null) {
+                mergeFailure.set(error);
+              }
+            })
+        .thenApply(ignored -> (Void) null)
+        // 成功结果回调：镜像将由传输层删除（persistedSnapshot 为 null），回调完成即业务处理完成
+        .thenCompose(
+            ignored ->
+                transferSnapshotProvider
+                    .mergeSnapshotResult(true, null, null, parameters)
+                    .toCompletableFuture())
+        .exceptionallyCompose(
+            error -> {
+              final Throwable failure = mergeFailure.get();
+              if (failure == null) {
+                // 合并与水位推进均已成功，成功回调自身失败：直接上抛（业务需幂等，源分区整体重推）
+                return CompletableFuture.failedFuture(error);
+              }
+              // 失败结果回调：镜像引用交给业务（回调内自行处理，如数据回滚），回调完成后仍以合并失败应答
+              return transferSnapshotProvider
+                  .mergeSnapshotResult(
+                      false,
+                      failure.getMessage() != null ? failure.getMessage() : failure.toString(),
+                      received,
+                      parameters)
+                  .toCompletableFuture()
+                  .thenCompose(ignored -> CompletableFuture.<Void>failedFuture(failure));
+            })
+        // 合并流终止（成功/失败结果回调均已完成）：删除本地拉取或推送落地的合并镜像；
+        // 删除为清理操作，失败仅记日志，残留由 merge 存储下次启动时的清空兜住
+        .whenComplete(
+            (ignored, error) ->
+                mergeSnapshotStore
+                    .deleteSnapshot(received.snapshotId())
+                    .onComplete(
+                        (unused, deleteError) -> {
+                          if (deleteError != null) {
+                            LOG.warn(
+                                "Failed to delete merged snapshot {} of partition {}",
+                                received.snapshotId(),
+                                partitionId,
+                                deleteError);
+                          }
+                        }));
   }
 
   /**
@@ -666,7 +844,7 @@ public final class RaftPartition implements Partition, HealthMonitorable {
     final String nodeId = managementService.getMembershipService().getLocalMember().id().id();
     snapshotActor = Actor.newActor().name(name() + "-snapshot").build();
     snapshotStore =
-        new DefaultRaftSnapshotStore(
+        new RaftSnapshotStore(
             nodeId,
             partitionDirectory.resolve("snapshots").resolve(SnapshotType.RAFT.directoryName()),
             config.getMaxSnapshotCount(),
@@ -683,17 +861,16 @@ public final class RaftPartition implements Partition, HealthMonitorable {
               transferSnapshotProvider,
               snapshotFileInfoProvider,
               snapshotActor);
-      // 合并镜像存储：源端拍摄（直接经内容写入器调 takeMergeSnapshot）+ 目标端接收共用同一 merge 目录
+      // 合并镜像存储：拉取/推送合并共用，拍摄统一走 takeMergeSnapshot（参数由推送/拉取入口传入）
       mergeSnapshotStore =
-          new DefaultRaftSnapshotStore(
+          new MergeSnapshotStore(
               nodeId,
-              partitionDirectory.resolve("snapshots").resolve(SnapshotType.MERGE.directoryName()),
-              MAX_MERGE_SNAPSHOT_COUNT,
-              new DefaultSimpleFileVerificationStore(),
+              partitionDirectory,
+              transferSnapshotProvider,
               snapshotFileInfoProvider,
-              this::takeMergeSnapshotContent,
               snapshotActor);
     }
+
     actorSchedulingService
         .submitActor(snapshotActor)
         .onComplete(
@@ -746,6 +923,24 @@ public final class RaftPartition implements Partition, HealthMonitorable {
    * 拍摄 raft 镜像（可在同水位强制重拍）：{@code force=true} 时即使与当前最新镜像同 id 也重拍覆盖 —— 合并流在 {@link
    * RaftSnapshotProvider#mergeSnapshot} 后调用，保证合并后的业务状态进入 raft 镜像（水位未推进时 常规拍摄会被同 id 跳过）。
    */
+  public CompletableFuture<Void> takeSnapshot(final boolean force) {
+    return takeSnapshotInternal(force);
+  }
+
+  /** 传输镜像提供者（引导/合并拍摄与结果回调；未配置时为 null）。 */
+  public TransferSnapshotProvider getTransferSnapshotProvider() {
+    return transferSnapshotProvider;
+  }
+
+  /** actor 调度服务（传输 actor 等运行期组件的提交入口）。 */
+  public ActorSchedulingService getActorSchedulingService() {
+    return actorSchedulingService;
+  }
+
+  /**
+   * 拍摄 raft 镜像（可在同水位强制重拍）：{@code force=true} 时即使与当前最新镜像同 id 也重拍覆盖 —— 合并流在 {@link
+   * RaftSnapshotProvider#mergeSnapshot} 后调用，保证合并后的业务状态进入 raft 镜像（水位未推进时 常规拍摄会被同 id 跳过）。
+   */
   private CompletableFuture<Void> takeSnapshotInternal(final boolean force) {
     final RaftPartitionServer current = server;
     if (current == null) {
@@ -757,7 +952,7 @@ public final class RaftPartition implements Partition, HealthMonitorable {
     if (!force && (index <= 0 || index <= snapshotStore.getCurrentSnapshotIndex())) {
       return CompletableFuture.completedFuture(null);
     }
-    return ((DefaultRaftSnapshotStore) snapshotStore)
+    return snapshotStore
         .newTransientSnapshot(index, term, force)
         .toCompletableFuture()
         // 相同 id 前置跳过时 pending 为 null（本次拍摄已被 store 跳过），直接视为完成
@@ -871,7 +1066,7 @@ public final class RaftPartition implements Partition, HealthMonitorable {
             });
   }
 
-  /** 关闭前主动删除引导镜像（best-effort）：正常流程镜像在最后一个引用 RELEASE 时已删除， 这里兜底清理因引导方中途死亡而残留的镜像； 失败仅记录日志，不阻断关闭。 */
+  /** 关闭前主动删除引导镜像（best-effort）：正常流程镜像在最后一个引用 RELEASE 时已删除， 这里清理引导方中途死亡的残留，失败不阻断关闭。 */
   private CompletableFuture<Void> deleteBootstrapSnapshotsBeforeClose() {
     if (bootstrapSnapshotStore == null) {
       return CompletableFuture.completedFuture(null);
@@ -1051,13 +1246,5 @@ public final class RaftPartition implements Partition, HealthMonitorable {
 
   public RaftPartitionConfig getPartitionConfig() {
     return config;
-  }
-
-  /**
-   * 合并镜像内容直写：委托 {@link TransferSnapshotProvider#takeMergeSnapshot}（迁移来源由 provider 自行读取最新 raft
-   * 镜像），业务信息清单随镜像持久化。
-   */
-  private Map<String, Object> takeMergeSnapshotContent(final Path snapshotDirectory) {
-    return transferSnapshotProvider.takeMergeSnapshot(snapshotDirectory);
   }
 }

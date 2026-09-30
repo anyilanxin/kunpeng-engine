@@ -30,8 +30,7 @@ import com.anyilanxin.kunpeng.cluster.raft.protocol.ControllableRaftServerProtoc
 import com.anyilanxin.kunpeng.cluster.raft.protocol.TimeoutNowRequest;
 import com.anyilanxin.kunpeng.cluster.raft.roles.LeaderRole;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.RaftSnapshotStore;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.DefaultRaftSnapshotStore;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.raft.RaftSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.DefaultSimpleFileVerificationStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.DefaultSnapshotFileInfoProvider;
 import com.anyilanxin.kunpeng.cluster.raft.storage.RaftStorage;
@@ -231,7 +230,7 @@ public final class ControllableRaftContexts {
   private RaftContext createRaftContextForMember(final Random random, final int nodeId) {
     final var memberId = MemberId.from(String.valueOf(nodeId));
     final var snapshotStore =
-            new DefaultRaftSnapshotStore(
+            new RaftSnapshotStore(
                     memberId.toString(),
             getMemberDirectory(directory, memberId.toString()).toPath().resolve("snapshots"),
             3,
@@ -248,7 +247,7 @@ public final class ControllableRaftContexts {
     snapshotStores.put(memberId, snapshotStore);
     final RaftContext raftContext =
         createRaftContext(
-            memberId, random, createStorage(memberId, cfg -> cfg.withSnapshotStore(snapshotStore)));
+            memberId, random, createStorage(memberId, cfg -> cfg.withSnapshotStores(snapshotStore, snapshotStore)));
     raftServers.put(memberId, raftContext);
     return raftContext;
   }

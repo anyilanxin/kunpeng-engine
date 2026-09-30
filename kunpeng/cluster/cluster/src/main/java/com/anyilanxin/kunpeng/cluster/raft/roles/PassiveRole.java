@@ -182,7 +182,7 @@ public class PassiveRole extends InactiveRole {
 
       try {
         pendingSnapshot =
-            raft.getPersistedSnapshotStore().newReceivedSnapshot(snapshotId.asString()).join();
+            raft.getReceiveSnapshotStore().newReceivedSnapshot(snapshotId.asString()).join();
       } catch (final Exception e) {
         return failIfSnapshotAlreadyExists(e, snapshotId);
       }

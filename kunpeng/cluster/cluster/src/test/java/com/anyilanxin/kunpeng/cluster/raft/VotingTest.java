@@ -101,10 +101,11 @@ final class VotingTest {
     final var protocol = protocolFactory.newServerProtocol(memberId);
     protocolByMember.put(memberId, protocol);
 
+    final var testSnapshotStore = new TestSnapshotStore(new AtomicReference<>());
     final var storage =
         RaftStorage.builder(meterRegistry)
             .withDirectory(dir.resolve(memberId.toString()).toFile())
-            .withSnapshotStore(new TestSnapshotStore(new AtomicReference<>()))
+            .withSnapshotStores(testSnapshotStore, testSnapshotStore)
             .withMaxSegmentSize(1024 * 10)
             .build();
     final var partitionConfig =

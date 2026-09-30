@@ -24,7 +24,7 @@ import com.anyilanxin.kunpeng.cluster.raft.cluster.RaftMember.Type;
 import com.anyilanxin.kunpeng.cluster.raft.partition.impl.RaftPartitionServer;
 import com.anyilanxin.kunpeng.cluster.raft.primitive.TestMember;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.*;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.RaftSnapshotStore;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.raft.RaftSnapshotStore;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.AfterEach;

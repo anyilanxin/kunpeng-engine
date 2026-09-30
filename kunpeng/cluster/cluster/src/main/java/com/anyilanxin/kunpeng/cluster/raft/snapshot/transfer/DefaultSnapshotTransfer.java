@@ -23,6 +23,8 @@ import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationServ
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartitionTopology;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.*;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.impl.SnapshotChunkImpl;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.merge.SnapshotPullServer;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.merge.SnapshotPushServer;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.receive.ReceiveSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.receive.ReceivedSnapshot;
 import com.anyilanxin.kunpeng.scheduler.Actor;
@@ -32,6 +34,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
@@ -104,14 +107,14 @@ public class DefaultSnapshotTransfer extends Actor implements SnapshotTransfer {
     this.maxBatchSize = maxBatchSize;
   }
 
-  /** 镜像传输主题：{@value #SUBJECT_PREFIX}{分区名}，服务端按分区注册同名处理器。 */
-  public static String subjectOf(final String partitionName) {
-    return SUBJECT_PREFIX + partitionName;
-  }
-
   /** 引导镜像传输主题：{@value #BOOTSTRAP_SUBJECT_PREFIX}{分区名}，拍摄端 leader 注册同名处理器。 */
   public static String bootstrapSubjectOf(final String partitionName) {
     return BOOTSTRAP_SUBJECT_PREFIX + partitionName;
+  }
+
+  /** 镜像传输主题：{@value #SUBJECT_PREFIX}{分区名}，服务端按分区注册同名处理器。 */
+  public static String subjectOf(final String partitionName) {
+    return SUBJECT_PREFIX + partitionName;
   }
 
   @Override
@@ -126,12 +129,13 @@ public class DefaultSnapshotTransfer extends Actor implements SnapshotTransfer {
                     "No known leader for partition " + partitionId + "; cannot pull snapshot"));
             return;
           }
+          final String transferId = UUID.randomUUID().toString();
           startPull(
               future,
               leader.get(),
               subjectOf(RaftPartitionTopology.partitionNameOf(partitionId)),
-              UUID.randomUUID().toString(),
-              RequestCommand.PULL,
+              transferId,
+              SnapshotTransferCodec.encodeRequest(transferId, RequestCommand.PULL),
               RequestCommand.COMPLETE);
         });
     return future;
@@ -141,34 +145,51 @@ public class DefaultSnapshotTransfer extends Actor implements SnapshotTransfer {
   public ActorFuture<@Nullable PersistedSnapshot> getBootstrapSnapshot(
       final PartitionId sourcePartitionId, final MemberId sourceMember) {
     final CompletableActorFuture<PersistedSnapshot> future = new CompletableActorFuture<>();
+    final String transferId = UUID.randomUUID().toString();
     actor.run(
         () ->
             startPull(
                 future,
                 sourceMember,
                 bootstrapSubjectOf(RaftPartitionTopology.partitionNameOf(sourcePartitionId)),
-                UUID.randomUUID().toString(),
-                RequestCommand.BOOTSTRAP,
+                transferId,
+                SnapshotTransferCodec.encodeRequest(transferId, RequestCommand.BOOTSTRAP),
                 RequestCommand.RELEASE));
     return future;
   }
 
-  /** 首个请求：取回信息分片，以其 chunkName（镜像 id）创建接收 pending 后进入拉取循环。 */
+  @Override
+  public ActorFuture<@Nullable PersistedSnapshot> pullTransferSnapshot(
+      final PartitionId sourcePartitionId,
+      final MemberId sourceMember,
+      final String transferId,
+      final Map<String, String> parameters) {
+    final CompletableActorFuture<PersistedSnapshot> future = new CompletableActorFuture<>();
+    actor.run(
+        () ->
+            startPull(
+                future,
+                sourceMember,
+                SnapshotPullServer.subjectOf(
+                    RaftPartitionTopology.partitionNameOf(sourcePartitionId)),
+                transferId,
+                SnapshotTransferCodec.encodeTransferBeginRequest(transferId, parameters),
+                // 传输完成仅清理读取会话（COMPLETE）：拍摄镜像的删除由获取方合并结果通知（成功时）触发，
+                // 传输成功即 RELEASE 会在合并失败时把源端镜像提前删掉，失去保留复用
+                RequestCommand.COMPLETE));
+    return future;
+  }
+
+  /** 首个请求（payload 由调用方按命令编码，传输镜像拍摄请求携带拍摄参数）：取回信息分片，以其 chunkName（镜像 id）创建接收 pending 后进入拉取循环。 */
   private void startPull(
       final CompletableActorFuture<PersistedSnapshot> future,
       final MemberId target,
       final String subject,
       final String transferId,
-      final RequestCommand firstCommand,
+      final byte[] firstPayload,
       final RequestCommand doneCommand) {
     communicator
-        .send(
-            subject,
-            SnapshotTransferCodec.encodeRequest(transferId, firstCommand),
-            IDENTITY,
-            IDENTITY,
-            target,
-            chunkTimeout)
+        .send(subject, firstPayload, IDENTITY, IDENTITY, target, chunkTimeout)
         .whenComplete(
             (bytes, error) -> {
               if (error != null) {
@@ -284,7 +305,8 @@ public class DefaultSnapshotTransfer extends Actor implements SnapshotTransfer {
   public ActorFuture<Void> pushSnapshot(
       final PersistedSnapshot snapshot,
       final PartitionId sourcePartitionId,
-      final PartitionId targetPartitionId) {
+      final PartitionId targetPartitionId,
+      final Map<String, String> parameters) {
     final CompletableActorFuture<Void> future = new CompletableActorFuture<>();
     actor.run(
         () -> {
@@ -301,6 +323,7 @@ public class DefaultSnapshotTransfer extends Actor implements SnapshotTransfer {
               future,
               snapshot,
               sourcePartitionId,
+              parameters,
               SnapshotPushServer.subjectOf(
                   RaftPartitionTopology.partitionNameOf(targetPartitionId)),
               leader.get());
@@ -313,7 +336,8 @@ public class DefaultSnapshotTransfer extends Actor implements SnapshotTransfer {
       final PersistedSnapshot snapshot,
       final PartitionId sourcePartitionId,
       final PartitionId targetPartitionId,
-      final MemberId targetMember) {
+      final MemberId targetMember,
+      final Map<String, String> parameters) {
     final CompletableActorFuture<Void> future = new CompletableActorFuture<>();
     actor.run(
         () ->
@@ -321,6 +345,7 @@ public class DefaultSnapshotTransfer extends Actor implements SnapshotTransfer {
                 future,
                 snapshot,
                 sourcePartitionId,
+                parameters,
                 SnapshotPushServer.subjectOf(
                     RaftPartitionTopology.partitionNameOf(targetPartitionId)),
                 targetMember));
@@ -331,17 +356,21 @@ public class DefaultSnapshotTransfer extends Actor implements SnapshotTransfer {
       final CompletableActorFuture<Void> future,
       final PersistedSnapshot snapshot,
       final PartitionId sourcePartitionId,
+      final Map<String, String> parameters,
       final String subject,
       final MemberId target) {
     final var batcher = new SnapshotChunkBatcher(snapshot.newChunkReader(UUID.randomUUID()));
-    // 先发信息分片：chunkName 承载镜像 id，content 承载源分区标识（目标端据此记录合并来源）
+    // 先发信息分片：chunkName 承载镜像 id，content 第一行为源分区标识（目标端据此记录合并来源）、
+    // 其后逐行为拍摄参数（目标端合并结果回调时回传业务）
+    final var infoContent =
+        sourcePartitionId.toString() + "\n" + SnapshotTransferCodec.encodeParameters(parameters);
     final var info =
         new SnapshotChunkImpl(
             snapshot.snapshotId().asString(),
             0,
             0,
             0,
-            ByteBuffer.wrap(sourcePartitionId.toString().getBytes(StandardCharsets.UTF_8)),
+            ByteBuffer.wrap(infoContent.getBytes(StandardCharsets.UTF_8)),
             0);
     final var infoBatch = new SnapshotChunkBatch(TransferKind.FILE_CHUNKS, List.of(info), true);
     communicator
