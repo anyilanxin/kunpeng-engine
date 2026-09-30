@@ -340,14 +340,7 @@ public class BrokerClientImpl extends Actor implements BrokerClient {
   }
 
   private PartitionId partitionBySource(final int sourceId) {
-    for (final var entry : topologyService.getRaftGroup(BUSINESS_RAFT_GROUP).entrySet()) {
-      for (final var memberInfo : entry.getValue()) {
-        if (memberInfo.getSourceId() == sourceId) {
-          return entry.getKey();
-        }
-      }
-    }
-    return null;
+    return topologyService.getPartitionBySourceId(sourceId);
   }
 
   private PartitionId randomPartition() {
