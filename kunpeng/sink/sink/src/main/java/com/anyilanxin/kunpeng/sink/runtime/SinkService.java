@@ -564,44 +564,26 @@ public final class SinkService extends Actor implements HealthMonitorable, Recor
       delivered = false;
     }
     if (delivered) {
-      recordDelivered();
       return true;
     }
 
+    // 首次分发未成功（槽位失败/分发抛异常）：移交控制权退避重试，回调负责清标志并续跑
     dispatchPending = true;
     final var dispatched = dispatchRetry.runWithRetry(dispatcher::dispatch, this::isServiceClosed);
-    if (!dispatched.isDone()) {
-      actor.runOnCompletion(
-          dispatched,
-          (ignored, error) -> {
-            dispatchPending = false;
-            if (error != null) {
-              LOG.error("Processing of record from entry {} aborted", entry, error);
-              failService(error);
-            } else if (Boolean.FALSE.equals(ignored)) {
-              // 重试因服务关闭被终止：记录未投出，不计投递、不续跑
-            } else {
-              recordDelivered();
-              drain();
-            }
-          });
-      return false;
-    }
-
-    dispatchPending = false;
-    if (dispatched.isCompletedExceptionally()) {
-      failService(dispatched.getException());
-      return false;
-    }
-    recordDelivered();
-    return true;
-  }
-
-  /** 无缓存值记录不投递（typedRecord 视图停留在上一条），按真实值类型计投递指标。 */
-  private void recordDelivered() {
-    if (dispatcher.isDispatchable()) {
-      metrics.recordDelivered(dispatcher.getValueType());
-    }
+    actor.runOnCompletion(
+        dispatched,
+        (ignored, error) -> {
+          dispatchPending = false;
+          if (error != null) {
+            LOG.error("Processing of record from entry {} aborted", entry, error);
+            failService(error);
+          } else if (Boolean.FALSE.equals(ignored)) {
+            // 重试因服务关闭被终止：记录未投出，不续跑
+          } else {
+            drain();
+          }
+        });
+    return false;
   }
 
   private void skipEntry(final LoggedEntry entry) {

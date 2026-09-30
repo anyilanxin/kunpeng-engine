@@ -74,7 +74,7 @@ public final class ActorControl implements ConcurrencyControl {
     if (isCalledFromWithinActor()) {
       return cell.submitInternal(ActorEnvelope.Kind.RUN, action, null).thenApply(ignored -> null);
     }
-    return cell.submitExternal(ActorEnvelope.Kind.RUN, action, null).thenApply(ignored -> null);
+    return runBehind(action);
   }
 
   public ActorFuture<Void> submit(final Runnable action) {

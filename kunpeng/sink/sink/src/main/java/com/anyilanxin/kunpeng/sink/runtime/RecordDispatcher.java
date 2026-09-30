@@ -76,16 +76,12 @@ final class RecordDispatcher {
   }
 
   /**
-   * @return 当前包装的记录是否有可分发的缓存值（无缓存值记录不投递，也不计投递指标）
-   */
-  boolean isDispatchable() {
-    return dispatchable;
-  }
-
-  /**
    * 把已包装的记录分发给所有槽位，从上次失败的那个开始。
    *
-   * @return 所有槽位都处理完时返回 true；一旦有槽位失败立即返回 false—— 无需重新 {@link #wrap}，再次调用本方法即可正确续传
+   * <p>成功投递（含无缓存值记录的早退）返回 true；一旦有槽位失败立即返回 false—— 无需重新 {@link #wrap}，再次调用本方法即可正确续传。
+   * 投递指标在本方法内记：无缓存值记录不投递、不计。
+   *
+   * @return 所有槽位都处理完时返回 true
    */
   boolean dispatch() {
     if (!dispatchable) {
@@ -105,11 +101,8 @@ final class RecordDispatcher {
         }
       }
     }
+    metrics.recordDelivered(valueType);
     return true;
-  }
-
-  ValueType getValueType() {
-    return typedRecord.getValueType();
   }
 
   /** 丢弃续传点。记录在途期间槽位列表发生变化后必须调用， 否则可能出现槽位被跳过或重复收到同一条记录。 */

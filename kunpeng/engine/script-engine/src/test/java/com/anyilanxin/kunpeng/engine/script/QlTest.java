@@ -17,7 +17,6 @@
 package com.anyilanxin.kunpeng.engine.script;
 
 import com.anyilanxin.kunpeng.engine.script.impl.qlexpress.QlExpressLanguage;
-import com.anyilanxin.kunpeng.utils.Either;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -35,11 +34,10 @@ public class QlTest {
     final ScriptExpression parse = expressLanguage.parse("orderId>10");
 //    final Either<String, Boolean> stringBooleanEither = parse.evaluateBoolean();
 //    final ScriptExpression parse = expressLanguage.parse("20 between (10->30]");
-    final Either<String, Object> stringBooleanEither = parse.evaluateObject(() -> {
+    parse.evaluateObject(() -> {
       final Map<String, Object> value = new HashMap<>();
       value.put("orderId", 20);
       return value;
     });
-
   }
 }
