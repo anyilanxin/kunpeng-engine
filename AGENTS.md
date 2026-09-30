@@ -31,8 +31,11 @@ kunpeng-engine/
 ├── clients/           # 客户端 SDK（client-java、spring-boot-starter-client）
 ├── connectors/        # Camunda Connectors 生态 fork——独立 Maven 工程（自带 .mvn/parent），勿用 Gradle 构建
 ├── backup-stores/     # 备份存储（当前为空，占位）
+├── sinks/             # sink 外发实现（当前 sink-rdbms；eachDir 自动 include；含上游 fork 许可文件 LICENSE/NOTICE/licenses）
 ├── bom/               # 三个 BOM：dependency-bom（总依赖）、client-sdk-bom、connector-sdk-bom
 ├── dist/              # 发行版装配
+├── example/           # 可运行示例应用（示例 BPMN 流程、job worker 接入、启停脚本）
+├── docs/              # 仓库级文档（系统架构图 mermaid/svg、集群消息层基准结论）
 ├── licenses/          # 多许可文件（AGPL-3.0 / Apache-2.0 / MPL-2.0）
 ├── buildSrc/          # 自研 Gradle 插件：kunpeng.code-spotless（格式化）、kunpeng.build-publish、kunpeng.spring-boot、kunpeng.sbe-java、kunpeng.grpc-java、kunpeng.dependency-update + common-config.gradle（私仓凭据等）
 ├── .agents/skills/    # 技能体系（见下文「技能体系」）
@@ -40,7 +43,7 @@ kunpeng-engine/
 └── .codegraph/        # codegraph 工具索引数据
 ```
 
-> **模块发现规则**：`settings.gradle` 扫描 `kunpeng/` 各固定二级目录与根下带 `build.gradle` 的目录自动 include——**新增模块 = 建目录 + build.gradle**，无需改 settings.gradle（例外才进 `excludes`）。
+> **模块发现规则**：`settings.gradle` 扫描 `kunpeng/` 各固定二级目录、`sinks/`/`clients/`/`backup-stores/`/`bom/` eachDir 与根下带 `build.gradle` 的目录自动 include——**新增模块 = 建目录 + build.gradle**，无需改 settings.gradle（例外才进 `excludes`）。
 
 ## 开发流程
 
