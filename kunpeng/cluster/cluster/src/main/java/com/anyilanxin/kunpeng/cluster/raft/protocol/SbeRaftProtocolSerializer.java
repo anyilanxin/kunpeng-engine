@@ -877,21 +877,21 @@ public final class SbeRaftProtocolSerializer implements Serializer {
 
   /** 包裹变长数据视图并拷贝出定长字节（flyweight 原地读取，仅此处一次载荷拷贝）。 */
   private static byte[] copyOf(final int length, final Consumer<DirectBuffer> wrapper) {
+    // wrapper 必须无条件执行：wrapXxx 负责推进解码 limit，空字段的 4 字节长度头同样要消费，
+    // 否则后续变长字段会错读到前一个空字段的长度前缀
+    final UnsafeBuffer view = new UnsafeBuffer(new byte[0]);
+    wrapper.accept(view);
     if (length <= 0) {
       return new byte[0];
     }
-    final UnsafeBuffer view = new UnsafeBuffer(new byte[0]);
-    wrapper.accept(view);
     final byte[] copy = new byte[length];
     view.getBytes(0, copy);
     return copy;
   }
 
   private static ByteBuffer wrapOrNull(final int length, final Consumer<DirectBuffer> wrapper) {
-    if (length <= 0) {
-      return null;
-    }
-    return ByteBuffer.wrap(copyOf(length, wrapper));
+    final byte[] copy = copyOf(length, wrapper);
+    return length > 0 ? ByteBuffer.wrap(copy) : null;
   }
 
   private static final class EncodeContext {
