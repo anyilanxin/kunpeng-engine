@@ -62,6 +62,11 @@ public abstract class RaftBusinessMetaListenerStep<CONTENT extends PartitionStar
   public ActorFuture<CONTENT> shutdown(final CONTENT content) {
     final var result = content.getConcurrencyControl().<CONTENT>createFuture();
     final RaftPartition raftPartition = content.getRaftPartition();
+    // StartupProcess 契约：shutdown 逆序覆盖全部步骤（含 startup 未执行的），分区未写入上下文时无监听器可注销
+    if (raftPartition == null) {
+      result.complete(content);
+      return result;
+    }
     content
         .getConcurrencyControl()
         .run(
