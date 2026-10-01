@@ -30,6 +30,7 @@ import com.anyilanxin.kunpeng.cluster.raft.metrics.SnapshotReplicationMetrics;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.*;
 import com.anyilanxin.kunpeng.cluster.raft.protocol.RaftResponse.Status;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
+import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChunk;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotChunkBatch;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotException.SnapshotAlreadyExistsException;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotId;
@@ -55,6 +56,10 @@ public class PassiveRole extends InactiveRole {
   private final ThrottledLogger throttledLogger = new ThrottledLogger(log, Duration.ofSeconds(5));
   private final SnapshotReplicationMetrics snapshotReplicationMetrics;
   private long pendingSnapshotStartTimestamp;
+
+  /** 当前接收中镜像的累计已写入字节，用于完成日志的传输量跟踪。 */
+  private long pendingSnapshotReceivedBytes;
+
   private ReceivedSnapshot pendingSnapshot;
   private ByteBuffer nextPendingSnapshotChunkId;
   private ByteBuffer previouslyReceivedSnapshotChunkId;
@@ -141,11 +146,17 @@ public class PassiveRole extends InactiveRole {
     final SnapshotId snapshotId =
         new SnapshotId(request.leader().id(), request.index(), request.term());
 
-    log.debug(
-        "Received snapshot batch of {} chunk(s) for snapshot {} from {}",
+    final long batchBytes = batch.chunks().stream().mapToLong(SnapshotChunk::getLength).sum();
+    log.info(
+        "Received snapshot batch of {} chunk(s), {} bytes from {} for snapshot {}: [{}],"
+            + " hasMore: {}, complete: {}",
         batch.chunks().size(),
+        batchBytes,
+        request.leader(),
         snapshotId,
-        request.leader());
+        describeChunks(batch),
+        batch.hasMore(),
+        request.complete());
 
     // If a snapshot is currently being received and the snapshot versions don't match, simply
     // close the existing snapshot. This is a naive implementation that assumes that the leader
@@ -189,6 +200,7 @@ public class PassiveRole extends InactiveRole {
 
       log.info("Started receiving new snapshot {} from {}", pendingSnapshot, request.leader());
       pendingSnapshotStartTimestamp = System.currentTimeMillis();
+      pendingSnapshotReceivedBytes = 0L;
       snapshotReplicationMetrics.incrementCount();
 
       // When all chunks of the snapshot is received the log will be reset. Hence notify the
@@ -217,6 +229,7 @@ public class PassiveRole extends InactiveRole {
                       RaftError.Type.APPLICATION_ERROR, "Failed to write pending snapshot chunk")
                   .build()));
     }
+    pendingSnapshotReceivedBytes += batchBytes;
 
     // If the snapshot is complete, store the snapshot and reset state, otherwise update the next
     // snapshot offset.
@@ -230,7 +243,11 @@ public class PassiveRole extends InactiveRole {
         resetLogOnReceivingSnapshot(pendingSnapshot.snapshotId().index());
 
         persistedSnapshot = pendingSnapshot.persist().toCompletableFuture().join();
-        log.info("Committed snapshot {}", persistedSnapshot);
+        log.info(
+            "Committed snapshot {}, received {} bytes in {} ms",
+            persistedSnapshot,
+            pendingSnapshotReceivedBytes,
+            elapsed);
       } catch (final Exception e) {
         log.error(
             "Failed to persist pending snapshot {}. The log has already been reset and is now "
@@ -693,6 +710,24 @@ public class PassiveRole extends InactiveRole {
     return bytes;
   }
 
+  /** 批次分片摘要：{@code 名称(长度@偏移)} 逐个拼接，供接收日志跟踪传输进度。 */
+  private static String describeChunks(final SnapshotChunkBatch batch) {
+    final var builder = new StringBuilder();
+    for (final SnapshotChunk chunk : batch.chunks()) {
+      if (builder.length() > 0) {
+        builder.append(", ");
+      }
+      builder
+          .append(chunk.getChunkName())
+          .append('(')
+          .append(chunk.getLength())
+          .append('@')
+          .append(chunk.getOffset())
+          .append(')');
+    }
+    return builder.toString();
+  }
+
   protected void abortPendingSnapshots() {
     if (pendingSnapshot != null) {
       setNextExpected(null);
@@ -705,6 +740,7 @@ public class PassiveRole extends InactiveRole {
       }
       pendingSnapshot = null;
       pendingSnapshotStartTimestamp = 0L;
+      pendingSnapshotReceivedBytes = 0L;
 
       snapshotReplicationMetrics.decrementCount();
       onSnapshotReceiveCompletedOrAborted();
