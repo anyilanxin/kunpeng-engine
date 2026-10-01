@@ -40,6 +40,7 @@ public class RaftPartitionConfig {
   private static final Duration DEFAULT_SNAPSHOT_INTERVAL = Duration.ofMinutes(5);
   private static final int DEFAULT_MAX_SNAPSHOT_COUNT = 1;
   private static final int DEFAULT_SNAPSHOT_ENTRY_TRIGGER_THRESHOLD = 100_000;
+  private static final int MIN_SNAPSHOT_ENTRY_TRIGGER_THRESHOLD = 5_000;
   private static final Duration DEFAULT_SNAPSHOT_MERGE_AWAIT_TIMEOUT = Duration.ofMinutes(5);
 
   /**
@@ -80,7 +81,8 @@ public class RaftPartitionConfig {
 
   /**
    * 自上次快照水位起 commit index 推进达到该阈值时额外触发一次快照（与 {@link #snapshotInterval}
-   * 周期触发互补：高写入速率下按条数及时截断日志，低速率下靠周期兜底）； 0 表示禁用，仅保留周期触发。
+   * 周期触发互补：高写入速率下按条数及时截断日志，低速率下靠周期兜底）； 无快照时水位种子为 0，即首版快照同样受该阈值约束。最小 {@value
+   * #MIN_SNAPSHOT_ENTRY_TRIGGER_THRESHOLD}。
    */
   private int snapshotEntryTriggerThreshold = DEFAULT_SNAPSHOT_ENTRY_TRIGGER_THRESHOLD;
 
@@ -349,13 +351,23 @@ public class RaftPartitionConfig {
     return this;
   }
 
-  /** 条数触发快照的 commit index 推进阈值，0 表示禁用（默认 {@value #DEFAULT_SNAPSHOT_ENTRY_TRIGGER_THRESHOLD}）。 */
+  /**
+   * 条数触发快照的 commit index 推进阈值（默认 {@value #DEFAULT_SNAPSHOT_ENTRY_TRIGGER_THRESHOLD}，最小 {@value
+   * #MIN_SNAPSHOT_ENTRY_TRIGGER_THRESHOLD}）。
+   */
   public int getSnapshotEntryTriggerThreshold() {
     return snapshotEntryTriggerThreshold;
   }
 
   public RaftPartitionConfig setSnapshotEntryTriggerThreshold(
       final int snapshotEntryTriggerThreshold) {
+    if (snapshotEntryTriggerThreshold < MIN_SNAPSHOT_ENTRY_TRIGGER_THRESHOLD) {
+      throw new IllegalArgumentException(
+          "snapshotEntryTriggerThreshold must be >= "
+              + MIN_SNAPSHOT_ENTRY_TRIGGER_THRESHOLD
+              + ", got "
+              + snapshotEntryTriggerThreshold);
+    }
     this.snapshotEntryTriggerThreshold = snapshotEntryTriggerThreshold;
     return this;
   }
