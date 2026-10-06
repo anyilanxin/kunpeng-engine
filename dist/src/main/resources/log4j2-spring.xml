@@ -48,7 +48,7 @@
     <logger name="org.springframework" level="info"/>
     <logger name="reactor.netty.http.server" level="info"/>
     <logger name="com.anyilanxin.kunpeng.cluster" level="debug"/>
-    <logger name="reactor.netty" level="info"/>
+    <logger name="com.anyilanxin.kunpeng.cluster.cluster.protocol.swim" level="info"/>
 
     <root level="debug">
       <appender-ref ref="Console"/>
