@@ -20,8 +20,10 @@
    QA 配置）原样保留；同时删除了所有 Camunda License 1.0 的文件。
 2. 导入后的调整：文件协议头统一为标准 Apache 2.0 头并追加 anyilanxin 版权声明；删除了
    生成的 `element-templates/versioned/` 产物；统一代码风格；修正少量文档与版本引用。
-3. `connectors/` 始终是独立的 Maven 工程——**不参与**本仓库的 Gradle 统一构建，构建与测试
-   使用 `mvn`（见本目录 `AGENTS.md`）。
+3. **已裁剪为纯源码形态**：删除了上游 CI/QA（`.github/`、`.ci/`）、e2e 测试、上游文档、社区文件与
+   Maven 根工程（根/parent `pom.xml`、Maven wrapper）；补充了 `LICENSE`、`licenses/`（Apache-2.0 /
+   MPL-2.0）并更新了 `NOTICE`。
+4. `connectors/` 仅作源码保留——不参与本仓库的 Gradle 统一构建，也不再以 Maven 构建（Maven 根工程已移除）。
 
 ## 版权与许可注意事项
 

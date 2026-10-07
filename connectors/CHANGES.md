@@ -24,8 +24,11 @@ constrained by the upstream release cadence.
 2. Follow-up adjustments after import: license headers were unified to the standard Apache 2.0 header
    with the anyilanxin copyright notice appended; generated `element-templates/versioned/` artifacts
    were removed; code style was unified; a few documentation and version references were touched up.
-3. `connectors/` remains an independent Maven project — it is NOT part of this repository's unified
-   Gradle build; build and test it with `mvn` (see `AGENTS.md` in this directory).
+3. **Pruned to a source-only layout**: upstream CI/QA (`.github/`, `.ci/`), the e2e test suites, upstream
+   docs, community files and the Maven reactor root (root/parent `pom.xml`, Maven wrapper) were removed;
+   `LICENSE`, `licenses/` (Apache-2.0 / MPL-2.0) were added and `NOTICE` was updated.
+4. `connectors/` is kept as source only — it is NOT part of this repository's unified Gradle build and is
+   no longer built with Maven (the Maven root project was removed).
 
 ## Copyright and License Notes
 
