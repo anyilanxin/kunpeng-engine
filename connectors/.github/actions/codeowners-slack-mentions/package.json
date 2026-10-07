@@ -1,8 +1,0 @@
-{
-    "private": true,
-    "engines": {"node": "18 || 20 || >=22"},
-    "name": "codeowners-slack-mentions",
-    "type": "module",
-    "scripts": {"test": "node --test index.test.mjs"},
-    "dependencies": {"minimatch": "10.2.6"}
-}
