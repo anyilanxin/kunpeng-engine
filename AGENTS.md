@@ -29,7 +29,7 @@ kunpeng-engine/
 │   ├── configuration/ # 引擎配置
 │   └── utils/         # 公共工具
 ├── clients/           # 客户端 SDK（client-java、spring-boot-starter-client）
-├── connector/         # Camunda Connectors 生态 fork——裁剪为纯源码形态（上游 CI/e2e/文档与 Maven 根构建已移除），未纳入 Gradle 构建
+├── connector/         # Camunda Connectors 生态 fork（connector-sdk、connector-commons、connector-runtime、element-template-generator、http、connector-runtime-bundle）——构建文件已由 Maven 迁移为 Gradle、版本统一收拢在 dependency-bom，暂未纳入 Gradle 统一构建
 ├── backup-stores/     # 备份存储（当前为空，占位）
 ├── sinks/             # sink 外发实现（当前 sink-rdbms；eachDir 自动 include；含上游 fork 许可文件 LICENSE/NOTICE/licenses）
 ├── bom/               # 三个 BOM：dependency-bom（总依赖）、client-sdk-bom、connector-sdk-bom
@@ -43,7 +43,7 @@ kunpeng-engine/
 └── .codegraph/        # codegraph 工具索引数据
 ```
 
-> **模块发现规则**：`settings.gradle` 扫描 `kunpeng/` 各固定二级目录、`sinks/`/`clients/`/`backup-stores/`/`bom/` eachDir 与根下带 `build.gradle` 的目录自动 include——**新增模块 = 建目录 + build.gradle**，无需改 settings.gradle（例外才进 `excludes`）。
+> **模块发现规则**：`settings.gradle` 扫描 `kunpeng/` 各固定二级目录、`sinks/`/`clients/`/`backup-stores/`/`bom/` eachDir 与根下带 `build.gradle` 的目录自动 include——**新增模块 = 建目录 + build.gradle**，无需改 settings.gradle（例外才进 `excludes`）；`connector/` 各子树的 include 块已在 settings.gradle 预留（注释状态），启用后才参与构建。
 
 ## 开发流程
 
