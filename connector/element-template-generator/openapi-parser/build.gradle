@@ -1,0 +1,29 @@
+plugins {
+    id 'kunpeng.build-publish'
+}
+
+description = "openapi-parser"
+
+configure(jarInfo) {
+    archiveName = "kunpeng-connector-openapi-parser"
+}
+
+
+dependencies {
+    implementation 'org.slf4j:slf4j-api'
+    implementation project(':connector:http:http-base')
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation project(':connector:element-template-generator:annotations')
+    implementation project(':connector:element-template-generator:core')
+    implementation project(':connector:connector-commons:connector-object-mapper')
+    implementation project(':connector:element-template-generator:http-dsl')
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml'
+    implementation project(':connector:connector-runtime:connector-feel')
+    implementation 'io.swagger.core.v3:swagger-models'
+    implementation 'io.swagger.parser.v3:swagger-parser-v3'
+    implementation 'io.swagger.parser.v3:swagger-parser-core'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.assertj:assertj-core'
+    testImplementation 'org.skyscreamer:jsonassert'
+}

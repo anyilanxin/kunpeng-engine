@@ -1,0 +1,28 @@
+plugins {
+    id 'kunpeng.build-publish'
+}
+
+description = "Connector Runtime Test"
+
+configure(jarInfo) {
+    archiveName = "kunpeng-connector-runtime-test"
+}
+
+
+dependencies {
+    implementation project(':connector:connector-sdk:core')
+    implementation project(':connector:connector-sdk:test')
+    implementation project(':connector:connector-runtime:connector-runtime-core')
+    implementation project(':connector:connector-commons:connector-object-mapper')
+    implementation project(':connector:connector-commons:host-ip-validator')
+    implementation 'jakarta.validation:jakarta.validation-api'
+    implementation 'org.hibernate.validator:hibernate-validator'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation project(':connector:connector-runtime:jackson-datatype-feel')
+    implementation project(':connector:connector-runtime:jackson-datatype-document')
+    implementation 'org.slf4j:slf4j-api'
+    implementation 'org.assertj:assertj-core'
+    implementation project(':connector:connector-sdk:validation')
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api'
+}

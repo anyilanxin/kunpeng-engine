@@ -1,0 +1,59 @@
+plugins {
+    id 'kunpeng.build-publish'
+}
+
+description = "Connector Runtime Spring"
+
+configure(jarInfo) {
+    archiveName = "kunpeng-connector-runtime-spring"
+}
+
+
+dependencies {
+    compileOnly 'org.springframework:spring-context'
+    compileOnly 'org.springframework:spring-core'
+    compileOnly 'org.springframework:spring-webmvc'
+    compileOnly 'org.springframework.boot:spring-boot-autoconfigure'
+    compileOnly 'org.springframework:spring-beans'
+    compileOnly 'org.apache.tomcat.embed:tomcat-embed-core'
+    compileOnly 'org.apache.tomcat:tomcat-annotations-api'
+    compileOnly 'io.micrometer:micrometer-core'
+    compileOnly 'io.micrometer:micrometer-commons'
+
+    implementation 'org.apache.httpcomponents.core5:httpcore5'
+    implementation 'org.apache.commons:commons-lang3'
+    implementation 'org.apache.httpcomponents.client5:httpclient5'
+    implementation 'io.grpc:grpc-api'
+    implementation 'org.slf4j:slf4j-api'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'ch.qos.logback:logback-core'
+    implementation 'ch.qos.logback:logback-classic'
+    implementation project(':kunpeng:bpm-model:xml-model')
+    implementation project(':clients:client-java')
+    implementation project(':clients:spring-boot-starter-client')
+    implementation project(':connector:connector-sdk:core')
+    implementation project(':connector:connector-runtime:connector-feel')
+    implementation project(':kunpeng:bpm-model:bpmn-model')
+    implementation project(':connector:connector-runtime:connector-runtime-core')
+    implementation project(':connector:connector-commons:connector-object-mapper')
+    implementation 'com.google.guava:guava'
+    implementation 'com.google.code.findbugs:jsr305'
+    implementation project(':connector:connector-runtime:jackson-datatype-document')
+    implementation project(':connector:connector-runtime:jackson-datatype-feel')
+    implementation 'dev.failsafe:failsafe'
+    implementation 'org.springframework:spring-context-support'
+    implementation 'com.github.ben-manes.caffeine:caffeine'
+
+    testImplementation project(':connector:connector-sdk:validation')
+    testImplementation 'org.springframework:spring-test'
+    testImplementation 'org.mockito:mockito-junit-jupiter'
+    testImplementation 'org.assertj:assertj-core'
+    testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.wiremock:wiremock-standalone'
+    testImplementation project(':connector:connector-commons:connector-test-utils')
+    testImplementation 'jakarta.validation:jakarta.validation-api'
+    testImplementation 'org.springframework.boot:spring-boot-test'
+    testImplementation 'org.mockito:mockito-core'
+    testImplementation 'org.awaitility:awaitility'
+}

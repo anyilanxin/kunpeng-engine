@@ -1,0 +1,63 @@
+plugins {
+    id 'kunpeng.build-publish'
+}
+
+description = "Spring Boot Starter Camunda Connectors"
+
+configure(jarInfo) {
+    archiveName = "kunpeng-connector-spring-boot-starter-camunda-connectors"
+}
+
+
+dependencies {
+    implementation project(':connector:connector-runtime:connector-runtime-spring')
+    implementation project(':connector:connector-sdk:validation')
+    implementation project(':connector:connector-commons:host-ip-validator')
+    implementation project(':connector:connector-sdk:core')
+    implementation project(':connector:connector-runtime:connector-runtime-core')
+    implementation project(':connector:connector-commons:connector-object-mapper')
+    implementation project(':connector:connector-commons:http-client')
+    implementation project(':connector:connector-runtime:connector-feel')
+    implementation project(':connector:connector-runtime:jackson-datatype-feel')
+    implementation project(':connector:connector-runtime:jackson-datatype-document')
+    implementation project(':clients:spring-boot-starter-client')
+    implementation project(':clients:client-java')
+    implementation 'org.springframework:spring-core'
+    implementation 'org.springframework:spring-beans'
+    implementation 'org.springframework:spring-context'
+    implementation 'org.springframework:spring-web'
+    implementation 'org.springframework.boot:spring-boot'
+    implementation 'org.springframework.boot:spring-boot-autoconfigure'
+    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-health'
+    implementation 'org.springframework.boot:spring-boot-micrometer-metrics'
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'org.slf4j:slf4j-api'
+    implementation 'org.jspecify:jspecify'
+    implementation 'jakarta.validation:jakarta.validation-api'
+    implementation 'org.hibernate.validator:hibernate-validator'
+    implementation 'io.micrometer:micrometer-core'
+
+    compileOnly 'org.springframework.boot:spring-boot-configuration-processor'
+
+    testImplementation project(':connector:connector-commons:connector-test-utils')
+    testImplementation 'org.awaitility:awaitility'
+    testImplementation 'org.springframework:spring-test'
+    testImplementation 'org.springframework.boot:spring-boot-test'
+    testImplementation 'org.springframework.boot:spring-boot-resttestclient'
+    testImplementation 'org.springframework.boot:spring-boot-restclient'
+    testImplementation 'org.springframework.boot:spring-boot-webmvc-test'
+    testImplementation 'org.assertj:assertj-core'
+    testImplementation 'org.hamcrest:hamcrest'
+    testImplementation 'org.mockito:mockito-core'
+    testImplementation 'org.apache.tomcat.embed:tomcat-embed-core'
+    testImplementation project(':kunpeng:bpm-model:bpmn-model')
+    testImplementation 'io.grpc:grpc-api'
+    testImplementation 'org.apache.commons:commons-lang3'
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.mockito:mockito-junit-jupiter'
+    testImplementation 'tools.jackson.core:jackson-databind'
+    testImplementation 'org.springframework.boot:spring-boot-jackson2'
+}

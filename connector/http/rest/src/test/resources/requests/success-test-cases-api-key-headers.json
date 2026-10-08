@@ -1,0 +1,24 @@
+[
+    {
+        "method": "get",
+        "descriptionOfTest": "Normal request with apiKey in headers",
+        "url": "http://localhost:8086/http-endpoint",
+        "authentication": {
+            "name": "api-key-auth",
+            "type": "apiKey",
+            "value": "my-api-key-value",
+            "apiKeyLocation": "headers"
+        }
+    },
+    {
+        "method": "get",
+        "descriptionOfTest": "Normal request with apiKey in headers with secrets",
+        "url": "http://localhost:8086/http-endpoint",
+        "authentication": {
+            "name": "{{secrets.API_KEY_NAME}}",
+            "type": "apiKey",
+            "value": "{{secrets.API_KEY_VALUE}}",
+            "apiKeyLocation": "headers"
+        }
+    }
+]

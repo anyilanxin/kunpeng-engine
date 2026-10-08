@@ -1,0 +1,22 @@
+plugins {
+    id 'kunpeng.build-publish'
+}
+
+description = "element-template-generator-maven-plugin"
+
+configure(jarInfo) {
+    archiveName = "kunpeng-connector-element-template-maven-plugin"
+}
+
+
+dependencies {
+    implementation project(':connector:element-template-generator:core')
+    implementation project(':connector:connector-sdk:core')
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+
+    compileOnly 'org.apache.maven:maven-model'
+    compileOnly 'org.apache.maven:maven-artifact'
+    compileOnly 'org.apache.maven:maven-plugin-api'
+    compileOnly 'org.apache.maven.plugin-tools:maven-plugin-annotations'
+    compileOnly 'org.apache.maven:maven-project'
+}

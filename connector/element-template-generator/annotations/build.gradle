@@ -1,0 +1,14 @@
+plugins {
+    id 'kunpeng.build-publish'
+}
+
+description = "Element Template Generator Annotations"
+
+configure(jarInfo) {
+    archiveName = "kunpeng-connector-element-template-annotations"
+}
+
+
+dependencies {
+    implementation project(':connector:connector-sdk:core')
+}

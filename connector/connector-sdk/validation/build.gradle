@@ -1,0 +1,20 @@
+plugins {
+    id 'kunpeng.build-publish'
+}
+
+description = "Connector SDK Validation"
+
+configure(jarInfo) {
+    archiveName = "kunpeng-connector-sdk-validation"
+}
+
+
+dependencies {
+    implementation project(':connector:connector-sdk:core')
+    implementation 'jakarta.validation:jakarta.validation-api'
+    implementation 'org.hibernate.validator:hibernate-validator'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.assertj:assertj-core'
+    testImplementation 'com.fasterxml.jackson.core:jackson-annotations'
+}

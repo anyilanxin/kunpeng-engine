@@ -1,0 +1,19 @@
+plugins {
+    id 'kunpeng.build-publish'
+}
+
+description = "Connector SDK Core"
+
+configure(jarInfo) {
+    archiveName = "kunpeng-connector-sdk-core"
+}
+
+
+dependencies {
+    compileOnly 'com.fasterxml.jackson.core:jackson-annotations'
+    compileOnly 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'org.jspecify:jspecify'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.assertj:assertj-core'
+}

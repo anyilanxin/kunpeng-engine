@@ -1,0 +1,20 @@
+plugins {
+    id 'kunpeng.build-publish'
+}
+
+description = "element-template-generator-http"
+
+configure(jarInfo) {
+    archiveName = "kunpeng-connector-element-template-http-dsl"
+}
+
+
+dependencies {
+    implementation project(':connector:element-template-generator:annotations')
+    implementation project(':connector:element-template-generator:core')
+    implementation project(':connector:connector-runtime:connector-feel')
+    implementation project(':connector:http:http-base')
+
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.assertj:assertj-core'
+}

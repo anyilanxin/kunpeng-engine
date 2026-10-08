@@ -1,0 +1,46 @@
+plugins {
+    id 'kunpeng.build-publish'
+}
+
+description = "Connector Runtime Core"
+
+configure(jarInfo) {
+    archiveName = "kunpeng-connector-runtime-core"
+}
+
+
+dependencies {
+    implementation 'org.jspecify:jspecify'
+    implementation project(':connector:connector-sdk:core')
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'org.apache.httpcomponents.core5:httpcore5'
+    implementation 'io.grpc:grpc-api'
+    implementation 'com.google.guava:guava'
+    implementation 'org.camunda.feel:feel-engine'
+    implementation project(':connector:connector-runtime:jackson-datatype-document')
+    implementation project(':connector:connector-runtime:jackson-datatype-feel')
+    implementation project(':connector:connector-runtime:connector-feel')
+    implementation project(':connector:connector-commons:connector-utils')
+    implementation project(':clients:client-java')
+    implementation 'org.slf4j:slf4j-api'
+    implementation 'org.scala-lang:scala-library'
+    implementation 'org.apache.commons:commons-lang3'
+    implementation 'org.apache.commons:commons-collections4'
+    implementation 'jakarta.annotation:jakarta.annotation-api'
+    implementation project(':connector:connector-commons:http-client')
+    implementation 'com.auth0:java-jwt'
+    implementation 'org.bouncycastle:bcprov-jdk18on'
+
+    testImplementation project(':connector:connector-sdk:validation')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'uk.org.webcompere:system-stubs-core'
+    testImplementation 'uk.org.webcompere:system-stubs-jupiter'
+    testImplementation 'org.assertj:assertj-core'
+    testImplementation 'org.mockito:mockito-core'
+    testImplementation 'org.mockito:mockito-junit-jupiter'
+    testImplementation 'org.wiremock:wiremock-standalone'
+    testImplementation 'org.skyscreamer:jsonassert'
+    testImplementation project(':connector:connector-commons:connector-object-mapper')
+    testImplementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8'
+    testImplementation 'jakarta.validation:jakarta.validation-api'
+}

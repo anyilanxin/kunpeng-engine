@@ -1,0 +1,22 @@
+plugins {
+    id 'kunpeng.build-publish'
+}
+
+description = "connector-http-json"
+
+configure(jarInfo) {
+    archiveName = "kunpeng-connector-http-json"
+}
+
+
+dependencies {
+    implementation project(':connector:http:http-base')
+    implementation project(':connector:element-template-generator:annotations')
+
+    testImplementation 'org.wiremock:wiremock-standalone'
+    testImplementation project(':connector:connector-commons:http-client')
+    testImplementation project(':connector:element-template-generator:core')
+    testImplementation 'com.fasterxml.jackson.core:jackson-databind'
+    testImplementation 'org.apache.httpcomponents.core5:httpcore5'
+    testImplementation 'org.apache.httpcomponents:httpcore'
+}

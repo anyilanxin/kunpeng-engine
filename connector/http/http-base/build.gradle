@@ -1,0 +1,21 @@
+plugins {
+    id 'kunpeng.build-publish'
+}
+
+description = "HTTP Connector Base"
+
+configure(jarInfo) {
+    archiveName = "kunpeng-connector-http-base"
+}
+
+
+dependencies {
+    implementation project(':connector:element-template-generator:annotations')
+    implementation 'org.apache.commons:commons-lang3'
+    implementation 'org.apache.httpcomponents.core5:httpcore5'
+    implementation project(':connector:connector-commons:http-client')
+
+    testImplementation 'org.wiremock:wiremock-standalone'
+    testImplementation 'org.skyscreamer:jsonassert'
+    testImplementation project(':connector:connector-runtime:connector-runtime-core')
+}

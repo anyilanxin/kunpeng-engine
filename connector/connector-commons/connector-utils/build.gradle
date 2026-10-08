@@ -1,0 +1,14 @@
+plugins {
+    id 'kunpeng.build-publish'
+}
+
+description = "Connector Utils"
+
+configure(jarInfo) {
+    archiveName = "kunpeng-connector-utils"
+}
+
+
+dependencies {
+    implementation project(':connector:connector-sdk:core')
+}

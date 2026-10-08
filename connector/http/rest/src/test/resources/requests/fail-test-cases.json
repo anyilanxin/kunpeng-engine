@@ -1,0 +1,54 @@
+[
+    {
+        "headers": {
+            "User-Agent": "http-connector-demo",
+            "X-Camunda-Cluster-ID": "abcdef"
+        },
+        "queryParameters": {
+            "q": "test",
+            "priority": 12
+        },
+        "descriptionOfTest": "No method",
+        "body": {"customer": {
+            "name": "Jane Doe",
+            "id": 1231231,
+            "email": "jane.doe@exampe.com"
+        }},
+        "url": "http://localhost:8086/http-endpoint"
+    },
+    {
+        "headers": {
+            "User-Agent": "http-connector-demo",
+            "X-Camunda-Cluster-ID": "abcdef"
+        },
+        "method": "get",
+        "queryParameters": {
+            "q": "test",
+            "priority": 12
+        },
+        "descriptionOfTest": "No URL",
+        "body": {"customer": {
+            "name": "Jane Doe",
+            "id": 1231231,
+            "email": "jane.doe@exampe.com"
+        }}
+    },
+    {
+        "headers": {
+            "User-Agent": "http-connector-demo",
+            "X-Camunda-Cluster-ID": "abcdef"
+        },
+        "method": "get",
+        "queryParameters": {
+            "q": "test",
+            "priority": 12
+        },
+        "descriptionOfTest": "Malformed URL",
+        "body": {"customer": {
+            "name": "Jane Doe",
+            "id": 1231231,
+            "email": "jane.doe@exampe.com"
+        }},
+        "url": "testmail@testmail.com"
+    }
+]

@@ -37,7 +37,6 @@ dependencies {
     api platform("io.micrometer:micrometer-bom:1.17.1")
     api platform("tools.jackson:jackson-bom:3.2.3")
     api platform("org.apache.logging.log4j:log4j-bom:2.26.1")
-    api platform('io.netty:netty-bom:4.2.18.Final')
     constraints {
         // rpc
         def protostuff = "1.8.0"
@@ -117,7 +116,6 @@ dependencies {
         api "com.auth0:java-jwt:4.6.1"
         api "com.auth0:auth0:5.3.0"
         api "com.auth0:jwks-rsa:0.24.1"
-        api "net.jcip:jcip-annotations:1.0"
         api "com.google.cloud:spring-cloud-gcp-logging:8.2.1"
         api "org.apache.commons:commons-collections4:4.6.0"
         api 'commons-codec:commons-codec:1.22.1'
@@ -133,12 +131,22 @@ dependencies {
         api 'org.eclipse.angus:angus-mail:2.0.5'
         api "org.testcontainers:rabbitmq:1.21.4"
         api "org.apache.httpcomponents:httpcore:4.4.16"
-        api 'org.apache.commons:commons-text:1.15.0'
         api "org.jdbi:jdbi3-core:3.55.0"
         api "org.jdbi:jdbi3-jackson2:3.55.0"
-        api 'org.postgresql:postgresql:42.7.13'
         api 'org.mariadb.jdbc:mariadb-java-client:3.5.10'
         api "org.apache.fory:fory-core:1.7.6"
+
+        // connector fork相关----start
+        def ayza = "10.0.6"
+        api "io.github.hakky54:ayza:$ayza"
+        api "io.github.hakky54:ayza-for-pem:$ayza"
+        api 'org.camunda.feel:feel-engine:1.22.0'
+        api 'org.scala-lang:scala-library:3.8.4'
+        api 'org.skyscreamer:jsonassert:1.5.3'
+        api 'org.apache.maven:maven-model:4.0.0-rc-7'
+        api 'org.apache.maven:maven-artifact:4.0.0-rc-7'
+        api 'org.eclipse.jgit:org.eclipse.jgit:7.7.1.202607240634-r'
+        // connector fork相关----end
 
         def mapstructPlus = "1.5.3"
         api "io.github.linpeilie:mapstruct-plus-spring-boot-starter:${mapstructPlus}"
@@ -161,7 +169,12 @@ dependencies {
         def swagger = "2.2.55"
         api "io.swagger.core.v3:swagger-annotations:$swagger"
         api "io.swagger.core.v3:swagger-annotations-jakarta:$swagger"
-        api "io.swagger.parser.v3:swagger-parser:2.1.48"
+        api "io.swagger.core.v3:swagger-models:$swagger"
+
+        def swaggerParse = "2.1.48"
+        api "io.swagger.parser.v3:swagger-parser:$swaggerParse"
+        api "io.swagger.parser.v3:swagger-parser-v3:$swaggerParse"
+        api "io.swagger.parser.v3:swagger-parser-core:$swaggerParse"
 
         def mybatisPlus = "3.5.17"
         api "com.baomidou:mybatis-plus-extension:${mybatisPlus}"

@@ -1,0 +1,14 @@
+plugins {
+    id 'kunpeng.build-publish'
+}
+
+description = "Connector Host IP Validator Annotation"
+
+configure(jarInfo) {
+    archiveName = "kunpeng-connector-host-ip-validator-annotation"
+}
+
+
+dependencies {
+    implementation 'jakarta.validation:jakarta.validation-api'
+}

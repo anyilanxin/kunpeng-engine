@@ -1,0 +1,21 @@
+plugins {
+    id 'kunpeng.build-publish'
+}
+
+description = "Uniquet"
+
+configure(jarInfo) {
+    archiveName = "kunpeng-connector-uniquet"
+}
+
+
+dependencies {
+    implementation 'org.slf4j:slf4j-api'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'info.picocli:picocli'
+    implementation 'org.eclipse.jgit:org.eclipse.jgit'
+    implementation 'org.slf4j:slf4j-simple'
+
+    testImplementation 'org.mockito:mockito-core'
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}

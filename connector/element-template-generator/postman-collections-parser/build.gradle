@@ -1,0 +1,24 @@
+plugins {
+    id 'kunpeng.build-publish'
+}
+
+description = "postman-collections-parser"
+
+configure(jarInfo) {
+    archiveName = "kunpeng-connector-postman-collections-parser"
+}
+
+
+dependencies {
+    implementation 'org.slf4j:slf4j-api'
+    implementation project(':connector:http:http-base')
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'org.apache.commons:commons-lang3'
+    implementation project(':connector:element-template-generator:annotations')
+    implementation project(':connector:element-template-generator:core')
+    implementation project(':connector:element-template-generator:http-dsl')
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.assertj:assertj-core'
+}

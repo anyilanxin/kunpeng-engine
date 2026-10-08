@@ -1,0 +1,25 @@
+plugins {
+    id 'kunpeng.build-publish'
+}
+
+description = "congen-cli"
+
+configure(jarInfo) {
+    archiveName = "kunpeng-connector-congen-cli"
+}
+
+
+dependencies {
+    implementation 'info.picocli:picocli'
+    implementation 'com.networknt:json-schema-validator'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation project(':connector:element-template-generator:annotations')
+    implementation project(':connector:element-template-generator:core')
+    implementation project(':connector:element-template-generator:openapi-parser')
+    implementation project(':connector:element-template-generator:postman-collections-parser')
+    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml'
+    implementation 'org.slf4j:slf4j-nop'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.assertj:assertj-core'
+}

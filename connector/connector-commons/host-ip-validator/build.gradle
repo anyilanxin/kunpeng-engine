@@ -1,0 +1,20 @@
+plugins {
+    id 'kunpeng.build-publish'
+}
+
+description = "Connector Host IP Validator"
+
+configure(jarInfo) {
+    archiveName = "kunpeng-connector-host-ip-validator"
+}
+
+
+dependencies {
+    implementation project(':connector:connector-commons:host-ip-validator-annotation')
+    implementation 'jakarta.validation:jakarta.validation-api'
+    implementation 'org.hibernate.validator:hibernate-validator'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api'
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.assertj:assertj-core'
+}

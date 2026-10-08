@@ -1,0 +1,27 @@
+plugins {
+    id 'kunpeng.build-publish'
+}
+
+description = "Connector Runtime Bundle"
+
+configure(jarInfo) {
+    archiveName = "kunpeng-connector-runtime-bundle"
+}
+
+dependencies {
+    def allProjects = []
+    rootProject.allprojects.each {
+        if (it.parent != null) {
+            allProjects.add(":${it.parent.name}:${it.name}")
+        }
+    }
+    if (file("${rootDir}/connector/connectors").directory) {
+        file("${rootDir}/connector/connectors").eachDir {
+            if (file("${it.path}/build.gradle").file) {
+                if (allProjects.contains(":connector:${it.name}")) {
+                    implementation project(":connector:connector:${it.name}")
+                }
+            }
+        }
+    }
+}

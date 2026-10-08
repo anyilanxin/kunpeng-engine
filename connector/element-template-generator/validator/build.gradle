@@ -1,0 +1,21 @@
+plugins {
+    id 'kunpeng.build-publish'
+}
+
+description = "Element Template Validator"
+
+configure(jarInfo) {
+    archiveName = "kunpeng-connector-element-template-validator"
+}
+
+
+dependencies {
+    implementation 'org.slf4j:slf4j-api'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'info.picocli:picocli'
+    implementation 'com.networknt:json-schema-validator'
+    implementation 'org.slf4j:slf4j-nop'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.assertj:assertj-core'
+}

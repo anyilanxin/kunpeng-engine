@@ -29,7 +29,7 @@ kunpeng-engine/
 │   ├── configuration/ # 引擎配置
 │   └── utils/         # 公共工具
 ├── clients/           # 客户端 SDK（client-java、spring-boot-starter-client）
-├── connectors/        # Camunda Connectors 生态 fork——裁剪为纯源码形态（上游 CI/e2e/文档与 Maven 根构建已移除），未纳入 Gradle 构建
+├── connector/         # Camunda Connectors 生态 fork——裁剪为纯源码形态（上游 CI/e2e/文档与 Maven 根构建已移除），未纳入 Gradle 构建
 ├── backup-stores/     # 备份存储（当前为空，占位）
 ├── sinks/             # sink 外发实现（当前 sink-rdbms；eachDir 自动 include；含上游 fork 许可文件 LICENSE/NOTICE/licenses）
 ├── bom/               # 三个 BOM：dependency-bom（总依赖）、client-sdk-bom、connector-sdk-bom
@@ -122,7 +122,7 @@ kunpeng-engine/
 ./gradlew spotlessApply               # 格式化（仅根目录整库执行有效，提交前必跑）
 ./gradlew spotlessCheck               # 格式化校验
 
-# connectors/ 为纯源码保留（上游 Maven 根工程已移除），不参与任何构建
+# connector/ 为纯源码保留（上游 Maven 根工程已移除），不参与任何构建
 ```
 
 - **JDK**：toolchain 25；`JavaExec`/`Test` 已统一注入 `--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED`，勿在模块里重复加
@@ -134,7 +134,7 @@ kunpeng-engine/
 - **协议编号池不可乱动**：`PROCESS_INDEX_*` / `RECORD_INDEX_*` 有严格连续性规则，编号错会导致 **Raft 日志反序列化错位**——申请/重排编号必须走 `enum-standards` 技能流程。
 - **序列化兼容**：structpack Record 的 key-id 是身份强管理（改字段=改协议），动手前读 `structpack` 技能；Entity 与 Record 必须成对同步 wrap/unwrap。
 - **spotlessApply 只在根目录跑**：模块级不存在该任务，报错即用错了地方。
-- **connectors 纯源码保留**：`connectors/` 已裁剪掉上游 CI/QA、e2e 测试、文档与 Maven 根构建（根/parent pom、wrapper），Gradle 与 Maven 均不构建它。
+- **connector 纯源码保留**：`connector/` 已裁剪掉上游 CI/QA、e2e 测试、文档与 Maven 根构建（根/parent pom、wrapper），Gradle 与 Maven 均不构建它。
 - **版权头**：上游（Zeebe/Camunda 系）文件保留原版权头不动；新文件加自家 AGPL 头。
 - **格式化即门禁**：Spotless（googleJavaFormat，经 `kunpeng.code-spotless` 插件）在编译前自动 apply，本地提交前手动跑一遍避免 CI 噪音。
 

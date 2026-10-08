@@ -1,0 +1,18 @@
+plugins {
+    id 'kunpeng.build-publish'
+}
+
+description = "Connector Test Utils"
+
+configure(jarInfo) {
+    archiveName = "kunpeng-connector-test-utils"
+}
+
+
+dependencies {
+    implementation 'org.wiremock:wiremock-standalone'
+    implementation 'org.junit.jupiter:junit-jupiter'
+    implementation 'org.junit.jupiter:junit-jupiter-api'
+
+    testImplementation 'org.assertj:assertj-core'
+}

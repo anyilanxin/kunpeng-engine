@@ -1,0 +1,21 @@
+plugins {
+    id 'kunpeng.build-publish'
+}
+
+description = "Jackson Datatype Feel"
+
+configure(jarInfo) {
+    archiveName = "kunpeng-connector-jackson-datatype-feel"
+}
+
+
+dependencies {
+    implementation project(':connector:connector-runtime:connector-feel')
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation project(':connector:connector-sdk:core')
+    implementation project(':connector:connector-commons:connector-object-mapper')
+
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.assertj:assertj-core'
+    testImplementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+}

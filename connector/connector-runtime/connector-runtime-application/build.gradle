@@ -1,0 +1,21 @@
+plugins {
+    id 'kunpeng.build-publish'
+}
+
+description = "Connector Runtime Application"
+
+configure(jarInfo) {
+    archiveName = "kunpeng-connector-runtime-application"
+}
+
+
+dependencies {
+    implementation project(':connector:connector-runtime:spring-boot-starter-camunda-connectors')
+    implementation 'org.springframework:spring-context'
+    implementation 'org.springframework.boot:spring-boot-autoconfigure'
+    implementation 'org.springframework.boot:spring-boot'
+    implementation 'org.springframework.boot:spring-boot-jackson2'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+    implementation 'com.google.cloud:spring-cloud-gcp-logging'
+    implementation 'org.codehaus.janino:janino'
+}
