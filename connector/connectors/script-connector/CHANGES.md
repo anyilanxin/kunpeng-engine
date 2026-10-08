@@ -22,8 +22,14 @@ constrained by the upstream release cadence.
 ## Changes in This Repository
 
 1. The full content of the upstream repository root was extracted into this directory; the upstream
-   Maven engineering is preserved as-is at this stage (root `pom.xml`, the `connector` and `runtime`
-   modules, `.github/` workflows and community files).
+   Maven engineering was preserved as-is at import time (root `pom.xml`, the `connector` and
+   `runtime` modules, `.github/` workflows and community files).
+2. Follow-up adjustments after import: pruned to the `connector` module only (the `runtime` sample
+   application, `.github/` workflows, docker and community files were removed) and flattened to a
+   single-module layout (`src/`, `element-templates/` at the directory root); the Maven build files
+   were replaced by a Gradle `build.gradle` translated from the module `pom.xml` (internal
+   `io.camunda.connector` artifacts map to local `project(...)` references; versions live in this
+   repository's dependency BOM). All `pom.xml` files have been removed.
 
 ## Copyright and License Notes
 

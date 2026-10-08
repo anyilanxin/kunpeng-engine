@@ -19,8 +19,12 @@
 
 ## 本仓库的更改
 
-1. 导入时仅提取上游仓库根目录全部内容至本目录：上游 Maven 工程结构（根 `pom.xml`、`connector` 与
-   `runtime` 两个模块、`.github/` 工作流与社区文件）原样保留。
+1. 导入时提取上游仓库根目录全部内容至本目录：上游 Maven 工程结构（根 `pom.xml`、`connector` 与
+   `runtime` 两个模块、`.github/` 工作流与社区文件）当时原样保留。
+2. 导入后的调整：裁剪为仅保留 `connector` 模块（移除 `runtime` 示例应用、`.github/` 工作流、docker
+   与社区文件）并扁平化为单模块布局（`src/`、`element-templates/` 上移至目录根部）；构建文件由
+   Maven `pom.xml` 替换为按模块 `pom.xml` 翻译的 Gradle `build.gradle`（内部 `io.camunda.connector`
+   构件映射为本地 `project(...)` 引用，版本统一收拢在本仓库 dependency-bom）；全部 `pom.xml` 已删除。
 
 ## 版权与许可注意事项
 

@@ -1,0 +1,29 @@
+plugins {
+    id 'kunpeng.build-publish'
+}
+
+description = "Script Connector"
+
+configure(jarInfo) {
+    archiveName = "kunpeng-script-connector"
+}
+
+
+dependencies {
+    compileOnly project(':connector:connector-sdk:core')
+    compileOnly project(':connector:element-template-generator:annotations')
+    compileOnly 'jakarta.validation:jakarta.validation-api'
+    compileOnly 'com.fasterxml.jackson.core:jackson-databind'
+
+    implementation 'com.samskivert:jmustache'
+    implementation 'org.apache.groovy:groovy-all'
+    implementation 'org.graalvm.polyglot:polyglot'
+    implementation 'org.graalvm.polyglot:js'
+    implementation 'org.graalvm.js:js-scriptengine'
+    implementation 'org.jetbrains.kotlin:kotlin-scripting-jsr223'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.assertj:assertj-core'
+    testImplementation project(':connector:connector-runtime:spring-boot-starter-camunda-connectors')
+}
