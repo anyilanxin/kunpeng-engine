@@ -29,9 +29,9 @@ kunpeng-engine/
 │   ├── configuration/ # 引擎配置
 │   └── utils/         # 公共工具
 ├── clients/           # 客户端 SDK（client-java、spring-boot-starter-client）
-├── connector/         # Camunda Connectors 生态 fork（connector-sdk、connector-commons、connector-runtime、element-template-generator、http、connector-runtime-bundle）——构建文件已由 Maven 迁移为 Gradle、版本统一收拢在 dependency-bom，暂未纳入 Gradle 统一构建
+├── connector/         # Connector 生态（connector-sdk、connector-commons 含 http-base、connector-runtime、element-template-generator、connectors 开箱即用连接器 rest 与 script-connector、connector-runtime-bundle）
 ├── backup-stores/     # 备份存储（当前为空，占位）
-├── sinks/             # sink 外发实现（当前 sink-rdbms；eachDir 自动 include；含上游 fork 许可文件 LICENSE/NOTICE/licenses）
+├── sinks/             # sink 外发实现
 ├── bom/               # 三个 BOM：dependency-bom（总依赖）、client-sdk-bom、connector-sdk-bom
 ├── dist/              # 发行版装配
 ├── example/           # 可运行示例应用（示例 BPMN 流程、job worker 接入、启停脚本）
