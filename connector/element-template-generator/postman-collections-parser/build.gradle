@@ -11,7 +11,7 @@ configure(jarInfo) {
 
 dependencies {
     implementation 'org.slf4j:slf4j-api'
-    implementation project(':connector:http:http-base')
+    implementation project(':connector:connector-commons:http-base')
     implementation 'com.fasterxml.jackson.core:jackson-databind'
     implementation 'org.apache.commons:commons-lang3'
     implementation project(':connector:element-template-generator:annotations')

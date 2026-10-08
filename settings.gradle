@@ -94,18 +94,6 @@ if (file("${rootDir}/clients").directory) {
 //    }
 //}
 //
-//if (file("${rootDir}/connector/http").directory) {
-//    file("${rootDir}/connector/http").eachDir {
-//        if (it.directory) {
-//            if (file("${it.path}/build.gradle").file) {
-//                if (!excludes.contains(it.name)) {
-//                    include "connector:http:${it.name}"
-//                }
-//            }
-//        }
-//    }
-//}
-//
 //
 //if (file("${rootDir}/connector/connectors").directory) {
 //    file("${rootDir}/connector/connectors").eachDir {

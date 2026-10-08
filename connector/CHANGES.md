@@ -41,7 +41,7 @@ constrained by the upstream release cadence.
    re-imported from upstream with Gradle build files (the upstream `polling` and `graphql` siblings
    were not included). The former external `connector-http-base` references in the
    element-template-generator modules (`http-dsl`, `openapi-parser`, `postman-collections-parser`)
-   now point at the local `:connector:http:http-base` project.
+   now point at the local `:connector:connector-commons:http-base` project.
 
 ## Copyright and License Notes
 

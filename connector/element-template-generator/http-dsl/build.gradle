@@ -13,7 +13,7 @@ dependencies {
     implementation project(':connector:element-template-generator:annotations')
     implementation project(':connector:element-template-generator:core')
     implementation project(':connector:connector-runtime:connector-feel')
-    implementation project(':connector:http:http-base')
+    implementation project(':connector:connector-commons:http-base')
 
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation 'org.assertj:assertj-core'

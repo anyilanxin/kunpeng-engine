@@ -10,7 +10,7 @@ configure(jarInfo) {
 
 
 dependencies {
-    implementation project(':connector:http:http-base')
+    implementation project(':connector:connector-commons:http-base')
     implementation project(':connector:element-template-generator:annotations')
 
     testImplementation 'org.wiremock:wiremock-standalone'

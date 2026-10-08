@@ -31,7 +31,7 @@
    重新导入上游 `http/http-base` 与 `http/rest`（`connector-http-json`）并配好 Gradle 构建文件
    （上游同级的 `polling`、`graphql` 模块未导入）。element-template-generator 各模块（`http-dsl`、
    `openapi-parser`、`postman-collections-parser`）原先指向外部的 `connector-http-base` 引用改为本地
-   `:connector:http:http-base` 工程。
+   `:connector:connector-commons:http-base` 工程。
 
 ## 版权与许可注意事项
 
