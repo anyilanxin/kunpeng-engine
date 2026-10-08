@@ -2,7 +2,7 @@
 
 [English](./CHANGES.md)
 
-本目录的代码来源于 Camunda Connectors 仓库（connector SDK、运行时与开箱即用连接器）：
+本目录的代码来源于 Camunda Connectors 仓库（connector SDK、运行时与开箱即用连接器）——凡未单独注明来源的内容均来自该仓库；来自其他项目的部分是例外，会在其所在目录单独附来源说明：
 
 - 上游仓库：<https://github.com/camunda/connectors>
 - 导入时的来源提交（含上游最后一次提交）：<https://github.com/camunda/connectors/commit/6bdd060a30968ce176bfaa15e55ab7f015fffbbb>

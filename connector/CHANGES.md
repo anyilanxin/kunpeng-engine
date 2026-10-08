@@ -3,7 +3,9 @@
 [中文](./CHANGES.zh-CN.md)
 
 The code in this directory originates from the Camunda Connectors repository (connector SDK, runtime
-and out-of-the-box connectors):
+and out-of-the-box connectors) — anything without a specific source note comes from there; parts
+originating from other projects are the exception and carry their own separate source notes in
+their directories:
 
 - Upstream repository: <https://github.com/camunda/connectors>
 - Source commit at import time (last upstream commit included): <https://github.com/camunda/connectors/commit/6bdd060a30968ce176bfaa15e55ab7f015fffbbb>

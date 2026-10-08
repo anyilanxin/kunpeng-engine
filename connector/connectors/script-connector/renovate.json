@@ -1,0 +1,35 @@
+{
+    "extends": [
+        "config:recommended",
+        "schedule:automergeNonOfficeHours",
+        ":automergeAll"
+    ],
+    "packageRules": [
+        {
+            "matchPackageNames": ["io.camunda.connectors.community{/,}**"],
+            "description": "Never update Script connector dependencies",
+            "enabled": false
+        },
+        {
+            "matchPackageNames": ["io.camunda:*{/,}**"],
+            "description": "Never update camunda dependencies minor and major after a release",
+            "matchBaseBranches": ["/^release/.*/"],
+            "matchUpdateTypes": [
+                "major",
+                "minor"
+            ],
+            "enabled": false
+        },
+        {
+            "matchPackageNames": ["/.*/"],
+            "description": "Exclude SNAPSHOT versions, renovate may suggest them for pre-release values.",
+            "matchManagers": ["maven"],
+            "allowedVersions": "!/-SNAPSHOT$/"
+        }
+    ],
+    "baseBranchPatterns": [
+        "main",
+        "/^release/.*/"
+    ],
+    "labels": ["dependencies"]
+}
