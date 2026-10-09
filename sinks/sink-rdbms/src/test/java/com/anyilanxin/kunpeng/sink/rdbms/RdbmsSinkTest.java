@@ -283,7 +283,8 @@ class RdbmsSinkTest {
     emit(1L, ValueType.PROCESS_INSTANCE, ProcessInstanceLifeCycle.ACTIVATED, new Fakes.ProcessInstanceValue());
     sink.flush();
 
-    // 重启：新实例、新引擎位置（-1），start() 从位置行对账并反推
+    // 重启：新实例、新引擎位置（-1）；start() 只读位置行用于跳过，不反推引擎
+    // （外部库位置可能跨数据世代——重建 data/ 等——反推会把引擎投递游标推到日志之外导致启动失败）
     sink.close();
     final var args =
         Map.<String, Object>of(
@@ -292,11 +293,13 @@ class RdbmsSinkTest {
     sink.initialize(Fakes.context(args));
     controller = new Fakes.RecordingController();
     sink.start(controller);
-    assertThat(controller.getPosition()).isEqualTo(1L);
+    assertThat(controller.getPosition()).isEqualTo(-1L);
 
-    // 引擎侧位置丢失后的重放：同位置记录再送一遍，低于权威位置直接跳过，不产生重复行
+    // 引擎侧位置丢失后的重放：同位置记录再送一遍，低于权威位置直接跳过，不产生重复行；
+    // 跳过窗口的空刷盘照常确认，引擎位置经 ack 自然追平
     emit(1L, ValueType.PROCESS_INSTANCE, ProcessInstanceLifeCycle.ACTIVATED, new Fakes.ProcessInstanceValue());
     sink.flush();
+    assertThat(controller.getPosition()).isEqualTo(1L);
     try (var session = verifyFactory.openSession()) {
       assertThat(session.getMapper(VerificationMapper.class).totalRows()).isOne();
     }

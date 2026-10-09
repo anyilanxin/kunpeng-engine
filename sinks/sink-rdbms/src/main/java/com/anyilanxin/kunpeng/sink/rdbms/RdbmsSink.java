@@ -57,8 +57,9 @@ import org.slf4j.Logger;
  * ChangeBuffer}；缓冲按「形态 + 主键」收敛（同一窗口内同主键的连续 update 只剩最后一笔， insert 与 update
  * 保持先后、同事务内自然合并），刷盘时整窗进入同一个事务批量提交，成功后才向引擎确认位置。 任意一步失败则整体回滚，依赖引擎重投递收敛。
  *
- * <p>位置分两级：引擎侧确认位置只作压缩门槛与投递游标；本 sink 在目标库维护自己的权威位置行（位置行与数据同事务提交），
- * 启动时与引擎位置对账——位置行领先则反推引擎，低于位置行的重放记录直接跳过不落库。
+ * <p>位置分两级：引擎侧确认位置只作压缩门槛与投递游标，仅承认框架实际投递过的确认；本 sink 在目标库维护自己的
+ * 权威位置行（位置行与数据同事务提交），启动只读取用于跳过重放——低于位置行的记录直接跳过不落库，跳过窗口照常 确认让引擎位置追平。位置行不回推引擎：外部库可能跨数据世代（重建 data/
+ * 等），回推会把投递游标推到日志之外。
  *
  * <p>配置项见 {@link RdbmsSinkSettings}；建表默认自动迁移。
  *
@@ -253,7 +254,10 @@ public final class RdbmsSink implements RecordSink {
     }
   }
 
-  /** 启动对账：读取（或首启创建）本分区的位置行。位置行领先引擎侧位置时反推引擎—— 引擎位置只来自最后确认点，快照回退/重启后可能落后于实际落库进度。 */
+  /**
+   * 启动读取（或首启创建）本分区的位置行，仅用于 {@link #sink} 内跳过重放。位置行不回推引擎：引擎侧位置
+   * 只承认框架实际投递过的确认（启动阶段框架一条未投，确认无据）；跳过窗口经空刷盘照常确认，引擎位置自然追平。
+   */
   private void recoverOwnPosition() {
     final var row = findOwnPositionRow();
     if (row == null) {
@@ -261,10 +265,6 @@ public final class RdbmsSink implements RecordSink {
       return;
     }
     ownPosition = row.getExportedPosition();
-    if (ownPosition > -1L) {
-      // updatePosition 单调不回退：引擎位置领先时是无害空操作
-      controller.updatePosition(ownPosition);
-    }
     log.info("Rdbms sink partition {} resumed from exported position {}", partitionId, ownPosition);
   }
 
