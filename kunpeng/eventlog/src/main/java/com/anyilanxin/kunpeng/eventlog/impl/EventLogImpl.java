@@ -33,7 +33,7 @@ import java.time.Clock;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
- * {@link EventLog} 实现：恢复（seekToEnd 找回 lastPosition）→ 装配定序器/流控 → 提交通知分发。
+ * {@link EventLog} 实现：恢复（存储持久化提交位找回 lastPosition）→ 装配定序器/流控 → 提交通知分发。
  *
  * @author zxuanhong
  * @since 2026.9.0
@@ -67,18 +67,13 @@ public final class EventLogImpl implements EventLog {
             ? EventLogMetrics.noop()
             : new EventLogMetrics(registry, logName, partitionId);
     this.flowControl = new FlowController(params, System::nanoTime, metrics);
-    final long lastPosition = recoverLastPosition(store);
+    // 打开期播种：存储持久化的最后已提交 position（空日志 = 0），定序器从 lastPosition+1 续号；
+    // 不经 reader seekToEnd（底层 asqn 寻位冷启动会退化为全日志顺序扫描）
+    final long lastPosition = store.getLastCommittedPosition();
     this.flowControl.seedPositions(lastPosition);
     this.sequencer =
         new PositionSequencer(store, flowControl, metrics, maxBatchSize, lastPosition + 1, clock);
     store.addCommitListener(commitListener);
-  }
-
-  /** 打开期恢复：临时 reader 扫到末尾取 lastPosition（空日志 = 0） */
-  private static long recoverLastPosition(final EventStore store) {
-    try (EventLogReaderImpl recovery = new EventLogReaderImpl(store.newReader())) {
-      return recovery.seekToEnd();
-    }
   }
 
   @Override

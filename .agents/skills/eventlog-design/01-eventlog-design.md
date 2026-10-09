@@ -335,7 +335,7 @@ flowchart LR
 
 - seek 族语义：`seek(p)` 命中 position==p 或最近大于项；`seekToEnd()` 返回 lastPosition（空日志 0），供恢复续号
 - gap（烧毁区间）表现为 position 跳跃，不报错
-- `BatchEntryReader`：同一 sourcePosition 的**连续**条目归为一批（处理单条源事件的结果连续存放），`head()` 经 `reader.seek` 回卷重放
+- `BatchEntryReader`：同一 sourcePosition 的**连续**条目归为一批（处理单条源事件的结果连续存放），`head()` 经 `reader.seek` 回卷重放；`seekToNextBatch(p)` 委托 `seekToNextEntry(p)` 按**条目 position** 定位（负哨兵→首条、非负→p 之后首条）——生产写入全走无源（source=-1）2 参 append，源位置比较（-1>-1 永假）会顺序吞掉整条日志，故寻位必须用条目 position（与上游 LogStreamBatchReaderImpl 语义一致）
 
 ## 7. 存储 SPI（Raft 桥接点）
 

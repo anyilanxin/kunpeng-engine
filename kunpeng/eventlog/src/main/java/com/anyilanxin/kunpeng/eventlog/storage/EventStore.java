@@ -40,6 +40,13 @@ public interface EventStore {
   EventStoreReader newReader();
 
   /**
+   * 最后已提交 position（无已提交条目返回 0，position 从 1 起）。
+   *
+   * <p>持久化视角：重启后仍可取回，不得只依赖本进程内存水位；打开期播种（续号起点）依赖此语义。
+   */
+  long getLastCommittedPosition();
+
+  /**
    * 追加一个块（firstPosition..lastPosition 的批帧）
    *
    * @param firstPosition 块首条目 position

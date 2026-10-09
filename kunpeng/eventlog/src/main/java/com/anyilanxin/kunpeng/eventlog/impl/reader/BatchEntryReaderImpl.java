@@ -53,16 +53,9 @@ public final class BatchEntryReaderImpl implements BatchEntryReader {
 
   @Override
   public boolean seekToNextBatch(final long position) {
-    while (true) {
-      final LoggedEntry peeked = reader.peekNext();
-      if (peeked == null) {
-        return false;
-      }
-      if (peeked.getSourcePosition() > position) {
-        return true;
-      }
-      reader.next();
-    }
+    // 源位置比较对无源批(source=-1)失效——-1>-1 永假会顺序吃掉整条日志; 改按条目 position 定位
+    // (负哨兵→首条, 非负→position 之后首条), 与上游 LogStreamBatchReaderImpl 语义一致
+    return reader.seekToNextEntry(position);
   }
 
   @Override

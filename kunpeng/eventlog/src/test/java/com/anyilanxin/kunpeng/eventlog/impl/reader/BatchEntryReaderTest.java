@@ -99,16 +99,50 @@ class BatchEntryReaderTest {
   }
 
   @Test
-  @DisplayName("seekToNextBatch 按 sourcePosition 定位")
+  @DisplayName("seekToNextBatch 按 position 定位（负值=从头，不吞日志）")
   void seekToNextBatch() {
     try (BatchEntryReader reader = log.newBatchReader()) {
-      assertThat(reader.seekToNextBatch(100)).isTrue();
-      assertThat(reader.next().next().getSourcePosition()).isEqualTo(200);
+      // 负哨兵（恢复起点 -1）→ 定位到首条
+      assertThat(reader.seekToNextBatch(-1)).isTrue();
+      assertThat(reader.hasNext()).isTrue();
+      assertThat(reader.next().next().getPosition()).isEqualTo(1);
 
-      assertThat(reader.seekToNextBatch(200)).isTrue();
-      assertThat(reader.next().next().getSourcePosition()).isEqualTo(300);
+      // 非负: 跳过 position <= 给定值, 落在首个更晚条目
+      assertThat(reader.seekToNextBatch(3)).isTrue();
+      assertThat(reader.next().next().getPosition()).isEqualTo(4);
 
-      assertThat(reader.seekToNextBatch(300)).isFalse(); // 无更晚源
+      // 尾部追平: 末条 position=6 存在即定位成功, 但无更晚条目
+      assertThat(reader.seekToNextBatch(6)).isTrue();
+      assertThat(reader.hasNext()).isFalse();
+    }
+  }
+
+  @Test
+  @DisplayName("无源批（生产写入 source=-1）：负值全量可读，非负按 position 续读")
+  void seekToNextBatchOnSourcelessBatches() {
+    final InMemoryEventStore sourcelessStore = new InMemoryEventStore();
+    final EventLog sourcelessLog =
+        EventLog.builder()
+            .withEventStore(sourcelessStore)
+            .withLogName("batch-reader-sourceless-test")
+            .withPartitionId(1)
+            .build();
+    try {
+      // 生产路径 2 参 tryAppend → sourcePosition=-1（回归: 旧实现 -1>-1 永假会吞掉整条日志）
+      sourcelessLog.newWriter().tryAppend(WriteContext.INTERNAL, entriesOfSize(2));
+      sourcelessLog.newWriter().tryAppend(WriteContext.INTERNAL, entriesOfSize(1));
+
+      try (BatchEntryReader reader = sourcelessLog.newBatchReader()) {
+        assertThat(reader.seekToNextBatch(-1)).isTrue();
+        assertThat(reader.hasNext()).isTrue();
+        assertThat(reader.next().next().getPosition()).isEqualTo(1);
+
+        assertThat(reader.seekToNextBatch(1)).isTrue();
+        assertThat(reader.next().next().getPosition()).isEqualTo(2);
+      }
+    } finally {
+      sourcelessLog.close();
+      sourcelessStore.shutdown();
     }
   }
 

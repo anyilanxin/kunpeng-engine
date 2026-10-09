@@ -81,6 +81,11 @@ public final class InMemoryEventStore implements EventStore {
   }
 
   @Override
+  public long getLastCommittedPosition() {
+    return ranges.isEmpty() ? 0 : ranges.get(ranges.size() - 1)[1];
+  }
+
+  @Override
   public void append(
       final long firstPosition, final long lastPosition, final BufferWriter block,
       final AppendListener listener) {

@@ -111,6 +111,31 @@ public final class RaftLog implements Closeable {
     commitIndex = index;
   }
 
+  /**
+   * 最后已提交 position：末个已提交应用条目的 highestPosition，无已提交应用条目返回 0（position 从 1 起）。
+   *
+   * <p>走 index 寻位（idx 持久化索引冷启动可用，段内最多顺扫 density 条），从 commitIndex 起回退越过非应用条目
+   * （initial/config，ASQN_IGNORE）。ASQN 只存在于记录体内且内存 asqn 索引不持久化，冷启动经 {@code seekToAsqn}
+   * 取末位会退化为全日志顺序扫描，故这里必须走 index 寻位路径。
+   */
+  public long getLastCommittedPosition() {
+    long index = commitIndex;
+    try (final RaftLogReader reader = openUncommittedReader()) {
+      while (index >= journal.getFirstIndex()) {
+        reader.seek(index);
+        if (!reader.hasNext()) {
+          break;
+        }
+        final IndexedRaftLogEntry entry = reader.next();
+        if (entry.isApplicationEntry()) {
+          return entry.getApplicationEntry().highestPosition();
+        }
+        index--;
+      }
+    }
+    return 0;
+  }
+
   public boolean flushesDirectly() {
     return flusher.isDirect();
   }

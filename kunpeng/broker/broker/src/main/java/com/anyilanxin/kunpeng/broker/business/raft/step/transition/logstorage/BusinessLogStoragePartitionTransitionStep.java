@@ -26,6 +26,7 @@ import com.anyilanxin.kunpeng.cluster.raft.partition.impl.RaftPartitionServer;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ApplicationEntry;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 import com.anyilanxin.kunpeng.utils.Either;
+import java.util.function.LongSupplier;
 
 /**
  * 业务面日志存储分区迁移步骤。
@@ -111,7 +112,10 @@ public final class BusinessLogStoragePartitionTransitionStep
       final RaftPartitionServer server) {
 
     return right(
-        new BusinessRaftEventStore(server::openReader, new LogAppenderForReadOnlyStorage()));
+        new BusinessRaftEventStore(
+            server::openReader,
+            new LogAppenderForReadOnlyStorage(),
+            lastCommittedPosition(server)));
   }
 
   private Either<Exception, BusinessRaftEventStore> createWritableLogStorage(
@@ -141,9 +145,15 @@ public final class BusinessLogStoragePartitionTransitionStep
               String.format(
                   WRONG_TERM_ERROR_MSG, targetTerm, raftTerm, context.getRaftPartitionId().id())));
     } else {
-      final var logStorage = BusinessRaftEventStore.ofPartition(server::openReader, logAppender);
+      final var logStorage =
+          BusinessRaftEventStore.ofPartition(
+              server::openReader, logAppender, lastCommittedPosition(server));
       return right(logStorage);
     }
+  }
+
+  private static LongSupplier lastCommittedPosition(final RaftPartitionServer server) {
+    return server.getContext().getLog()::getLastCommittedPosition;
   }
 
   public static final class NotLeaderException extends RuntimeException {

@@ -29,7 +29,11 @@ public interface BatchEntryReader extends Iterator<BatchEntryReader.Batch>, Auto
   @Override
   void close();
 
-  /** 定位到 sourcePosition 大于给定值的下一个批；无更晚的批返回 false */
+  /**
+   * 定位到首条目 position 大于给定值的批；position 为负（恢复起点无状态）时定位到日志首条。
+   *
+   * @return 定位是否成功（给定 position 存在或为负；尾部追平时返回 true 但 {@link #hasNext()} 为 false）
+   */
   boolean seekToNextBatch(long position);
 
   interface Batch extends Iterator<LoggedEntry> {

@@ -26,6 +26,7 @@ import com.anyilanxin.kunpeng.cluster.raft.partition.impl.RaftPartitionServer;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.entry.ApplicationEntry;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 import com.anyilanxin.kunpeng.utils.Either;
+import java.util.function.LongSupplier;
 
 /**
  * 管理面日志存储分区迁移步骤。
@@ -109,7 +110,11 @@ public final class AdminLogStoragePartitionTransitionStep
   private Either<Exception, AdminRaftEventStore> createReadOnlyStorage(
       final RaftPartitionServer server) {
 
-    return right(new AdminRaftEventStore(server::openReader, new LogAppenderForReadOnlyStorage()));
+    return right(
+        new AdminRaftEventStore(
+            server::openReader,
+            new LogAppenderForReadOnlyStorage(),
+            lastCommittedPosition(server)));
   }
 
   private Either<Exception, AdminRaftEventStore> createWritableLogStorage(
@@ -139,9 +144,15 @@ public final class AdminLogStoragePartitionTransitionStep
               String.format(
                   WRONG_TERM_ERROR_MSG, targetTerm, raftTerm, context.getRaftPartitionId().id())));
     } else {
-      final var logStorage = AdminRaftEventStore.ofPartition(server::openReader, logAppender);
+      final var logStorage =
+          AdminRaftEventStore.ofPartition(
+              server::openReader, logAppender, lastCommittedPosition(server));
       return right(logStorage);
     }
+  }
+
+  private static LongSupplier lastCommittedPosition(final RaftPartitionServer server) {
+    return server.getContext().getLog()::getLastCommittedPosition;
   }
 
   public static final class NotLeaderException extends RuntimeException {

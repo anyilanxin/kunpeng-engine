@@ -22,6 +22,7 @@ import com.anyilanxin.kunpeng.eventlog.storage.EventStore;
 import com.anyilanxin.kunpeng.structpack.buffer.BufferWriter;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.function.LongSupplier;
 
 /**
  * Raft journal 桥（logstreams SPI 实现）：追加走 LogAppender 复制，提交回调转发通知
@@ -33,22 +34,33 @@ public class BusinessRaftEventStore implements EventStore, RaftCommitListener {
 
   private final BusinessAtomixReaderFactory readerFactory;
   private final LogAppender logAppender;
+  private final LongSupplier lastCommittedPosition;
   private final Set<CommitListener> commitListeners = new CopyOnWriteArraySet<>();
 
   public BusinessRaftEventStore(
-      final BusinessAtomixReaderFactory readerFactory, final LogAppender logAppender) {
+      final BusinessAtomixReaderFactory readerFactory,
+      final LogAppender logAppender,
+      final LongSupplier lastCommittedPosition) {
     this.readerFactory = readerFactory;
     this.logAppender = logAppender;
+    this.lastCommittedPosition = lastCommittedPosition;
   }
 
   public static BusinessRaftEventStore ofPartition(
-      final BusinessAtomixReaderFactory readerFactory, final LogAppender appender) {
-    return new BusinessRaftEventStore(readerFactory, appender);
+      final BusinessAtomixReaderFactory readerFactory,
+      final LogAppender appender,
+      final LongSupplier lastCommittedPosition) {
+    return new BusinessRaftEventStore(readerFactory, appender, lastCommittedPosition);
   }
 
   @Override
   public BusinessRaftEventStoreReader newReader() {
     return new BusinessRaftEventStoreReader(readerFactory.create());
+  }
+
+  @Override
+  public long getLastCommittedPosition() {
+    return lastCommittedPosition.getAsLong();
   }
 
   @Override

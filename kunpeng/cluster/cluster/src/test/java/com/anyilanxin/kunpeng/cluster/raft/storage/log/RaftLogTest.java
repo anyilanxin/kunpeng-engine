@@ -76,9 +76,11 @@ class RaftLogTest {
   private RaftLog raftlog;
   private JournalMetaStore metaStore;
   private RaftLogReader reader;
+  private File directory;
 
   @BeforeEach
   void setup(@TempDir final File directory) {
+    this.directory = directory;
     metaStore = new InMemory();
     raftlog =
         RaftLog.builder(meterRegistry)
@@ -246,6 +248,85 @@ class RaftLogTest {
 
     // then
     assertThat(raftlog.getCommitIndex()).isEqualTo(10);
+  }
+
+  @Test
+  void shouldReturnLastCommittedPosition() {
+    // given
+    raftlog.append(new RaftLogEntry(1, firstApplicationEntry));
+    final var secondEntry =
+        raftlog.append(new RaftLogEntry(1, createApplicationEntryAfter(firstApplicationEntry)));
+    raftlog.append(
+        new RaftLogEntry(1, createApplicationEntryAfter(secondEntry.getApplicationEntry())));
+    raftlog.setCommitIndex(secondEntry.index());
+
+    // when
+    final var lastCommittedPosition = raftlog.getLastCommittedPosition();
+
+    // then
+    assertThat(lastCommittedPosition)
+        .isEqualTo(secondEntry.getApplicationEntry().highestPosition());
+  }
+
+  @Test
+  void shouldStepBackOverNonApplicationEntry() {
+    // given
+    final var appended = raftlog.append(new RaftLogEntry(1, firstApplicationEntry));
+    final var configurationIndex = raftlog.append(new RaftLogEntry(1, configurationEntry)).index();
+    raftlog.setCommitIndex(configurationIndex);
+
+    // when
+    final var lastCommittedPosition = raftlog.getLastCommittedPosition();
+
+    // then
+    assertThat(lastCommittedPosition)
+        .isEqualTo(appended.getApplicationEntry().highestPosition());
+  }
+
+  @Test
+  void shouldReturnZeroWithoutCommittedApplicationEntry() {
+    // given（仅 initial/config 条目，无应用条目）
+    raftlog.append(new RaftLogEntry(1, initialEntry));
+    raftlog.setCommitIndex(raftlog.append(new RaftLogEntry(1, configurationEntry)).index());
+
+    // when + then
+    assertThat(raftlog.getLastCommittedPosition()).isZero();
+  }
+
+  @Test
+  void shouldReturnZeroOnEmptyLog() {
+    // when + then
+    assertThat(raftlog.getLastCommittedPosition()).isZero();
+  }
+
+  @Test
+  void shouldResolveLastCommittedPositionAfterReopen() {
+    // given（重开 = 冷启动：内存 asqn 索引为空，只有 idx 持久化索引可用）
+    raftlog.append(new RaftLogEntry(1, firstApplicationEntry));
+    final var committed =
+        raftlog.append(new RaftLogEntry(1, createApplicationEntryAfter(firstApplicationEntry)));
+    raftlog.setCommitIndex(committed.index());
+    reader.close();
+    raftlog.close();
+
+    final var reopened =
+        RaftLog.builder(meterRegistry)
+            .withDirectory(directory)
+            .withName("test")
+            .withMetaStore(new InMemory())
+            .build();
+    try {
+      reopened.setCommitIndex(committed.index());
+
+      // when
+      final var lastCommittedPosition = reopened.getLastCommittedPosition();
+
+      // then
+      assertThat(lastCommittedPosition)
+          .isEqualTo(committed.getApplicationEntry().highestPosition());
+    } finally {
+      reopened.close();
+    }
   }
 
   private ApplicationEntry createApplicationEntryAfter(final ApplicationEntry applicationEntry) {
