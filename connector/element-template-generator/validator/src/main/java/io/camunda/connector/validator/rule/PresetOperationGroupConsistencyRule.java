@@ -16,7 +16,6 @@
  */
 package io.camunda.connector.validator.rule;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.camunda.connector.validator.core.ElementTemplate;
 import io.camunda.connector.validator.core.Finding;
 import io.camunda.connector.validator.core.OperationMetadataIgnoreList;
@@ -27,6 +26,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import tools.jackson.databind.JsonNode;
 
 /**
  * The set of "operation-group dropdowns" is discovered as the union of keys across {@code
@@ -69,7 +69,7 @@ public class PresetOperationGroupConsistencyRule implements Rule {
       if (!properties.isObject()) {
         continue;
       }
-      properties.fieldNames().forEachRemaining(keys::add);
+      keys.addAll(properties.propertyNames());
     }
     return keys;
   }

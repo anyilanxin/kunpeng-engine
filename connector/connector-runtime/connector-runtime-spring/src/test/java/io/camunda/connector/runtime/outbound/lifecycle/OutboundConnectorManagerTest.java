@@ -17,188 +17,124 @@
 package io.camunda.connector.runtime.outbound.lifecycle;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.camunda.client.CamundaClient;
-import io.camunda.client.annotation.value.JobWorkerValue;
-import io.camunda.client.annotation.value.SourceAware;
-import io.camunda.client.jobhandling.JobCallbackCommandWrapperFactory;
-import io.camunda.client.jobhandling.JobWorkerManager;
-import io.camunda.client.jobhandling.ManagedJobWorker;
-import io.camunda.client.metrics.MetricsRecorder;
-import io.camunda.connector.api.document.DocumentFactory;
+import tools.jackson.databind.ObjectMapper;
+import com.anyilanxin.kunpeng.client.KunpengClient;
+import com.anyilanxin.kunpeng.client.command.job.worker.JobWorker;
+import com.anyilanxin.kunpeng.client.spring.annotation.value.JobWorkerValue;
+import com.anyilanxin.kunpeng.client.spring.jobhandling.JobWorkerManager;
 import io.camunda.connector.api.outbound.OutboundConnectorFunction;
 import io.camunda.connector.api.validation.ValidationProvider;
 import io.camunda.connector.runtime.core.config.OutboundConnectorConfiguration;
 import io.camunda.connector.runtime.core.outbound.OutboundConnectorFactory;
 import io.camunda.connector.runtime.core.secret.SecretFilterFactory;
 import io.camunda.connector.runtime.core.secret.SecretProviderAggregator;
+import io.camunda.connector.runtime.outbound.job.SpringConnectorJobHandler;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 class OutboundConnectorManagerTest {
 
-  private static CamundaClient clientWithPhysicalTenantId(String physicalTenantId) {
-    var client = mock(CamundaClient.class, RETURNS_DEEP_STUBS);
-    when(client.getConfiguration().getPhysicalTenantId()).thenReturn(physicalTenantId);
-    return client;
-  }
-
   private static OutboundConnectorConfiguration connectorConfig(
       String type, Supplier<OutboundConnectorFunction> instanceSupplier) {
-    return connectorConfig(type, instanceSupplier, false);
-  }
-
-  private static OutboundConnectorConfiguration connectorConfig(
-      String type, Supplier<OutboundConnectorFunction> instanceSupplier, boolean withLease) {
-    return new OutboundConnectorConfiguration(
-        type, new String[0], type, instanceSupplier, null, withLease);
+    return new OutboundConnectorConfiguration(type, new String[0], type, instanceSupplier);
   }
 
   private static OutboundConnectorManager managerWith(
-      JobWorkerManager jobWorkerManager,
-      OutboundConnectorFactory connectorFactory,
-      Map<String, DocumentFactory> documentFactoriesByPhysicalTenantId,
-      Map<String, SecretFilterFactory> secretFilterFactoriesByPhysicalTenantId) {
-    var objectMappersByPhysicalTenantId =
-        documentFactoriesByPhysicalTenantId.keySet().stream()
-            .collect(java.util.stream.Collectors.toMap(id -> id, id -> mock(ObjectMapper.class)));
+      JobWorkerManager jobWorkerManager, OutboundConnectorFactory connectorFactory) {
     return new OutboundConnectorManager(
         jobWorkerManager,
         connectorFactory,
-        mock(JobCallbackCommandWrapperFactory.class),
         mock(SecretProviderAggregator.class),
         mock(ValidationProvider.class),
-        documentFactoriesByPhysicalTenantId,
-        objectMappersByPhysicalTenantId,
-        mock(MetricsRecorder.class),
-        secretFilterFactoriesByPhysicalTenantId,
-        null);
+        mock(ObjectMapper.class),
+        mock(SecretFilterFactory.class),
+        new SimpleMeterRegistry());
   }
 
   @Test
-  void onStart_throwsClearErrorWhenResolvedPhysicalTenantHasNoConfiguredFactories() {
+  void onStart_opensOneWorkerPerActiveConnector() {
     var jobWorkerManager = mock(JobWorkerManager.class);
-    var connectorFactory = mock(OutboundConnectorFactory.class);
-    when(connectorFactory.getActiveConfigurations()).thenReturn(Set.of());
-    var manager = managerWith(jobWorkerManager, connectorFactory, Map.of(), Map.of());
-    var client = clientWithPhysicalTenantId("unconfigured-tenant");
-
-    assertThatThrownBy(() -> manager.onStart(client, "engine-a"))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessageContaining("unconfigured-tenant");
-  }
-
-  @Test
-  void onStart_opensOneWorkerPerActiveConnector_whenPhysicalTenantIsConfigured() {
-    var jobWorkerManager = mock(JobWorkerManager.class);
+    when(jobWorkerManager.openWorker(any(), any(JobWorkerValue.class), any()))
+        .thenReturn(mock(JobWorker.class));
     var connectorFactory = mock(OutboundConnectorFactory.class);
     when(connectorFactory.getActiveConfigurations())
         .thenReturn(
             List.of(
                 connectorConfig("type-a", () -> mock(OutboundConnectorFunction.class)),
                 connectorConfig("type-b", () -> mock(OutboundConnectorFunction.class))));
-    var documentFactory = mock(DocumentFactory.class);
-    var secretFilterFactory = mock(SecretFilterFactory.class);
-    var manager =
-        managerWith(
-            jobWorkerManager,
-            connectorFactory,
-            Map.of("tenant-a", documentFactory),
-            Map.of("tenant-a", secretFilterFactory));
-    var client = clientWithPhysicalTenantId("tenant-a");
+    var manager = managerWith(jobWorkerManager, connectorFactory);
 
-    manager.onStart(client, "engine-a");
+    manager.onStart(mock(KunpengClient.class));
 
-    verify(jobWorkerManager, times(2)).createJobWorker(any(), any(), any());
+    verify(jobWorkerManager, times(2))
+        .openWorker(any(), any(JobWorkerValue.class), any(SpringConnectorJobHandler.class));
   }
 
   @Test
-  void onStart_resolvesPhysicalTenantIdFromConfiguration_fallsBackToClientNameWhenNotConfigured() {
+  void onStart_populatesJobWorkerValueFromConfiguration() {
     var jobWorkerManager = mock(JobWorkerManager.class);
+    when(jobWorkerManager.openWorker(any(), any(JobWorkerValue.class), any()))
+        .thenReturn(mock(JobWorker.class));
     var connectorFactory = mock(OutboundConnectorFactory.class);
-    when(connectorFactory.getActiveConfigurations()).thenReturn(Set.of());
-    var manager =
-        managerWith(
-            jobWorkerManager,
-            connectorFactory,
-            Map.of("engine-b", mock(DocumentFactory.class)),
-            Map.of("engine-b", mock(SecretFilterFactory.class)));
-    // no physical-tenant-id explicitly configured -> falls back to the client name "engine-b"
-    var client = clientWithPhysicalTenantId(null);
+    when(connectorFactory.getActiveConfigurations())
+        .thenReturn(
+            List.of(connectorConfig("type-a", () -> mock(OutboundConnectorFunction.class))));
+    var manager = managerWith(jobWorkerManager, connectorFactory);
 
-    manager.onStart(client, "engine-b");
+    manager.onStart(mock(KunpengClient.class));
 
-    // no exception thrown proves resolution correctly fell back to "engine-b" and found the map
-    // entries
+    var jobWorkerCaptor = ArgumentCaptor.forClass(JobWorkerValue.class);
+    verify(jobWorkerManager)
+        .openWorker(any(), jobWorkerCaptor.capture(), any(SpringConnectorJobHandler.class));
+    JobWorkerValue jobWorkerValue = jobWorkerCaptor.getValue();
+    assertThat(jobWorkerValue.getName()).isEqualTo("type-a");
+    assertThat(jobWorkerValue.getType()).isEqualTo("type-a");
+    assertThat(jobWorkerValue.getFetchVariables()).isEmpty();
   }
 
   @Test
-  void onStart_fallsBackToClientNameWhenConfigurationCannotBeRead() {
+  void onStart_createsOneConnectorInstancePerType() {
     var jobWorkerManager = mock(JobWorkerManager.class);
+    when(jobWorkerManager.openWorker(any(), any(JobWorkerValue.class), any()))
+        .thenReturn(mock(JobWorker.class));
     var connectorFactory = mock(OutboundConnectorFactory.class);
-    when(connectorFactory.getActiveConfigurations()).thenReturn(Set.of());
-    var manager =
-        managerWith(
-            jobWorkerManager,
-            connectorFactory,
-            Map.of("engine-c", mock(DocumentFactory.class)),
-            Map.of("engine-c", mock(SecretFilterFactory.class)));
-    var uninitializedClient = mock(CamundaClient.class);
-    when(uninitializedClient.getConfiguration())
-        .thenThrow(new RuntimeException("client not initialized"));
-
-    manager.onStart(uninitializedClient, "engine-c");
-
-    // no exception thrown proves resolution fell back to "engine-c" despite the config read failure
-  }
-
-  @Test
-  void onStart_createsOneConnectorInstancePerPhysicalTenant_isolatingAcrossTenants() {
-    var jobWorkerManager = mock(JobWorkerManager.class);
-    var connectorFactory = mock(OutboundConnectorFactory.class);
-    var instancesCreated = new java.util.concurrent.atomic.AtomicInteger();
+    var instancesCreated = new AtomicInteger();
     Supplier<OutboundConnectorFunction> instanceSupplier =
         () -> {
           instancesCreated.incrementAndGet();
           return mock(OutboundConnectorFunction.class);
         };
     when(connectorFactory.getActiveConfigurations())
-        .thenReturn(List.of(connectorConfig("type-a", instanceSupplier)));
-    var manager =
-        managerWith(
-            jobWorkerManager,
-            connectorFactory,
-            Map.of(
-                "tenant-a", mock(DocumentFactory.class),
-                "tenant-b", mock(DocumentFactory.class)),
-            Map.of(
-                "tenant-a", mock(SecretFilterFactory.class),
-                "tenant-b", mock(SecretFilterFactory.class)));
+        .thenReturn(
+            List.of(
+                connectorConfig("type-a", instanceSupplier),
+                connectorConfig("type-b", instanceSupplier)));
+    var manager = managerWith(jobWorkerManager, connectorFactory);
 
-    manager.onStart(clientWithPhysicalTenantId("tenant-a"), "engine-a");
-    manager.onStart(clientWithPhysicalTenantId("tenant-b"), "engine-b");
+    manager.onStart(mock(KunpengClient.class));
 
     assertThat(instancesCreated.get()).isEqualTo(2);
   }
 
   @Test
-  void onStart_reusesSameConnectorInstance_acrossRepeatedOnStartForTheSamePhysicalTenant() {
+  void onStart_reusesSameConnectorInstance_acrossStopStartCycles() {
     var jobWorkerManager = mock(JobWorkerManager.class);
+    when(jobWorkerManager.openWorker(any(), any(JobWorkerValue.class), any()))
+        .thenReturn(mock(JobWorker.class));
     var connectorFactory = mock(OutboundConnectorFactory.class);
-    var instancesCreated = new java.util.concurrent.atomic.AtomicInteger();
+    var instancesCreated = new AtomicInteger();
     Supplier<OutboundConnectorFunction> instanceSupplier =
         () -> {
           instancesCreated.incrementAndGet();
@@ -206,102 +142,58 @@ class OutboundConnectorManagerTest {
         };
     when(connectorFactory.getActiveConfigurations())
         .thenReturn(List.of(connectorConfig("type-a", instanceSupplier)));
-    var manager =
-        managerWith(
-            jobWorkerManager,
-            connectorFactory,
-            Map.of("tenant-a", mock(DocumentFactory.class)),
-            Map.of("tenant-a", mock(SecretFilterFactory.class)));
-    var client = clientWithPhysicalTenantId("tenant-a");
+    var manager = managerWith(jobWorkerManager, connectorFactory);
+    var client = mock(KunpengClient.class);
 
-    manager.onStart(client, "engine-a");
-    // simulate a client reconnect: onStop then onStart again for the same physical tenant
-    manager.onStop(client, "engine-a");
-    manager.onStart(client, "engine-a");
+    // simulate a client reconnect: onStart then onStop then onStart again
+    manager.onStart(client);
+    manager.onStop(client);
+    manager.onStart(client);
 
     assertThat(instancesCreated.get()).isEqualTo(1);
+    verify(jobWorkerManager, times(2))
+        .openWorker(any(), any(JobWorkerValue.class), any(SpringConnectorJobHandler.class));
   }
 
   @Test
-  void onStop_closesOnlyThisClientsJobWorkers_neverAllClients() {
+  void onStop_closesOnlyTheWorkersItOpened_neverAllWorkers() {
     var jobWorkerManager = mock(JobWorkerManager.class);
+    var workerA = mock(JobWorker.class);
+    var workerB = mock(JobWorker.class);
+    when(jobWorkerManager.openWorker(any(), any(JobWorkerValue.class), any()))
+        .thenReturn(workerA, workerB);
     var connectorFactory = mock(OutboundConnectorFactory.class);
-    var manager = managerWith(jobWorkerManager, connectorFactory, Map.of(), Map.of());
-    var client = clientWithPhysicalTenantId("tenant-a");
-
-    manager.onStop(client, "engine-a");
-
-    verify(jobWorkerManager).closeJobWorkers(manager, client);
-    verify(jobWorkerManager, never()).closeAllJobWorkers(any());
-  }
-
-  @Test
-  void singleArgOnStartAndOnStop_delegateToTwoArgFormsWithDefaultClientName() {
-    var jobWorkerManager = mock(JobWorkerManager.class);
-    var connectorFactory = mock(OutboundConnectorFactory.class);
-    when(connectorFactory.getActiveConfigurations()).thenReturn(Set.of());
-    var manager =
-        managerWith(
-            jobWorkerManager,
-            connectorFactory,
-            Map.of("default", mock(DocumentFactory.class)),
-            Map.of("default", mock(SecretFilterFactory.class)));
-    var client = clientWithPhysicalTenantId(null);
+    when(connectorFactory.getActiveConfigurations())
+        .thenReturn(
+            List.of(
+                connectorConfig("type-a", () -> mock(OutboundConnectorFunction.class)),
+                connectorConfig("type-b", () -> mock(OutboundConnectorFunction.class))));
+    var manager = managerWith(jobWorkerManager, connectorFactory);
+    var client = mock(KunpengClient.class);
 
     manager.onStart(client);
     manager.onStop(client);
 
-    // resolves to "default" (client name fallback) and finds the map entries without throwing
-    verify(jobWorkerManager).closeJobWorkers(manager, client);
+    // only the workers this manager opened — the shared JobWorkerManager may also run workers
+    // owned by other components (e.g. annotated @JobWorker beans)
+    verify(jobWorkerManager).closeWorker(workerA);
+    verify(jobWorkerManager).closeWorker(workerB);
+    verify(jobWorkerManager, never()).closeAllOpenWorkers();
+
+    // a second onStop after clear must not re-close stale workers
+    manager.onStop(client);
+    verify(jobWorkerManager, times(1)).closeWorker(workerA);
   }
 
   @Test
-  void onStart_setsWithLeaseOnJobWorkerValue_whenConnectorOptsIn() {
+  void onStart_ignoresEmptyConfigurationSet() {
     var jobWorkerManager = mock(JobWorkerManager.class);
     var connectorFactory = mock(OutboundConnectorFactory.class);
-    when(connectorFactory.getActiveConfigurations())
-        .thenReturn(
-            List.of(connectorConfig("type-a", () -> mock(OutboundConnectorFunction.class), true)));
-    var documentFactory = mock(DocumentFactory.class);
-    var secretFilterFactory = mock(SecretFilterFactory.class);
-    var manager =
-        managerWith(
-            jobWorkerManager,
-            connectorFactory,
-            Map.of("tenant-a", documentFactory),
-            Map.of("tenant-a", secretFilterFactory));
-    var client = clientWithPhysicalTenantId("tenant-a");
+    when(connectorFactory.getActiveConfigurations()).thenReturn(Set.of());
+    var manager = managerWith(jobWorkerManager, connectorFactory);
 
-    manager.onStart(client, "engine-a");
+    manager.onStart(mock(KunpengClient.class));
 
-    var jobWorkerCaptor = ArgumentCaptor.forClass(ManagedJobWorker.class);
-    verify(jobWorkerManager).createJobWorker(any(), jobWorkerCaptor.capture(), any());
-    JobWorkerValue jobWorkerValue = jobWorkerCaptor.getValue().jobWorkerValue();
-    assertThat(jobWorkerValue.getWithLease().value()).isTrue();
-  }
-
-  @Test
-  void onStart_leavesWithLeaseUnset_whenConnectorDoesNotOptIn() {
-    var jobWorkerManager = mock(JobWorkerManager.class);
-    var connectorFactory = mock(OutboundConnectorFactory.class);
-    when(connectorFactory.getActiveConfigurations())
-        .thenReturn(
-            List.of(connectorConfig("type-a", () -> mock(OutboundConnectorFunction.class))));
-    var documentFactory = mock(DocumentFactory.class);
-    var secretFilterFactory = mock(SecretFilterFactory.class);
-    var manager =
-        managerWith(
-            jobWorkerManager,
-            connectorFactory,
-            Map.of("tenant-a", documentFactory),
-            Map.of("tenant-a", secretFilterFactory));
-    var client = clientWithPhysicalTenantId("tenant-a");
-
-    manager.onStart(client, "engine-a");
-
-    var jobWorkerCaptor = ArgumentCaptor.forClass(ManagedJobWorker.class);
-    verify(jobWorkerManager).createJobWorker(any(), jobWorkerCaptor.capture(), any());
-    JobWorkerValue jobWorkerValue = jobWorkerCaptor.getValue().jobWorkerValue();
-    assertThat(jobWorkerValue.getWithLease()).isInstanceOf(SourceAware.Empty.class);
+    verify(jobWorkerManager, never()).openWorker(any(), any(JobWorkerValue.class), any());
   }
 }

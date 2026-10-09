@@ -16,11 +16,11 @@
  */
 package io.camunda.connector.runtime.instances.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.core.type.TypeReference;
 
 /** Router used when instance forwarding is not configured. */
 public class LocalInstanceForwardingRouter implements InstanceForwardingRouter {

@@ -22,7 +22,8 @@ import java.util.Map;
 /**
  * A {@link ProcessElement} that can bind its own raw properties to a typed object. It delegates all
  * element metadata to the wrapped element and adds element-scoped property binding via a runtime
- * {@link PropertyBinder} (typically the connector context's secret-replacement + FEEL pipeline).
+ * {@link PropertyBinder} (typically the connector context's secret-replacement + Expression
+ * pipeline).
  *
  * <p>The runtime attaches this to the activated element of a {@link
  * io.camunda.connector.api.inbound.CorrelationResult.Success} so callers can use {@code
@@ -31,7 +32,9 @@ import java.util.Map;
 public record BindableProcessElement(ProcessElement delegate, PropertyBinder binder)
     implements ProcessElement {
 
-  /** Binds a raw (FEEL-unevaluated, secret-unresolved) element property map to a typed object. */
+  /**
+   * Binds a raw (Expression-unevaluated, secret-unresolved) element property map to a typed object.
+   */
   @FunctionalInterface
   public interface PropertyBinder {
     <T> T bind(Map<String, String> rawProperties, Class<T> type);

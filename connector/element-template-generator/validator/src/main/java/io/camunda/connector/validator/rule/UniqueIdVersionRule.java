@@ -16,7 +16,6 @@
  */
 package io.camunda.connector.validator.rule;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.camunda.connector.validator.core.ElementTemplate;
 import io.camunda.connector.validator.core.Finding;
 import io.camunda.connector.validator.core.MultiFileRule;
@@ -26,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import tools.jackson.databind.JsonNode;
 
 /**
  * No two element templates — current or versioned snapshot — may share both the same {@code id}

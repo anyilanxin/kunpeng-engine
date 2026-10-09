@@ -18,7 +18,7 @@ package io.camunda.connector.runtime.outbound.job;
 
 import static io.camunda.connector.runtime.outbound.job.SpringConnectorJobHandler.MAX_ERROR_MESSAGE_LENGTH;
 
-import io.camunda.client.api.response.ActivatedJob;
+import com.anyilanxin.kunpeng.client.command.job.ActivatedJob;
 import io.camunda.connector.api.error.ConnectorException;
 import io.camunda.connector.api.error.ConnectorInputException;
 import io.camunda.connector.api.error.ConnectorRetryException;
@@ -139,9 +139,7 @@ public class OutboundConnectorExceptionHandler {
               .toList();
       secrets =
           this.secretProvider.fetchAll(
-              allowedKeys,
-              new SecretContext(
-                  job.getTenantId(), job.getBpmnProcessId(), job.getPhysicalTenantId()));
+              allowedKeys, new SecretContext(job.getTenantId(), job.getProcessDefinitionKey()));
     } catch (Exception ex) {
       LOGGER.error(
           "Initial error for job: {} for tenant: {} can't be displayed because fetching secrets failed: {}",
@@ -251,9 +249,7 @@ public class OutboundConnectorExceptionHandler {
             .toList();
     List<String> secrets =
         this.secretProvider.fetchAll(
-            allowedKeys,
-            new SecretContext(
-                job.getTenantId(), job.getBpmnProcessId(), job.getPhysicalTenantId()));
+            allowedKeys, new SecretContext(job.getTenantId(), job.getProcessDefinitionKey()));
     Exception newException = new Exception(hideSecretsFromMessage(ex.getMessage(), secrets), ex);
     LOGGER.error(
         "Exception while processing job: {} for tenant: {}, message: {}",

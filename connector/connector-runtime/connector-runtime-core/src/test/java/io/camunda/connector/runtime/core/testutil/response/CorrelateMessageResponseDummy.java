@@ -16,22 +16,17 @@
  */
 package io.camunda.connector.runtime.core.testutil.response;
 
-import io.camunda.client.api.response.CorrelateMessageResponse;
+import com.anyilanxin.kunpeng.client.command.message.correlation.MessageCorrelationCommandResponse;
 
-public class CorrelateMessageResponseDummy implements CorrelateMessageResponse {
+public class CorrelateMessageResponseDummy implements MessageCorrelationCommandResponse {
 
   @Override
-  public Long getMessageKey() {
+  public long getMessageKey() {
     return -1L;
   }
 
   @Override
   public String getTenantId() {
     return "default";
-  }
-
-  @Override
-  public Long getProcessInstanceKey() {
-    return 99L;
   }
 }

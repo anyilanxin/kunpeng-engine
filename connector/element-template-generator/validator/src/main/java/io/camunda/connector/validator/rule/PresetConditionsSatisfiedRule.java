@@ -16,7 +16,6 @@
  */
 package io.camunda.connector.validator.rule;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.camunda.connector.validator.core.ConditionEvaluator;
 import io.camunda.connector.validator.core.ElementTemplate;
 import io.camunda.connector.validator.core.Finding;
@@ -29,6 +28,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import tools.jackson.databind.JsonNode;
 
 /**
  * For each preset, every pinned property's {@code condition} must evaluate to true under the

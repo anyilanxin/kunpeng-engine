@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import io.camunda.client.CamundaClient;
+import com.anyilanxin.kunpeng.client.KunpengClient;
 import io.camunda.connector.runtime.app.TestConnectorRuntimeApplication;
 import org.junit.jupiter.api.Test;
 import org.mockito.Answers;
@@ -46,7 +46,7 @@ class HealthEndpointsTest {
   @Autowired MockMvc mockMvc;
 
   @MockitoBean(answers = Answers.RETURNS_DEEP_STUBS)
-  CamundaClient camundaClient;
+  KunpengClient client;
 
   @Test
   void actuatorHealth_isAccessible() throws Exception {

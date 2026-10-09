@@ -16,7 +16,6 @@
  */
 package io.camunda.connector.validator.rule;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.camunda.connector.validator.core.ElementTemplate;
 import io.camunda.connector.validator.core.Finding;
 import io.camunda.connector.validator.core.OperationMetadataIgnoreList;
@@ -24,6 +23,7 @@ import io.camunda.connector.validator.core.Rule;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import tools.jackson.databind.JsonNode;
 
 /**
  * Validates leaf step nodes (no child {@code steps} array). A leaf must declare {@code presetId}

@@ -25,7 +25,7 @@ dependencies {
     implementation 'org.apache.httpcomponents.client5:httpclient5'
     implementation 'io.grpc:grpc-api'
     implementation 'org.slf4j:slf4j-api'
-    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'tools.jackson.core:jackson-databind'
     implementation 'ch.qos.logback:logback-core'
     implementation 'ch.qos.logback:logback-classic'
     implementation project(':kunpeng:bpm-model:xml-model')
@@ -38,7 +38,6 @@ dependencies {
     implementation project(':connector:connector-commons:connector-object-mapper')
     implementation 'com.google.guava:guava'
     implementation 'com.google.code.findbugs:jsr305'
-    implementation project(':connector:connector-runtime:jackson-datatype-document')
     implementation project(':connector:connector-runtime:jackson-datatype-feel')
     implementation 'dev.failsafe:failsafe'
     implementation 'org.springframework:spring-context-support'
@@ -46,6 +45,9 @@ dependencies {
 
     testImplementation project(':connector:connector-sdk:validation')
     testImplementation 'org.springframework:spring-test'
+    testImplementation 'org.springframework:spring-webmvc'
+    testImplementation 'io.micrometer:micrometer-core'
+    testImplementation 'org.apache.tomcat.embed:tomcat-embed-core'
     testImplementation 'org.mockito:mockito-junit-jupiter'
     testImplementation 'org.assertj:assertj-core'
     testImplementation 'org.testcontainers:testcontainers-junit-jupiter'

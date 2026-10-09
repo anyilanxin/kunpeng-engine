@@ -39,7 +39,7 @@ public interface ProcessElement {
   String tenantId();
 
   /**
-   * Raw properties of this element as defined in the process model. FEEL expressions are not
+   * Raw properties of this element as defined in the process model. Expression expressions are not
    * evaluated and secret placeholders are not resolved.
    *
    * <p>This allows the runtime to resolve element-scoped properties (for example, a webhook
@@ -50,7 +50,7 @@ public interface ProcessElement {
 
   /**
    * Binds this element's raw properties to a typed object using the runtime's secret-replacement
-   * and FEEL-evaluation pipeline.
+   * and Expression-evaluation pipeline.
    *
    * <p>Use this to resolve element-scoped properties (for example, a webhook response expression)
    * from the specific element that matched a request, even when several elements were deduplicated

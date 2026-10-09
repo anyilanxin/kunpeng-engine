@@ -16,8 +16,6 @@
  */
 package io.camunda.connector.generator.postman.utils;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import io.camunda.connector.generator.dsl.http.HttpFeelBuilder;
 import io.camunda.connector.generator.dsl.http.HttpOperationProperty;
 import io.camunda.connector.generator.dsl.http.HttpOperationProperty.Target;
@@ -30,6 +28,8 @@ import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
 
 public class PostmanBodyUtil {
 
@@ -75,9 +75,8 @@ public class PostmanBodyUtil {
     try {
       JsonNode parsedBody = ObjectMapperProvider.getInstance().readTree(bodyContent);
       boolean isComplex = false;
-      var it = parsedBody.elements();
-      while (it.hasNext()) {
-        if (it.next().isContainerNode()) {
+      for (var element : parsedBody.values()) {
+        if (element.isContainer()) {
           isComplex = true;
         }
       }
@@ -92,9 +91,7 @@ public class PostmanBodyUtil {
         List<HttpOperationProperty> properties = new ArrayList<>();
         var contextBuilder = HttpFeelBuilder.context();
 
-        var fields = parsedBody.fields();
-        while (fields.hasNext()) {
-          var node = fields.next();
+        for (var node : parsedBody.properties()) {
           var property =
               HttpOperationProperty.createStringProperty(
                   node.getKey(), Target.BODY, StringUtils.EMPTY, true, node.getValue().asText());
@@ -104,7 +101,7 @@ public class PostmanBodyUtil {
 
         return new Detailed(contextBuilder, properties);
       }
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       LOG.warn("Wasn't able to parse body: " + bodyContent);
       return new Raw("");
     }

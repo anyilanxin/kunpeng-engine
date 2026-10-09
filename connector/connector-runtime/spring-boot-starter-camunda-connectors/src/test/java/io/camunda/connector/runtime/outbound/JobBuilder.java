@@ -22,11 +22,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.camunda.client.api.command.CompleteJobCommandStep1;
-import io.camunda.client.api.command.FailJobCommandStep1;
-import io.camunda.client.api.command.ThrowErrorCommandStep1;
-import io.camunda.client.api.response.ActivatedJob;
-import io.camunda.client.api.worker.JobClient;
+import com.anyilanxin.kunpeng.client.command.job.ActivatedJob;
+import com.anyilanxin.kunpeng.client.command.job.CompleteJobCommandStep1;
+import com.anyilanxin.kunpeng.client.command.job.FailJobCommandStep1;
+import com.anyilanxin.kunpeng.client.command.job.ThrowErrorCommandStep1;
+import com.anyilanxin.kunpeng.client.command.job.worker.JobClient;
 import io.camunda.connector.runtime.core.Keywords;
 import io.camunda.connector.runtime.outbound.job.SpringConnectorJobHandler;
 import java.util.HashMap;

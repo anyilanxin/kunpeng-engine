@@ -16,11 +16,9 @@
  */
 package io.camunda.connector.runtime;
 
-import io.camunda.client.CamundaClient;
-import io.camunda.connector.runtime.inbound.importer.ImportSchedulers;
+import com.anyilanxin.kunpeng.client.KunpengClient;
 import io.camunda.connector.runtime.metrics.ContextAwareLogbackMetrics;
 import io.micrometer.core.instrument.binder.logging.LogbackMetrics;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -37,15 +35,10 @@ public class ConnectorsObservabilityAutoConfiguration {
     return new ContextAwareLogbackMetrics();
   }
 
-  @Bean(name = "zeebeClientHealthIndicator") // overrides the health indicator from Spring Zeebe
-  public ZeebeHealthIndicator zeebeClientHealthIndicator(CamundaClient camundaClient) {
-    return new ZeebeHealthIndicator(camundaClient);
-  }
-
-  @Bean
-  public ProcessDefinitionImportHealthIndicator processDefinitionImportHealthIndicator(
-      @Autowired(required = false) ImportSchedulers importSchedulers) {
-    return new ProcessDefinitionImportHealthIndicator(importSchedulers);
+  @Bean(
+      name = "zeebeClientHealthIndicator") // overrides the health indicator from the client starter
+  public ZeebeHealthIndicator zeebeClientHealthIndicator(KunpengClient client) {
+    return new ZeebeHealthIndicator(client);
   }
 
   @Bean(name = "startupCheck")

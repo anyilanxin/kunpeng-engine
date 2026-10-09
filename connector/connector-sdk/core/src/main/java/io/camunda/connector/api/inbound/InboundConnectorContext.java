@@ -16,7 +16,6 @@
  */
 package io.camunda.connector.api.inbound;
 
-import io.camunda.connector.api.document.DocumentFactory;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -24,7 +23,7 @@ import java.util.function.Consumer;
  * The context object provided to an inbound connector function. The context allows to fetch
  * information injected by the environment runtime.
  */
-public interface InboundConnectorContext extends DocumentFactory {
+public interface InboundConnectorContext {
 
   /**
    * Checks if the Connector can be activated. The Connector can be activated if the activation
@@ -104,8 +103,8 @@ public interface InboundConnectorContext extends DocumentFactory {
   /**
    * High-level properties access method. Allows to deserialize properties into a given type.
    *
-   * <p>Additionally, this method takes care of secret replacement, properties validation, and FEEL
-   * expression evaluation.
+   * <p>Additionally, this method takes care of secret replacement, properties validation, and
+   * Expression expression evaluation.
    *
    * <p>Secret values are substituted using the {@link
    * io.camunda.connector.api.secret.SecretProvider} implementations available in the Connector
@@ -115,7 +114,7 @@ public interface InboundConnectorContext extends DocumentFactory {
    * io.camunda.connector.api.validation.ValidationProvider} implementation available in the
    * Connector runtime.
    *
-   * <p>FEEL expressions in properties are evaluated as encountered.
+   * <p>Expression expressions in properties are evaluated as encountered.
    *
    * @param cls a class to deserialize properties into
    * @param <T> a type to deserialize properties into

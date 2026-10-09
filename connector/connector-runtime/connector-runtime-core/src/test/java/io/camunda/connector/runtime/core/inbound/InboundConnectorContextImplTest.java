@@ -19,16 +19,13 @@ package io.camunda.connector.runtime.core.inbound;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.camunda.client.CamundaClient;
-import io.camunda.client.api.command.EvaluateExpressionCommandStep1.EvaluateExpressionCommandStep2;
-import io.camunda.client.api.response.EvaluateExpressionResponse;
-import io.camunda.connector.api.annotation.FEEL;
-import io.camunda.connector.api.document.DocumentCreationRequest;
-import io.camunda.connector.api.document.DocumentFactory;
+import tools.jackson.databind.ObjectMapper;
+import com.anyilanxin.kunpeng.client.KunpengClient;
+import io.camunda.connector.api.annotation.Expression;
 import io.camunda.connector.api.inbound.ActivityLogTag;
 import io.camunda.connector.api.inbound.CorrelationRequest;
 import io.camunda.connector.api.inbound.CorrelationResult;
@@ -47,11 +44,12 @@ import io.camunda.connector.runtime.core.inbound.correlation.InboundCorrelationH
 import io.camunda.connector.runtime.core.inbound.correlation.MessageCorrelationPoint.StandaloneMessageCorrelationPoint;
 import io.camunda.connector.runtime.core.inbound.details.InboundConnectorDetails;
 import io.camunda.connector.runtime.core.inbound.details.InboundConnectorDetails.ValidInboundConnectorDetails;
-import java.io.ByteArrayInputStream;
+import io.camunda.connector.runtime.core.testutil.command.EvaluateExpressionCommandDummy;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -61,11 +59,11 @@ class InboundConnectorContextImplTest {
   private final ActivityLogRegistry activityLogRegistry = new ActivityLogRegistry();
 
   /**
-   * Default {@link CamundaClient} stub for tests that don't care about cluster-specific behavior:
-   * it forwards each FEEL expression to a {@link LocalFeelExpressionEvaluator} so binding tests can
+   * Default {@link KunpengClient} stub for tests that don't care about cluster-specific behavior:
+   * it forwards each Expression expression to a {@link LocalFeelExpressionEvaluator} so binding tests can
    * exercise the cluster code path without mocking each expression individually.
    */
-  private final CamundaClient camundaClient = camundaClientBackedByLocalFeel();
+  private final KunpengClient client = clientBackedByLocalFeel();
 
   private static ValidInboundConnectorDetails getInboundConnectorDefinition(
       Map<String, String> properties) {
@@ -79,7 +77,7 @@ class InboundConnectorContextImplTest {
     InboundConnectorElement element =
         new InboundConnectorElement(
             properties,
-            new StandaloneMessageCorrelationPoint("", "", null, null),
+            new StandaloneMessageCorrelationPoint("", ""),
             new ProcessElementWithRuntimeData("bool", 0, 0, "id", tenantId));
     var details = InboundConnectorDetails.of(element.deduplicationId(List.of()), List.of(element));
     assertThat(details).isInstanceOf(ValidInboundConnectorDetails.class);
@@ -93,7 +91,7 @@ class InboundConnectorContextImplTest {
     InboundConnectorElement element =
         new InboundConnectorElement(
             properties,
-            new StandaloneMessageCorrelationPoint("", "", null, null),
+            new StandaloneMessageCorrelationPoint("", ""),
             new ProcessElementWithRuntimeData(
                 "bool",
                 null,
@@ -113,46 +111,31 @@ class InboundConnectorContextImplTest {
   }
 
   /**
-   * Builds a {@link CamundaClient} mock whose {@code newEvaluateExpressionCommand} chain resolves
+   * Builds a {@link KunpengClient} mock whose {@code newEvaluateExpressionCommand} chain resolves
    * each expression via a real {@link LocalFeelExpressionEvaluator}. Useful for tests that want to
-   * verify end-to-end FEEL binding behavior through {@link
+   * verify end-to-end Expression binding behavior through {@link
    * InboundConnectorContextImpl#bindProperties(Class)} without re-stubbing per expression.
    */
-  private static CamundaClient camundaClientBackedByLocalFeel() {
+  private static KunpengClient clientBackedByLocalFeel() {
     var local = new LocalFeelExpressionEvaluator();
-    var client = mock(CamundaClient.class, RETURNS_DEEP_STUBS);
-    var step2 = mock(EvaluateExpressionCommandStep2.class, RETURNS_DEEP_STUBS);
-    when(client.newEvaluateExpressionCommand().expression(any()))
-        .thenAnswer(
-            invocation -> {
-              String expression = invocation.getArgument(0, String.class);
-              var response = mock(EvaluateExpressionResponse.class);
-              when(response.getResult()).thenAnswer(unused -> local.evaluate(expression));
-              when(step2.send().join()).thenReturn(response);
-              return step2;
-            });
-    return client;
+    return clientWithEvaluations(local::evaluate);
   }
 
   /**
-   * Builds a {@link CamundaClient} mock whose {@code newEvaluateExpressionCommand().expression(x)}
+   * Builds a {@link KunpengClient} mock whose {@code newEvaluateExpressionCommand().expression(x)}
    * resolves to the value mapped from {@code x} in {@code expressionToResult}. Useful for verifying
-   * that {@link InboundConnectorContextImpl#bindProperties(Class)} forwards each {@code @FEEL}
+   * that {@link InboundConnectorContextImpl#bindProperties(Class)} forwards each {@code @Expression}
    * field as its own evaluation through the cluster.
    */
-  private static CamundaClient mockClusterEvaluations(Map<String, Object> expressionToResult) {
-    var camundaClient = mock(CamundaClient.class, RETURNS_DEEP_STUBS);
-    var step2 = mock(EvaluateExpressionCommandStep2.class, RETURNS_DEEP_STUBS);
-    when(camundaClient.newEvaluateExpressionCommand().expression(any()))
-        .thenAnswer(
-            invocation -> {
-              String expression = invocation.getArgument(0, String.class);
-              var response = mock(EvaluateExpressionResponse.class);
-              when(response.getResult()).thenReturn(expressionToResult.get(expression));
-              when(step2.send().join()).thenReturn(response);
-              return step2;
-            });
-    return camundaClient;
+  private static KunpengClient mockClusterEvaluations(Map<String, Object> expressionToResult) {
+    return clientWithEvaluations(expressionToResult::get);
+  }
+
+  private static KunpengClient clientWithEvaluations(Function<String, Object> resolver) {
+    var client = mock(KunpengClient.class);
+    when(client.newEvaluateExpressionCommand())
+        .thenReturn(new EvaluateExpressionCommandDummy(resolver));
+    return client;
   }
 
   @Test
@@ -189,7 +172,7 @@ class InboundConnectorContextImplTest {
             (e) -> {},
             mapper,
             activityLogRegistry,
-            camundaClient);
+            client);
 
     // when
     var result = context.correlate(CorrelationRequest.builder().variables(Map.of()).build());
@@ -198,50 +181,6 @@ class InboundConnectorContextImplTest {
     assertThat(result).isInstanceOf(CorrelationResult.Success.class);
     var bound = ((CorrelationResult.Success) result).bindProperties(TestPropertiesClass.class);
     assertThat(bound.getStringMap()).containsEntry("from", "activated-element");
-  }
-
-  @Test
-  void create_stampsTheElementsPhysicalTenantIdWhenRequestHasNone() {
-    var element =
-        new InboundConnectorElement(
-            Map.of("inbound.type", "io.camunda:connector:1"),
-            new StandaloneMessageCorrelationPoint("", "", null, null),
-            new ProcessElementWithRuntimeData(
-                "bool",
-                null,
-                null,
-                0,
-                0,
-                "id",
-                null,
-                null,
-                "<default>",
-                "tenant-a",
-                new ElementTemplateDetails("t", "1", "icon"),
-                Map.of()));
-    var definition =
-        (ValidInboundConnectorDetails)
-            InboundConnectorDetails.of(element.deduplicationId(List.of()), List.of(element));
-    var documentFactory = mock(DocumentFactory.class);
-    var context =
-        new InboundConnectorContextImpl(
-            secretProvider,
-            (e) -> {},
-            documentFactory,
-            definition,
-            null,
-            (e) -> {},
-            mapper,
-            activityLogRegistry,
-            camundaClient);
-    var request =
-        DocumentCreationRequest.from(new ByteArrayInputStream("hello".getBytes())).build();
-
-    context.create(request);
-
-    var captor = ArgumentCaptor.forClass(DocumentCreationRequest.class);
-    verify(documentFactory).create(captor.capture());
-    assertThat(captor.getValue().physicalTenantId()).isEqualTo("tenant-a");
   }
 
   @Test
@@ -257,13 +196,13 @@ class InboundConnectorContextImplTest {
             (e) -> {},
             mapper,
             activityLogRegistry,
-            camundaClient);
+            client);
     // when and then
     RuntimeException exception =
         assertThrows(
             RuntimeException.class,
             () -> inboundConnectorContext.bindProperties(TestPropertiesClass.class));
-    // Outer wrapper from bindProperties; the FEEL failure surfaces in the cause chain.
+    // Outer wrapper from bindProperties; the Expression failure surfaces in the cause chain.
     assertThat(exception).hasMessageContaining("Failed to bind process instance properties");
     assertThat(exception).hasStackTraceContaining(FeelEngineWrapperException.class.getName());
     assertThat(exception).hasStackTraceContaining("Failed to evaluate expression");
@@ -287,7 +226,7 @@ class InboundConnectorContextImplTest {
             (e) -> {},
             mapper,
             activityLogRegistry,
-            camundaClient);
+            client);
 
     // when
     context.bindProperties(TestPropertiesClass.class);
@@ -312,7 +251,7 @@ class InboundConnectorContextImplTest {
             (e) -> {},
             mapper,
             activityLogRegistry,
-            camundaClient);
+            client);
 
     assertThat(context.getDefinition().physicalTenantId()).isEqualTo("engine-1");
   }
@@ -330,7 +269,7 @@ class InboundConnectorContextImplTest {
             (e) -> {},
             mapper,
             activityLogRegistry,
-            camundaClient);
+            client);
     // when
     TestPropertiesClass propertiesAsType =
         inboundConnectorContext.bindProperties(TestPropertiesClass.class);
@@ -356,7 +295,7 @@ class InboundConnectorContextImplTest {
             (e) -> {},
             mapper,
             activityLogRegistry,
-            camundaClient);
+            client);
     // when
     TestPropertiesClass propertiesAsType =
         inboundConnectorContext.bindProperties(TestPropertiesClass.class);
@@ -400,7 +339,7 @@ class InboundConnectorContextImplTest {
             (e) -> {},
             mapper,
             activityLogRegistry,
-            camundaClient);
+            client);
     // when
     TestPropertiesClass propertiesAsType =
         inboundConnectorContext.bindProperties(TestPropertiesClass.class);
@@ -422,7 +361,7 @@ class InboundConnectorContextImplTest {
             (e) -> {},
             mapper,
             activityLogRegistry,
-            camundaClient);
+            client);
 
     // when
     Map<String, Object> properties = inboundConnectorContext.getProperties();
@@ -445,7 +384,7 @@ class InboundConnectorContextImplTest {
             (e) -> {},
             mapper,
             activityLogRegistry,
-            camundaClient);
+            client);
 
     // when
     inboundConnectorContext.reportHealth(health);
@@ -469,68 +408,58 @@ class InboundConnectorContextImplTest {
     var definition =
         getInboundConnectorDefinitionWithTenant(
             Map.of("str", "=camunda.vars.env.MY_API_KEY"), "tenant-1");
-    var camundaClient = mock(CamundaClient.class, RETURNS_DEEP_STUBS);
-    var step2 = mock(EvaluateExpressionCommandStep2.class, RETURNS_DEEP_STUBS);
-    var response = mock(EvaluateExpressionResponse.class);
-    var expressionCaptor = ArgumentCaptor.forClass(String.class);
-    when(camundaClient.newEvaluateExpressionCommand().expression(expressionCaptor.capture()))
-        .thenReturn(step2);
-    when(step2.send().join()).thenReturn(response);
-    when(response.getResult()).thenReturn("resolved-api-key");
+    var command = new EvaluateExpressionCommandDummy(expression -> "resolved-api-key");
+    var client = mock(KunpengClient.class);
+    when(client.newEvaluateExpressionCommand()).thenReturn(command);
 
     InboundConnectorContextImpl inboundConnectorContext =
         new InboundConnectorContextImpl(
             secretProvider,
             (e) -> {},
-            null,
             definition,
             null,
             (e) -> {},
             mapper,
             activityLogRegistry,
-            camundaClient);
+            client);
 
     // when
     TestPropertiesClass result = inboundConnectorContext.bindProperties(TestPropertiesClass.class);
 
     // then the cluster receives the expression verbatim and the result is bound
-    assertThat(expressionCaptor.getValue()).contains("camunda.vars.env.MY_API_KEY");
+    assertThat(command.expressions()).contains("=camunda.vars.env.MY_API_KEY");
     assertThat(result.str).isEqualTo("resolved-api-key");
     // tenant must be propagated so cluster variables can be resolved against the right scope
-    verify(step2).tenantId(eq("tenant-1"));
+    assertThat(command.tenantIds()).contains("tenant-1");
   }
 
   @Test
-  void bindProperties_shouldUseCamundaClientEvaluatorWithTenantId() {
+  void bindProperties_shouldUseKunpengClientEvaluatorWithTenantId() {
     // given
     var definition =
         getInboundConnectorDefinitionWithTenant(Map.of("str", "= anything"), "tenant-1");
-    var camundaClient = mock(CamundaClient.class, RETURNS_DEEP_STUBS);
-    var step2 = mock(EvaluateExpressionCommandStep2.class, RETURNS_DEEP_STUBS);
-    var response = mock(EvaluateExpressionResponse.class);
-    when(camundaClient.newEvaluateExpressionCommand().expression(any())).thenReturn(step2);
-    when(step2.send().join()).thenReturn(response);
-    when(response.getResult()).thenReturn("evaluated-by-cluster");
+    var command = new EvaluateExpressionCommandDummy(expression -> "evaluated-by-cluster");
+    var client = mock(KunpengClient.class);
+    when(client.newEvaluateExpressionCommand()).thenReturn(command);
 
     InboundConnectorContextImpl inboundConnectorContext =
         new InboundConnectorContextImpl(
             secretProvider,
             (e) -> {},
-            null,
             definition,
             null,
             (e) -> {},
             mapper,
             activityLogRegistry,
-            camundaClient);
+            client);
 
     // when
     TestPropertiesClass result = inboundConnectorContext.bindProperties(TestPropertiesClass.class);
 
     // then
     assertThat(result.str).isEqualTo("evaluated-by-cluster");
-    verify(step2).tenantId(eq("tenant-1"));
-    verify(step2, never()).scopeKey(org.mockito.ArgumentMatchers.anyLong());
+    assertThat(command.tenantIds()).contains("tenant-1");
+    assertThat(command.scopeKeys()).isEmpty();
   }
 
   @Test
@@ -547,7 +476,7 @@ class InboundConnectorContextImplTest {
             (e) -> {},
             mapper,
             activityLogRegistry,
-            camundaClient);
+            client);
 
     // when
     inboundConnectorContext.reportHealth(health);
@@ -567,10 +496,10 @@ class InboundConnectorContextImplTest {
 
   @Test
   void bindProperties_shouldBindListFromClusterResult() {
-    // given the cluster returns a List for a @FEEL List<String> field
+    // given the cluster returns a List for a @Expression List<String> field
     var definition =
         getInboundConnectorDefinition(Map.of("stringList", "=camunda.vars.env.RECIPIENTS"));
-    var camundaClient =
+    var client =
         mockClusterEvaluations(
             Map.of("=camunda.vars.env.RECIPIENTS", List.of("alice", "bob", "carol")));
 
@@ -578,13 +507,12 @@ class InboundConnectorContextImplTest {
         new InboundConnectorContextImpl(
             secretProvider,
             (e) -> {},
-            null,
             definition,
             null,
             (e) -> {},
             mapper,
             activityLogRegistry,
-            camundaClient);
+            client);
 
     // when
     TestPropertiesClass result = inboundConnectorContext.bindProperties(TestPropertiesClass.class);
@@ -595,10 +523,10 @@ class InboundConnectorContextImplTest {
 
   @Test
   void bindProperties_shouldBindMapFromClusterResult() {
-    // given the cluster returns a Map for a @FEEL Map<String, String> field
+    // given the cluster returns a Map for a @Expression Map<String, String> field
     var definition =
         getInboundConnectorDefinition(Map.of("stringMap", "=camunda.vars.env.HEADERS"));
-    var camundaClient =
+    var client =
         mockClusterEvaluations(
             Map.of(
                 "=camunda.vars.env.HEADERS",
@@ -608,13 +536,12 @@ class InboundConnectorContextImplTest {
         new InboundConnectorContextImpl(
             secretProvider,
             (e) -> {},
-            null,
             definition,
             null,
             (e) -> {},
             mapper,
             activityLogRegistry,
-            camundaClient);
+            client);
 
     // when
     TestPropertiesClass result = inboundConnectorContext.bindProperties(TestPropertiesClass.class);
@@ -632,19 +559,18 @@ class InboundConnectorContextImplTest {
         getInboundConnectorDefinition(Map.of("str", "=camunda.vars.env.OPTIONAL_VALUE"));
     var expressionToResult = new HashMap<String, Object>();
     expressionToResult.put("=camunda.vars.env.OPTIONAL_VALUE", null);
-    var camundaClient = mockClusterEvaluations(expressionToResult);
+    var client = mockClusterEvaluations(expressionToResult);
 
     var inboundConnectorContext =
         new InboundConnectorContextImpl(
             secretProvider,
             (e) -> {},
-            null,
             definition,
             null,
             (e) -> {},
             mapper,
             activityLogRegistry,
-            camundaClient);
+            client);
 
     // when
     TestPropertiesClass result = inboundConnectorContext.bindProperties(TestPropertiesClass.class);
@@ -659,7 +585,7 @@ class InboundConnectorContextImplTest {
     var definition =
         getInboundConnectorDefinition(
             Map.of("mapWithNumberList", "=camunda.vars.env.RETRY_LIMITS"));
-    var camundaClient =
+    var client =
         mockClusterEvaluations(
             Map.of("=camunda.vars.env.RETRY_LIMITS", Map.of("key", List.of(1, 2, 3))));
 
@@ -667,13 +593,12 @@ class InboundConnectorContextImplTest {
         new InboundConnectorContextImpl(
             secretProvider,
             (e) -> {},
-            null,
             definition,
             null,
             (e) -> {},
             mapper,
             activityLogRegistry,
-            camundaClient);
+            client);
 
     // when
     TestPropertiesClass result = inboundConnectorContext.bindProperties(TestPropertiesClass.class);
@@ -687,7 +612,7 @@ class InboundConnectorContextImplTest {
     // given the cluster returns a nested Map that should bind to a Map<String, InnerObject>
     var definition =
         getInboundConnectorDefinition(Map.of("stringObjectMap", "=camunda.vars.env.NESTED_CONFIG"));
-    var camundaClient =
+    var client =
         mockClusterEvaluations(
             Map.of(
                 "=camunda.vars.env.NESTED_CONFIG",
@@ -697,13 +622,12 @@ class InboundConnectorContextImplTest {
         new InboundConnectorContextImpl(
             secretProvider,
             (e) -> {},
-            null,
             definition,
             null,
             (e) -> {},
             mapper,
             activityLogRegistry,
-            camundaClient);
+            client);
 
     // when
     TestPropertiesClass result = inboundConnectorContext.bindProperties(TestPropertiesClass.class);
@@ -731,16 +655,26 @@ class InboundConnectorContextImplTest {
   }
 
   public static class TestPropertiesClass {
-    @FEEL private Map<String, String> stringMap;
-    @FEEL private Map<String, Map<String, String>> stringMapMap;
-    @FEEL private Map<String, InnerObject> stringObjectMap;
-    @FEEL private List<String> stringList;
-    @FEEL private List<Integer> numberList;
-    @FEEL private List<String> stringNumberList;
-    @FEEL private Map<String, List<Long>> mapWithNumberList;
-    @FEEL private Map<String, List<String>> mapWithStringListWithNumbers;
-    @FEEL private String str;
-    @FEEL private boolean bool;
+    @Expression
+    private Map<String, String> stringMap;
+    @Expression
+    private Map<String, Map<String, String>> stringMapMap;
+    @Expression
+    private Map<String, InnerObject> stringObjectMap;
+    @Expression
+    private List<String> stringList;
+    @Expression
+    private List<Integer> numberList;
+    @Expression
+    private List<String> stringNumberList;
+    @Expression
+    private Map<String, List<Long>> mapWithNumberList;
+    @Expression
+    private Map<String, List<String>> mapWithStringListWithNumbers;
+    @Expression
+    private String str;
+    @Expression
+    private boolean bool;
 
     public Map<String, String> getStringMap() {
       return stringMap;

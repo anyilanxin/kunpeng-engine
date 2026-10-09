@@ -26,7 +26,7 @@ import static org.mockito.Mockito.when;
 import io.camunda.connector.runtime.core.common.AbstractConnectorFactory.ConnectorRuntimeConfiguration;
 import io.camunda.connector.runtime.core.config.OutboundConnectorConfiguration;
 import io.camunda.connector.runtime.core.outbound.OutboundConnectorFactory;
-import io.camunda.connector.runtime.inbound.controller.exception.DataNotFoundException;
+import io.camunda.connector.runtime.outbound.controller.exception.DataNotFoundException;
 import io.camunda.connector.runtime.outbound.controller.OutboundConnectorResponse;
 import io.camunda.connector.runtime.outbound.jobstream.BrokerConnectivityState;
 import io.camunda.connector.runtime.outbound.jobstream.BrokerJobStreamClient;

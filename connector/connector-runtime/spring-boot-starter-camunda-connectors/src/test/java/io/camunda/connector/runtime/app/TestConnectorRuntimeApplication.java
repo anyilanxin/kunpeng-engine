@@ -16,18 +16,45 @@
  */
 package io.camunda.connector.runtime.app;
 
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.mock;
+
+import com.anyilanxin.kunpeng.client.KunpengClient;
+import com.anyilanxin.kunpeng.client.spring.jobhandling.JobWorkerManager;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 
 @SpringBootApplication
 @ImportAutoConfiguration({
-  io.camunda.connector.runtime.InboundConnectorsAutoConfiguration.class,
   io.camunda.connector.runtime.OutboundConnectorsAutoConfiguration.class,
-  io.camunda.connector.runtime.WebhookConnectorAutoConfiguration.class,
   io.camunda.connector.runtime.ConnectorsAutoConfiguration.class,
 })
+@Import(TestConnectorRuntimeApplication.MockKunpengClientConfiguration.class)
 public class TestConnectorRuntimeApplication {
+
+  /**
+   * The real client performs eager gateway discovery at construction, which no engine-less test
+   * context can satisfy — these tests exercise runtime wiring, so a mock client stands in (the
+   * client's own auto-configuration is excluded via spring.autoconfigure.exclude in the test
+   * application.properties).
+   */
+  @Configuration(proxyBeanMethods = false)
+  static class MockKunpengClientConfiguration {
+
+    @Bean
+    KunpengClient kunpengClient() {
+      return mock(KunpengClient.class, RETURNS_DEEP_STUBS);
+    }
+
+    @Bean
+    JobWorkerManager jobWorkerManager() {
+      return mock(JobWorkerManager.class);
+    }
+  }
 
   public static void main(String[] args) {
     SpringApplication.run(TestConnectorRuntimeApplication.class, args);

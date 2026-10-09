@@ -16,23 +16,21 @@
  */
 package io.camunda.connector.runtime.core.testutil.command;
 
-import io.camunda.client.api.CamundaFuture;
-import io.camunda.client.api.command.CreateProcessInstanceCommandStep1;
-import io.camunda.client.api.command.FinalCommandStep;
-import io.camunda.client.api.response.ProcessInstanceEvent;
-import io.camunda.client.api.response.ProcessInstanceResult;
-import io.camunda.client.impl.CamundaClientFutureImpl;
+import com.anyilanxin.kunpeng.client.command.KunpengClientFutureImpl;
+import com.anyilanxin.kunpeng.client.command.processinstance.CreateProcessInstanceCommand;
+import com.anyilanxin.kunpeng.client.command.processinstance.CreateProcessInstanceCommand.CreateProcessInstanceCommandStep2;
+import com.anyilanxin.kunpeng.client.command.processinstance.CreateProcessInstanceCommand.CreateProcessInstanceCommandStep3;
+import com.anyilanxin.kunpeng.client.command.processinstance.CreateProcessInstanceCommand.CreateProcessInstanceWithResultCommandStep1;
 import io.camunda.connector.runtime.core.testutil.response.ProcessInstanceEventDummy;
 import io.camunda.connector.runtime.core.testutil.response.ProcessInstanceResultDummy;
 import java.io.InputStream;
 import java.time.Duration;
 import java.util.Map;
-import java.util.Set;
 
 public class CreateCommandDummy
-    implements CreateProcessInstanceCommandStep1,
-        CreateProcessInstanceCommandStep1.CreateProcessInstanceCommandStep2,
-        CreateProcessInstanceCommandStep1.CreateProcessInstanceCommandStep3 {
+    implements CreateProcessInstanceCommand,
+        CreateProcessInstanceCommandStep2,
+        CreateProcessInstanceCommandStep3 {
 
   private final Map<String, Object> variables;
 
@@ -44,49 +42,82 @@ public class CreateCommandDummy
     this.variables = variables;
   }
 
-  public CreateProcessInstanceCommandStep2 bpmnProcessId(String bpmnProcessId) {
-    return this;
-  }
-
-  public CreateProcessInstanceCommandStep3 processDefinitionKey(long processDefinitionKey) {
-    return this;
-  }
-
-  public CreateProcessInstanceCommandStep3 version(int version) {
-    return this;
-  }
-
-  public CreateProcessInstanceCommandStep3 latestVersion() {
-    return this;
-  }
-
-  public CreateProcessInstanceCommandStep3 variables(InputStream variables) {
-    return this;
-  }
-
-  public CreateProcessInstanceCommandStep3 variables(String variables) {
-    return this;
-  }
-
-  public CreateProcessInstanceCommandStep3 variables(Map<String, Object> variables) {
-    return this;
-  }
-
-  public CreateProcessInstanceCommandStep3 variables(Object variables) {
-    return this;
-  }
-
-  public CreateProcessInstanceCommandStep3 startBeforeElement(String elementId) {
+  @Override
+  public CreateProcessInstanceCommandStep2 processDefinitionKey(String processDefinitionKey) {
     return this;
   }
 
   @Override
-  public CreateProcessInstanceCommandStep3 terminateAfterElement(String elementId) {
+  public CreateProcessInstanceCommandStep3 processDefinitionId(long processDefinitionId) {
     return this;
   }
 
+  @Override
+  public CreateProcessInstanceCommandStep3 version(int version) {
+    return this;
+  }
+
+  @Override
+  public CreateProcessInstanceCommandStep3 latestVersion() {
+    return this;
+  }
+
+  @Override
+  public CreateProcessInstanceCommandStep3 tenantId(String tenantId) {
+    return this;
+  }
+
+  @Override
+  public CreateProcessInstanceCommandStep3 variables(InputStream variables) {
+    return this;
+  }
+
+  @Override
+  public CreateProcessInstanceCommandStep3 variables(String variables) {
+    return this;
+  }
+
+  @Override
+  public CreateProcessInstanceCommandStep3 variables(Map<String, Object> variables) {
+    return this;
+  }
+
+  @Override
+  public CreateProcessInstanceCommandStep3 variables(Object variables) {
+    return this;
+  }
+
+  @Override
+  public CreateProcessInstanceCommandStep3 variable(String key, Object value) {
+    return this;
+  }
+
+  @Override
+  public CreateProcessInstanceCommandStep3 startBeforeElement(String activityDefinitionKey) {
+    return this;
+  }
+
+  @Override
+  public CreateProcessInstanceCommandStep3 terminateAfterElement(String activityDefinitionKey) {
+    return this;
+  }
+
+  @Override
   public CreateProcessInstanceWithResultCommandStep1 withResult() {
     return new WithResultCommandDummy(variables);
+  }
+
+  @Override
+  public CreateProcessInstanceCommandStep3 requestTimeout(Duration requestTimeout) {
+    return this;
+  }
+
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  @Override
+  public KunpengClientFutureImpl send() {
+    KunpengClientFutureImpl future = new KunpengClientFutureImpl<>();
+    future.complete(new ProcessInstanceEventDummy());
+    return future;
   }
 
   public static class WithResultCommandDummy
@@ -98,17 +129,8 @@ public class CreateCommandDummy
       this.variables = variables;
     }
 
-    public WithResultCommandDummy() {
-      this.variables = Map.of();
-    }
-
     @Override
     public CreateProcessInstanceWithResultCommandStep1 tenantId(String tenantId) {
-      return this;
-    }
-
-    @Override
-    public CreateProcessInstanceWithResultCommandStep1 fetchVariables(String... fetchVariables) {
       return this;
     }
 
@@ -119,77 +141,21 @@ public class CreateCommandDummy
     }
 
     @Override
-    public FinalCommandStep<ProcessInstanceResult> requestTimeout(Duration requestTimeout) {
+    public CreateProcessInstanceWithResultCommandStep1 fetchVariables(String... fetchVariables) {
+      return this;
+    }
+
+    @Override
+    public CreateProcessInstanceWithResultCommandStep1 requestTimeout(Duration requestTimeout) {
       return this;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     @Override
-    public CamundaFuture<ProcessInstanceResult> send() {
-      CamundaClientFutureImpl future = new CamundaClientFutureImpl<>();
+    public KunpengClientFutureImpl send() {
+      KunpengClientFutureImpl future = new KunpengClientFutureImpl<>();
       future.complete(new ProcessInstanceResultDummy(variables));
       return future;
     }
-
-    @Override
-    public CreateProcessInstanceWithResultCommandStep1 useRest() {
-      return this;
-    }
-
-    @Override
-    public CreateProcessInstanceWithResultCommandStep1 useGrpc() {
-      return this;
-    }
-  }
-
-  @Override
-  public CreateProcessInstanceCommandStep3 tags(String... tags) {
-    return this;
-  }
-
-  @Override
-  public CreateProcessInstanceCommandStep3 tags(Iterable<String> tags) {
-    return this;
-  }
-
-  @Override
-  public CreateProcessInstanceCommandStep3 tags(Set<String> tags) {
-    return this;
-  }
-
-  public FinalCommandStep<ProcessInstanceEvent> requestTimeout(Duration requestTimeout) {
-    return this;
-  }
-
-  @Override
-  public CreateProcessInstanceCommandStep3 variable(String key, Object value) {
-    return this;
-  }
-
-  @Override
-  public CreateProcessInstanceCommandStep3 tenantId(String tenantId) {
-    return this;
-  }
-
-  @SuppressWarnings({"rawtypes", "unchecked"})
-  public CamundaFuture<ProcessInstanceEvent> send() {
-    CamundaClientFutureImpl future = new CamundaClientFutureImpl<>();
-    future.complete(new ProcessInstanceEventDummy());
-    return future;
-  }
-
-  @Override
-  public CreateProcessInstanceCommandStep1 useRest() {
-    return this;
-  }
-
-  @Override
-  public CreateProcessInstanceCommandStep1 useGrpc() {
-    return this;
-  }
-
-  @Override
-  public CreateProcessInstanceCommandStep3 businessId(String businessId) {
-    return this;
   }
 }

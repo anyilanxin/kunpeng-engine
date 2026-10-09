@@ -20,8 +20,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.camunda.client.api.response.ActivatedJob;
+import tools.jackson.databind.ObjectMapper;
+import com.anyilanxin.kunpeng.client.command.job.ActivatedJob;
 import io.camunda.connector.api.annotation.OutboundConnector;
 import io.camunda.connector.api.error.ConnectorInputException;
 import io.camunda.connector.api.error.ConnectorRetryException;
@@ -97,7 +97,7 @@ public class AnnotatedOperationTests {
     var result =
         invoker.execute(
             createMockContext("{\"x\": 10}", "myOperation5", Map.of("myFeelFunction", "=x+2")));
-    assertEquals(12L, result);
+    assertEquals(12, result);
   }
 
   @Test
@@ -165,7 +165,6 @@ public class AnnotatedOperationTests {
         activatedJob,
         new NoOpSecretProvider(),
         validationProvider,
-        null,
         contextObjectMapper,
         SecretFilter.allowAll());
   }
@@ -218,7 +217,7 @@ public class AnnotatedOperationTests {
 
   @Test
   public void shouldUseContextObjectMapper_notRegistrationTimeMapper_forHeaderResolution() {
-    // a bare ObjectMapper has no FEEL support, so it cannot convert the "=x+2" header string into
+    // a bare ObjectMapper has no Expression support, so it cannot convert the "=x+2" header string into
     // the Function<Map<String, Integer>, Integer> parameter type that myOperation5 expects.
     var registrationMapperWithoutFeelSupport = new ObjectMapper();
     var mismatchedInvoker =
@@ -234,6 +233,6 @@ public class AnnotatedOperationTests {
                 Map.of("myFeelFunction", "=x+2"),
                 TestObjectMapperSupplier.INSTANCE));
 
-    assertEquals(12L, result);
+    assertEquals(12, result);
   }
 }

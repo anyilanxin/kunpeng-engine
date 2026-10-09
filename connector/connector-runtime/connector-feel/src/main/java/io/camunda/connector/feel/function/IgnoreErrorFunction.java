@@ -19,40 +19,30 @@ package io.camunda.connector.feel.function;
 import static io.camunda.connector.feel.FeelConnectorFunctionProvider.ERROR_TYPE_PROPERTY;
 import static io.camunda.connector.feel.FeelConnectorFunctionProvider.IGNORE_ERROR_TYPE_VALUE;
 
-import java.util.List;
-import org.camunda.feel.context.Context;
-import org.camunda.feel.context.JavaFunction;
-import org.camunda.feel.syntaxtree.ValContext;
-import scala.collection.immutable.Map;
-import scala.collection.immutable.Map$;
+import com.alibaba.qlexpress4.runtime.Parameters;
+import com.alibaba.qlexpress4.runtime.QContext;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-public class IgnoreErrorFunction {
+/** Expression function {@code ignoreError([variables])}. */
+public class IgnoreErrorFunction implements QLFunction {
 
   public static final String NAME = "ignoreError";
 
-  private static final List<String> ARGUMENTS = List.of("variables");
+  private static final String VARIABLES = "variables";
 
-  private static final JavaFunction WITH_VARIABLES =
-      new JavaFunction(
-          ARGUMENTS,
-          args ->
-              new ValContext(
-                  new Context.StaticContext(
-                      new Map.Map2<>(
-                          ERROR_TYPE_PROPERTY,
-                          IGNORE_ERROR_TYPE_VALUE,
-                          ARGUMENTS.getFirst(),
-                          FunctionHelper.toContext(args, 0, NAME, ARGUMENTS.getFirst())),
-                      Map$.MODULE$.empty())));
+  @Override
+  public Object call(final QContext qContext, final Parameters parameters) throws Throwable {
+    final Map<String, Object> result = new LinkedHashMap<>();
+    result.put(ERROR_TYPE_PROPERTY, IGNORE_ERROR_TYPE_VALUE);
+    if (parameters.size() > 0) {
+      result.put(VARIABLES, FunctionHelper.toMap(parameters, 0, NAME, VARIABLES));
+    }
+    return result;
+  }
 
-  private static final JavaFunction NO_ARGS =
-      new JavaFunction(
-          List.of(),
-          args ->
-              new ValContext(
-                  new Context.StaticContext(
-                      new Map.Map1<>(ERROR_TYPE_PROPERTY, IGNORE_ERROR_TYPE_VALUE),
-                      Map$.MODULE$.empty())));
-
-  public static final List<JavaFunction> FUNCTIONS = List.of(WITH_VARIABLES, NO_ARGS);
+  @Override
+  public String getSignature() {
+    return NAME;
+  }
 }

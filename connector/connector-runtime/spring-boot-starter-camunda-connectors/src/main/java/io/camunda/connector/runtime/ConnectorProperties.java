@@ -23,22 +23,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /** Configuration properties for Camunda Connectors. */
 @ConfigurationProperties(prefix = "camunda.connector")
 public record ConnectorProperties(
-    Polling polling,
-    Webhook webhook,
     SecretProvider secretProvider,
     VirtualThreads virtualThreads,
-    Inbound inbound,
     OAuth oauth,
     Validation validation) {
   // NOTE: this class is not used in directly in the code, but is used by Spring Boot
   // configuration annotation processor to generate the configuration properties metadata
-
-  /** Configuration for the inbound webhook connector. */
-  public record Webhook(boolean enabled, boolean appendPhysicalTenantAndTenantToPath) {}
-
-  /** Configuration for Operate polling that enables inbound Connectors. */
-  public record Polling(
-      boolean enabled, boolean activeVersionsEnabled, long interval, long initialDelay) {}
 
   public record VirtualThreads(boolean enabled) {}
 
@@ -55,28 +45,6 @@ public record ConnectorProperties(
       boolean enabled, String prefix, boolean tenantAware, boolean processDefinitionAware) {}
 
   public record ConsoleSecretProvider(boolean enabled, String endpoint, String audience) {}
-
-  /** Configuration for inbound connector processing. */
-  public record Inbound(ProcessDefinitionCache processDefinitionCache) {}
-
-  /**
-   * Configuration for the process definition cache used when parsing inbound connector elements.
-   *
-   * @param maxSize Maximum number of process definitions to cache. Default is 1000.
-   */
-  public record ProcessDefinitionCache(int maxSize) {
-    public static final int DEFAULT_MAX_SIZE = 1000;
-
-    public ProcessDefinitionCache {
-      if (maxSize <= 0) {
-        maxSize = DEFAULT_MAX_SIZE;
-      }
-    }
-
-    public ProcessDefinitionCache() {
-      this(DEFAULT_MAX_SIZE);
-    }
-  }
 
   /** Configuration for OAuth token caching. */
   public record OAuth(OAuthCache cache) {}

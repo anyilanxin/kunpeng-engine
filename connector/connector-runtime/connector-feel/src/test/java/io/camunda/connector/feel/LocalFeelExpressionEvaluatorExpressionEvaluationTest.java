@@ -20,7 +20,6 @@ import static io.camunda.connector.feel.FeelEngineWrapperUtil.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import io.camunda.connector.feel.function.CreateDocumentFunction;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Collections;
@@ -44,7 +43,7 @@ class LocalFeelExpressionEvaluatorExpressionEvaluationTest {
   @Test
   void evaluateToJson_ShouldSucceed_WhenHappyCase() throws JSONException {
     // given
-    // FEEL expression -> {"processedOutput":response.callStatus}
+    // Expression expression -> {"processedOutput": response.callStatus}
     final var resultExpression = "{\"processedOutput\": response.callStatus }";
     // Response from service -> {"callStatus":{"statusCode":"200 OK"}}
     final var variables = Map.of("callStatus", Map.of("statusCode", "200 OK"));
@@ -63,7 +62,7 @@ class LocalFeelExpressionEvaluatorExpressionEvaluationTest {
   @Test
   void evaluate_ShouldSucceed_WhenHappyCaseJavaType() {
     // given
-    // FEEL expression -> {"processedOutput":response.callStatus}
+    // Expression expression -> {"processedOutput": response.callStatus}
     final var resultExpression = "{\"processedOutput\": response.callStatus }";
     // Response from service -> {"callStatus":{"statusCode":"200 OK"}}
     final var variables = Map.of("callStatus", Map.of("statusCode", "200 OK"));
@@ -80,7 +79,7 @@ class LocalFeelExpressionEvaluatorExpressionEvaluationTest {
   @Test
   void evaluateToJson_ShouldSucceed_WhenHandlingPojo() throws JSONException {
     // given
-    final var resultExpression = "= { value: response.value, response: response }";
+    final var resultExpression = "= {\"value\": response.value, \"response\": response}";
     final var variables = new TestPojo("FOO");
 
     // when
@@ -97,7 +96,7 @@ class LocalFeelExpressionEvaluatorExpressionEvaluationTest {
   @Test
   void evaluateToJson_ShouldSucceed_WhenExpressionStartsWithEqualsSign() throws JSONException {
     // given
-    // FEEL expression -> ={"processedOutput":response.callStatus}
+    // Expression expression -> ={"processedOutput":response.callStatus}
     final var resultExpression = "={\"processedOutput\": response.callStatus }";
     // Response from service -> {"callStatus":{"statusCode":"200 OK"}}
     final var variables = Map.of("callStatus", Map.of("statusCode", "200 OK"));
@@ -116,11 +115,12 @@ class LocalFeelExpressionEvaluatorExpressionEvaluationTest {
   @Test
   void evaluateToJson_ShouldSucceed_WhenContextWithContextFromHttpResponse() throws JSONException {
     // given
-    // FEEL expression which is a bit useless, but it proves 2 things
+    // Expression expression which is a bit useless, but it proves 2 things
     // 1. status is wrapped to response
     // 2. job is not
     final var errorExpression =
-        "if response.status = 204 then {retries: job.retries, responseRetries: response.job.retries} else null";
+        "response.status == 204 ? {\"retries\": job.retries, \"responseRetries\":"
+            + " response.job.retries} : null";
     final var variables = Map.of("status", 204, "body", "", "headers", Map.of());
     final var jobContent = Map.of("job", Map.of("retries", 3));
     final var evaluatedResultAsJson =
@@ -134,8 +134,8 @@ class LocalFeelExpressionEvaluatorExpressionEvaluationTest {
   @Test
   void evaluateToJson_ShouldSucceed_WhenVariableNotFound() throws JSONException {
     // given
-    // FEEL expression -> ={"processedOutput":response.doesnt-exist}
-    final var resultExpression = "={\"processedOutput\": response.doesnt-exist }";
+    // Expression expression -> ={"processedOutput":response.doesntExist}
+    final var resultExpression = "={\"processedOutput\": response.doesntExist }";
     // Response from service -> {"callStatus":{"statusCode":"200 OK"}}
     final var variables = Map.of("callStatus", Map.of("statusCode", "200 OK"));
 
@@ -148,10 +148,10 @@ class LocalFeelExpressionEvaluatorExpressionEvaluationTest {
   }
 
   @Test
-  void evaluateToJson_ShouldSucceed_WhenUsedBuiltInFunction() throws JSONException {
+  void evaluateToJson_ShouldSucceed_WhenUsingComparison() throws JSONException {
     // given
-    // FEEL expression -> {"processedOutput": upper case(response.callStatus)}
-    final var resultExpression = "{\"processedOutput\": upper case(response.callStatus) }";
+    // Expression expression -> {"processedOutput": callStatus == "done"}
+    final var resultExpression = "{\"processedOutput\": callStatus == \"done\" }";
     // Response from service -> {"callStatus":"done"}
     final var variables = Map.of("callStatus", "done");
 
@@ -161,14 +161,13 @@ class LocalFeelExpressionEvaluatorExpressionEvaluationTest {
 
     // then
     JSONAssert.assertEquals(
-        "{\"processedOutput\":\"DONE\"}", evaluatedResultAsJson, JSONCompareMode.STRICT);
-    // processedOutput in upper-case!
+        "{\"processedOutput\":true}", evaluatedResultAsJson, JSONCompareMode.STRICT);
   }
 
   @Test
   void evaluateToJson_ShouldFail_WhenVariablesAreNull() {
     // given
-    // FEEL expression -> {"processedOutput":response.callStatus}
+    // Expression expression -> {"processedOutput":response.callStatus}
     final var resultExpression = "{\"processedOutput\": response.callStatus }";
 
     // when & then
@@ -183,7 +182,7 @@ class LocalFeelExpressionEvaluatorExpressionEvaluationTest {
   @Test
   void evaluateToJson_ShouldNotFail_WhenVariablesAreNotMap() throws JSONException {
     // given
-    // FEEL expression -> {"processedOutput":response.callStatus}
+    // Expression expression -> {"processedOutput":response.callStatus}
     final var resultExpression = "{\"processedOutput\": response.callStatus }";
 
     // when & then
@@ -197,7 +196,7 @@ class LocalFeelExpressionEvaluatorExpressionEvaluationTest {
   @Test
   void evaluateToJson_ShouldNotFail_WhenResponseBodyIsEmpty() throws JSONException {
     // given - simulates HTTP response with empty body (null)
-    // FEEL expression -> {"processedOutput": response.status}
+    // Expression expression -> {"processedOutput": response.status}
     final var resultExpression = "{\"processedOutput\": response.status }";
     // Response body is null, but wrapped response contains the null
     final Object responseContent = null;
@@ -215,9 +214,9 @@ class LocalFeelExpressionEvaluatorExpressionEvaluationTest {
   @Test
   void evaluateToJson_ShouldNotFail_WhenCallingNonExistingFunction() {
     // given
-    // FEEL expression -> {"processedOutput": camel case(response.callStatus)}
-    // camel case function does not exist in FEEL
-    final var resultExpression = "{\"processedOutput\": camel case(response.callStatus) }";
+    // Expression expression -> {"processedOutput": camelCase(response.callStatus)}
+    // camelCase function does not exist; a null-tolerant engine yields null
+    final var resultExpression = "{\"processedOutput\": camelCase(response.callStatus) }";
     // Response from service -> {"callStatus":"done"}
     final var variables = Map.of("callStatus", "done");
     Assertions.assertThatNoException()
@@ -235,7 +234,7 @@ class LocalFeelExpressionEvaluatorExpressionEvaluationTest {
   @Test
   void evaluateToJson_ShouldHandleDates() {
     final var jsonDeserialized = Map.of("data", LocalDate.of(2024, 1, 1));
-    assertThat(objectUnderTest.evaluateToJson("{res: data}", jsonDeserialized))
+    assertThat(objectUnderTest.evaluateToJson("{\"res\": data}", jsonDeserialized))
         .isEqualTo("{\"res\":\"2024-01-01\"}");
 
     assertThat(objectUnderTest.evaluateToJson("\"test\"", jsonDeserialized)).isEqualTo("\"test\"");
@@ -246,7 +245,7 @@ class LocalFeelExpressionEvaluatorExpressionEvaluationTest {
   }
 
   @Test
-  void shouldSanitizeScalaMapOutput() {
+  void evaluate_ShouldReturnPlainJavaMapOutput() {
     // given
     final var expression = "={\"processedOutput\": response.callStatus, \"response\": response }";
     final var variables = Map.of("callStatus", "200 OK");
@@ -256,8 +255,6 @@ class LocalFeelExpressionEvaluatorExpressionEvaluationTest {
         objectUnderTest.evaluate(expression, Object.class, variables, wrapResponse(variables));
 
     // then
-    // result is not a scala map
-    assertThat(result).isNotInstanceOf(scala.collection.Map.class);
     assertThat(result).isEqualTo(Map.of("processedOutput", "200 OK", "response", variables));
   }
 
@@ -284,6 +281,7 @@ class LocalFeelExpressionEvaluatorExpressionEvaluationTest {
     Map<String, Object> result = objectUnderTest.evaluate(resultExpression, variables);
     assertEquals("test", result.get("errorCode"));
     assertEquals("test message", result.get("errorMessage"));
+    @SuppressWarnings("unchecked")
     Map<String, Object> resultErrorVariables = (Map<String, Object>) result.get("variables");
     assertEquals(errorVariables.get("errorVariable"), resultErrorVariables.get("errorVariable"));
   }
@@ -302,14 +300,13 @@ class LocalFeelExpressionEvaluatorExpressionEvaluationTest {
 
   @Test
   void failJobFunctionWithAllParameters() {
-    // given
-    final var resultExpression =
-        "=jobError(message, {\"key\": \"value\"}, job.retries - 1, @\"PT1M\")";
+    // given - retryBackoff is given as a number of milliseconds
+    final var resultExpression = "=jobError(message, {\"key\": \"value\"}, job.retries - 1, 60000)";
     final var variables = Map.of("message", "some Message", "job", Map.of("retries", 3));
     // when
     final Map<String, Object> result = objectUnderTest.evaluate(resultExpression, variables);
     assertThat(result)
-        .containsEntry("retries", 2L)
+        .containsEntry("retries", 2)
         .containsEntry("retryBackoff", Duration.ofMinutes(1))
         .containsEntry("variables", Map.of("key", "value"))
         .containsEntry("errorType", "jobError")
@@ -324,7 +321,7 @@ class LocalFeelExpressionEvaluatorExpressionEvaluationTest {
     // when
     final Map<String, Object> result = objectUnderTest.evaluate(resultExpression, variables);
     assertThat(result)
-        .containsEntry("retries", 2L)
+        .containsEntry("retries", 2)
         .containsEntry("retryBackoff", Duration.ZERO)
         .containsEntry("variables", Map.of("key", "value"))
         .containsEntry("errorType", "jobError")
@@ -333,13 +330,14 @@ class LocalFeelExpressionEvaluatorExpressionEvaluationTest {
 
   @Test
   void failJobFunctionWithoutRetries() {
-    // given
+    // given - qlexpress evaluates an empty map literal '{}' to null, which jobError
+    // treats as "no variables"
     final var resultExpression = "=jobError(message, {})";
     final var variables = Map.of("message", "some Message");
     // when
     final Map<String, Object> result = objectUnderTest.evaluate(resultExpression, variables);
     assertThat(result)
-        .containsEntry("retries", 0L)
+        .containsEntry("retries", 0)
         .containsEntry("retryBackoff", Duration.ZERO)
         .containsEntry("variables", Collections.emptyMap())
         .containsEntry("errorType", "jobError")
@@ -354,7 +352,7 @@ class LocalFeelExpressionEvaluatorExpressionEvaluationTest {
     // when
     final Map<String, Object> result = objectUnderTest.evaluate(resultExpression, variables);
     assertThat(result)
-        .containsEntry("retries", 0L)
+        .containsEntry("retries", 0)
         .containsEntry("retryBackoff", Duration.ZERO)
         .containsEntry("variables", Collections.emptyMap())
         .containsEntry("errorType", "jobError")
@@ -368,13 +366,13 @@ class LocalFeelExpressionEvaluatorExpressionEvaluationTest {
     final var variables = Map.of("message", "some Message");
     // when
     final Map<String, Object> result = objectUnderTest.evaluate(resultExpression, variables);
-    // then - the expression should be evaluated to 6 (Java Integer)
+    // then - the expression should be evaluated to 6
     assertThat(result)
         .containsEntry("errorType", "jobError")
         .containsEntry("errorMessage", "some Message");
     @SuppressWarnings("unchecked")
     Map<String, Object> resultVariables = (Map<String, Object>) result.get("variables");
-    assertThat(resultVariables).containsEntry("expr", 6L);
+    assertThat(resultVariables).containsEntry("expr", 6);
   }
 
   @Test
@@ -384,7 +382,7 @@ class LocalFeelExpressionEvaluatorExpressionEvaluationTest {
     final var variables = Map.of("message", "some Message");
     // when
     final Map<String, Object> result = objectUnderTest.evaluate(resultExpression, variables);
-    // then - the variables should contain Java String, not ValString
+    // then - the variables should contain Java String
     @SuppressWarnings("unchecked")
     Map<String, Object> resultVariables = (Map<String, Object>) result.get("variables");
     assertThat(resultVariables.get("key")).isInstanceOf(String.class).isEqualTo("value");
@@ -419,8 +417,8 @@ class LocalFeelExpressionEvaluatorExpressionEvaluationTest {
     assertThat(resultVariables.get("items")).isInstanceOf(java.util.List.class);
     @SuppressWarnings("unchecked")
     java.util.List<Object> items = (java.util.List<Object>) resultVariables.get("items");
-    assertThat(items).containsExactly(1L, 2L, 3L);
-    assertThat(items.get(0)).isInstanceOf(Long.class);
+    assertThat(items).containsExactly(1, 2, 3);
+    assertThat(items.getFirst()).isInstanceOf(Integer.class);
   }
 
   @Test
@@ -435,7 +433,7 @@ class LocalFeelExpressionEvaluatorExpressionEvaluationTest {
     @SuppressWarnings("unchecked")
     Map<String, Object> resultVariables = (Map<String, Object>) result.get("variables");
     assertThat(resultVariables.get("str")).isInstanceOf(String.class).isEqualTo("text");
-    assertThat(resultVariables.get("num")).isInstanceOf(Long.class).isEqualTo(42L);
+    assertThat(resultVariables.get("num")).isInstanceOf(Integer.class).isEqualTo(42);
     assertThat(resultVariables.get("bool")).isInstanceOf(Boolean.class).isEqualTo(true);
   }
 
@@ -450,9 +448,9 @@ class LocalFeelExpressionEvaluatorExpressionEvaluationTest {
     // then - numbers should be converted to appropriate Java types
     @SuppressWarnings("unchecked")
     Map<String, Object> resultVariables = (Map<String, Object>) result.get("variables");
-    assertThat(resultVariables.get("int")).isInstanceOf(Long.class).isEqualTo(100L);
+    assertThat(resultVariables.get("int")).isInstanceOf(Integer.class).isEqualTo(100);
     assertThat(resultVariables.get("long")).isInstanceOf(Long.class).isEqualTo(9999999999L);
-    // Note: FEEL may represent 3.14159 as a double
+    // Note: the engine may represent 3.14159 as a BigDecimal
     assertThat(resultVariables.get("decimal")).isInstanceOf(Number.class);
   }
 
@@ -514,10 +512,9 @@ class LocalFeelExpressionEvaluatorExpressionEvaluationTest {
 
   @Test
   void backoffFunctionUsableAsRetryBackoffInJobError() {
-    // given - jitterFactor=0 makes result deterministic: attempt=1, minDelay=PT1S, factor=2 ->
+    // given - jitterFactor=0 makes result deterministic: attempt=1, minDelay=1000ms, factor=2 ->
     // exactly 1000ms
-    final var expression =
-        "=jobError(\"fail\", {}, 2, backoff(1, duration(\"PT1S\"), 2, duration(\"PT1M\"), 0))";
+    final var expression = "=jobError(\"fail\", {}, 2, backoff(1, 1000, 2, 60000, 0))";
     // when
     Map<String, Object> result = objectUnderTest.evaluate(expression, Map.of());
     // then
@@ -539,18 +536,17 @@ class LocalFeelExpressionEvaluatorExpressionEvaluationTest {
   void backoffFunctionShouldThrowWhenFactorIsZero() {
     // given - factor=0 breaks exponential formula
     // when & then
-    assertThatThrownBy(
-            () -> objectUnderTest.evaluate("=backoff(1, duration(\"PT0.05S\"), 0)", Map.of()))
+    assertThatThrownBy(() -> objectUnderTest.evaluate("=backoff(1, 50, 0)", Map.of()))
         .isInstanceOf(FeelEngineWrapperException.class)
         .hasMessageContaining("factor");
   }
 
   @Test
   void backoffFunctionWithAttemptAndMinDelay() {
-    // given - attempt=1, minDelay=PT1S: raw = 1000ms * 1.6^0 = 1000ms, jitter ±10% -> [900ms,
+    // given - attempt=1, minDelay=1000ms: raw = 1000ms * 1.6^0 = 1000ms, jitter ±10% -> [900ms,
     // 1100ms]
     // when
-    Duration result = objectUnderTest.evaluate("=backoff(1, duration(\"PT1S\"))", Map.of());
+    Duration result = objectUnderTest.evaluate("=backoff(1, 1000)", Map.of());
     // then
     assertThat(result).isBetween(Duration.ofMillis(900), Duration.ofMillis(1100));
   }
@@ -562,7 +558,7 @@ class LocalFeelExpressionEvaluatorExpressionEvaluationTest {
     assertThatThrownBy(
             () ->
                 objectUnderTest.evaluate(
-                    "=backoff(1, duration(\"PT10S\"), 1.6, duration(\"PT5S\"), 0.1)", Map.of()))
+                    "=backoff(1, 10000, 1.6, 5000, 0.1)", Map.of()))
         .isInstanceOf(FeelEngineWrapperException.class)
         .hasMessageContaining("minDelay");
   }
@@ -574,119 +570,8 @@ class LocalFeelExpressionEvaluatorExpressionEvaluationTest {
     assertThatThrownBy(
             () ->
                 objectUnderTest.evaluate(
-                    "=backoff(1, duration(\"PT0.05S\"), 1.6, duration(\"PT5S\"), -0.1)", Map.of()))
+                    "=backoff(1, 50, 1.6, 5000, -0.1)", Map.of()))
         .isInstanceOf(FeelEngineWrapperException.class)
         .hasMessageContaining("jitterFactor");
-  }
-
-  @Test
-  void createDocumentFunctionWithObjectArgument() {
-    final var resultExpression =
-        "=createDocument({content: \"aGVsbG8=\", name: \"hello.txt\", contentType: \"text/plain\"})";
-    FeelConnectorFunctionProvider.beginCreateDocumentEvaluationScope();
-    try {
-      Map<String, Object> result = objectUnderTest.evaluate(resultExpression, Map.of());
-      assertThat(result)
-          .extractingByKey("connectorResultFunction")
-          .isEqualTo(FeelConnectorFunctionProvider.currentCreateDocumentNonce());
-      @SuppressWarnings("unchecked")
-      Map<String, Object> value = (Map<String, Object>) result.get("value");
-      assertThat(value)
-          .containsEntry("content", "aGVsbG8=")
-          .containsEntry("name", "hello.txt")
-          .containsEntry("contentType", "text/plain");
-    } finally {
-      FeelConnectorFunctionProvider.endCreateDocumentEvaluationScope();
-    }
-  }
-
-  @Test
-  void createDocumentFunctionWithStringArgument() {
-    final var resultExpression = "=createDocument(\"aGVsbG8=\")";
-    FeelConnectorFunctionProvider.beginCreateDocumentEvaluationScope();
-    try {
-      Map<String, Object> result = objectUnderTest.evaluate(resultExpression, Map.of());
-      assertThat(result)
-          .extractingByKey("connectorResultFunction")
-          .isEqualTo(FeelConnectorFunctionProvider.currentCreateDocumentNonce());
-      assertThat(result).containsEntry("value", "aGVsbG8=");
-    } finally {
-      FeelConnectorFunctionProvider.endCreateDocumentEvaluationScope();
-    }
-  }
-
-  @Test
-  void createDocumentFunctionWithObjectArgumentContentOnly() {
-    // name/contentType are optional at this layer — CreateDocumentFunction just tags whatever
-    // object it receives; defaulting (random filename, MimeTypeResolver-inferred content type)
-    // happens later, in ResultDocumentResolver, not here.
-    final var resultExpression = "=createDocument({content: \"aGVsbG8=\"})";
-    FeelConnectorFunctionProvider.beginCreateDocumentEvaluationScope();
-    try {
-      Map<String, Object> result = objectUnderTest.evaluate(resultExpression, Map.of());
-      @SuppressWarnings("unchecked")
-      Map<String, Object> value = (Map<String, Object>) result.get("value");
-      assertThat(value).containsOnly(Map.entry("content", "aGVsbG8="));
-    } finally {
-      FeelConnectorFunctionProvider.endCreateDocumentEvaluationScope();
-    }
-  }
-
-  @Test
-  void createDocumentFunctionPassesThroughArbitraryContentTypeVerbatim() {
-    // The function itself does no MIME validation — an unrecognized/made-up contentType string
-    // is passed through as-is. (ResultDocumentResolver doesn't validate it either: an explicit
-    // contentType, valid-looking or not, is used verbatim — see MimeTypeResolver.)
-    final var resultExpression =
-        "=createDocument({content: \"aGVsbG8=\", contentType: \"not-a-real-mimetype\"})";
-    FeelConnectorFunctionProvider.beginCreateDocumentEvaluationScope();
-    try {
-      Map<String, Object> result = objectUnderTest.evaluate(resultExpression, Map.of());
-      @SuppressWarnings("unchecked")
-      Map<String, Object> value = (Map<String, Object>) result.get("value");
-      assertThat(value).containsEntry("contentType", "not-a-real-mimetype");
-    } finally {
-      FeelConnectorFunctionProvider.endCreateDocumentEvaluationScope();
-    }
-  }
-
-  @Test
-  void createDocumentTypeValueIsNonceSuffixed() {
-    // Guards against the discriminator regressing to a plain, forgeable literal: it must be
-    // unpredictable per evaluation so it can never be forged by data arriving in a connector
-    // response, nor reused across a different evaluation's scope.
-    FeelConnectorFunctionProvider.beginCreateDocumentEvaluationScope();
-    try {
-      assertThat(FeelConnectorFunctionProvider.currentCreateDocumentNonce())
-          .startsWith("createDocument:")
-          .hasSizeGreaterThan(CreateDocumentFunction.NAME.length());
-    } finally {
-      FeelConnectorFunctionProvider.endCreateDocumentEvaluationScope();
-    }
-  }
-
-  @Test
-  void createDocumentNonceDiffersAcrossEvaluationScopes() {
-    // The whole point of scoping the nonce per evaluation rather than per JVM: a value learned
-    // during one evaluation must not match a later, independent evaluation's nonce.
-    FeelConnectorFunctionProvider.beginCreateDocumentEvaluationScope();
-    String first;
-    try {
-      first = FeelConnectorFunctionProvider.currentCreateDocumentNonce();
-    } finally {
-      FeelConnectorFunctionProvider.endCreateDocumentEvaluationScope();
-    }
-    FeelConnectorFunctionProvider.beginCreateDocumentEvaluationScope();
-    try {
-      assertThat(FeelConnectorFunctionProvider.currentCreateDocumentNonce()).isNotEqualTo(first);
-    } finally {
-      FeelConnectorFunctionProvider.endCreateDocumentEvaluationScope();
-    }
-  }
-
-  @Test
-  void currentCreateDocumentNonceThrowsOutsideAnActiveScope() {
-    assertThatThrownBy(FeelConnectorFunctionProvider::currentCreateDocumentNonce)
-        .isInstanceOf(IllegalStateException.class);
   }
 }

@@ -16,7 +16,6 @@
  */
 package io.camunda.connector.validator.rule;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.camunda.connector.validator.core.ElementTemplate;
 import io.camunda.connector.validator.core.Finding;
 import io.camunda.connector.validator.core.JsonPointers;
@@ -26,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import tools.jackson.databind.JsonNode;
 
 /**
  * Any property B whose subtree contains a {@code condition} referencing property A must appear

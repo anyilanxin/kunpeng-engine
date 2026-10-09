@@ -41,7 +41,8 @@ public @interface DataExample {
   String id() default "";
 
   /**
-   * @return FEEL expression that will be evaluated against the result of the annotated method.
+   * @return Expression expression that will be evaluated against the result of the annotated
+   *     method.
    */
   String feel() default "";
 }

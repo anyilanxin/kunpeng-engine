@@ -16,7 +16,6 @@
  */
 package io.camunda.connector.runtime.core.outbound;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.camunda.connector.api.annotation.OutboundConnector;
 import io.camunda.connector.api.outbound.OutboundConnectorFunction;
 import io.camunda.connector.api.outbound.OutboundConnectorProvider;
@@ -36,6 +35,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import tools.jackson.databind.ObjectMapper;
 
 public class DefaultOutboundConnectorFactory
     extends AbstractConnectorFactory<OutboundConnectorFunction, OutboundConnectorConfiguration>
@@ -223,8 +223,7 @@ public class DefaultOutboundConnectorFactory
         outboundConnector.inputVariables(),
         configurationOverrides.typeOverride().orElse(outboundConnector.type()),
         instanceProvider,
-        configurationOverrides.timeoutOverride().orElse(null),
-        outboundConnector.withLease());
+        configurationOverrides.timeoutOverride().orElse(null));
   }
 
   @Override

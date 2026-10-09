@@ -16,13 +16,13 @@
  */
 package io.camunda.connector.feel.jackson;
 
-import com.fasterxml.jackson.databind.BeanProperty;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.type.TypeFactory;
 import io.camunda.connector.feel.FeelExpressionEvaluator;
 import java.util.function.Supplier;
+import tools.jackson.databind.BeanProperty;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.type.TypeFactory;
 
 class FeelSupplierDeserializer<OUT> extends AbstractFeelDeserializer<Supplier<OUT>> {
 

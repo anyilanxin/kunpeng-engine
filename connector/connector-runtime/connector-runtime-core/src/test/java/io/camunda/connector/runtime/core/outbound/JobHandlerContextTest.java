@@ -22,12 +22,10 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.camunda.client.api.response.ActivatedJob;
-import io.camunda.connector.api.document.DocumentCreationRequest;
-import io.camunda.connector.api.document.DocumentFactory;
-import io.camunda.connector.api.document.DocumentReturnChoice;
-import io.camunda.connector.api.document.DocumentReturnFormat;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import com.anyilanxin.kunpeng.client.command.job.ActivatedJob;
 import io.camunda.connector.api.error.ConnectorInputException;
 import io.camunda.connector.api.secret.SecretContext;
 import io.camunda.connector.api.secret.SecretProvider;
@@ -35,9 +33,6 @@ import io.camunda.connector.api.validation.ValidationProvider;
 import io.camunda.connector.runtime.core.secret.SecretFilter;
 import io.camunda.connector.runtime.core.testutil.classexample.TestClass;
 import io.camunda.connector.runtime.core.testutil.classexample.TestClassString;
-import java.io.ByteArrayInputStream;
-import java.util.Map;
-import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -51,21 +46,18 @@ class JobHandlerContextTest {
   @Mock private ActivatedJob activatedJob;
   @Mock private SecretProvider secretProvider;
   @Mock private ValidationProvider validationProvider;
-  @Mock private DocumentFactory documentFactory;
 
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  // Jackson 3 no longer fails on unknown properties by default; these tests rely on strict
+  // binding to exercise JobHandlerContext's error formatting
+  private final ObjectMapper objectMapper =
+      JsonMapper.builder().enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES).build();
   private JobHandlerContext jobHandlerContext;
 
   @BeforeEach
   void setUp() {
     jobHandlerContext =
         new JobHandlerContext(
-            activatedJob,
-            secretProvider,
-            validationProvider,
-            null,
-            objectMapper,
-            SecretFilter.allowAll());
+            activatedJob, secretProvider, validationProvider, objectMapper, SecretFilter.allowAll());
   }
 
   @Test
@@ -73,50 +65,6 @@ class JobHandlerContextTest {
     when(activatedJob.getVariables()).thenReturn("{}");
     jobHandlerContext.getJobContext().getVariables();
     verify(activatedJob).getVariables();
-  }
-
-  @Test
-  void getLeaseToken() {
-    when(activatedJob.getLeaseToken()).thenReturn("lease-token-1");
-    assertThat(jobHandlerContext.getJobContext().getLeaseToken()).isEqualTo("lease-token-1");
-  }
-
-  @Test
-  void getLeaseToken_nullWhenJobActivatedWithoutLease() {
-    when(activatedJob.getLeaseToken()).thenReturn(null);
-    assertThat(jobHandlerContext.getJobContext().getLeaseToken()).isNull();
-  }
-
-  @Test
-  void readDocumentReturnFormat_absentReturnsEmptyForOlderTemplates() {
-    // Older templates do not send `documentReturnFormat`. Reading it must not throw the way
-    // job.getVariable(...) would, so the connector can fall through to its legacy flow.
-    when(activatedJob.getVariablesAsMap()).thenReturn(Map.of("someOtherVar", "x"));
-
-    assertThat(jobHandlerContext.readDocumentReturnFormat()).isEmpty();
-  }
-
-  @Test
-  void readDocumentReturnFormat_parsesChoiceAndEncodingWhenPresent() {
-    when(activatedJob.getVariablesAsMap())
-        .thenReturn(
-            Map.of("documentReturnFormat", Map.of("choice", "TEXT", "encoding", "ISO-8859-1")));
-
-    Optional<DocumentReturnFormat> format = jobHandlerContext.readDocumentReturnFormat();
-
-    assertThat(format).isPresent();
-    assertThat(format.get().choice()).isEqualTo(DocumentReturnChoice.TEXT);
-    assertThat(format.get().encoding()).isEqualTo("ISO-8859-1");
-  }
-
-  @Test
-  void readDocumentReturnFormat_rejectsInvalidChoice() {
-    when(activatedJob.getVariablesAsMap())
-        .thenReturn(Map.of("documentReturnFormat", Map.of("choice", "BOGUS")));
-
-    assertThatThrownBy(() -> jobHandlerContext.readDocumentReturnFormat())
-        .isInstanceOf(ConnectorInputException.class)
-        .hasMessageContaining("DOCUMENT, TEXT, JSON");
   }
 
   @Test
@@ -147,11 +95,10 @@ class JobHandlerContextTest {
   }
 
   @Test
-  void bindVariables_secretContextCarriesTheJobsPhysicalTenantId() {
+  void bindVariables_secretContextCarriesTheJobsTenantAndProcess() {
     when(activatedJob.getVariables()).thenReturn("{ \"integer\": {{secrets.FOO}} }");
     when(activatedJob.getTenantId()).thenReturn("my-tenant");
-    when(activatedJob.getBpmnProcessId()).thenReturn("my-process");
-    when(activatedJob.getPhysicalTenantId()).thenReturn("engine-1");
+    when(activatedJob.getProcessDefinitionKey()).thenReturn("my-process");
     when(secretProvider.getSecret(eq("FOO"), any())).thenReturn("1");
 
     jobHandlerContext.bindVariables(TestClass.class);
@@ -159,64 +106,7 @@ class JobHandlerContextTest {
     var secretContext = ArgumentCaptor.forClass(SecretContext.class);
     verify(secretProvider).getSecret(eq("FOO"), secretContext.capture());
     assertThat(secretContext.getValue())
-        .isEqualTo(new SecretContext("my-tenant", "my-process", "engine-1"));
-  }
-
-  @Test
-  void bindVariables_secretContextHasNoPhysicalTenantIdWhenTheJobReportsNone() {
-    // clusters that predate multi-engine support report an empty physical tenant
-    when(activatedJob.getVariables()).thenReturn("{ \"integer\": {{secrets.FOO}} }");
-    when(activatedJob.getPhysicalTenantId()).thenReturn("");
-    when(secretProvider.getSecret(eq("FOO"), any())).thenReturn("1");
-
-    jobHandlerContext.bindVariables(TestClass.class);
-
-    var secretContext = ArgumentCaptor.forClass(SecretContext.class);
-    verify(secretProvider).getSecret(eq("FOO"), secretContext.capture());
-    assertThat(secretContext.getValue().physicalTenantId()).isNull();
-  }
-
-  @Test
-  void create_stampsTheJobsPhysicalTenantIdWhenRequestHasNone() {
-    when(activatedJob.getPhysicalTenantId()).thenReturn("tenant-a");
-    var contextWithDocumentFactory =
-        new JobHandlerContext(
-            activatedJob,
-            secretProvider,
-            validationProvider,
-            documentFactory,
-            objectMapper,
-            SecretFilter.allowAll());
-    var request =
-        DocumentCreationRequest.from(new ByteArrayInputStream("hello".getBytes())).build();
-
-    contextWithDocumentFactory.create(request);
-
-    var captor = ArgumentCaptor.forClass(DocumentCreationRequest.class);
-    verify(documentFactory).create(captor.capture());
-    assertThat(captor.getValue().physicalTenantId()).isEqualTo("tenant-a");
-  }
-
-  @Test
-  void create_neverOverridesAnExplicitlySetPhysicalTenantId() {
-    var contextWithDocumentFactory =
-        new JobHandlerContext(
-            activatedJob,
-            secretProvider,
-            validationProvider,
-            documentFactory,
-            objectMapper,
-            SecretFilter.allowAll());
-    var request =
-        DocumentCreationRequest.from(new ByteArrayInputStream("hello".getBytes()))
-            .physicalTenantId("explicit-tenant")
-            .build();
-
-    contextWithDocumentFactory.create(request);
-
-    var captor = ArgumentCaptor.forClass(DocumentCreationRequest.class);
-    verify(documentFactory).create(captor.capture());
-    assertThat(captor.getValue().physicalTenantId()).isEqualTo("explicit-tenant");
+        .isEqualTo(new SecretContext("my-tenant", "my-process", null));
   }
 
   @Test

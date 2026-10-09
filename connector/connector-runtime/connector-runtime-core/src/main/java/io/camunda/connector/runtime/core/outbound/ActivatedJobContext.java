@@ -16,7 +16,7 @@
  */
 package io.camunda.connector.runtime.core.outbound;
 
-import io.camunda.client.api.response.ActivatedJob;
+import com.anyilanxin.kunpeng.client.command.job.ActivatedJob;
 import io.camunda.connector.api.outbound.JobContext;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -53,12 +53,12 @@ public class ActivatedJobContext implements JobContext {
 
   @Override
   public long getProcessInstanceKey() {
-    return activatedJob.getProcessInstanceKey();
+    return activatedJob.getProcessInstanceId();
   }
 
   @Override
   public String getBpmnProcessId() {
-    return activatedJob.getBpmnProcessId();
+    return activatedJob.getProcessDefinitionKey();
   }
 
   @Override
@@ -68,26 +68,21 @@ public class ActivatedJobContext implements JobContext {
 
   @Override
   public long getProcessDefinitionKey() {
-    return activatedJob.getProcessDefinitionKey();
+    return activatedJob.getProcessDefinitionId();
   }
 
   @Override
   public String getElementId() {
-    return activatedJob.getElementId();
+    return activatedJob.getActivityDefinitionKey();
   }
 
   @Override
   public long getElementInstanceKey() {
-    return activatedJob.getElementInstanceKey();
+    return activatedJob.getActivityInstanceId();
   }
 
   @Override
   public String getTenantId() {
     return activatedJob.getTenantId();
-  }
-
-  @Override
-  public String getLeaseToken() {
-    return activatedJob.getLeaseToken();
   }
 }

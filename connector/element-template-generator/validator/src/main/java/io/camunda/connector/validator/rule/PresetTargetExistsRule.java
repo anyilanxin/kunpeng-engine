@@ -16,7 +16,6 @@
  */
 package io.camunda.connector.validator.rule;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.camunda.connector.validator.core.ElementTemplate;
 import io.camunda.connector.validator.core.Finding;
 import io.camunda.connector.validator.core.JsonPointers;
@@ -29,6 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import tools.jackson.databind.JsonNode;
 
 /**
  * For every entry of the top-level {@code presets[]} array, each key inside {@code properties} must

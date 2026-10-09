@@ -18,7 +18,7 @@ package io.camunda.connector.runtime.core.outbound;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import io.camunda.connector.runtime.core.validation.ValidationUtil;
 import java.util.List;
 import java.util.NoSuchElementException;

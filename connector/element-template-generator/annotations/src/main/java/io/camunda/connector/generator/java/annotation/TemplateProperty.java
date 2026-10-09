@@ -70,8 +70,8 @@ public @interface TemplateProperty {
   DropdownPropertyChoice[] choices() default {};
 
   /**
-   * Defines the support for FEEL expressions in the property. By default, for inbound connectors,
-   * FEEL is disabled; for outbound connectors, FEEL is optional.
+   * Defines the support for Expression expressions in the property. By default, for inbound
+   * connectors, Expression is disabled; for outbound connectors, Expression is optional.
    */
   FeelMode feel() default FeelMode.system_default;
 
@@ -158,7 +158,7 @@ public @interface TemplateProperty {
     FALSE,
     NULL;
 
-    public static EqualsBoolean fromBoolean(Boolean value) {
+    public static EqualsBoolean fromBoolean(final Boolean value) {
       if (value == null) {
         return NULL;
       } else if (value) {

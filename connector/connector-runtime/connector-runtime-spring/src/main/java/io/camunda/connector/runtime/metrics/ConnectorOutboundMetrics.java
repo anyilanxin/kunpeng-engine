@@ -16,33 +16,33 @@
  */
 package io.camunda.connector.runtime.metrics;
 
-import io.camunda.client.metrics.MetricsRecorder;
+import io.camunda.connector.runtime.metrics.ConnectorMetrics.CounterMetricsContext;
+import io.camunda.connector.runtime.metrics.ConnectorMetrics.TimerMetricsContext;
+import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.Tags;
+import io.micrometer.core.instrument.Timer;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Centralises all outbound connector metric recording — counters, timers, and last-activity
- * timestamps — into a single object, mirroring the approach used by {@link
- * ConnectorsInboundMetrics} on the inbound side.
- *
- * <p>Counter and timer recording is delegated to the underlying {@link MetricsRecorder} (from the
- * Camunda client). Timestamp gauges ({@code last-completed} / {@code last-failed}) are managed
- * directly via the {@link MeterRegistry}.
+ * Centralises all outbound connector metric recording — invocation counters, the execution-time
+ * timer, and last-activity timestamp gauges — into a single object, recording directly through the
+ * {@link MeterRegistry}.
  */
 public class ConnectorOutboundMetrics {
 
-  private final MetricsRecorder delegate;
   private final MeterRegistry meterRegistry;
   private final String physicalTenantId;
   private final ConcurrentHashMap<String, AtomicLong> lastCompleted = new ConcurrentHashMap<>();
   private final ConcurrentHashMap<String, AtomicLong> lastFailed = new ConcurrentHashMap<>();
   private final ConcurrentHashMap<String, AtomicLong> allTimeMaxMs = new ConcurrentHashMap<>();
 
-  public ConnectorOutboundMetrics(MetricsRecorder delegate, MeterRegistry meterRegistry) {
-    this(delegate, meterRegistry, null);
+  public ConnectorOutboundMetrics(MeterRegistry meterRegistry) {
+    this(meterRegistry, null);
   }
 
   /**
@@ -51,9 +51,7 @@ public class ConnectorOutboundMetrics {
    *     type report separately instead of colliding on one shared, wrongly-attributed gauge. {@code
    *     null} falls back to {@link ConnectorMetrics#DEFAULT_PHYSICAL_TENANT_ID}.
    */
-  public ConnectorOutboundMetrics(
-      MetricsRecorder delegate, MeterRegistry meterRegistry, String physicalTenantId) {
-    this.delegate = delegate;
+  public ConnectorOutboundMetrics(MeterRegistry meterRegistry, String physicalTenantId) {
     this.meterRegistry = meterRegistry;
     this.physicalTenantId =
         physicalTenantId == null || physicalTenantId.isBlank()
@@ -67,29 +65,42 @@ public class ConnectorOutboundMetrics {
   }
 
   // -------------------------------------------------------------------------
-  // Counter / timer delegation
+  // Counters / timer
   // -------------------------------------------------------------------------
 
-  public void increaseActivated(MetricsRecorder.CounterMetricsContext ctx) {
-    delegate.increaseActivated(ctx);
+  /**
+   * Records one invocation of {@code ctx.metricName()}, tagged with the context's tags plus the
+   * given {@code action} (e.g. {@link ConnectorMetrics.Outbound#ACTION_COMPLETED}).
+   */
+  public void increaseInvocations(CounterMetricsContext ctx, String action) {
+    if (meterRegistry == null) {
+      return;
+    }
+    Counter.builder(ctx.metricName())
+        .tags(toTags(ctx.tags()))
+        .tag(ConnectorMetrics.Tag.ACTION, action)
+        .register(meterRegistry)
+        .increment(ctx.count());
   }
 
-  public void increaseFailed(MetricsRecorder.CounterMetricsContext ctx) {
-    delegate.increaseFailed(ctx);
-  }
-
+  /** Records the callable's execution duration and the never-resetting all-time maximum. */
   public void executeWithTimer(
-      MetricsRecorder.TimerMetricsContext ctx, java.util.concurrent.Callable<Void> callable)
-      throws Exception {
+      TimerMetricsContext ctx, java.util.concurrent.Callable<Void> callable) throws Exception {
     long start = System.nanoTime();
     try {
-      delegate.executeWithTimer(ctx, callable);
+      callable.call();
     } finally {
-      long durationMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+      long durationNs = System.nanoTime() - start;
+      if (meterRegistry != null) {
+        Timer.builder(ctx.metricName())
+            .tags(toTags(ctx.tags()))
+            .register(meterRegistry)
+            .record(durationNs, TimeUnit.NANOSECONDS);
+      }
       String type = ctx.tags().get(ConnectorMetrics.Tag.TYPE);
       if (type != null) {
         getOrCreate(allTimeMaxMs, ConnectorMetrics.Outbound.METRIC_NAME_MAX_EXECUTION_TIME, type)
-            .accumulateAndGet(durationMs, Math::max);
+            .accumulateAndGet(TimeUnit.NANOSECONDS.toMillis(durationNs), Math::max);
       }
     }
   }
@@ -114,13 +125,8 @@ public class ConnectorOutboundMetrics {
   // Internal helpers
   // -------------------------------------------------------------------------
 
-  /**
-   * Returns the {@link MetricsRecorder} delegate. Used by {@link
-   * io.camunda.client.jobhandling.JobCallbackCommandWrapperFactory} which requires the raw
-   * recorder.
-   */
-  public MetricsRecorder delegate() {
-    return delegate;
+  private static Tags toTags(java.util.Map<String, String> tags) {
+    return Tags.of(tags.entrySet().stream().map(e -> Tag.of(e.getKey(), e.getValue())).toList());
   }
 
   private AtomicLong getOrCreate(

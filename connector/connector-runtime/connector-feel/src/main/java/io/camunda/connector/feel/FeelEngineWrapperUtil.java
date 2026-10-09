@@ -18,7 +18,6 @@ package io.camunda.connector.feel;
 
 import static io.camunda.connector.feel.JacksonSupport.MAP_TYPE_REFERENCE;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.camunda.connector.jackson.ConnectorsObjectMapperSupplier;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -27,8 +26,10 @@ import java.util.Objects;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
-/** Utility methods for FEEL expression evaluation. */
+/** Utility methods for Expression expression evaluation. */
 public class FeelEngineWrapperUtil {
 
   private static final Logger LOG = LoggerFactory.getLogger(FeelEngineWrapperUtil.class);
@@ -83,7 +84,8 @@ public class FeelEngineWrapperUtil {
       ObjectMapper objectMapper, Object o) {
     try {
       return Optional.of(objectMapper.convertValue(o, MAP_TYPE_REFERENCE));
-    } catch (IllegalArgumentException ex) {
+    } catch (JacksonException ex) {
+      // Jackson 3 throws unchecked JacksonException where Jackson 2 threw IllegalArgumentException
       LOG.warn(ex.getMessage(), ex);
       return Optional.empty();
     }

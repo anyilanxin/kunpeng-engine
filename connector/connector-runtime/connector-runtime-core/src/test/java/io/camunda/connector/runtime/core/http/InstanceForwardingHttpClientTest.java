@@ -19,7 +19,7 @@ package io.camunda.connector.runtime.core.http;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;

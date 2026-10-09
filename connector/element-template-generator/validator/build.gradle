@@ -11,7 +11,7 @@ configure(jarInfo) {
 
 dependencies {
     implementation 'org.slf4j:slf4j-api'
-    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'tools.jackson.core:jackson-databind'
     implementation 'info.picocli:picocli'
     implementation 'com.networknt:json-schema-validator'
     implementation 'org.slf4j:slf4j-nop'

@@ -16,13 +16,14 @@
  */
 package io.camunda.connector.validator.core;
 
-import com.fasterxml.jackson.core.JsonLocation;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
 import java.nio.file.Path;
+import tools.jackson.core.StreamReadFeature;
+import tools.jackson.core.TokenStreamLocation;
+import tools.jackson.core.exc.JacksonIOException;
+import tools.jackson.core.exc.StreamReadException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Parses element-template JSON files. Strict mode rejects duplicate object keys — which Jackson
@@ -35,21 +36,20 @@ public final class TemplateLoader {
   public static final String DUPLICATE_KEYS_RULE = "duplicate-keys";
   public static final String JSON_PARSE_RULE = "json-parse";
 
-  private static final ObjectMapper MAPPER = new ObjectMapper();
-
-  static {
-    MAPPER.getFactory().enable(JsonParser.Feature.STRICT_DUPLICATE_DETECTION);
-  }
+  private static final ObjectMapper MAPPER =
+      JsonMapper.builder().enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION).build();
 
   private TemplateLoader() {}
 
   public static Result load(Path path) {
     try {
       return new Result(MAPPER.readTree(path.toFile()), null);
-    } catch (JsonParseException e) {
+    } catch (StreamReadException e) {
       String original = e.getOriginalMessage();
-      if (original != null && original.startsWith("Duplicate field")) {
-        JsonLocation loc = e.getLocation();
+      // Jackson 3 reports duplicates as `Duplicate Object property "x"` (Jackson 2 said
+      // `Duplicate field 'x'`); STRICT_DUPLICATE_DETECTION produces no other duplicate wording
+      if (original != null && original.startsWith("Duplicate Object property")) {
+        TokenStreamLocation loc = e.getLocation();
         String where =
             loc == null ? "" : " at line " + loc.getLineNr() + ", column " + loc.getColumnNr();
         return new Result(
@@ -58,7 +58,7 @@ public final class TemplateLoader {
       return new Result(
           null,
           Finding.error(path, "/", JSON_PARSE_RULE, "Failed to parse JSON: " + e.getMessage()));
-    } catch (IOException e) {
+    } catch (JacksonIOException e) {
       return new Result(
           null,
           Finding.error(path, "/", JSON_PARSE_RULE, "Failed to parse JSON: " + e.getMessage()));

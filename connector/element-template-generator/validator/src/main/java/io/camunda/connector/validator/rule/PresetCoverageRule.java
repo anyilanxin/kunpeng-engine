@@ -16,7 +16,6 @@
  */
 package io.camunda.connector.validator.rule;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.camunda.connector.validator.core.ConditionEvaluator;
 import io.camunda.connector.validator.core.ElementTemplate;
 import io.camunda.connector.validator.core.Finding;
@@ -33,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import tools.jackson.databind.JsonNode;
 
 /**
  * Verifies that the set of {@code presets[]} and the set of leaf {@code steps} both enumerate
@@ -113,7 +113,7 @@ public class PresetCoverageRule implements Rule {
     for (JsonNode preset : presets) {
       JsonNode properties = preset.path(ElementTemplate.PROPERTIES);
       if (properties.isObject()) {
-        properties.fieldNames().forEachRemaining(keys::add);
+        keys.addAll(properties.propertyNames());
       }
     }
     return keys;

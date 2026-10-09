@@ -16,8 +16,8 @@
  */
 package io.camunda.connector.feel;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import java.util.Map;
+import tools.jackson.core.type.TypeReference;
 
 public class JacksonSupport {
   public static final TypeReference<Map<String, Object>> MAP_TYPE_REFERENCE =

@@ -90,8 +90,8 @@ to relocate common libraries. A [example can be found in the SQS connector](http
         <configuration>
           <relocations>
             <relocation>
-              <pattern>com.fasterxml.jackson</pattern>
-              <shadedPattern>connectorsqs.com.fasterxml.jackson</shadedPattern>
+              <pattern>tools.jackson</pattern>
+              <shadedPattern>connectorsqs.tools.jackson</shadedPattern>
             </relocation>
           </relocations>
         </configuration>

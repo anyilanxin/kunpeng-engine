@@ -19,8 +19,8 @@ package io.camunda.connector.http.client.authentication;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import io.camunda.connector.api.error.ConnectorException;
 import io.camunda.connector.http.client.HttpClientObjectMapperSupplier;
 import io.camunda.connector.http.client.mapper.StreamingHttpResponse;
@@ -88,7 +88,7 @@ public class OAuthRefreshTokenServiceTest {
   class ExtractTokenFromRefreshTokenResponseTests {
 
     @Test
-    void shouldReturnToken_whenResponseContainsAccessToken() throws JsonProcessingException {
+    void shouldReturnToken_whenResponseContainsAccessToken() throws JacksonException {
       var body =
           Map.of(
               "access_token", "myAccessToken",

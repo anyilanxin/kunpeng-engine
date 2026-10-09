@@ -16,7 +16,6 @@
  */
 package io.camunda.connector.validator.rule;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.camunda.connector.validator.core.ElementTemplate;
 import io.camunda.connector.validator.core.Finding;
 import io.camunda.connector.validator.core.OperationMetadataIgnoreList;
@@ -26,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import tools.jackson.databind.JsonNode;
 
 /**
  * Every leaf step's {@code presetId} must resolve to some {@code presets[].id} declared at the

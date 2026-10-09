@@ -17,39 +17,25 @@
 package io.camunda.connector.runtime.core.inbound;
 
 import io.camunda.connector.api.inbound.InboundConnectorContext;
-import io.camunda.connector.api.inbound.InboundConnectorExecutable;
 import io.camunda.connector.runtime.core.inbound.activitylog.ActivityLogWriter;
 import io.camunda.connector.runtime.core.inbound.details.InboundConnectorDetails.ValidInboundConnectorDetails;
 import java.util.function.Consumer;
 
-/**
- * Factory interface for creating {@link InboundConnectorContext} instances.
- *
- * <p>The factory is responsible for generating context instances tailored for specific inbound
- * connectors. The type of context (standard or intermediate) is determined based on the nature of
- * the provided InboundConnectorExecutable.
- */
+/** Factory interface for creating {@link InboundConnectorContext} instances. */
 public interface InboundConnectorContextFactory {
 
   /**
-   * Creates an appropriate {@link InboundConnectorContext} instance based on the provided
-   * parameters.
-   *
-   * <p>This method will produce a context that aligns with the nature of the given connector data
-   * and its execution requirements. The context is also influenced by the type of the executable
-   * connector provided.
+   * Creates an {@link InboundConnectorContext} instance based on the provided parameters.
    *
    * @param connectorDetails The specific inbound connector data which gives details about the
    *     connector and its related properties.
    * @param cancellationCallback Callback that gets invoked during connector execution errors or
    *     cancellations.
-   * @param executableClass Class representation of the executable connector in use.
    * @return A newly created {@link InboundConnectorContext} instance, tailored to the provided
    *     parameters.
    */
-  <T extends InboundConnectorExecutable<?>> InboundConnectorContext createContext(
+  InboundConnectorContext createContext(
       final ValidInboundConnectorDetails connectorDetails,
       final Consumer<Throwable> cancellationCallback,
-      final Class<T> executableClass,
-      final ActivityLogWriter logRegistry);
+      final ActivityLogWriter logWriter);
 }

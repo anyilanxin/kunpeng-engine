@@ -60,8 +60,7 @@ public final class ConnectorConfigurationUtil {
         getInputVariables(cls, annotation),
         configurationOverrides.typeOverride().orElse(annotation.type()),
         () -> instantiateConnector(cls),
-        configurationOverrides.timeoutOverride().orElse(null),
-        annotation.withLease());
+        configurationOverrides.timeoutOverride().orElse(null));
   }
 
   public static InboundConnectorConfiguration getInboundConnectorConfiguration(

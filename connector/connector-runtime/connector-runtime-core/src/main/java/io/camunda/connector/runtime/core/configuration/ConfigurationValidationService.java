@@ -16,7 +16,6 @@
  */
 package io.camunda.connector.runtime.core.configuration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.camunda.connector.api.error.ConnectorException;
 import io.camunda.connector.api.secret.SecretContext;
 import io.camunda.connector.api.secret.SecretProvider;
@@ -31,15 +30,16 @@ import io.camunda.connector.runtime.core.secret.SecretHandler;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Resolves a stored configuration referenced by a validation request, applies bean validation, and
  * invokes its {@link ConfigurationValidator}, mapping the outcome to a {@link
  * ConfigurationValidationResult}.
  *
- * <p>Pipeline: look up the registered validator by id; select the (cluster-backed) FEEL evaluator
- * for the request's physical tenant and resolve {@code credentialRef} to JSON with it; replace
- * secret placeholders in that same physical tenant's scope; deserialize into the registered
+ * <p>Pipeline: look up the registered validator by id; select the (cluster-backed) Expression
+ * evaluator for the request's physical tenant and resolve {@code credentialRef} to JSON with it;
+ * replace secret placeholders in that same physical tenant's scope; deserialize into the registered
  * configuration class; run Jakarta bean validation (as normal connector binding does); then call
  * the validator. A missing registration yields {@code UNSUPPORTED}; anything else that goes wrong
  * yields {@code FAILURE}.
@@ -76,21 +76,21 @@ public class ConfigurationValidationService {
   private final ObjectMapper objectMapper;
 
   public ConfigurationValidationService(
-      ConfigurationValidationRegistry registry,
-      Map<String, FeelExpressionEvaluator> feelExpressionEvaluatorsByPhysicalTenantId,
-      SecretProvider secretProvider,
-      ValidationProvider validationProvider,
-      ObjectMapper objectMapper) {
+      final ConfigurationValidationRegistry registry,
+      final Map<String, FeelExpressionEvaluator> feelExpressionEvaluatorsByPhysicalTenantId,
+      final SecretProvider secretProvider,
+      final ValidationProvider validationProvider,
+      final ObjectMapper objectMapper) {
     this.registry = registry;
     this.feelExpressionEvaluatorsByPhysicalTenantId = feelExpressionEvaluatorsByPhysicalTenantId;
     // Out-of-band validation has no process/element scope, so no secret allow-list applies.
-    this.secretHandler = new SecretHandler(secretProvider, SecretFilter.allowAll());
+    secretHandler = new SecretHandler(secretProvider, SecretFilter.allowAll());
     this.validationProvider = validationProvider;
     this.objectMapper = objectMapper;
   }
 
-  public ConfigurationValidationResult validate(ConfigurationValidationRequest request) {
-    RegisteredValidator registered = registry.findById(request.credentialId()).orElse(null);
+  public ConfigurationValidationResult validate(final ConfigurationValidationRequest request) {
+    final RegisteredValidator registered = registry.findById(request.credentialId()).orElse(null);
     if (registered == null) {
       return ConfigurationValidationResult.unsupported();
     }
@@ -98,7 +98,7 @@ public class ConfigurationValidationService {
     final FeelExpressionEvaluator feelExpressionEvaluator;
     try {
       feelExpressionEvaluator = resolveEvaluator(request.physicalTenantId());
-    } catch (IllegalArgumentException e) {
+    } catch (final IllegalArgumentException e) {
       // Unlike everything downstream of secret replacement, this message is derived purely from
       // caller-supplied routing metadata and the runtime's own engine configuration — no resolved
       // configuration content — so it is safe to log in full.
@@ -111,8 +111,9 @@ public class ConfigurationValidationService {
     try {
       configuration =
           resolveConfiguration(request, feelExpressionEvaluator, registered.configurationClass());
-    } catch (Exception e) {
-      // Log only the exception type, never the throwable: FEEL/secret/JSON error messages (and
+    } catch (final Exception e) {
+      // Log only the exception type, never the throwable: Expression/secret/JSON error messages
+      // (and
       // stack-trace detail) can echo resolved secret material into the logs.
       LOG.warn(
           "Failed to resolve configuration '{}' from its reference ({})",
@@ -125,7 +126,7 @@ public class ConfigurationValidationService {
     try {
       // Same object graph and constraints the normal binding path validates (JobHandlerContext).
       validationProvider.validate(configuration);
-    } catch (Exception e) {
+    } catch (final Exception e) {
       // Log only the exception type, never the throwable: constraint-violation messages can
       // interpolate the invalid (secret) value.
       LOG.warn(
@@ -138,20 +139,20 @@ public class ConfigurationValidationService {
 
     try {
       @SuppressWarnings("unchecked")
-      ConfigurationValidator<Object> validator =
+      final ConfigurationValidator<Object> validator =
           (ConfigurationValidator<Object>) registered.validator();
       // A validator's returned result (including its message) is passed through unchanged: that
       // text is author-authored and deliberate. A *thrown* exception is not — it may wrap
       // SDK/framework messages carrying credential material — so its message is logged, never
       // surfaced.
-      ConfigurationValidationResult result = validator.validate(configuration);
+      final ConfigurationValidationResult result = validator.validate(configuration);
       if (result == null) {
         // Nothing stops a validator returning null, and that would NPE in response mapping.
         LOG.warn("Validator for configuration '{}' returned null", request.credentialId());
         return ConfigurationValidationResult.failure(ErrorCode.ERROR, VALIDATOR_ERROR_MESSAGE);
       }
       return result;
-    } catch (Exception e) {
+    } catch (final Exception e) {
       // Log only the exception type, never the throwable: a validator exception can wrap
       // SDK/framework messages carrying credential material.
       LOG.warn(
@@ -160,8 +161,8 @@ public class ConfigurationValidationService {
           e.getClass().getName());
       // A ConnectorException's error code is author-chosen and may legitimately fall outside
       // ErrorCode, so it is passed through as-is; anything else collapses to the shared ERROR.
-      String code =
-          e instanceof ConnectorException ce && ce.getErrorCode() != null
+      final String code =
+          e instanceof final ConnectorException ce && ce.getErrorCode() != null
               ? ce.getErrorCode()
               : ErrorCode.ERROR.name();
       return ConfigurationValidationResult.failure(code, VALIDATOR_ERROR_MESSAGE);
@@ -169,14 +170,14 @@ public class ConfigurationValidationService {
   }
 
   /**
-   * Selects the FEEL evaluator bound to the engine that holds the configuration. A {@code null}
-   * physical tenant (a single-engine deployment, or a caller that predates multi-engine support) is
-   * unambiguous only while one engine is configured; with several, the request is rejected rather
-   * than resolved against an arbitrary engine.
+   * Selects the Expression evaluator bound to the engine that holds the configuration. A {@code
+   * null} physical tenant (a single-engine deployment, or a caller that predates multi-engine
+   * support) is unambiguous only while one engine is configured; with several, the request is
+   * rejected rather than resolved against an arbitrary engine.
    */
-  private FeelExpressionEvaluator resolveEvaluator(String physicalTenantId) {
+  private FeelExpressionEvaluator resolveEvaluator(final String physicalTenantId) {
     if (physicalTenantId != null) {
-      FeelExpressionEvaluator evaluator =
+      final FeelExpressionEvaluator evaluator =
           feelExpressionEvaluatorsByPhysicalTenantId.get(physicalTenantId);
       if (evaluator == null) {
         throw new IllegalArgumentException(
@@ -192,12 +193,12 @@ public class ConfigurationValidationService {
   }
 
   private Object resolveConfiguration(
-      ConfigurationValidationRequest request,
-      FeelExpressionEvaluator feelExpressionEvaluator,
-      Class<?> configurationClass)
+      final ConfigurationValidationRequest request,
+      final FeelExpressionEvaluator feelExpressionEvaluator,
+      final Class<?> configurationClass)
       throws Exception {
-    String rawJson = feelExpressionEvaluator.evaluateToJson(request.credentialRef());
-    String withSecrets =
+    final String rawJson = feelExpressionEvaluator.evaluateToJson(request.credentialRef());
+    final String withSecrets =
         secretHandler.replaceSecrets(
             rawJson, new SecretContext(request.tenantId(), null, request.physicalTenantId()));
     return objectMapper.readValue(withSecrets, configurationClass);

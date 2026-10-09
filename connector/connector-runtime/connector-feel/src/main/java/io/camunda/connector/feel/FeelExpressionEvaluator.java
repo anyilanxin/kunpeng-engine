@@ -16,18 +16,18 @@
  */
 package io.camunda.connector.feel;
 
-import com.fasterxml.jackson.databind.JavaType;
+import tools.jackson.databind.JavaType;
 
 /**
- * Abstraction for FEEL expression evaluation. Implementations may evaluate expressions locally
- * using a FEEL engine or remotely via a Camunda cluster.
+ * Abstraction for Expression expression evaluation. Implementations may evaluate expressions
+ * locally using a Expression engine or remotely via a Camunda cluster.
  */
 public interface FeelExpressionEvaluator {
 
   /**
-   * Evaluates a FEEL expression with the given variables.
+   * Evaluates a Expression expression with the given variables.
    *
-   * @param expression the FEEL expression to evaluate (with or without leading '=')
+   * @param expression the Expression expression to evaluate (with or without leading '=')
    * @param variables the variables to use in evaluation (will be merged)
    * @param <T> the type to cast the evaluation result to
    * @return the evaluation result
@@ -36,9 +36,9 @@ public interface FeelExpressionEvaluator {
   <T> T evaluate(String expression, Object... variables);
 
   /**
-   * Evaluates a FEEL expression with the given variables and converts to the specified type.
+   * Evaluates a Expression expression with the given variables and converts to the specified type.
    *
-   * @param expression the FEEL expression to evaluate
+   * @param expression the Expression expression to evaluate
    * @param targetType the class the result should be converted to
    * @param variables the variables to use in evaluation
    * @param <T> the type to cast the evaluation result to
@@ -48,9 +48,10 @@ public interface FeelExpressionEvaluator {
   <T> T evaluate(String expression, Class<T> targetType, Object... variables);
 
   /**
-   * Evaluates a FEEL expression with the given variables and converts to the specified JavaType.
+   * Evaluates a Expression expression with the given variables and converts to the specified
+   * JavaType.
    *
-   * @param expression the FEEL expression to evaluate
+   * @param expression the Expression expression to evaluate
    * @param targetType the JavaType the result should be converted to
    * @param variables the variables to use in evaluation
    * @param <T> the type to cast the evaluation result to

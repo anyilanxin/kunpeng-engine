@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.fasterxml.jackson.core.type.TypeReference;
+import tools.jackson.core.type.TypeReference;
 import io.camunda.connector.jackson.ConnectorsObjectMapperSupplier;
 import io.camunda.connector.runtime.metrics.OutboundConnectorMetrics;
 import io.camunda.connector.runtime.outbound.controller.OutboundConnectorResponse;
@@ -40,7 +40,7 @@ import org.springframework.http.ResponseEntity;
 @ExtendWith(MockitoExtension.class)
 class OutboundConnectorsRestControllerMultiInstancesTest extends BaseOutboundMultiInstancesTest {
 
-  /** Physical tenant a legacy, single-{@code CamundaClient} configuration resolves to. */
+  /** Physical tenant a legacy, single-{@code KunpengClient} configuration resolves to. */
   private static final String DEFAULT_PHYSICAL_TENANT_ID = "default";
 
   @Test

@@ -16,31 +16,11 @@
  */
 package io.camunda.connector.runtime.core.inbound.correlation;
 
-import java.time.Duration;
-
 public sealed interface MessageCorrelationPoint extends ProcessCorrelationPoint {
   String messageName();
 
   String correlationKeyExpression();
 
-  String messageIdExpression();
-
-  Duration timeToLive();
-
-  record StandaloneMessageCorrelationPoint(
-      String messageName,
-      String correlationKeyExpression,
-      String messageIdExpression,
-      Duration timeToLive)
+  record StandaloneMessageCorrelationPoint(String messageName, String correlationKeyExpression)
       implements MessageCorrelationPoint {}
-
-  record BoundaryEventCorrelationPoint(
-      String messageName,
-      String correlationKeyExpression,
-      String messageIdExpression,
-      Duration timeToLive,
-      Activity attachedTo)
-      implements MessageCorrelationPoint {
-    public record Activity(String elementId, String name) {}
-  }
 }

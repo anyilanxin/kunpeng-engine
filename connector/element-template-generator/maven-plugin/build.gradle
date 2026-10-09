@@ -10,9 +10,9 @@ configure(jarInfo) {
 
 
 dependencies {
-    implementation project(':connector:element-template-generator:core')
+    implementation project(':connector:element-template-generator:generator-core')
     implementation project(':connector:connector-sdk:core')
-    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'tools.jackson.core:jackson-databind'
 
     compileOnly 'org.apache.maven:maven-model'
     compileOnly 'org.apache.maven:maven-artifact'

@@ -16,8 +16,8 @@
  */
 package io.camunda.connector.generator.postman;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
 import io.camunda.connector.generator.api.GeneratorConfiguration;
 import io.camunda.connector.generator.api.GeneratorConfiguration.ConnectorMode;
 import io.camunda.connector.generator.postman.utils.ObjectMapperProvider;
@@ -35,7 +35,7 @@ public class PostmanCollectionsGeneratorDryRunExampleTest {
 
   @ParameterizedTest
   @MethodSource("commandLineArguments")
-  void generate(List<String> args) throws JsonProcessingException {
+  void generate(List<String> args) throws JacksonException {
     var source = new PostmanCollectionsGenerationSource(args);
     var gen = new PostmanCollectionOutboundTemplateGenerator();
     var templates =

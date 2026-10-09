@@ -19,23 +19,18 @@ package io.camunda.connector.runtime;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.camunda.client.CamundaClient;
-import io.camunda.client.jobhandling.CamundaClientExecutorService;
-import io.camunda.client.jobhandling.JobCallbackCommandWrapperFactory;
-import io.camunda.client.jobhandling.JobWorkerManager;
-import io.camunda.client.metrics.MeteredCamundaClientExecutorService;
-import io.camunda.client.metrics.MetricsRecorder;
-import io.camunda.client.spring.configuration.CamundaAutoConfiguration;
-import io.camunda.client.spring.configuration.ExecutorServiceConfiguration;
-import io.camunda.client.spring.properties.CamundaClientProperties;
+import tools.jackson.databind.ObjectMapper;
+import com.anyilanxin.kunpeng.client.KunpengClient;
+import com.anyilanxin.kunpeng.client.spring.configuration.ExecutorServiceConfiguration;
+import com.anyilanxin.kunpeng.client.spring.configuration.KunpengAutoConfiguration;
+import com.anyilanxin.kunpeng.client.spring.jobhandling.JobWorkerManager;
+import com.anyilanxin.kunpeng.client.spring.jobhandling.KunpengClientExecutorService;
+import com.anyilanxin.kunpeng.client.spring.properties.KunpengClientProperties;
 import io.camunda.connector.jackson.ConnectorsObjectMapperSupplier;
 import io.camunda.connector.runtime.annotation.ConnectorsObjectMapper;
 import io.camunda.connector.runtime.annotation.OutboundConnectorObjectMapper;
 import io.camunda.connector.runtime.core.secret.SecretProviderAggregator;
-import java.net.URI;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -47,7 +42,7 @@ import org.springframework.core.annotation.MergedAnnotations;
 class OutboundConnectorsAutoConfigurationTest {
 
   private static final String CONNECTOR_EXECUTOR_BEAN_NAME =
-      "connectorCamundaClientExecutorService";
+      "connectorKunpengClientExecutorService";
 
   private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
@@ -60,22 +55,22 @@ class OutboundConnectorsAutoConfigurationTest {
   void shouldCreateConnectorExecutorServiceByDefault() {
     contextRunner.run(
         context -> {
-          assertThat(context).hasSingleBean(CamundaClientExecutorService.class);
+          assertThat(context).hasSingleBean(KunpengClientExecutorService.class);
           assertThat(context).hasBean(CONNECTOR_EXECUTOR_BEAN_NAME);
-          assertThat(context.getBean(CamundaClientExecutorService.class))
+          assertThat(context.getBean(KunpengClientExecutorService.class))
               .isSameAs(context.getBean(CONNECTOR_EXECUTOR_BEAN_NAME))
-              .isInstanceOf(MeteredCamundaClientExecutorService.class);
+              .isInstanceOf(KunpengClientExecutorService.class);
         });
   }
 
   @Test
-  void shouldBeConfiguredBeforeCamundaClientAutoConfiguration() {
+  void shouldBeConfiguredBeforeKunpengClientAutoConfiguration() {
     var autoConfigureBefore =
         MergedAnnotations.from(OutboundConnectorsAutoConfiguration.class)
             .get(AutoConfigureBefore.class);
 
     assertThat(autoConfigureBefore.getClassArray("value"))
-        .contains(CamundaAutoConfiguration.class, ExecutorServiceConfiguration.class);
+        .contains(KunpengAutoConfiguration.class, ExecutorServiceConfiguration.class);
   }
 
   @Test
@@ -85,18 +80,15 @@ class OutboundConnectorsAutoConfigurationTest {
         .run(
             context -> {
               assertThat(context).doesNotHaveBean(CONNECTOR_EXECUTOR_BEAN_NAME);
-              assertThat(context).hasSingleBean(CamundaClientExecutorService.class);
+              assertThat(context).hasSingleBean(KunpengClientExecutorService.class);
             });
   }
 
   static class RequiredOutboundRuntimeBeans {
 
     @Bean
-    CamundaClient camundaClient() {
-      CamundaClient client = mock(CamundaClient.class, RETURNS_DEEP_STUBS);
-      when(client.getConfiguration().getRestAddress())
-          .thenReturn(URI.create("http://localhost:26500"));
-      return client;
+    KunpengClient client() {
+      return mock(KunpengClient.class, RETURNS_DEEP_STUBS);
     }
 
     @Bean
@@ -105,23 +97,13 @@ class OutboundConnectorsAutoConfigurationTest {
     }
 
     @Bean
-    JobCallbackCommandWrapperFactory jobCallbackCommandWrapperFactory() {
-      return mock(JobCallbackCommandWrapperFactory.class);
-    }
-
-    @Bean
     SecretProviderAggregator secretProviderAggregator() {
       return new SecretProviderAggregator(List.of());
     }
 
     @Bean
-    MetricsRecorder metricsRecorder() {
-      return mock(MetricsRecorder.class);
-    }
-
-    @Bean
-    CamundaClientProperties camundaClientProperties() {
-      var properties = new CamundaClientProperties();
+    KunpengClientProperties clientProperties() {
+      var properties = new KunpengClientProperties();
       properties.setExecutionThreads(1);
       return properties;
     }

@@ -12,12 +12,12 @@ configure(jarInfo) {
 dependencies {
     implementation 'org.slf4j:slf4j-api'
     implementation project(':connector:connector-commons:http-base')
-    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'tools.jackson.core:jackson-databind'
     implementation project(':connector:element-template-generator:annotations')
-    implementation project(':connector:element-template-generator:core')
+    implementation project(':connector:element-template-generator:generator-core')
     implementation project(':connector:connector-commons:connector-object-mapper')
     implementation project(':connector:element-template-generator:http-dsl')
-    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml'
+    implementation 'tools.jackson.dataformat:jackson-dataformat-yaml'
     implementation project(':connector:connector-runtime:connector-feel')
     implementation 'io.swagger.core.v3:swagger-models'
     implementation 'io.swagger.parser.v3:swagger-parser-v3'

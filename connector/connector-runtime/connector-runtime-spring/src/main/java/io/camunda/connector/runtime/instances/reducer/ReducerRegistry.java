@@ -16,18 +16,13 @@
  */
 package io.camunda.connector.runtime.instances.reducer;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import io.camunda.connector.runtime.inbound.controller.ActiveInboundConnectorResponse;
-import io.camunda.connector.runtime.inbound.executable.ConnectorInstances;
-import io.camunda.connector.runtime.instances.InstanceAwareModel;
-import io.camunda.connector.runtime.metrics.InboundConnectorMetrics;
 import io.camunda.connector.runtime.metrics.OutboundConnectorMetrics;
 import io.camunda.connector.runtime.outbound.controller.OutboundConnectorResponse;
 import java.lang.reflect.Type;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import tools.jackson.core.type.TypeReference;
 
 public class ReducerRegistry {
   private final Map<Type, Reducer<?>> reducers;
@@ -35,31 +30,10 @@ public class ReducerRegistry {
   public ReducerRegistry() {
     reducers = new HashMap<>();
     reducers.put(
-        new TypeReference<ConnectorInstances>() {}.getType(), new ConnectorInstancesReducer());
-    reducers.put(
-        new TypeReference<List<ConnectorInstances>>() {}.getType(),
-        new ConnectorInstancesListReducer());
-    reducers.put(
-        new TypeReference<ActiveInboundConnectorResponse>() {}.getType(),
-        new ActiveInboundConnectorResponseReducer());
-    reducers.put(
-        new TypeReference<List<InstanceAwareModel.InstanceAwareActivity>>() {}.getType(),
-        Reducers.mergeListsReducer());
-    reducers.put(
-        new TypeReference<
-            List<Collection<InstanceAwareModel.InstanceAwareActivity>>>() {}.getType(),
-        Reducers.mergeListsReducer());
-    reducers.put(
-        new TypeReference<List<InstanceAwareModel.InstanceAwareHealth>>() {}.getType(),
-        Reducers.mergeListsReducer());
-    reducers.put(
         new TypeReference<List<OutboundConnectorResponse>>() {}.getType(),
         Reducers.mergeListsReducer());
     reducers.put(
         new TypeReference<List<OutboundConnectorMetrics>>() {}.getType(),
-        Reducers.mergeListsReducer());
-    reducers.put(
-        new TypeReference<List<InboundConnectorMetrics>>() {}.getType(),
         Reducers.mergeListsReducer());
   }
 

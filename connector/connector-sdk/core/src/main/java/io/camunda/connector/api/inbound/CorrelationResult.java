@@ -28,7 +28,7 @@ public sealed interface CorrelationResult {
 
     /**
      * Binds the raw properties of the {@link #activatedElement()} to a typed object using the
-     * runtime's secret-replacement and FEEL-evaluation pipeline.
+     * runtime's secret-replacement and Expression-evaluation pipeline.
      *
      * <p>Use this to resolve element-scoped properties (for example, a webhook response expression)
      * from the element that actually matched this correlation, even when several elements were
@@ -59,18 +59,12 @@ public sealed interface CorrelationResult {
         Map<String, Object> variables)
         implements Success {}
 
-    record MessagePublished(ProcessElement activatedElement, Long messageKey, String tenantId)
-        implements Success {}
-
     /**
-     * Result for synchronous message correlation via {@code newCorrelateMessageCommand}. Contains
-     * the process instance key of the correlated process instance.
+     * Result for message correlation. The engine does not report the correlated process instance,
+     * so only the message key and tenant are available.
      */
-    record MessageCorrelated(
-        ProcessElement activatedElement, Long processInstanceKey, Long messageKey, String tenantId)
+    record MessageCorrelated(ProcessElement activatedElement, Long messageKey, String tenantId)
         implements Success {}
-
-    record MessageAlreadyCorrelated(ProcessElement activatedElement) implements Success {}
   }
 
   sealed interface Failure extends CorrelationResult {

@@ -16,82 +16,71 @@
  */
 package io.camunda.connector.runtime.core.testutil.command;
 
-import io.camunda.client.api.CamundaFuture;
-import io.camunda.client.api.command.CorrelateMessageCommandStep1;
-import io.camunda.client.api.command.CorrelateMessageCommandStep1.CorrelateMessageCommandStep2;
-import io.camunda.client.api.command.CorrelateMessageCommandStep1.CorrelateMessageCommandStep3;
-import io.camunda.client.api.command.FinalCommandStep;
-import io.camunda.client.api.response.CorrelateMessageResponse;
-import io.camunda.client.impl.CamundaClientFutureImpl;
+import com.anyilanxin.kunpeng.client.command.KunpengClientFutureImpl;
+import com.anyilanxin.kunpeng.client.command.message.correlation.MessageCorrelationCommand;
+import com.anyilanxin.kunpeng.client.command.message.correlation.MessageCorrelationCommand.MessageCorrelationCommandStep1;
 import io.camunda.connector.runtime.core.testutil.response.CorrelateMessageResponseDummy;
 import java.io.InputStream;
 import java.time.Duration;
 import java.util.Map;
 
 public class CorrelateMessageCommandDummy
-    implements CorrelateMessageCommandStep1,
-        CorrelateMessageCommandStep2,
-        CorrelateMessageCommandStep3 {
+    implements MessageCorrelationCommand, MessageCorrelationCommandStep1 {
 
   @Override
-  public CorrelateMessageCommandStep2 messageName(String messageName) {
+  public MessageCorrelationCommandStep1 messageName(String messageName) {
     return this;
   }
 
   @Override
-  public CorrelateMessageCommandStep3 correlationKey(String correlationKey) {
+  public MessageCorrelationCommandStep1 processInstanceId(long processInstanceId) {
     return this;
   }
 
   @Override
-  public CorrelateMessageCommandStep3 withoutCorrelationKey() {
+  public MessageCorrelationCommandStep1 correlationKey(String correlationKey) {
     return this;
   }
 
   @Override
-  public CorrelateMessageCommandStep3 variables(InputStream variables) {
+  public MessageCorrelationCommandStep1 tenantId(String tenantId) {
     return this;
   }
 
   @Override
-  public CorrelateMessageCommandStep3 variables(String variables) {
+  public MessageCorrelationCommandStep1 variables(InputStream variables) {
     return this;
   }
 
   @Override
-  public CorrelateMessageCommandStep3 variables(Map<String, Object> variables) {
+  public MessageCorrelationCommandStep1 variables(String variables) {
     return this;
   }
 
   @Override
-  public CorrelateMessageCommandStep3 variables(Object variables) {
+  public MessageCorrelationCommandStep1 variables(Map<String, Object> variables) {
     return this;
   }
 
   @Override
-  public CorrelateMessageCommandStep3 variable(String key, Object value) {
+  public MessageCorrelationCommandStep1 variables(Object variables) {
     return this;
   }
 
   @Override
-  public CorrelateMessageCommandStep3 tenantId(String tenantId) {
+  public MessageCorrelationCommandStep1 variable(String key, Object value) {
     return this;
   }
 
   @Override
-  public CorrelateMessageCommandStep3 businessId(String businessId) {
-    return this;
-  }
-
-  @Override
-  public FinalCommandStep<CorrelateMessageResponse> requestTimeout(Duration requestTimeout) {
+  public MessageCorrelationCommandStep1 requestTimeout(Duration requestTimeout) {
     return this;
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
   @Override
-  public CamundaFuture<CorrelateMessageResponse> send() {
-    CamundaClientFutureImpl future = new CamundaClientFutureImpl<>();
+  public KunpengClientFutureImpl send() {
+    KunpengClientFutureImpl future = new KunpengClientFutureImpl<>();
     future.complete(new CorrelateMessageResponseDummy());
     return future;
   }

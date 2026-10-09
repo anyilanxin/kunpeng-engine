@@ -17,16 +17,17 @@
 package io.camunda.connector.runtime.core.inbound;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.databind.BeanDescription;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import tools.jackson.databind.BeanDescription;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.introspect.AnnotatedClassResolver;
+import tools.jackson.databind.introspect.BeanPropertyDefinition;
 
 /**
  * Derives the deduplication property <em>prefixes</em> contributed by one or more connector data
@@ -98,7 +99,13 @@ public final class DeduplicationPropertyResolver {
         addPrefix(prefix, out);
         return;
       }
-      BeanDescription description = MAPPER.getSerializationConfig().introspect(type);
+      var serializationConfig = MAPPER.serializationConfig();
+      BeanDescription description =
+          serializationConfig
+              .classIntrospectorInstance()
+              .introspectForSerialization(
+                  type,
+                  AnnotatedClassResolver.resolve(serializationConfig, type, serializationConfig));
       List<BeanPropertyDefinition> properties = description.findProperties();
       if (properties.isEmpty()) {
         addPrefix(prefix, out);

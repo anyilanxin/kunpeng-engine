@@ -16,15 +16,11 @@
  */
 package io.camunda.connector.api.outbound;
 
-import io.camunda.connector.api.document.DocumentFactory;
-import io.camunda.connector.api.document.DocumentReturnFormat;
-import java.util.Optional;
-
 /**
  * The context object provided to a connector function. The context allows to fetch information
  * injected by the environment runtime.
  */
-public interface OutboundConnectorContext extends DocumentFactory {
+public interface OutboundConnectorContext {
 
   /** Context information about the activated job. */
   JobContext getJobContext();
@@ -47,18 +43,4 @@ public interface OutboundConnectorContext extends DocumentFactory {
    * @return deserialized and validated variables with secrets replaced
    */
   <T> T bindVariables(Class<T> cls);
-
-  /**
-   * Reads the user-selected document return format from the job's input variables. Bound to the
-   * canonical {@code documentReturnFormat} variable path produced by the
-   * {@code @DocumentReturnFormat} element-template annotation (in the generator module).
-   *
-   * <p>Returns {@link Optional#empty()} when the dropdown was not set (old templates / connectors
-   * that don't expose the new field), letting the connector fall back to its legacy code path.
-   * Connectors should only return a {@link io.camunda.connector.api.document.DocumentReturn} when
-   * this method returns a present value.
-   */
-  default Optional<DocumentReturnFormat> readDocumentReturnFormat() {
-    return Optional.empty();
-  }
 }

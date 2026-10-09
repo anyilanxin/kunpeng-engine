@@ -16,43 +16,14 @@
  */
 package io.camunda.connector.runtime.metrics;
 
-import io.camunda.client.api.response.ActivatedJob;
-import io.camunda.connector.api.inbound.ElementTemplateDetails;
-import io.camunda.connector.runtime.core.inbound.InboundConnectorElement;
-import io.camunda.connector.runtime.core.inbound.ProcessElementWithRuntimeData;
-import java.util.Optional;
+import com.anyilanxin.kunpeng.client.command.job.ActivatedJob;
 
-public record Result(String type, String id, String version, String physicalTenantId, String key) {
+public record Result(String type, String id, String version, String key) {
 
   public static Result getResult(ActivatedJob job) {
     String type = job.getType();
     String id = job.getCustomHeaders().getOrDefault("elementTemplateId", "unknown");
     String version = job.getCustomHeaders().getOrDefault("elementTemplateVersion", "unknown");
-    String physicalTenantId = job.getPhysicalTenantId();
-    String key = type + "_" + id + "_" + version;
-    return new Result(type, id, version, physicalTenantId, key);
-  }
-
-  public static Result getResult(InboundConnectorElement connectorElement) {
-    String type = connectorElement.type();
-    String id =
-        Optional.of(connectorElement)
-            .map(InboundConnectorElement::element)
-            .map(ProcessElementWithRuntimeData::elementTemplateDetails)
-            .map(ElementTemplateDetails::id)
-            .orElse("unknown");
-    String version =
-        Optional.of(connectorElement)
-            .map(InboundConnectorElement::element)
-            .map(ProcessElementWithRuntimeData::elementTemplateDetails)
-            .map(ElementTemplateDetails::version)
-            .orElse("unknown");
-    String physicalTenantId = connectorElement.physicalTenantId();
-    String key = type + "_" + id + "_" + version + "_" + physicalTenantId;
-    return new Result(type, id, version, physicalTenantId, key);
-  }
-
-  public String createKey(String actionActivated) {
-    return this.key() + "_" + actionActivated;
+    return new Result(type, id, version, type + "_" + id + "_" + version);
   }
 }

@@ -16,13 +16,10 @@
  */
 package io.camunda.connector.validator.rule;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.networknt.schema.JsonSchema;
-import com.networknt.schema.JsonSchemaFactory;
-import com.networknt.schema.SchemaValidatorsConfig;
-import com.networknt.schema.SpecVersion;
-import com.networknt.schema.ValidationMessage;
+import com.networknt.schema.Error;
+import com.networknt.schema.Schema;
+import com.networknt.schema.SchemaRegistry;
+import com.networknt.schema.dialect.Dialects;
 import io.camunda.connector.validator.core.Finding;
 import io.camunda.connector.validator.core.Rule;
 import java.io.IOException;
@@ -34,7 +31,8 @@ import java.net.http.HttpResponse;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
-import java.util.Set;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Validates each template against the upstream Camunda element-template JSON schema.
@@ -56,7 +54,7 @@ public class SchemaRule implements Rule {
           + SCHEMA_VERSION
           + "/resources/schema.json";
 
-  private final JsonSchema schema;
+  private final Schema schema;
 
   public SchemaRule() {
     this(SCHEMA_URL);
@@ -68,13 +66,13 @@ public class SchemaRule implements Rule {
 
   @Override
   public List<Finding> apply(Path file, JsonNode template) {
-    Set<ValidationMessage> messages = schema.validate(template);
-    return messages.stream()
+    List<Error> errors = schema.validate(template);
+    return errors.stream()
         .map(m -> Finding.error(file, m.getInstanceLocation().toString(), id(), m.getMessage()))
         .toList();
   }
 
-  private static JsonSchema loadSchema(String url) {
+  private static Schema loadSchema(String url) {
     try {
       HttpClient client =
           HttpClient.newBuilder()
@@ -90,9 +88,7 @@ public class SchemaRule implements Rule {
       }
       ObjectMapper mapper = new ObjectMapper();
       JsonNode schemaNode = mapper.readTree(response.body());
-      JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7);
-      SchemaValidatorsConfig config = new SchemaValidatorsConfig();
-      return factory.getSchema(schemaNode, config);
+      return SchemaRegistry.withDialect(Dialects.getDraft7()).getSchema(schemaNode);
     } catch (IOException e) {
       throw new UncheckedIOException("Failed to fetch element-template schema from " + url, e);
     } catch (InterruptedException e) {

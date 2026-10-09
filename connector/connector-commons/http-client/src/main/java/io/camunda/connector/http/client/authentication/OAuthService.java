@@ -16,8 +16,6 @@
  */
 package io.camunda.connector.http.client.authentication;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.camunda.connector.api.error.ConnectorException;
 import io.camunda.connector.http.client.HttpClientObjectMapperSupplier;
 import io.camunda.connector.http.client.mapper.ResponseMappers;
@@ -31,6 +29,8 @@ import java.util.Map;
 import java.util.Optional;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.HttpHeaders;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 public class OAuthService {
 
@@ -48,15 +48,15 @@ public class OAuthService {
    * @return a new request that can be used to fetch an OAuth token
    * @see OAuthAuthentication
    */
-  public HttpClientRequest createOAuthRequestFrom(OAuthAuthentication authentication) {
-    HttpClientRequest oauthRequest = new HttpClientRequest();
-    Map<String, String> headers = new HashMap<>();
+  public HttpClientRequest createOAuthRequestFrom(final OAuthAuthentication authentication) {
+    final HttpClientRequest oauthRequest = new HttpClientRequest();
+    final Map<String, String> headers = new HashMap<>();
 
     headers.put(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_FORM_URLENCODED.getMimeType());
 
     oauthRequest.setMethod(HttpMethod.POST);
     oauthRequest.setUrl(authentication.oauthTokenEndpoint());
-    Map<String, String> body = authentication.getDataForAuthRequestBody();
+    final Map<String, String> body = authentication.getDataForAuthRequestBody();
 
     // Depending on the client authentication, add the client ID and client secret to the request
     // either as basic authentication header or as client credentials in the request body
@@ -68,12 +68,12 @@ public class OAuthService {
     return oauthRequest;
   }
 
-  public TokenResponse extractTokenFromResponse(StreamingHttpResponse body) {
-    var jsonNode = ResponseMappers.asJsonNode(() -> OBJECT_MAPPER).apply(body);
+  public TokenResponse extractTokenFromResponse(final StreamingHttpResponse body) {
+    final var jsonNode = ResponseMappers.asJsonNode(() -> OBJECT_MAPPER).apply(body);
     return Optional.ofNullable(jsonNode)
         .filter(JsonNode::isObject)
         .map(node -> node.findValue(OAuthConstants.ACCESS_TOKEN))
-        .map(JsonNode::asText)
+        .map(JsonNode::asString)
         .map(accessToken -> toTokenResponse(accessToken, jsonNode))
         .orElseThrow(
             () ->
@@ -89,9 +89,9 @@ public class OAuthService {
    * @return a request targeting the token endpoint with the refresh-token body
    */
   public HttpClientRequest createOAuthRefreshTokenRequestFrom(
-      OAuthRefreshTokenAuthentication authentication) {
-    HttpClientRequest oauthRequest = new HttpClientRequest();
-    Map<String, String> headers = new HashMap<>();
+      final OAuthRefreshTokenAuthentication authentication) {
+    final HttpClientRequest oauthRequest = new HttpClientRequest();
+    final Map<String, String> headers = new HashMap<>();
     headers.put(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_FORM_URLENCODED.getMimeType());
 
     oauthRequest.setMethod(HttpMethod.POST);
@@ -109,15 +109,15 @@ public class OAuthService {
    * @return token response containing the access token (and expires_in if present)
    * @throws ConnectorException if the response contains an OAuth error or no access_token
    */
-  public TokenResponse extractTokenFromRefreshTokenResponse(StreamingHttpResponse body) {
-    var jsonNode = ResponseMappers.asJsonNode(() -> OBJECT_MAPPER).apply(body);
+  public TokenResponse extractTokenFromRefreshTokenResponse(final StreamingHttpResponse body) {
+    final var jsonNode = ResponseMappers.asJsonNode(() -> OBJECT_MAPPER).apply(body);
     if (jsonNode != null && jsonNode.isObject()) {
-      var errorNode = jsonNode.findValue(OAuthConstants.ERROR);
+      final var errorNode = jsonNode.findValue(OAuthConstants.ERROR);
       if (errorNode != null) {
-        String error = errorNode.asText();
-        String description =
+        final String error = errorNode.asString();
+        final String description =
             Optional.ofNullable(jsonNode.findValue(OAuthConstants.ERROR_DESCRIPTION))
-                .map(JsonNode::asText)
+                .map(JsonNode::asString)
                 .orElse("no description provided");
         if (OAuthConstants.INVALID_GRANT.equals(error)) {
           throw new ConnectorException(
@@ -139,7 +139,7 @@ public class OAuthService {
     return Optional.ofNullable(jsonNode)
         .filter(JsonNode::isObject)
         .map(node -> node.findValue(OAuthConstants.ACCESS_TOKEN))
-        .map(JsonNode::asText)
+        .map(JsonNode::asString)
         .map(accessToken -> toTokenResponse(accessToken, jsonNode))
         .orElseThrow(
             () ->
@@ -148,7 +148,7 @@ public class OAuthService {
                     "OAuth token response does not contain an access_token field"));
   }
 
-  private TokenResponse toTokenResponse(String accessToken, JsonNode jsonNode) {
+  private TokenResponse toTokenResponse(final String accessToken, final JsonNode jsonNode) {
     return Optional.of(jsonNode)
         .map(node -> node.findValue(OAuthConstants.EXPIRES_IN))
         .filter(JsonNode::isNumber)
@@ -157,7 +157,9 @@ public class OAuthService {
   }
 
   private void addCredentials(
-      Map<String, String> body, Map<String, String> headers, OAuthAuthentication authentication) {
+      final Map<String, String> body,
+      final Map<String, String> headers,
+      final OAuthAuthentication authentication) {
     switch (authentication.clientAuthentication()) {
       case OAuthConstants.BASIC_AUTH_HEADER ->
           headers.put(

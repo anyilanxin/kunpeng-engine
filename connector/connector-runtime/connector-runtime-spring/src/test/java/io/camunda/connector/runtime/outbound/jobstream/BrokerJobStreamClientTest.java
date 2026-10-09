@@ -31,9 +31,9 @@ import static org.mockito.Mockito.when;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
-import io.camunda.client.CamundaClient;
-import io.camunda.client.api.response.BrokerInfo;
-import io.camunda.client.api.response.Topology;
+import com.anyilanxin.kunpeng.client.KunpengClient;
+import com.anyilanxin.kunpeng.client.command.BrokerInfo;
+import com.anyilanxin.kunpeng.client.command.topology.TopologyCommandResponse;
 import io.camunda.connector.jackson.ConnectorsObjectMapperSupplier;
 import java.io.IOException;
 import java.net.URI;
@@ -178,8 +178,8 @@ class BrokerJobStreamClientTest {
   }
 
   private BrokerJobStreamClient clientFromTopology(int port, String... hosts) {
-    CamundaClient camundaClient = mock(CamundaClient.class, RETURNS_DEEP_STUBS);
-    Topology topology = mock(Topology.class);
+    KunpengClient client = mock(KunpengClient.class, RETURNS_DEEP_STUBS);
+    TopologyCommandResponse topology = mock(TopologyCommandResponse.class);
     List<BrokerInfo> brokers =
         Arrays.stream(hosts)
             .map(
@@ -190,8 +190,8 @@ class BrokerJobStreamClientTest {
                 })
             .toList();
     when(topology.getBrokers()).thenReturn(brokers);
-    when(camundaClient.newTopologyRequest().send().join()).thenReturn(topology);
+    when(client.newTopologyCommand().send().join()).thenReturn(topology);
 
-    return new BrokerJobStreamClient(camundaClient, port, ConnectorsObjectMapperSupplier.getCopy());
+    return new BrokerJobStreamClient(client, port, ConnectorsObjectMapperSupplier.getCopy());
   }
 }

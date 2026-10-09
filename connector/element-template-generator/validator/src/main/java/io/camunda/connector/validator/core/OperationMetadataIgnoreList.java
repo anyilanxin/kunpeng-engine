@@ -16,11 +16,11 @@
  */
 package io.camunda.connector.validator.core;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import java.nio.file.Path;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import tools.jackson.databind.JsonNode;
 
 /**
  * Connectors that are exempt from the operations-metadata rules (the {@code steps} / {@code

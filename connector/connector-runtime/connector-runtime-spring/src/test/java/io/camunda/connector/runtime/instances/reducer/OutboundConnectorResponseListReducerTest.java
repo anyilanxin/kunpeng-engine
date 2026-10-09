@@ -19,7 +19,7 @@ package io.camunda.connector.runtime.instances.reducer;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.fasterxml.jackson.core.type.TypeReference;
+import tools.jackson.core.type.TypeReference;
 import io.camunda.connector.runtime.outbound.controller.OutboundConnectorResponse;
 import io.camunda.connector.runtime.outbound.jobstream.BrokerConnectivityState;
 import java.util.List;

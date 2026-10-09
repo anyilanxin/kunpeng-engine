@@ -16,9 +16,9 @@
  */
 package io.camunda.connector.validator.core;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import java.nio.file.Path;
 import java.util.List;
+import tools.jackson.databind.JsonNode;
 
 public interface Rule {
 

@@ -17,10 +17,9 @@
 package io.camunda.connector.runtime.instances.reducer;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import io.camunda.connector.runtime.inbound.executable.ConnectorInstances;
-import io.camunda.connector.runtime.metrics.InboundConnectorMetrics;
+import tools.jackson.core.type.TypeReference;
 import io.camunda.connector.runtime.metrics.OutboundConnectorMetrics;
 import io.camunda.connector.runtime.outbound.controller.OutboundConnectorResponse;
 import java.util.List;
@@ -28,30 +27,6 @@ import org.junit.jupiter.api.Test;
 
 public class ReducerRegistryTest {
   private final ReducerRegistry reducerRegistry = new ReducerRegistry();
-
-  @Test
-  public void shouldReturnReducer_whenClassParameter() {
-    // given
-    var targetClass = new TypeReference<ConnectorInstances>() {};
-
-    // when
-    var reducer = reducerRegistry.getReducer(targetClass);
-
-    // then
-    assertThat(reducer).isNotNull().isInstanceOf(ConnectorInstancesReducer.class);
-  }
-
-  @Test
-  public void shouldReturnReducer_whenListParameter() {
-    // given
-    var targetClass = new TypeReference<List<ConnectorInstances>>() {};
-
-    // when
-    var reducer = reducerRegistry.getReducer(targetClass);
-
-    // then
-    assertThat(reducer).isNotNull().isInstanceOf(ConnectorInstancesListReducer.class);
-  }
 
   @Test
   public void shouldReturnReducer_forOutboundConnectorResponseList() {
@@ -73,8 +48,11 @@ public class ReducerRegistryTest {
   }
 
   @Test
-  public void shouldReturnReducer_forInboundConnectorMetricsList() {
-    var reducer = reducerRegistry.getReducer(new TypeReference<List<InboundConnectorMetrics>>() {});
-    assertThat(reducer).isNotNull();
+  public void shouldThrow_forUnregisteredType() {
+    var targetClass = new TypeReference<List<String>>() {};
+
+    assertThatThrownBy(() -> reducerRegistry.getReducer(targetClass))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("No reducer found");
   }
 }

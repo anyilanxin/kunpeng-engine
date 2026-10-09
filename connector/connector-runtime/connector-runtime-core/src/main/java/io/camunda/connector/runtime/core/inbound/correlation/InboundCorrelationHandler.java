@@ -16,75 +16,52 @@
  */
 package io.camunda.connector.runtime.core.inbound.correlation;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.camunda.client.CamundaClient;
-import io.camunda.client.api.command.ClientStatusException;
-import io.camunda.client.api.response.CorrelateMessageResponse;
-import io.camunda.client.api.response.ProcessInstanceEvent;
-import io.camunda.client.api.response.ProcessInstanceResult;
-import io.camunda.client.api.response.PublishMessageResponse;
-import io.camunda.connector.api.document.DocumentFactory;
-import io.camunda.connector.api.document.InlineSizeGuard;
+import com.anyilanxin.kunpeng.client.KunpengClient;
+import com.anyilanxin.kunpeng.client.command.ClientStatusException;
+import com.anyilanxin.kunpeng.client.command.message.correlation.MessageCorrelationCommand;
+import com.anyilanxin.kunpeng.client.command.message.correlation.MessageCorrelationCommandResponse;
+import com.anyilanxin.kunpeng.client.command.processinstance.CreateProcessInstanceCommandResponse;
+import com.anyilanxin.kunpeng.client.command.processinstance.CreateProcessInstanceWithResultCommandResponse;
 import io.camunda.connector.api.error.ConnectorInputException;
 import io.camunda.connector.api.inbound.ActivationCheckResult;
 import io.camunda.connector.api.inbound.CorrelationRequest;
 import io.camunda.connector.api.inbound.CorrelationResult;
-import io.camunda.connector.api.inbound.CorrelationResult.Failure;
-import io.camunda.connector.api.inbound.CorrelationResult.Failure.ActivationConditionNotMet;
-import io.camunda.connector.api.inbound.CorrelationResult.Failure.Other;
-import io.camunda.connector.api.inbound.CorrelationResult.Success.MessageAlreadyCorrelated;
 import io.camunda.connector.api.inbound.ProcessElement;
 import io.camunda.connector.feel.FeelExpressionEvaluator;
 import io.camunda.connector.feel.LocalFeelExpressionEvaluator;
 import io.camunda.connector.runtime.core.ConnectorResultHandler;
+import io.camunda.connector.runtime.core.InlineSizeGuard;
 import io.camunda.connector.runtime.core.inbound.InboundConnectorElement;
-import io.grpc.Status;
-import java.time.Duration;
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
-/** Component responsible for calling Zeebe to report an inbound event */
+/**
+ * Component responsible for calling the engine to report an inbound event.
+ *
+ * <p>Engine capability note: the engine only offers synchronous message correlation without message
+ * id deduplication or TTL, so every message correlation point is correlated synchronously.
+ */
 public class InboundCorrelationHandler {
 
   private static final Logger LOG = LoggerFactory.getLogger(InboundCorrelationHandler.class);
 
-  private final CamundaClient camundaClient;
+  private final KunpengClient client;
   private final FeelExpressionEvaluator feelExpressionEvaluator =
       new LocalFeelExpressionEvaluator();
   private final ActivationConditionEvaluator activationConditionEvaluator;
 
-  private final Duration defaultMessageTtl;
-
   private final ConnectorResultHandler connectorResultHandler;
   private final ObjectMapper objectMapper;
 
-  public InboundCorrelationHandler(
-      CamundaClient camundaClient,
-      ObjectMapper objectMapper,
-      Duration defaultMessageTtl,
-      DocumentFactory documentFactory) {
-    this.camundaClient = camundaClient;
+  public InboundCorrelationHandler(KunpengClient client, ObjectMapper objectMapper) {
+    this.client = client;
     this.objectMapper = objectMapper;
     this.activationConditionEvaluator = new ActivationConditionEvaluator(feelExpressionEvaluator);
-    this.defaultMessageTtl = defaultMessageTtl;
-    this.connectorResultHandler = new ConnectorResultHandler(objectMapper, documentFactory);
-  }
-
-  /**
-   * Preserves source/binary compatibility for callers compiled against the pre-{@code
-   * createDocument()} three-argument constructor. {@code createDocument()} is unavailable through
-   * this instance (see {@code ConnectorResultHandler(ObjectMapper)}).
-   */
-  public InboundCorrelationHandler(
-      CamundaClient camundaClient, ObjectMapper objectMapper, Duration defaultMessageTtl) {
-    this.camundaClient = camundaClient;
-    this.objectMapper = objectMapper;
-    this.activationConditionEvaluator = new ActivationConditionEvaluator(feelExpressionEvaluator);
-    this.defaultMessageTtl = defaultMessageTtl;
     this.connectorResultHandler = new ConnectorResultHandler(objectMapper);
   }
 
@@ -106,37 +83,27 @@ public class InboundCorrelationHandler {
 
     return switch (activationCheckResult) {
       case ActivationCheckResult.Failure.NoMatchingElement noMatchingElement ->
-          new ActivationConditionNotMet(noMatchingElement.discardUnmatchedEvents());
+          new CorrelationResult.Failure.ActivationConditionNotMet(
+              noMatchingElement.discardUnmatchedEvents());
       case ActivationCheckResult.Failure.TooManyMatchingElements tooMany ->
-          new Failure.InvalidInput(
+          new CorrelationResult.Failure.InvalidInput(
               "Multiple connectors are activated for the same input: " + tooMany.reason(), null);
       case ActivationCheckResult.Success.CanActivate canActivate ->
           correlateInternal(
               findMatchingElement(elements, canActivate.activatedElement()),
-              correlationRequest.getVariables(),
-              correlationRequest.getMessageId());
+              correlationRequest.getVariables());
     };
   }
 
   protected CorrelationResult correlateInternal(
-      InboundConnectorElement activatedElement, Object variables, String messageId) {
-    var correlationPoint = activatedElement.correlationPoint();
-
-    return switch (correlationPoint) {
+      InboundConnectorElement activatedElement, Object variables) {
+    return switch (activatedElement.correlationPoint()) {
       case StartEventCorrelationPoint corPoint ->
           triggerStartEvent(activatedElement, corPoint, variables);
       case MessageCorrelationPoint corPoint ->
-          triggerMessage(
-              activatedElement,
-              corPoint,
-              variables,
-              resolveMessageId(corPoint.messageIdExpression(), messageId, variables));
+          triggerMessage(activatedElement, corPoint, variables);
       case MessageStartEventCorrelationPoint corPoint ->
-          triggerMessageStartEvent(
-              activatedElement,
-              corPoint,
-              variables,
-              resolveMessageId(corPoint.messageIdExpression(), messageId, variables));
+          triggerMessageStartEvent(activatedElement, corPoint, variables);
     };
   }
 
@@ -162,26 +129,26 @@ public class InboundCorrelationHandler {
       StartEventCorrelationPoint correlationPoint,
       Object extractedVariables) {
     try {
-      ProcessInstanceEvent result =
-          camundaClient
-              .newCreateInstanceCommand()
-              .bpmnProcessId(correlationPoint.bpmnProcessId())
+      CreateProcessInstanceCommandResponse result =
+          client
+              .newCreateProcessInstanceCommand()
+              .processDefinitionKey(correlationPoint.bpmnProcessId())
               .version(correlationPoint.version())
               .tenantId(activatedElement.tenantId())
               .variables(extractedVariables)
               .send()
               .join();
 
-      LOG.info("Created a process instance with key {}", result.getProcessInstanceKey());
+      LOG.info("Created a process instance with id {}", result.getProcessInstanceId());
       return new CorrelationResult.Success.ProcessInstanceCreated(
-          activatedElement.element(), result.getProcessInstanceKey(), result.getTenantId());
+          activatedElement.element(), result.getProcessInstanceId(), activatedElement.tenantId());
 
     } catch (ClientStatusException e1) {
       LOG.info("Failed to create process instance: ", e1);
       return new CorrelationResult.Failure.ZeebeClientStatus(
           e1.getStatus().getCode().name(), e1.getMessage());
     } catch (Throwable e2) {
-      return new Other(e2);
+      return new CorrelationResult.Failure.Other(e2);
     }
   }
 
@@ -190,63 +157,51 @@ public class InboundCorrelationHandler {
       StartEventCorrelationPoint correlationPoint,
       Object extractedVariables) {
     try {
-      ProcessInstanceResult result =
-          camundaClient
-              .newCreateInstanceCommand()
-              .bpmnProcessId(correlationPoint.bpmnProcessId())
+      CreateProcessInstanceWithResultCommandResponse result =
+          client
+              .newCreateProcessInstanceCommand()
+              .processDefinitionKey(correlationPoint.bpmnProcessId())
               .version(correlationPoint.version())
-              .tenantId(activatedElement.tenantId())
               .variables(extractedVariables)
               .withResult()
+              .tenantId(activatedElement.tenantId())
               .send()
               .join();
 
       LOG.info(
-          "Created a process instance with key {} synchronously, received result variables",
-          result.getProcessInstanceKey());
+          "Created a process instance with id {} synchronously, received result variables",
+          result.getProcessInstanceId());
       return new CorrelationResult.Success.ProcessInstanceCreatedWithResult(
           activatedElement.element(),
-          result.getProcessInstanceKey(),
-          result.getTenantId(),
-          result.getVariablesAsMap());
+          result.getProcessInstanceId(),
+          activatedElement.tenantId(),
+          parseVariables(result.getVariables()));
 
     } catch (ClientStatusException e1) {
       LOG.info("Failed to create process instance with result: ", e1);
       return new CorrelationResult.Failure.ZeebeClientStatus(
           e1.getStatus().getCode().name(), e1.getMessage());
     } catch (Throwable e2) {
-      return new Other(e2);
+      return new CorrelationResult.Failure.Other(e2);
     }
   }
 
   protected CorrelationResult triggerMessageStartEvent(
       InboundConnectorElement activatedElement,
       MessageStartEventCorrelationPoint correlationPoint,
-      Object variables,
-      String messageId) {
+      Object variables) {
 
     var correlationKey =
         extractCorrelationKey(correlationPoint.correlationKeyExpression(), variables);
 
-    if (activatedElement.synchronousResponse()) {
-      return correlateMessageSynchronously(
-          activatedElement, correlationPoint.messageName(), variables, correlationKey.orElse(""));
-    }
-
-    return publishMessage(
-        activatedElement,
-        correlationPoint.messageName(),
-        variables,
-        messageId,
-        correlationPoint.timeToLive(),
-        correlationKey.orElse(""));
+    return correlateMessage(
+        activatedElement, correlationPoint.messageName(), variables, correlationKey.orElse(""));
   }
 
   protected CorrelationResult triggerMessage(
       InboundConnectorElement activatedElement,
       MessageCorrelationPoint correlationPoint,
-      Object variables,
-      String messageId) {
+      Object variables) {
 
     var correlationKeyExpression = correlationPoint.correlationKeyExpression();
     var correlationKey = extractCorrelationKey(correlationKeyExpression, variables);
@@ -255,26 +210,16 @@ public class InboundCorrelationHandler {
           "Wasn't able to obtain correlation key for expression " + correlationKeyExpression, null);
     }
 
-    if (activatedElement.synchronousResponse()) {
-      return correlateMessageSynchronously(
-          activatedElement, correlationPoint.messageName(), variables, correlationKey.get());
-    }
-
-    return publishMessage(
-        activatedElement,
-        correlationPoint.messageName(),
-        variables,
-        messageId,
-        correlationPoint.timeToLive(),
-        correlationKey.get());
+    return correlateMessage(
+        activatedElement, correlationPoint.messageName(), variables, correlationKey.get());
   }
 
   /**
-   * Correlates a message synchronously using {@code newCorrelateMessageCommand}, waiting for the
-   * message to be correlated before returning. Returns a {@link
-   * CorrelationResult.Success.MessageCorrelated} with the process instance key on success.
+   * Correlates a message synchronously using {@code newMessageCorrelationCommand}. The engine does
+   * not report the correlated process instance, so the result only carries the message key and the
+   * requested tenant.
    */
-  private CorrelationResult correlateMessageSynchronously(
+  private CorrelationResult correlateMessage(
       InboundConnectorElement activatedElement,
       String messageName,
       Object variables,
@@ -286,80 +231,25 @@ public class InboundCorrelationHandler {
       return new CorrelationResult.Failure.InvalidInput(e.getMessage(), e);
     }
     try {
-      var step2 = camundaClient.newCorrelateMessageCommand().messageName(messageName);
-      var step3 =
-          correlationKey.isBlank()
-              ? step2.withoutCorrelationKey()
-              : step2.correlationKey(correlationKey);
-      step3.variables(extractedVariables).tenantId(activatedElement.tenantId());
-      CorrelateMessageResponse response = step3.send().join();
+      MessageCorrelationCommand.MessageCorrelationCommandStep1 command =
+          client.newMessageCorrelationCommand().messageName(messageName);
+      if (correlationKey != null && !correlationKey.isBlank()) {
+        command = command.correlationKey(correlationKey);
+      }
+      MessageCorrelationCommandResponse response =
+          command.variables(extractedVariables).tenantId(activatedElement.tenantId()).send().join();
 
-      LOG.info(
-          "Correlated message synchronously, process instance key: {}",
-          response.getProcessInstanceKey());
+      LOG.info("Correlated message, message key: {}", response.getMessageKey());
       return new CorrelationResult.Success.MessageCorrelated(
-          activatedElement.element(),
-          response.getProcessInstanceKey(),
-          response.getMessageKey(),
-          response.getTenantId());
+          activatedElement.element(), response.getMessageKey(), activatedElement.tenantId());
 
     } catch (ClientStatusException ex) {
-      LOG.info("Failed to correlate message synchronously: {}", ex.getMessage());
+      LOG.info("Failed to correlate message: {}", ex.getMessage());
       return new CorrelationResult.Failure.ZeebeClientStatus(
           ex.getStatus().getCode().name(), ex.getMessage());
     } catch (Exception ex) {
-      return new Failure.Other(ex);
+      return new CorrelationResult.Failure.Other(ex);
     }
-  }
-
-  private CorrelationResult publishMessage(
-      InboundConnectorElement activatedElement,
-      String messageName,
-      Object variables,
-      String messageId,
-      Duration timeToLive,
-      String correlationKey) {
-    Object extractedVariables = extractVariables(variables, activatedElement);
-    try {
-      checkVariablesSize(extractedVariables);
-    } catch (ConnectorInputException e) {
-      return new CorrelationResult.Failure.InvalidInput(e.getMessage(), e);
-    }
-    CorrelationResult result;
-    try {
-      var command =
-          camundaClient
-              .newPublishMessageCommand()
-              .messageName(messageName)
-              .correlationKey(correlationKey)
-              .messageId(messageId)
-              .tenantId(activatedElement.tenantId())
-              .variables(extractedVariables);
-      if (timeToLive != null) {
-        command.timeToLive(timeToLive);
-      } else {
-        command.timeToLive(defaultMessageTtl);
-      }
-      PublishMessageResponse response = command.send().join();
-
-      LOG.info("Published message with key: {}", response.getMessageKey());
-      result =
-          new CorrelationResult.Success.MessagePublished(
-              activatedElement.element(), response.getMessageKey(), response.getTenantId());
-    } catch (ClientStatusException ex) {
-      if (Status.ALREADY_EXISTS.getCode().equals(ex.getStatus().getCode())) {
-        result = new MessageAlreadyCorrelated(activatedElement.element());
-        LOG.debug("Message already correlated: {}", ex.getMessage());
-      } else {
-        LOG.info("Failed to publish message: {}", ex.getMessage());
-        result =
-            new CorrelationResult.Failure.ZeebeClientStatus(
-                ex.getStatus().getCode().name(), ex.getMessage());
-      }
-    } catch (Exception ex) {
-      result = new Failure.Other(ex);
-    }
-    return result;
   }
 
   private InboundConnectorElement findMatchingElement(
@@ -393,33 +283,18 @@ public class InboundCorrelationHandler {
 
   protected Object extractVariables(Object rawVariables, InboundConnectorElement definition) {
     return connectorResultHandler.createOutputVariables(
-        rawVariables,
-        definition.resultVariable(),
-        definition.resultExpression(),
-        definition.physicalTenantId());
+        rawVariables, definition.resultVariable(), definition.resultExpression());
   }
 
   private void checkVariablesSize(Object variables) {
     if (variables == null) return;
-    try {
-      InlineSizeGuard.check(objectMapper.writeValueAsBytes(variables).length);
-    } catch (JsonProcessingException e) {
-      throw new RuntimeException("Failed to serialize variables for size check", e);
-    }
+    InlineSizeGuard.check(objectMapper.writeValueAsBytes(variables).length);
   }
 
-  private String resolveMessageId(String messageIdExpression, String messageId, Object context) {
-    if (!Objects.isNull(messageIdExpression) && !messageIdExpression.isBlank()) {
-      try {
-        return feelExpressionEvaluator.evaluate(messageIdExpression, String.class, context);
-      } catch (Exception e) {
-        throw new ConnectorInputException(
-            "Message expression could not be evaluated: " + messageIdExpression, e);
-      }
-    } else if (!Objects.isNull(messageId)) {
-      return messageId;
-    } else {
-      return "";
+  private Map<String, Object> parseVariables(String variables) {
+    if (variables == null || variables.isBlank()) {
+      return Map.of();
     }
+    return objectMapper.readValue(variables, new TypeReference<Map<String, Object>>() {});
   }
 }

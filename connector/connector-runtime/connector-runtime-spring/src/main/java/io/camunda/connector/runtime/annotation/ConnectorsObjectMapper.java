@@ -25,9 +25,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 /**
  * Qualifier annotation for the Connectors-specific ObjectMapper bean.
  *
- * <p>This ObjectMapper includes FEEL support, document modules, and intrinsic functions configured
- * for Camunda Connectors. Use this annotation when injecting ObjectMapper in connector-related
- * code.
+ * <p>This ObjectMapper includes Expression support, document modules, and intrinsic functions
+ * configured for Camunda Connectors. Use this annotation when injecting ObjectMapper in
+ * connector-related code.
  */
 @Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)

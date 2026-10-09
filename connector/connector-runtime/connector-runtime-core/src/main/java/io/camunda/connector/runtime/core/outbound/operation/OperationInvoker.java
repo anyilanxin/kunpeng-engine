@@ -16,22 +16,19 @@
  */
 package io.camunda.connector.runtime.core.outbound.operation;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonPointer;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.camunda.connector.api.error.ConnectorInputException;
 import io.camunda.connector.api.outbound.OutboundConnectorContext;
 import io.camunda.connector.api.validation.ValidationProvider;
 import io.camunda.connector.runtime.core.outbound.JobHandlerContext;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.core.JsonPointer;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 public class OperationInvoker {
   private static final Logger log = LoggerFactory.getLogger(OperationInvoker.class);
@@ -125,22 +122,12 @@ public class OperationInvoker {
   private Object readValueAs(
       JsonNode jsonNode, JsonPointer jsonPointer, Type type, ObjectMapper mapper) {
     JsonNode node = jsonNode.at(jsonPointer);
-
     JavaType javaType = mapper.getTypeFactory().constructType(type);
-
-    try (JsonParser parser = node.traverse(mapper)) {
-      return mapper.readValue(parser, javaType);
-    } catch (IOException ex) {
-      throw new RuntimeException(ex);
-    }
+    return mapper.treeToValue(node, javaType);
   }
 
   private JsonNode readJsonAsTree(String json, ObjectMapper mapper) {
-    try {
-      return mapper.readTree(json);
-    } catch (JsonProcessingException e) {
-      throw new RuntimeException(e);
-    }
+    return mapper.readTree(json);
   }
 
   private Object invokeMethod(Object connectorInstance, Object[] args) {

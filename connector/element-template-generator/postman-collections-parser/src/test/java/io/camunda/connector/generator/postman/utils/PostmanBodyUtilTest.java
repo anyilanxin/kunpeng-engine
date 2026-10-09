@@ -18,7 +18,7 @@ package io.camunda.connector.generator.postman.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import io.camunda.connector.generator.dsl.http.HttpOperationProperty.Target;
 import io.camunda.connector.generator.postman.model.PostmanCollectionV210.Item.Endpoint;
 import io.camunda.connector.generator.postman.model.PostmanCollectionV210.Item.Endpoint.Request;

@@ -16,7 +16,6 @@
  */
 package io.camunda.connector.validator.rule;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.camunda.connector.validator.core.ElementTemplate;
 import io.camunda.connector.validator.core.Finding;
 import io.camunda.connector.validator.core.MultiFileRule;
@@ -27,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import tools.jackson.databind.JsonNode;
 
 /**
  * For each {@code .../element-templates/versioned/<base>-<N>.json}, the file's {@code version}

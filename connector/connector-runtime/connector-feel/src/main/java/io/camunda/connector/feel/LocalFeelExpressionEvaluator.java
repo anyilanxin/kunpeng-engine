@@ -16,59 +16,47 @@
  */
 package io.camunda.connector.feel;
 
-import static io.camunda.connector.feel.JacksonSupport.MAP_TYPE_REFERENCE;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.module.scala.DefaultScalaModule$;
-import io.camunda.connector.document.jackson.JacksonModuleDocumentSerializer;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import com.alibaba.qlexpress4.Express4Runner;
+import com.alibaba.qlexpress4.InitOptions;
+import com.alibaba.qlexpress4.QLOptions;
+import io.camunda.connector.feel.function.QLFunction;
 import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
-import org.camunda.feel.FeelEngine;
-import org.camunda.feel.impl.JavaValueMapper;
-import org.camunda.feel.impl.SpiServiceLoader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import scala.collection.Iterable;
-import scala.jdk.javaapi.CollectionConverters;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.databind.cfg.DateTimeFeature;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Local implementation of {@link FeelExpressionEvaluator} that uses the embedded FEEL engine for
- * expression evaluation. This is the default implementation for scenarios where cluster-based
+ * Local implementation of {@link FeelExpressionEvaluator} that uses the embedded QLExpress engine
+ * for expression evaluation. This is the default implementation for scenarios where cluster-based
  * evaluation is not needed.
  */
 public class LocalFeelExpressionEvaluator implements FeelExpressionEvaluator {
 
-  private static final Logger LOG = LoggerFactory.getLogger(LocalFeelExpressionEvaluator.class);
-  private final FeelEngine feelEngine;
+  /**
+   * QLExpress rejects field access on a missing variable by default, while Expression result
+   * expressions rely on missing paths evaluating to null (e.g. {@code response.unknownField}).
+   */
+  private static final QLOptions QL_OPTIONS = QLOptions.builder().avoidNullPointer(true).build();
+
   private final ObjectMapper objectMapper;
+  private final Express4Runner express4Runner;
 
   public LocalFeelExpressionEvaluator() {
-    this.objectMapper =
-        new ObjectMapper()
-            .registerModule(DefaultScalaModule$.MODULE$)
-            .registerModule(new JavaTimeModule())
-            .registerModule(new Jdk8Module())
-            .registerModule(new JacksonModuleDocumentSerializer())
+    objectMapper =
+        JsonMapper.builder()
             .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
-            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-            .disable(SerializationFeature.WRITE_DURATIONS_AS_TIMESTAMPS);
-
-    this.feelEngine =
-        new FeelEngine.Builder()
-            .customValueMapper(new JavaValueMapper())
-            .functionProvider(SpiServiceLoader.loadFunctionProvider())
-            .customValueMapper(new CustomValueMapper(objectMapper))
+            .disable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
+            .disable(DateTimeFeature.WRITE_DURATIONS_AS_TIMESTAMPS)
             .build();
+
+    express4Runner = new Express4Runner(InitOptions.DEFAULT_OPTIONS);
+    for (final QLFunction function : FeelConnectorFunctionProvider.FUNCTIONS) {
+      express4Runner.addFunction(function.getSignature(), function);
+    }
   }
 
   private static String trimExpression(final String expression) {
@@ -79,81 +67,28 @@ public class LocalFeelExpressionEvaluator implements FeelExpressionEvaluator {
     return feelExpression.trim();
   }
 
-  private static scala.collection.immutable.Map<String, Object> toScalaMap(
-      final Map<String, Object> responseMap) {
-    final HashMap<String, Object> context = new HashMap<>(responseMap);
-    return scala.collection.immutable.Map.from(CollectionConverters.asScala(context));
-  }
-
-  private Optional<Map<String, Object>> tryConvertToMap(Object o) {
-    try {
-      return Optional.of(sanitizeScalaOutput(objectMapper.convertValue(o, MAP_TYPE_REFERENCE)));
-    } catch (IllegalArgumentException ex) {
-      LOG.warn(ex.getMessage(), ex);
-      return Optional.empty();
-    }
-  }
-
-  @SuppressWarnings("unchecked")
-  public <T> T sanitizeScalaOutput(T output) {
-    return switch (output) {
-      case scala.collection.Map<?, ?> scalaMap ->
-          (T)
-              CollectionConverters.asJava(scalaMap).entrySet().stream()
-                  .collect(
-                      HashMap::new,
-                      (m, v) -> m.put(v.getKey(), sanitizeScalaOutput(v.getValue())),
-                      HashMap::putAll);
-      case Map<?, ?> javaMap ->
-          (T)
-              javaMap.entrySet().stream()
-                  .collect(
-                      HashMap::new,
-                      (m, e) -> m.put(e.getKey(), sanitizeScalaOutput(e.getValue())),
-                      HashMap::putAll);
-      case Iterable<?> scalaIterable ->
-          (T)
-              StreamSupport.stream(CollectionConverters.asJava(scalaIterable).spliterator(), false)
-                  .map(this::sanitizeScalaOutput)
-                  .collect(Collectors.toList());
-      case null, default -> output;
-    };
-  }
-
   @Override
   @SuppressWarnings("unchecked")
   public <T> T evaluate(final String expression, final Object... variables) {
     try {
       return (T) evaluateInternal(expression, variables);
-    } catch (Exception e) {
+    } catch (final Exception e) {
       throw wrapEvaluationException(e, expression, variables);
     }
   }
 
   @Override
   public <T> T evaluate(final String expression, final Class<T> clazz, final Object... variables) {
-    Function<JsonNode, T> converter =
-        (JsonNode jsonNode) -> {
-          try {
-            return objectMapper.treeToValue(jsonNode, clazz);
-          } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-          }
-        };
-    var type = objectMapper.getTypeFactory().constructType(clazz);
+    final Function<JsonNode, T> converter =
+        (final JsonNode jsonNode) -> objectMapper.treeToValue(jsonNode, clazz);
+    final var type = objectMapper.getTypeFactory().constructType(clazz);
     return evaluateAndConvert(expression, type, converter, variables);
   }
 
   @Override
   public <T> T evaluate(final String expression, final JavaType clazz, final Object... variables) {
-    Function<JsonNode, T> converter =
-        (JsonNode jsonNode) -> {
-          try {
-            return objectMapper.treeToValue(jsonNode, clazz);
-          } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-          }
-        };
+    final Function<JsonNode, T> converter =
+        (final JsonNode jsonNode) -> objectMapper.treeToValue(jsonNode, clazz);
     return evaluateAndConvert(expression, clazz, converter, variables);
   }
 
@@ -161,72 +96,57 @@ public class LocalFeelExpressionEvaluator implements FeelExpressionEvaluator {
   private <T> T evaluateAndConvert(
       final String expression,
       final JavaType clazz,
-      Function<JsonNode, T> converter,
+      final Function<JsonNode, T> converter,
       final Object... variables) {
 
-    Object result = evaluate(expression, variables);
-    JsonNode jsonNode = objectMapper.convertValue(result, JsonNode.class);
+    final Object result = evaluate(expression, variables);
+    final JsonNode jsonNode = objectMapper.convertValue(result, JsonNode.class);
 
     try {
       if (clazz.getRawClass().equals(String.class) && jsonNode.isObject()) {
         return (T) objectMapper.writeValueAsString(jsonNode);
       } else {
-        return sanitizeScalaOutput(converter.apply(jsonNode));
+        return converter.apply(jsonNode);
       }
-    } catch (Exception e) {
+    } catch (final Exception e) {
       throw new FeelEngineWrapperException(
-          "Failed to convert FEEL evaluation result to the target type", expression, variables, e);
+          "Failed to convert Expression evaluation result to the target type",
+          expression,
+          variables,
+          e);
     }
   }
 
   @Override
   public String evaluateToJson(final String expression, final Object... variables) {
     try {
-      var result = evaluateInternal(expression, variables);
+      final var result = evaluateInternal(expression, variables);
       if (result != null) {
         return resultToJson(result);
-      } else return null;
-    } catch (Exception e) {
+      } else {
+        return null;
+      }
+    } catch (final Exception e) {
       throw wrapEvaluationException(e, expression, variables);
     }
   }
 
-  /**
-   * feel-engine's cooperative cancellation ({@code FeelInterpreter.eval}) checks {@code
-   * Thread.interrupted()} on every AST node and throws a bare, message-less {@link
-   * InterruptedException} when the job-handling thread was interrupted (e.g. runtime shutdown while
-   * a job was in flight). Wrapping it like any other evaluation failure produces a misleading
-   * "Reason: null" incident, so it is special-cased here with a clear reason and the thread's
-   * interrupt status is restored for callers further up the stack to observe.
-   */
   private static FeelEngineWrapperException wrapEvaluationException(
       final Exception e, final String expression, final Object[] variables) {
-    if (e instanceof InterruptedException) {
-      Thread.currentThread().interrupt();
-      return new FeelEngineWrapperException(
-          "the evaluating thread was interrupted, likely because the connector runtime is shutting down",
-          expression,
-          variables,
-          e);
-    }
     return new FeelEngineWrapperException(e.getMessage(), expression, variables, e);
   }
 
   private Object evaluateInternal(final String expression, final Object[] variables) {
-    var variablesAsMap = FeelEngineWrapperUtil.mergeMapVariables(objectMapper, variables);
-    var variablesAsMapAsScalaMap = toScalaMap(variablesAsMap);
-    var result = feelEngine.evalExpression(trimExpression(expression), variablesAsMapAsScalaMap);
-    if (result.isRight()) {
-      return result.right().get();
-    } else {
-      throw new RuntimeException(result.left().get().message());
-    }
+    final var variablesAsMap = FeelEngineWrapperUtil.mergeMapVariables(objectMapper, variables);
+    return express4Runner
+        .execute(trimExpression(expression), variablesAsMap, QL_OPTIONS)
+        .getResult();
   }
 
   private String resultToJson(final Object result) {
     try {
       return objectMapper.writeValueAsString(result);
-    } catch (final JsonProcessingException e) {
+    } catch (final JacksonException e) {
       throw new RuntimeException(
           "The output expression result cannot be parsed as JSON: " + result, e);
     }

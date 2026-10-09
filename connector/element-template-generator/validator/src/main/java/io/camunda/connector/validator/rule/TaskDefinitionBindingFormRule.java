@@ -16,13 +16,13 @@
  */
 package io.camunda.connector.validator.rule;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.camunda.connector.validator.core.ElementTemplate;
 import io.camunda.connector.validator.core.Finding;
 import io.camunda.connector.validator.core.Rule;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import tools.jackson.databind.JsonNode;
 
 /**
  * The legacy binding type {@code zeebe:taskDefinition:type} must not be used; the canonical form is

@@ -16,9 +16,9 @@
  */
 package io.camunda.connector.runtime.instances.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.function.Supplier;
+import tools.jackson.core.type.TypeReference;
 
 public interface InstanceForwardingRouter {
   /**

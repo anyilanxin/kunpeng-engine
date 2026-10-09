@@ -18,9 +18,9 @@ package io.camunda.connector.feel.jackson;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
@@ -31,12 +31,10 @@ import org.junit.jupiter.api.Test;
 public class FeelSupplierDeserializerTest {
 
   private final ObjectMapper mapper =
-      new ObjectMapper()
-          .registerModule(new JacksonModuleFeelFunction())
-          .registerModule(new JavaTimeModule());
+      JsonMapper.builder().addModule(new JacksonModuleFeelFunction()).build();
 
   @Test
-  void feelSupplierDeserialization_objectResult() throws JsonProcessingException {
+  void feelSupplierDeserialization_objectResult() throws JacksonException {
     // given
     String json =
         """
@@ -53,7 +51,7 @@ public class FeelSupplierDeserializerTest {
   }
 
   @Test
-  void feelSupplierDeserialization_stringResult() throws JsonProcessingException {
+  void feelSupplierDeserialization_stringResult() throws JacksonException {
     // given
     String json =
         """
@@ -69,7 +67,7 @@ public class FeelSupplierDeserializerTest {
   }
 
   @Test
-  void feelSupplierDeserialization_booleanResult() throws JsonProcessingException {
+  void feelSupplierDeserialization_booleanResult() throws JacksonException {
     // given
     String json =
         """
@@ -85,7 +83,7 @@ public class FeelSupplierDeserializerTest {
   }
 
   @Test
-  void feelSupplierDeserialization_integerResult() throws JsonProcessingException {
+  void feelSupplierDeserialization_integerResult() throws JacksonException {
     // given
     String json =
         """
@@ -101,7 +99,7 @@ public class FeelSupplierDeserializerTest {
   }
 
   @Test
-  void feelSupplierDeserialization_nullResult() throws JsonProcessingException {
+  void feelSupplierDeserialization_nullResult() throws JacksonException {
     // given
     String json =
         """
@@ -117,7 +115,7 @@ public class FeelSupplierDeserializerTest {
   }
 
   @Test
-  void feelSupplierDeserialization_listResult() throws JsonProcessingException {
+  void feelSupplierDeserialization_listResult() throws JacksonException {
     // given
     String json =
         """
@@ -133,7 +131,7 @@ public class FeelSupplierDeserializerTest {
   }
 
   @Test
-  void feelSupplierDeserialization_mapResult() throws JsonProcessingException {
+  void feelSupplierDeserialization_mapResult() throws JacksonException {
     // given
     String json =
         """
@@ -175,7 +173,8 @@ public class FeelSupplierDeserializerTest {
     TargetTypeString targetType =
         FeelContextAwareObjectReader.of(mapper)
             .withStaticContext(context)
-            .readValue(json, TargetTypeString.class);
+            .forType(TargetTypeString.class)
+            .readValue(json);
 
     // then
     String result = targetType.supplier().get();
@@ -184,14 +183,19 @@ public class FeelSupplierDeserializerTest {
 
   @Test
   void feelSupplierDeserialization_java8Time() throws IOException {
-    // given
+    // given: the QL dialect has no date()/string() functions, so a LocalDate is injected
+    // through the reader context instead
     var json =
         """
-        { "supplier": "= string(date(2021,1,1))" }
+        { "supplier": "= d" }
         """;
 
     // when
-    TargetTypeJava8Time targetType = mapper.readValue(json, TargetTypeJava8Time.class);
+    TargetTypeJava8Time targetType =
+        FeelContextAwareObjectReader.of(mapper)
+            .withStaticContext(Map.of("d", LocalDate.of(2021, 1, 1)))
+            .forType(TargetTypeJava8Time.class)
+            .readValue(json);
 
     // then
     LocalDate result = targetType.supplier().get();

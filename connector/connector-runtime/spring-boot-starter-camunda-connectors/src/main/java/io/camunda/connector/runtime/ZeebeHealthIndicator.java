@@ -16,11 +16,11 @@
  */
 package io.camunda.connector.runtime;
 
-import io.camunda.client.CamundaClient;
-import io.camunda.client.api.response.BrokerInfo;
-import io.camunda.client.api.response.PartitionBrokerHealth;
-import io.camunda.client.api.response.PartitionInfo;
-import io.camunda.client.api.response.Topology;
+import com.anyilanxin.kunpeng.client.KunpengClient;
+import com.anyilanxin.kunpeng.client.command.BrokerInfo;
+import com.anyilanxin.kunpeng.client.command.PartitionBrokerHealth;
+import com.anyilanxin.kunpeng.client.command.PartitionInfo;
+import com.anyilanxin.kunpeng.client.command.topology.TopologyCommandResponse;
 import java.util.Collection;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -32,20 +32,20 @@ public class ZeebeHealthIndicator extends AbstractHealthIndicator {
 
   private static final Logger LOG = LoggerFactory.getLogger(ZeebeHealthIndicator.class);
 
-  private final CamundaClient camundaClient;
+  private final KunpengClient client;
 
-  public ZeebeHealthIndicator(CamundaClient camundaClient) {
-    this.camundaClient = camundaClient;
+  public ZeebeHealthIndicator(KunpengClient client) {
+    this.client = client;
   }
 
   @Override
   protected void doHealthCheck(Builder builder) {
-    final Topology topology;
+    final TopologyCommandResponse topology;
 
     try {
-      topology = camundaClient.newTopologyRequest().send().join();
+      topology = client.newTopologyCommand().send().join();
     } catch (Exception e) {
-      LOG.warn("Zeebe health check failed: could not retrieve topology", e);
+      LOG.warn("Kunpeng health check failed: could not retrieve topology", e);
       builder.down(e);
       return;
     }
@@ -61,7 +61,7 @@ public class ZeebeHealthIndicator extends AbstractHealthIndicator {
       builder.up().withDetails(details);
     } else {
       LOG.warn(
-          "Zeebe health check failed: numBrokers={}, anyPartitionHealthy={}",
+          "Kunpeng health check failed: numBrokers={}, anyPartitionHealthy={}",
           numBrokers,
           anyPartitionHealthy);
       builder.down().withDetails(details);

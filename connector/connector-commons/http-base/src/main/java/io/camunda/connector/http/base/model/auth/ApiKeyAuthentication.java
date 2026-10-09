@@ -7,7 +7,7 @@
 package io.camunda.connector.http.base.model.auth;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import io.camunda.connector.api.annotation.FEEL;
+import io.camunda.connector.api.annotation.Expression;
 import io.camunda.connector.generator.java.annotation.TemplateDiscriminatorProperty;
 import io.camunda.connector.generator.java.annotation.TemplateProperty;
 import io.camunda.connector.generator.java.annotation.TemplateSubType;
@@ -22,7 +22,7 @@ import jakarta.validation.constraints.NotNull;
     description = "Send API key in the header, or as parameter in the query parameters")
 @TemplateSubType(id = ApiKeyAuthentication.TYPE, label = "API key")
 public record ApiKeyAuthentication(
-    @FEEL
+    @Expression
         @NotNull @TemplateProperty(
             group = "authentication",
             type = TemplateProperty.PropertyType.Dropdown,
@@ -33,8 +33,9 @@ public record ApiKeyAuthentication(
             },
             description = "Choose type: Send API key in header or as query parameter.")
         ApiKeyLocation apiKeyLocation,
-    @FEEL @NotEmpty @TemplateProperty(group = "authentication", label = "API key name") String name,
-    @FEEL @NotEmpty @TemplateProperty(group = "authentication", label = "API key value")
+    @Expression @NotEmpty @TemplateProperty(group = "authentication", label = "API key name")
+        String name,
+    @Expression @NotEmpty @TemplateProperty(group = "authentication", label = "API key value")
         String value)
     implements Authentication {
   @TemplateProperty(ignore = true)

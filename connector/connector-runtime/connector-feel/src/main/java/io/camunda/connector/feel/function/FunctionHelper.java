@@ -16,55 +16,61 @@
  */
 package io.camunda.connector.feel.function;
 
-import java.util.List;
-import org.camunda.feel.syntaxtree.Val;
-import org.camunda.feel.syntaxtree.ValContext;
-import org.camunda.feel.syntaxtree.ValDayTimeDuration;
-import org.camunda.feel.syntaxtree.ValNumber;
-import org.camunda.feel.syntaxtree.ValString;
+import com.alibaba.qlexpress4.runtime.Parameters;
+import java.time.Duration;
+import java.util.Map;
 
-/** Shared type-safe argument helpers for Connector FEEL functions. */
+/** Shared type-safe argument helpers for Connector Expression functions. */
 class FunctionHelper {
 
   private FunctionHelper() {}
 
-  static String toString(List<Val> args, int index, String functionName, String paramName) {
-    Val value = args.get(index);
-    if (value instanceof ValString string) {
-      return string.value();
+  static String toString(Parameters parameters, int index, String functionName, String paramName) {
+    Object value = parameters.getValue(index);
+    if (value instanceof String string) {
+      return string;
     }
     throw new IllegalArgumentException(
         String.format("Parameter '%s' of function '%s' must be a String", paramName, functionName));
   }
 
-  static ValContext toContext(List<Val> args, int index, String functionName, String paramName) {
-    Val value = args.get(index);
-    if (value instanceof ValContext map) {
-      return map;
+  @SuppressWarnings("unchecked")
+  static Map<String, Object> toMap(
+      Parameters parameters, int index, String functionName, String paramName) {
+    Object value = parameters.getValue(index);
+    // qlexpress evaluates an empty map literal '{}' to null, meaning "no variables"
+    if (value == null) {
+      return Map.of();
+    }
+    if (value instanceof Map<?, ?> map) {
+      return (Map<String, Object>) map;
     }
     throw new IllegalArgumentException(
         String.format(
             "Parameter '%s' of function '%s' must be a Context", paramName, functionName));
   }
 
-  static ValNumber toNumber(List<Val> args, int index, String functionName, String paramName) {
-    Val value = args.get(index);
-    if (value instanceof ValNumber number) {
-      return number;
+  static double toNumber(Parameters parameters, int index, String functionName, String paramName) {
+    Object value = parameters.getValue(index);
+    if (value instanceof Number number) {
+      return number.doubleValue();
     }
     throw new IllegalArgumentException(
         String.format("Parameter '%s' of function '%s' must be a Number", paramName, functionName));
   }
 
-  static ValDayTimeDuration toDuration(
-      List<Val> args, int index, String functionName, String paramName) {
-    Val value = args.get(index);
-    if (value instanceof ValDayTimeDuration duration) {
+  static Duration toDuration(
+      Parameters parameters, int index, String functionName, String paramName) {
+    Object value = parameters.getValue(index);
+    if (value instanceof Duration duration) {
       return duration;
+    }
+    if (value instanceof Number millis) {
+      return Duration.ofMillis(millis.longValue());
     }
     throw new IllegalArgumentException(
         String.format(
-            "Parameter '%s' of function '%s' must be a day-time duration (e.g. duration(\"PT1S\"))",
+            "Parameter '%s' of function '%s' must be a duration or a number of milliseconds",
             paramName, functionName));
   }
 }

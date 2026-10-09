@@ -22,7 +22,7 @@ Include the job worker runtime utilities as maven dependency:
 You can create a job worker by wrapping a Connector function like this:
 
 ```java
-import io.camunda.client.CamundaClient;
+import com.anyilanxin.kunpeng.client.KunpengClient;
 import io.camunda.connector.slack.outbound.SlackFunction;
 import io.camunda.connector.runtime.jobworker.api.outbound.ConnectorJobHandler;
 import io.camunda.zeebe.client.ZeebeClient;
@@ -31,9 +31,9 @@ public class Main {
 
     public static void main(String[] args) {
 
-        var camundaClient = CamundaClient.newClientBuilder().build();
+        var client = KunpengClient.newClientBuilder().build();
 
-        camundaClient.newWorker()
+        client.newWorker()
                 .jobType("slack")
                 .handler(new ConnectorJobHandler(new SlackFunction()))
                 .name("SLACK")

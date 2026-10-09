@@ -18,9 +18,9 @@ package io.camunda.connector.generator.openapi;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.dataformat.yaml.YAMLFactory;
 import io.camunda.connector.generator.dsl.DropdownProperty;
 import io.camunda.connector.generator.dsl.ElementTemplate;
 import java.util.Arrays;
@@ -46,7 +46,7 @@ public class PublicSpecsTest {
   @MethodSource("getTestData")
   void scanPublicSpecs(
       String source, long expectedSuccessfulOperations, long expectedFailedOperations)
-      throws JsonProcessingException {
+      throws JacksonException {
     var generator = new OpenApiOutboundTemplateGenerator();
     var scanResult = generator.scan(new OpenApiGenerationSource(List.of(source)));
 

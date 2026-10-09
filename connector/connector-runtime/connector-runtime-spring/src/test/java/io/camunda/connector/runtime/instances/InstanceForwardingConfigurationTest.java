@@ -18,7 +18,7 @@ package io.camunda.connector.runtime.instances;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import io.camunda.connector.runtime.instances.service.ForwardingInstanceForwardingRouter;
 import io.camunda.connector.runtime.instances.service.InstanceForwardingRouter;
 import io.camunda.connector.runtime.instances.service.LocalInstanceForwardingRouter;

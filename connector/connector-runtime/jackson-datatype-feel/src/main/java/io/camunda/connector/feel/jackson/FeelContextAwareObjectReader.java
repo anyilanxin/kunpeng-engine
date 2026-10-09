@@ -16,19 +16,21 @@
  */
 package io.camunda.connector.feel.jackson;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
 import io.camunda.connector.feel.FeelExpressionEvaluator;
 import java.util.function.Supplier;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectReader;
 
 /**
- * Shortcut builder-like API for configuring {@link ObjectMapper} instances to contain a FEEL
- * context used for evaluating FEEL expressions via {@link
+ * Shortcut builder-like API for configuring {@link ObjectMapper} instances to contain a Expression
+ * context used for evaluating Expression expressions via {@link
  * io.camunda.connector.feel.jackson.JacksonModuleFeelFunction}
  */
 public class FeelContextAwareObjectReader {
 
-  /** Attribute name that is used to pass the FEEL context supplier object to the deserializer */
+  /**
+   * Attribute name that is used to pass the Expression context supplier object to the deserializer
+   */
   public static final String FEEL_CONTEXT_ATTRIBUTE = "FEEL_CONTEXT";
 
   /**
@@ -48,16 +50,17 @@ public class FeelContextAwareObjectReader {
   }
 
   /**
-   * Creates a new {@link ObjectMapper} that contains the given FEEL context supplier. This allows
-   * to resolve the FEEL context dynamically during deserialization.
+   * Creates a new {@link ObjectMapper} that contains the given Expression context supplier. This
+   * allows to resolve the Expression context dynamically during deserialization.
    */
   public ObjectReader withContextSupplier(Supplier<?> supplier) {
     return mapper.reader().withAttribute(FEEL_CONTEXT_ATTRIBUTE, supplier);
   }
 
   /**
-   * Creates a new {@link ObjectMapper} that contains the given FEEL context object. This is useful
-   * when the FEEL context is static and can be resolved during object reader creation, or in tests.
+   * Creates a new {@link ObjectMapper} that contains the given Expression context object. This is
+   * useful when the Expression context is static and can be resolved during object reader creation,
+   * or in tests.
    */
   public ObjectReader withStaticContext(Object context) {
     Supplier<?> supplier = () -> context;
@@ -65,7 +68,7 @@ public class FeelContextAwareObjectReader {
   }
 
   /**
-   * Returns a new {@link ObjectReader} carrying the given FEEL expression evaluator as an
+   * Returns a new {@link ObjectReader} carrying the given Expression expression evaluator as an
    * attribute. The {@code AbstractFeelDeserializer} picks it up and uses it instead of the
    * evaluator baked in at module-registration time. Jackson's {@link ObjectReader#withAttribute}
    * returns a new reader with the attribute added, so callers can chain with other {@code

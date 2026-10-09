@@ -16,75 +16,33 @@
  */
 package io.camunda.connector.runtime.core.testutil.response;
 
-import io.camunda.client.api.response.ProcessInstanceResult;
-import java.util.Collections;
+import com.anyilanxin.kunpeng.client.command.processinstance.CreateProcessInstanceWithResultCommandResponse;
 import java.util.Map;
-import java.util.Set;
+import tools.jackson.databind.ObjectMapper;
 
-public class ProcessInstanceResultDummy implements ProcessInstanceResult {
+public class ProcessInstanceResultDummy
+    implements CreateProcessInstanceWithResultCommandResponse {
+
+  private static final ObjectMapper MAPPER = new ObjectMapper();
 
   private final Map<String, Object> variables;
-
-  public ProcessInstanceResultDummy() {
-    this(Collections.emptyMap());
-  }
 
   public ProcessInstanceResultDummy(Map<String, Object> variables) {
     this.variables = variables;
   }
 
   @Override
-  public long getProcessDefinitionKey() {
-    return 0;
-  }
-
-  @Override
-  public String getBpmnProcessId() {
-    return null;
-  }
-
-  @Override
-  public int getVersion() {
-    return 0;
-  }
-
-  @Override
-  public long getProcessInstanceKey() {
+  public long getProcessInstanceId() {
     return 42L;
   }
 
   @Override
   public String getVariables() {
-    return "{}";
-  }
-
-  @Override
-  public Map<String, Object> getVariablesAsMap() {
-    return variables;
-  }
-
-  @Override
-  public <T> T getVariablesAsType(Class<T> variableType) {
-    return null;
-  }
-
-  @Override
-  public Object getVariable(String name) {
-    return variables.get(name);
+    return MAPPER.writeValueAsString(variables);
   }
 
   @Override
   public String getTenantId() {
     return "default";
-  }
-
-  @Override
-  public Set<String> getTags() {
-    return Set.of();
-  }
-
-  @Override
-  public String getBusinessId() {
-    return null;
   }
 }

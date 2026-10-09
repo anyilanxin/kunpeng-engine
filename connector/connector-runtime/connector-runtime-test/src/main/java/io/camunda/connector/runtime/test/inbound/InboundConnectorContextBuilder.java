@@ -16,30 +16,17 @@
  */
 package io.camunda.connector.runtime.test.inbound;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.camunda.connector.api.document.Document;
-import io.camunda.connector.api.document.DocumentCreationRequest;
-import io.camunda.connector.api.document.DocumentFactory;
-import io.camunda.connector.api.document.DocumentReference;
 import io.camunda.connector.api.inbound.*;
 import io.camunda.connector.api.inbound.CorrelationResult.Success;
 import io.camunda.connector.api.secret.SecretProvider;
 import io.camunda.connector.api.validation.ValidationProvider;
-import io.camunda.connector.document.jackson.JacksonModuleDocumentDeserializer;
-import io.camunda.connector.document.jackson.JacksonModuleDocumentDeserializer.DocumentModuleSettings;
-import io.camunda.connector.document.jackson.JacksonModuleDocumentSerializer;
 import io.camunda.connector.feel.jackson.JacksonModuleFeelFunction;
 import io.camunda.connector.jackson.ConnectorsObjectMapperSupplier;
 import io.camunda.connector.runtime.core.AbstractConnectorContext;
-import io.camunda.connector.runtime.core.document.DocumentFactoryImpl;
-import io.camunda.connector.runtime.core.document.store.InMemoryDocumentStore;
 import io.camunda.connector.runtime.core.inbound.InboundConnectorElement;
 import io.camunda.connector.runtime.core.inbound.InboundConnectorManagementContext;
 import io.camunda.connector.runtime.core.inbound.ProcessElementWithRuntimeData;
 import io.camunda.connector.runtime.core.inbound.details.InboundConnectorDetails.ValidInboundConnectorDetails;
-import io.camunda.connector.runtime.core.intrinsic.DefaultIntrinsicFunctionExecutor;
 import io.camunda.connector.runtime.core.secret.SecretFilter;
 import io.camunda.connector.runtime.core.validation.ValidationUtil;
 import io.camunda.connector.test.ConnectorContextTestUtil;
@@ -53,6 +40,9 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 /** Test helper class for creating an {@link InboundConnectorContext} with a fluent API. */
 public class InboundConnectorContextBuilder {
@@ -66,32 +56,13 @@ public class InboundConnectorContextBuilder {
   protected ValidationProvider validationProvider =
       ValidationUtil.discoverDefaultValidationProviderImplementation();
   protected CorrelationResult result;
-  protected DocumentFactory documentFactory =
-      new DocumentFactoryImpl(InMemoryDocumentStore.INSTANCE);
   protected ObjectMapper objectMapper = createObjectMapper();
 
   private ObjectMapper createObjectMapper() {
-    var copy = ConnectorsObjectMapperSupplier.getCopy();
-    var functionExecutor = new DefaultIntrinsicFunctionExecutor(copy);
-    var jacksonModuleDocumentDeserializer =
-        new JacksonModuleDocumentDeserializer(
-            documentFactory, functionExecutor, DocumentModuleSettings.create());
-    return copy.registerModules(
-        jacksonModuleDocumentDeserializer,
-        new JacksonModuleFeelFunction(),
-        new JacksonModuleDocumentSerializer());
-  }
-
-  private ObjectMapper createObjectMapper(DocumentFactory documentFactory) {
-    var copy = ConnectorsObjectMapperSupplier.getCopy();
-    var functionExecutor = new DefaultIntrinsicFunctionExecutor(copy);
-    var jacksonModuleDocumentDeserializer =
-        new JacksonModuleDocumentDeserializer(
-            documentFactory, functionExecutor, DocumentModuleSettings.create());
-    return copy.registerModules(
-        jacksonModuleDocumentDeserializer,
-        new JacksonModuleFeelFunction(),
-        new JacksonModuleDocumentSerializer());
+    return ConnectorsObjectMapperSupplier.getCopy()
+        .rebuild()
+        .addModule(new JacksonModuleFeelFunction())
+        .build();
   }
 
   public static InboundConnectorContextBuilder create() {
@@ -203,11 +174,6 @@ public class InboundConnectorContextBuilder {
     return this;
   }
 
-  public InboundConnectorContextBuilder documentFactory(DocumentFactory documentFactory) {
-    this.objectMapper = createObjectMapper(documentFactory);
-    return this;
-  }
-
   /**
    * Sets a custom {@link ObjectMapper} that is used to serialize and deserialize the properties. If
    * not provided, default mapper will be used.
@@ -233,14 +199,6 @@ public class InboundConnectorContextBuilder {
     return new TestInboundConnectorContext(secretProvider, validationProvider, result);
   }
 
-  /**
-   * @return the {@link io.camunda.connector.api.inbound.InboundIntermediateConnectorContext}
-   *     including all previously defined properties
-   */
-  public TestInboundIntermediateConnectorContext buildIntermediateConnectorContext() {
-    return new TestInboundIntermediateConnectorContext(secretProvider, validationProvider);
-  }
-
   public class TestInboundConnectorContext extends AbstractConnectorContext
       implements InboundConnectorContext, InboundConnectorManagementContext {
 
@@ -257,12 +215,8 @@ public class InboundConnectorContextBuilder {
       super(secretProvider, SecretFilter.allowAll(), validationProvider);
       this.result = result;
       this.activationTimestamp = System.currentTimeMillis();
-      try {
-        propertiesWithSecrets =
-            getSecretHandler().replaceSecrets(objectMapper.writeValueAsString(properties), null);
-      } catch (JsonProcessingException e) {
-        throw new RuntimeException(e);
-      }
+      propertiesWithSecrets =
+          getSecretHandler().replaceSecrets(objectMapper.writeValueAsString(properties), null);
     }
 
     protected void correlate(Object variables) {
@@ -302,7 +256,7 @@ public class InboundConnectorContextBuilder {
     public Map<String, Object> getProperties() {
       try {
         return objectMapper.readValue(propertiesWithSecrets, new TypeReference<>() {});
-      } catch (JsonProcessingException e) {
+      } catch (JacksonException e) {
         throw new RuntimeException(e);
       }
     }
@@ -315,7 +269,7 @@ public class InboundConnectorContextBuilder {
           getValidationProvider().validate(mappedObject);
         }
         return mappedObject;
-      } catch (JsonProcessingException e) {
+      } catch (JacksonException e) {
         throw new RuntimeException(e);
       }
     }
@@ -339,7 +293,6 @@ public class InboundConnectorContextBuilder {
       return correlatedEvents;
     }
 
-    @Override
     public Health getHealth() {
       return health;
     }
@@ -362,7 +315,6 @@ public class InboundConnectorContextBuilder {
       return null;
     }
 
-    @Override
     public Long getActivationTimestamp() {
       return activationTimestamp;
     }
@@ -370,30 +322,6 @@ public class InboundConnectorContextBuilder {
     @Override
     public void updateConnectorDetails(ValidInboundConnectorDetails connectorDetails) {
       // do nothing
-    }
-
-    @Override
-    public Document resolve(DocumentReference reference) {
-      return documentFactory.resolve(reference);
-    }
-
-    @Override
-    public Document create(DocumentCreationRequest request) {
-      return documentFactory.create(request);
-    }
-  }
-
-  public class TestInboundIntermediateConnectorContext extends TestInboundConnectorContext
-      implements InboundIntermediateConnectorContext {
-
-    protected TestInboundIntermediateConnectorContext(
-        SecretProvider secretProvider, ValidationProvider validationProvider) {
-      super(secretProvider, validationProvider, result);
-    }
-
-    @Override
-    public List<ProcessInstanceContext> getProcessInstanceContexts() {
-      return null;
     }
   }
 }

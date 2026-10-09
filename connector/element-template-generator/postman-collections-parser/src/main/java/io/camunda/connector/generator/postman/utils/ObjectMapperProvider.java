@@ -16,16 +16,18 @@
  */
 package io.camunda.connector.generator.postman.utils;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.MapperFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.MapperFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 public final class ObjectMapperProvider {
 
   private static final ObjectMapper INSTANCE =
-      new ObjectMapper()
-          .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-          .configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS, true);
+      JsonMapper.builder()
+          .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+          .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS)
+          .build();
 
   public static ObjectMapper getInstance() {
     return INSTANCE;

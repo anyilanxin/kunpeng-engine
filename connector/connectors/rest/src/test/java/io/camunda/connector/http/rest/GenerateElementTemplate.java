@@ -17,14 +17,14 @@
 package io.camunda.connector.http.rest;
 
 import io.camunda.connector.generator.java.ClassBasedTemplateGenerator;
-import org.testcontainers.shaded.com.fasterxml.jackson.core.JsonProcessingException;
-import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
+import io.camunda.connector.jackson.ConnectorsObjectMapperSupplier;
+import tools.jackson.core.JacksonException;
 
 public class GenerateElementTemplate {
 
-  public static void main(String[] args) throws JsonProcessingException {
+  public static void main(String[] args) throws JacksonException {
     System.out.println(
-        new ObjectMapper()
+        ConnectorsObjectMapperSupplier.getCopy()
             .writeValueAsString(
                 new ClassBasedTemplateGenerator().generate(HttpJsonFunction.class)));
   }

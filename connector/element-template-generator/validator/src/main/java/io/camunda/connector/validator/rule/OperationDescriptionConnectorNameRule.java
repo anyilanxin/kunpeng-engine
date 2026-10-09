@@ -16,7 +16,6 @@
  */
 package io.camunda.connector.validator.rule;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.camunda.connector.validator.core.ConnectorNameOverrides;
 import io.camunda.connector.validator.core.ElementTemplate;
 import io.camunda.connector.validator.core.Finding;
@@ -28,6 +27,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import tools.jackson.databind.JsonNode;
 
 /**
  * When a native operation (leaf step) declares a {@code description}, that description must

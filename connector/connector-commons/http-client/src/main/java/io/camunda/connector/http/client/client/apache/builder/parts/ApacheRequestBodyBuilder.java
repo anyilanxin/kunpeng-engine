@@ -20,17 +20,15 @@ import static org.apache.hc.core5.http.ContentType.MULTIPART_FORM_DATA;
 import static org.apache.hc.core5.http.HttpHeaders.CONTENT_TYPE;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.camunda.connector.api.document.Document;
 import io.camunda.connector.api.error.ConnectorException;
 import io.camunda.connector.http.client.HttpClientObjectMapperSupplier;
 import io.camunda.connector.http.client.model.HttpClientRequest;
-import io.camunda.connector.http.client.utils.DocumentHelper;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.apache.hc.client5.http.entity.mime.HttpMultipartMode;
+import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.io.entity.HttpEntities;
@@ -39,6 +37,8 @@ import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.apache.hc.core5.http.message.BasicNameValuePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Maps the request body of a {@link HttpClientRequest} to an Apache {@link ClassicRequestBuilder}.
@@ -50,11 +50,16 @@ public class ApacheRequestBodyBuilder implements ApacheRequestPartBuilder {
   public static final String EMPTY_BODY = "";
   public static final ObjectMapper mapperIgnoreNull =
       HttpClientObjectMapperSupplier.getCopy()
-          .setSerializationInclusion(JsonInclude.Include.NON_NULL);
+          .rebuild()
+          .changeDefaultPropertyInclusion(
+              _ ->
+                  JsonInclude.Value.construct(
+                      JsonInclude.Include.NON_NULL, JsonInclude.Include.NON_NULL))
+          .build();
   public static final ObjectMapper mapperSendNull = HttpClientObjectMapperSupplier.getCopy();
 
   @Override
-  public void build(ClassicRequestBuilder builder, HttpClientRequest request) {
+  public void build(final ClassicRequestBuilder builder, final HttpClientRequest request) {
     if (request.getMethod().supportsBody) {
       if (!request.hasBody()) {
         /**
@@ -67,7 +72,7 @@ public class ApacheRequestBodyBuilder implements ApacheRequestPartBuilder {
         return;
       }
 
-      if (request.getBody() instanceof Map<?, ?> body) {
+      if (request.getBody() instanceof final Map<?, ?> body) {
         tryGetContentType(request)
             .ifPresentOrElse(
                 contentType ->
@@ -80,10 +85,10 @@ public class ApacheRequestBodyBuilder implements ApacheRequestPartBuilder {
   }
 
   private HttpEntity createEntityForContentType(
-      ContentType contentType, Map<?, ?> body, HttpClientRequest request) {
-    HttpEntity entity;
+      final ContentType contentType, final Map<?, ?> body, final HttpClientRequest request) {
+    final HttpEntity entity;
     if (contentType.getMimeType().equalsIgnoreCase(MULTIPART_FORM_DATA.getMimeType())) {
-      entity = new DocumentAwareMultipartEntityBuilder(body, contentType).build();
+      entity = createMultipartEntity(contentType, body);
     } else if (contentType
         .getMimeType()
         .equalsIgnoreCase(ContentType.APPLICATION_FORM_URLENCODED.getMimeType())) {
@@ -94,18 +99,28 @@ public class ApacheRequestBodyBuilder implements ApacheRequestPartBuilder {
     return entity;
   }
 
-  private Optional<ContentType> tryGetContentType(HttpClientRequest request) {
+  private HttpEntity createMultipartEntity(final ContentType contentType, final Map<?, ?> body) {
+    final MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+    builder.setMode(HttpMultipartMode.LEGACY);
+    Optional.ofNullable(contentType.getParameter("boundary")).ifPresent(builder::setBoundary);
+    for (final Map.Entry<?, ?> entry : body.entrySet()) {
+      if (entry.getValue() != null) {
+        builder.addTextBody(
+            String.valueOf(entry.getKey()), String.valueOf(entry.getValue()), MULTIPART_FORM_DATA);
+      }
+    }
+    return builder.build();
+  }
+
+  private Optional<ContentType> tryGetContentType(final HttpClientRequest request) {
     return request.getHeader(CONTENT_TYPE).map(ContentType::parse);
   }
 
-  private HttpEntity createStringEntity(HttpClientRequest request) {
-    Object body = request.getBody();
-    if (body instanceof Map map) {
-      body = new DocumentHelper().parseDocumentsInBody(map, Document::asByteArray);
-    }
-    Optional<ContentType> contentType = tryGetContentType(request);
+  private HttpEntity createStringEntity(final HttpClientRequest request) {
+    final Object body = request.getBody();
+    final Optional<ContentType> contentType = tryGetContentType(request);
     try {
-      return body instanceof String s
+      return body instanceof final String s
           ? new StringEntity(
               s, contentType.orElse(ContentType.TEXT_PLAIN.withCharset(StandardCharsets.UTF_8)))
           : new StringEntity(
@@ -113,12 +128,12 @@ public class ApacheRequestBodyBuilder implements ApacheRequestPartBuilder {
                   ? mapperIgnoreNull.writeValueAsString(body)
                   : mapperSendNull.writeValueAsString(body),
               contentType.orElse(ContentType.APPLICATION_JSON.withCharset(StandardCharsets.UTF_8)));
-    } catch (JsonProcessingException e) {
+    } catch (final JacksonException e) {
       throw new ConnectorException("Failed to serialize request body:" + body, e);
     }
   }
 
-  private HttpEntity createUrlEncodedFormEntity(Map<?, ?> body) {
+  private HttpEntity createUrlEncodedFormEntity(final Map<?, ?> body) {
     return HttpEntities.createUrlEncoded(
         body.entrySet().stream()
             .map(

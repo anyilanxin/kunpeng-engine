@@ -16,7 +16,6 @@
  */
 package io.camunda.connector.validator.command;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.camunda.connector.validator.core.Finding;
 import io.camunda.connector.validator.core.MultiFileRule;
 import io.camunda.connector.validator.core.ReportPrinter;
@@ -58,6 +57,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import picocli.CommandLine;
+import tools.jackson.databind.JsonNode;
 
 @CommandLine.Command(
     name = "element-template-validator",

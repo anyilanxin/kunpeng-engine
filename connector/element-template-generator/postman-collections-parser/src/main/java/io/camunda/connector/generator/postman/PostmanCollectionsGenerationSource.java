@@ -16,9 +16,6 @@
  */
 package io.camunda.connector.generator.postman;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.camunda.connector.generator.postman.model.PostmanCollectionV210;
 import io.camunda.connector.generator.postman.utils.ObjectMapperProvider;
 import java.io.File;
@@ -33,6 +30,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.dataformat.yaml.YAMLFactory;
 
 public record PostmanCollectionsGenerationSource(
     PostmanCollectionV210 collection, Set<String> includeOperations) {
@@ -57,13 +57,12 @@ public record PostmanCollectionsGenerationSource(
                       try {
                         return ObjectMapperProvider.getInstance()
                             .readValue(pathOrContent, JsonNode.class);
-                      } catch (IOException e) {
+                      } catch (tools.jackson.core.JacksonException e) {
                         throw new IllegalArgumentException(
                             "Couldn't parse Postman Collection to v.2.1.0 standard", e);
                       }
                     } else if (isValidYAML(pathOrContent)) {
                       final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-                      mapper.findAndRegisterModules();
                       return mapper.readValue(pathOrContent, JsonNode.class);
                     }
                     final File postmanCollectionsFileJson;
@@ -109,10 +108,10 @@ public record PostmanCollectionsGenerationSource(
       }
 
       if (collection.items() == null || collection.items().isEmpty()) {
-        throw new IOException("Wasn't able to load items");
+        throw new IllegalArgumentException("Wasn't able to load items");
       }
       return collection;
-    } catch (IOException e) {
+    } catch (tools.jackson.core.JacksonException e) {
       throw new IllegalArgumentException(
           "Couldn't parse Postman Collection to v.2.1.0 standard", e);
     }
@@ -122,7 +121,7 @@ public record PostmanCollectionsGenerationSource(
     try {
       ObjectMapperProvider.getInstance().readTree(jsonInString);
       return true;
-    } catch (IOException e) {
+    } catch (tools.jackson.core.JacksonException e) {
       return false;
     }
   }
@@ -132,7 +131,7 @@ public record PostmanCollectionsGenerationSource(
       final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
       mapper.readTree(yamlString);
       return yamlString.contains("\n");
-    } catch (IOException e) {
+    } catch (tools.jackson.core.JacksonException e) {
       return false;
     }
   }

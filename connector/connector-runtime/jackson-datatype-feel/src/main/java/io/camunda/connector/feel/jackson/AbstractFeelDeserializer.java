@@ -16,38 +16,37 @@
  */
 package io.camunda.connector.feel.jackson;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import io.camunda.connector.feel.FeelEngineWrapperException;
 import io.camunda.connector.feel.FeelExpressionEvaluator;
 import io.camunda.connector.jackson.ConnectorsObjectMapperSupplier;
-import java.io.IOException;
 import java.util.function.Supplier;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.deser.std.StdDeserializer;
+import tools.jackson.databind.exc.MismatchedInputException;
 
 /**
- * Base Jackson deserializer for connector FEEL-backed values.
+ * Base Jackson deserializer for connector Expression-backed values.
  *
  * <p>Subclasses decide whether values are evaluated immediately during property binding or turned
  * into deferred runtime callbacks such as {@link java.util.function.Function} and {@link Supplier}.
  *
  * @param <T> the deserialized target type
  */
-public abstract class AbstractFeelDeserializer<T> extends StdDeserializer<T>
-    implements ContextualDeserializer {
+public abstract class AbstractFeelDeserializer<T> extends StdDeserializer<T> {
 
   /**
    * A blank object mapper object for use in inheriting classes.
    *
    * <p>NOTE: This object mapper does not preserve the original deserialization context nor is it
-   * aware of any registered modules beyond what's present in the default ObjectMapper. For example,
-   * jackson-datatype-document will not be registered. It should not be used to deserialize the
-   * final result. For final results, use the {@link DeserializationContext} object passed to {@link
-   * #doDeserialize(JsonNode, JsonNode, DeserializationContext)} instead.
+   * aware of any registered modules beyond what's present in the default ObjectMapper. It should
+   * not be used to deserialize the final result. For final results, use the {@link
+   * DeserializationContext} object passed to {@link #doDeserialize(JsonNode, JsonNode,
+   * DeserializationContext)} instead.
    */
   protected static final ObjectMapper BLANK_OBJECT_MAPPER =
       ConnectorsObjectMapperSupplier.getCopy();
@@ -60,24 +59,24 @@ public abstract class AbstractFeelDeserializer<T> extends StdDeserializer<T>
    *
    * <p>Strict mode ({@code false}) is used for deferred runtime callbacks such as {@link
    * java.util.function.Function} and {@link Supplier}. These callbacks are deserialized from
-   * explicit FEEL expressions and evaluated later against in-memory runtime data, which may include
-   * objects such as Documents. They must keep the evaluator configured by their Jackson module,
-   * usually local FEEL, because a remote evaluator cannot serialize or interpret those runtime
-   * objects reliably.
+   * explicit Expression expressions and evaluated later against in-memory runtime data, which may
+   * include objects such as Documents. They must keep the evaluator configured by their Jackson
+   * module, usually local Expression, because a remote evaluator cannot serialize or interpret
+   * those runtime objects reliably.
    *
    * <p>Relaxed mode ({@code true}) is used for regular connector properties, for example fields
-   * annotated with {@code @FEEL}. In this mode, the deserializer also accepts plain strings and
-   * JSON-like values, and a per-reader evaluator override may be applied.
+   * annotated with {@code @Expression}. In this mode, the deserializer also accepts plain strings
+   * and JSON-like values, and a per-reader evaluator override may be applied.
    */
   protected final boolean relaxed;
 
   /**
-   * Creates a new deserializer with the given FEEL expression evaluator.
+   * Creates a new deserializer with the given Expression expression evaluator.
    *
-   * @param evaluator the FEEL expression evaluator to use
+   * @param evaluator the Expression expression evaluator to use
    * @param relaxed if true, the deserializer will be triggered for any string value, even if not a
-   *     FEEL expression. if false, the deserializer will only be triggered for string values that
-   *     start with '=' (indicating a FEEL expression).
+   *     Expression expression. if false, the deserializer will only be triggered for string values
+   *     that start with '=' (indicating a Expression expression).
    */
   protected AbstractFeelDeserializer(FeelExpressionEvaluator evaluator, boolean relaxed) {
     super(String.class);
@@ -86,13 +85,15 @@ public abstract class AbstractFeelDeserializer<T> extends StdDeserializer<T>
   }
 
   @Override
-  public T deserialize(JsonParser parser, DeserializationContext context) throws IOException {
+  public T deserialize(JsonParser parser, DeserializationContext context) {
     JsonNode node = parser.readValueAsTree();
     if (node == null || node.isNull()) {
       return null;
     }
 
-    if (isFeelExpression(node.textValue()) || relaxed) {
+    // Jackson 3's textValue() throws on non-textual nodes (Jackson 2 returned null), so only
+    // textual nodes can carry the '=' Expression prefix
+    if ((node.isTextual() && isFeelExpression(node.textValue())) || relaxed) {
       var feelContextSupplier =
           context.getAttribute(FeelContextAwareObjectReader.FEEL_CONTEXT_ATTRIBUTE);
 
@@ -102,20 +103,22 @@ public abstract class AbstractFeelDeserializer<T> extends StdDeserializer<T>
       if (feelContextSupplier instanceof Supplier<?> supplier) {
         return doDeserialize(node, BLANK_OBJECT_MAPPER.valueToTree(supplier.get()), context);
       }
-      throw new IOException(
+      throw new IllegalArgumentException(
           "Attribute "
               + FeelContextAwareObjectReader.FEEL_CONTEXT_ATTRIBUTE
               + " must be a Supplier, but was: "
               + feelContextSupplier.getClass());
     }
-    throw new IOException(
-        "Invalid input: expected a FEEL expression (starting with '=') or a JSON object/array/etc. "
-            + "Property name: "
-            + parser.getParsingContext().getCurrentName());
+    throw MismatchedInputException.from(
+        parser,
+        (Class<?>) null,
+        "Invalid input: expected a Expression expression (starting with '=') or a JSON"
+            + " object/array/etc. Property name: "
+            + parser.currentName());
   }
 
   /**
-   * Checks whether the given value is an explicit FEEL expression.
+   * Checks whether the given value is an explicit Expression expression.
    *
    * @param value the textual value to inspect
    * @return {@code true} if the value starts with {@code =}
@@ -125,15 +128,15 @@ public abstract class AbstractFeelDeserializer<T> extends StdDeserializer<T>
   }
 
   /**
-   * Evaluates a FEEL expression and converts the result to the target type using the
+   * Evaluates a Expression expression and converts the result to the target type using the
    * deserialization context.
    *
    * @param ctx the deserialization context (used for type conversion to preserve registered
    *     modules)
-   * @param expression the FEEL expression to evaluate
+   * @param expression the Expression expression to evaluate
    * @param targetType the target type to convert the result to
    * @param variables the variables to use in evaluation
-   * @param <R> the converted FEEL expression result type
+   * @param <R> the converted Expression expression result type
    * @return the evaluation result converted to the target type
    */
   @SuppressWarnings("unchecked")
@@ -157,28 +160,29 @@ public abstract class AbstractFeelDeserializer<T> extends StdDeserializer<T>
         return (R) BLANK_OBJECT_MAPPER.writeValueAsString(jsonNode);
       }
       return ctx.readTreeAsValue(jsonNode, targetType);
-    } catch (IOException e) {
+    } catch (JacksonException e) {
       throw new FeelEngineWrapperException(
-          "Failed to convert FEEL evaluation result to the target type", expression, variables, e);
+          "Failed to convert Expression evaluation result to the target type",
+          expression,
+          variables,
+          e);
     }
   }
 
   /**
-   * Performs subclass-specific deserialization after the FEEL context has been resolved.
+   * Performs subclass-specific deserialization after the Expression context has been resolved.
    *
    * @param node the source JSON node
-   * @param feelContext the FEEL context available during evaluation
+   * @param feelContext the Expression context available during evaluation
    * @param deserializationContext the Jackson deserialization context
    * @return the deserialized value
-   * @throws IOException when deserialization fails
    */
   protected abstract T doDeserialize(
-      JsonNode node, JsonNode feelContext, DeserializationContext deserializationContext)
-      throws IOException;
+      JsonNode node, JsonNode feelContext, DeserializationContext deserializationContext);
 
   private FeelExpressionEvaluator resolveEvaluator(DeserializationContext ctx) {
     // Strict deserializers are used for deferred runtime callbacks like Function/Supplier.
-    // They must keep their module-configured evaluator, usually local FEEL, because their
+    // They must keep their module-configured evaluator, usually local Expression, because their
     // inputs can contain in-memory runtime objects that a remote evaluator cannot serialize
     // or interpret correctly.
     if (!relaxed) {

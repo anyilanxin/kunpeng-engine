@@ -16,48 +16,51 @@
  */
 package io.camunda.connector.feel.jackson;
 
-import com.fasterxml.jackson.core.Version;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.databind.type.TypeFactory;
 import io.camunda.connector.feel.FeelExpressionEvaluator;
 import io.camunda.connector.feel.LocalFeelExpressionEvaluator;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import tools.jackson.core.Version;
+import tools.jackson.databind.module.SimpleModule;
+import tools.jackson.databind.type.TypeFactory;
 
 public class JacksonModuleFeelFunction extends SimpleModule {
 
   /**
-   * Evaluator used for {@code @FEEL}-annotated fields (via {@link FeelAnnotationIntrospector}).
-   * These fields typically represent connector properties that may reference cluster variables
-   * (e.g., {@code camunda.vars.env.*}), so this evaluator may use cluster-based evaluation.
+   * Evaluator used for {@code @Expression}-annotated fields (via {@link
+   * FeelAnnotationIntrospector}). These fields typically represent connector properties that may
+   * reference cluster variables (e.g., {@code camunda.vars.env.*}), so this evaluator may use
+   * cluster-based evaluation.
    */
   private final FeelExpressionEvaluator annotationEvaluator;
 
   /**
    * Evaluator used for {@link Function} and {@link Supplier} deserializers. These types represent
-   * runtime transformations that operate on in-process data (which may include Documents or other
-   * non-serializable objects), so this evaluator should use local evaluation.
+   * runtime transformations that operate on in-process data (which may include non-serializable
+   * objects), so this evaluator should use local evaluation.
    */
   private final FeelExpressionEvaluator functionEvaluator;
 
   /**
-   * Using this flag, the module can be configured to not process the {@code @FEEL} annotation. This
-   * can be useful in scenarios where only deserialization of Function/Supplier is needed, but not
-   * the annotation processing (e.g., to avoid interference with other modules). This way, we can
-   * use the same models with (inbound connectors) and without (outbound connectors) FEEL support.
+   * Using this flag, the module can be configured to not process the {@code @Expression}
+   * annotation. This can be useful in scenarios where only deserialization of Function/Supplier is
+   * needed, but not the annotation processing (e.g., to avoid interference with other modules).
+   * This way, we can use the same models with (inbound connectors) and without (outbound
+   * connectors) Expression support.
    */
   private final boolean processFEELAnnotation;
 
-  /** Creates a module using local FEEL engine for all evaluations. */
+  /** Creates a module using local Expression engine for all evaluations. */
   public JacksonModuleFeelFunction() {
     this(true, new LocalFeelExpressionEvaluator(), null);
   }
 
   /**
-   * Creates a module with the specified FEEL expression evaluator used for all evaluation types.
+   * Creates a module with the specified Expression expression evaluator used for all evaluation
+   * types.
    *
-   * @param processFEELAnnotation whether to process @FEEL annotations
-   * @param evaluator the FEEL expression evaluator to use for all evaluations
+   * @param processFEELAnnotation whether to process @Expression annotations
+   * @param evaluator the Expression expression evaluator to use for all evaluations
    */
   public JacksonModuleFeelFunction(
       boolean processFEELAnnotation, FeelExpressionEvaluator evaluator) {
@@ -68,12 +71,12 @@ public class JacksonModuleFeelFunction extends SimpleModule {
    * Creates a module with separate evaluators for annotation-driven and type-driven
    * deserialization.
    *
-   * @param processFEELAnnotation whether to process @FEEL annotations
-   * @param annotationEvaluator evaluator for {@code @FEEL}-annotated fields (may use cluster
+   * @param processFEELAnnotation whether to process @Expression annotations
+   * @param annotationEvaluator evaluator for {@code @Expression}-annotated fields (may use cluster
    *     evaluation for access to cluster variables)
    * @param functionEvaluator evaluator for {@link Function}/{@link Supplier} fields (should use
-   *     local evaluation to avoid serializing runtime objects like Documents). If null, defaults to
-   *     a local FEEL engine.
+   *     local evaluation to avoid serializing runtime objects). If null, defaults to a local
+   *     Expression engine.
    */
   public JacksonModuleFeelFunction(
       boolean processFEELAnnotation,

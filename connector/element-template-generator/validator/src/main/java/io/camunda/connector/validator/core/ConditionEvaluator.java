@@ -16,8 +16,8 @@
  */
 package io.camunda.connector.validator.core;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import java.util.Map;
+import tools.jackson.databind.JsonNode;
 
 /**
  * Evaluates an element-template property {@code condition} against an assignment of property

@@ -16,9 +16,9 @@
  */
 package io.camunda.connector.runtime.instances.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
+import tools.jackson.core.type.TypeReference;
 
 public interface InstanceForwardingService {
   <T> List<T> forward(HttpServletRequest request, TypeReference<T> responseType);

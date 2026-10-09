@@ -20,9 +20,6 @@ import static io.camunda.connector.generator.cli.ReturnCodes.GENERATION_FAILED;
 import static io.camunda.connector.generator.cli.ReturnCodes.INPUT_PREPARATION_FAILED;
 import static io.camunda.connector.generator.cli.ReturnCodes.SUCCESS;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.camunda.connector.generator.api.CliCompatibleTemplateGenerator;
 import io.camunda.connector.generator.api.CliCompatibleTemplateGenerator.ScanResult;
 import java.util.List;
@@ -30,6 +27,9 @@ import java.util.concurrent.Callable;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 import picocli.CommandLine.ParentCommand;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.dataformat.yaml.YAMLFactory;
 
 @Command(name = "scan")
 public class Scan implements Callable<Integer> {
@@ -71,7 +71,7 @@ public class Scan implements Callable<Integer> {
       var resultString = mapper.writeValueAsString(result);
       System.out.println(resultString);
       return SUCCESS.getCode();
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       System.err.println("Failed to serialize result: " + e.getMessage());
       return GENERATION_FAILED.getCode();
     }

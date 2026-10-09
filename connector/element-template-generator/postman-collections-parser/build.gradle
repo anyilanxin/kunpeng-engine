@@ -12,12 +12,12 @@ configure(jarInfo) {
 dependencies {
     implementation 'org.slf4j:slf4j-api'
     implementation project(':connector:connector-commons:http-base')
-    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'tools.jackson.core:jackson-databind'
     implementation 'org.apache.commons:commons-lang3'
     implementation project(':connector:element-template-generator:annotations')
-    implementation project(':connector:element-template-generator:core')
+    implementation project(':connector:element-template-generator:generator-core')
     implementation project(':connector:element-template-generator:http-dsl')
-    implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml'
+    implementation 'tools.jackson.dataformat:jackson-dataformat-yaml'
 
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation 'org.assertj:assertj-core'

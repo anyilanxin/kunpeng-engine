@@ -13,7 +13,7 @@ dependencies {
     compileOnly project(':connector:connector-sdk:core')
     compileOnly project(':connector:element-template-generator:annotations')
     compileOnly 'jakarta.validation:jakarta.validation-api'
-    compileOnly 'com.fasterxml.jackson.core:jackson-databind'
+    compileOnly 'tools.jackson.core:jackson-databind'
 
     implementation 'com.samskivert:jmustache'
     implementation 'org.apache.groovy:groovy-all'

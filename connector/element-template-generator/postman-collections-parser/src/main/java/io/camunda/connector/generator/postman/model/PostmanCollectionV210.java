@@ -17,8 +17,6 @@
 package io.camunda.connector.generator.postman.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
 import io.camunda.connector.generator.postman.model.PostmanCollectionV210.Item.Endpoint;
 import io.camunda.connector.generator.postman.model.PostmanCollectionV210.Item.Endpoint.Request.Method;
 import io.camunda.connector.generator.postman.model.PostmanCollectionV210.Item.Folder;
@@ -26,6 +24,8 @@ import io.camunda.connector.generator.postman.utils.ObjectMapperProvider;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JsonNode;
 
 public record PostmanCollectionV210(
     Info info,

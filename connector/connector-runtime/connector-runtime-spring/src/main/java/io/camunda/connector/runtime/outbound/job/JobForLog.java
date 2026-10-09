@@ -16,7 +16,7 @@
  */
 package io.camunda.connector.runtime.outbound.job;
 
-import io.camunda.client.api.response.ActivatedJob;
+import com.anyilanxin.kunpeng.client.command.job.ActivatedJob;
 import java.util.Map;
 
 record JobForLog(
@@ -33,10 +33,10 @@ record JobForLog(
         job.getKey(),
         job.getCustomHeaders(),
         job.getTenantId(),
-        job.getBpmnProcessId(),
-        job.getType(),
         job.getProcessDefinitionKey(),
+        job.getType(),
+        job.getProcessDefinitionId(),
         job.getProcessDefinitionVersion(),
-        job.getProcessInstanceKey());
+        job.getProcessInstanceId());
   }
 }

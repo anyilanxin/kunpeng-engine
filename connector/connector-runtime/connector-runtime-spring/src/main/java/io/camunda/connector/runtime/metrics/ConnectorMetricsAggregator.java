@@ -29,8 +29,8 @@ import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Queries a {@link MeterRegistry} and builds structured {@link OutboundConnectorMetrics} and {@link
- * InboundConnectorMetrics} aggregates, grouped by connector type.
+ * Queries a {@link MeterRegistry} and builds structured {@link OutboundConnectorMetrics}
+ * aggregates, grouped by connector type.
  */
 public final class ConnectorMetricsAggregator {
 
@@ -280,193 +280,6 @@ public final class ConnectorMetricsAggregator {
   }
 
   // -------------------------------------------------------------------------
-  // Inbound
-  // -------------------------------------------------------------------------
-
-  /**
-   * Returns inbound metrics for a specific connector type, or aggregated totals across all types
-   * when {@code connectorType} is {@code null} or blank. {@code runtimeId} identifies the runtime
-   * node that produced these metrics.
-   */
-  public static InboundConnectorMetrics inbound(
-      MeterRegistry registry, String connectorType, String runtimeId) {
-    return inbound(registry, connectorType, null, runtimeId);
-  }
-
-  /**
-   * @param physicalTenantIds when non-null and non-empty, restricts the sums to meters recorded for
-   *     one of these physical tenants (engines) — a distinct dimension from connector {@code type}.
-   *     {@code null}/empty sums across every physical tenant, matching the pre-existing behavior of
-   *     this method.
-   */
-  public static InboundConnectorMetrics inbound(
-      MeterRegistry registry,
-      String connectorType,
-      List<String> physicalTenantIds,
-      String runtimeId) {
-    if (registry == null) {
-      return new InboundConnectorMetrics(runtimeId, null, null, null);
-    }
-    if (connectorType != null && !connectorType.isBlank()) {
-      return buildInbound(registry, connectorType, physicalTenantIds, runtimeId);
-    }
-    return buildInboundAggregate(registry, physicalTenantIds, runtimeId);
-  }
-
-  private static InboundConnectorMetrics buildInboundAggregate(
-      MeterRegistry registry, List<String> physicalTenantIds, String runtimeId) {
-    Set<String> types = discoverTypes(registry, null, allInboundMetricNames());
-
-    long activated = 0, deactivated = 0, activationFailed = 0;
-    long triggered = 0, correlated = 0, correlationFailed = 0, activationConditionFailed = 0;
-    long maxLastActivated = 0L;
-    long maxLastTriggered = 0L;
-
-    for (String type : types) {
-      activated +=
-          sumCounterByAction(
-              registry,
-              ConnectorMetrics.Inbound.METRIC_NAME_ACTIVATIONS,
-              type,
-              ConnectorMetrics.Inbound.ACTION_ACTIVATED,
-              physicalTenantIds);
-      deactivated +=
-          sumCounterByAction(
-              registry,
-              ConnectorMetrics.Inbound.METRIC_NAME_ACTIVATIONS,
-              type,
-              ConnectorMetrics.Inbound.ACTION_DEACTIVATED,
-              physicalTenantIds);
-      activationFailed +=
-          sumCounterByAction(
-              registry,
-              ConnectorMetrics.Inbound.METRIC_NAME_ACTIVATIONS,
-              type,
-              ConnectorMetrics.Inbound.ACTION_ACTIVATION_FAILED,
-              physicalTenantIds);
-      triggered +=
-          sumCounterByAction(
-              registry,
-              ConnectorMetrics.Inbound.METRIC_NAME_TRIGGERS,
-              type,
-              ConnectorMetrics.Inbound.ACTION_TRIGGERED,
-              physicalTenantIds);
-      correlated +=
-          sumCounterByAction(
-              registry,
-              ConnectorMetrics.Inbound.METRIC_NAME_TRIGGERS,
-              type,
-              ConnectorMetrics.Inbound.ACTION_CORRELATED,
-              physicalTenantIds);
-      correlationFailed +=
-          sumCounterByAction(
-              registry,
-              ConnectorMetrics.Inbound.METRIC_NAME_TRIGGERS,
-              type,
-              ConnectorMetrics.Inbound.ACTION_CORRELATION_FAILED,
-              physicalTenantIds);
-      activationConditionFailed +=
-          sumCounterByAction(
-              registry,
-              ConnectorMetrics.Inbound.METRIC_NAME_TRIGGERS,
-              type,
-              ConnectorMetrics.Inbound.ACTION_ACTIVATION_CONDITION_FAILED,
-              physicalTenantIds);
-      maxLastActivated =
-          Math.max(
-              maxLastActivated,
-              readGauge(
-                  registry,
-                  ConnectorMetrics.Inbound.METRIC_NAME_LAST_ACTIVATED,
-                  type,
-                  physicalTenantIds));
-      maxLastTriggered =
-          Math.max(
-              maxLastTriggered,
-              readGauge(
-                  registry,
-                  ConnectorMetrics.Inbound.METRIC_NAME_LAST_TRIGGERED,
-                  type,
-                  physicalTenantIds));
-    }
-
-    return new InboundConnectorMetrics(
-        runtimeId,
-        new InboundConnectorMetrics.Runtime(readRuntimeUptime(registry)),
-        new InboundConnectorMetrics.Activation(
-            activated, deactivated, activationFailed, epochMsToInstant(maxLastActivated)),
-        new InboundConnectorMetrics.Trigger(
-            triggered,
-            correlated,
-            correlationFailed,
-            activationConditionFailed,
-            epochMsToInstant(maxLastTriggered)));
-  }
-
-  private static InboundConnectorMetrics buildInbound(
-      MeterRegistry registry, String type, List<String> physicalTenantIds, String runtimeId) {
-    return new InboundConnectorMetrics(
-        runtimeId,
-        new InboundConnectorMetrics.Runtime(readRuntimeUptime(registry)),
-        new InboundConnectorMetrics.Activation(
-            sumCounterByAction(
-                registry,
-                ConnectorMetrics.Inbound.METRIC_NAME_ACTIVATIONS,
-                type,
-                ConnectorMetrics.Inbound.ACTION_ACTIVATED,
-                physicalTenantIds),
-            sumCounterByAction(
-                registry,
-                ConnectorMetrics.Inbound.METRIC_NAME_ACTIVATIONS,
-                type,
-                ConnectorMetrics.Inbound.ACTION_DEACTIVATED,
-                physicalTenantIds),
-            sumCounterByAction(
-                registry,
-                ConnectorMetrics.Inbound.METRIC_NAME_ACTIVATIONS,
-                type,
-                ConnectorMetrics.Inbound.ACTION_ACTIVATION_FAILED,
-                physicalTenantIds),
-            epochMsToInstant(
-                readGauge(
-                    registry,
-                    ConnectorMetrics.Inbound.METRIC_NAME_LAST_ACTIVATED,
-                    type,
-                    physicalTenantIds))),
-        new InboundConnectorMetrics.Trigger(
-            sumCounterByAction(
-                registry,
-                ConnectorMetrics.Inbound.METRIC_NAME_TRIGGERS,
-                type,
-                ConnectorMetrics.Inbound.ACTION_TRIGGERED,
-                physicalTenantIds),
-            sumCounterByAction(
-                registry,
-                ConnectorMetrics.Inbound.METRIC_NAME_TRIGGERS,
-                type,
-                ConnectorMetrics.Inbound.ACTION_CORRELATED,
-                physicalTenantIds),
-            sumCounterByAction(
-                registry,
-                ConnectorMetrics.Inbound.METRIC_NAME_TRIGGERS,
-                type,
-                ConnectorMetrics.Inbound.ACTION_CORRELATION_FAILED,
-                physicalTenantIds),
-            sumCounterByAction(
-                registry,
-                ConnectorMetrics.Inbound.METRIC_NAME_TRIGGERS,
-                type,
-                ConnectorMetrics.Inbound.ACTION_ACTIVATION_CONDITION_FAILED,
-                physicalTenantIds),
-            epochMsToInstant(
-                readGauge(
-                    registry,
-                    ConnectorMetrics.Inbound.METRIC_NAME_LAST_TRIGGERED,
-                    type,
-                    physicalTenantIds))));
-  }
-
-  // -------------------------------------------------------------------------
   // Helpers
   // -------------------------------------------------------------------------
 
@@ -568,13 +381,5 @@ public final class ConnectorMetricsAggregator {
         ConnectorMetrics.Outbound.METRIC_NAME_WORKER_JOB_ACTIVATED,
         ConnectorMetrics.Outbound.METRIC_NAME_WORKER_JOB_HANDLED,
         ConnectorMetrics.Outbound.METRIC_NAME_WORKER_STREAM_INACTIVITY_RECREATED);
-  }
-
-  private static List<String> allInboundMetricNames() {
-    return List.of(
-        ConnectorMetrics.Inbound.METRIC_NAME_ACTIVATIONS,
-        ConnectorMetrics.Inbound.METRIC_NAME_TRIGGERS,
-        ConnectorMetrics.Inbound.METRIC_NAME_LAST_ACTIVATED,
-        ConnectorMetrics.Inbound.METRIC_NAME_LAST_TRIGGERED);
   }
 }

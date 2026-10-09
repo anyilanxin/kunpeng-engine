@@ -16,8 +16,6 @@
  */
 package io.camunda.connector.runtime.core.http;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -27,6 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 public class InstanceForwardingHttpClient {
   private final ObjectMapper objectMapper;

@@ -7,7 +7,7 @@
 package io.camunda.connector.http.base.model.auth;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import io.camunda.connector.api.annotation.FEEL;
+import io.camunda.connector.api.annotation.Expression;
 import io.camunda.connector.generator.java.annotation.TemplateProperty;
 import io.camunda.connector.generator.java.annotation.TemplateSubType;
 import jakarta.validation.constraints.NotEmpty;
@@ -15,8 +15,8 @@ import jakarta.validation.constraints.NotEmpty;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @TemplateSubType(id = BasicAuthentication.TYPE, label = "Basic")
 public record BasicAuthentication(
-    @FEEL @NotEmpty @TemplateProperty(group = "authentication") String username,
-    @FEEL
+    @Expression @NotEmpty @TemplateProperty(group = "authentication") String username,
+    @Expression
         @TemplateProperty(
             group = "authentication",
             constraints = @TemplateProperty.PropertyConstraints(notEmpty = true))

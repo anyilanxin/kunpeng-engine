@@ -16,7 +16,6 @@
  */
 package io.camunda.connector.generator.openapi.util;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.camunda.connector.generator.dsl.http.HttpOperationProperty;
 import io.camunda.connector.generator.dsl.http.HttpOperationProperty.Target;
 import io.camunda.connector.jackson.ConnectorsObjectMapperSupplier;
@@ -24,6 +23,7 @@ import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.parameters.Parameter;
 import java.util.*;
+import tools.jackson.core.JacksonException;
 
 /** Utility functions related to converting OpenAPI parameters to {@link HttpOperationProperty}s. */
 public class ParameterUtil {
@@ -186,7 +186,7 @@ public class ParameterUtil {
       return ConnectorsObjectMapperSupplier.getCopy()
           .writerWithDefaultPrettyPrinter()
           .writeValueAsString(data);
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       throw new RuntimeException(e);
     }
   }

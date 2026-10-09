@@ -16,23 +16,23 @@
  */
 package io.camunda.connector.http.client.utils;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.camunda.connector.http.client.HttpClientObjectMapperSupplier;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 public class JsonHelper {
 
   private static final ObjectMapper objectMapper = HttpClientObjectMapperSupplier.getCopy();
 
-  public static boolean isJsonStringValid(String jsonString) {
+  public static boolean isJsonStringValid(final String jsonString) {
     if (jsonString == null) {
       return false;
     }
     try {
-      JsonNode jsonNode = objectMapper.readTree(jsonString);
+      final JsonNode jsonNode = objectMapper.readTree(jsonString);
       return jsonNode.isObject() || jsonNode.isArray();
-    } catch (JsonProcessingException e) {
+    } catch (final JacksonException e) {
       return false;
     }
   }

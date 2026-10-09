@@ -19,67 +19,36 @@ package io.camunda.connector.feel.function;
 import static io.camunda.connector.feel.FeelConnectorFunctionProvider.BPMN_ERROR_TYPE_VALUE;
 import static io.camunda.connector.feel.FeelConnectorFunctionProvider.ERROR_TYPE_PROPERTY;
 
-import java.util.List;
-import org.camunda.feel.context.Context;
-import org.camunda.feel.context.JavaFunction;
-import org.camunda.feel.syntaxtree.ValContext;
-import scala.collection.immutable.Map;
-import scala.collection.immutable.Map$;
+import com.alibaba.qlexpress4.runtime.Parameters;
+import com.alibaba.qlexpress4.runtime.QContext;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-public class BpmnErrorFunction {
+/** Expression function {@code bpmnError(errorCode[, errorMessage[, variables]])}. */
+public class BpmnErrorFunction implements QLFunction {
 
   public static final String NAME = "bpmnError";
 
-  private static final List<String> ARGUMENTS_CODE_ONLY = List.of("errorCode");
-  private static final List<String> ARGUMENTS = List.of("errorCode", "errorMessage");
-  private static final List<String> ARGUMENTS_WITH_VARS =
-      List.of("errorCode", "errorMessage", "variables");
+  private static final String ERROR_CODE = "errorCode";
+  private static final String ERROR_MESSAGE = "errorMessage";
+  private static final String VARIABLES = "variables";
 
-  private static final JavaFunction CODE_ONLY =
-      new JavaFunction(
-          ARGUMENTS_CODE_ONLY,
-          args ->
-              new ValContext(
-                  new Context.StaticContext(
-                      new Map.Map2<>(
-                          ERROR_TYPE_PROPERTY,
-                          BPMN_ERROR_TYPE_VALUE,
-                          ARGUMENTS_CODE_ONLY.get(0),
-                          FunctionHelper.toString(args, 0, NAME, ARGUMENTS_CODE_ONLY.get(0))),
-                      Map$.MODULE$.empty())));
+  @Override
+  public Object call(final QContext qContext, final Parameters parameters) throws Throwable {
+    final Map<String, Object> result = new LinkedHashMap<>();
+    result.put(ERROR_TYPE_PROPERTY, BPMN_ERROR_TYPE_VALUE);
+    result.put(ERROR_CODE, FunctionHelper.toString(parameters, 0, NAME, ERROR_CODE));
+    if (parameters.size() > 1) {
+      result.put(ERROR_MESSAGE, FunctionHelper.toString(parameters, 1, NAME, ERROR_MESSAGE));
+    }
+    if (parameters.size() > 2) {
+      result.put(VARIABLES, FunctionHelper.toMap(parameters, 2, NAME, VARIABLES));
+    }
+    return result;
+  }
 
-  private static final JavaFunction WITH_CODE_AND_MESSAGE =
-      new JavaFunction(
-          ARGUMENTS,
-          args ->
-              new ValContext(
-                  new Context.StaticContext(
-                      new Map.Map3<>(
-                          ERROR_TYPE_PROPERTY,
-                          BPMN_ERROR_TYPE_VALUE,
-                          ARGUMENTS.get(0),
-                          FunctionHelper.toString(args, 0, NAME, ARGUMENTS.get(0)),
-                          ARGUMENTS.get(1),
-                          FunctionHelper.toString(args, 1, NAME, ARGUMENTS.get(1))),
-                      Map$.MODULE$.empty())));
-
-  private static final JavaFunction WITH_VARS =
-      new JavaFunction(
-          ARGUMENTS_WITH_VARS,
-          args ->
-              new ValContext(
-                  new Context.StaticContext(
-                      new Map.Map4<>(
-                          ERROR_TYPE_PROPERTY,
-                          BPMN_ERROR_TYPE_VALUE,
-                          ARGUMENTS.get(0),
-                          FunctionHelper.toString(args, 0, NAME, ARGUMENTS.get(0)),
-                          ARGUMENTS.get(1),
-                          FunctionHelper.toString(args, 1, NAME, ARGUMENTS.get(1)),
-                          ARGUMENTS_WITH_VARS.get(2),
-                          FunctionHelper.toContext(args, 2, NAME, ARGUMENTS_WITH_VARS.get(2))),
-                      Map$.MODULE$.empty())));
-
-  public static final List<JavaFunction> FUNCTIONS =
-      List.of(CODE_ONLY, WITH_CODE_AND_MESSAGE, WITH_VARS);
+  @Override
+  public String getSignature() {
+    return NAME;
+  }
 }

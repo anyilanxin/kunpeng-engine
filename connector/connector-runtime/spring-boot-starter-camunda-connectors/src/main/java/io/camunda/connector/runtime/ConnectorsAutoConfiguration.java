@@ -16,17 +16,11 @@
  */
 package io.camunda.connector.runtime;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.camunda.client.CamundaClient;
-import io.camunda.client.impl.CamundaObjectMapper;
-import io.camunda.client.spring.bean.CamundaClientRegistry;
-import io.camunda.client.spring.configuration.CamundaAutoConfiguration;
-import io.camunda.client.spring.properties.CamundaClientProperties;
-import io.camunda.connector.api.document.DocumentFactory;
+import com.anyilanxin.kunpeng.client.KunpengClient;
+import com.anyilanxin.kunpeng.client.spring.configuration.KunpengAutoConfiguration;
+import com.anyilanxin.kunpeng.client.spring.properties.KunpengClientProperties;
 import io.camunda.connector.api.secret.SecretProvider;
 import io.camunda.connector.api.validation.ValidationProvider;
-import io.camunda.connector.document.jackson.JacksonModuleDocumentDeserializer;
-import io.camunda.connector.document.jackson.JacksonModuleDocumentSerializer;
 import io.camunda.connector.feel.FeelExpressionEvaluator;
 import io.camunda.connector.feel.FeelExpressionEvaluatorBuilder;
 import io.camunda.connector.feel.jackson.JacksonModuleFeelFunction;
@@ -38,10 +32,8 @@ import io.camunda.connector.http.client.authentication.cacheimpl.CaffeineOAuthTo
 import io.camunda.connector.jackson.ConnectorsObjectMapperSupplier;
 import io.camunda.connector.runtime.annotation.ConnectorsObjectMapper;
 import io.camunda.connector.runtime.annotation.OutboundConnectorObjectMapper;
-import io.camunda.connector.runtime.core.intrinsic.DefaultIntrinsicFunctionExecutor;
 import io.camunda.connector.runtime.core.secret.SecretProviderAggregator;
 import io.camunda.connector.runtime.core.secret.SecretProviderDiscovery;
-import io.camunda.connector.runtime.inbound.PhysicalTenantIds;
 import io.camunda.connector.runtime.secret.ConsoleSecretProvider;
 import io.camunda.connector.runtime.secret.EnvironmentSecretProvider;
 import io.camunda.connector.runtime.secret.console.ConsoleSecretApiClient;
@@ -58,7 +50,6 @@ import org.hibernate.validator.messageinterpolation.ParameterMessageInterpolator
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -71,13 +62,10 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.Scheduled;
+import tools.jackson.databind.ObjectMapper;
 
 @AutoConfiguration
-@AutoConfigureBefore({
-  OutboundConnectorsAutoConfiguration.class,
-  InboundConnectorsAutoConfiguration.class,
-  CamundaAutoConfiguration.class
-})
+@AutoConfigureBefore({OutboundConnectorsAutoConfiguration.class, KunpengAutoConfiguration.class})
 // Configuration (credential) validation is direction-agnostic, so it is wired here in the neutral
 // runtime auto-configuration rather than the outbound-specific one.
 @Import(io.camunda.connector.runtime.configuration.ConfigurationValidationConfiguration.class)
@@ -110,7 +98,8 @@ public class ConnectorsAutoConfiguration {
   @Value("${camunda.connector.secretprovider.console.audience:secrets.camunda.io}")
   String consoleSecretsApiAudience;
 
-  public ConnectorsAutoConfiguration(ObjectProvider<OAuthTokenCache> oAuthTokenCacheProvider) {
+  public ConnectorsAutoConfiguration(
+      final ObjectProvider<OAuthTokenCache> oAuthTokenCacheProvider) {
     this.oAuthTokenCacheProvider = oAuthTokenCacheProvider;
   }
 
@@ -122,8 +111,8 @@ public class ConnectorsAutoConfiguration {
   @Bean
   @Primary
   @ConditionalOnMissingBean(FeelExpressionEvaluator.class)
-  public FeelExpressionEvaluator camundaClientFeelExpressionEvaluator(CamundaClient camundaClient) {
-    return FeelExpressionEvaluatorBuilder.camundaClient(camundaClient).build();
+  public FeelExpressionEvaluator clientFeelExpressionEvaluator(final KunpengClient client) {
+    return FeelExpressionEvaluatorBuilder.client(client).build();
   }
 
   /**
@@ -139,10 +128,10 @@ public class ConnectorsAutoConfiguration {
    */
   @Bean
   @ConditionalOnMissingBean(OAuthTokenCache.class)
-  public OAuthTokenCache oAuthTokenCache(ConnectorProperties properties) {
-    var cacheProps = properties.oauth() != null ? properties.oauth().cache() : null;
-    Duration skewBuffer = cacheProps != null ? cacheProps.skewBuffer() : null;
-    OAuthTokenCache cache = CaffeineOAuthTokenCache.initialize(skewBuffer);
+  public OAuthTokenCache oAuthTokenCache(final ConnectorProperties properties) {
+    final var cacheProps = properties.oauth() != null ? properties.oauth().cache() : null;
+    final Duration skewBuffer = cacheProps != null ? cacheProps.skewBuffer() : null;
+    final OAuthTokenCache cache = CaffeineOAuthTokenCache.initialize(skewBuffer);
     OAuthTokenCacheHolder.set(cache);
     return cache;
   }
@@ -150,11 +139,11 @@ public class ConnectorsAutoConfiguration {
   @Bean
   @ConditionalOnMissingBean
   public SecretProviderAggregator springSecretProviderAggregator(
-      Optional<List<SecretProvider>> secretProviderBeans) {
-    var secretProviders = secretProviderBeans.orElseGet(LinkedList::new);
+      final Optional<List<SecretProvider>> secretProviderBeans) {
+    final var secretProviders = secretProviderBeans.orElseGet(LinkedList::new);
     LOG.debug("Using secret providers discovered as Spring beans: {}", secretProviderBeans);
     if (secretProviderLookupEnabled != Boolean.FALSE) {
-      var discoveredSecretProviders = SecretProviderDiscovery.discoverSecretProviders();
+      final var discoveredSecretProviders = SecretProviderDiscovery.discoverSecretProviders();
       LOG.debug("Using secret providers discovered by lookup: {}", discoveredSecretProviders);
       secretProviders.addAll(discoveredSecretProviders);
     }
@@ -166,7 +155,7 @@ public class ConnectorsAutoConfiguration {
       name = "camunda.connector.secretprovider.environment.enabled",
       havingValue = "true",
       matchIfMissing = true)
-  public EnvironmentSecretProvider defaultSecretProvider(Environment environment) {
+  public EnvironmentSecretProvider defaultSecretProvider(final Environment environment) {
     return new EnvironmentSecretProvider(
         environment,
         environmentSecretProviderPrefix,
@@ -180,7 +169,7 @@ public class ConnectorsAutoConfiguration {
       name = "camunda.connector.secretprovider.console.enabled",
       havingValue = "true")
   public ConsoleSecretProvider consoleSecretProvider(
-      ConsoleSecretApiClient consoleSecretApiClient) {
+      final ConsoleSecretApiClient consoleSecretApiClient) {
     return new ConsoleSecretProvider(consoleSecretApiClient, Duration.ofSeconds(20));
   }
 
@@ -188,23 +177,24 @@ public class ConnectorsAutoConfiguration {
   @ConditionalOnProperty(
       name = "camunda.connector.secretprovider.console.enabled",
       havingValue = "true")
-  public ConsoleSecretApiClient consoleSecretApiClient(CamundaClientProperties clientProperties) {
+  public ConsoleSecretApiClient consoleSecretApiClient(
+      final KunpengClientProperties clientProperties) {
 
-    if (!clientProperties.getMode().equals(CamundaClientProperties.ClientMode.saas)) {
+    if (!clientProperties.getMode().equals(KunpengClientProperties.ClientMode.saas)) {
       throw new RuntimeException(
           "Console Secrets require a SaaS environment, but the client is configured for "
               + clientProperties.getMode());
     }
 
-    var authProperties = clientProperties.getAuth();
-    URL issuerUrl;
+    final var authProperties = clientProperties.getAuth();
+    final URL issuerUrl;
     try {
       issuerUrl = authProperties.getTokenUrl().toURL();
-    } catch (Exception e) {
+    } catch (final Exception e) {
       throw new RuntimeException("Invalid token URL: " + authProperties.getTokenUrl(), e);
     }
 
-    var jwtCredential =
+    final var jwtCredential =
         new JwtCredential(
             authProperties.getClientId(),
             authProperties.getClientSecret(),
@@ -214,77 +204,38 @@ public class ConnectorsAutoConfiguration {
     return new ConsoleSecretApiClient(consoleSecretsApiEndpoint, jwtCredential);
   }
 
-  @Bean(name = "camundaJsonMapper")
-  @ConditionalOnMissingBean
-  public CamundaObjectMapper jsonMapper() {
-    return new CamundaObjectMapper(
-        ConnectorsObjectMapperSupplier.getCopy()
-            .registerModules(
-                new JacksonModuleFeelFunction(), new JacksonModuleDocumentSerializer()));
-  }
-
   @Bean(defaultCandidate = false)
   @ConnectorsObjectMapper
   @ConditionalOnMissingBean(name = "connectorObjectMapper")
-  public ObjectMapper connectorObjectMapper(
-      CamundaClientRegistry registry,
-      @Autowired(required = false) CamundaClient legacyCamundaClient,
-      DocumentFactory legacyDocumentFactory,
-      FeelExpressionEvaluator feelExpressionEvaluator) {
-    final ObjectMapper copy = ConnectorsObjectMapperSupplier.getCopy();
-    // default intrinsic function contains a pointer of the copy
-    var functionExecutor = new DefaultIntrinsicFunctionExecutor(copy);
-
-    // The deserializer module contains the function executor, which contains the pointer of the
-    // object mapper
-    var documentFactoriesByPhysicalTenantId =
-        PhysicalTenantIds.buildDocumentFactoriesByPhysicalTenantId(
-            registry, legacyCamundaClient, legacyDocumentFactory);
-    var jacksonModuleDocumentDeserializer =
-        new JacksonModuleDocumentDeserializer(
-            documentFactoriesByPhysicalTenantId,
-            functionExecutor,
-            JacksonModuleDocumentDeserializer.DocumentModuleSettings.create());
-
-    // Function/Supplier always use local evaluation to avoid serializing runtime objects
-    // (e.g., Documents) to the cluster. The injected evaluator is used for @FEEL-annotated fields.
-    return copy.registerModules(
-        jacksonModuleDocumentDeserializer,
-        new JacksonModuleFeelFunction(
-            true, feelExpressionEvaluator, FeelExpressionEvaluatorBuilder.local().build()),
-        new JacksonModuleDocumentSerializer());
+  public ObjectMapper connectorObjectMapper(final FeelExpressionEvaluator feelExpressionEvaluator) {
+    // Function/Supplier always use local evaluation to avoid serializing runtime objects to the
+    // cluster. The injected evaluator is used for @Expression-annotated fields.
+    return ConnectorsObjectMapperSupplier.getCopy()
+        .rebuild()
+        .addModule(
+            new JacksonModuleFeelFunction(
+                true, feelExpressionEvaluator, FeelExpressionEvaluatorBuilder.local().build()))
+        .build();
   }
 
   /**
-   * ObjectMapper for OutboundConnectorManager with FEEL annotation processing disabled. This
-   * prevents {@code @FEEL}-annotated properties from being evaluated as FEEL expressions during
-   * outbound connector variable binding, which would otherwise conflict with other modules (e.g.
-   * the document module) and can prevent the correct deserializer from being picked. {@code @FEEL}
-   * is not relevant for outbound connectors anyway, as FEEL for jobs is evaluated by Zeebe.
+   * ObjectMapper for OutboundConnectorManager with Expression annotation processing disabled. This
+   * prevents {@code @Expression}-annotated properties from being evaluated as Expression
+   * expressions during outbound connector variable binding. {@code @Expression} is not relevant for
+   * outbound connectors anyway, as Expression for jobs is evaluated by the engine.
    */
   @Bean(defaultCandidate = false)
   @OutboundConnectorObjectMapper
   @ConditionalOnMissingBean(name = "outboundConnectorObjectMapper")
-  public ObjectMapper outboundConnectorObjectMapper(DocumentFactory documentFactory) {
-    return buildOutboundConnectorObjectMapper(documentFactory);
-  }
-
-  private static ObjectMapper buildOutboundConnectorObjectMapper(DocumentFactory documentFactory) {
-    final ObjectMapper copy = ConnectorsObjectMapperSupplier.getCopy();
-    var functionExecutor = new DefaultIntrinsicFunctionExecutor(copy);
-
-    var jacksonModuleDocumentDeserializer =
-        new JacksonModuleDocumentDeserializer(
-            documentFactory,
-            functionExecutor,
-            JacksonModuleDocumentDeserializer.DocumentModuleSettings.create());
-
-    return copy.registerModules(
-        jacksonModuleDocumentDeserializer,
-        new JacksonModuleFeelFunction(
-            false,
-            FeelExpressionEvaluatorBuilder.local().build()), // FEEL annotation processing disabled
-        new JacksonModuleDocumentSerializer());
+  public ObjectMapper outboundConnectorObjectMapper() {
+    return ConnectorsObjectMapperSupplier.getCopy()
+        .rebuild()
+        .addModule(
+            new JacksonModuleFeelFunction(
+                false,
+                FeelExpressionEvaluatorBuilder.local()
+                    .build())) // Expression annotation processing disabled
+        .build();
   }
 
   @Scheduled(fixedRate = 60_000, initialDelay = 60_000)
@@ -293,28 +244,29 @@ public class ConnectorsAutoConfiguration {
       return;
     }
 
-    OAuthTokenCache cache = oAuthTokenCacheProvider.getIfAvailable(OAuthTokenCacheHolder::get);
+    final OAuthTokenCache cache =
+        oAuthTokenCacheProvider.getIfAvailable(OAuthTokenCacheHolder::get);
     LOG.debug("OAuth token cache stats: {}", cache.getStats());
   }
 
   @Bean
   @ConditionalOnMissingBean(ValidationProvider.class)
-  VerifiedHostValidator verifiedHostValidator(ConnectorProperties connectorProperties) {
-    var validation =
+  VerifiedHostValidator verifiedHostValidator(final ConnectorProperties connectorProperties) {
+    final var validation =
         Optional.ofNullable(connectorProperties.validation())
             .orElseGet(
                 () ->
                     new ConnectorProperties.Validation(
                         new ConnectorProperties.Validation.Hosts(false, null, null, false, false)));
-    var allowRanges =
+    final var allowRanges =
         Optional.ofNullable(validation.hosts().allowRanges()).orElseGet(List::of).stream()
             .map(CidrRange::parse)
             .toList();
-    List<CidrRange> denyRanges =
+    final List<CidrRange> denyRanges =
         Optional.ofNullable(validation.hosts().denyRanges()).orElseGet(List::of).stream()
             .map(CidrRange::parse)
             .toList();
-    var config =
+    final var config =
         new VerifiedHostValidator.Config(
             validation.hosts().enabled(),
             allowRanges,
@@ -327,14 +279,15 @@ public class ConnectorsAutoConfiguration {
   @Bean
   @ConditionalOnMissingBean(ValidationProvider.class)
   SpringBeanConstraintValidatorFactory springConstraintValidatorFactory(
-      AutowireCapableBeanFactory autowireCapableBeanFactory) {
+      final AutowireCapableBeanFactory autowireCapableBeanFactory) {
     return new SpringBeanConstraintValidatorFactory(autowireCapableBeanFactory);
   }
 
   @Bean
   @ConditionalOnMissingBean(ValidationProvider.class)
-  ValidationProvider validationProvider(ConstraintValidatorFactory constraintValidatorFactory) {
-    var validationFactory =
+  ValidationProvider validationProvider(
+      final ConstraintValidatorFactory constraintValidatorFactory) {
+    final var validationFactory =
         Validation.byDefaultProvider()
             .configure()
             .messageInterpolator(new ParameterMessageInterpolator())

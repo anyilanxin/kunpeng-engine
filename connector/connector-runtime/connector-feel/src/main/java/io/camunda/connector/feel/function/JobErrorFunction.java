@@ -19,87 +19,41 @@ package io.camunda.connector.feel.function;
 import static io.camunda.connector.feel.FeelConnectorFunctionProvider.ERROR_TYPE_PROPERTY;
 import static io.camunda.connector.feel.FeelConnectorFunctionProvider.JOB_ERROR_TYPE_VALUE;
 
+import com.alibaba.qlexpress4.runtime.Parameters;
+import com.alibaba.qlexpress4.runtime.QContext;
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.List;
-import org.camunda.feel.context.Context;
-import org.camunda.feel.context.Context.StaticContext;
-import org.camunda.feel.context.JavaFunction;
-import org.camunda.feel.syntaxtree.ValContext;
-import org.camunda.feel.syntaxtree.ValDayTimeDuration;
-import org.camunda.feel.syntaxtree.ValNumber;
-import org.camunda.feel.syntaxtree.ValString;
-import scala.collection.JavaConverters;
-import scala.collection.immutable.Map;
-import scala.collection.immutable.Map$;
-import scala.math.BigDecimal;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-public class JobErrorFunction {
+/** Expression function {@code jobError(errorMessage[, variables[, retries[, retryBackoff]]])}. */
+public class JobErrorFunction implements QLFunction {
 
   public static final String NAME = "jobError";
 
-  private static final List<String> ARGUMENTS =
-      List.of("errorMessage", "variables", "retries", "retryBackoff");
+  private static final String ERROR_MESSAGE = "errorMessage";
+  private static final String VARIABLES = "variables";
+  private static final String RETRIES = "retries";
+  private static final String RETRY_BACKOFF = "retryBackoff";
 
-  private static final ValContext DEFAULT_VARIABLES =
-      new ValContext(new StaticContext(Map$.MODULE$.empty(), Map$.MODULE$.empty()));
-  private static final ValNumber DEFAULT_RETRIES =
-      new ValNumber(new BigDecimal(new java.math.BigDecimal(0)));
-  private static final ValDayTimeDuration DEFAULT_RETRY_BACKOFF =
-      new ValDayTimeDuration(Duration.ZERO);
+  @Override
+  public Object call(final QContext qContext, final Parameters parameters) throws Throwable {
+    final Map<String, Object> result = new LinkedHashMap<>();
+    result.put(ERROR_TYPE_PROPERTY, JOB_ERROR_TYPE_VALUE);
+    result.put(ERROR_MESSAGE, FunctionHelper.toString(parameters, 0, NAME, ERROR_MESSAGE));
+    result.put(
+        VARIABLES,
+        parameters.size() > 1 ? FunctionHelper.toMap(parameters, 1, NAME, VARIABLES) : Map.of());
+    result.put(RETRIES, parameters.size() > 2 ? parameters.getValue(2) : 0);
+    result.put(
+        RETRY_BACKOFF,
+        parameters.size() > 3
+            ? FunctionHelper.toDuration(parameters, 3, NAME, RETRY_BACKOFF)
+            : Duration.ZERO);
+    return result;
+  }
 
-  private static final JavaFunction FUNCTION_4 =
-      new JavaFunction(
-          ARGUMENTS,
-          args ->
-              createContext(
-                  (ValString) args.get(0),
-                  (ValContext) args.get(1),
-                  (ValNumber) args.get(2),
-                  (ValDayTimeDuration) args.get(3)));
-
-  private static final JavaFunction FUNCTION_3 =
-      new JavaFunction(
-          ARGUMENTS.subList(0, 3),
-          args ->
-              createContext(
-                  (ValString) args.get(0),
-                  (ValContext) args.get(1),
-                  (ValNumber) args.get(2),
-                  DEFAULT_RETRY_BACKOFF));
-
-  private static final JavaFunction FUNCTION_2 =
-      new JavaFunction(
-          ARGUMENTS.subList(0, 2),
-          args ->
-              createContext(
-                  (ValString) args.get(0),
-                  (ValContext) args.get(1),
-                  DEFAULT_RETRIES,
-                  DEFAULT_RETRY_BACKOFF));
-
-  private static final JavaFunction FUNCTION_1 =
-      new JavaFunction(
-          ARGUMENTS.subList(0, 1),
-          args ->
-              createContext(
-                  (ValString) args.get(0),
-                  DEFAULT_VARIABLES,
-                  DEFAULT_RETRIES,
-                  DEFAULT_RETRY_BACKOFF));
-
-  public static final List<JavaFunction> FUNCTIONS =
-      List.of(FUNCTION_1, FUNCTION_2, FUNCTION_3, FUNCTION_4);
-
-  private static ValContext createContext(
-      ValString message, ValContext variables, ValNumber retries, ValDayTimeDuration retryBackoff) {
-    java.util.Map<String, Object> javaMap = new HashMap<>();
-    javaMap.put(ERROR_TYPE_PROPERTY, JOB_ERROR_TYPE_VALUE);
-    javaMap.put(ARGUMENTS.get(0), message);
-    javaMap.put(ARGUMENTS.get(1), variables);
-    javaMap.put(ARGUMENTS.get(2), retries);
-    javaMap.put(ARGUMENTS.get(3), retryBackoff);
-    return new ValContext(
-        new Context.StaticContext(Map.from(JavaConverters.asScala(javaMap)), Map$.MODULE$.empty()));
+  @Override
+  public String getSignature() {
+    return NAME;
   }
 }

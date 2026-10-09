@@ -10,13 +10,19 @@ configure(jarInfo) {
 
 
 dependencies {
+    implementation project(':connector:connector-sdk:core')
     implementation project(':connector:connector-commons:http-base')
     implementation project(':connector:element-template-generator:annotations')
 
     testImplementation 'org.wiremock:wiremock-standalone'
+    testImplementation 'org.mockito:mockito-junit-jupiter'
     testImplementation project(':connector:connector-commons:http-client')
-    testImplementation project(':connector:element-template-generator:core')
-    testImplementation 'com.fasterxml.jackson.core:jackson-databind'
+    testImplementation project(':connector:connector-commons:connector-object-mapper')
+    testImplementation project(':connector:connector-runtime:connector-runtime-core')
+    testImplementation project(':connector:connector-runtime:connector-runtime-test')
+    testImplementation project(':connector:connector-sdk:validation')
+    testImplementation project(':connector:element-template-generator:generator-core')
+    testImplementation 'tools.jackson.core:jackson-databind'
     testImplementation 'org.apache.httpcomponents.core5:httpcore5'
     testImplementation 'org.apache.httpcomponents:httpcore'
 }

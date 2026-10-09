@@ -12,17 +12,12 @@ configure(jarInfo) {
 dependencies {
     implementation project(':connector:connector-sdk:core')
     implementation 'org.slf4j:slf4j-api'
-    implementation project(':connector:connector-runtime:jackson-datatype-document')
     implementation project(':connector:connector-commons:connector-object-mapper')
-    implementation 'org.camunda.feel:feel-engine'
-    implementation 'com.fasterxml.jackson.core:jackson-databind'
-    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
-    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8'
-    implementation 'com.fasterxml.jackson.core:jackson-core'
-    implementation 'org.scala-lang:scala-library'
+    implementation 'com.alibaba:qlexpress4'
+    implementation 'tools.jackson.core:jackson-databind'
+    implementation 'tools.jackson.core:jackson-core'
 
     compileOnly project(':clients:client-java')
-
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation 'org.assertj:assertj-core'
     testImplementation 'org.skyscreamer:jsonassert'

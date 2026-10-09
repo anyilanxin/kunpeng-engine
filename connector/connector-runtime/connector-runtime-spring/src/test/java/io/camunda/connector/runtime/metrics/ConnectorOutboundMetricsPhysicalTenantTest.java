@@ -20,8 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.camunda.client.api.response.ActivatedJob;
-import io.camunda.client.metrics.MicrometerMetricsRecorder;
+import com.anyilanxin.kunpeng.client.command.job.ActivatedJob;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.List;
@@ -29,11 +28,10 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /**
- * Exercises the physical-tenant dimension added to the outbound metrics pipeline (#7965): two
- * physical tenants (engines) executing the same connector type must land in separate,
- * correctly-tagged meters, and {@link ConnectorMetricsAggregator#outbound} must sum across all
- * tenants when unfiltered and scope down correctly when a {@code physicalTenantIds} filter is
- * given.
+ * Exercises the physical-tenant dimension of the outbound metrics pipeline: two physical tenants
+ * (engines) executing the same connector type must land in separate, correctly-tagged meters, and
+ * {@link ConnectorMetricsAggregator#outbound} must sum across all tenants when unfiltered and scope
+ * down correctly when a {@code physicalTenantIds} filter is given.
  */
 class ConnectorOutboundMetricsPhysicalTenantTest {
 
@@ -48,8 +46,10 @@ class ConnectorOutboundMetricsPhysicalTenantTest {
   }
 
   private static void recordCompletedJob(MeterRegistry registry, String physicalTenantId) {
-    new MicrometerMetricsRecorder(registry)
-        .increaseCompleted(ConnectorMetrics.counter(job(), physicalTenantId));
+    new ConnectorOutboundMetrics(registry, physicalTenantId)
+        .increaseInvocations(
+            ConnectorMetrics.counter(job(), physicalTenantId),
+            ConnectorMetrics.Outbound.ACTION_COMPLETED);
   }
 
   private static long completedFor(MeterRegistry registry, String physicalTenantId) {
@@ -84,30 +84,31 @@ class ConnectorOutboundMetricsPhysicalTenantTest {
   }
 
   @Test
-  void tenantLessOverloads_attributeTheJobToItsOwnPhysicalTenant() {
+  void tenantLessOverloads_attributeTheJobToTheDefaultPhysicalTenant() {
     var registry = new SimpleMeterRegistry();
-    var recorder = new MicrometerMetricsRecorder(registry);
-    var job = job();
-    when(job.getPhysicalTenantId()).thenReturn("tenant-from-job");
+    var metrics = new ConnectorOutboundMetrics(registry);
 
-    // the pre-#7965 signatures, kept for callers compiled against them
-    recorder.increaseCompleted(ConnectorMetrics.counter(job));
-    var timerTags = ConnectorMetrics.timer(job).tags();
+    // the 1-arg factories, kept for callers compiled against them
+    metrics.increaseInvocations(
+        ConnectorMetrics.counter(job()), ConnectorMetrics.Outbound.ACTION_COMPLETED);
+    var timerTags = ConnectorMetrics.timer(job()).tags();
 
-    assertThat(completedFor(registry, "tenant-from-job")).isEqualTo(1);
-    assertThat(timerTags).containsEntry(ConnectorMetrics.Tag.PHYSICAL_TENANT_ID, "tenant-from-job");
+    assertThat(completedFor(registry, ConnectorMetrics.DEFAULT_PHYSICAL_TENANT_ID)).isEqualTo(1);
+    assertThat(timerTags)
+        .containsEntry(ConnectorMetrics.Tag.PHYSICAL_TENANT_ID, ConnectorMetrics.DEFAULT_PHYSICAL_TENANT_ID);
   }
 
   @Test
   void lastCompletedGauge_isTaggedPerPhysicalTenant() {
     var registry = new SimpleMeterRegistry();
-    var recorder = new MicrometerMetricsRecorder(registry);
+    var metricsA = new ConnectorOutboundMetrics(registry, "tenant-a");
+    var metricsB = new ConnectorOutboundMetrics(registry, "tenant-b");
 
-    new ConnectorOutboundMetrics(recorder, registry, "tenant-a").recordCompleted(TYPE);
-    new ConnectorOutboundMetrics(recorder, registry, "tenant-b").recordCompleted(TYPE);
+    metricsA.recordCompleted(TYPE);
+    metricsB.recordCompleted(TYPE);
 
-    // one gauge per (type, physical tenant) — before #7965 the second registration silently
-    // collided with the first one's, leaving that engine's timestamp invisible
+    // one gauge per (type, physical tenant) — without the tenant tag the second registration
+    // silently collided with the first one's, leaving that engine's timestamp invisible
     assertThat(registry.find(ConnectorMetrics.Outbound.METRIC_NAME_LAST_COMPLETED).gauges())
         .hasSize(2);
     assertThat(
@@ -176,8 +177,8 @@ class ConnectorOutboundMetricsPhysicalTenantTest {
   @Test
   void aggregatorOutbound_scopesLastCompletedGaugeToTheFilteredPhysicalTenant() {
     var registry = new SimpleMeterRegistry();
-    var recorder = new MicrometerMetricsRecorder(registry);
-    new ConnectorOutboundMetrics(recorder, registry, "tenant-a").recordCompleted(TYPE);
+    var metrics = new ConnectorOutboundMetrics(registry, "tenant-a");
+    metrics.recordCompleted(TYPE);
 
     var tenantA =
         ConnectorMetricsAggregator.outbound(registry, TYPE, List.of("tenant-a"), "runtime-1");

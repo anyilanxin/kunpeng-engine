@@ -16,14 +16,13 @@
  */
 package io.camunda.connector.generator.openapi;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.parser.OpenAPIV3Parser;
 import io.swagger.v3.parser.core.models.ParseOptions;
-import java.io.IOException;
 import java.util.List;
 import java.util.Set;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.dataformat.yaml.YAMLFactory;
 
 /**
  * @param openAPI Parsed OpenAPI schema
@@ -91,7 +90,7 @@ public record OpenApiGenerationSource(
       final ObjectMapper mapper = new ObjectMapper();
       mapper.readTree(jsonInString);
       return true;
-    } catch (IOException e) {
+    } catch (tools.jackson.core.JacksonException e) {
       return false;
     }
   }
@@ -101,7 +100,7 @@ public record OpenApiGenerationSource(
       final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
       mapper.readTree(yamlString);
       return yamlString.contains("\n");
-    } catch (IOException e) {
+    } catch (tools.jackson.core.JacksonException e) {
       return false;
     }
   }

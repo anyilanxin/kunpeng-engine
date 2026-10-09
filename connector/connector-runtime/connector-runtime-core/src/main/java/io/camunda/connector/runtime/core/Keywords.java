@@ -33,7 +33,8 @@ public class Keywords {
 
   /**
    * The keyword that identifies the source of `result expression` property of a Connector. Result
-   * expression is a FEEL expression that is used to map the Connector output into process variables
+   * expression is a Expression expression that is used to map the Connector output into process
+   * variables
    *
    * <p>For outbound Connectors, this value comes from Zeebe job headers.
    *
@@ -43,8 +44,8 @@ public class Keywords {
 
   /**
    * The keyword that identifies the source of `error expression` property of a Connector. Error
-   * expression is a FEEL context expression that is used to map the Connector output into process
-   * variables
+   * expression is a Expression context expression that is used to map the Connector output into
+   * process variables
    *
    * <p>This value only exists for outbound Connectors and comes from Zeebe job headers.
    */
@@ -61,8 +62,8 @@ public class Keywords {
 
   /**
    * The keyword that identifies the source of `correlation key expression` property of a Connector.
-   * Correlation key expression is a FEEL expression that is extracts the correlation key from the
-   * inbound Connector output.
+   * Correlation key expression is a Expression expression that is extracts the correlation key from
+   * the inbound Connector output.
    *
    * <p>This value only exists for inbound Connectors that target an intermediate message catch
    * event and comes from the extension properties of a BPMN element.
@@ -75,8 +76,8 @@ public class Keywords {
 
   /**
    * The keyword that identifies the source of `activation condition` property of a Connector.
-   * Activation condition is a boolean FEEL expression that determines whether the inbound Connector
-   * should be activated based on the inbound payload.
+   * Activation condition is a boolean Expression expression that determines whether the inbound
+   * Connector should be activated based on the inbound payload.
    *
    * <p>This value only exists for inbound Connectors and comes from the extension properties of a
    * BPMN element.

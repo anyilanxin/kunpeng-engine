@@ -19,7 +19,6 @@ dependencies {
     implementation project(':connector:connector-commons:http-client')
     implementation project(':connector:connector-runtime:connector-feel')
     implementation project(':connector:connector-runtime:jackson-datatype-feel')
-    implementation project(':connector:connector-runtime:jackson-datatype-document')
     implementation project(':clients:spring-boot-starter-client')
     implementation project(':clients:client-java')
     implementation 'org.springframework:spring-core'
@@ -33,7 +32,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-health'
     implementation 'org.springframework.boot:spring-boot-micrometer-metrics'
     implementation 'org.springframework.boot:spring-boot-starter-cache'
-    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'tools.jackson.core:jackson-databind'
     implementation 'org.slf4j:slf4j-api'
     implementation 'org.jspecify:jspecify'
     implementation 'jakarta.validation:jakarta.validation-api'

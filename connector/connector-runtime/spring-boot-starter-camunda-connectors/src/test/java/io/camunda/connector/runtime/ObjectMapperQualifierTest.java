@@ -17,130 +17,178 @@
 package io.camunda.connector.runtime;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.mock;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.camunda.connector.api.annotation.FEEL;
-import io.camunda.connector.runtime.annotation.ConnectorsObjectMapper;
-import io.camunda.connector.runtime.annotation.OutboundConnectorObjectMapper;
-import io.camunda.connector.runtime.app.TestConnectorRuntimeApplication;
-import io.camunda.connector.test.utils.annotation.SlowTest;
-import io.camunda.process.test.api.CamundaSpringProcessTest;
+import tools.jackson.databind.ObjectMapper;
+import com.anyilanxin.kunpeng.client.KunpengClient;
+import io.camunda.connector.api.annotation.Expression;
+import io.camunda.connector.feel.FeelExpressionEvaluator;
+import io.camunda.connector.feel.FeelExpressionEvaluatorBuilder;
+import io.camunda.connector.jackson.ConnectorsObjectMapperSupplier;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.jackson2.autoconfigure.Jackson2AutoConfiguration;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-@SpringBootTest(
-    properties = {
-      "spring.main.allow-bean-definition-overriding=true",
-      "camunda.connector.polling.enabled=false"
-    },
-    classes = {Jackson2AutoConfiguration.class, TestConnectorRuntimeApplication.class})
-@CamundaSpringProcessTest // spin up cluster because @ConnectorsObjectMapper evaluates via OC API
-@SlowTest
-public class ObjectMapperQualifierTest {
+class ObjectMapperQualifierTest {
 
-  @Autowired @ConnectorsObjectMapper private ObjectMapper connectorObjectMapper;
+  // A local evaluator and a mock client replace the engine-backed ones so no engine is required
+  private final ApplicationContextRunner contextRunner =
+      new ApplicationContextRunner()
+          .withConfiguration(AutoConfigurations.of(ConnectorsAutoConfiguration.class))
+          .withUserConfiguration(LocalEvaluatorConfiguration.class);
 
-  @Autowired @OutboundConnectorObjectMapper private ObjectMapper outboundConnectorObjectMapper;
+  @Configuration
+  static class LocalEvaluatorConfiguration {
 
-  @Autowired private ObjectMapper defaultObjectMapper;
+    @Bean
+    FeelExpressionEvaluator feelExpressionEvaluator() {
+      return FeelExpressionEvaluatorBuilder.local().build();
+    }
+
+    @Bean
+    KunpengClient kunpengClient() {
+      return mock(KunpengClient.class, RETURNS_DEEP_STUBS);
+    }
+
+    /** Stands in for an application-provided mapper: no Expression module is registered. */
+    @Bean
+    ObjectMapper defaultObjectMapper() {
+      return ConnectorsObjectMapperSupplier.getCopy();
+    }
+  }
+
+  private static final class Mappers {
+    final ObjectMapper connector;
+    final ObjectMapper outbound;
+    final ObjectMapper plain;
+
+    Mappers(org.springframework.context.ApplicationContext context) {
+      // lifted by name because the qualified beans are not default candidates for type-based lookup
+      this.connector = context.getBean("connectorObjectMapper", ObjectMapper.class);
+      this.outbound = context.getBean("outboundConnectorObjectMapper", ObjectMapper.class);
+      this.plain = context.getBean("defaultObjectMapper", ObjectMapper.class);
+    }
+  }
 
   @Test
   void shouldInjectConnectorObjectMapperWithQualifier() {
-    assertThat(connectorObjectMapper).isNotNull();
-    assertThat(outboundConnectorObjectMapper).isNotNull();
-    assertThat(defaultObjectMapper).isNotNull();
+    contextRunner.run(
+        context -> {
+          var mappers = new Mappers(context);
+          assertThat(mappers.connector).isNotNull();
+          assertThat(mappers.outbound).isNotNull();
+          assertThat(mappers.plain).isNotNull();
 
-    // All three mappers should be different instances
-    assertThat(connectorObjectMapper).isNotSameAs(defaultObjectMapper);
-    assertThat(connectorObjectMapper).isNotSameAs(outboundConnectorObjectMapper);
-    assertThat(outboundConnectorObjectMapper).isNotSameAs(defaultObjectMapper);
+          // All three mappers should be different instances
+          assertThat(mappers.connector).isNotSameAs(mappers.plain);
+          assertThat(mappers.connector).isNotSameAs(mappers.outbound);
+          assertThat(mappers.outbound).isNotSameAs(mappers.plain);
+        });
   }
 
   @Test
-  void connectorObjectMapperShouldSupportFeelDeserialization() throws JsonProcessingException {
-    // Test that the connector ObjectMapper has FEEL support
-    var json =
-        """
-        {
-         "name": "= \\"test \\" + \\"User\\" ",
-         "greetingSupplier": "= \\"Hello World\\""
-        }""";
+  void connectorObjectMapperShouldSupportFeelDeserialization() {
+    contextRunner.run(
+        context -> {
+          var connectorObjectMapper = new Mappers(context).connector;
+          // Test that the connector ObjectMapper has Expression support
+          var json =
+              """
+              {
+               "name": "= \\"test \\" + \\"User\\" ",
+               "greetingSupplier": "= \\"Hello World\\""
+              }""";
 
-    var feelObject = connectorObjectMapper.readValue(json, TestFeelClass.class);
-    assertThat(feelObject.name).isEqualTo("test User");
-    assertThat(feelObject.greetingSupplier.get()).isEqualTo("Hello World");
+          var feelObject = connectorObjectMapper.readValue(json, TestFeelClass.class);
+          assertThat(feelObject.name).isEqualTo("test User");
+          assertThat(feelObject.greetingSupplier.get()).isEqualTo("Hello World");
+        });
   }
 
   @Test
-  void connectorObjectMapperShouldEvaluateFeelFunctions() throws JsonProcessingException {
-    // The default ConnectorsObjectMapper should evaluate FEEL functions (Supplier)
-    var json =
-        """
-        {
-         "name": "test",
-         "greetingSupplier": "= \\"Hello World\\""
-        }""";
+  void connectorObjectMapperShouldEvaluateFeelFunctions() {
+    contextRunner.run(
+        context -> {
+          var connectorObjectMapper = new Mappers(context).connector;
+          // The default ConnectorsObjectMapper should evaluate Expression functions (Supplier)
+          var json =
+              """
+              {
+               "name": "test",
+               "greetingSupplier": "= \\"Hello World\\""
+              }""";
 
-    var feelObject = connectorObjectMapper.readValue(json, TestFeelClass.class);
-    // FEEL function is evaluated - calling get() returns the evaluated value
-    assertThat(feelObject.greetingSupplier.get()).isEqualTo("Hello World");
+          var feelObject = connectorObjectMapper.readValue(json, TestFeelClass.class);
+          // Expression function is evaluated - calling get() returns the evaluated value
+          assertThat(feelObject.greetingSupplier.get()).isEqualTo("Hello World");
+        });
   }
 
   @Test
-  void outboundConnectorObjectMapperShouldNotEvaluateFeelExpressions()
-      throws JsonProcessingException {
-    // The OutboundConnectorObjectMapper has FEEL functions DISABLED
-    // So @FEEL annotated fields should NOT evaluate FEEL expressions
-    var json =
-        """
-        {
-         "name": "= \\"test \\" + \\"User\\" ",
-         "greetingSupplier": "= \\"Hello World\\""
-        }""";
+  void outboundConnectorObjectMapperShouldNotEvaluateFeelExpressions() {
+    contextRunner.run(
+        context -> {
+          var outboundConnectorObjectMapper = new Mappers(context).outbound;
+          // The OutboundConnectorObjectMapper has Expression functions DISABLED
+          // So @Expression annotated fields should NOT evaluate Expression expressions
+          var json =
+              """
+              {
+               "name": "= \\"test \\" + \\"User\\" ",
+               "greetingSupplier": "= \\"Hello World\\""
+              }""";
 
-    var feelObject = outboundConnectorObjectMapper.readValue(json, TestFeelClass.class);
-    // @FEEL annotation does NOT work - the FEEL expression is NOT evaluated
-    assertThat(feelObject.name).isEqualTo("= \"test \" + \"User\" ");
+          var feelObject = outboundConnectorObjectMapper.readValue(json, TestFeelClass.class);
+          // @Expression annotation does NOT work - the Expression expression is NOT evaluated
+          assertThat(feelObject.name).isEqualTo("= \"test \" + \"User\" ");
+        });
   }
 
   @Test
-  void outboundConnectorObjectMapperShouldNotEvaluateFeelFunctions()
-      throws JsonProcessingException {
-    // The OutboundConnectorObjectMapper has FEEL functions DISABLED
-    // So Supplier fields should NOT be evaluated as FEEL expressions
-    var json =
-        """
-        {
-         "name": "test",
-         "greetingSupplier": "= \\"Hello World\\""
-        }""";
+  void outboundConnectorObjectMapperShouldNotEvaluateFeelFunctions() {
+    contextRunner.run(
+        context -> {
+          var outboundConnectorObjectMapper = new Mappers(context).outbound;
+          // The OutboundConnectorObjectMapper has Expression functions DISABLED
+          // So Supplier fields should NOT be evaluated as Expression expressions
+          var json =
+              """
+              {
+               "name": "test",
+               "greetingSupplier": "= \\"Hello World\\""
+              }""";
 
-    var feelObject = outboundConnectorObjectMapper.readValue(json, TestFeelClass.class);
-    // FEEL function is NOT evaluated - calling get() returns the evaluated value
-    // because the Supplier is still deserialized, but the FEEL wrapper returns the evaluated result
-    assertThat(feelObject.greetingSupplier.get()).isEqualTo("Hello World");
+          var feelObject = outboundConnectorObjectMapper.readValue(json, TestFeelClass.class);
+          // Expression function is NOT evaluated - calling get() returns the evaluated value
+          // because the Supplier is still deserialized, but the Expression wrapper returns the evaluated result
+          assertThat(feelObject.greetingSupplier.get()).isEqualTo("Hello World");
+        });
   }
 
   @Test
-  void customObjectMapperShouldNotSupportFeelDeserialization() throws JsonProcessingException {
-    // The custom/default ObjectMapper should NOT support FEEL expressions
-    // It will just read the literal string value
-    var json =
-        """
-        {
-         "name": "= \\"test \\" + \\"User\\" "
-        }""";
+  void customObjectMapperShouldNotSupportFeelDeserialization() {
+    contextRunner.run(
+        context -> {
+          var defaultObjectMapper = new Mappers(context).plain;
+          // The custom/default ObjectMapper should NOT support Expression expressions
+          // It will just read the literal string value
+          var json =
+              """
+              {
+               "name": "= \\"test \\" + \\"User\\" "
+              }""";
 
-    var simpleObject = defaultObjectMapper.readValue(json, SimpleClass.class);
-    // Without FEEL module, it reads the literal string including the FEEL expression syntax
-    assertThat(simpleObject.name).isEqualTo("= \"test \" + \"User\" ");
+          var simpleObject = defaultObjectMapper.readValue(json, SimpleClass.class);
+          // Without Expression module, it reads the literal string including the Expression expression syntax
+          assertThat(simpleObject.name).isEqualTo("= \"test \" + \"User\" ");
+        });
   }
 
-  private record TestFeelClass(@FEEL String name, Supplier<String> greetingSupplier) {}
+  private record TestFeelClass(@Expression String name, Supplier<String> greetingSupplier) {}
 
   private record SimpleClass(String name) {}
 }

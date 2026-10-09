@@ -18,8 +18,6 @@ package io.camunda.connector.generator.cli.command;
 
 import static io.camunda.connector.generator.cli.ReturnCodes.*;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networknt.schema.*;
 import com.networknt.schema.Error;
 import com.networknt.schema.dialect.Dialects;
@@ -33,6 +31,9 @@ import java.util.concurrent.Callable;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 import picocli.CommandLine.ParentCommand;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 @Command(name = "generate")
 public class Generate implements Callable<Integer> {
@@ -45,7 +46,7 @@ public class Generate implements Callable<Integer> {
                   "https://unpkg.com/@camunda/zeebe-element-templates-json-schema/resources/schema.json"));
 
   private static final ObjectMapper mapper =
-      new ObjectMapper().registerModule(new ElementTemplateModule());
+      JsonMapper.builder().addModule(new ElementTemplateModule()).build();
 
   @ParentCommand ConGen connectorGen;
 
@@ -112,7 +113,7 @@ public class Generate implements Callable<Integer> {
       }
       System.out.println(resultString);
       return SUCCESS.getCode();
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       System.err.println("Failed to serialize the result: " + e.getMessage());
       return GENERATION_FAILED.getCode();
     }

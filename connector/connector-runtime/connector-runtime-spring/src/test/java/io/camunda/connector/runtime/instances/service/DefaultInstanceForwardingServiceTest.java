@@ -18,13 +18,10 @@ package io.camunda.connector.runtime.instances.service;
 
 import static org.mockito.Mockito.*;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import io.camunda.connector.api.inbound.Health;
+import tools.jackson.core.type.TypeReference;
 import io.camunda.connector.jackson.ConnectorsObjectMapperSupplier;
 import io.camunda.connector.runtime.core.http.InstanceForwardingHttpClient;
-import io.camunda.connector.runtime.core.inbound.ExecutableId;
-import io.camunda.connector.runtime.inbound.controller.ActiveInboundConnectorResponse;
-import io.camunda.connector.runtime.inbound.executable.ConnectorInstances;
+import io.camunda.connector.runtime.outbound.controller.OutboundConnectorResponse;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -39,21 +36,10 @@ public class DefaultInstanceForwardingServiceTest {
     InstanceForwardingHttpClient mockHttpClient = mock(InstanceForwardingHttpClient.class);
     String method = "POST";
     String path = "/api/forward?param=value&param2=value2";
-    ConnectorInstances body =
-        new ConnectorInstances(
-            "connectorId",
-            "connectorName",
-            List.of(
-                new ActiveInboundConnectorResponse(
-                    ExecutableId.fromDeduplicationId("deduplicationId"),
-                    "type",
-                    "tenantId",
-                    List.of(),
-                    Map.of("dataKey", "dataValue"),
-                    Health.down(),
-                    System.currentTimeMillis(),
-                    List.of(),
-                    "physicalTenantId")));
+    List<OutboundConnectorResponse> body =
+        List.of(
+            new OutboundConnectorResponse(
+                "HTTP JSON", "io.camunda:http-json:1", List.of("url"), null, true, "runtime-1"));
     DefaultInstanceForwardingService service =
         new DefaultInstanceForwardingService(mockHttpClient, "localhost");
     var mockHttpServletRequest = new MockHttpServletRequest(method, path);
@@ -62,7 +48,7 @@ public class DefaultInstanceForwardingServiceTest {
     mockHttpServletRequest.addHeader("Authorization", "Bearer token");
 
     // When
-    TypeReference<ConnectorInstances> responseType = new TypeReference<>() {};
+    TypeReference<List<OutboundConnectorResponse>> responseType = new TypeReference<>() {};
     service.forwardAndReduce(mockHttpServletRequest, responseType);
 
     // Then

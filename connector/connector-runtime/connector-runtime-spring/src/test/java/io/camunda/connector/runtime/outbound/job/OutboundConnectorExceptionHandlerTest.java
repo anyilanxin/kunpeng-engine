@@ -22,7 +22,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.camunda.client.api.response.ActivatedJob;
+import com.anyilanxin.kunpeng.client.command.job.ActivatedJob;
 import io.camunda.connector.api.error.ConnectorException;
 import io.camunda.connector.api.secret.SecretContext;
 import io.camunda.connector.api.secret.SecretProvider;
@@ -37,9 +37,9 @@ import org.mockito.ArgumentCaptor;
 
 /**
  * Secrets are masked out of error output by re-resolving them, so this handler has to resolve
- * against the same scope {@code JobHandlerContext} used when it substituted them. If the two
- * disagree, a secret resolved for one engine would not be recognized here and would leak into the
- * error payload verbatim.
+ * against the same {@link SecretContext} (logical tenant + process definition) that {@code
+ * JobHandlerContext} used when it substituted them. If the two disagree, a secret resolved under
+ * one scope would not be recognized here and would leak into the error payload verbatim.
  */
 class OutboundConnectorExceptionHandlerTest {
 
@@ -47,12 +47,11 @@ class OutboundConnectorExceptionHandlerTest {
   private final OutboundConnectorExceptionHandler handler =
       new OutboundConnectorExceptionHandler(secretProvider);
 
-  private static ActivatedJob jobOnEngine(String physicalTenantId) {
+  private static ActivatedJob jobInTenant(String tenantId) {
     var job = mock(ActivatedJob.class);
     when(job.getVariables()).thenReturn("{\"token\": \"{{secrets.FOO}}\"}");
-    when(job.getTenantId()).thenReturn("my-tenant");
-    when(job.getBpmnProcessId()).thenReturn("my-process");
-    when(job.getPhysicalTenantId()).thenReturn(physicalTenantId);
+    when(job.getTenantId()).thenReturn(tenantId);
+    when(job.getProcessDefinitionKey()).thenReturn("my-process");
     return job;
   }
 
@@ -63,47 +62,45 @@ class OutboundConnectorExceptionHandlerTest {
   }
 
   @Test
-  void manageConnectorJobHandlerException_resolvesSecretsAgainstTheJobsPhysicalTenant() {
-    var job = jobOnEngine("engine-1");
+  void manageConnectorJobHandlerException_resolvesSecretsAgainstTheJobsContext() {
+    var job = jobInTenant("my-tenant");
     when(secretProvider.fetchAll(any(), any())).thenReturn(List.of("secret-value"));
 
     handler.manageConnectorJobHandlerException(
         new RuntimeException("boom"), job, Duration.ofSeconds(1), SecretFilter.allowAll());
 
-    assertThat(captureSecretContext())
-        .isEqualTo(new SecretContext("my-tenant", "my-process", "engine-1"));
+    assertThat(captureSecretContext()).isEqualTo(new SecretContext("my-tenant", "my-process"));
   }
 
   @Test
-  void handleFinalResultException_resolvesSecretsAgainstTheJobsPhysicalTenant() {
-    var job = jobOnEngine("engine-1");
+  void handleFinalResultException_resolvesSecretsAgainstTheJobsContext() {
+    var job = jobInTenant("my-tenant");
     when(job.getRetries()).thenReturn(1);
     when(secretProvider.fetchAll(any(), any())).thenReturn(List.of("secret-value"));
 
     handler.handleFinalResultException(new RuntimeException("boom"), job, SecretFilter.allowAll());
 
-    assertThat(captureSecretContext())
-        .isEqualTo(new SecretContext("my-tenant", "my-process", "engine-1"));
+    assertThat(captureSecretContext()).isEqualTo(new SecretContext("my-tenant", "my-process"));
   }
 
   @Test
-  void handleFinalResultException_masksASecretScopedToTheJobsEngine() {
-    // the payoff of scoping correctly: this provider only knows the secret under engine-1, so
-    // resolving with the wrong physical tenant leaves the value unmasked in the error payload
-    var job = jobOnEngine("engine-1");
+  void handleFinalResultException_masksASecretScopedToTheJobsTenant() {
+    // the payoff of scoping correctly: this provider only knows the secret under my-tenant, so
+    // resolving with the wrong tenant leaves the value unmasked in the error payload
+    var job = jobInTenant("my-tenant");
     when(job.getRetries()).thenReturn(1);
-    SecretProvider engineScopedProvider =
+    SecretProvider tenantScopedProvider =
         new SecretProvider() {
           @Override
           public String getSecret(String name, SecretContext context) {
-            return "FOO".equals(name) && "engine-1".equals(context.physicalTenantId())
+            return "FOO".equals(name) && "my-tenant".equals(context.tenantId())
                 ? "super-secret"
                 : null;
           }
         };
 
     var result =
-        new OutboundConnectorExceptionHandler(engineScopedProvider)
+        new OutboundConnectorExceptionHandler(tenantScopedProvider)
             .handleFinalResultException(
                 new RuntimeException("failed talking to https://api?key=super-secret"),
                 job,
@@ -176,7 +173,7 @@ class OutboundConnectorExceptionHandlerTest {
    */
   @Test
   void errorCode_isNotMasked() {
-    var job = jobOnEngine("engine-1");
+    var job = jobInTenant("my-tenant");
     when(job.getRetries()).thenReturn(1);
     when(secretProvider.fetchAll(any(), any())).thenReturn(List.of("401"));
 
@@ -189,7 +186,7 @@ class OutboundConnectorExceptionHandlerTest {
 
   @SuppressWarnings("unchecked")
   private Map<String, Object> maskedErrorVariables(Map<String, Object> errorVariables) {
-    var job = jobOnEngine("engine-1");
+    var job = jobInTenant("my-tenant");
     when(job.getRetries()).thenReturn(1);
     when(secretProvider.fetchAll(any(), any())).thenReturn(List.of("super-secret"));
 

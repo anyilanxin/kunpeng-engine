@@ -16,19 +16,7 @@
  */
 package io.camunda.connector.runtime.core.outbound;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.exc.*;
-import io.camunda.client.api.response.ActivatedJob;
-import io.camunda.connector.api.document.Document;
-import io.camunda.connector.api.document.DocumentCreationRequest;
-import io.camunda.connector.api.document.DocumentFactory;
-import io.camunda.connector.api.document.DocumentReference;
-import io.camunda.connector.api.document.DocumentReturnChoice;
-import io.camunda.connector.api.document.DocumentReturnFormat;
+import com.anyilanxin.kunpeng.client.command.job.ActivatedJob;
 import io.camunda.connector.api.error.ConnectorInputException;
 import io.camunda.connector.api.outbound.JobContext;
 import io.camunda.connector.api.outbound.OutboundConnectorContext;
@@ -38,8 +26,11 @@ import io.camunda.connector.api.validation.ValidationProvider;
 import io.camunda.connector.runtime.core.AbstractConnectorContext;
 import io.camunda.connector.runtime.core.secret.SecretFilter;
 import java.util.Objects;
-import java.util.Optional;
 import org.jspecify.annotations.Nullable;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.exc.StreamReadException;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.exc.*;
 
 /**
  * Implementation of {@link io.camunda.connector.api.outbound.OutboundConnectorContext} passed on to
@@ -53,18 +44,15 @@ public class JobHandlerContext extends AbstractConnectorContext
 
   private final ObjectMapper objectMapper;
   private final JobContext jobContext;
-  private final DocumentFactory documentFactory;
   private @Nullable String jsonWithSecrets = null;
 
   public JobHandlerContext(
       final ActivatedJob job,
       final SecretProvider secretProvider,
       final ValidationProvider validationProvider,
-      final DocumentFactory documentFactory,
       final ObjectMapper objectMapper,
       final SecretFilter secretFilter) {
     super(secretProvider, secretFilter, validationProvider);
-    this.documentFactory = documentFactory;
     this.job = job;
     this.objectMapper = objectMapper;
     this.jobContext = new ActivatedJobContext(job, this::getJsonReplacedWithSecrets);
@@ -94,8 +82,7 @@ public class JobHandlerContext extends AbstractConnectorContext
           getSecretHandler()
               .replaceSecrets(
                   job.getVariables(),
-                  new SecretContext(
-                      job.getTenantId(), job.getBpmnProcessId(), job.getPhysicalTenantId()));
+                  new SecretContext(job.getTenantId(), job.getProcessDefinitionKey(), null));
     }
     return jsonWithSecrets;
   }
@@ -104,7 +91,7 @@ public class JobHandlerContext extends AbstractConnectorContext
     var jsonWithSecrets = getJsonReplacedWithSecrets();
     try {
       return objectMapper.readValue(jsonWithSecrets, cls);
-    } catch (JsonParseException e) {
+    } catch (StreamReadException e) {
       throw new ConnectorInputException("This is not a JSON object", e);
     } catch (InvalidFormatException
         | InvalidNullException
@@ -112,7 +99,7 @@ public class JobHandlerContext extends AbstractConnectorContext
         | PropertyBindingException e) {
       String errorMessage =
           e.getPath().stream()
-              .map(JsonMappingException.Reference::getFieldName)
+              .map(JacksonException.Reference::getPropertyName)
               .reduce((s, s2) -> s.concat(", ").concat(s2))
               .map("Json object contains an invalid field: "::concat)
               .map(
@@ -125,34 +112,8 @@ public class JobHandlerContext extends AbstractConnectorContext
               .orElse("Unexpected Error, Further investigation is needed");
 
       throw new ConnectorInputException(errorMessage, e);
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       throw new ConnectorInputException(e.getOriginalMessage(), e);
-    }
-  }
-
-  @Override
-  public Optional<DocumentReturnFormat> readDocumentReturnFormat() {
-    // Read the raw variable directly instead of the secret-replaced job JSON: the return-format
-    // dropdown never carries secrets, so we can skip secret replacement and parsing the full
-    // variable tree. getVariablesAsMap().get(...) returns null when the variable is absent
-    // (older templates), whereas job.getVariable(...) would throw — so this keeps older
-    // templates working by falling through to the legacy flow.
-    Object rawFormat = job.getVariablesAsMap().get("documentReturnFormat");
-    if (rawFormat == null) {
-      return Optional.empty();
-    }
-    JsonNode formatNode = objectMapper.valueToTree(rawFormat);
-    String choiceText = formatNode.path("choice").asText(null);
-    if (choiceText == null || choiceText.isBlank()) {
-      return Optional.empty();
-    }
-    try {
-      return Optional.of(
-          new DocumentReturnFormat(
-              DocumentReturnChoice.valueOf(choiceText), formatNode.path("encoding").asText(null)));
-    } catch (IllegalArgumentException e) {
-      throw new ConnectorInputException(
-          "documentReturnFormat.choice must be one of DOCUMENT, TEXT, JSON. Got: " + choiceText, e);
     }
   }
 
@@ -176,15 +137,5 @@ public class JobHandlerContext extends AbstractConnectorContext
   @Override
   public int hashCode() {
     return Objects.hash(job);
-  }
-
-  @Override
-  public Document resolve(DocumentReference reference) {
-    return documentFactory.resolve(reference);
-  }
-
-  @Override
-  public Document create(DocumentCreationRequest request) {
-    return documentFactory.create(request.withPhysicalTenantIdIfAbsent(job.getPhysicalTenantId()));
   }
 }

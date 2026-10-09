@@ -19,7 +19,7 @@ package io.camunda.connector.http.rest;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import io.camunda.connector.api.outbound.OutboundConnectorContext;
 import io.camunda.connector.http.base.model.auth.Authentication;
 import io.camunda.connector.http.base.model.auth.BasicAuthentication;

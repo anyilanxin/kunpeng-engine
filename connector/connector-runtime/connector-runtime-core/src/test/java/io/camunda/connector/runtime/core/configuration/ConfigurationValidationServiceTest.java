@@ -18,8 +18,8 @@ package io.camunda.connector.runtime.core.configuration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.ObjectMapper;
 import io.camunda.connector.api.annotation.Configuration;
 import io.camunda.connector.api.error.ConnectorException;
 import io.camunda.connector.api.secret.SecretContext;

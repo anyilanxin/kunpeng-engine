@@ -39,7 +39,7 @@ import java.util.List;
  *     identity, as opposed to {@code runtimeId}, which is the reporting pod's identity. One entry
  *     per (connector, physical tenant) pair is returned, since every configured engine runs a job
  *     worker for every registered connector. {@code null} when no physical tenant is known (legacy
- *     single-client wiring that supplies no {@code CamundaClientRegistry}).
+ *     single-client wiring that supplies no {@code KunpengClientRegistry}).
  */
 @JsonInclude(Include.NON_NULL)
 public record OutboundConnectorResponse(

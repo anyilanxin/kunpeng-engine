@@ -37,7 +37,6 @@ import io.camunda.connector.http.rest.model.HttpJsonRequest;
       "connectionTimeoutInSeconds",
       "readTimeoutInSeconds",
       "body",
-      "storeResponse",
       "groupSetCookieHeaders",
       "ignoreNullValues",
       "followRedirects"
@@ -68,7 +67,7 @@ import io.camunda.connector.http.rest.model.HttpJsonRequest;
     defaultResultExpression =
         "{\n"
             + "  myResponseBody: response.body\n"
-            + "  // Use FEEL to extract values, e.g.,:\n"
+            + "  // Use Expression to extract values, e.g.,:\n"
             + "  // myUserId: response.body.post.userId\n"
             + "}",
     propertyGroups = {
@@ -89,13 +88,13 @@ public class HttpJsonFunction implements OutboundConnectorFunction {
     this(new HttpService());
   }
 
-  HttpJsonFunction(HttpService httpService) {
+  HttpJsonFunction(final HttpService httpService) {
     this.httpService = httpService;
   }
 
   @Override
   public Object execute(final OutboundConnectorContext context) {
     final var request = context.bindVariables(HttpJsonRequest.class);
-    return httpService.executeConnectorRequest(request, context);
+    return httpService.executeConnectorRequest(request);
   }
 }

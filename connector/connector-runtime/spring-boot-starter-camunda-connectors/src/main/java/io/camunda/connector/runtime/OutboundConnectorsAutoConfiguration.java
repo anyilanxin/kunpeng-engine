@@ -16,40 +16,37 @@
  */
 package io.camunda.connector.runtime;
 
-import io.camunda.client.jobhandling.CamundaClientExecutorService;
-import io.camunda.client.metrics.MeteredCamundaClientExecutorService;
-import io.camunda.client.spring.configuration.CamundaAutoConfiguration;
-import io.camunda.client.spring.configuration.ExecutorServiceConfiguration;
+import com.anyilanxin.kunpeng.client.spring.configuration.ExecutorServiceConfiguration;
+import com.anyilanxin.kunpeng.client.spring.configuration.KunpengAutoConfiguration;
+import com.anyilanxin.kunpeng.client.spring.jobhandling.KunpengClientExecutorService;
 import io.camunda.connector.runtime.instances.InstanceForwardingConfiguration;
 import io.camunda.connector.runtime.outbound.OutboundConnectorRuntimeConfiguration;
-import io.micrometer.core.instrument.MeterRegistry;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @AutoConfiguration
-@AutoConfigureBefore({CamundaAutoConfiguration.class, ExecutorServiceConfiguration.class})
+@AutoConfigureBefore({KunpengAutoConfiguration.class, ExecutorServiceConfiguration.class})
 @Import({OutboundConnectorRuntimeConfiguration.class, InstanceForwardingConfiguration.class})
+@EnableScheduling
 public class OutboundConnectorsAutoConfiguration {
 
-  @Bean(name = {"connectorCamundaClientExecutorService", "camundaClientExecutorService"})
+  @Bean(name = {"connectorKunpengClientExecutorService", "clientExecutorService"})
   @ConditionalOnMissingBean
   @ConditionalOnProperty(
       name = "camunda.connector.virtual-threads.enabled",
       havingValue = "true",
       matchIfMissing = true)
-  public CamundaClientExecutorService connectorCamundaClientExecutorService(
-      @Autowired(required = false) MeterRegistry meterRegistry) {
+  public KunpengClientExecutorService connectorKunpengClientExecutorService() {
+    // each scheduled job-handling task runs on its own virtual thread
     ThreadFactory factory = Thread.ofVirtual().name("job-worker-virtual-", 0).factory();
-    var vThreadExecutor = Executors.newThreadPerTaskExecutor(factory);
-    var scheduler = Executors.newSingleThreadScheduledExecutor();
-    return new MeteredCamundaClientExecutorService(
-        scheduler, true, vThreadExecutor, true, meterRegistry);
+    var scheduler = Executors.newSingleThreadScheduledExecutor(factory);
+    return new KunpengClientExecutorService(scheduler, true);
   }
 }

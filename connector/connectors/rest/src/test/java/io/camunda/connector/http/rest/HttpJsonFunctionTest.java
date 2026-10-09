@@ -21,8 +21,8 @@ import static org.apache.http.entity.ContentType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchException;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
 import com.github.tomakehurst.wiremock.admin.model.ServeEventQuery;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
@@ -122,7 +122,7 @@ public class HttpJsonFunctionTest extends BaseTest {
   }
 
   @Test
-  void execute_shouldSendNullFieldWhenRequestContainsNullField() throws JsonProcessingException {
+  void execute_shouldSendNullFieldWhenRequestContainsNullField() throws JacksonException {
     // given request, and response body with null field value
     final var request =
         "{ \"method\": \"put\", \"url\": \"http://localhost:8086/http-endpoint\",\"authentication\": { \"type\": \"noAuth\" }, \"body\" : { \"test\": 2, \"second\" : null}, \"ignoreNullValues\" : false }";
@@ -143,7 +143,7 @@ public class HttpJsonFunctionTest extends BaseTest {
   }
 
   @Test
-  void execute_shouldNotSendNullFieldWhenRequestContainsNullField() throws JsonProcessingException {
+  void execute_shouldNotSendNullFieldWhenRequestContainsNullField() throws JacksonException {
     // given request, and response body with null field value
     final var request =
         "{ \"method\": \"put\", \"url\": \"http://localhost:8086/http-endpoint\",\"authentication\": { \"type\": \"noAuth\" }, \"body\" : { \"test\": 2, \"second\" : null}, \"ignoreNullValues\" : true }";

@@ -11,9 +11,8 @@ configure(jarInfo) {
 
 dependencies {
     implementation 'org.slf4j:slf4j-api'
-    implementation 'com.fasterxml.jackson.core:jackson-databind'
-    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8'
-    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    implementation 'tools.jackson.core:jackson-databind'
+    implementation 'tools.jackson.core:jackson-core'
     implementation 'com.google.http-client:google-http-client'
     implementation 'org.apache.httpcomponents.core5:httpcore5'
     implementation 'org.apache.httpcomponents.client5:httpclient5'

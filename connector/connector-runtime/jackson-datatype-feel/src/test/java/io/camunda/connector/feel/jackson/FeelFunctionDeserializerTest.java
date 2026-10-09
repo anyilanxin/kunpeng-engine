@@ -18,10 +18,10 @@ package io.camunda.connector.feel.jackson;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JavaType;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import io.camunda.connector.feel.FeelExpressionEvaluator;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -33,12 +33,10 @@ import org.junit.jupiter.api.Test;
 public class FeelFunctionDeserializerTest {
 
   private final ObjectMapper mapper =
-      new ObjectMapper()
-          .registerModule(new JacksonModuleFeelFunction())
-          .registerModule(new JavaTimeModule());
+      JsonMapper.builder().addModule(new JacksonModuleFeelFunction()).build();
 
   @Test
-  void feelFunctionDeserialization_objectResult() throws JsonProcessingException {
+  void feelFunctionDeserialization_objectResult() throws JacksonException {
     // given
     String json =
         """
@@ -56,7 +54,7 @@ public class FeelFunctionDeserializerTest {
   }
 
   @Test
-  void feelFunctionDeserialization_stringResult() throws JsonProcessingException {
+  void feelFunctionDeserialization_stringResult() throws JacksonException {
     // given
     String json =
         """
@@ -73,11 +71,11 @@ public class FeelFunctionDeserializerTest {
   }
 
   @Test
-  void feelFunctionDeserialization_booleanResult() throws JsonProcessingException {
-    // given
+  void feelFunctionDeserialization_booleanResult() throws JacksonException {
+    // given: QL equality is '==', not FEEL's single '='
     String json =
         """
-        { "function": "= a = b" }
+        { "function": "= a == b" }
         """;
 
     // when
@@ -90,7 +88,7 @@ public class FeelFunctionDeserializerTest {
   }
 
   @Test
-  void feelFunctionDeserialization_integerResult() throws JsonProcessingException {
+  void feelFunctionDeserialization_integerResult() throws JacksonException {
     // given
     String json =
         """
@@ -107,7 +105,7 @@ public class FeelFunctionDeserializerTest {
   }
 
   @Test
-  void feelFunctionDeserialization_nullResult() throws JsonProcessingException {
+  void feelFunctionDeserialization_nullResult() throws JacksonException {
     // given
     String json =
         """
@@ -124,7 +122,7 @@ public class FeelFunctionDeserializerTest {
   }
 
   @Test
-  void feelSupplierDeserialization_listResult() throws JsonProcessingException {
+  void feelSupplierDeserialization_listResult() throws JacksonException {
     // given
     String json =
         """
@@ -141,7 +139,7 @@ public class FeelFunctionDeserializerTest {
   }
 
   @Test
-  void feelSupplierDeserialization_mapResult() throws JsonProcessingException {
+  void feelSupplierDeserialization_mapResult() throws JacksonException {
     // given
     String json =
         """
@@ -158,7 +156,7 @@ public class FeelFunctionDeserializerTest {
   }
 
   @Test
-  void feelSupplierDeserialization_foldedMapResult() throws JsonProcessingException {
+  void feelSupplierDeserialization_foldedMapResult() throws JacksonException {
     // given
     String json =
         """
@@ -172,8 +170,9 @@ public class FeelFunctionDeserializerTest {
     InputContextInteger inputContext = new InputContextInteger(3, 5);
     var result = targetType.function().apply(inputContext);
     assertThat(result).containsKey("foo");
-    assertThat((Map) result.get("foo")).containsEntry("bar", 8L);
-    assertThat((Map) result.get("foo")).containsEntry("baz", 2L);
+    // QL arithmetic yields Integer, not FEEL's Long
+    assertThat((Map) result.get("foo")).containsEntry("bar", 8);
+    assertThat((Map) result.get("foo")).containsEntry("baz", 2);
   }
 
   @Test
@@ -199,10 +198,12 @@ public class FeelFunctionDeserializerTest {
         { "function": "= { result: a + c }" }
         """;
     var contextualReader =
-        FeelContextAwareObjectReader.of(mapper).withStaticContext(Map.of("c", "bar"));
+        FeelContextAwareObjectReader.of(mapper)
+            .withStaticContext(Map.of("c", "bar"))
+            .forType(TargetTypeObject.class);
 
     // when
-    TargetTypeObject targetType = contextualReader.readValue(json, TargetTypeObject.class);
+    TargetTypeObject targetType = contextualReader.readValue(json);
 
     // then
     InputContextString inputContext = new InputContextString("foo", "some value");
@@ -221,10 +222,11 @@ public class FeelFunctionDeserializerTest {
         """;
     var contextualReader =
         FeelContextAwareObjectReader.of(mapper)
-            .withEvaluator(new ThrowingFeelExpressionEvaluator());
+            .withEvaluator(new ThrowingFeelExpressionEvaluator())
+            .forType(TargetTypeObject.class);
 
     // when
-    TargetTypeObject targetType = contextualReader.readValue(json, TargetTypeObject.class);
+    TargetTypeObject targetType = contextualReader.readValue(json);
 
     // then
     InputContextString inputContext = new InputContextString("foo", "bar");
@@ -235,16 +237,19 @@ public class FeelFunctionDeserializerTest {
 
   @Test
   void feelFunctionDeserialization_contextAware_knowsJava8Time() throws IOException {
-    // given
+    // given: the QL dialect has no date()/string() functions, so a LocalDate is injected
+    // through the reader context instead
     var json =
         """
-        { "function": "= string(date(2021, 1, 1))" }
+        { "function": "= d" }
         """;
     var contextualReader =
-        FeelContextAwareObjectReader.of(mapper).withStaticContext(Map.of("c", "bar"));
+        FeelContextAwareObjectReader.of(mapper)
+            .withStaticContext(Map.of("d", LocalDate.of(2021, 1, 1)))
+            .forType(TargetTypeJava8Time.class);
 
     // when
-    TargetTypeJava8Time targetType = contextualReader.readValue(json, TargetTypeJava8Time.class);
+    TargetTypeJava8Time targetType = contextualReader.readValue(json);
 
     // then
     InputContextInteger inputContext = new InputContextInteger(3, 5);

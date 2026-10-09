@@ -16,15 +16,15 @@
  */
 package io.camunda.connector.http.client.mapper;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.camunda.connector.api.error.ConnectorException;
 import io.camunda.connector.http.client.utils.EnvVarHelper;
 import io.camunda.connector.http.client.utils.JsonHelper;
 import java.io.IOException;
 import java.util.function.Supplier;
 import org.apache.commons.lang3.StringUtils;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Common {@link ResponseMapper} implementations.
@@ -43,17 +43,18 @@ public final class ResponseMappers {
     return ResponseMappers::asBytes;
   }
 
-  public static ResponseMapper<JsonNode> asJsonNode(Supplier<ObjectMapper> objectMapperSupplier) {
+  public static ResponseMapper<JsonNode> asJsonNode(
+      final Supplier<ObjectMapper> objectMapperSupplier) {
     return (response) -> asJson(response, objectMapperSupplier.get());
   }
 
   public static <T> ResponseMapper<T> asObject(
-      Supplier<ObjectMapper> objectMapperSupplier, Class<T> valueType) {
+      final Supplier<ObjectMapper> objectMapperSupplier, final Class<T> valueType) {
     return (response) -> {
-      var mapper = objectMapperSupplier.get();
+      final var mapper = objectMapperSupplier.get();
       try {
         return mapper.readValue(asString(response), valueType);
-      } catch (IOException e) {
+      } catch (final JacksonException e) {
         throw new ConnectorException(
             "Failed to map response body to type " + valueType.getSimpleName(), e);
       }
@@ -73,9 +74,9 @@ public final class ResponseMappers {
   private static final String ERROR_MESSAGE_TOO_LARGE =
       "Response body exceeds maximum in-memory size of " + MAX_IN_MEMORY_BODY_SIZE + " bytes";
 
-  private static String asString(StreamingHttpResponse response) {
+  private static String asString(final StreamingHttpResponse response) {
     try {
-      var bytes = response.body().readNBytes(MAX_IN_MEMORY_BODY_SIZE);
+      final var bytes = response.body().readNBytes(MAX_IN_MEMORY_BODY_SIZE);
       if (response.body().read() != -1) {
         throw new RuntimeException(ERROR_MESSAGE_TOO_LARGE);
       }
@@ -83,25 +84,26 @@ public final class ResponseMappers {
         return null;
       }
       return new String(bytes);
-    } catch (IOException e) {
+    } catch (final IOException e) {
       throw new RuntimeException("Failed to read response body as string", e);
     }
   }
 
-  private static byte[] asBytes(StreamingHttpResponse response) {
+  private static byte[] asBytes(final StreamingHttpResponse response) {
     try {
-      var body = response.body().readNBytes(MAX_IN_MEMORY_BODY_SIZE);
+      final var body = response.body().readNBytes(MAX_IN_MEMORY_BODY_SIZE);
       if (response.body().read() != -1) {
         throw new RuntimeException(ERROR_MESSAGE_TOO_LARGE);
       }
       return body;
-    } catch (IOException e) {
+    } catch (final IOException e) {
       throw new RuntimeException("Failed to read response body as bytes", e);
     }
   }
 
-  private static JsonNode asJson(StreamingHttpResponse response, ObjectMapper objectMapper) {
-    var stringBody = asString(response);
+  private static JsonNode asJson(
+      final StreamingHttpResponse response, final ObjectMapper objectMapper) {
+    final var stringBody = asString(response);
     if (stringBody == null) {
       return null;
     }
@@ -114,7 +116,7 @@ public final class ResponseMappers {
     }
     try {
       return objectMapper.readTree(stringBody);
-    } catch (JsonProcessingException e) {
+    } catch (final JacksonException e) {
       throw new ConnectorException("Failed to parse JSON string: " + stringBody, e);
     }
   }

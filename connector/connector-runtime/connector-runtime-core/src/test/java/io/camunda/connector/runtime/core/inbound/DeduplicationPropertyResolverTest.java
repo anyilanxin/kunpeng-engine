@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Verifies prefix derivation against a fixture that mirrors the structure of a real connector model
- * (a wrapper around a bean with scalars, an enum, a container, a sealed polymorphic type and a FEEL
+ * (a wrapper around a bean with scalars, an enum, a container, a sealed polymorphic type and a Expression
  * function), without depending on any connector module.
  */
 class DeduplicationPropertyResolverTest {

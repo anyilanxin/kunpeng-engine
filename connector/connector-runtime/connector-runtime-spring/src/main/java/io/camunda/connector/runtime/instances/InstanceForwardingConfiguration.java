@@ -16,7 +16,6 @@
  */
 package io.camunda.connector.runtime.instances;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.camunda.connector.runtime.instances.service.DefaultInstanceForwardingService;
 import io.camunda.connector.runtime.instances.service.ForwardingInstanceForwardingRouter;
 import io.camunda.connector.runtime.instances.service.InstanceForwardingRouter;
@@ -28,6 +27,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import tools.jackson.databind.ObjectMapper;
 
 @Configuration
 public class InstanceForwardingConfiguration {

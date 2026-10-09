@@ -16,21 +16,10 @@
  */
 package io.camunda.connector.api.inbound.webhook;
 
-import io.camunda.connector.api.document.Document;
 import io.camunda.connector.api.inbound.CorrelationResult;
-import java.util.List;
 import java.util.Map;
 
 public record WebhookResultContext(
     MappedHttpRequest request,
     Map<String, Object> connectorData,
-    CorrelationResult.Success correlation,
-    List<Document> documents) {
-
-  public WebhookResultContext(
-      MappedHttpRequest request,
-      Map<String, Object> connectorData,
-      CorrelationResult.Success correlation) {
-    this(request, connectorData, correlation, List.of());
-  }
-}
+    CorrelationResult.Success correlation) {}

@@ -16,8 +16,6 @@
  */
 package io.camunda.connector.api.inbound.webhook;
 
-import io.camunda.connector.api.document.Document;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -25,8 +23,4 @@ import java.util.Map;
  * variables.
  */
 public record WebhookTriggerResultContext(
-    MappedHttpRequest request, Map<String, Object> connectorData, List<Document> documents) {
-  public WebhookTriggerResultContext(MappedHttpRequest request, Map<String, Object> connectorData) {
-    this(request, connectorData, List.of());
-  }
-}
+    MappedHttpRequest request, Map<String, Object> connectorData) {}

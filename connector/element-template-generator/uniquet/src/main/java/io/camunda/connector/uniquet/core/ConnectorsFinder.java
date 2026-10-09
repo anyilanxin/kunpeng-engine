@@ -18,8 +18,6 @@ package io.camunda.connector.uniquet.core;
 
 import static io.camunda.connector.uniquet.core.FileHelper.getBaseName;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.camunda.connector.uniquet.dto.Connector;
 import java.io.File;
 import java.io.IOException;
@@ -30,6 +28,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 public class ConnectorsFinder {
 
@@ -133,7 +134,7 @@ public class ConnectorsFinder {
       JsonNode idNode = root.get("id");
       var a = idNode != null && IGNORED_TEMPLATE_IDS.contains(idNode.asText());
       return !a;
-    } catch (IOException e) {
+    } catch (JacksonException e) {
       throw new RuntimeException(e);
     }
   }

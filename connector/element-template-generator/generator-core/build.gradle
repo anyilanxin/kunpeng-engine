@@ -1,0 +1,32 @@
+plugins {
+    id 'kunpeng.build-publish'
+}
+
+description = "element-template-generator-core"
+
+configure(jarInfo) {
+    archiveName = "kunpeng-connector-element-template-core"
+}
+
+
+dependencies {
+    implementation project(':connector:element-template-generator:annotations')
+    implementation project(':connector:connector-sdk:core')
+    implementation project(':connector:connector-commons:connector-object-mapper')
+    implementation project(':connector:connector-commons:connector-utils')
+    implementation project(':connector:connector-runtime:connector-feel')
+    implementation 'tools.jackson.core:jackson-databind'
+    implementation 'jakarta.validation:jakarta.validation-api'
+    implementation 'org.apache.commons:commons-lang3'
+    implementation 'net.jcip:jcip-annotations'
+    implementation 'io.pebbletemplates:pebble'
+    implementation 'net.steppschuh.markdowngenerator:markdowngenerator'
+    implementation('uk.co.jemos.podam:podam') {
+        exclude group: 'net.jcip', module: 'jcip-annotations'
+    }
+
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.assertj:assertj-core'
+    testImplementation 'org.skyscreamer:jsonassert'
+    testImplementation 'com.networknt:json-schema-validator'
+}

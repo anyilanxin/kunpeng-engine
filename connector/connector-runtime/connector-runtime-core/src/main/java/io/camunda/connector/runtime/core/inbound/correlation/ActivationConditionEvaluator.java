@@ -110,8 +110,7 @@ public class ActivationConditionEvaluator {
    * <ul>
    *   <li>All are intermediate catch events
    *   <li>All have the same message name
-   *   <li>All have the same resultExpression, resultVariable, correlationKeyExpression,
-   *       messageIdExpression, and timeToLive
+   *   <li>All have the same resultExpression, resultVariable, and correlationKeyExpression
    * </ul>
    *
    * <p>When compatible, we can pick any one (the first) since they're functionally identical and
@@ -171,24 +170,6 @@ public class ActivationConditionEvaluator {
             .toList();
     if (correlationKeyExpressions.size() > 1) {
       mismatches.add("correlationKeyExpression: " + correlationKeyExpressions);
-    }
-
-    var messageIdExpressions =
-        matchingElements.stream()
-            .map(e -> ((MessageCorrelationPoint) e.correlationPoint()).messageIdExpression())
-            .distinct()
-            .toList();
-    if (messageIdExpressions.size() > 1) {
-      mismatches.add("messageIdExpression: " + messageIdExpressions);
-    }
-
-    var timeToLives =
-        matchingElements.stream()
-            .map(e -> ((MessageCorrelationPoint) e.correlationPoint()).timeToLive())
-            .distinct()
-            .toList();
-    if (timeToLives.size() > 1) {
-      mismatches.add("timeToLive: " + timeToLives);
     }
 
     if (!mismatches.isEmpty()) {

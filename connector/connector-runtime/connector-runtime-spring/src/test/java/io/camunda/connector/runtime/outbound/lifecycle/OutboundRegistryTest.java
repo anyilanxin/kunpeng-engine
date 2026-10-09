@@ -18,7 +18,7 @@ package io.camunda.connector.runtime.outbound.lifecycle;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import io.camunda.connector.api.annotation.OutboundConnector;
 import io.camunda.connector.api.outbound.OutboundConnectorContext;
 import io.camunda.connector.api.outbound.OutboundConnectorFunction;

@@ -16,8 +16,6 @@
  */
 package io.camunda.connector.runtime.instances.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.camunda.connector.runtime.core.http.DefaultInstancesUrlBuilder;
 import io.camunda.connector.runtime.core.http.InstanceForwardingHttpClient;
 import io.camunda.connector.runtime.instances.reducer.ReducerRegistry;
@@ -28,6 +26,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 public class DefaultInstanceForwardingService implements InstanceForwardingService {
 

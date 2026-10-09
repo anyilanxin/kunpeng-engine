@@ -16,13 +16,7 @@
  */
 package io.camunda.connector.runtime.configuration;
 
-import static io.camunda.connector.runtime.tenant.PhysicalTenantClients.clientNames;
-import static io.camunda.connector.runtime.tenant.PhysicalTenantClients.resolveClient;
-import static io.camunda.connector.runtime.tenant.PhysicalTenantClients.toMapByPhysicalTenantId;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.camunda.client.CamundaClient;
-import io.camunda.client.spring.bean.CamundaClientRegistry;
+import com.anyilanxin.kunpeng.client.KunpengClient;
 import io.camunda.connector.api.validation.ConfigurationValidator;
 import io.camunda.connector.api.validation.ValidationProvider;
 import io.camunda.connector.feel.FeelExpressionEvaluator;
@@ -31,26 +25,26 @@ import io.camunda.connector.runtime.annotation.OutboundConnectorObjectMapper;
 import io.camunda.connector.runtime.core.configuration.ConfigurationValidationRegistry;
 import io.camunda.connector.runtime.core.configuration.ConfigurationValidationService;
 import io.camunda.connector.runtime.core.secret.SecretProviderAggregator;
+import io.camunda.connector.runtime.metrics.ConnectorMetrics;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Wires configuration (credential) validation. This is <b>direction-agnostic</b>: the same
  * configuration types are consumed by both inbound and outbound connectors, so it is imported by
- * the neutral top-level runtime auto-configuration rather than the outbound-specific one — an
- * inbound-only runtime exposes it too.
+ * the neutral top-level runtime auto-configuration rather than the outbound-specific one.
  *
  * <p>{@code POST /configurations/validate} resolves stored secrets to run a validator, and applies
  * no secret allow-list while doing so — out-of-band validation has no process or element scope to
  * derive one from. No resolved value can reach the response (see the message-safety policy on
  * {@code ConfigurationValidationService}), but the route is still expected to be reachable only by
- * trusted callers; the SaaS bundle covers it with the Console JWT {@code SecurityFilterChain}.
+ * trusted callers.
  */
 @Configuration
 @Import(ConfigurationValidationRestController.class)
@@ -62,60 +56,33 @@ public class ConfigurationValidationConfiguration {
   }
 
   /**
-   * A stored configuration lives on exactly one orchestration cluster, so its {@code credentialRef}
-   * must be evaluated against that cluster's variables. Builds one cluster-backed evaluator per
-   * configured physical tenant, mirroring the per-physical-tenant maps the outbound runtime builds
-   * for document stores and secret caches.
+   * A stored configuration is evaluated against the engine's variables, so the evaluator is built
+   * from the wired {@link KunpengClient} and keyed by the runtime's single physical tenant id.
    *
-   * <p>Every evaluator is constructed here from a {@link CamundaClient}, and the ambient {@code
-   * FeelExpressionEvaluator} bean is deliberately <b>not</b> consulted. That bean is only
-   * {@code @ConditionalOnMissingBean}, so a deployment or test may replace it with a local
-   * (embedded-engine) evaluator — which cannot reach {@code camunda.vars.env.*} at all and would
-   * fail at request time in a way that is hard to trace back to the substituted bean. Constructing
-   * the evaluators here makes that substitution structurally impossible rather than merely
-   * discouraged.
+   * <p>The ambient {@code FeelExpressionEvaluator} bean is deliberately <b>not</b> consulted. That
+   * bean is only {@code @ConditionalOnMissingBean}, so a deployment or test may replace it with a
+   * local (embedded-engine) evaluator — which cannot reach {@code camunda.vars.env.*} at all and
+   * would fail at request time in a way that is hard to trace back to the substituted bean.
+   * Constructing the evaluator here makes that substitution structurally impossible rather than
+   * merely discouraged.
    */
-  private static Map<String, FeelExpressionEvaluator>
-      buildFeelExpressionEvaluatorsByPhysicalTenantId(
-          CamundaClientRegistry registry, CamundaClient legacyCamundaClient) {
-    return clientNames(registry, legacyCamundaClient).stream()
-        .collect(
-            toMapByPhysicalTenantId(
-                registry,
-                legacyCamundaClient,
-                name ->
-                    FeelExpressionEvaluatorBuilder.camundaClient(
-                            resolveClient(registry, name, legacyCamundaClient))
-                        .build()));
+  private static Map<String, FeelExpressionEvaluator> buildFeelExpressionEvaluators(
+      KunpengClient client) {
+    return Map.of(
+        ConnectorMetrics.DEFAULT_PHYSICAL_TENANT_ID,
+        FeelExpressionEvaluatorBuilder.client(client).build());
   }
 
-  @Bean
-  public Map<String, FeelExpressionEvaluator> feelExpressionEvaluatorsByPhysicalTenantId(
-      @Autowired(required = false) CamundaClientRegistry registry,
-      @Autowired(required = false) CamundaClient legacyCamundaClient) {
-    return buildFeelExpressionEvaluatorsByPhysicalTenantId(registry, legacyCamundaClient);
-  }
-
-  /**
-   * Builds the per-physical-tenant evaluator map via the plain (non-{@code @Bean}) {@code build*}
-   * helper rather than declaring a {@code Map<String, FeelExpressionEvaluator>}-typed parameter or
-   * calling the sibling {@code @Bean} method: Spring special-cases any {@code Map<String, X>}-typed
-   * parameter by collecting all beans of type {@code X} by name, and {@code @Configuration} CGLIB
-   * proxying re-resolves a {@code @Bean} method's parameters from the container even when it is
-   * called directly in code. Either path would silently yield a single-entry map keyed by the
-   * scalar {@code FeelExpressionEvaluator} bean's name instead of the real per-tenant map.
-   */
   @Bean
   public ConfigurationValidationService configurationValidationService(
       ConfigurationValidationRegistry configurationValidationRegistry,
       SecretProviderAggregator secretProviderAggregator,
       ValidationProvider validationProvider,
       @OutboundConnectorObjectMapper ObjectMapper objectMapper,
-      @Autowired(required = false) CamundaClientRegistry registry,
-      @Autowired(required = false) CamundaClient legacyCamundaClient) {
+      KunpengClient client) {
     return new ConfigurationValidationService(
         configurationValidationRegistry,
-        buildFeelExpressionEvaluatorsByPhysicalTenantId(registry, legacyCamundaClient),
+        buildFeelExpressionEvaluators(client),
         secretProviderAggregator,
         validationProvider,
         objectMapper);

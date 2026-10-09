@@ -24,8 +24,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 
 /**
  * Qualifier annotation for the ObjectMapper used by OutboundConnectorManager. This ObjectMapper has
- * FEEL functions disabled to avoid evaluating FEEL expressions during outbound connector
- * processing.
+ * Expression functions disabled to avoid evaluating Expression expressions during outbound
+ * connector processing.
  */
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)

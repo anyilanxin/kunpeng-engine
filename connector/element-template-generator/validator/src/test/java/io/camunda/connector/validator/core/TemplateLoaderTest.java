@@ -43,7 +43,10 @@ class TemplateLoaderTest {
     Finding finding = result.finding();
     assertThat(finding.ruleId()).isEqualTo(TemplateLoader.DUPLICATE_KEYS_RULE);
     assertThat(finding.jsonPointer()).isEqualTo("/");
-    assertThat(finding.message()).contains("Duplicate field").contains("id").contains("line");
+    assertThat(finding.message())
+        .contains("Duplicate Object property")
+        .contains("id")
+        .contains("line");
   }
 
   @Test

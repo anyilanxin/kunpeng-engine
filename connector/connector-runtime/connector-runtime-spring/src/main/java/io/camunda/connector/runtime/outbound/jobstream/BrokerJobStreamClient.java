@@ -16,8 +16,7 @@
  */
 package io.camunda.connector.runtime.outbound.jobstream;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.camunda.client.CamundaClient;
+import com.anyilanxin.kunpeng.client.KunpengClient;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -25,6 +24,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Fetches remote (broker-side) job-stream data from each Zeebe broker's monitoring endpoint ({@code
@@ -35,7 +35,7 @@ import java.util.List;
  *       {@code camunda.connector.broker.monitoring.addresses} (comma-separated, e.g. {@code
  *       http://localhost:9600,http://localhost:9601}). No topology request is made.
  *   <li><b>Topology discovery</b> (fallback): when no addresses are configured, broker hosts are
- *       resolved at query time via {@link CamundaClient#newTopologyRequest()}. The monitoring port
+ *       resolved at query time via {@link KunpengClient#newTopologyCommand()}. The monitoring port
  *       defaults to {@code 9600} and can be overridden via {@code
  *       camunda.connector.broker.monitoring.port}.
  * </ul>
@@ -51,7 +51,7 @@ public class BrokerJobStreamClient {
   // Explicit mode — null means use topology discovery instead
   private final List<URI> explicitBaseUris;
   // Topology mode — only used when explicitBaseUris is null
-  private final CamundaClient camundaClient;
+  private final KunpengClient client;
   private final int monitoringPort;
 
   private final ObjectMapper objectMapper;
@@ -59,9 +59,9 @@ public class BrokerJobStreamClient {
 
   /** Topology-discovery mode: broker hosts are resolved at query time via the topology API. */
   public BrokerJobStreamClient(
-      CamundaClient camundaClient, int monitoringPort, ObjectMapper objectMapper) {
+      KunpengClient client, int monitoringPort, ObjectMapper objectMapper) {
     this.explicitBaseUris = null;
-    this.camundaClient = camundaClient;
+    this.client = client;
     this.monitoringPort = monitoringPort;
     this.objectMapper = objectMapper;
     this.httpClient = HttpClient.newHttpClient();
@@ -73,7 +73,7 @@ public class BrokerJobStreamClient {
    */
   public BrokerJobStreamClient(List<URI> explicitBaseUris, ObjectMapper objectMapper) {
     this.explicitBaseUris = explicitBaseUris;
-    this.camundaClient = null;
+    this.client = null;
     this.monitoringPort = 0;
     this.objectMapper = objectMapper;
     this.httpClient = HttpClient.newHttpClient();
@@ -107,7 +107,7 @@ public class BrokerJobStreamClient {
     if (explicitBaseUris != null) {
       return explicitBaseUris.stream().map(base -> base.resolve(JOB_STREAMS_PATH)).toList();
     }
-    return camundaClient.newTopologyRequest().send().join().getBrokers().stream()
+    return client.newTopologyCommand().send().join().getBrokers().stream()
         .map(b -> URI.create("http://" + b.getHost() + ":" + monitoringPort + JOB_STREAMS_PATH))
         .toList();
   }

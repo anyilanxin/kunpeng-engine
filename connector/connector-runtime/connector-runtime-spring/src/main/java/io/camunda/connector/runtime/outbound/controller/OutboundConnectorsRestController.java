@@ -18,12 +18,11 @@ package io.camunda.connector.runtime.outbound.controller;
 
 import static io.camunda.connector.runtime.core.http.InstanceForwardingHttpClient.X_CAMUNDA_FORWARDED_FOR;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import io.camunda.connector.runtime.inbound.controller.exception.DataNotFoundException;
 import io.camunda.connector.runtime.instances.service.InstanceForwardingRouter;
 import io.camunda.connector.runtime.instances.service.OutboundConnectorsService;
 import io.camunda.connector.runtime.metrics.ConnectorMetricsAggregator;
 import io.camunda.connector.runtime.metrics.OutboundConnectorMetrics;
+import io.camunda.connector.runtime.outbound.controller.exception.DataNotFoundException;
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -37,6 +36,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import tools.jackson.core.type.TypeReference;
 
 @RestController
 @RequestMapping("/outbound")

@@ -18,12 +18,10 @@ package io.camunda.connector.runtime.core.inbound;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.camunda.client.CamundaClient;
-import io.camunda.connector.api.document.DocumentFactory;
+import tools.jackson.databind.ObjectMapper;
+import com.anyilanxin.kunpeng.client.KunpengClient;
 import io.camunda.connector.api.inbound.InboundConnectorContext;
 import io.camunda.connector.api.inbound.InboundConnectorExecutable;
-import io.camunda.connector.api.inbound.InboundIntermediateConnectorContext;
 import io.camunda.connector.api.validation.ValidationProvider;
 import io.camunda.connector.runtime.core.inbound.activitylog.ActivityLogRegistry;
 import io.camunda.connector.runtime.core.inbound.correlation.InboundCorrelationHandler;
@@ -43,11 +41,9 @@ class DefaultInboundConnectorContextFactoryTest {
   @Mock private InboundCorrelationHandler correlationHandler;
   @Mock private SecretProviderAggregator secretProviderAggregator;
   @Mock private ValidationProvider validationProvider;
-  @Mock private ProcessInstanceClient processInstanceClient;
   @Mock private Consumer<Throwable> cancellationCallback;
   @Mock private ValidInboundConnectorDetails newConnector;
-  @Mock private DocumentFactory documentFactory;
-  @Mock private CamundaClient camundaClient;
+  @Mock private KunpengClient client;
   private DefaultInboundConnectorContextFactory factory;
   private final ActivityLogRegistry activityLogRegistry = new ActivityLogRegistry();
 
@@ -55,78 +51,14 @@ class DefaultInboundConnectorContextFactoryTest {
   void setUp() {
     factory =
         new DefaultInboundConnectorContextFactory(
-            objectMapper,
-            correlationHandler,
-            secretProviderAggregator,
-            validationProvider,
-            processInstanceClient,
-            documentFactory,
-            camundaClient);
+            objectMapper, correlationHandler, secretProviderAggregator, validationProvider, client);
   }
 
   @Test
   void shouldCreateInboundConnectorContext() {
     InboundConnectorContext result =
-        factory.createContext(
-            newConnector,
-            cancellationCallback,
-            ExecutableWithInboundContext.class,
-            activityLogRegistry);
+        factory.createContext(newConnector, cancellationCallback, activityLogRegistry);
 
     assertThat(result).isExactlyInstanceOf(InboundConnectorContextImpl.class);
-  }
-
-  @Test
-  void shouldCreateInboundConnectorContextWhenParameterizedTypeIsEmpty() {
-    InboundConnectorContext result =
-        factory.createContext(
-            newConnector,
-            cancellationCallback,
-            ExecutableWithEmptyParameterizedType.class,
-            activityLogRegistry);
-
-    assertThat(result).isExactlyInstanceOf(InboundConnectorContextImpl.class);
-  }
-
-  @Test
-  void shouldCreateInboundIntermediateConnectorContext() {
-
-    InboundConnectorContext result =
-        factory.createContext(
-            newConnector,
-            cancellationCallback,
-            ExecutableWithIntermediate.class,
-            activityLogRegistry);
-
-    assertThat(result).isExactlyInstanceOf(InboundIntermediateConnectorContextImpl.class);
-  }
-
-  static class ExecutableWithInboundContext
-      implements InboundConnectorExecutable<InboundConnectorContext> {
-    @Override
-    public void activate(final InboundConnectorContext context) throws Exception {}
-
-    @Override
-    public void deactivate() throws Exception {}
-  }
-
-  static class ExecutableWithEmptyParameterizedType
-      implements InboundConnectorExecutable<InboundConnectorContext> {
-
-    @Override
-    public void activate(final InboundConnectorContext context) throws Exception {}
-
-    @Override
-    public void deactivate() throws Exception {}
-  }
-
-  static class ExecutableWithIntermediate
-      implements InboundConnectorExecutable<InboundIntermediateConnectorContext> {
-
-    @Override
-    public void activate(final InboundIntermediateConnectorContext context) throws Exception {}
-
-    @Override
-    public void deactivate() throws Exception {}
   }
 }

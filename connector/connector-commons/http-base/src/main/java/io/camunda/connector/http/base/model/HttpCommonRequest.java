@@ -6,7 +6,7 @@
  */
 package io.camunda.connector.http.base.model;
 
-import io.camunda.connector.api.annotation.FEEL;
+import io.camunda.connector.api.annotation.Expression;
 import io.camunda.connector.generator.java.annotation.FeelMode;
 import io.camunda.connector.generator.java.annotation.TemplateProperty;
 import io.camunda.connector.generator.java.annotation.TemplateProperty.PropertyCondition;
@@ -25,11 +25,11 @@ public class HttpCommonRequest {
   @TemplateProperty(ignore = true)
   private static final int DEFAULT_TIMEOUT = 20;
 
-  @FEEL
+  @Expression
   @NotNull @TemplateProperty(group = "endpoint", id = "method", defaultValue = "GET")
   private HttpMethod method;
 
-  @FEEL
+  @Expression
   @NotBlank @Pattern(regexp = "^(=|(http://|https://|secrets|\\{\\{).*$)", message = "Must be a http(s) URL")
   @TemplateProperty(group = "endpoint", label = "URL", feel = FeelMode.optional)
   private String url;
@@ -61,7 +61,7 @@ public class HttpCommonRequest {
           "Timeout in seconds to read data from an established connection or 0 for an infinite timeout")
   private Integer readTimeoutInSeconds;
 
-  @FEEL
+  @Expression
   @TemplateProperty(
       feel = FeelMode.required,
       group = "endpoint",
@@ -69,7 +69,7 @@ public class HttpCommonRequest {
       description = "Map of HTTP headers to add to the request")
   private Map<String, String> headers;
 
-  @FEEL
+  @Expression
   @TemplateProperty(
       label = "Request body",
       description = "Payload to send with the request",
@@ -83,21 +83,13 @@ public class HttpCommonRequest {
               oneOf = {"POST", "PUT", "PATCH"}))
   private Object body;
 
-  @FEEL
+  @Expression
   @TemplateProperty(
       feel = FeelMode.required,
       group = "endpoint",
       optional = true,
       description = "Map of query parameters to add to the request URL")
   private Map<String, String> queryParameters;
-
-  @TemplateProperty(
-      group = "endpoint",
-      type = PropertyType.Boolean,
-      defaultValueType = TemplateProperty.DefaultValueType.Boolean,
-      defaultValue = "false",
-      description = "Store the response as a document in the document store")
-  private boolean storeResponse;
 
   @TemplateProperty(
       label = "Skip URL encoding",
@@ -201,14 +193,6 @@ public class HttpCommonRequest {
 
   public void setQueryParameters(final Map<String, String> queryParameters) {
     this.queryParameters = queryParameters;
-  }
-
-  public boolean isStoreResponse() {
-    return storeResponse;
-  }
-
-  public void setStoreResponse(final boolean storeResponse) {
-    this.storeResponse = storeResponse;
   }
 
   public String getSkipEncoding() {

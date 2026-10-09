@@ -16,23 +16,23 @@
  */
 package io.camunda.connector.feel;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.camunda.client.CamundaClient;
+import com.anyilanxin.kunpeng.client.KunpengClient;
 import io.camunda.connector.jackson.ConnectorsObjectMapperSupplier;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Step builder for {@link FeelExpressionEvaluator} instances. The entry points return distinct
  * sub-builders so that backend-specific options (e.g. {@code scopeKey}, {@code tenantId}) are only
  * reachable for the backend that actually supports them.
  *
- * <p>Pick {@link #local()} for embedded FEEL evaluation, or {@link #camundaClient(CamundaClient)}
+ * <p>Pick {@link #local()} for embedded Expression evaluation, or {@link #client(KunpengClient)}
  * for cluster-based evaluation (allowing access to cluster variables like {@code
  * camunda.vars.env.*}).
  *
  * <pre>{@code
  * FeelExpressionEvaluator local = FeelExpressionEvaluatorBuilder.local().build();
  *
- * FeelExpressionEvaluator cluster = FeelExpressionEvaluatorBuilder.camundaClient(client)
+ * FeelExpressionEvaluator cluster = FeelExpressionEvaluatorBuilder.client(client)
  *     .tenantId("acme")
  *     .scopeKey(elementInstanceKey)
  *     .objectMapper(objectMapper)
@@ -48,15 +48,15 @@ public final class FeelExpressionEvaluatorBuilder {
     return new LocalStep();
   }
 
-  /** Start building a {@link CamundaClientFeelExpressionEvaluator}. */
-  public static CamundaClientStep camundaClient(CamundaClient camundaClient) {
-    if (camundaClient == null) {
-      throw new IllegalArgumentException("camundaClient must not be null");
+  /** Start building a {@link KunpengClientFeelExpressionEvaluator}. */
+  public static KunpengClientStep client(final KunpengClient client) {
+    if (client == null) {
+      throw new IllegalArgumentException("client must not be null");
     }
-    return new CamundaClientStep(camundaClient);
+    return new KunpengClientStep(client);
   }
 
-  /** Step builder for the embedded FEEL engine evaluator. */
+  /** Step builder for the embedded Expression engine evaluator. */
   public static final class LocalStep {
     private LocalStep() {}
 
@@ -66,35 +66,35 @@ public final class FeelExpressionEvaluatorBuilder {
   }
 
   /** Step builder for the cluster-based evaluator. */
-  public static final class CamundaClientStep {
-    private final CamundaClient camundaClient;
+  public static final class KunpengClientStep {
+    private final KunpengClient client;
     private String tenantId;
     private Long scopeKey;
     private ObjectMapper objectMapper;
 
-    private CamundaClientStep(CamundaClient camundaClient) {
-      this.camundaClient = camundaClient;
+    private KunpengClientStep(final KunpengClient client) {
+      this.client = client;
     }
 
-    public CamundaClientStep tenantId(String tenantId) {
+    public KunpengClientStep tenantId(final String tenantId) {
       this.tenantId = tenantId;
       return this;
     }
 
-    public CamundaClientStep scopeKey(Long scopeKey) {
+    public KunpengClientStep scopeKey(final Long scopeKey) {
       this.scopeKey = scopeKey;
       return this;
     }
 
-    public CamundaClientStep objectMapper(ObjectMapper objectMapper) {
+    public KunpengClientStep objectMapper(final ObjectMapper objectMapper) {
       this.objectMapper = objectMapper;
       return this;
     }
 
     public FeelExpressionEvaluator build() {
-      ObjectMapper mapper =
+      final ObjectMapper mapper =
           objectMapper != null ? objectMapper : ConnectorsObjectMapperSupplier.getCopy();
-      return new CamundaClientFeelExpressionEvaluator(camundaClient, tenantId, scopeKey, mapper);
+      return new KunpengClientFeelExpressionEvaluator(client, tenantId, scopeKey, mapper);
     }
   }
 }

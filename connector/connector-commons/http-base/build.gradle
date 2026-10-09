@@ -11,9 +11,15 @@ configure(jarInfo) {
 
 dependencies {
     implementation project(':connector:element-template-generator:annotations')
+    implementation project(':connector:connector-sdk:core')
     implementation 'org.apache.commons:commons-lang3'
+    implementation 'tools.jackson.core:jackson-databind'
+    implementation 'tools.jackson.core:jackson-core'
     implementation 'org.apache.httpcomponents.core5:httpcore5'
     implementation project(':connector:connector-commons:http-client')
+    implementation project(':connector:connector-commons:connector-object-mapper')
+    implementation 'jakarta.validation:jakarta.validation-api'
+    implementation 'org.hibernate.validator:hibernate-validator'
 
     testImplementation 'org.wiremock:wiremock-standalone'
     testImplementation 'org.skyscreamer:jsonassert'

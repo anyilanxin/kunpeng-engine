@@ -16,38 +16,17 @@
  */
 package io.camunda.connector.runtime.core.testutil.response;
 
-import io.camunda.client.api.response.ProcessInstanceEvent;
-import java.util.Set;
+import com.anyilanxin.kunpeng.client.command.processinstance.CreateProcessInstanceCommandResponse;
 
-public class ProcessInstanceEventDummy implements ProcessInstanceEvent {
-  public long getProcessDefinitionKey() {
-    return 0;
-  }
+public class ProcessInstanceEventDummy implements CreateProcessInstanceCommandResponse {
 
-  public String getBpmnProcessId() {
-    return null;
-  }
-
-  public int getVersion() {
-    return 0;
-  }
-
-  public long getProcessInstanceKey() {
-    return 0;
+  @Override
+  public long getProcessInstanceId() {
+    return 42L;
   }
 
   @Override
   public String getTenantId() {
-    return null;
-  }
-
-  @Override
-  public Set<String> getTags() {
-    return Set.of();
-  }
-
-  @Override
-  public String getBusinessId() {
-    return null;
+    return "default";
   }
 }

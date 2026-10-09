@@ -16,99 +16,50 @@
  */
 package io.camunda.connector.runtime.core.inbound;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.camunda.client.CamundaClient;
-import io.camunda.connector.api.document.DocumentFactory;
+import com.anyilanxin.kunpeng.client.KunpengClient;
 import io.camunda.connector.api.inbound.InboundConnectorContext;
-import io.camunda.connector.api.inbound.InboundConnectorExecutable;
-import io.camunda.connector.api.inbound.InboundIntermediateConnectorContext;
 import io.camunda.connector.api.validation.ValidationProvider;
 import io.camunda.connector.runtime.core.inbound.activitylog.ActivityLogWriter;
 import io.camunda.connector.runtime.core.inbound.correlation.InboundCorrelationHandler;
 import io.camunda.connector.runtime.core.inbound.details.InboundConnectorDetails.ValidInboundConnectorDetails;
 import io.camunda.connector.runtime.core.secret.SecretProviderAggregator;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.Objects;
 import java.util.function.Consumer;
+import tools.jackson.databind.ObjectMapper;
 
 public class DefaultInboundConnectorContextFactory implements InboundConnectorContextFactory {
   private final ObjectMapper objectMapper;
   private final InboundCorrelationHandler correlationHandler;
   private final SecretProviderAggregator secretProviderAggregator;
   private final ValidationProvider validationProvider;
-  private final ProcessInstanceClient processInstanceClient;
-  private final DocumentFactory documentFactory;
-  private final CamundaClient camundaClient;
+  private final KunpengClient client;
 
   public DefaultInboundConnectorContextFactory(
       final ObjectMapper mapper,
       final InboundCorrelationHandler correlationHandler,
       final SecretProviderAggregator secretProviderAggregator,
       final ValidationProvider validationProvider,
-      final ProcessInstanceClient processInstanceClient,
-      final DocumentFactory documentFactory,
-      final CamundaClient camundaClient) {
+      final KunpengClient client) {
     this.objectMapper = mapper;
     this.correlationHandler = correlationHandler;
     this.secretProviderAggregator = secretProviderAggregator;
     this.validationProvider = validationProvider;
-    this.processInstanceClient = processInstanceClient;
-    this.documentFactory = documentFactory;
-    this.camundaClient = Objects.requireNonNull(camundaClient, "camundaClient must not be null");
+    this.client = Objects.requireNonNull(client, "client must not be null");
   }
 
   @Override
-  public <T extends InboundConnectorExecutable<?>> InboundConnectorContext createContext(
+  public InboundConnectorContext createContext(
       final ValidInboundConnectorDetails connectorDetails,
       final Consumer<Throwable> cancellationCallback,
-      final Class<T> executableClass,
       final ActivityLogWriter logWriter) {
-
-    InboundConnectorManagementContext inboundContext =
-        new InboundConnectorContextImpl(
-            secretProviderAggregator,
-            validationProvider,
-            documentFactory,
-            connectorDetails,
-            correlationHandler,
-            cancellationCallback,
-            objectMapper,
-            logWriter,
-            camundaClient);
-
-    if (isIntermediateContext(executableClass)) {
-      inboundContext =
-          new InboundIntermediateConnectorContextImpl(
-              inboundContext,
-              processInstanceClient,
-              validationProvider,
-              objectMapper,
-              correlationHandler,
-              camundaClient);
-    }
-
-    return inboundContext;
-  }
-
-  private <T> boolean isIntermediateContext(Class<T> executableClass) {
-    // Retrieve all generic interfaces implemented by the executable class.
-    Type[] genericInterfaces = executableClass.getGenericInterfaces();
-
-    for (Type genericInterface : genericInterfaces) {
-      // Check if the current type is a parameterized type (i.e., has generic parameters).
-      if (genericInterface instanceof ParameterizedType parameterizedType) {
-        // Retrieve actual type arguments of the parameterized type.
-        Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
-
-        // If the first generic type argument matches InboundIntermediateConnectorContext,
-        // then this class represents an intermediate context.
-        if (actualTypeArguments.length > 0
-            && InboundIntermediateConnectorContext.class.equals(actualTypeArguments[0])) {
-          return true;
-        }
-      }
-    }
-    return false;
+    return new InboundConnectorContextImpl(
+        secretProviderAggregator,
+        validationProvider,
+        connectorDetails,
+        correlationHandler,
+        cancellationCallback,
+        objectMapper,
+        logWriter,
+        client);
   }
 }
