@@ -83,6 +83,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 
 /**
@@ -94,6 +95,7 @@ import org.slf4j.Logger;
 public class DispatchProcessService extends Actor implements RecordAvailableListener {
   private final EventLog logStream;
   EventLogReader logStreamReader;
+  private BatchEntryReader logStreamBatchReader;
   EventLogWriter logStreamWriter;
   private boolean processing = false;
   public static final Logger LOGGER = ClusterDispatchLoggers.CLUSTER_DISPATCH;
@@ -185,6 +187,7 @@ public class DispatchProcessService extends Actor implements RecordAvailableList
   @Override
   protected void onActorStarting() {
     logStreamReader = logStream.newReader();
+    logStreamBatchReader = logStream.newBatchReader();
     logStreamWriter = logStream.newWriter();
     initScheduled();
     initProcessPosition();
@@ -276,26 +279,89 @@ public class DispatchProcessService extends Actor implements RecordAvailableList
             logEventWriter,
             collectSupplier);
     processingCollect = new BatchProcessingCollect(commandApiHandle, appliers, partitionId.id());
-    logStreamReader.seekToNextEntry(processPosition);
+    logStreamBatchReader.seekToNextBatch(processPosition);
   }
 
   @Override
   protected void onActorStarted() {
-    // 调度器 attach(绑定 owner)必须发生在 STARTED 相位(STARTING 相位的投递不保证执行, 见调度器文档)
-    primaryScheduler.attach(actor);
-    lanePool
-        .launch(actor)
-        .onComplete(
-            (ignored, error) -> {
-              if (error != null) {
-                return;
-              }
-              startProcessing();
-            },
-            actor);
+    startProcessing();
   }
 
   private void startProcessing() {
+    final ActorFuture<Void> future = actor.createFuture();
+    recover(future);
+    future.onComplete(
+        (unused, throwable) -> {
+          if (throwable == null) {
+            // 调度器 attach(绑定 owner)必须发生在 STARTED 相位(STARTING 相位的投递不保证执行, 见调度器文档)
+            primaryScheduler.attach(actor);
+            lanePool
+                .launch(actor)
+                .onComplete(
+                    (ignored, error) -> {
+                      if (error != null) {
+                        return;
+                      }
+                      logStreamReader.seekToNextEntry(processPosition);
+                      processing();
+                    },
+                    actor);
+          }
+        },
+        actor);
+  }
+
+  /**
+   * 有界回放恢复：以恢复起点的最后已提交 position 为固定端点，重放 (processedPosition, 端点] 的 EVENT
+   * 条目重建管理面状态；端点之后（含回放期间新提交）的条目交由实时处理接管。
+   */
+  private void recover(final ActorFuture<Void> future) {
+    final long lastCommittedPosition = logStream.getLastCommittedPosition();
+    while (logStreamBatchReader.hasNext()) {
+      final BatchEntryReader.Batch batch = logStreamBatchReader.next();
+      final boolean b = processReplayEvent(batch, lastCommittedPosition);
+      if (!b) {
+        break;
+      }
+    }
+    future.complete(null);
+  }
+
+  boolean processReplayEvent(final BatchEntryReader.Batch batch, final long lastCommittedPosition) {
+    final AtomicBoolean continueProcess = new AtomicBoolean(false);
+    try {
+      currentTransaction = context.getCurrentTransaction();
+      currentTransaction.run(
+          () -> {
+            while (batch.hasNext()) {
+              final LoggedEntry loggedEvent = batch.next();
+              metadata.reset();
+              loggedEvent.readMetadata(metadata);
+              final AdminValueType valueType = metadata.getValueType();
+              final AdminValueLifeCycle lifeCycle = metadata.getLifeCycle();
+              final RecordType recordType = metadata.getRecordType();
+              final long key = loggedEvent.getKey();
+              if (recordType == RecordType.EVENT) {
+                final UnifiedRecordValue recordValue = recordValueMapper.getCacheValue(lifeCycle);
+                recordValue.reset();
+                loggedEvent.readValue(recordValue);
+                appliers.applyState(key, valueType, lifeCycle, recordValue);
+              }
+              processPosition = loggedEvent.getPosition();
+              continueProcess.set(lastCommittedPosition > processPosition);
+              mutableKeyGenerator.setKeyIfHigher(key);
+            }
+            mutableRepositoryPosition.markAsProcessed(processPosition);
+          });
+      currentTransaction.commit();
+      currentTransaction = null;
+    } catch (final Exception e) {
+      LOGGER.error("Failed to process log records", e);
+    }
+    return continueProcess.get();
+  }
+
+  private void processing() {
     logStream.registerRecordAvailableListener(this);
     dispatchService.start(logStream.newWriter(), repositoryFactory);
     actor.submit(this::processNextEvent);
@@ -440,7 +506,6 @@ public class DispatchProcessService extends Actor implements RecordAvailableList
   private void adminInit() {
     final ClusterAdminConfiguration adminConfiguration = clusterMetaStore.getAdminConfiguration();
     if (!adminConfiguration.isInitiator()) {
-
       final AdminRecordMetadata nodeSourceMetaMetadata =
           new AdminRecordMetadata()
               .recordType(RecordType.COMMAND)

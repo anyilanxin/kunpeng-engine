@@ -28,6 +28,7 @@ import com.anyilanxin.kunpeng.eventlog.*;
 import com.anyilanxin.kunpeng.kvstore.RepositoryTransaction;
 import com.anyilanxin.kunpeng.kvstore.TransactionContext;
 import com.anyilanxin.kunpeng.protocol.business.ValueLifeCycle;
+import com.anyilanxin.kunpeng.protocol.business.ValueType;
 import com.anyilanxin.kunpeng.protocol.business.impl.RecordMetadata;
 import com.anyilanxin.kunpeng.protocol.business.impl.eventlog.TypedRecordReader;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.DefaultRecordValueMapper;
@@ -49,6 +50,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.BeanFactory;
 
@@ -63,6 +65,7 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
 
   private final EventLog logStream;
   EventLogReader logStreamReader;
+  private BatchEntryReader logStreamBatchReader;
   EventLogWriter logStreamWriter;
   private boolean processing = false;
   public static final Logger LOGGER = Loggers.SYSTEM_LOGGER;
@@ -139,6 +142,7 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
   @Override
   protected void onActorStarting() {
     logStreamReader = logStream.newReader();
+    logStreamBatchReader = logStream.newBatchReader();
     logStreamWriter = logStream.newWriter();
     initScheduled();
     initProcessPosition();
@@ -231,26 +235,84 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
             logEventWriter,
             collectSupplier);
     processingCollect = new BatchProcessingCollect(commandApiHandle, appliers, partitionId.id());
-    logStreamReader.seekToNextEntry(processPosition);
+    logStreamBatchReader.seekToNextBatch(processPosition);
   }
 
   @Override
   protected void onActorStarted() {
-    // 调度器 attach(绑定 owner)必须发生在 STARTED 相位(STARTING 相位的投递不保证执行, 见调度器文档)
-    primaryScheduler.attach(actor);
-    lanePool
-        .launch(actor)
-        .onComplete(
-            (ignored, error) -> {
-              if (error != null) {
-                return;
-              }
-              startProcessing();
-            },
-            actor);
+    startProcessing();
   }
 
   private void startProcessing() {
+    final ActorFuture<Void> future = actor.createFuture();
+    recover(future);
+    future.onComplete(
+        (_, throwable) -> {
+          if (throwable == null) {
+            // 调度器 attach(绑定 owner)必须发生在 STARTED 相位(STARTING 相位的投递不保证执行, 见调度器文档)
+            primaryScheduler.attach(actor);
+            lanePool
+                .launch(actor)
+                .onComplete(
+                    (ignored, error) -> {
+                      if (error != null) {
+                        return;
+                      }
+                      logStreamReader.seekToNextEntry(processPosition);
+                      processing();
+                    },
+                    actor);
+          }
+        });
+  }
+
+  private void recover(final ActorFuture<Void> future) {
+    final long lastCommittedPosition = logStream.getLastCommittedPosition();
+    while (logStreamBatchReader.hasNext()) {
+      final BatchEntryReader.Batch batch = logStreamBatchReader.next();
+      final boolean b = processReplayEvent(batch, lastCommittedPosition);
+      if (!b) {
+        break;
+      }
+    }
+    future.complete(null);
+  }
+
+  boolean processReplayEvent(final BatchEntryReader.Batch batch, final long lastCommittedPosition) {
+    final AtomicBoolean continueProcess = new AtomicBoolean(false);
+    try {
+      currentTransaction = context.getCurrentTransaction();
+      currentTransaction.run(
+          () -> {
+            while (batch.hasNext()) {
+              final LoggedEntry loggedEvent = batch.next();
+              metadata.reset();
+              loggedEvent.readMetadata(metadata);
+              final ValueType valueType = metadata.getValueType();
+              final ValueLifeCycle lifeCycle = metadata.getLifeCycle();
+              final RecordType recordType = metadata.getRecordType();
+              final long key = loggedEvent.getKey();
+              if (recordType == RecordType.EVENT) {
+                final UnifiedRecordValue recordValue = recordValueMapper.getCacheValue(lifeCycle);
+                recordValue.reset();
+                loggedEvent.readValue(recordValue);
+                appliers.applyState(key, valueType, lifeCycle, recordValue);
+              }
+              processPosition = loggedEvent.getPosition();
+              continueProcess.set(lastCommittedPosition > processPosition);
+              mutableKeyGenerator.setKeyIfHigher(key);
+            }
+            mutableProcessedPosition.markAsProcessed(processPosition);
+          });
+      currentTransaction.commit();
+      currentTransaction = null;
+    } catch (final Exception e) {
+      LOGGER.error("Failed to process log records", e);
+    }
+    return continueProcess.get();
+  }
+
+  private void processing() {
     logStream.registerRecordAvailableListener(this);
     actor.submit(this::processNextEvent);
     actor.run(
@@ -271,12 +333,7 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
   @Override
   public ActorFuture<Void> closeAsync() {
     logStream.removeRecordAvailableListener(this);
-    logEventWriter
-        .schedulerCheckerAwares()
-        .forEach(
-            v -> {
-              v.onClose();
-            });
+    logEventWriter.schedulerCheckerAwares().forEach(SchedulerCheckerAware::onClose);
     if (currentTransaction != null) {
       try {
         currentTransaction.rollback();
