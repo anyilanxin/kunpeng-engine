@@ -21,14 +21,28 @@ import com.anyilanxin.kunpeng.gateway.grpc.service.ProcessInstanceServiceOuterCl
 public class CreateProcessInstanceWithResultCommandResponseImpl
     implements CreateProcessInstanceWithResultCommandResponse {
   private final long processInstanceId;
+  private final String variables;
+  private final String tenantId;
 
   public CreateProcessInstanceWithResultCommandResponseImpl(
       final ProcessInstanceServiceOuterClass.CreateProcessInstanceWithResultResponse response) {
     processInstanceId = response.getProcessInstanceId();
+    variables = response.getVariables();
+    tenantId = response.getTenantId();
   }
 
   @Override
   public long getProcessInstanceId() {
     return processInstanceId;
+  }
+
+  @Override
+  public String getVariables() {
+    return variables;
+  }
+
+  @Override
+  public String getTenantId() {
+    return tenantId;
   }
 }

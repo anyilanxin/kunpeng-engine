@@ -19,4 +19,9 @@ package com.anyilanxin.kunpeng.client.command.processinstance;
 public interface CreateProcessInstanceWithResultCommandResponse {
 
   long getProcessInstanceId();
+
+  /** JSON document consisting of visible variables in the root scope, may be empty. */
+  String getVariables();
+
+  String getTenantId();
 }

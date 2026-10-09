@@ -14,6 +14,7 @@ package com.anyilanxin.kunpeng.client;
 
 import com.anyilanxin.kunpeng.client.command.deployment.DeleteResourceCommand;
 import com.anyilanxin.kunpeng.client.command.deployment.DeployResourceCommand;
+import com.anyilanxin.kunpeng.client.command.expression.EvaluateExpressionCommand;
 import com.anyilanxin.kunpeng.client.command.incident.resolve.IncidentResolveCommand;
 import com.anyilanxin.kunpeng.client.command.job.ActivatedJob;
 import com.anyilanxin.kunpeng.client.command.job.UpdateRetriesJobCommandStep1;
@@ -304,4 +305,11 @@ public interface KunpengClient extends AutoCloseable, JobClient, GatewayServiceD
    * @return {@link RemoveVariableCommand }
    */
   RemoveVariableCommand newVariableRemoveCommand();
+
+  /**
+   * 表达式评估
+   *
+   * @return {@link EvaluateExpressionCommand }
+   */
+  EvaluateExpressionCommand newEvaluateExpressionCommand();
 }

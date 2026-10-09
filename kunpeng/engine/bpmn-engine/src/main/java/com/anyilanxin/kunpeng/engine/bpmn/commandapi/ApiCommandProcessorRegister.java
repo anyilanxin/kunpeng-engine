@@ -19,6 +19,7 @@ package com.anyilanxin.kunpeng.engine.bpmn.commandapi;
 import com.anyilanxin.kunpeng.engine.bpmn.LogEventProcessors;
 import com.anyilanxin.kunpeng.engine.bpmn.LogEventWriter;
 import com.anyilanxin.kunpeng.engine.bpmn.commandapi.deployment.DeploymentApiProcessorRegister;
+import com.anyilanxin.kunpeng.engine.bpmn.commandapi.expression.ExpressionApiProcessorRegister;
 import com.anyilanxin.kunpeng.engine.bpmn.commandapi.incident.IncidentApiProcessorRegister;
 import com.anyilanxin.kunpeng.engine.bpmn.commandapi.job.JobApiProcessorRegister;
 import com.anyilanxin.kunpeng.engine.bpmn.commandapi.message.MessageCorrelationApiProcessorRegister;
@@ -47,5 +48,6 @@ public final class ApiCommandProcessorRegister {
     SignalCorrelationApiProcessorRegister.registerRepository(processors, writer);
     JobApiProcessorRegister.registerRepository(processors, writer);
     VariableApiProcessorRegister.registerRepository(processors, writer);
+    ExpressionApiProcessorRegister.registerRepository(processors, writer);
   }
 }

@@ -139,7 +139,7 @@ public final class CreateProcessInstanceCommandImpl
   @Override
   public CreateProcessInstanceCommand.CreateProcessInstanceWithResultCommandStep1 withResult() {
     return new CreateProcessInstanceWithResultCommandImpl(
-        asyncStub, config, jsonMapper, retryPredicate);
+        asyncStub, config, jsonMapper, retryPredicate, requestBuilder.build());
   }
 
   @Override

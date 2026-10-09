@@ -102,8 +102,10 @@ public interface RecordMappingIndex {
   short RECORD_INDEX_82 = 82;
   short RECORD_INDEX_83 = 83;
   short RECORD_INDEX_84 = 84;
+  short RECORD_INDEX_85 = 85;
+  short RECORD_INDEX_86 = 86;
 
   static short size() {
-    return RECORD_INDEX_84 + 1;
+    return RECORD_INDEX_86 + 1;
   }
 }

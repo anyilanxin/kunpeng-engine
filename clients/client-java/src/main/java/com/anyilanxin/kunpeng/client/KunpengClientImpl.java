@@ -19,6 +19,8 @@ import com.anyilanxin.kunpeng.client.command.deployment.DeleteResourceCommand;
 import com.anyilanxin.kunpeng.client.command.deployment.DeleteResourceCommandImpl;
 import com.anyilanxin.kunpeng.client.command.deployment.DeployResourceCommand;
 import com.anyilanxin.kunpeng.client.command.deployment.DeployResourceCommandImpl;
+import com.anyilanxin.kunpeng.client.command.expression.EvaluateExpressionCommand;
+import com.anyilanxin.kunpeng.client.command.expression.EvaluateExpressionCommandImpl;
 import com.anyilanxin.kunpeng.client.command.gatewaydiscribe.GatewayAddressQueryCommand;
 import com.anyilanxin.kunpeng.client.command.gatewaydiscribe.GatewayAddressQueryCommandImpl;
 import com.anyilanxin.kunpeng.client.command.gatewaydiscribe.GatewayLoadQueryCommand;
@@ -90,6 +92,7 @@ public class KunpengClientImpl implements KunpengClient {
   private final IncidentServiceGrpc.IncidentServiceStub incidentService;
   private final ClusterManageServiceGrpc.ClusterManageServiceStub clusterManageService;
   private final VariableServiceGrpc.VariableServiceStub variableService;
+  private final ExpressionServiceGrpc.ExpressionServiceStub expressionService;
   private final KunpengClientConfiguration configuration;
   private final JobClient jobClient;
   private final ExecutorResource executorResource;
@@ -125,6 +128,7 @@ public class KunpengClientImpl implements KunpengClient {
     incidentService = buildIncidentServiceStub(channel, configuration);
     clusterManageService = buildClusterManageServiceStub(channel, configuration);
     variableService = buildVariableService(channel, configuration);
+    expressionService = buildExpressionService(channel, configuration);
     this.configuration = configuration;
     jsonMapper = configuration.getJsonMapper();
     retryPredicate = (code) -> configuration.getCredentialsProvider().shouldRetryRequest(code);
@@ -195,6 +199,18 @@ public class KunpengClientImpl implements KunpengClient {
     final CallCredentials credentials = buildCallCredentials(config);
     final VariableServiceGrpc.VariableServiceStub gatewayStub =
         VariableServiceGrpc.newStub(channel).withCallCredentials(credentials);
+    if (!config.getInterceptors().isEmpty()) {
+      return gatewayStub.withInterceptors(
+          config.getInterceptors().toArray(new ClientInterceptor[] {}));
+    }
+    return gatewayStub;
+  }
+
+  public static ExpressionServiceGrpc.ExpressionServiceStub buildExpressionService(
+      final ManagedChannel channel, final KunpengClientConfiguration config) {
+    final CallCredentials credentials = buildCallCredentials(config);
+    final ExpressionServiceGrpc.ExpressionServiceStub gatewayStub =
+        ExpressionServiceGrpc.newStub(channel).withCallCredentials(credentials);
     if (!config.getInterceptors().isEmpty()) {
       return gatewayStub.withInterceptors(
           config.getInterceptors().toArray(new ClientInterceptor[] {}));
@@ -543,5 +559,11 @@ public class KunpengClientImpl implements KunpengClient {
   @Override
   public RemoveVariableCommand newVariableRemoveCommand() {
     return new RemoveVariableCommandImpl(variableService, configuration, retryPredicate);
+  }
+
+  @Override
+  public EvaluateExpressionCommand newEvaluateExpressionCommand() {
+    return new EvaluateExpressionCommandImpl(
+        expressionService, configuration, jsonMapper, retryPredicate);
   }
 }

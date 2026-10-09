@@ -35,6 +35,7 @@ import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.UserTask
 import com.anyilanxin.kunpeng.protocol.business.record.command.variable.VariableLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.record.commandapi.record.deployment.CommandApiDeploymentValueLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.record.commandapi.record.empty.CommandApiEmptyValueLifeCycle;
+import com.anyilanxin.kunpeng.protocol.business.record.commandapi.record.expression.CommandApiExpressionValueLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.record.commandapi.record.incident.CommandApiIncidentValueLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.record.commandapi.record.job.CommandApiJobBatchValueLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.record.commandapi.record.job.CommandApiJobValueLifeCycle;
@@ -90,7 +91,8 @@ public interface ValueLifeCycle {
           DelayLifeCycle.class,
           HistoryCleanupLifeCycle.class,
           BusinessRouteApiLifeCycle.class,
-          CommandApiEmptyValueLifeCycle.class);
+          CommandApiEmptyValueLifeCycle.class,
+          CommandApiExpressionValueLifeCycle.class);
   short NULL_VAL = 255;
   ValueLifeCycle UNKNOWN = UnknownState.UNKNOWN;
 
@@ -150,6 +152,7 @@ public interface ValueLifeCycle {
       case QUERY_BUSINESS_ROUTE -> BusinessRouteApiLifeCycle.from(state);
       case RESPONSE_BUSINESS_ROUTE -> BusinessRouteApiLifeCycle.from(state);
       case EMPTY -> CommandApiEmptyValueLifeCycle.from(state);
+      case EXPRESSION_API -> CommandApiExpressionValueLifeCycle.from(state);
       default -> throw new IllegalStateException("Illegal valueType: " + valueType);
     };
   }

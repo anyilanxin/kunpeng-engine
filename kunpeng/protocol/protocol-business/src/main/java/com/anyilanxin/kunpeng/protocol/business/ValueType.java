@@ -62,6 +62,8 @@ public enum ValueType {
   QUERY_BUSINESS_ROUTE((short) 38),
   RESPONSE_BUSINESS_ROUTE((short) 39),
   EMPTY((short) 52),
+
+  EXPRESSION_API((short) 53),
   ;
 
   private final short value;

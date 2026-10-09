@@ -1,0 +1,31 @@
+syntax = 'proto3';
+package gateway_protocol;
+
+option java_multiple_files = false;
+option java_package = "com.anyilanxin.kunpeng.gateway.grpc.service";
+option go_package = "./;pb";
+
+message EvaluateExpressionRequest {
+  string expression = 1;
+  string variables = 2;
+  string tenantId = 3;
+  int64 scopeKey = 4;
+}
+
+
+message EvaluateExpressionResponse {
+  string result = 1;
+}
+
+
+service ExpressionService {
+  /*
+   Evaluates an expression with the given variables and returns the result.
+
+   Errors:
+    INVALID_ARGUMENT:
+     - expression is blank (empty string, null)
+  */
+  rpc EvaluateExpression (EvaluateExpressionRequest) returns (stream EvaluateExpressionResponse) {
+  }
+}

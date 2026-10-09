@@ -18,6 +18,7 @@ package com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi;
 
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.deployment.DeploymentApiRecordRegister;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.empty.EmptyRecordRegister;
+import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.expression.ExpressionApiRecordRegister;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.incident.IncidentApiRecordRegister;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.job.JobApiRecordRegister;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.message.MessageApiRecordRegister;
@@ -48,5 +49,6 @@ public class CommandApiRecordRegister {
     UserTaskApiRecordRegister.register(valueMapper);
     EmptyRecordRegister.register(valueMapper);
     VariableApiRecordRegister.register(valueMapper);
+    ExpressionApiRecordRegister.register(valueMapper);
   }
 }

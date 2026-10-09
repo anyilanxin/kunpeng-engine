@@ -245,8 +245,9 @@ public interface RecordProcessIndex {
   short PROCESS_INDEX_224 = 224;
   short PROCESS_INDEX_225 = 225;
   short PROCESS_INDEX_226 = 226;
+  short PROCESS_INDEX_227 = 227;
 
   static short size() {
-    return PROCESS_INDEX_226 + 1;
+    return PROCESS_INDEX_227 + 1;
   }
 }

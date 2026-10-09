@@ -125,6 +125,7 @@ public class GatewayGrpcService extends Actor {
         new GrpcProcessInstanceServiceImpl(brokerClient, errorHandle),
         new GrpcUserTaskServiceImpl(brokerClient, errorHandle),
         new GrpcVariableServiceImpl(brokerClient, errorHandle),
+        new GrpcExpressionServiceImpl(brokerClient, errorHandle),
         new GrpcClusterManageServiceImpl(
             brokerClient,
             errorHandle,

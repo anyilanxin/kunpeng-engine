@@ -45,13 +45,15 @@ public class CreateProcessInstanceWithResultCommandImpl
       final ProcessInstanceServiceGrpc.ProcessInstanceServiceStub asyncStub,
       final KunpengClientConfiguration config,
       final JsonMapper jsonMapper,
-      final Predicate<CredentialsProvider.StatusCode> retryPredicate) {
+      final Predicate<CredentialsProvider.StatusCode> retryPredicate,
+      final ProcessInstanceServiceOuterClass.CreateProcessInstanceRequest createRequest) {
     this.asyncStub = asyncStub;
     this.jsonMapper = jsonMapper;
     this.retryPredicate = retryPredicate;
 
     requestBuilder =
-        ProcessInstanceServiceOuterClass.CreateProcessInstanceWithResultRequest.newBuilder();
+        ProcessInstanceServiceOuterClass.CreateProcessInstanceWithResultRequest.newBuilder()
+            .setRequest(createRequest);
     requestTimeout(config.getDefaultRequestTimeout());
     defaultTenantIds = new HashSet<>(config.getDefaultJobWorkerTenantIds());
     customTenantIds = new HashSet<>();
@@ -60,18 +62,21 @@ public class CreateProcessInstanceWithResultCommandImpl
   @Override
   public CreateProcessInstanceCommand.CreateProcessInstanceWithResultCommandStep1 fetchVariables(
       final List<String> fetchVariables) {
+    requestBuilder.addAllFetchVariables(fetchVariables);
     return this;
   }
 
   @Override
   public CreateProcessInstanceCommand.CreateProcessInstanceWithResultCommandStep1 fetchVariables(
       final String... fetchVariables) {
+    requestBuilder.addAllFetchVariables(List.of(fetchVariables));
     return this;
   }
 
   @Override
   public CreateProcessInstanceCommand.CreateProcessInstanceWithResultCommandStep1 tenantId(
       final String tenantId) {
+    requestBuilder.setRequest(requestBuilder.getRequestBuilder().setTenantId(tenantId).build());
     return this;
   }
 
