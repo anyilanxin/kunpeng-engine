@@ -41,7 +41,7 @@ public class AnyHitPolicyHandler implements DmnHitPolicyHandler {
 
     if (!matchingRules.isEmpty()) {
       if (allOutputsAreEqual(matchingRules)) {
-        final DmnEvaluatedDecisionRule firstMatchingRule = matchingRules.get(0);
+        final DmnEvaluatedDecisionRule firstMatchingRule = matchingRules.getFirst();
         ((DmnDecisionTableEvaluationEventImpl) decisionTableEvaluationEvent)
             .setMatchingRules(Collections.singletonList(firstMatchingRule));
       } else {
