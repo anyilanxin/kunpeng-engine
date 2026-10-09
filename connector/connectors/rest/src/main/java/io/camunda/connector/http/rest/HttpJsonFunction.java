@@ -64,12 +64,14 @@ import io.camunda.connector.http.rest.model.HttpJsonRequest;
     inputDataClass = HttpJsonRequest.class,
     outputDataClass = HttpCommonResult.class,
     version = 13,
-    defaultResultExpression =
-        "{\n"
-            + "  myResponseBody: response.body\n"
-            + "  // Use Expression to extract values, e.g.,:\n"
-            + "  // myUserId: response.body.post.userId\n"
-            + "}",
+    defaultResultExpression ="""
+                            {
+                              myResponseBody: response.body
+                              // Use Expression to extract values, e.g.,:
+                              // myUserId: response.body.post.userId
+                            }
+                            """
+        ,
     propertyGroups = {
       @PropertyGroup(id = "authentication", label = "Authentication"),
       @PropertyGroup(id = "endpoint", label = "HTTP endpoint"),
