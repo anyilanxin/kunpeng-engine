@@ -275,6 +275,7 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
         break;
       }
     }
+    logStreamBatchReader.close();
     future.complete(null);
   }
 

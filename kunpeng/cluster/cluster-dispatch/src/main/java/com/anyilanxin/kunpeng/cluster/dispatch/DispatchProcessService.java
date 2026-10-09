@@ -324,6 +324,7 @@ public class DispatchProcessService extends Actor implements RecordAvailableList
         break;
       }
     }
+    logStreamBatchReader.close();
     future.complete(null);
   }
 
