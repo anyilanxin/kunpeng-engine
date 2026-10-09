@@ -1,6 +1,6 @@
 ---
 name: kunpeng-skills
-description: Use as the top-level entry to discover kunpeng project's coding/generation skills. Lists all skill modules (iteration, record-standards, enum-standards, repository-standards, structpack, scheduler, eventlog-design, cluster-dispatch-design, commit-standards, sink-design, workjob) with one-line descriptions and links to each module's entry file.
+description: Use as the top-level entry to discover kunpeng project's coding/generation skills. Lists all skill modules (iteration, engine-chain, record-standards, enum-standards, repository-standards, structpack, scheduler, eventlog-design, cluster-dispatch-design, commit-standards, sink-design, workjob) with one-line descriptions and links to each module's entry file.
 ---
 
 # kunpeng Skills 总览
@@ -12,6 +12,7 @@ description: Use as the top-level entry to discover kunpeng project's coding/gen
 | 模块目录 | 主题 | 何时用 | 入口 |
 |----------|------|--------|------|
 | `iteration/` | 全链路迭代开发专家：跨模块/跨层既有功能改动的一次性编排（影响排查→计划确认→固定顺序执行→契约自检），大改动分流（广而浅→总控派发 / 深而窄→设计先行），协议兼容变更先评估 | 改动跨 protocol/repository/engine/clients 多层的字段、校验、bug、枚举、状态机；"改一下XX/加个字段/迭代一下" | [iteration/SKILL.md](./iteration/SKILL.md) |
+| `engine-chain/` | 引擎侧全链路开发规范：client→gateway→broker→引擎→存储 六层职责、新增命令/API 的 11 项注册点清单、直答型 vs 持久化型两种命令模式、表达式求值链活样例 | 引擎侧新增业务功能（新命令、新 gRPC API、新 Value 域）时；想理解一条请求从 SDK 到 RocksDB 的完整链路时 | [engine-chain/SKILL.md](./engine-chain/SKILL.md) |
 | `record-standards/` | 协议 Record 类（`*Record extends UnifiedRecordValue`）编写规范：类骨架、字段类型、key、getter/setter、集合与 addXxx、wrap/unwrap、嵌套对象 setter | 给 `*RecordValue` 接口实现 `*Record` 类；新增字段、修改 setter、加 addXxx 方法 | [record-standards/SKILL.md](./record-standards/SKILL.md) |
 | `enum-standards/` | LifeCycle/State 枚举规范：`CommandValueLifeCycle` vs `CommandApiValueLifeCycle` 契约、`PROCESS_INDEX_*`/`RECORD_INDEX_*` 编号池分配 | 新建/修改 LifeCycle 枚举、增删状态、申请索引编号 | [enum-standards/SKILL.md](./enum-standards/SKILL.md) |
 | `repository-standards/` | repository Entity 规范（record 规则与 repository 规则整合）：`*Entity extends UnpackedObject implements DbValue`、必须 wrap/unwrap、字段映射与裁剪 | 新建/修改与 protocol Record 对应的持久化 Entity、同步 wrap/unwrap | [repository-standards/SKILL.md](./repository-standards/SKILL.md) |
@@ -35,6 +36,7 @@ description: Use as the top-level entry to discover kunpeng project's coding/gen
 ├── repository-standards/  ← repository 持久化 Entity 编写规范
 ├── commit-standards/      ← 提交规范(spotlessApply + git commit)
 ├── iteration/             ← 全链路迭代开发专家(跨模块改动编排)
+├── engine-chain/          ← 引擎侧全链路开发规范(新增命令/API 六层清单)
 ├── structpack/            ← 序列化层知识库
 ├── scheduler/             ← Actor 调度器知识库
 ├── eventlog-design/       ← 事件日志流知识库

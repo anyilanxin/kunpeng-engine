@@ -87,6 +87,7 @@ kunpeng-engine/
 | 技能 | 主题 | 何时用 |
 |------|------|--------|
 | `iteration` | 全链路迭代开发专家：跨模块/跨层既有功能改动的一次性编排（影响排查→计划确认→固定顺序执行→契约自检），大改动分流（广而浅→总控派发 / 深而窄→设计先行），协议兼容变更先评估不直接改 | 日常迭代改动跨 protocol/repository/engine/clients 多层（字段、校验、bug、枚举、状态机）；"改一下XX / 加个字段 / 迭代一下" |
+| `engine-chain` | 引擎侧全链路开发规范：client→gateway→broker→引擎→存储六层职责与实现逻辑、新增命令/API 的 11 项注册点清单、直答型 vs 持久化型两种命令模式、表达式求值链活样例 | 引擎侧新增业务功能（新命令、新 gRPC API、新 Value 域）开发时；理解一条请求从 SDK 到 RocksDB 的完整链路时 |
 | `record-standards` | 协议 Record 类（`*Record extends UnifiedRecordValue`）编写规范：类骨架、Property 字段类型、key 常量、getter/setter/addXxx、wrap/unwrap、嵌套对象 | 给 `*RecordValue` 实现具体 Record 类、增改字段/集合方法 |
 | `enum-standards` | LifeCycle/State 枚举规范：`CommandValueLifeCycle` vs `CommandApiValueLifeCycle` 两种 archetype 契约、`PROCESS_INDEX_*`/`RECORD_INDEX_*` 编号池 | 新建/修改枚举、增删状态、申请或重排索引编号 |
 | `repository-standards` | 持久化 Entity 规范（`*Entity extends UnpackedObject implements DbValue`，必须有 wrap/unwrap） | 新建/修改与 Record 对应的 Entity、字段落库映射与裁剪 |
@@ -105,6 +106,7 @@ kunpeng-engine/
 | 任务类型 | 引用什么 |
 |---------|---------|
 | **日常迭代**：跨模块/跨层的既有功能改动（字段调整、校验/状态机修改、bug 修复、枚举值更新、接口参数变更） | `iteration` 全链路编排，一次完成「协议 + 存储 + 引擎逻辑 + 客户端 SDK + 测试 + 文档」 |
+| **新增命令/API**：引擎侧新功能开发（新 `XxxCommand`、新 gRPC 服务、新 Value 域从 client 到存储的整条链路） | `engine-chain` 分层清单与注册点核对（协议 → broker → 引擎 → 网关 → 客户端 → 存储） |
 | 纯单模块内部实现/修 bug（不动协议契约） | 直接改，遵循对应规范技能（`record-standards` / `enum-standards` / `repository-standards`） |
 | 序列化格式、协议编号池、新 Record key 定义 | `structpack` + `enum-standards`（破坏性评估先行，编号错=Raft 反序列化错位） |
 | 理解/改动调度器、事件日志、集群调度子系统 | `scheduler` / `eventlog-design` / `cluster-dispatch-design` |
