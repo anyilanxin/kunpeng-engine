@@ -456,10 +456,27 @@ public final class SinkService extends Actor implements HealthMonitorable, Recor
   }
 
   private void startFrom(final long position) {
-    if (!reader.seekToNextEntry(position)) {
+    final long lastCommitted = eventLog.getLastCommittedPosition();
+    final long seekPosition;
+    if (position > lastCommitted) {
+      // 越界的恢复点只可能是跨数据世代的陈旧位置值（同世代内已确认位置恒 ≤ 日志尾）；
+      // 钳到日志尾按已追平处理：低于该位置的记录不再投递，等待新记录
+      seekPosition = lastCommitted < 1 ? -1 : lastCommitted;
+      LOG.warn(
+          "Resume position {} of partition {} is beyond the last committed position {}; "
+              + "seeking to {} instead, records at or below {} will not be delivered",
+          position,
+          partitionId,
+          lastCommitted,
+          seekPosition,
+          position);
+    } else {
+      seekPosition = position;
+    }
+    if (!reader.seekToNextEntry(seekPosition)) {
       throw new IllegalStateException(
           "Expected to find the entry at position %d in the log of partition %d to resume processing, but the log has no such entry"
-              .formatted(position, partitionId));
+              .formatted(seekPosition, partitionId));
     }
 
     eventLog.registerRecordAvailableListener(this);
