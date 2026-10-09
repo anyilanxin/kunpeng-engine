@@ -90,15 +90,15 @@ public class DistributeSerialChecker implements SchedulerCheckerAware {
     if (!running) {
       return;
     }
-    distribute.foreachRetriableDistribution(
-        (distributionKey, distributeRecord) -> {
-          writer.addCommand(
-              distributeRecord.getDistributeId(),
-              DistributeParallelLifeCycle.DISTRIBUTE_START,
-              -1,
-              distributeRecord);
-          return true;
-        });
+    //    distribute.foreachRetriableDistribution(
+    //        (distributionKey, distributeRecord) -> {
+    //          writer.addCommand(
+    //              distributeRecord.getDistributeId(),
+    //              DistributeParallelLifeCycle.DISTRIBUTE_START,
+    //              -1,
+    //              distributeRecord);
+    //          return true;
+    //        });
   }
 
   public void runRetryDistributionAfterCycle() {
