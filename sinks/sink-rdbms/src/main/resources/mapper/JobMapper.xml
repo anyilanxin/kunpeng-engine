@@ -20,9 +20,9 @@
 
   <insert id="insert" parameterType="com.anyilanxin.kunpeng.sink.rdbms.model.JobDbModel">
     INSERT INTO ${table.job} (
-      job_id, job_type, job_kind, state, retries, retry_backoff, priority, due_time, lock_owner,
+      job_id, job_type, job_kind, state, retries, retry_backoff, priority, due_date, lock_owner,
       lock_expire_time, process_instance_id, activity_instance_id, process_definition_id,
-      definition_key, activity_key, task_id, incident_id, denied_reason, start_time, end_time,
+      process_definition_key, activity_definition_key, task_id, incident_id, denied_reason, start_time, end_time,
       duration, variables_json, local_variables_json, revision, resource_id
     ) VALUES (
       #{jobId}, #{jobType}, #{jobKind}, #{state}, #{retries}, #{retryBackoff}, #{priority},
@@ -41,7 +41,7 @@
         retries = #{retries},
         retry_backoff = #{retryBackoff},
         priority = #{priority},
-        due_time = #{dueTime,jdbcType=TIMESTAMP},
+        due_date = #{dueTime,jdbcType=TIMESTAMP},
         lock_owner = #{lockOwner},
         lock_expire_time = #{lockExpireTime,jdbcType=TIMESTAMP},
         denied_reason = #{deniedReason},

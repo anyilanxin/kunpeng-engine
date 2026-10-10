@@ -22,7 +22,7 @@
     INSERT INTO ${table.message_subscription} (
       message_subscription_id, message_name, message_type, correlation_key,
       process_instance_id, activity_instance_id, correlation_activity_instance_id,
-      correlation_process_instance_id, process_definition_id, definition_key, activity_key,
+      correlation_process_instance_id, process_definition_id, process_definition_key, activity_definition_key,
       state, resource_id
     ) VALUES (
       #{messageSubscriptionId}, #{messageName}, #{messageType}, #{correlationKey},

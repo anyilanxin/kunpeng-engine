@@ -372,4 +372,34 @@
     </createTable>
   </changeSet>
 
+  <!-- 列名对齐协议 Record key（DEFINITION_KEY→PROCESS_DEFINITION_KEY、ACTIVITY_KEY→ACTIVITY_DEFINITION_KEY、DUE_TIME→DUE_DATE、FOLLOW_UP_TIME→FOLLOW_UP_DATE、TASK_NAME→TASK_DEFINITION_NAME、START_USER→START_USER_ID）。
+       基线 createTable 已在存量库执行、不可改（校验和失配），新建库走先建后改名，存量库由本变更集原位改名保数据 -->
+  <changeSet id="2026.9.0-rename-columns-to-protocol-keys" author="anyilanxin">
+    <renameColumn tableName="${table.process_definition}" oldColumnName="definition_key" newColumnName="process_definition_key" columnDataType="VARCHAR(255)"/>
+    <renameColumn tableName="${table.process_definition}" oldColumnName="definition_name" newColumnName="process_definition_name" columnDataType="VARCHAR(255)"/>
+    <renameColumn tableName="${table.process_instance}" oldColumnName="definition_key" newColumnName="process_definition_key" columnDataType="VARCHAR(255)"/>
+    <renameColumn tableName="${table.process_instance}" oldColumnName="definition_name" newColumnName="process_definition_name" columnDataType="VARCHAR(255)"/>
+    <renameColumn tableName="${table.process_instance}" oldColumnName="start_user" newColumnName="start_user_id" columnDataType="VARCHAR(255)"/>
+    <renameColumn tableName="${table.activity_instance}" oldColumnName="definition_key" newColumnName="process_definition_key" columnDataType="VARCHAR(255)"/>
+    <renameColumn tableName="${table.activity_instance}" oldColumnName="activity_key" newColumnName="activity_definition_key" columnDataType="VARCHAR(255)"/>
+    <renameColumn tableName="${table.activity_instance}" oldColumnName="activity_name" newColumnName="activity_definition_name" columnDataType="VARCHAR(255)"/>
+    <renameColumn tableName="${table.activity_instance}" oldColumnName="activity_type" newColumnName="activity_definition_type" columnDataType="VARCHAR(64)"/>
+    <renameColumn tableName="${table.user_task}" oldColumnName="definition_key" newColumnName="process_definition_key" columnDataType="VARCHAR(255)"/>
+    <renameColumn tableName="${table.user_task}" oldColumnName="task_name" newColumnName="task_definition_name" columnDataType="VARCHAR(255)"/>
+    <renameColumn tableName="${table.user_task}" oldColumnName="due_time" newColumnName="due_date" columnDataType="${ts.type}"/>
+    <renameColumn tableName="${table.user_task}" oldColumnName="follow_up_time" newColumnName="follow_up_date" columnDataType="${ts.type}"/>
+    <renameColumn tableName="${table.job}" oldColumnName="definition_key" newColumnName="process_definition_key" columnDataType="VARCHAR(255)"/>
+    <renameColumn tableName="${table.job}" oldColumnName="activity_key" newColumnName="activity_definition_key" columnDataType="VARCHAR(255)"/>
+    <renameColumn tableName="${table.job}" oldColumnName="due_time" newColumnName="due_date" columnDataType="${ts.type}"/>
+    <renameColumn tableName="${table.incident}" oldColumnName="definition_key" newColumnName="process_definition_key" columnDataType="VARCHAR(255)"/>
+    <renameColumn tableName="${table.incident}" oldColumnName="activity_key" newColumnName="activity_definition_key" columnDataType="VARCHAR(255)"/>
+    <renameColumn tableName="${table.timer}" oldColumnName="due_time" newColumnName="due_date" columnDataType="${ts.type}"/>
+    <renameColumn tableName="${table.timer}" oldColumnName="definition_key" newColumnName="process_definition_key" columnDataType="VARCHAR(255)"/>
+    <renameColumn tableName="${table.timer}" oldColumnName="activity_key" newColumnName="activity_definition_key" columnDataType="VARCHAR(255)"/>
+    <renameColumn tableName="${table.message_subscription}" oldColumnName="definition_key" newColumnName="process_definition_key" columnDataType="VARCHAR(255)"/>
+    <renameColumn tableName="${table.message_subscription}" oldColumnName="activity_key" newColumnName="activity_definition_key" columnDataType="VARCHAR(255)"/>
+    <renameColumn tableName="${table.signal_subscription}" oldColumnName="definition_key" newColumnName="process_definition_key" columnDataType="VARCHAR(255)"/>
+    <renameColumn tableName="${table.signal_subscription}" oldColumnName="activity_key" newColumnName="activity_definition_key" columnDataType="VARCHAR(255)"/>
+  </changeSet>
+
 </databaseChangeLog>

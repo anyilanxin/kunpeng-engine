@@ -21,7 +21,7 @@
   <insert id="insert" parameterType="com.anyilanxin.kunpeng.sink.rdbms.model.SignalSubscriptionDbModel">
     INSERT INTO ${table.signal_subscription} (
       signal_subscription_id, signal_name, signal_type, process_instance_id,
-      activity_instance_id, process_definition_id, definition_key, activity_key, state,
+      activity_instance_id, process_definition_id, process_definition_key, activity_definition_key, state,
       resource_id
     ) VALUES (
       #{signalSubscriptionId}, #{signalName}, #{signalType}, #{processInstanceId},

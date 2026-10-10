@@ -33,11 +33,11 @@ public class ProcessDefinitionEntity implements Serializable {
   private String processDefinitionId;
 
   /** 流程定义key */
-  @TableField(value = "DEFINITION_KEY")
+  @TableField(value = "PROCESS_DEFINITION_KEY")
   private String processDefinitionKey;
 
   /** 流程定义名称 */
-  @TableField(value = "DEFINITION_NAME")
+  @TableField(value = "PROCESS_DEFINITION_NAME")
   private String name;
 
   /** 版本 */

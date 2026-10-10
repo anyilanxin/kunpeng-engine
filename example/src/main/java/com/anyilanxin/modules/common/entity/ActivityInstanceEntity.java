@@ -58,19 +58,19 @@ public class ActivityInstanceEntity implements Serializable {
   private String processDefinitionId;
 
   /** 流程定义 key */
-  @TableField(value = "DEFINITION_KEY")
+  @TableField(value = "PROCESS_DEFINITION_KEY")
   private String processDefinitionKey;
 
   /** 活动 key */
-  @TableField(value = "ACTIVITY_KEY")
+  @TableField(value = "ACTIVITY_DEFINITION_KEY")
   private String activityDefinitionKey;
 
   /** 活动名称 */
-  @TableField(value = "ACTIVITY_NAME")
+  @TableField(value = "ACTIVITY_DEFINITION_NAME")
   private String activityDefinitionName;
 
   /** 活动类型 */
-  @TableField(value = "ACTIVITY_TYPE")
+  @TableField(value = "ACTIVITY_DEFINITION_TYPE")
   private String activityDefinitionType;
 
   /** 任务 id */

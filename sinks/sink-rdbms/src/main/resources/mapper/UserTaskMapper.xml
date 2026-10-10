@@ -21,8 +21,8 @@
   <insert id="insert" parameterType="com.anyilanxin.kunpeng.sink.rdbms.model.UserTaskDbModel">
     INSERT INTO ${table.user_task} (
       task_id, activity_instance_id, process_instance_id, business_key, process_definition_id,
-      definition_key, task_definition_key, task_name, assignee, owner, priority, due_time,
-      follow_up_time, state, candidate_groups, candidate_users, start_time, end_time, duration,
+      process_definition_key, task_definition_key, task_definition_name, assignee, owner, priority, due_date,
+      follow_up_date, state, candidate_groups, candidate_users, start_time, end_time, duration,
       revision, resource_id
     ) VALUES (
       #{taskId}, #{activityInstanceId}, #{processInstanceId}, #{businessKey},
@@ -39,8 +39,8 @@
     SET assignee = #{assignee},
         owner = #{owner},
         priority = #{priority},
-        due_time = #{dueTime,jdbcType=TIMESTAMP},
-        follow_up_time = #{followUpTime,jdbcType=TIMESTAMP},
+        due_date = #{dueTime,jdbcType=TIMESTAMP},
+        follow_up_date = #{followUpTime,jdbcType=TIMESTAMP},
         state = #{state},
         candidate_groups = #{candidateGroups},
         candidate_users = #{candidateUsers},

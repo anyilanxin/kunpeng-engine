@@ -164,7 +164,7 @@ class RdbmsSinkTest {
     emit(2L, ValueType.PROCESS_INSTANCE, ProcessInstanceLifeCycle.COMPLETED, finished);
     sink.flush();
 
-    // update 语句不触碰 start_time / start_user：终态更新后创建时间仍在、结束时间已写（H2 下同样成立）
+    // update 语句不触碰 start_time / start_user_id：终态更新后创建时间仍在、结束时间已写（H2 下同样成立）
     try (var session = verifyFactory.openSession()) {
       final var mapper = session.getMapper(VerificationMapper.class);
       assertThat(mapper.totalRows()).isOne();
@@ -255,7 +255,7 @@ class RdbmsSinkTest {
       final var mapper = session.getMapper(VerificationMapper.class);
       assertThat(mapper.totalRows()).isOne();
       assertThat(mapper.activityInstanceRow())
-          .containsEntry("ACTIVITY_TYPE", "SEQUENCE_FLOW")
+          .containsEntry("ACTIVITY_DEFINITION_TYPE", "SEQUENCE_FLOW")
           .containsEntry("START_ACTIVITY_INSTANCE_ID", 3001L);
     }
     assertThat(controller.getPosition()).isEqualTo(1L);

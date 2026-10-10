@@ -69,7 +69,7 @@ public class JobEntity implements Serializable {
 
   /** 到期时间 */
   @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = TIME_ZONE_GMT8)
-  @TableField(value = "DUE_TIME")
+  @TableField(value = "DUE_DATE")
   private LocalDateTime dueDate;
 
   /** 锁持有者 */
@@ -94,11 +94,11 @@ public class JobEntity implements Serializable {
   private Long processDefinitionId;
 
   /** 流程定义 key */
-  @TableField(value = "DEFINITION_KEY")
+  @TableField(value = "PROCESS_DEFINITION_KEY")
   private String processDefinitionKey;
 
   /** 活动 key */
-  @TableField(value = "ACTIVITY_KEY")
+  @TableField(value = "ACTIVITY_DEFINITION_KEY")
   private String activityDefinitionKey;
 
   /** 任务 id（关联用户任务） */

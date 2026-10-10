@@ -8,10 +8,10 @@
        <result property="parentActivityInstanceId" column="PARENT_ACTIVITY_INSTANCE_ID" jdbcType="VARCHAR"/>
        <result property="callProcessInstanceId" column="CALL_PROCESS_INSTANCE_ID" jdbcType="VARCHAR"/>
        <result property="processDefinitionId" column="PROCESS_DEFINITION_ID" jdbcType="VARCHAR"/>
-       <result property="processDefinitionKey" column="DEFINITION_KEY" jdbcType="VARCHAR"/>
-       <result property="activityDefinitionKey" column="ACTIVITY_KEY" jdbcType="VARCHAR"/>
-       <result property="activityDefinitionName" column="ACTIVITY_NAME" jdbcType="VARCHAR"/>
-       <result property="activityDefinitionType" column="ACTIVITY_TYPE" jdbcType="VARCHAR"/>
+       <result property="processDefinitionKey" column="PROCESS_DEFINITION_KEY" jdbcType="VARCHAR"/>
+       <result property="activityDefinitionKey" column="ACTIVITY_DEFINITION_KEY" jdbcType="VARCHAR"/>
+       <result property="activityDefinitionName" column="ACTIVITY_DEFINITION_NAME" jdbcType="VARCHAR"/>
+       <result property="activityDefinitionType" column="ACTIVITY_DEFINITION_TYPE" jdbcType="VARCHAR"/>
        <result property="taskId" column="TASK_ID" jdbcType="VARCHAR"/>
        <result property="assignee" column="ASSIGNEE" jdbcType="VARCHAR"/>
        <result property="state" column="STATE" jdbcType="VARCHAR"/>
@@ -27,19 +27,19 @@
     </resultMap>
 
     <!-- @formatter:off -->
-    <!--数据库字段，重命名列按 Vo 旧属性名别名输出，保证 resultType 自动映射-->
+    <!--数据库字段，REVISION 按旧属性名 REV 别名输出，保证 resultType 自动映射-->
     <sql id="Column_List">
-ACTIVITY_INSTANCE_ID, PROCESS_INSTANCE_ID, ROOT_PROCESS_INSTANCE_ID, PARENT_ACTIVITY_INSTANCE_ID, CALL_PROCESS_INSTANCE_ID, PROCESS_DEFINITION_ID, DEFINITION_KEY AS PROCESS_DEFINITION_KEY, ACTIVITY_KEY AS ACTIVITY_DEFINITION_KEY, ACTIVITY_NAME AS ACTIVITY_DEFINITION_NAME, ACTIVITY_TYPE AS ACTIVITY_DEFINITION_TYPE, TASK_ID, ASSIGNEE, STATE, INCIDENT_ID, SEQUENCE_COUNTER, START_ACTIVITY_DEFINITION_KEY, START_ACTIVITY_INSTANCE_ID, START_TIME, END_TIME, DURATION, REVISION AS REV, RESOURCE_ID
+ACTIVITY_INSTANCE_ID, PROCESS_INSTANCE_ID, ROOT_PROCESS_INSTANCE_ID, PARENT_ACTIVITY_INSTANCE_ID, CALL_PROCESS_INSTANCE_ID, PROCESS_DEFINITION_ID, PROCESS_DEFINITION_KEY, ACTIVITY_DEFINITION_KEY, ACTIVITY_DEFINITION_NAME, ACTIVITY_DEFINITION_TYPE, TASK_ID, ASSIGNEE, STATE, INCIDENT_ID, SEQUENCE_COUNTER, START_ACTIVITY_DEFINITION_KEY, START_ACTIVITY_INSTANCE_ID, START_TIME, END_TIME, DURATION, REVISION AS REV, RESOURCE_ID
     </sql>
 
     <!--数据库字段待别名-->
     <sql id="Column_List_Ali">
-ali.ACTIVITY_INSTANCE_ID, ali.PROCESS_INSTANCE_ID, ali.ROOT_PROCESS_INSTANCE_ID, ali.PARENT_ACTIVITY_INSTANCE_ID, ali.CALL_PROCESS_INSTANCE_ID, ali.PROCESS_DEFINITION_ID, ali.DEFINITION_KEY AS PROCESS_DEFINITION_KEY, ali.ACTIVITY_KEY AS ACTIVITY_DEFINITION_KEY, ali.ACTIVITY_NAME AS ACTIVITY_DEFINITION_NAME, ali.ACTIVITY_TYPE AS ACTIVITY_DEFINITION_TYPE, ali.TASK_ID, ali.ASSIGNEE, ali.STATE, ali.INCIDENT_ID, ali.SEQUENCE_COUNTER, ali.START_ACTIVITY_DEFINITION_KEY, ali.START_ACTIVITY_INSTANCE_ID, ali.START_TIME, ali.END_TIME, ali.DURATION, ali.REVISION AS REV, ali.RESOURCE_ID
+ali.ACTIVITY_INSTANCE_ID, ali.PROCESS_INSTANCE_ID, ali.ROOT_PROCESS_INSTANCE_ID, ali.PARENT_ACTIVITY_INSTANCE_ID, ali.CALL_PROCESS_INSTANCE_ID, ali.PROCESS_DEFINITION_ID, ali.PROCESS_DEFINITION_KEY, ali.ACTIVITY_DEFINITION_KEY, ali.ACTIVITY_DEFINITION_NAME, ali.ACTIVITY_DEFINITION_TYPE, ali.TASK_ID, ali.ASSIGNEE, ali.STATE, ali.INCIDENT_ID, ali.SEQUENCE_COUNTER, ali.START_ACTIVITY_DEFINITION_KEY, ali.START_ACTIVITY_INSTANCE_ID, ali.START_TIME, ali.END_TIME, ali.DURATION, ali.REVISION AS REV, ali.RESOURCE_ID
     </sql>
 
      <!--数据库字段-->
     <sql id="Column_List_Page_Ali">
-ali.ACTIVITY_INSTANCE_ID, ali.PROCESS_INSTANCE_ID, ali.ROOT_PROCESS_INSTANCE_ID, ali.PARENT_ACTIVITY_INSTANCE_ID, ali.CALL_PROCESS_INSTANCE_ID, ali.PROCESS_DEFINITION_ID, ali.DEFINITION_KEY AS PROCESS_DEFINITION_KEY, ali.ACTIVITY_KEY AS ACTIVITY_DEFINITION_KEY, ali.ACTIVITY_NAME AS ACTIVITY_DEFINITION_NAME, ali.ACTIVITY_TYPE AS ACTIVITY_DEFINITION_TYPE, ali.TASK_ID, ali.ASSIGNEE, ali.STATE, ali.INCIDENT_ID, ali.SEQUENCE_COUNTER, ali.START_ACTIVITY_DEFINITION_KEY, ali.START_ACTIVITY_INSTANCE_ID, ali.START_TIME, ali.END_TIME, ali.DURATION, ali.REVISION AS REV, ali.RESOURCE_ID
+ali.ACTIVITY_INSTANCE_ID, ali.PROCESS_INSTANCE_ID, ali.ROOT_PROCESS_INSTANCE_ID, ali.PARENT_ACTIVITY_INSTANCE_ID, ali.CALL_PROCESS_INSTANCE_ID, ali.PROCESS_DEFINITION_ID, ali.PROCESS_DEFINITION_KEY, ali.ACTIVITY_DEFINITION_KEY, ali.ACTIVITY_DEFINITION_NAME, ali.ACTIVITY_DEFINITION_TYPE, ali.TASK_ID, ali.ASSIGNEE, ali.STATE, ali.INCIDENT_ID, ali.SEQUENCE_COUNTER, ali.START_ACTIVITY_DEFINITION_KEY, ali.START_ACTIVITY_INSTANCE_ID, ali.START_TIME, ali.END_TIME, ali.DURATION, ali.REVISION AS REV, ali.RESOURCE_ID
     </sql>
 
 
@@ -62,7 +62,7 @@ ali.ACTIVITY_INSTANCE_ID, ali.PROCESS_INSTANCE_ID, ali.ROOT_PROCESS_INSTANCE_ID,
              AND ali.PROCESS_INSTANCE_ID = #{query.processInstanceId, jdbcType=VARCHAR}
           </if>
           <if test="query.processDefinitionKey != null and query.processDefinitionKey != ''">
-             AND ali.DEFINITION_KEY = #{query.processDefinitionKey, jdbcType=VARCHAR}
+             AND ali.PROCESS_DEFINITION_KEY = #{query.processDefinitionKey, jdbcType=VARCHAR}
           </if>
           <if test="query.processDefinitionId != null and query.processDefinitionId != ''">
              AND ali.PROCESS_DEFINITION_ID = #{query.processDefinitionId, jdbcType=VARCHAR}
@@ -71,13 +71,13 @@ ali.ACTIVITY_INSTANCE_ID, ali.PROCESS_INSTANCE_ID, ali.ROOT_PROCESS_INSTANCE_ID,
              AND ali.CALL_PROCESS_INSTANCE_ID = #{query.callProcessInstanceId, jdbcType=VARCHAR}
           </if>
           <if test="query.activityDefinitionKey != null and query.activityDefinitionKey != ''">
-             AND ali.ACTIVITY_KEY = #{query.activityDefinitionKey, jdbcType=VARCHAR}
+             AND ali.ACTIVITY_DEFINITION_KEY = #{query.activityDefinitionKey, jdbcType=VARCHAR}
           </if>
           <if test="query.activityDefinitionName != null and query.activityDefinitionName != ''">
-             AND ali.ACTIVITY_NAME = #{query.activityDefinitionName, jdbcType=VARCHAR}
+             AND ali.ACTIVITY_DEFINITION_NAME = #{query.activityDefinitionName, jdbcType=VARCHAR}
           </if>
           <if test="query.activityDefinitionType != null and query.activityDefinitionType != ''">
-             AND ali.ACTIVITY_TYPE = #{query.activityDefinitionType, jdbcType=VARCHAR}
+             AND ali.ACTIVITY_DEFINITION_TYPE = #{query.activityDefinitionType, jdbcType=VARCHAR}
           </if>
           <if test="query.taskId != null and query.taskId != ''">
              AND ali.TASK_ID = #{query.taskId, jdbcType=VARCHAR}
@@ -132,7 +132,7 @@ ali.ACTIVITY_INSTANCE_ID, ali.PROCESS_INSTANCE_ID, ali.ROOT_PROCESS_INSTANCE_ID,
              AND PROCESS_INSTANCE_ID = #{processInstanceId, jdbcType=VARCHAR}
          </if>
          <if test="processDefinitionKey != null and processDefinitionKey != ''">
-             AND DEFINITION_KEY = #{processDefinitionKey, jdbcType=VARCHAR}
+             AND PROCESS_DEFINITION_KEY = #{processDefinitionKey, jdbcType=VARCHAR}
          </if>
          <if test="processDefinitionId != null and processDefinitionId != ''">
              AND PROCESS_DEFINITION_ID = #{processDefinitionId, jdbcType=VARCHAR}
@@ -141,13 +141,13 @@ ali.ACTIVITY_INSTANCE_ID, ali.PROCESS_INSTANCE_ID, ali.ROOT_PROCESS_INSTANCE_ID,
              AND CALL_PROCESS_INSTANCE_ID = #{callProcessInstanceId, jdbcType=VARCHAR}
          </if>
          <if test="activityDefinitionKey != null and activityDefinitionKey != ''">
-             AND ACTIVITY_KEY = #{activityDefinitionKey, jdbcType=VARCHAR}
+             AND ACTIVITY_DEFINITION_KEY = #{activityDefinitionKey, jdbcType=VARCHAR}
          </if>
          <if test="activityDefinitionName != null and activityDefinitionName != ''">
-             AND ACTIVITY_NAME = #{activityDefinitionName, jdbcType=VARCHAR}
+             AND ACTIVITY_DEFINITION_NAME = #{activityDefinitionName, jdbcType=VARCHAR}
          </if>
          <if test="activityDefinitionType != null and activityDefinitionType != ''">
-             AND ACTIVITY_TYPE = #{activityDefinitionType, jdbcType=VARCHAR}
+             AND ACTIVITY_DEFINITION_TYPE = #{activityDefinitionType, jdbcType=VARCHAR}
          </if>
          <if test="taskId != null and taskId != ''">
              AND TASK_ID = #{taskId, jdbcType=VARCHAR}

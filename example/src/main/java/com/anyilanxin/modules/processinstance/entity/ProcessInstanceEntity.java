@@ -49,7 +49,7 @@ public class ProcessInstanceEntity implements Serializable {
   private String businessKey;
 
   /** 流程定义 key */
-  @TableField(value = "DEFINITION_KEY")
+  @TableField(value = "PROCESS_DEFINITION_KEY")
   private String processDefinitionKey;
 
   /** 流程定义 id */
@@ -57,11 +57,11 @@ public class ProcessInstanceEntity implements Serializable {
   private String processDefinitionId;
 
   /** 流程定义名称 */
-  @TableField(value = "DEFINITION_NAME")
+  @TableField(value = "PROCESS_DEFINITION_NAME")
   private String processDefinitionName;
 
   /** 开始用户 id */
-  @TableField(value = "START_USER")
+  @TableField(value = "START_USER_ID")
   private String startUserId;
 
   /** 状态 */

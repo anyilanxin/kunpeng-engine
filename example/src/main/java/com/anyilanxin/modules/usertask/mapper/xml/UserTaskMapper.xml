@@ -20,7 +20,7 @@
     <resultMap type="com.anyilanxin.modules.usertask.entity.UserTaskEntity" id="UserTaskMap">
        <result property="userTaskKey" column="TASK_ID" jdbcType="VARCHAR"/>
        <result property="elementId" column="TASK_DEFINITION_KEY" jdbcType="VARCHAR"/>
-       <result property="name" column="TASK_NAME" jdbcType="VARCHAR"/>
+       <result property="name" column="TASK_DEFINITION_NAME" jdbcType="VARCHAR"/>
        <result property="processDefinitionId" column="PROCESS_DEFINITION_ID" jdbcType="VARCHAR"/>
        <result property="businessKey" column="BUSINESS_KEY" jdbcType="VARCHAR"/>
        <result property="creationDate" column="START_TIME" jdbcType="TIMESTAMP"/>
@@ -28,11 +28,11 @@
        <result property="assignee" column="ASSIGNEE" jdbcType="VARCHAR"/>
        <result property="owner" column="OWNER" jdbcType="VARCHAR"/>
        <result property="state" column="STATE" jdbcType="VARCHAR"/>
-       <result property="processDefinitionKey" column="DEFINITION_KEY" jdbcType="VARCHAR"/>
+       <result property="processDefinitionKey" column="PROCESS_DEFINITION_KEY" jdbcType="VARCHAR"/>
        <result property="processInstanceKey" column="PROCESS_INSTANCE_ID" jdbcType="VARCHAR"/>
        <result property="elementInstanceKey" column="ACTIVITY_INSTANCE_ID" jdbcType="VARCHAR"/>
-       <result property="dueDate" column="DUE_TIME" jdbcType="TIMESTAMP"/>
-       <result property="followUpDate" column="FOLLOW_UP_TIME" jdbcType="TIMESTAMP"/>
+       <result property="dueDate" column="DUE_DATE" jdbcType="TIMESTAMP"/>
+       <result property="followUpDate" column="FOLLOW_UP_DATE" jdbcType="TIMESTAMP"/>
        <result property="candidateGroups" column="CANDIDATE_GROUPS" jdbcType="VARCHAR"/>
        <result property="candidateUsers" column="CANDIDATE_USERS" jdbcType="VARCHAR"/>
        <result property="priority" column="PRIORITY" jdbcType="INTEGER"/>
@@ -42,19 +42,19 @@
     </resultMap>
 
     <!-- @formatter:off -->
-    <!--数据库字段，重命名列按 Vo 旧属性名别名输出，保证 resultType 自动映射-->
+    <!--数据库字段，与 Vo 旧属性不同名的列（user_task 模块沿用的 Zeebe 式命名）按旧属性名别名输出，保证 resultType 自动映射-->
     <sql id="Column_List">
-TASK_ID AS USER_TASK_KEY, TASK_DEFINITION_KEY AS ELEMENT_ID, TASK_NAME AS NAME, PROCESS_DEFINITION_ID, BUSINESS_KEY, START_TIME AS CREATION_DATE, END_TIME AS COMPLETION_DATE, ASSIGNEE, OWNER, STATE, DEFINITION_KEY AS PROCESS_DEFINITION_KEY, PROCESS_INSTANCE_ID AS PROCESS_INSTANCE_KEY, ACTIVITY_INSTANCE_ID AS ELEMENT_INSTANCE_KEY, DUE_TIME AS DUE_DATE, FOLLOW_UP_TIME AS FOLLOW_UP_DATE, CANDIDATE_GROUPS, CANDIDATE_USERS, PRIORITY, DURATION, REVISION, RESOURCE_ID
+TASK_ID AS USER_TASK_KEY, TASK_DEFINITION_KEY AS ELEMENT_ID, TASK_DEFINITION_NAME AS NAME, PROCESS_DEFINITION_ID, BUSINESS_KEY, START_TIME AS CREATION_DATE, END_TIME AS COMPLETION_DATE, ASSIGNEE, OWNER, STATE, PROCESS_DEFINITION_KEY, PROCESS_INSTANCE_ID AS PROCESS_INSTANCE_KEY, ACTIVITY_INSTANCE_ID AS ELEMENT_INSTANCE_KEY, DUE_DATE, FOLLOW_UP_DATE, CANDIDATE_GROUPS, CANDIDATE_USERS, PRIORITY, DURATION, REVISION, RESOURCE_ID
     </sql>
 
     <!--数据库字段待别名-->
     <sql id="Column_List_Ali">
-ali.TASK_ID AS USER_TASK_KEY, ali.TASK_DEFINITION_KEY AS ELEMENT_ID, ali.TASK_NAME AS NAME, ali.PROCESS_DEFINITION_ID, ali.BUSINESS_KEY, ali.START_TIME AS CREATION_DATE, ali.END_TIME AS COMPLETION_DATE, ali.ASSIGNEE, ali.OWNER, ali.STATE, ali.DEFINITION_KEY AS PROCESS_DEFINITION_KEY, ali.PROCESS_INSTANCE_ID AS PROCESS_INSTANCE_KEY, ali.ACTIVITY_INSTANCE_ID AS ELEMENT_INSTANCE_KEY, ali.DUE_TIME AS DUE_DATE, ali.FOLLOW_UP_TIME AS FOLLOW_UP_DATE, ali.CANDIDATE_GROUPS, ali.CANDIDATE_USERS, ali.PRIORITY, ali.DURATION, ali.REVISION, ali.RESOURCE_ID
+ali.TASK_ID AS USER_TASK_KEY, ali.TASK_DEFINITION_KEY AS ELEMENT_ID, ali.TASK_DEFINITION_NAME AS NAME, ali.PROCESS_DEFINITION_ID, ali.BUSINESS_KEY, ali.START_TIME AS CREATION_DATE, ali.END_TIME AS COMPLETION_DATE, ali.ASSIGNEE, ali.OWNER, ali.STATE, ali.PROCESS_DEFINITION_KEY, ali.PROCESS_INSTANCE_ID AS PROCESS_INSTANCE_KEY, ali.ACTIVITY_INSTANCE_ID AS ELEMENT_INSTANCE_KEY, ali.DUE_DATE, ali.FOLLOW_UP_DATE, ali.CANDIDATE_GROUPS, ali.CANDIDATE_USERS, ali.PRIORITY, ali.DURATION, ali.REVISION, ali.RESOURCE_ID
     </sql>
 
      <!--数据库字段-->
     <sql id="Column_List_Page_Ali">
-ali.TASK_ID AS USER_TASK_KEY, ali.TASK_DEFINITION_KEY AS ELEMENT_ID, ali.TASK_NAME AS NAME, ali.PROCESS_DEFINITION_ID, ali.BUSINESS_KEY, ali.START_TIME AS CREATION_DATE, ali.END_TIME AS COMPLETION_DATE, ali.ASSIGNEE, ali.OWNER, ali.STATE, ali.DEFINITION_KEY AS PROCESS_DEFINITION_KEY, ali.PROCESS_INSTANCE_ID AS PROCESS_INSTANCE_KEY, ali.ACTIVITY_INSTANCE_ID AS ELEMENT_INSTANCE_KEY, ali.DUE_TIME AS DUE_DATE, ali.FOLLOW_UP_TIME AS FOLLOW_UP_DATE, ali.CANDIDATE_GROUPS, ali.CANDIDATE_USERS, ali.PRIORITY, ali.DURATION, ali.REVISION, ali.RESOURCE_ID
+ali.TASK_ID AS USER_TASK_KEY, ali.TASK_DEFINITION_KEY AS ELEMENT_ID, ali.TASK_DEFINITION_NAME AS NAME, ali.PROCESS_DEFINITION_ID, ali.BUSINESS_KEY, ali.START_TIME AS CREATION_DATE, ali.END_TIME AS COMPLETION_DATE, ali.ASSIGNEE, ali.OWNER, ali.STATE, ali.PROCESS_DEFINITION_KEY, ali.PROCESS_INSTANCE_ID AS PROCESS_INSTANCE_KEY, ali.ACTIVITY_INSTANCE_ID AS ELEMENT_INSTANCE_KEY, ali.DUE_DATE, ali.FOLLOW_UP_DATE, ali.CANDIDATE_GROUPS, ali.CANDIDATE_USERS, ali.PRIORITY, ali.DURATION, ali.REVISION, ali.RESOURCE_ID
     </sql>
 
 
@@ -71,7 +71,7 @@ ali.TASK_ID AS USER_TASK_KEY, ali.TASK_DEFINITION_KEY AS ELEMENT_ID, ali.TASK_NA
              AND ali.TASK_DEFINITION_KEY = #{query.elementId, jdbcType=VARCHAR}
           </if>
           <if test="query.name != null and query.name != ''">
-             AND ali.TASK_NAME = #{query.name, jdbcType=VARCHAR}
+             AND ali.TASK_DEFINITION_NAME = #{query.name, jdbcType=VARCHAR}
           </if>
           <if test="query.processDefinitionId != null and query.processDefinitionId != ''">
              AND ali.PROCESS_DEFINITION_ID = #{query.processDefinitionId, jdbcType=VARCHAR}
@@ -89,7 +89,7 @@ ali.TASK_ID AS USER_TASK_KEY, ali.TASK_DEFINITION_KEY AS ELEMENT_ID, ali.TASK_NA
              AND ali.STATE = #{query.state, jdbcType=VARCHAR}
           </if>
           <if test="query.processDefinitionKey != null and query.processDefinitionKey != ''">
-             AND ali.DEFINITION_KEY = #{query.processDefinitionKey, jdbcType=VARCHAR}
+             AND ali.PROCESS_DEFINITION_KEY = #{query.processDefinitionKey, jdbcType=VARCHAR}
           </if>
           <if test="query.processInstanceKey != null and query.processInstanceKey != ''">
              AND ali.PROCESS_INSTANCE_ID = #{query.processInstanceKey, jdbcType=VARCHAR}
@@ -98,10 +98,10 @@ ali.TASK_ID AS USER_TASK_KEY, ali.TASK_DEFINITION_KEY AS ELEMENT_ID, ali.TASK_NA
              AND ali.ACTIVITY_INSTANCE_ID = #{query.elementInstanceKey, jdbcType=VARCHAR}
           </if>
           <if test="query.dueDate != null">
-             AND ali.DUE_TIME = #{query.dueDate, jdbcType=TIMESTAMP}
+             AND ali.DUE_DATE = #{query.dueDate, jdbcType=TIMESTAMP}
           </if>
           <if test="query.followUpDate != null">
-             AND ali.FOLLOW_UP_TIME = #{query.followUpDate, jdbcType=TIMESTAMP}
+             AND ali.FOLLOW_UP_DATE = #{query.followUpDate, jdbcType=TIMESTAMP}
           </if>
           <if test="query.priority != null">
              AND ali.PRIORITY = #{query.priority, jdbcType=INTEGER}
@@ -123,7 +123,7 @@ ali.TASK_ID AS USER_TASK_KEY, ali.TASK_DEFINITION_KEY AS ELEMENT_ID, ali.TASK_NA
              AND TASK_DEFINITION_KEY = #{elementId, jdbcType=VARCHAR}
          </if>
          <if test="name != null and name != ''">
-             AND TASK_NAME = #{name, jdbcType=VARCHAR}
+             AND TASK_DEFINITION_NAME = #{name, jdbcType=VARCHAR}
          </if>
          <if test="processDefinitionId != null and processDefinitionId != ''">
              AND PROCESS_DEFINITION_ID = #{processDefinitionId, jdbcType=VARCHAR}
@@ -141,7 +141,7 @@ ali.TASK_ID AS USER_TASK_KEY, ali.TASK_DEFINITION_KEY AS ELEMENT_ID, ali.TASK_NA
              AND STATE = #{state, jdbcType=VARCHAR}
          </if>
          <if test="processDefinitionKey != null and processDefinitionKey != ''">
-             AND DEFINITION_KEY = #{processDefinitionKey, jdbcType=VARCHAR}
+             AND PROCESS_DEFINITION_KEY = #{processDefinitionKey, jdbcType=VARCHAR}
          </if>
          <if test="processInstanceKey != null and processInstanceKey != ''">
              AND PROCESS_INSTANCE_ID = #{processInstanceKey, jdbcType=VARCHAR}
@@ -150,10 +150,10 @@ ali.TASK_ID AS USER_TASK_KEY, ali.TASK_DEFINITION_KEY AS ELEMENT_ID, ali.TASK_NA
              AND ACTIVITY_INSTANCE_ID = #{elementInstanceKey, jdbcType=VARCHAR}
          </if>
          <if test="dueDate != null">
-             AND DUE_TIME = #{dueDate, jdbcType=TIMESTAMP}
+             AND DUE_DATE = #{dueDate, jdbcType=TIMESTAMP}
          </if>
          <if test="followUpDate != null">
-             AND FOLLOW_UP_TIME = #{followUpDate, jdbcType=TIMESTAMP}
+             AND FOLLOW_UP_DATE = #{followUpDate, jdbcType=TIMESTAMP}
          </if>
          <if test="priority != null">
              AND PRIORITY = #{priority, jdbcType=INTEGER}

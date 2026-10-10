@@ -20,8 +20,8 @@
 
   <insert id="insert" parameterType="com.anyilanxin.kunpeng.sink.rdbms.model.TimerDbModel">
     INSERT INTO ${table.timer} (
-      timer_id, due_time, repetitions, process_instance_id, activity_instance_id,
-      process_definition_id, definition_key, activity_key, timer_element_type, timer_type,
+      timer_id, due_date, repetitions, process_instance_id, activity_instance_id,
+      process_definition_id, process_definition_key, activity_definition_key, timer_element_type, timer_type,
       timer_content, state, resource_id
     ) VALUES (
       #{timerId}, #{dueTime,jdbcType=TIMESTAMP}, #{repetitions}, #{processInstanceId},
@@ -32,7 +32,7 @@
 
   <update id="update" parameterType="com.anyilanxin.kunpeng.sink.rdbms.model.TimerDbModel">
     UPDATE ${table.timer}
-    SET due_time = #{dueTime,jdbcType=TIMESTAMP},
+    SET due_date = #{dueTime,jdbcType=TIMESTAMP},
         repetitions = #{repetitions},
         state = #{state}
     WHERE timer_id = #{timerId}

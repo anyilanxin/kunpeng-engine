@@ -48,8 +48,8 @@ public class UserTaskEntity extends BaseEntity {
   @TableField(value = "TASK_DEFINITION_KEY")
   private String elementId;
 
-  /** 元素名称（task_name） */
-  @TableField(value = "TASK_NAME")
+  /** 元素名称（task_definition_name） */
+  @TableField(value = "TASK_DEFINITION_NAME")
   private String name;
 
   /** 流程定义 id */
@@ -82,8 +82,8 @@ public class UserTaskEntity extends BaseEntity {
   @TableField(value = "STATE")
   private String state;
 
-  /** 流程定义key（definition_key） */
-  @TableField(value = "DEFINITION_KEY")
+  /** 流程定义key（process_definition_key） */
+  @TableField(value = "PROCESS_DEFINITION_KEY")
   private String processDefinitionKey;
 
   /** 流程实例 key（process_instance_id） */
@@ -94,14 +94,14 @@ public class UserTaskEntity extends BaseEntity {
   @TableField(value = "ACTIVITY_INSTANCE_ID")
   private String elementInstanceKey;
 
-  /** 截止日期（due_time） */
+  /** 截止日期（due_date） */
   @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = TIME_ZONE_GMT8)
-  @TableField(value = "DUE_TIME")
+  @TableField(value = "DUE_DATE")
   private LocalDateTime dueDate;
 
-  /** 跟进日期（follow_up_time） */
+  /** 跟进日期（follow_up_date） */
   @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = TIME_ZONE_GMT8)
-  @TableField(value = "FOLLOW_UP_TIME")
+  @TableField(value = "FOLLOW_UP_DATE")
   private LocalDateTime followUpDate;
 
   /** 候选组 */

@@ -3,8 +3,8 @@
 <mapper namespace="com.anyilanxin.modules.resource.mapper.ProcessDefinitionMapper">
     <resultMap type="com.anyilanxin.modules.resource.entity.ProcessDefinitionEntity" id="ProcessDefinitionMap">
        <result property="processDefinitionId" column="PROCESS_DEFINITION_ID" jdbcType="VARCHAR"/>
-       <result property="processDefinitionKey" column="DEFINITION_KEY" jdbcType="VARCHAR"/>
-       <result property="name" column="DEFINITION_NAME" jdbcType="VARCHAR"/>
+       <result property="processDefinitionKey" column="PROCESS_DEFINITION_KEY" jdbcType="VARCHAR"/>
+       <result property="name" column="PROCESS_DEFINITION_NAME" jdbcType="VARCHAR"/>
        <result property="version" column="VERSION" jdbcType="INTEGER"/>
        <result property="versionTag" column="VERSION_TAG" jdbcType="VARCHAR"/>
        <result property="historyTimeToLive" column="HISTORY_TIME_TO_LIVE" jdbcType="INTEGER"/>
@@ -20,19 +20,19 @@
     </resultMap>
 
     <!-- @formatter:off -->
-    <!--数据库字段，重命名列按 Vo 旧属性名别名输出，保证 resultType 自动映射-->
+    <!--数据库字段，与 Vo 属性不同名的列按旧属性名别名输出，保证 resultType 自动映射-->
     <sql id="Column_List">
-PROCESS_DEFINITION_ID, DEFINITION_KEY AS PROCESS_DEFINITION_KEY, DEFINITION_NAME AS NAME, VERSION, VERSION_TAG, HISTORY_TIME_TO_LIVE, DEPLOYMENT_ID, RESOURCE_DEFINITION_ID, RESOURCE_NAME, CHECKSUM, STARTER_EVENTS, CANDIDATE_STARTER_GROUPS, CANDIDATE_STARTER_USERS, RESOURCE_CONTENT AS BPMN_XML, RESOURCE_ID
+PROCESS_DEFINITION_ID, PROCESS_DEFINITION_KEY, PROCESS_DEFINITION_NAME AS NAME, VERSION, VERSION_TAG, HISTORY_TIME_TO_LIVE, DEPLOYMENT_ID, RESOURCE_DEFINITION_ID, RESOURCE_NAME, CHECKSUM, STARTER_EVENTS, CANDIDATE_STARTER_GROUPS, CANDIDATE_STARTER_USERS, RESOURCE_CONTENT AS BPMN_XML, RESOURCE_ID
     </sql>
 
     <!--数据库字段待别名-->
     <sql id="Column_List_Ali">
-ali.PROCESS_DEFINITION_ID, ali.DEFINITION_KEY AS PROCESS_DEFINITION_KEY, ali.DEFINITION_NAME AS NAME, ali.VERSION, ali.VERSION_TAG, ali.HISTORY_TIME_TO_LIVE, ali.DEPLOYMENT_ID, ali.RESOURCE_DEFINITION_ID, ali.RESOURCE_NAME, ali.CHECKSUM, ali.STARTER_EVENTS, ali.CANDIDATE_STARTER_GROUPS, ali.CANDIDATE_STARTER_USERS, ali.RESOURCE_CONTENT AS BPMN_XML, ali.RESOURCE_ID
+ali.PROCESS_DEFINITION_ID, ali.PROCESS_DEFINITION_KEY, ali.PROCESS_DEFINITION_NAME AS NAME, ali.VERSION, ali.VERSION_TAG, ali.HISTORY_TIME_TO_LIVE, ali.DEPLOYMENT_ID, ali.RESOURCE_DEFINITION_ID, ali.RESOURCE_NAME, ali.CHECKSUM, ali.STARTER_EVENTS, ali.CANDIDATE_STARTER_GROUPS, ali.CANDIDATE_STARTER_USERS, ali.RESOURCE_CONTENT AS BPMN_XML, ali.RESOURCE_ID
     </sql>
 
      <!--数据库字段-->
     <sql id="Column_List_Page_Ali">
-ali.PROCESS_DEFINITION_ID, ali.DEFINITION_KEY AS PROCESS_DEFINITION_KEY, ali.DEFINITION_NAME AS NAME, ali.VERSION, ali.VERSION_TAG, ali.HISTORY_TIME_TO_LIVE, ali.DEPLOYMENT_ID, ali.RESOURCE_DEFINITION_ID, ali.RESOURCE_NAME, ali.CHECKSUM, ali.STARTER_EVENTS, ali.CANDIDATE_STARTER_GROUPS, ali.CANDIDATE_STARTER_USERS, ali.RESOURCE_CONTENT AS BPMN_XML, ali.RESOURCE_ID
+ali.PROCESS_DEFINITION_ID, ali.PROCESS_DEFINITION_KEY, ali.PROCESS_DEFINITION_NAME AS NAME, ali.VERSION, ali.VERSION_TAG, ali.HISTORY_TIME_TO_LIVE, ali.DEPLOYMENT_ID, ali.RESOURCE_DEFINITION_ID, ali.RESOURCE_NAME, ali.CHECKSUM, ali.STARTER_EVENTS, ali.CANDIDATE_STARTER_GROUPS, ali.CANDIDATE_STARTER_USERS, ali.RESOURCE_CONTENT AS BPMN_XML, ali.RESOURCE_ID
     </sql>
 
 
@@ -46,10 +46,10 @@ ali.PROCESS_DEFINITION_ID, ali.DEFINITION_KEY AS PROCESS_DEFINITION_KEY, ali.DEF
              AND ali.PROCESS_DEFINITION_ID = #{query.processDefinitionId, jdbcType=VARCHAR}
           </if>
           <if test="query.processDefinitionKey != null and query.processDefinitionKey != ''">
-             AND ali.DEFINITION_KEY = #{query.processDefinitionKey, jdbcType=VARCHAR}
+             AND ali.PROCESS_DEFINITION_KEY = #{query.processDefinitionKey, jdbcType=VARCHAR}
           </if>
           <if test="query.name != null and query.name != ''">
-             AND ali.DEFINITION_NAME = #{query.name, jdbcType=VARCHAR}
+             AND ali.PROCESS_DEFINITION_NAME = #{query.name, jdbcType=VARCHAR}
           </if>
           <if test="query.resourceName != null and query.resourceName != ''">
              AND ali.RESOURCE_NAME = #{query.resourceName, jdbcType=VARCHAR}
@@ -74,10 +74,10 @@ ali.PROCESS_DEFINITION_ID, ali.DEFINITION_KEY AS PROCESS_DEFINITION_KEY, ali.DEF
              AND PROCESS_DEFINITION_ID = #{processDefinitionId, jdbcType=VARCHAR}
          </if>
          <if test="processDefinitionKey != null and processDefinitionKey != ''">
-             AND DEFINITION_KEY = #{processDefinitionKey, jdbcType=VARCHAR}
+             AND PROCESS_DEFINITION_KEY = #{processDefinitionKey, jdbcType=VARCHAR}
          </if>
          <if test="name != null and name != ''">
-             AND DEFINITION_NAME = #{name, jdbcType=VARCHAR}
+             AND PROCESS_DEFINITION_NAME = #{name, jdbcType=VARCHAR}
          </if>
          <if test="resourceName != null and resourceName != ''">
              AND RESOURCE_NAME = #{resourceName, jdbcType=VARCHAR}

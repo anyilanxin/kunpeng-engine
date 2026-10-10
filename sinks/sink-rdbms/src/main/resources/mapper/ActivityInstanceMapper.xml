@@ -22,7 +22,7 @@
     INSERT INTO ${table.activity_instance} (
       activity_instance_id, process_instance_id, root_process_instance_id,
       parent_activity_instance_id, call_process_instance_id, process_definition_id,
-      definition_key, activity_key, activity_name, activity_type, task_id, assignee,
+      process_definition_key, activity_definition_key, activity_definition_name, activity_definition_type, task_id, assignee,
       start_activity_definition_key, start_activity_instance_id, state,
       incident_id, sequence_counter, start_time, end_time, duration, revision, resource_id
     ) VALUES (
