@@ -1,3 +1,3 @@
 <component name="DependencyValidationManager">
-  <scope name="mpl-license-scope" pattern="" />
+  <scope name="mpl-license-scope" pattern="file[kunpeng-engine.clients*]:*//*||file[kunpeng-engine.connector*]:*//*||file[kunpeng-engine.kunpeng.sink.sink-api*]:*//*||file[kunpeng-engine.kunpeng.sink.sink-common*]:*//*||file[kunpeng-engine.kunpeng.bpm-model.bpmn-model*]:*//*||file[kunpeng-engine.kunpeng.bpm-model.dmn-model*]:*//*||file[kunpeng-engine.kunpeng.bpm-model.xml-model*]:*//*||file[kunpeng-engine.kunpeng.protocol.protocol-admin*]:*//*||file[kunpeng-engine.kunpeng.protocol.protocol-business*]:*//*||file[kunpeng-engine.kunpeng.protocol.protocol-common*]:*//*||file[kunpeng-engine.example*]:*//*||file[kunpeng-engine.sinks*]:*//*" />
 </component>
