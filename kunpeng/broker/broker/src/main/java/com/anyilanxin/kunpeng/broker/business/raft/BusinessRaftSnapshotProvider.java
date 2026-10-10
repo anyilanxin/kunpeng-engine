@@ -56,8 +56,8 @@ public class BusinessRaftSnapshotProvider
   private final ConcurrencyControl concurrencyControl;
   private KvStore<BusinessRepositoryColumnFamilies> rocksdbDb;
   private final RocksdbFactory<BusinessRepositoryColumnFamilies> rocksdbFactory;
-  private final Supplier<Long> processPositionSupplier;
-  private final Supplier<Long> sinkPositionSupplier;
+  private Supplier<Long> processPositionSupplier = () -> -1L;
+  private Supplier<Long> sinkPositionSupplier = () -> -1L;
   private final RocksdbConfiguration rocksdbConfiguration;
   private static final Logger LOG = BrokerLoggers.CLUSTER_BUSINESS;
   private Path partitionDirectory;
@@ -74,11 +74,7 @@ public class BusinessRaftSnapshotProvider
       final ConcurrencyControl concurrencyControl,
       final RocksdbConfiguration rocksdbConfiguration,
       final MeterRegistry registry,
-      final Supplier<Long> processPositionSupplier,
-      final Supplier<Long> sinkPositionSupplier,
       final TimerClock timerClock) {
-    this.sinkPositionSupplier = sinkPositionSupplier;
-    this.processPositionSupplier = processPositionSupplier;
     this.concurrencyControl = concurrencyControl;
     this.timerClock = timerClock;
     rocksdbFactory = new DefaultRocksdbFactory<>();
@@ -98,6 +94,14 @@ public class BusinessRaftSnapshotProvider
         PROCESS_POSITION, processPositionSupplier.get(),
         SINK_POSITION, sinkPositionSupplier.get(),
         SNAPSHOT_TIME, timerClock.millis());
+  }
+
+  public void setProcessPositionSupplier(final Supplier<Long> processPositionSupplier) {
+    this.processPositionSupplier = processPositionSupplier;
+  }
+
+  public void setSinkPositionSupplier(final Supplier<Long> sinkPositionSupplier) {
+    this.sinkPositionSupplier = sinkPositionSupplier;
   }
 
   @Override

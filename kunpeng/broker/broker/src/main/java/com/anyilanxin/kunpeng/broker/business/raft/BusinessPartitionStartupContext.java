@@ -30,7 +30,6 @@ import com.anyilanxin.kunpeng.cluster.raft.logentry.EntryValidator;
 import com.anyilanxin.kunpeng.cluster.raft.partition.PartitionManagementService;
 import com.anyilanxin.kunpeng.cluster.raft.partition.PartitionMetadata;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartition;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.RaftSnapshotProvider;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.TransferSnapshotProvider;
 import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
@@ -47,7 +46,7 @@ import org.springframework.beans.factory.BeanFactory;
  * @since 2026.9.0
  */
 public class BusinessPartitionStartupContext
-    implements PartitionStartupContext<BusinessTransitionContent> {
+    implements PartitionStartupContext<BusinessTransitionContent, BusinessRaftSnapshotProvider> {
   private final ConcurrencyControl concurrencyControl;
   private final ActorSchedulingService schedulingService;
   private final RaftPartitionFactory raftPartitionFactory;
@@ -114,7 +113,7 @@ public class BusinessPartitionStartupContext
   }
 
   @Override
-  public RaftSnapshotProvider getSnapshotProvider() {
+  public BusinessRaftSnapshotProvider getSnapshotProvider() {
     return snapshotProvider;
   }
 

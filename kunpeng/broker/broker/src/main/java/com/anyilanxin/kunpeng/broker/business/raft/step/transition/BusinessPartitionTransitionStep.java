@@ -23,6 +23,7 @@ import com.anyilanxin.kunpeng.broker.business.raft.step.transition.apipartition.
 import com.anyilanxin.kunpeng.broker.business.raft.step.transition.bpmnengine.EngineProcessServiceTransitionStep;
 import com.anyilanxin.kunpeng.broker.business.raft.step.transition.logstorage.BusinessLogStoragePartitionTransitionStep;
 import com.anyilanxin.kunpeng.broker.business.raft.step.transition.logstream.BusinessLogStreamPartitionTransitionStep;
+import com.anyilanxin.kunpeng.broker.business.raft.step.transition.positionsupier.PositionSupplierTransitionStep;
 import com.anyilanxin.kunpeng.broker.business.raft.step.transition.repository.RepositoryProcessServiceTransitionStep;
 import com.anyilanxin.kunpeng.broker.business.raft.step.transition.rocksdb.RocksdbPartitionTransitionStep;
 import com.anyilanxin.kunpeng.broker.business.raft.step.transition.sink.SinkServiceTransitionStep;
@@ -53,7 +54,8 @@ public final class BusinessPartitionTransitionStep
           new RocksdbPartitionTransitionStep(),
           new RepositoryProcessServiceTransitionStep(),
           new EngineProcessServiceTransitionStep(),
-          new SinkServiceTransitionStep());
+          new SinkServiceTransitionStep(),
+          new PositionSupplierTransitionStep());
 
   @Override
   public String getName() {

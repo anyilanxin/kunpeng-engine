@@ -35,13 +35,14 @@ import java.nio.file.Path;
  * @author zxuanhong
  * @since 2026.9.0
  */
-public interface PartitionStartupContext<CONTENT extends TransitionContent> {
+public interface PartitionStartupContext<
+    CONTENT extends TransitionContent, PROVIDER extends RaftSnapshotProvider> {
 
   RaftPartitionFactory getRaftPartitionFactory();
 
   PartitionMetadata getPartitionMetadata();
 
-  RaftSnapshotProvider getSnapshotProvider();
+  PROVIDER getSnapshotProvider();
 
   TransferSnapshotProvider getTransferSnapshotProvider();
 

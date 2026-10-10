@@ -16,6 +16,7 @@
  */
 package com.anyilanxin.kunpeng.broker.admin.raft.step.transition;
 
+import com.anyilanxin.kunpeng.broker.admin.raft.AdminRaftSnapshotProvider;
 import com.anyilanxin.kunpeng.broker.admin.raft.step.transition.logstorage.AdminRaftEventStore;
 import com.anyilanxin.kunpeng.broker.client.admin.commandapi.AdminCommandApiService;
 import com.anyilanxin.kunpeng.cluster.business.step.RaftPartitionSource;
@@ -30,7 +31,6 @@ import com.anyilanxin.kunpeng.cluster.dispatch.api.ClusterDispatchClient;
 import com.anyilanxin.kunpeng.cluster.dispatch.scheduling.TimerClock;
 import com.anyilanxin.kunpeng.cluster.raft.RaftServer;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartition;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.RaftSnapshotProvider;
 import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
 import com.anyilanxin.kunpeng.eventlog.EventLog;
 import com.anyilanxin.kunpeng.kvstore.KvStore;
@@ -47,9 +47,8 @@ import io.micrometer.core.instrument.MeterRegistry;
  * @author zxuanhong
  * @since 2026.9.0
  */
-public class AdminTransitionContent
-    implements TransitionContent<KvStore<AdminRepositoryColumnFamilies>> {
-  private final RaftSnapshotProvider<KvStore<AdminRepositoryColumnFamilies>> snapshotProvider;
+public class AdminTransitionContent implements TransitionContent {
+  private final AdminRaftSnapshotProvider snapshotProvider;
   private final MeterRegistry meterRegistry;
   private final RaftPartition raftPartition;
   private final BrokerCfg brokerCfg;
@@ -77,7 +76,7 @@ public class AdminTransitionContent
   public AdminTransitionContent(
       final RaftPartitionSource partitionSource,
       final ClusterMetaStore clusterMetaStore,
-      final RaftSnapshotProvider<KvStore<AdminRepositoryColumnFamilies>> snapshotProvider,
+      final AdminRaftSnapshotProvider snapshotProvider,
       final MeterRegistry meterRegistry,
       final RaftPartition raftPartition,
       final BrokerCfg brokerCfg,
@@ -114,7 +113,7 @@ public class AdminTransitionContent
     this.concurrencyControl = concurrencyControl;
   }
 
-  public RaftSnapshotProvider<KvStore<AdminRepositoryColumnFamilies>> getSnapshotProvider() {
+  public AdminRaftSnapshotProvider getSnapshotProvider() {
     return snapshotProvider;
   }
 

@@ -52,7 +52,7 @@ public class AdminRaftSnapshotProvider
   private KvStore<AdminRepositoryColumnFamilies> rocksdbDb;
   private final RocksdbFactory<AdminRepositoryColumnFamilies> rocksdbFactory;
   private final RocksdbConfiguration rocksdbConfiguration;
-  private final Supplier<Long> processPositionSupplier;
+  private Supplier<Long> processPositionSupplier = () -> -1L;
   private static final Logger LOG = BrokerLoggers.CLUSTER_ADMIN;
   private Path partitionDirectory;
   private Path runtimeDirectory;
@@ -65,14 +65,16 @@ public class AdminRaftSnapshotProvider
       final ConcurrencyControl concurrencyControl,
       final RocksdbConfiguration rocksdbConfiguration,
       final MeterRegistry registry,
-      final Supplier<Long> processPositionSupplier,
       final TimerClock timerClock) {
     this.timerClock = timerClock;
-    this.processPositionSupplier = processPositionSupplier;
     this.concurrencyControl = concurrencyControl;
     rocksdbFactory = new DefaultRocksdbFactory<>();
     this.rocksdbConfiguration = rocksdbConfiguration;
     this.registry = registry;
+  }
+
+  public void setProcessPositionSupplier(final Supplier<Long> processPositionSupplier) {
+    this.processPositionSupplier = processPositionSupplier;
   }
 
   @Override
@@ -83,6 +85,7 @@ public class AdminRaftSnapshotProvider
       LOG.debug("Failed to delete snapshot directory when closing", e);
     }
     rocksdbDb.createSnapshot(snapshotDirectory.toFile());
+
     return Map.of(
         PROCESS_POSITION, processPositionSupplier.get(),
         SNAPSHOT_TIME, timerClock.millis());

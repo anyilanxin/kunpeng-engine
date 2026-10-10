@@ -290,11 +290,7 @@ public class ClusterAdminService extends Actor implements ClusterAdmin, AdminExe
   private AdminPartitionStartupContext createContent(final PartitionMetadata partitionMetadata) {
     final AdminRaftSnapshotProvider snapshotProvider =
         new AdminRaftSnapshotProvider(
-            this,
-            brokerCfg.getRocksdb().createRocksDbConfiguration(),
-            meterRegistry,
-            () -> -1L,
-            timerClock);
+            this, brokerCfg.getRocksdb().createRocksDbConfiguration(), meterRegistry, timerClock);
     return new AdminPartitionStartupContext(
         clusterMetaStore,
         actorSchedulingService,

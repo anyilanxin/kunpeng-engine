@@ -16,6 +16,7 @@
  */
 package com.anyilanxin.kunpeng.broker.business.raft.step.transition;
 
+import com.anyilanxin.kunpeng.broker.business.raft.BusinessRaftSnapshotProvider;
 import com.anyilanxin.kunpeng.broker.business.raft.step.transition.apipartition.impl.InterPartitionCommandReceiverActor;
 import com.anyilanxin.kunpeng.broker.business.raft.step.transition.apipartition.impl.InterPartitionCommandSenderService;
 import com.anyilanxin.kunpeng.broker.business.raft.step.transition.logstorage.BusinessRaftEventStore;
@@ -31,7 +32,6 @@ import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologySer
 import com.anyilanxin.kunpeng.cluster.dispatch.scheduling.TimerClock;
 import com.anyilanxin.kunpeng.cluster.raft.RaftServer;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartition;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.RaftSnapshotProvider;
 import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
 import com.anyilanxin.kunpeng.engine.bpmn.EngineProcessService;
 import com.anyilanxin.kunpeng.eventlog.EventLog;
@@ -52,9 +52,8 @@ import org.springframework.beans.factory.BeanFactory;
  * @author zxuanhong
  * @since 2026.9.0
  */
-public class BusinessTransitionContent
-    implements TransitionContent<KvStore<BusinessRepositoryColumnFamilies>> {
-  private final RaftSnapshotProvider<KvStore<BusinessRepositoryColumnFamilies>> snapshotProvider;
+public class BusinessTransitionContent implements TransitionContent {
+  private final BusinessRaftSnapshotProvider snapshotProvider;
   private final MeterRegistry meterRegistry;
   private final RaftPartition raftPartition;
   private final BrokerCfg brokerCfg;
@@ -89,7 +88,7 @@ public class BusinessTransitionContent
   public BusinessTransitionContent(
       final RaftPartitionSource partitionSource,
       final PartitionMessagingService partitionCommunicationService,
-      final RaftSnapshotProvider<KvStore<BusinessRepositoryColumnFamilies>> snapshotProvider,
+      final BusinessRaftSnapshotProvider snapshotProvider,
       final MeterRegistry meterRegistry,
       final RaftPartition raftPartition,
       final BrokerCfg brokerCfg,
@@ -235,7 +234,7 @@ public class BusinessTransitionContent
     return meterRegistry;
   }
 
-  public RaftSnapshotProvider<KvStore<BusinessRepositoryColumnFamilies>> getSnapshotProvider() {
+  public BusinessRaftSnapshotProvider getSnapshotProvider() {
     return snapshotProvider;
   }
 

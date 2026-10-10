@@ -32,7 +32,6 @@ import com.anyilanxin.kunpeng.cluster.raft.logentry.EntryValidator;
 import com.anyilanxin.kunpeng.cluster.raft.partition.PartitionManagementService;
 import com.anyilanxin.kunpeng.cluster.raft.partition.PartitionMetadata;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartition;
-import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.RaftSnapshotProvider;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.constructable.TransferSnapshotProvider;
 import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
@@ -47,12 +46,12 @@ import java.nio.file.Path;
  * @since 2026.9.0
  */
 public class AdminPartitionStartupContext
-    implements PartitionStartupContext<AdminTransitionContent> {
+    implements PartitionStartupContext<AdminTransitionContent, AdminRaftSnapshotProvider> {
   private final ConcurrencyControl concurrencyControl;
   private final ActorSchedulingService schedulingService;
   private final RaftPartitionFactory raftPartitionFactory;
   private final PartitionMetadata partitionMetadata;
-  private final RaftSnapshotProvider snapshotProvider;
+  private final AdminRaftSnapshotProvider snapshotProvider;
   private final EntryValidator entryValidator = new AdminEntryValidator();
   private final MeterRegistry meterRegistry;
   private final PartitionManagementService managementService;
@@ -76,7 +75,7 @@ public class AdminPartitionStartupContext
       final ConcurrencyControl concurrencyControl,
       final RaftPartitionFactory raftPartitionFactory,
       final PartitionMetadata partitionMetadata,
-      final RaftSnapshotProvider snapshotProvider,
+      final AdminRaftSnapshotProvider snapshotProvider,
       final MeterRegistry meterRegistry,
       final PartitionManagementService managementService,
       final BrokerCfg brokerCfg,
@@ -112,7 +111,7 @@ public class AdminPartitionStartupContext
   }
 
   @Override
-  public RaftSnapshotProvider getSnapshotProvider() {
+  public AdminRaftSnapshotProvider getSnapshotProvider() {
     return snapshotProvider;
   }
 

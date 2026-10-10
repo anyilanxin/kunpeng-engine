@@ -20,6 +20,7 @@ import com.anyilanxin.kunpeng.broker.business.raft.step.transition.BusinessTrans
 import com.anyilanxin.kunpeng.broker.jobstream.JobStreamDispatcher;
 import com.anyilanxin.kunpeng.cluster.business.step.transition.TransitionStep;
 import com.anyilanxin.kunpeng.engine.bpmn.EngineProcessService;
+import com.anyilanxin.kunpeng.engine.bpmn.scheduling.TimerClock;
 import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 import org.slf4j.Logger;
@@ -78,8 +79,7 @@ public final class EngineProcessServiceTransitionStep
                   context.getRaftPartitionSource(),
                   commandSender,
                   context.getMeterRegistry(),
-                  com.anyilanxin.kunpeng.engine.bpmn.scheduling.TimerClock.passthrough(
-                      context.getTimerClock()),
+                  TimerClock.passthrough(context.getTimerClock()),
                   context.getSchedulingService());
           context
               .getSchedulingService()

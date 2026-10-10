@@ -21,6 +21,7 @@ import com.anyilanxin.kunpeng.broker.admin.raft.step.transition.apicommand.Admin
 import com.anyilanxin.kunpeng.broker.admin.raft.step.transition.dispatch.DispatchProcessServiceTransitionStep;
 import com.anyilanxin.kunpeng.broker.admin.raft.step.transition.logstorage.AdminLogStoragePartitionTransitionStep;
 import com.anyilanxin.kunpeng.broker.admin.raft.step.transition.logstream.AdminLogStreamPartitionTransitionStep;
+import com.anyilanxin.kunpeng.broker.admin.raft.step.transition.positionsupier.AdminPositionSupplierTransitionStep;
 import com.anyilanxin.kunpeng.broker.admin.raft.step.transition.repository.RepositoryProcessServiceTransitionStep;
 import com.anyilanxin.kunpeng.broker.admin.raft.step.transition.rocksdb.RocksdbPartitionTransitionStep;
 import com.anyilanxin.kunpeng.cluster.business.step.transition.AbstractPartitionTransitionStep;
@@ -48,7 +49,8 @@ public final class AdminPartitionTransitionStep
           new RocksdbPartitionTransitionStep(),
           new RepositoryProcessServiceTransitionStep(),
           new DispatchProcessServiceTransitionStep(),
-          new AdminCommandApiServiceTransitionStep());
+          new AdminCommandApiServiceTransitionStep(),
+          new AdminPositionSupplierTransitionStep());
 
   @Override
   public String getName() {

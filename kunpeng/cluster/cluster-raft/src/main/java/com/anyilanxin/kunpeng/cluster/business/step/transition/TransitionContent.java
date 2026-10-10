@@ -25,7 +25,7 @@ import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
  * @author zxuanhong
  * @since 2026.9.0
  */
-public interface TransitionContent<T> {
+public interface TransitionContent {
   ConcurrencyControl getConcurrencyControl();
 
   void setConcurrencyControl(ConcurrencyControl concurrencyControl);
