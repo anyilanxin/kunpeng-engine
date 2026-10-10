@@ -1,6 +1,6 @@
 # AGENTS.md — kunpeng-engine · 微服务编排引擎
 
-本文件为 AI 编码代理（ZCode / Codex / Cursor 等）在本仓库工作时的指引，遵循 [AGENTS.md 开放规范](https://agents.md)。Claude Code 通过根目录 `CLAUDE.md` 的 `@AGENTS.md` 引用同源加载——**本文件是单一事实源，改动只改这里**，勿单独改 CLAUDE.md。
+本文件为 AI 编码代理（ZCode / Codex / Cursor 等）在本仓库工作时的指引，遵循 [AGENTS.md 开放规范](https://agents.md)。Claude Code 通过根目录软链接 `CLAUDE.md → AGENTS.md` 同源加载——**本文件是单一事实源，改动只改这里**，勿单独改 CLAUDE.md（软链接）。
 
 ## 项目概述
 
@@ -143,7 +143,7 @@ kunpeng-engine/
 ## AGENTS 规范与多工具识别
 
 - 本文件遵循 [AGENTS.md 开放规范](https://agents.md)：仓库根目录 `AGENTS.md`、纯 Markdown、UTF-8；**子目录可放 `AGENTS.md` 叠加生效**（代理进入该目录工作时合并上下文）——新增子目录级约束时建议采用，而不是把所有内容堆进本文件。
-- **Claude Code 识别**：根 `CLAUDE.md` 仅含 `@AGENTS.md` 引用（Claude Code memory import 语法），内容与本文件同源；新版 Claude Code 亦原生读取 AGENTS.md，两条路径都指向本文件。
+- **Claude Code 识别**：根 `CLAUDE.md` 为指向本文件的软链接（`CLAUDE.md → AGENTS.md`），内容与本文件同源；新版 Claude Code 亦原生读取 AGENTS.md，两条路径都指向本文件。
 - **MCP**：`.claude/settings.local.json` 已启用 codegraph MCP server（代码图谱检索）。
 
 ## 文档导航
