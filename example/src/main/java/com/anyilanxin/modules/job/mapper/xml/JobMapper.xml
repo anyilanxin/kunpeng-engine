@@ -18,46 +18,47 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.anyilanxin.modules.job.mapper.JobMapper">
     <resultMap type="com.anyilanxin.modules.job.entity.JobEntity" id="JobMap">
-       <result property="jobId" column="JOB_ID" jdbcType="INTEGER"/>
+       <result property="jobId" column="JOB_ID" jdbcType="BIGINT"/>
        <result property="jobType" column="JOB_TYPE" jdbcType="VARCHAR"/>
        <result property="jobKind" column="JOB_KIND" jdbcType="VARCHAR"/>
+       <result property="state" column="STATE" jdbcType="VARCHAR"/>
        <result property="retries" column="RETRIES" jdbcType="INTEGER"/>
        <result property="retryBackoff" column="RETRY_BACKOFF" jdbcType="INTEGER"/>
        <result property="priority" column="PRIORITY" jdbcType="INTEGER"/>
-       <result property="dueDate" column="DUE_DATE" jdbcType="TIMESTAMP"/>
-       <result property="lockExpireTime" column="LOCK_EXPIRE_TIME" jdbcType="INTEGER"/>
+       <result property="dueDate" column="DUE_TIME" jdbcType="TIMESTAMP"/>
        <result property="lockOwner" column="LOCK_OWNER" jdbcType="VARCHAR"/>
-       <result property="processDefinitionKey" column="PROCESS_DEFINITION_KEY" jdbcType="VARCHAR"/>
-       <result property="processDefinitionId" column="PROCESS_DEFINITION_ID" jdbcType="INTEGER"/>
-       <result property="processInstanceId" column="PROCESS_INSTANCE_ID" jdbcType="INTEGER"/>
-       <result property="activityDefinitionKey" column="ACTIVITY_DEFINITION_KEY" jdbcType="VARCHAR"/>
-       <result property="activityInstanceId" column="ACTIVITY_INSTANCE_ID" jdbcType="INTEGER"/>
-       <result property="taskId" column="TASK_ID" jdbcType="INTEGER"/>
-       <result property="incidentId" column="INCIDENT_ID" jdbcType="INTEGER"/>
-       <result property="state" column="STATE" jdbcType="VARCHAR"/>
-       <result property="denied" column="DENIED" jdbcType="INTEGER"/>
+       <result property="lockExpireTime" column="LOCK_EXPIRE_TIME" jdbcType="TIMESTAMP"/>
+       <result property="processInstanceId" column="PROCESS_INSTANCE_ID" jdbcType="BIGINT"/>
+       <result property="activityInstanceId" column="ACTIVITY_INSTANCE_ID" jdbcType="BIGINT"/>
+       <result property="processDefinitionId" column="PROCESS_DEFINITION_ID" jdbcType="BIGINT"/>
+       <result property="processDefinitionKey" column="DEFINITION_KEY" jdbcType="VARCHAR"/>
+       <result property="activityDefinitionKey" column="ACTIVITY_KEY" jdbcType="VARCHAR"/>
+       <result property="taskId" column="TASK_ID" jdbcType="BIGINT"/>
+       <result property="incidentId" column="INCIDENT_ID" jdbcType="BIGINT"/>
        <result property="deniedReason" column="DENIED_REASON" jdbcType="VARCHAR"/>
        <result property="startTime" column="START_TIME" jdbcType="TIMESTAMP"/>
        <result property="endTime" column="END_TIME" jdbcType="TIMESTAMP"/>
-       <result property="duration" column="DURATION" jdbcType="INTEGER"/>
-       <result property="tenantId" column="TENANT_ID" jdbcType="VARCHAR"/>
-       <result property="partitionId" column="PARTITION_ID" jdbcType="INTEGER"/>
+       <result property="duration" column="DURATION" jdbcType="BIGINT"/>
+       <result property="variablesJson" column="VARIABLES_JSON" jdbcType="VARCHAR"/>
+       <result property="localVariablesJson" column="LOCAL_VARIABLES_JSON" jdbcType="VARCHAR"/>
+       <result property="rev" column="REVISION" jdbcType="INTEGER"/>
+       <result property="resourceId" column="RESOURCE_ID" jdbcType="INTEGER"/>
     </resultMap>
 
     <!-- @formatter:off -->
-    <!--数据库字段-->
+    <!--数据库字段，重命名列按 Vo 旧属性名别名输出，保证 resultType 自动映射-->
     <sql id="Column_List">
-JOB_ID, JOB_TYPE, JOB_KIND, RETRIES, RETRY_BACKOFF, PRIORITY, DUE_DATE, LOCK_EXPIRE_TIME, LOCK_OWNER, PROCESS_DEFINITION_KEY, PROCESS_DEFINITION_ID, PROCESS_INSTANCE_ID, ACTIVITY_DEFINITION_KEY, ACTIVITY_INSTANCE_ID, TASK_ID, INCIDENT_ID, STATE, DENIED, DENIED_REASON, START_TIME, END_TIME, DURATION, TENANT_ID, PARTITION_ID
+JOB_ID, JOB_TYPE, JOB_KIND, STATE, RETRIES, RETRY_BACKOFF, PRIORITY, DUE_TIME AS DUE_DATE, LOCK_OWNER, LOCK_EXPIRE_TIME, PROCESS_INSTANCE_ID, ACTIVITY_INSTANCE_ID, PROCESS_DEFINITION_ID, DEFINITION_KEY AS PROCESS_DEFINITION_KEY, ACTIVITY_KEY AS ACTIVITY_DEFINITION_KEY, TASK_ID, INCIDENT_ID, DENIED_REASON, START_TIME, END_TIME, DURATION, VARIABLES_JSON, LOCAL_VARIABLES_JSON, REVISION, RESOURCE_ID
     </sql>
 
     <!--数据库字段待别名-->
     <sql id="Column_List_Ali">
-ali.JOB_ID, ali.JOB_TYPE, ali.JOB_KIND, ali.RETRIES, ali.RETRY_BACKOFF, ali.PRIORITY, ali.DUE_DATE, ali.LOCK_EXPIRE_TIME, ali.LOCK_OWNER, ali.PROCESS_DEFINITION_KEY, ali.PROCESS_DEFINITION_ID, ali.PROCESS_INSTANCE_ID, ali.ACTIVITY_DEFINITION_KEY, ali.ACTIVITY_INSTANCE_ID, ali.TASK_ID, ali.INCIDENT_ID, ali.STATE, ali.DENIED, ali.DENIED_REASON, ali.START_TIME, ali.END_TIME, ali.DURATION, ali.TENANT_ID, ali.PARTITION_ID
+ali.JOB_ID, ali.JOB_TYPE, ali.JOB_KIND, ali.STATE, ali.RETRIES, ali.RETRY_BACKOFF, ali.PRIORITY, ali.DUE_TIME AS DUE_DATE, ali.LOCK_OWNER, ali.LOCK_EXPIRE_TIME, ali.PROCESS_INSTANCE_ID, ali.ACTIVITY_INSTANCE_ID, ali.PROCESS_DEFINITION_ID, ali.DEFINITION_KEY AS PROCESS_DEFINITION_KEY, ali.ACTIVITY_KEY AS ACTIVITY_DEFINITION_KEY, ali.TASK_ID, ali.INCIDENT_ID, ali.DENIED_REASON, ali.START_TIME, ali.END_TIME, ali.DURATION, ali.VARIABLES_JSON, ali.LOCAL_VARIABLES_JSON, ali.REVISION, ali.RESOURCE_ID
     </sql>
 
      <!--数据库字段-->
     <sql id="Column_List_Page_Ali">
-ali.JOB_ID, ali.JOB_TYPE, ali.JOB_KIND, ali.RETRIES, ali.RETRY_BACKOFF, ali.PRIORITY, ali.DUE_DATE, ali.LOCK_EXPIRE_TIME, ali.LOCK_OWNER, ali.PROCESS_DEFINITION_KEY, ali.PROCESS_DEFINITION_ID, ali.PROCESS_INSTANCE_ID, ali.ACTIVITY_DEFINITION_KEY, ali.ACTIVITY_INSTANCE_ID, ali.TASK_ID, ali.INCIDENT_ID, ali.STATE, ali.DENIED, ali.DENIED_REASON, ali.START_TIME, ali.END_TIME, ali.DURATION, ali.TENANT_ID, ali.PARTITION_ID
+ali.JOB_ID, ali.JOB_TYPE, ali.JOB_KIND, ali.STATE, ali.RETRIES, ali.RETRY_BACKOFF, ali.PRIORITY, ali.DUE_TIME AS DUE_DATE, ali.LOCK_OWNER, ali.LOCK_EXPIRE_TIME, ali.PROCESS_INSTANCE_ID, ali.ACTIVITY_INSTANCE_ID, ali.PROCESS_DEFINITION_ID, ali.DEFINITION_KEY AS PROCESS_DEFINITION_KEY, ali.ACTIVITY_KEY AS ACTIVITY_DEFINITION_KEY, ali.TASK_ID, ali.INCIDENT_ID, ali.DENIED_REASON, ali.START_TIME, ali.END_TIME, ali.DURATION, ali.VARIABLES_JSON, ali.LOCAL_VARIABLES_JSON, ali.REVISION, ali.RESOURCE_ID
     </sql>
 
 
@@ -67,9 +68,8 @@ ali.JOB_ID, ali.JOB_TYPE, ali.JOB_KIND, ali.RETRIES, ali.RETRY_BACKOFF, ali.PRIO
              <include refid="Column_List_Page_Ali"/>
         FROM ANYI_JOB ali
         <where>
-             ali.del_flag = 0
           <if test="query.jobId != null">
-             AND ali.JOB_ID = #{query.jobId, jdbcType=INTEGER}
+             AND ali.JOB_ID = #{query.jobId, jdbcType=BIGINT}
           </if>
           <if test="query.jobType != null and query.jobType != ''">
              AND ali.JOB_TYPE = #{query.jobType, jdbcType=VARCHAR}
@@ -87,40 +87,37 @@ ali.JOB_ID, ali.JOB_TYPE, ali.JOB_KIND, ali.RETRIES, ali.RETRY_BACKOFF, ali.PRIO
              AND ali.PRIORITY = #{query.priority, jdbcType=INTEGER}
           </if>
           <if test="query.dueDate != null">
-             AND ali.DUE_DATE = #{query.dueDate, jdbcType=TIMESTAMP}
+             AND ali.DUE_TIME = #{query.dueDate, jdbcType=TIMESTAMP}
           </if>
           <if test="query.lockExpireTime != null">
-             AND ali.LOCK_EXPIRE_TIME = #{query.lockExpireTime, jdbcType=INTEGER}
+             AND ali.LOCK_EXPIRE_TIME = #{query.lockExpireTime, jdbcType=TIMESTAMP}
           </if>
           <if test="query.lockOwner != null and query.lockOwner != ''">
              AND ali.LOCK_OWNER = #{query.lockOwner, jdbcType=VARCHAR}
           </if>
           <if test="query.processDefinitionKey != null and query.processDefinitionKey != ''">
-             AND ali.PROCESS_DEFINITION_KEY = #{query.processDefinitionKey, jdbcType=VARCHAR}
+             AND ali.DEFINITION_KEY = #{query.processDefinitionKey, jdbcType=VARCHAR}
           </if>
           <if test="query.processDefinitionId != null">
-             AND ali.PROCESS_DEFINITION_ID = #{query.processDefinitionId, jdbcType=INTEGER}
+             AND ali.PROCESS_DEFINITION_ID = #{query.processDefinitionId, jdbcType=BIGINT}
           </if>
           <if test="query.processInstanceId != null">
-             AND ali.PROCESS_INSTANCE_ID = #{query.processInstanceId, jdbcType=INTEGER}
+             AND ali.PROCESS_INSTANCE_ID = #{query.processInstanceId, jdbcType=BIGINT}
           </if>
           <if test="query.activityDefinitionKey != null and query.activityDefinitionKey != ''">
-             AND ali.ACTIVITY_DEFINITION_KEY = #{query.activityDefinitionKey, jdbcType=VARCHAR}
+             AND ali.ACTIVITY_KEY = #{query.activityDefinitionKey, jdbcType=VARCHAR}
           </if>
           <if test="query.activityInstanceId != null">
-             AND ali.ACTIVITY_INSTANCE_ID = #{query.activityInstanceId, jdbcType=INTEGER}
+             AND ali.ACTIVITY_INSTANCE_ID = #{query.activityInstanceId, jdbcType=BIGINT}
           </if>
           <if test="query.taskId != null">
-             AND ali.TASK_ID = #{query.taskId, jdbcType=INTEGER}
+             AND ali.TASK_ID = #{query.taskId, jdbcType=BIGINT}
           </if>
           <if test="query.incidentId != null">
-             AND ali.INCIDENT_ID = #{query.incidentId, jdbcType=INTEGER}
+             AND ali.INCIDENT_ID = #{query.incidentId, jdbcType=BIGINT}
           </if>
           <if test="query.state != null and query.state != ''">
              AND ali.STATE = #{query.state, jdbcType=VARCHAR}
-          </if>
-          <if test="query.denied != null">
-             AND ali.DENIED = #{query.denied, jdbcType=INTEGER}
           </if>
           <if test="query.deniedReason != null and query.deniedReason != ''">
              AND ali.DENIED_REASON = #{query.deniedReason, jdbcType=VARCHAR}
@@ -132,13 +129,7 @@ ali.JOB_ID, ali.JOB_TYPE, ali.JOB_KIND, ali.RETRIES, ali.RETRY_BACKOFF, ali.PRIO
              AND ali.END_TIME = #{query.endTime, jdbcType=TIMESTAMP}
           </if>
           <if test="query.duration != null">
-             AND ali.DURATION = #{query.duration, jdbcType=INTEGER}
-          </if>
-          <if test="query.tenantId != null and query.tenantId != ''">
-             AND ali.TENANT_ID = #{query.tenantId, jdbcType=VARCHAR}
-          </if>
-          <if test="query.partitionId != null">
-             AND ali.PARTITION_ID = #{query.partitionId, jdbcType=INTEGER}
+             AND ali.DURATION = #{query.duration, jdbcType=BIGINT}
           </if>
         </where>
     </select>
@@ -150,9 +141,8 @@ ali.JOB_ID, ali.JOB_TYPE, ali.JOB_KIND, ali.RETRIES, ali.RETRY_BACKOFF, ali.PRIO
             <include refid="Column_List"/>
         FROM ANYI_JOB
         <where>
-             del_flag = 0
          <if test="jobId != null">
-             AND JOB_ID = #{jobId, jdbcType=INTEGER}
+             AND JOB_ID = #{jobId, jdbcType=BIGINT}
          </if>
          <if test="jobType != null and jobType != ''">
              AND JOB_TYPE = #{jobType, jdbcType=VARCHAR}
@@ -170,40 +160,37 @@ ali.JOB_ID, ali.JOB_TYPE, ali.JOB_KIND, ali.RETRIES, ali.RETRY_BACKOFF, ali.PRIO
              AND PRIORITY = #{priority, jdbcType=INTEGER}
          </if>
          <if test="dueDate != null">
-             AND DUE_DATE = #{dueDate, jdbcType=TIMESTAMP}
+             AND DUE_TIME = #{dueDate, jdbcType=TIMESTAMP}
          </if>
          <if test="lockExpireTime != null">
-             AND LOCK_EXPIRE_TIME = #{lockExpireTime, jdbcType=INTEGER}
+             AND LOCK_EXPIRE_TIME = #{lockExpireTime, jdbcType=TIMESTAMP}
          </if>
          <if test="lockOwner != null and lockOwner != ''">
              AND LOCK_OWNER = #{lockOwner, jdbcType=VARCHAR}
          </if>
          <if test="processDefinitionKey != null and processDefinitionKey != ''">
-             AND PROCESS_DEFINITION_KEY = #{processDefinitionKey, jdbcType=VARCHAR}
+             AND DEFINITION_KEY = #{processDefinitionKey, jdbcType=VARCHAR}
          </if>
          <if test="processDefinitionId != null">
-             AND PROCESS_DEFINITION_ID = #{processDefinitionId, jdbcType=INTEGER}
+             AND PROCESS_DEFINITION_ID = #{processDefinitionId, jdbcType=BIGINT}
          </if>
          <if test="processInstanceId != null">
-             AND PROCESS_INSTANCE_ID = #{processInstanceId, jdbcType=INTEGER}
+             AND PROCESS_INSTANCE_ID = #{processInstanceId, jdbcType=BIGINT}
          </if>
          <if test="activityDefinitionKey != null and activityDefinitionKey != ''">
-             AND ACTIVITY_DEFINITION_KEY = #{activityDefinitionKey, jdbcType=VARCHAR}
+             AND ACTIVITY_KEY = #{activityDefinitionKey, jdbcType=VARCHAR}
          </if>
          <if test="activityInstanceId != null">
-             AND ACTIVITY_INSTANCE_ID = #{activityInstanceId, jdbcType=INTEGER}
+             AND ACTIVITY_INSTANCE_ID = #{activityInstanceId, jdbcType=BIGINT}
          </if>
          <if test="taskId != null">
-             AND TASK_ID = #{taskId, jdbcType=INTEGER}
+             AND TASK_ID = #{taskId, jdbcType=BIGINT}
          </if>
          <if test="incidentId != null">
-             AND INCIDENT_ID = #{incidentId, jdbcType=INTEGER}
+             AND INCIDENT_ID = #{incidentId, jdbcType=BIGINT}
          </if>
          <if test="state != null and state != ''">
              AND STATE = #{state, jdbcType=VARCHAR}
-         </if>
-         <if test="denied != null">
-             AND DENIED = #{denied, jdbcType=INTEGER}
          </if>
          <if test="deniedReason != null and deniedReason != ''">
              AND DENIED_REASON = #{deniedReason, jdbcType=VARCHAR}
@@ -215,13 +202,7 @@ ali.JOB_ID, ali.JOB_TYPE, ali.JOB_KIND, ali.RETRIES, ali.RETRY_BACKOFF, ali.PRIO
              AND END_TIME = #{endTime, jdbcType=TIMESTAMP}
          </if>
          <if test="duration != null">
-             AND DURATION = #{duration, jdbcType=INTEGER}
-         </if>
-         <if test="tenantId != null and tenantId != ''">
-             AND TENANT_ID = #{tenantId, jdbcType=VARCHAR}
-         </if>
-         <if test="partitionId != null">
-             AND PARTITION_ID = #{partitionId, jdbcType=INTEGER}
+             AND DURATION = #{duration, jdbcType=BIGINT}
          </if>
         </where>
     </select>

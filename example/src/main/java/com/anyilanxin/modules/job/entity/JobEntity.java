@@ -24,6 +24,11 @@ import java.time.LocalDateTime;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
+/**
+ * 任务信息(Job)Entity
+ *
+ * <p>字段与 sink 建表（changelog 2026.9.0-create-job）严格对齐，勿自行增删列名。
+ */
 @Getter
 @Setter
 @ToString
@@ -34,23 +39,27 @@ import lombok.experimental.SuperBuilder;
 public class JobEntity implements Serializable {
   @Serial private static final long serialVersionUID = 170813103804393047L;
 
-  /** 作业id */
+  /** 任务 id */
   @TableId(value = "JOB_ID")
   private Long jobId;
 
-  /** job 类型 */
+  /** 任务类型 */
   @TableField(value = "JOB_TYPE")
   private String jobType;
 
-  /** 种类：ACTIVITY，ACTIVITY_LISTENER，PROCESS_LISTENER，USER_TASK_LISTENER */
+  /** 任务种类 */
   @TableField(value = "JOB_KIND")
   private String jobKind;
+
+  /** 状态 */
+  @TableField(value = "STATE")
+  private String state;
 
   /** 重试次数 */
   @TableField(value = "RETRIES")
   private Integer retries;
 
-  /** 重试偏移量 */
+  /** 重试退避 */
   @TableField(value = "RETRY_BACKOFF")
   private Integer retryBackoff;
 
@@ -58,54 +67,47 @@ public class JobEntity implements Serializable {
   @TableField(value = "PRIORITY")
   private Integer priority;
 
-  /** 锁定过期执行时间 */
+  /** 到期时间 */
   @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = TIME_ZONE_GMT8)
-  @TableField(value = "DUE_DATE")
+  @TableField(value = "DUE_TIME")
   private LocalDateTime dueDate;
 
-  /** 锁定过期时间,单位s */
-  @TableField(value = "LOCK_EXPIRE_TIME")
-  private Integer lockExpireTime;
-
-  /** 锁定者 */
+  /** 锁持有者 */
   @TableField(value = "LOCK_OWNER")
   private String lockOwner;
 
-  /** 流程定义 key */
-  @TableField(value = "PROCESS_DEFINITION_KEY")
-  private String processDefinitionKey;
-
-  /** 流程定义id */
-  @TableField(value = "PROCESS_DEFINITION_ID")
-  private Long processDefinitionId;
+  /** 锁到期时间 */
+  @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = TIME_ZONE_GMT8)
+  @TableField(value = "LOCK_EXPIRE_TIME")
+  private LocalDateTime lockExpireTime;
 
   /** 流程实例 id */
   @TableField(value = "PROCESS_INSTANCE_ID")
   private Long processInstanceId;
 
-  /** 活动定义 key */
-  @TableField(value = "ACTIVITY_DEFINITION_KEY")
-  private String activityDefinitionKey;
-
   /** 活动实例 id */
   @TableField(value = "ACTIVITY_INSTANCE_ID")
   private Long activityInstanceId;
 
-  /** 任务 id */
+  /** 流程定义 id */
+  @TableField(value = "PROCESS_DEFINITION_ID")
+  private Long processDefinitionId;
+
+  /** 流程定义 key */
+  @TableField(value = "DEFINITION_KEY")
+  private String processDefinitionKey;
+
+  /** 活动 key */
+  @TableField(value = "ACTIVITY_KEY")
+  private String activityDefinitionKey;
+
+  /** 任务 id（关联用户任务） */
   @TableField(value = "TASK_ID")
   private Long taskId;
 
-  /** 事件id */
+  /** 事件 id */
   @TableField(value = "INCIDENT_ID")
   private Long incidentId;
-
-  /** 状态 */
-  @TableField(value = "STATE")
-  private String state;
-
-  /** 被拒绝，true-是，false-不是 */
-  @TableField(value = "DENIED")
-  private Integer denied;
 
   /** 拒绝原因 */
   @TableField(value = "DENIED_REASON")
@@ -125,11 +127,19 @@ public class JobEntity implements Serializable {
   @TableField(value = "DURATION")
   private Long duration;
 
-  /** 租户 id */
-  @TableField(value = "TENANT_ID")
-  private String tenantId;
+  /** 变量 json */
+  @TableField(value = "VARIABLES_JSON")
+  private String variablesJson;
 
-  /** 分区 id */
-  @TableField(value = "PARTITION_ID")
-  private Integer partitionId;
+  /** 本地变量 json */
+  @TableField(value = "LOCAL_VARIABLES_JSON")
+  private String localVariablesJson;
+
+  /** 数据版本 */
+  @TableField(value = "REVISION")
+  private Integer rev;
+
+  /** 资源 id */
+  @TableField(value = "RESOURCE_ID")
+  private Integer resourceId;
 }

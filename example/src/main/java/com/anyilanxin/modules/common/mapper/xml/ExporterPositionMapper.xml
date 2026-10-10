@@ -3,26 +3,26 @@
 <mapper namespace="com.anyilanxin.modules.common.mapper.ExporterPositionMapper">
     <resultMap type="com.anyilanxin.modules.common.entity.ExporterPositionEntity" id="ExporterPositionMap">
        <result property="partitionId" column="PARTITION_ID" jdbcType="OTHER"/>
-       <result property="exporter" column="EXPORTER" jdbcType="VARCHAR"/>
-       <result property="lastExportedPosition" column="LAST_EXPORTED_POSITION" jdbcType="INTEGER"/>
-       <result property="created" column="CREATED" jdbcType="TIMESTAMP"/>
-       <result property="lastUpdated" column="LAST_UPDATED" jdbcType="TIMESTAMP"/>
+       <result property="exporter" column="SINK" jdbcType="VARCHAR"/>
+       <result property="lastExportedPosition" column="EXPORTED_POSITION" jdbcType="VARCHAR"/>
+       <result property="created" column="CREATED_TIME" jdbcType="TIMESTAMP"/>
+       <result property="lastUpdated" column="UPDATE_TIME" jdbcType="TIMESTAMP"/>
     </resultMap>
 
     <!-- @formatter:off -->
-    <!--数据库字段-->
+    <!--数据库字段，重命名列按 Vo 旧属性名别名输出，保证 resultType 自动映射-->
     <sql id="Column_List">
-PARTITION_ID, EXPORTER, LAST_EXPORTED_POSITION, CREATED, LAST_UPDATED
+PARTITION_ID, SINK AS EXPORTER, EXPORTED_POSITION AS LAST_EXPORTED_POSITION, CREATED_TIME AS CREATED, UPDATE_TIME AS LAST_UPDATED
     </sql>
 
     <!--数据库字段待别名-->
     <sql id="Column_List_Ali">
-ali.PARTITION_ID, ali.EXPORTER, ali.LAST_EXPORTED_POSITION, ali.CREATED, ali.LAST_UPDATED
+ali.PARTITION_ID, ali.SINK AS EXPORTER, ali.EXPORTED_POSITION AS LAST_EXPORTED_POSITION, ali.CREATED_TIME AS CREATED, ali.UPDATE_TIME AS LAST_UPDATED
     </sql>
 
      <!--数据库字段-->
     <sql id="Column_List_Page_Ali">
-ali.PARTITION_ID, ali.EXPORTER, ali.LAST_EXPORTED_POSITION, ali.CREATED, ali.LAST_UPDATED
+ali.PARTITION_ID, ali.SINK AS EXPORTER, ali.EXPORTED_POSITION AS LAST_EXPORTED_POSITION, ali.CREATED_TIME AS CREATED, ali.UPDATE_TIME AS LAST_UPDATED
     </sql>
 
 
@@ -30,23 +30,22 @@ ali.PARTITION_ID, ali.EXPORTER, ali.LAST_EXPORTED_POSITION, ali.CREATED, ali.LAS
     <select id="pageByModel" resultType="com.anyilanxin.modules.common.service.vo.ExporterPositionPageVo">
         SELECT
              <include refid="Column_List_Page_Ali"/>
-        FROM ANYI_EXPORTER_POSITION ali
+        FROM ANYI_SINK_POSITION ali
         <where>
-             ali.del_flag = 0
           <if test="query.partitionId != null">
              AND ali.PARTITION_ID = #{query.partitionId, jdbcType=OTHER}
           </if>
           <if test="query.exporter != null and query.exporter != ''">
-             AND ali.EXPORTER = #{query.exporter, jdbcType=VARCHAR}
+             AND ali.SINK = #{query.exporter, jdbcType=VARCHAR}
           </if>
-          <if test="query.lastExportedPosition != null">
-             AND ali.LAST_EXPORTED_POSITION = #{query.lastExportedPosition, jdbcType=INTEGER}
+          <if test="query.lastExportedPosition != null and query.lastExportedPosition != ''">
+             AND ali.EXPORTED_POSITION = #{query.lastExportedPosition, jdbcType=VARCHAR}
           </if>
           <if test="query.created != null">
-             AND ali.CREATED = #{query.created, jdbcType=TIMESTAMP}
+             AND ali.CREATED_TIME = #{query.created, jdbcType=TIMESTAMP}
           </if>
           <if test="query.lastUpdated != null">
-             AND ali.LAST_UPDATED = #{query.lastUpdated, jdbcType=TIMESTAMP}
+             AND ali.UPDATE_TIME = #{query.lastUpdated, jdbcType=TIMESTAMP}
           </if>
         </where>
     </select>
@@ -56,23 +55,22 @@ ali.PARTITION_ID, ali.EXPORTER, ali.LAST_EXPORTED_POSITION, ali.CREATED, ali.LAS
     <select id="selectListByModel" resultType="com.anyilanxin.modules.common.service.vo.ExporterPositionVo" parameterType="com.anyilanxin.modules.common.controller.dto.ExporterPositionQueryDto">
         SELECT
             <include refid="Column_List"/>
-        FROM ANYI_EXPORTER_POSITION
+        FROM ANYI_SINK_POSITION
         <where>
-             del_flag = 0
          <if test="partitionId != null">
              AND PARTITION_ID = #{partitionId, jdbcType=OTHER}
          </if>
          <if test="exporter != null and exporter != ''">
-             AND EXPORTER = #{exporter, jdbcType=VARCHAR}
+             AND SINK = #{exporter, jdbcType=VARCHAR}
          </if>
-         <if test="lastExportedPosition != null">
-             AND LAST_EXPORTED_POSITION = #{lastExportedPosition, jdbcType=INTEGER}
+         <if test="lastExportedPosition != null and lastExportedPosition != ''">
+             AND EXPORTED_POSITION = #{lastExportedPosition, jdbcType=VARCHAR}
          </if>
          <if test="created != null">
-             AND CREATED = #{created, jdbcType=TIMESTAMP}
+             AND CREATED_TIME = #{created, jdbcType=TIMESTAMP}
          </if>
          <if test="lastUpdated != null">
-             AND LAST_UPDATED = #{lastUpdated, jdbcType=TIMESTAMP}
+             AND UPDATE_TIME = #{lastUpdated, jdbcType=TIMESTAMP}
          </if>
         </where>
     </select>

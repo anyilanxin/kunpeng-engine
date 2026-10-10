@@ -15,6 +15,8 @@ import lombok.experimental.SuperBuilder;
 /**
  * 流程实例信息(ProcessInstance)Entity
  *
+ * <p>字段与 sink 建表（changelog 2026.9.0-create-process-instance）严格对齐，勿自行增删列名。
+ *
  * @author zxh
  * @copyright zhouxuanhong（https://anyilanxin.com）
  * @date 2026-04-22 15:11:53
@@ -38,20 +40,16 @@ public class ProcessInstanceEntity implements Serializable {
   @TableField(value = "PARENT_PROCESS_INSTANCE_ID")
   private String parentProcessInstanceId;
 
-  /** 数据版本 */
-  @TableField(value = "REV")
-  private Integer rev;
-
-  /** 引用活动实例 id */
-  @TableField(value = "REFERENCE_ACTIVITY_INSTANCE_ID")
-  private String referenceActivityInstanceId;
+  /** 根流程实例 id */
+  @TableField(value = "ROOT_PROCESS_INSTANCE_ID")
+  private String rootProcessInstanceId;
 
   /** 业务key */
   @TableField(value = "BUSINESS_KEY")
   private String businessKey;
 
   /** 流程定义 key */
-  @TableField(value = "PROCESS_DEFINITION_KEY")
+  @TableField(value = "DEFINITION_KEY")
   private String processDefinitionKey;
 
   /** 流程定义 id */
@@ -59,11 +57,11 @@ public class ProcessInstanceEntity implements Serializable {
   private String processDefinitionId;
 
   /** 流程定义名称 */
-  @TableField(value = "PROCESS_DEFINITION_NAME")
+  @TableField(value = "DEFINITION_NAME")
   private String processDefinitionName;
 
   /** 开始用户 id */
-  @TableField(value = "START_USER_ID")
+  @TableField(value = "START_USER")
   private String startUserId;
 
   /** 状态 */
@@ -80,15 +78,11 @@ public class ProcessInstanceEntity implements Serializable {
   @TableField(value = "END_TIME")
   private LocalDateTime endTime;
 
-  /** 耗时 */
-  @TableField(value = "DURATION")
-  private Long duration;
+  /** 数据版本 */
+  @TableField(value = "REVISION")
+  private Integer rev;
 
-  /** 租户 id */
-  @TableField(value = "TENANT_ID")
-  private String tenantId;
-
-  /** 分区 id */
-  @TableField(value = "PARTITION_ID")
-  private Integer partitionId;
+  /** 资源 id */
+  @TableField(value = "RESOURCE_ID")
+  private Integer resourceId;
 }

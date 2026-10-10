@@ -2,44 +2,44 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.anyilanxin.modules.common.mapper.ActivityInstanceMapper">
     <resultMap type="com.anyilanxin.modules.common.entity.ActivityInstanceEntity" id="ActivityInstanceMap">
-       <result property="activityInstanceId" column="ACTIVITY_INSTANCE_ID" jdbcType="INTEGER"/>
-       <result property="parentActivityInstanceId" column="PARENT_ACTIVITY_INSTANCE_ID" jdbcType="INTEGER"/>
-       <result property="rev" column="REV" jdbcType="INTEGER"/>
-       <result property="processInstanceId" column="PROCESS_INSTANCE_ID" jdbcType="INTEGER"/>
-       <result property="processDefinitionKey" column="PROCESS_DEFINITION_KEY" jdbcType="VARCHAR"/>
-       <result property="processDefinitionId" column="PROCESS_DEFINITION_ID" jdbcType="INTEGER"/>
-       <result property="callProcessInstanceId" column="CALL_PROCESS_INSTANCE_ID" jdbcType="INTEGER"/>
-       <result property="activityDefinitionKey" column="ACTIVITY_DEFINITION_KEY" jdbcType="VARCHAR"/>
-       <result property="activityDefinitionName" column="ACTIVITY_DEFINITION_NAME" jdbcType="VARCHAR"/>
-       <result property="activityDefinitionType" column="ACTIVITY_DEFINITION_TYPE" jdbcType="VARCHAR"/>
-       <result property="taskId" column="TASK_ID" jdbcType="INTEGER"/>
+       <result property="activityInstanceId" column="ACTIVITY_INSTANCE_ID" jdbcType="VARCHAR"/>
+       <result property="processInstanceId" column="PROCESS_INSTANCE_ID" jdbcType="VARCHAR"/>
+       <result property="rootProcessInstanceId" column="ROOT_PROCESS_INSTANCE_ID" jdbcType="VARCHAR"/>
+       <result property="parentActivityInstanceId" column="PARENT_ACTIVITY_INSTANCE_ID" jdbcType="VARCHAR"/>
+       <result property="callProcessInstanceId" column="CALL_PROCESS_INSTANCE_ID" jdbcType="VARCHAR"/>
+       <result property="processDefinitionId" column="PROCESS_DEFINITION_ID" jdbcType="VARCHAR"/>
+       <result property="processDefinitionKey" column="DEFINITION_KEY" jdbcType="VARCHAR"/>
+       <result property="activityDefinitionKey" column="ACTIVITY_KEY" jdbcType="VARCHAR"/>
+       <result property="activityDefinitionName" column="ACTIVITY_NAME" jdbcType="VARCHAR"/>
+       <result property="activityDefinitionType" column="ACTIVITY_TYPE" jdbcType="VARCHAR"/>
+       <result property="taskId" column="TASK_ID" jdbcType="VARCHAR"/>
        <result property="assignee" column="ASSIGNEE" jdbcType="VARCHAR"/>
-       <result property="startActivityDefinitionKey" column="START_ACTIVITY_DEFINITION_KEY" jdbcType="VARCHAR"/>
-       <result property="startActivityInstanceId" column="START_ACTIVITY_INSTANCE_ID" jdbcType="INTEGER"/>
        <result property="state" column="STATE" jdbcType="VARCHAR"/>
-       <result property="sequenceCounter" column="SEQUENCE_COUNTER" jdbcType="INTEGER"/>
-       <result property="incidentId" column="INCIDENT_ID" jdbcType="INTEGER"/>
+       <result property="incidentId" column="INCIDENT_ID" jdbcType="VARCHAR"/>
+       <result property="sequenceCounter" column="SEQUENCE_COUNTER" jdbcType="VARCHAR"/>
+       <result property="startActivityDefinitionKey" column="START_ACTIVITY_DEFINITION_KEY" jdbcType="VARCHAR"/>
+       <result property="startActivityInstanceId" column="START_ACTIVITY_INSTANCE_ID" jdbcType="VARCHAR"/>
        <result property="startTime" column="START_TIME" jdbcType="TIMESTAMP"/>
        <result property="endTime" column="END_TIME" jdbcType="TIMESTAMP"/>
-       <result property="duration" column="DURATION" jdbcType="INTEGER"/>
-       <result property="tenantId" column="TENANT_ID" jdbcType="VARCHAR"/>
-       <result property="partitionId" column="PARTITION_ID" jdbcType="INTEGER"/>
+       <result property="duration" column="DURATION" jdbcType="BIGINT"/>
+       <result property="rev" column="REVISION" jdbcType="INTEGER"/>
+       <result property="resourceId" column="RESOURCE_ID" jdbcType="INTEGER"/>
     </resultMap>
 
     <!-- @formatter:off -->
-    <!--数据库字段-->
+    <!--数据库字段，重命名列按 Vo 旧属性名别名输出，保证 resultType 自动映射-->
     <sql id="Column_List">
-ACTIVITY_INSTANCE_ID, PARENT_ACTIVITY_INSTANCE_ID, REV, PROCESS_INSTANCE_ID, PROCESS_DEFINITION_KEY, PROCESS_DEFINITION_ID, CALL_PROCESS_INSTANCE_ID, ACTIVITY_DEFINITION_KEY, ACTIVITY_DEFINITION_NAME, ACTIVITY_DEFINITION_TYPE, TASK_ID, ASSIGNEE, START_ACTIVITY_DEFINITION_KEY, START_ACTIVITY_INSTANCE_ID, STATE, SEQUENCE_COUNTER, INCIDENT_ID, START_TIME, END_TIME, DURATION, TENANT_ID, PARTITION_ID
+ACTIVITY_INSTANCE_ID, PROCESS_INSTANCE_ID, ROOT_PROCESS_INSTANCE_ID, PARENT_ACTIVITY_INSTANCE_ID, CALL_PROCESS_INSTANCE_ID, PROCESS_DEFINITION_ID, DEFINITION_KEY AS PROCESS_DEFINITION_KEY, ACTIVITY_KEY AS ACTIVITY_DEFINITION_KEY, ACTIVITY_NAME AS ACTIVITY_DEFINITION_NAME, ACTIVITY_TYPE AS ACTIVITY_DEFINITION_TYPE, TASK_ID, ASSIGNEE, STATE, INCIDENT_ID, SEQUENCE_COUNTER, START_ACTIVITY_DEFINITION_KEY, START_ACTIVITY_INSTANCE_ID, START_TIME, END_TIME, DURATION, REVISION AS REV, RESOURCE_ID
     </sql>
 
     <!--数据库字段待别名-->
     <sql id="Column_List_Ali">
-ali.ACTIVITY_INSTANCE_ID, ali.PARENT_ACTIVITY_INSTANCE_ID, ali.REV, ali.PROCESS_INSTANCE_ID, ali.PROCESS_DEFINITION_KEY, ali.PROCESS_DEFINITION_ID, ali.CALL_PROCESS_INSTANCE_ID, ali.ACTIVITY_DEFINITION_KEY, ali.ACTIVITY_DEFINITION_NAME, ali.ACTIVITY_DEFINITION_TYPE, ali.TASK_ID, ali.ASSIGNEE, ali.START_ACTIVITY_DEFINITION_KEY, ali.START_ACTIVITY_INSTANCE_ID, ali.STATE, ali.SEQUENCE_COUNTER, ali.INCIDENT_ID, ali.START_TIME, ali.END_TIME, ali.DURATION, ali.TENANT_ID, ali.PARTITION_ID
+ali.ACTIVITY_INSTANCE_ID, ali.PROCESS_INSTANCE_ID, ali.ROOT_PROCESS_INSTANCE_ID, ali.PARENT_ACTIVITY_INSTANCE_ID, ali.CALL_PROCESS_INSTANCE_ID, ali.PROCESS_DEFINITION_ID, ali.DEFINITION_KEY AS PROCESS_DEFINITION_KEY, ali.ACTIVITY_KEY AS ACTIVITY_DEFINITION_KEY, ali.ACTIVITY_NAME AS ACTIVITY_DEFINITION_NAME, ali.ACTIVITY_TYPE AS ACTIVITY_DEFINITION_TYPE, ali.TASK_ID, ali.ASSIGNEE, ali.STATE, ali.INCIDENT_ID, ali.SEQUENCE_COUNTER, ali.START_ACTIVITY_DEFINITION_KEY, ali.START_ACTIVITY_INSTANCE_ID, ali.START_TIME, ali.END_TIME, ali.DURATION, ali.REVISION AS REV, ali.RESOURCE_ID
     </sql>
 
      <!--数据库字段-->
     <sql id="Column_List_Page_Ali">
-ali.ACTIVITY_INSTANCE_ID, ali.PARENT_ACTIVITY_INSTANCE_ID, ali.REV, ali.PROCESS_INSTANCE_ID, ali.PROCESS_DEFINITION_KEY, ali.PROCESS_DEFINITION_ID, ali.CALL_PROCESS_INSTANCE_ID, ali.ACTIVITY_DEFINITION_KEY, ali.ACTIVITY_DEFINITION_NAME, ali.ACTIVITY_DEFINITION_TYPE, ali.TASK_ID, ali.ASSIGNEE, ali.START_ACTIVITY_DEFINITION_KEY, ali.START_ACTIVITY_INSTANCE_ID, ali.STATE, ali.SEQUENCE_COUNTER, ali.INCIDENT_ID, ali.START_TIME, ali.END_TIME, ali.DURATION, ali.TENANT_ID, ali.PARTITION_ID
+ali.ACTIVITY_INSTANCE_ID, ali.PROCESS_INSTANCE_ID, ali.ROOT_PROCESS_INSTANCE_ID, ali.PARENT_ACTIVITY_INSTANCE_ID, ali.CALL_PROCESS_INSTANCE_ID, ali.PROCESS_DEFINITION_ID, ali.DEFINITION_KEY AS PROCESS_DEFINITION_KEY, ali.ACTIVITY_KEY AS ACTIVITY_DEFINITION_KEY, ali.ACTIVITY_NAME AS ACTIVITY_DEFINITION_NAME, ali.ACTIVITY_TYPE AS ACTIVITY_DEFINITION_TYPE, ali.TASK_ID, ali.ASSIGNEE, ali.STATE, ali.INCIDENT_ID, ali.SEQUENCE_COUNTER, ali.START_ACTIVITY_DEFINITION_KEY, ali.START_ACTIVITY_INSTANCE_ID, ali.START_TIME, ali.END_TIME, ali.DURATION, ali.REVISION AS REV, ali.RESOURCE_ID
     </sql>
 
 
@@ -49,39 +49,38 @@ ali.ACTIVITY_INSTANCE_ID, ali.PARENT_ACTIVITY_INSTANCE_ID, ali.REV, ali.PROCESS_
              <include refid="Column_List_Page_Ali"/>
         FROM ANYI_ACTIVITY_INSTANCE ali
         <where>
-             ali.del_flag = 0
-          <if test="query.activityInstanceId != null">
-             AND ali.ACTIVITY_INSTANCE_ID = #{query.activityInstanceId, jdbcType=INTEGER}
+          <if test="query.activityInstanceId != null and query.activityInstanceId != ''">
+             AND ali.ACTIVITY_INSTANCE_ID = #{query.activityInstanceId, jdbcType=VARCHAR}
           </if>
-          <if test="query.parentActivityInstanceId != null">
-             AND ali.PARENT_ACTIVITY_INSTANCE_ID = #{query.parentActivityInstanceId, jdbcType=INTEGER}
+          <if test="query.parentActivityInstanceId != null and query.parentActivityInstanceId != ''">
+             AND ali.PARENT_ACTIVITY_INSTANCE_ID = #{query.parentActivityInstanceId, jdbcType=VARCHAR}
           </if>
           <if test="query.rev != null">
-             AND ali.REV = #{query.rev, jdbcType=INTEGER}
+             AND ali.REVISION = #{query.rev, jdbcType=INTEGER}
           </if>
-          <if test="query.processInstanceId != null">
-             AND ali.PROCESS_INSTANCE_ID = #{query.processInstanceId, jdbcType=INTEGER}
+          <if test="query.processInstanceId != null and query.processInstanceId != ''">
+             AND ali.PROCESS_INSTANCE_ID = #{query.processInstanceId, jdbcType=VARCHAR}
           </if>
           <if test="query.processDefinitionKey != null and query.processDefinitionKey != ''">
-             AND ali.PROCESS_DEFINITION_KEY = #{query.processDefinitionKey, jdbcType=VARCHAR}
+             AND ali.DEFINITION_KEY = #{query.processDefinitionKey, jdbcType=VARCHAR}
           </if>
-          <if test="query.processDefinitionId != null">
-             AND ali.PROCESS_DEFINITION_ID = #{query.processDefinitionId, jdbcType=INTEGER}
+          <if test="query.processDefinitionId != null and query.processDefinitionId != ''">
+             AND ali.PROCESS_DEFINITION_ID = #{query.processDefinitionId, jdbcType=VARCHAR}
           </if>
-          <if test="query.callProcessInstanceId != null">
-             AND ali.CALL_PROCESS_INSTANCE_ID = #{query.callProcessInstanceId, jdbcType=INTEGER}
+          <if test="query.callProcessInstanceId != null and query.callProcessInstanceId != ''">
+             AND ali.CALL_PROCESS_INSTANCE_ID = #{query.callProcessInstanceId, jdbcType=VARCHAR}
           </if>
           <if test="query.activityDefinitionKey != null and query.activityDefinitionKey != ''">
-             AND ali.ACTIVITY_DEFINITION_KEY = #{query.activityDefinitionKey, jdbcType=VARCHAR}
+             AND ali.ACTIVITY_KEY = #{query.activityDefinitionKey, jdbcType=VARCHAR}
           </if>
           <if test="query.activityDefinitionName != null and query.activityDefinitionName != ''">
-             AND ali.ACTIVITY_DEFINITION_NAME = #{query.activityDefinitionName, jdbcType=VARCHAR}
+             AND ali.ACTIVITY_NAME = #{query.activityDefinitionName, jdbcType=VARCHAR}
           </if>
           <if test="query.activityDefinitionType != null and query.activityDefinitionType != ''">
-             AND ali.ACTIVITY_DEFINITION_TYPE = #{query.activityDefinitionType, jdbcType=VARCHAR}
+             AND ali.ACTIVITY_TYPE = #{query.activityDefinitionType, jdbcType=VARCHAR}
           </if>
-          <if test="query.taskId != null">
-             AND ali.TASK_ID = #{query.taskId, jdbcType=INTEGER}
+          <if test="query.taskId != null and query.taskId != ''">
+             AND ali.TASK_ID = #{query.taskId, jdbcType=VARCHAR}
           </if>
           <if test="query.assignee != null and query.assignee != ''">
              AND ali.ASSIGNEE = #{query.assignee, jdbcType=VARCHAR}
@@ -89,17 +88,17 @@ ali.ACTIVITY_INSTANCE_ID, ali.PARENT_ACTIVITY_INSTANCE_ID, ali.REV, ali.PROCESS_
           <if test="query.startActivityDefinitionKey != null and query.startActivityDefinitionKey != ''">
              AND ali.START_ACTIVITY_DEFINITION_KEY = #{query.startActivityDefinitionKey, jdbcType=VARCHAR}
           </if>
-          <if test="query.startActivityInstanceId != null">
-             AND ali.START_ACTIVITY_INSTANCE_ID = #{query.startActivityInstanceId, jdbcType=INTEGER}
+          <if test="query.startActivityInstanceId != null and query.startActivityInstanceId != ''">
+             AND ali.START_ACTIVITY_INSTANCE_ID = #{query.startActivityInstanceId, jdbcType=VARCHAR}
           </if>
           <if test="query.state != null and query.state != ''">
              AND ali.STATE = #{query.state, jdbcType=VARCHAR}
           </if>
-          <if test="query.sequenceCounter != null">
-             AND ali.SEQUENCE_COUNTER = #{query.sequenceCounter, jdbcType=INTEGER}
+          <if test="query.sequenceCounter != null and query.sequenceCounter != ''">
+             AND ali.SEQUENCE_COUNTER = #{query.sequenceCounter, jdbcType=VARCHAR}
           </if>
-          <if test="query.incidentId != null">
-             AND ali.INCIDENT_ID = #{query.incidentId, jdbcType=INTEGER}
+          <if test="query.incidentId != null and query.incidentId != ''">
+             AND ali.INCIDENT_ID = #{query.incidentId, jdbcType=VARCHAR}
           </if>
           <if test="query.startTime != null">
              AND ali.START_TIME = #{query.startTime, jdbcType=TIMESTAMP}
@@ -108,13 +107,7 @@ ali.ACTIVITY_INSTANCE_ID, ali.PARENT_ACTIVITY_INSTANCE_ID, ali.REV, ali.PROCESS_
              AND ali.END_TIME = #{query.endTime, jdbcType=TIMESTAMP}
           </if>
           <if test="query.duration != null">
-             AND ali.DURATION = #{query.duration, jdbcType=INTEGER}
-          </if>
-          <if test="query.tenantId != null and query.tenantId != ''">
-             AND ali.TENANT_ID = #{query.tenantId, jdbcType=VARCHAR}
-          </if>
-          <if test="query.partitionId != null">
-             AND ali.PARTITION_ID = #{query.partitionId, jdbcType=INTEGER}
+             AND ali.DURATION = #{query.duration, jdbcType=BIGINT}
           </if>
         </where>
     </select>
@@ -126,39 +119,38 @@ ali.ACTIVITY_INSTANCE_ID, ali.PARENT_ACTIVITY_INSTANCE_ID, ali.REV, ali.PROCESS_
             <include refid="Column_List"/>
         FROM ANYI_ACTIVITY_INSTANCE
         <where>
-             del_flag = 0
-         <if test="activityInstanceId != null">
-             AND ACTIVITY_INSTANCE_ID = #{activityInstanceId, jdbcType=INTEGER}
+         <if test="activityInstanceId != null and activityInstanceId != ''">
+             AND ACTIVITY_INSTANCE_ID = #{activityInstanceId, jdbcType=VARCHAR}
          </if>
-         <if test="parentActivityInstanceId != null">
-             AND PARENT_ACTIVITY_INSTANCE_ID = #{parentActivityInstanceId, jdbcType=INTEGER}
+         <if test="parentActivityInstanceId != null and parentActivityInstanceId != ''">
+             AND PARENT_ACTIVITY_INSTANCE_ID = #{parentActivityInstanceId, jdbcType=VARCHAR}
          </if>
          <if test="rev != null">
-             AND REV = #{rev, jdbcType=INTEGER}
+             AND REVISION = #{rev, jdbcType=INTEGER}
          </if>
-         <if test="processInstanceId != null">
-             AND PROCESS_INSTANCE_ID = #{processInstanceId, jdbcType=INTEGER}
+         <if test="processInstanceId != null and processInstanceId != ''">
+             AND PROCESS_INSTANCE_ID = #{processInstanceId, jdbcType=VARCHAR}
          </if>
          <if test="processDefinitionKey != null and processDefinitionKey != ''">
-             AND PROCESS_DEFINITION_KEY = #{processDefinitionKey, jdbcType=VARCHAR}
+             AND DEFINITION_KEY = #{processDefinitionKey, jdbcType=VARCHAR}
          </if>
-         <if test="processDefinitionId != null">
-             AND PROCESS_DEFINITION_ID = #{processDefinitionId, jdbcType=INTEGER}
+         <if test="processDefinitionId != null and processDefinitionId != ''">
+             AND PROCESS_DEFINITION_ID = #{processDefinitionId, jdbcType=VARCHAR}
          </if>
-         <if test="callProcessInstanceId != null">
-             AND CALL_PROCESS_INSTANCE_ID = #{callProcessInstanceId, jdbcType=INTEGER}
+         <if test="callProcessInstanceId != null and callProcessInstanceId != ''">
+             AND CALL_PROCESS_INSTANCE_ID = #{callProcessInstanceId, jdbcType=VARCHAR}
          </if>
          <if test="activityDefinitionKey != null and activityDefinitionKey != ''">
-             AND ACTIVITY_DEFINITION_KEY = #{activityDefinitionKey, jdbcType=VARCHAR}
+             AND ACTIVITY_KEY = #{activityDefinitionKey, jdbcType=VARCHAR}
          </if>
          <if test="activityDefinitionName != null and activityDefinitionName != ''">
-             AND ACTIVITY_DEFINITION_NAME = #{activityDefinitionName, jdbcType=VARCHAR}
+             AND ACTIVITY_NAME = #{activityDefinitionName, jdbcType=VARCHAR}
          </if>
          <if test="activityDefinitionType != null and activityDefinitionType != ''">
-             AND ACTIVITY_DEFINITION_TYPE = #{activityDefinitionType, jdbcType=VARCHAR}
+             AND ACTIVITY_TYPE = #{activityDefinitionType, jdbcType=VARCHAR}
          </if>
-         <if test="taskId != null">
-             AND TASK_ID = #{taskId, jdbcType=INTEGER}
+         <if test="taskId != null and taskId != ''">
+             AND TASK_ID = #{taskId, jdbcType=VARCHAR}
          </if>
          <if test="assignee != null and assignee != ''">
              AND ASSIGNEE = #{assignee, jdbcType=VARCHAR}
@@ -166,17 +158,17 @@ ali.ACTIVITY_INSTANCE_ID, ali.PARENT_ACTIVITY_INSTANCE_ID, ali.REV, ali.PROCESS_
          <if test="startActivityDefinitionKey != null and startActivityDefinitionKey != ''">
              AND START_ACTIVITY_DEFINITION_KEY = #{startActivityDefinitionKey, jdbcType=VARCHAR}
          </if>
-         <if test="startActivityInstanceId != null">
-             AND START_ACTIVITY_INSTANCE_ID = #{startActivityInstanceId, jdbcType=INTEGER}
+         <if test="startActivityInstanceId != null and startActivityInstanceId != ''">
+             AND START_ACTIVITY_INSTANCE_ID = #{startActivityInstanceId, jdbcType=VARCHAR}
          </if>
          <if test="state != null and state != ''">
              AND STATE = #{state, jdbcType=VARCHAR}
          </if>
-         <if test="sequenceCounter != null">
-             AND SEQUENCE_COUNTER = #{sequenceCounter, jdbcType=INTEGER}
+         <if test="sequenceCounter != null and sequenceCounter != ''">
+             AND SEQUENCE_COUNTER = #{sequenceCounter, jdbcType=VARCHAR}
          </if>
-         <if test="incidentId != null">
-             AND INCIDENT_ID = #{incidentId, jdbcType=INTEGER}
+         <if test="incidentId != null and incidentId != ''">
+             AND INCIDENT_ID = #{incidentId, jdbcType=VARCHAR}
          </if>
          <if test="startTime != null">
              AND START_TIME = #{startTime, jdbcType=TIMESTAMP}
@@ -185,13 +177,7 @@ ali.ACTIVITY_INSTANCE_ID, ali.PARENT_ACTIVITY_INSTANCE_ID, ali.REV, ali.PROCESS_
              AND END_TIME = #{endTime, jdbcType=TIMESTAMP}
          </if>
          <if test="duration != null">
-             AND DURATION = #{duration, jdbcType=INTEGER}
-         </if>
-         <if test="tenantId != null and tenantId != ''">
-             AND TENANT_ID = #{tenantId, jdbcType=VARCHAR}
-         </if>
-         <if test="partitionId != null">
-             AND PARTITION_ID = #{partitionId, jdbcType=INTEGER}
+             AND DURATION = #{duration, jdbcType=BIGINT}
          </if>
         </where>
     </select>

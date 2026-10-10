@@ -61,7 +61,7 @@ public class ExporterPositionServiceImpl
     getById(partitionId);
     // 更新数据
     final var entity = converter.convert(dto, ExporterPositionEntity.class);
-    entity.setPartitionId(partitionId);
+    entity.setPartitionId(partitionId.intValue());
     final var result = super.updateById(entity);
     if (!result) {
       throw new AnYiResponseException(AnYiResultStatus.DATABASE_BASE_ERROR, "更新数据失败");
@@ -112,7 +112,7 @@ public class ExporterPositionServiceImpl
     if (entities == null || entities.isEmpty()) {
       throw new AnYiResponseException(AnYiResultStatus.DATABASE_BASE_ERROR, "数据不存在或已经被别人删除");
     }
-    final var waitDeleteList = new ArrayList<BigDecimal>();
+    final var waitDeleteList = new ArrayList<Integer>();
     entities.forEach(v -> waitDeleteList.add(v.getPartitionId()));
     final var i = mapper.deleteByIds(waitDeleteList);
     if (i <= 0) {

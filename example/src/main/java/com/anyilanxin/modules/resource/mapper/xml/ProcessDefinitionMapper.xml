@@ -2,31 +2,37 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.anyilanxin.modules.resource.mapper.ProcessDefinitionMapper">
     <resultMap type="com.anyilanxin.modules.resource.entity.ProcessDefinitionEntity" id="ProcessDefinitionMap">
-       <result property="processDefinitionId" column="PROCESS_DEFINITION_ID" jdbcType="INTEGER"/>
-       <result property="processDefinitionKey" column="PROCESS_DEFINITION_KEY" jdbcType="VARCHAR"/>
-       <result property="name" column="NAME" jdbcType="VARCHAR"/>
-       <result property="resourceName" column="RESOURCE_NAME" jdbcType="VARCHAR"/>
-       <result property="bpmnXml" column="BPMN_XML" jdbcType="VARCHAR"/>
-       <result property="tenantId" column="TENANT_ID" jdbcType="VARCHAR"/>
+       <result property="processDefinitionId" column="PROCESS_DEFINITION_ID" jdbcType="VARCHAR"/>
+       <result property="processDefinitionKey" column="DEFINITION_KEY" jdbcType="VARCHAR"/>
+       <result property="name" column="DEFINITION_NAME" jdbcType="VARCHAR"/>
        <result property="version" column="VERSION" jdbcType="INTEGER"/>
        <result property="versionTag" column="VERSION_TAG" jdbcType="VARCHAR"/>
-       <result property="formId" column="FORM_ID" jdbcType="VARCHAR"/>
+       <result property="historyTimeToLive" column="HISTORY_TIME_TO_LIVE" jdbcType="INTEGER"/>
+       <result property="deploymentId" column="DEPLOYMENT_ID" jdbcType="VARCHAR"/>
+       <result property="resourceDefinitionId" column="RESOURCE_DEFINITION_ID" jdbcType="VARCHAR"/>
+       <result property="resourceName" column="RESOURCE_NAME" jdbcType="VARCHAR"/>
+       <result property="checksum" column="CHECKSUM" jdbcType="VARCHAR"/>
+       <result property="starterEvents" column="STARTER_EVENTS" jdbcType="VARCHAR"/>
+       <result property="candidateStarterGroups" column="CANDIDATE_STARTER_GROUPS" jdbcType="VARCHAR"/>
+       <result property="candidateStarterUsers" column="CANDIDATE_STARTER_USERS" jdbcType="VARCHAR"/>
+       <result property="bpmnXml" column="RESOURCE_CONTENT" jdbcType="VARCHAR"/>
+       <result property="resourceId" column="RESOURCE_ID" jdbcType="INTEGER"/>
     </resultMap>
 
     <!-- @formatter:off -->
-    <!--数据库字段-->
+    <!--数据库字段，重命名列按 Vo 旧属性名别名输出，保证 resultType 自动映射-->
     <sql id="Column_List">
-PROCESS_DEFINITION_ID, PROCESS_DEFINITION_KEY, NAME, RESOURCE_NAME, BPMN_XML, TENANT_ID, VERSION, VERSION_TAG, FORM_ID
+PROCESS_DEFINITION_ID, DEFINITION_KEY AS PROCESS_DEFINITION_KEY, DEFINITION_NAME AS NAME, VERSION, VERSION_TAG, HISTORY_TIME_TO_LIVE, DEPLOYMENT_ID, RESOURCE_DEFINITION_ID, RESOURCE_NAME, CHECKSUM, STARTER_EVENTS, CANDIDATE_STARTER_GROUPS, CANDIDATE_STARTER_USERS, RESOURCE_CONTENT AS BPMN_XML, RESOURCE_ID
     </sql>
 
     <!--数据库字段待别名-->
     <sql id="Column_List_Ali">
-ali.PROCESS_DEFINITION_ID, ali.PROCESS_DEFINITION_KEY, ali.NAME, ali.RESOURCE_NAME, ali.BPMN_XML, ali.TENANT_ID, ali.VERSION, ali.VERSION_TAG, ali.FORM_ID
+ali.PROCESS_DEFINITION_ID, ali.DEFINITION_KEY AS PROCESS_DEFINITION_KEY, ali.DEFINITION_NAME AS NAME, ali.VERSION, ali.VERSION_TAG, ali.HISTORY_TIME_TO_LIVE, ali.DEPLOYMENT_ID, ali.RESOURCE_DEFINITION_ID, ali.RESOURCE_NAME, ali.CHECKSUM, ali.STARTER_EVENTS, ali.CANDIDATE_STARTER_GROUPS, ali.CANDIDATE_STARTER_USERS, ali.RESOURCE_CONTENT AS BPMN_XML, ali.RESOURCE_ID
     </sql>
 
      <!--数据库字段-->
     <sql id="Column_List_Page_Ali">
-ali.PROCESS_DEFINITION_ID, ali.PROCESS_DEFINITION_KEY, ali.NAME, ali.RESOURCE_NAME, ali.BPMN_XML, ali.TENANT_ID, ali.VERSION, ali.VERSION_TAG, ali.FORM_ID
+ali.PROCESS_DEFINITION_ID, ali.DEFINITION_KEY AS PROCESS_DEFINITION_KEY, ali.DEFINITION_NAME AS NAME, ali.VERSION, ali.VERSION_TAG, ali.HISTORY_TIME_TO_LIVE, ali.DEPLOYMENT_ID, ali.RESOURCE_DEFINITION_ID, ali.RESOURCE_NAME, ali.CHECKSUM, ali.STARTER_EVENTS, ali.CANDIDATE_STARTER_GROUPS, ali.CANDIDATE_STARTER_USERS, ali.RESOURCE_CONTENT AS BPMN_XML, ali.RESOURCE_ID
     </sql>
 
 
@@ -36,33 +42,23 @@ ali.PROCESS_DEFINITION_ID, ali.PROCESS_DEFINITION_KEY, ali.NAME, ali.RESOURCE_NA
              <include refid="Column_List_Page_Ali"/>
         FROM ANYI_PROCESS_DEFINITION ali
         <where>
-             ali.del_flag = 0
-          <if test="query.processDefinitionId != null">
-             AND ali.PROCESS_DEFINITION_ID = #{query.processDefinitionId, jdbcType=INTEGER}
+          <if test="query.processDefinitionId != null and query.processDefinitionId != ''">
+             AND ali.PROCESS_DEFINITION_ID = #{query.processDefinitionId, jdbcType=VARCHAR}
           </if>
           <if test="query.processDefinitionKey != null and query.processDefinitionKey != ''">
-             AND ali.PROCESS_DEFINITION_KEY = #{query.processDefinitionKey, jdbcType=VARCHAR}
+             AND ali.DEFINITION_KEY = #{query.processDefinitionKey, jdbcType=VARCHAR}
           </if>
           <if test="query.name != null and query.name != ''">
-             AND ali.NAME = #{query.name, jdbcType=VARCHAR}
+             AND ali.DEFINITION_NAME = #{query.name, jdbcType=VARCHAR}
           </if>
           <if test="query.resourceName != null and query.resourceName != ''">
              AND ali.RESOURCE_NAME = #{query.resourceName, jdbcType=VARCHAR}
-          </if>
-          <if test="query.bpmnXml != null and query.bpmnXml != ''">
-             AND ali.BPMN_XML = #{query.bpmnXml, jdbcType=VARCHAR}
-          </if>
-          <if test="query.tenantId != null and query.tenantId != ''">
-             AND ali.TENANT_ID = #{query.tenantId, jdbcType=VARCHAR}
           </if>
           <if test="query.version != null">
              AND ali.VERSION = #{query.version, jdbcType=INTEGER}
           </if>
           <if test="query.versionTag != null and query.versionTag != ''">
              AND ali.VERSION_TAG = #{query.versionTag, jdbcType=VARCHAR}
-          </if>
-          <if test="query.formId != null and query.formId != ''">
-             AND ali.FORM_ID = #{query.formId, jdbcType=VARCHAR}
           </if>
         </where>
     </select>
@@ -74,33 +70,23 @@ ali.PROCESS_DEFINITION_ID, ali.PROCESS_DEFINITION_KEY, ali.NAME, ali.RESOURCE_NA
             <include refid="Column_List"/>
         FROM ANYI_PROCESS_DEFINITION
         <where>
-             del_flag = 0
-         <if test="processDefinitionId != null">
-             AND PROCESS_DEFINITION_ID = #{processDefinitionId, jdbcType=INTEGER}
+         <if test="processDefinitionId != null and processDefinitionId != ''">
+             AND PROCESS_DEFINITION_ID = #{processDefinitionId, jdbcType=VARCHAR}
          </if>
          <if test="processDefinitionKey != null and processDefinitionKey != ''">
-             AND PROCESS_DEFINITION_KEY = #{processDefinitionKey, jdbcType=VARCHAR}
+             AND DEFINITION_KEY = #{processDefinitionKey, jdbcType=VARCHAR}
          </if>
          <if test="name != null and name != ''">
-             AND NAME = #{name, jdbcType=VARCHAR}
+             AND DEFINITION_NAME = #{name, jdbcType=VARCHAR}
          </if>
          <if test="resourceName != null and resourceName != ''">
              AND RESOURCE_NAME = #{resourceName, jdbcType=VARCHAR}
-         </if>
-         <if test="bpmnXml != null and bpmnXml != ''">
-             AND BPMN_XML = #{bpmnXml, jdbcType=VARCHAR}
-         </if>
-         <if test="tenantId != null and tenantId != ''">
-             AND TENANT_ID = #{tenantId, jdbcType=VARCHAR}
          </if>
          <if test="version != null">
              AND VERSION = #{version, jdbcType=INTEGER}
          </if>
          <if test="versionTag != null and versionTag != ''">
              AND VERSION_TAG = #{versionTag, jdbcType=VARCHAR}
-         </if>
-         <if test="formId != null and formId != ''">
-             AND FORM_ID = #{formId, jdbcType=VARCHAR}
          </if>
         </where>
     </select>

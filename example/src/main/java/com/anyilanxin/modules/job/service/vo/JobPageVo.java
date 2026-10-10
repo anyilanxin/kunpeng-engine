@@ -55,8 +55,10 @@ public class JobPageVo implements Serializable {
   @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = TIME_ZONE_GMT8)
   private LocalDateTime dueDate;
 
-  /** 锁定过期时间,单位s */
-  private Integer lockExpireTime;
+  /** 锁定过期时间 */
+  @Schema(type = "string", example = "2020-11-12 11:23:59")
+  @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = TIME_ZONE_GMT8)
+  private LocalDateTime lockExpireTime;
 
   /** 锁定者 */
   private String lockOwner;

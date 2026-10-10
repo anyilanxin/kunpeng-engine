@@ -15,6 +15,9 @@ import lombok.experimental.SuperBuilder;
 /**
  * 活动实例信息(ActivityInstance)Entity
  *
+ * <p>字段与 sink 建表（changelog 2026.9.0-create-activity-instance 及 add-activity-start-columns）严格对齐，
+ * 勿自行增删列名。
+ *
  * @author zxh
  * @copyright zhouxuanhong（https://anyilanxin.com）
  * @date 2026-04-23 15:57:45
@@ -34,69 +37,69 @@ public class ActivityInstanceEntity implements Serializable {
   @TableId(value = "ACTIVITY_INSTANCE_ID")
   private String activityInstanceId;
 
-  /** 父级流程活动实例 id */
-  @TableField(value = "PARENT_ACTIVITY_INSTANCE_ID")
-  private String parentActivityInstanceId;
-
-  /** 数据版本 */
-  @TableField(value = "REV")
-  private Integer rev;
-
   /** 流程实例 id */
   @TableField(value = "PROCESS_INSTANCE_ID")
   private String processInstanceId;
 
-  /** 流程定义 key */
-  @TableField(value = "PROCESS_DEFINITION_KEY")
-  private String processDefinitionKey;
+  /** 根流程实例 id */
+  @TableField(value = "ROOT_PROCESS_INSTANCE_ID")
+  private String rootProcessInstanceId;
+
+  /** 父级活动实例 id */
+  @TableField(value = "PARENT_ACTIVITY_INSTANCE_ID")
+  private String parentActivityInstanceId;
+
+  /** 调用流程实例 id */
+  @TableField(value = "CALL_PROCESS_INSTANCE_ID")
+  private String callProcessInstanceId;
 
   /** 流程定义 id */
   @TableField(value = "PROCESS_DEFINITION_ID")
   private String processDefinitionId;
 
-  /** call流程实例 id */
-  @TableField(value = "CALL_PROCESS_INSTANCE_ID")
-  private String callProcessInstanceId;
+  /** 流程定义 key */
+  @TableField(value = "DEFINITION_KEY")
+  private String processDefinitionKey;
 
   /** 活动 key */
-  @TableField(value = "ACTIVITY_DEFINITION_KEY")
+  @TableField(value = "ACTIVITY_KEY")
   private String activityDefinitionKey;
 
   /** 活动名称 */
-  @TableField(value = "ACTIVITY_DEFINITION_NAME")
+  @TableField(value = "ACTIVITY_NAME")
   private String activityDefinitionName;
 
   /** 活动类型 */
-  @TableField(value = "ACTIVITY_DEFINITION_TYPE")
+  @TableField(value = "ACTIVITY_TYPE")
   private String activityDefinitionType;
 
   /** 任务 id */
   @TableField(value = "TASK_ID")
   private String taskId;
 
-  /** 任务审批人 */
+  /** 审批人 */
   @TableField(value = "ASSIGNEE")
   private String assignee;
-
-  /** 开始活动定义 key */
-  @TableField(value = "START_ACTIVITY_DEFINITION_KEY")
-  private String startActivityDefinitionKey;
-
-  /** 开始活动实例 id */
-  @TableField(value = "START_ACTIVITY_INSTANCE_ID")
-  private String startActivityInstanceId;
 
   /** 状态 */
   @TableField(value = "STATE")
   private String state;
 
-  /** 执行序号 */
-  @TableField(value = "SEQUENCE_COUNTER")
-  private String sequenceCounter;
-
   /** 事件 id */
   @TableField(value = "INCIDENT_ID")
   private String incidentId;
+
+  /** 序列号 */
+  @TableField(value = "SEQUENCE_COUNTER")
+  private String sequenceCounter;
+
+  /** 起始活动定义 key */
+  @TableField(value = "START_ACTIVITY_DEFINITION_KEY")
+  private String startActivityDefinitionKey;
+
+  /** 起始活动实例 id */
+  @TableField(value = "START_ACTIVITY_INSTANCE_ID")
+  private String startActivityInstanceId;
 
   /** 开始时间 */
   @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = TIME_ZONE_GMT8)
@@ -112,11 +115,11 @@ public class ActivityInstanceEntity implements Serializable {
   @TableField(value = "DURATION")
   private Long duration;
 
-  /** 租户 id */
-  @TableField(value = "TENANT_ID")
-  private String tenantId;
+  /** 数据版本 */
+  @TableField(value = "REVISION")
+  private Integer rev;
 
-  /** 分区 id */
-  @TableField(value = "PARTITION_ID")
-  private Integer partitionId;
+  /** 资源 id */
+  @TableField(value = "RESOURCE_ID")
+  private Integer resourceId;
 }
