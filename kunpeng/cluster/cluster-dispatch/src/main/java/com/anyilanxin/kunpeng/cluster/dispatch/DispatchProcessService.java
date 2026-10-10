@@ -317,14 +317,29 @@ public class DispatchProcessService extends Actor implements RecordAvailableList
    */
   private void recover(final ActorFuture<Void> future) {
     final long lastCommittedPosition = logStream.getLastCommittedPosition();
+    LOGGER.info(
+        "Log replay starting from processed position {} to last committed position {} [partition:"
+            + " {}]",
+        processPosition,
+        lastCommittedPosition,
+        partitionId);
+    final long startTime = clock.millis();
+    int replayedBatches = 0;
     while (logStreamBatchReader.hasNext()) {
       final BatchEntryReader.Batch batch = logStreamBatchReader.next();
+      replayedBatches++;
       final boolean b = processReplayEvent(batch, lastCommittedPosition);
       if (!b) {
         break;
       }
     }
     logStreamBatchReader.close();
+    LOGGER.info(
+        "Log replay finished at position {} with {} batches, took {} ms [partition: {}]",
+        processPosition,
+        replayedBatches,
+        clock.millis() - startTime,
+        partitionId);
     future.complete(null);
   }
 
