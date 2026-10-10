@@ -16,7 +16,10 @@
  */
 package com.anyilanxin.kunpeng.broker.business.raft;
 
+import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.*;
+
 import com.anyilanxin.kunpeng.broker.BrokerLoggers;
+import com.anyilanxin.kunpeng.cluster.dispatch.scheduling.TimerClock;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartition;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotStore;
@@ -38,6 +41,7 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 import org.slf4j.Logger;
 
 /**
@@ -52,6 +56,8 @@ public class BusinessRaftSnapshotProvider
   private final ConcurrencyControl concurrencyControl;
   private KvStore<BusinessRepositoryColumnFamilies> rocksdbDb;
   private final RocksdbFactory<BusinessRepositoryColumnFamilies> rocksdbFactory;
+  private final Supplier<Long> processPositionSupplier;
+  private final Supplier<Long> sinkPositionSupplier;
   private final RocksdbConfiguration rocksdbConfiguration;
   private static final Logger LOG = BrokerLoggers.CLUSTER_BUSINESS;
   private Path partitionDirectory;
@@ -59,6 +65,7 @@ public class BusinessRaftSnapshotProvider
   private SnapshotStore snapshotStore;
   private final MeterRegistry registry;
   private RaftPartition partition;
+  private final TimerClock timerClock;
 
   /** 在途 recover（分区 transition 链打开业务库的 future）：合并镜像早于库打开到达时等待其完成。 */
   private volatile ActorFuture<KvStore<BusinessRepositoryColumnFamilies>> pendingRecover;
@@ -66,8 +73,14 @@ public class BusinessRaftSnapshotProvider
   public BusinessRaftSnapshotProvider(
       final ConcurrencyControl concurrencyControl,
       final RocksdbConfiguration rocksdbConfiguration,
-      final MeterRegistry registry) {
+      final MeterRegistry registry,
+      final Supplier<Long> processPositionSupplier,
+      final Supplier<Long> sinkPositionSupplier,
+      final TimerClock timerClock) {
+    this.sinkPositionSupplier = sinkPositionSupplier;
+    this.processPositionSupplier = processPositionSupplier;
     this.concurrencyControl = concurrencyControl;
+    this.timerClock = timerClock;
     rocksdbFactory = new DefaultRocksdbFactory<>();
     this.rocksdbConfiguration = rocksdbConfiguration;
     this.registry = registry;
@@ -81,7 +94,10 @@ public class BusinessRaftSnapshotProvider
       LOG.debug("Failed to delete snapshot directory when closing", e);
     }
     rocksdbDb.createSnapshot(snapshotDirectory.toFile());
-    return Map.of("timestamp", System.currentTimeMillis());
+    return Map.of(
+        PROCESS_POSITION, processPositionSupplier.get(),
+        SINK_POSITION, sinkPositionSupplier.get(),
+        SNAPSHOT_TIME, timerClock.millis());
   }
 
   @Override
@@ -249,7 +265,7 @@ public class BusinessRaftSnapshotProvider
         .whenComplete(
             new BiConsumer<Long, Throwable>() {
               @Override
-              public void accept(Long aLong, Throwable throwable) {
+              public void accept(final Long aLong, final Throwable throwable) {
                 if (throwable != null) {
                   future.completeExceptionally(throwable);
                 } else {

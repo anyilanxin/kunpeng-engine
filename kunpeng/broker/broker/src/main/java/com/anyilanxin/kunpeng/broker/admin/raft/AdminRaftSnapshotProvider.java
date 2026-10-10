@@ -16,7 +16,10 @@
  */
 package com.anyilanxin.kunpeng.broker.admin.raft;
 
+import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.*;
+
 import com.anyilanxin.kunpeng.broker.BrokerLoggers;
+import com.anyilanxin.kunpeng.cluster.dispatch.scheduling.TimerClock;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartition;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.PersistedSnapshot;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.SnapshotStore;
@@ -34,6 +37,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.function.Supplier;
 import org.slf4j.Logger;
 
 /**
@@ -48,17 +52,23 @@ public class AdminRaftSnapshotProvider
   private KvStore<AdminRepositoryColumnFamilies> rocksdbDb;
   private final RocksdbFactory<AdminRepositoryColumnFamilies> rocksdbFactory;
   private final RocksdbConfiguration rocksdbConfiguration;
+  private final Supplier<Long> processPositionSupplier;
   private static final Logger LOG = BrokerLoggers.CLUSTER_ADMIN;
   private Path partitionDirectory;
   private Path runtimeDirectory;
   private SnapshotStore snapshotStore;
   private final MeterRegistry registry;
+  private final TimerClock timerClock;
   private RaftPartition partition;
 
   public AdminRaftSnapshotProvider(
       final ConcurrencyControl concurrencyControl,
       final RocksdbConfiguration rocksdbConfiguration,
-      final MeterRegistry registry) {
+      final MeterRegistry registry,
+      final Supplier<Long> processPositionSupplier,
+      final TimerClock timerClock) {
+    this.timerClock = timerClock;
+    this.processPositionSupplier = processPositionSupplier;
     this.concurrencyControl = concurrencyControl;
     rocksdbFactory = new DefaultRocksdbFactory<>();
     this.rocksdbConfiguration = rocksdbConfiguration;
@@ -73,7 +83,9 @@ public class AdminRaftSnapshotProvider
       LOG.debug("Failed to delete snapshot directory when closing", e);
     }
     rocksdbDb.createSnapshot(snapshotDirectory.toFile());
-    return Map.of("teset", System.currentTimeMillis());
+    return Map.of(
+        PROCESS_POSITION, processPositionSupplier.get(),
+        SNAPSHOT_TIME, timerClock.millis());
   }
 
   @Override

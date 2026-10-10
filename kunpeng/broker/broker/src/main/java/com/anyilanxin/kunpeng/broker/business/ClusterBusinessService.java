@@ -251,7 +251,12 @@ public class ClusterBusinessService extends Actor
   private BusinessPartitionStartupContext createContent(final PartitionMetadata metadata) {
     final BusinessRaftSnapshotProvider snapshotProvider =
         new BusinessRaftSnapshotProvider(
-            this, brokerCfg.getRocksdb().createRocksDbConfiguration(), meterRegistry);
+            this,
+            brokerCfg.getRocksdb().createRocksDbConfiguration(),
+            meterRegistry,
+            () -> -1L,
+            () -> -1L,
+            timerClock);
     return new BusinessPartitionStartupContext(
         actorSchedulingService,
         this,

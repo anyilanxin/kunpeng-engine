@@ -51,4 +51,7 @@ public interface ClusterCommonConstant {
 
   String PARTITION_SOURCE_KEY = "SOURCE_ID";
   String PARTITION_AGENT_SOURCE_KEY = "AGENT_SOURCE_IDS";
+  String PROCESS_POSITION = "processPosition";
+  String SNAPSHOT_TIME = "snapshotTimeMillis";
+  String SINK_POSITION = "sinkPosition";
 }
