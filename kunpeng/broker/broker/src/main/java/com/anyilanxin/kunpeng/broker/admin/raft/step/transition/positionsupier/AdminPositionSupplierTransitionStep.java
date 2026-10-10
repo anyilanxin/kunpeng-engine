@@ -17,19 +17,13 @@
 package com.anyilanxin.kunpeng.broker.admin.raft.step.transition.positionsupier;
 
 import com.anyilanxin.kunpeng.broker.admin.raft.step.transition.AdminTransitionContent;
-import com.anyilanxin.kunpeng.broker.client.admin.commandapi.AdminCommandApiHandle;
 import com.anyilanxin.kunpeng.cluster.business.step.transition.TransitionStep;
-import com.anyilanxin.kunpeng.cluster.dispatch.DispatchProcessService;
 import com.anyilanxin.kunpeng.repository.admin.AdminRepository;
 import com.anyilanxin.kunpeng.repository.admin.modules.position.ImmutablePositionRepository;
-import com.anyilanxin.kunpeng.repository.admin.modules.position.MutablePositionRepository;
-import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
 import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.function.Supplier;
 
 /**
  * 引擎分区 transition 步骤：leader 时构建引擎状态机（消费事件日志、驱动流程/job 状态迁移）并提交 actor 调度； 同时把 job
@@ -43,7 +37,8 @@ import java.util.function.Supplier;
  */
 public final class AdminPositionSupplierTransitionStep
     implements TransitionStep<AdminTransitionContent> {
-  private static final Logger LOG = LoggerFactory.getLogger(AdminPositionSupplierTransitionStep.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(AdminPositionSupplierTransitionStep.class);
 
   @Override
   public String getName() {
@@ -52,13 +47,13 @@ public final class AdminPositionSupplierTransitionStep
 
   @Override
   public ActorFuture<Void> onLeader(final AdminTransitionContent context, final long currentTerm) {
-    return start( context);
+    return start(context);
   }
 
   @Override
   public ActorFuture<Void> onFollower(
       final AdminTransitionContent context, final long currentTerm) {
-    return start( context);
+    return start(context);
   }
 
   @Override
@@ -67,20 +62,20 @@ public final class AdminPositionSupplierTransitionStep
     return context.getConcurrencyControl().createCompletedFuture();
   }
 
-
-
   private ActorFuture<Void> start(final AdminTransitionContent context) {
     final ConcurrencyControl concurrencyControl = context.getConcurrencyControl();
     final ActorFuture<Void> future = concurrencyControl.createFuture();
     concurrencyControl.run(
-      () -> {
-        final AdminRepository adminRepository = context.getRepositoryFactory().create();
-        final ImmutablePositionRepository positionRepository = adminRepository.positionRepository();
-        context.getSnapshotProvider().setProcessPositionSupplier(positionRepository::getLastSuccessfulProcessedRecordPosition);
-        future.complete(null);
-      });
+        () -> {
+          final AdminRepository adminRepository = context.getRepositoryFactory().create();
+          final ImmutablePositionRepository positionRepository =
+              adminRepository.positionRepository();
+          context
+              .getSnapshotProvider()
+              .setProcessPositionSupplier(
+                  positionRepository::getLastSuccessfulProcessedRecordPosition);
+          future.complete(null);
+        });
     return future;
   }
-
-
 }

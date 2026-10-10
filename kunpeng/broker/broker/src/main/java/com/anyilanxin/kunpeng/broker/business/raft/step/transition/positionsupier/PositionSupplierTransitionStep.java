@@ -16,18 +16,11 @@
  */
 package com.anyilanxin.kunpeng.broker.business.raft.step.transition.positionsupier;
 
-import com.anyilanxin.kunpeng.broker.admin.raft.step.transition.AdminTransitionContent;
 import com.anyilanxin.kunpeng.broker.business.raft.step.transition.BusinessTransitionContent;
-import com.anyilanxin.kunpeng.broker.jobstream.JobStreamDispatcher;
 import com.anyilanxin.kunpeng.cluster.business.step.transition.TransitionStep;
-import com.anyilanxin.kunpeng.engine.bpmn.EngineProcessService;
-import com.anyilanxin.kunpeng.engine.bpmn.scheduling.TimerClock;
-import com.anyilanxin.kunpeng.repository.admin.AdminRepository;
-import com.anyilanxin.kunpeng.repository.admin.modules.position.ImmutablePositionRepository;
 import com.anyilanxin.kunpeng.repository.business.BusinessRepository;
 import com.anyilanxin.kunpeng.repository.business.modules.position.ImmutableProcessedPositionRepository;
 import com.anyilanxin.kunpeng.repository.business.modules.sink.ImmutableSinkRepository;
-import com.anyilanxin.kunpeng.repository.business.modules.sink.MutableSinkRepository;
 import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 import org.slf4j.Logger;
@@ -53,33 +46,39 @@ public final class PositionSupplierTransitionStep
   }
 
   @Override
-  public ActorFuture<Void> onLeader(final BusinessTransitionContent context, final long currentTerm) {
-    return start( context);
+  public ActorFuture<Void> onLeader(
+      final BusinessTransitionContent context, final long currentTerm) {
+    return start(context);
   }
 
   @Override
-  public ActorFuture<Void> onFollower(final BusinessTransitionContent context, final long currentTerm) {
-    return start( context);
+  public ActorFuture<Void> onFollower(
+      final BusinessTransitionContent context, final long currentTerm) {
+    return start(context);
   }
 
   @Override
-  public ActorFuture<Void> onInactive(final BusinessTransitionContent context, final long currentTerm) {
+  public ActorFuture<Void> onInactive(
+      final BusinessTransitionContent context, final long currentTerm) {
     return context.getConcurrencyControl().createCompletedFuture();
   }
-
 
   private ActorFuture<Void> start(final BusinessTransitionContent context) {
     final ConcurrencyControl concurrencyControl = context.getConcurrencyControl();
     final ActorFuture<Void> future = concurrencyControl.createFuture();
     concurrencyControl.run(
-      () -> {
-        final BusinessRepository businessRepository = context.getRepositoryFactory().create();
-        final ImmutableProcessedPositionRepository positionRepository = businessRepository.processedPositionRepository();
-        final ImmutableSinkRepository sinkRepository = businessRepository.sinkRepository();
-        context.getSnapshotProvider().setProcessPositionSupplier(positionRepository::getLastSuccessfulProcessedRecordPosition);
-        context.getSnapshotProvider().setSinkPositionSupplier(sinkRepository::getLowestPosition);
-        future.complete(null);
-      });
+        () -> {
+          final BusinessRepository businessRepository = context.getRepositoryFactory().create();
+          final ImmutableProcessedPositionRepository positionRepository =
+              businessRepository.processedPositionRepository();
+          final ImmutableSinkRepository sinkRepository = businessRepository.sinkRepository();
+          context
+              .getSnapshotProvider()
+              .setProcessPositionSupplier(
+                  positionRepository::getLastSuccessfulProcessedRecordPosition);
+          context.getSnapshotProvider().setSinkPositionSupplier(sinkRepository::getLowestPosition);
+          future.complete(null);
+        });
     return future;
   }
 }
