@@ -48,6 +48,7 @@
     <logger name="org.springframework" level="info"/>
     <logger name="reactor.netty.http.server" level="info"/>
     <logger name="com.anyilanxin.kunpeng.cluster" level="debug"/>
+    <logger name="com.anyilanxin.kunpeng.cluster.config.messaging.PartitionMessagingService" level="info"/>
     <logger name="com.anyilanxin.kunpeng.cluster.cluster.protocol.swim" level="info"/>
 
     <root level="debug">
