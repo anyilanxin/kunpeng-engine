@@ -61,14 +61,14 @@ import org.springframework.beans.factory.BeanFactory;
  * @since 2026.9.0
  */
 public class EngineProcessService extends Actor implements RecordAvailableListener {
+  public static final Logger LOGGER = Loggers.SYSTEM_LOGGER;
   private static final int DEFAULT_MAX_BATCH = 100;
 
   private final EventLog logStream;
-  EventLogReader logStreamReader;
+  private EventLogReader logStreamReader;
   private BatchEntryReader logStreamBatchReader;
-  EventLogWriter logStreamWriter;
+  private EventLogWriter logStreamWriter;
   private boolean processing = false;
-  public static final Logger LOGGER = Loggers.SYSTEM_LOGGER;
   private long processPosition = -1;
   private MutableProcessedPositionRepository mutableProcessedPosition;
   private final CommandApiHandle commandApiHandle;
@@ -343,6 +343,8 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
         throw new RuntimeException(e);
       }
     }
+    logStreamWriter.close();
+    logStreamReader.close();
     if (lanePool == null) {
       return CompletableActorFuture.completed();
     }

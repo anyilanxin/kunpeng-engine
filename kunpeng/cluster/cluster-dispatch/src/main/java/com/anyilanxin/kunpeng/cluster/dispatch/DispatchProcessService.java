@@ -93,12 +93,12 @@ import org.slf4j.Logger;
  * @since 2026.9.0
  */
 public class DispatchProcessService extends Actor implements RecordAvailableListener {
-  private final EventLog logStream;
-  EventLogReader logStreamReader;
-  private BatchEntryReader logStreamBatchReader;
-  EventLogWriter logStreamWriter;
-  private boolean processing = false;
   public static final Logger LOGGER = ClusterDispatchLoggers.CLUSTER_DISPATCH;
+  private final EventLog logStream;
+  private EventLogReader logStreamReader;
+  private BatchEntryReader logStreamBatchReader;
+  private EventLogWriter logStreamWriter;
+  private boolean processing = false;
   private long processPosition = -1;
   private MutablePositionRepository mutableRepositoryPosition;
   private ImmutablePositionRepository immutableRepositoryPosition;
@@ -396,6 +396,8 @@ public class DispatchProcessService extends Actor implements RecordAvailableList
         throw new RuntimeException(e);
       }
     }
+    logStreamReader.close();
+    logStreamWriter.close();
     if (lanePool == null) {
       return CompletableActorFuture.completed();
     }
