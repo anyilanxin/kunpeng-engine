@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Kunpeng Engine 首页架构图 · 效果预览</title>
+<style>
+  body { margin: 0; padding: 40px 24px; background: #FFFFFF; font-family: -apple-system, 'Helvetica Neue', 'Segoe UI', Arial, 'PingFang SC', sans-serif; }
+  h1 { font-size: 15px; color: #57606A; font-weight: 600; text-align: center; margin: 0 0 12px; }
+  h2 { font-size: 13px; color: #8B949E; font-weight: 600; margin: 32px 0 12px; text-align: center; }
+  .frame { max-width: 1150px; margin: 0 auto; }
+  .dark { background: #F6F8FA; padding: 16px; border-radius: 30px; }
+  img, object { width: 100%; height: auto; display: block; }
+  .note { max-width: 1150px; margin: 16px auto 0; font-size: 12px; color: #8B949E; text-align: center; }
+</style>
+</head>
+<body>
+<h1>README 首页架构图 · 效果预览（1150 × 650，两版对比）</h1>
+
+<h2>白底版（GitHub 明亮主题原生融合；暗色主题下呈现为白色卡片）</h2>
+<div class="frame">
+  <object type="image/svg+xml" data="kunpeng-hero-lines-light.svg"></object>
+</div>
+
+<h2>深色版（GitHub 暗色主题原生融合；明亮主题下呈现为深色卡片）</h2>
+<div class="frame dark">
+  <object type="image/svg+xml" data="kunpeng-hero-lines.svg"></object>
+</div>
+
+<p class="note">两版可同时挂在 README：用 &lt;picture&gt; + prefers-color-scheme 自动切换明暗，也可以只选一版</p>
+</body>
+</html>

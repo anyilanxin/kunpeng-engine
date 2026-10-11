@@ -1,0 +1,154 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1150" height="650" viewBox="0 0 1150 650" font-family="-apple-system, 'Helvetica Neue', 'Segoe UI', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif">
+  <defs>
+    <linearGradient id="focal" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3B82F6"/>
+      <stop offset="1" stop-color="#1D4ED8"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="180%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#3B82F6" flood-opacity="0.35"/>
+    </filter>
+    <marker id="arrowBlue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#3B82F6"/>
+    </marker>
+    <marker id="arrowOrange" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#F59E0B"/>
+    </marker>
+    <marker id="arrowAdmin" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#93B4E8"/>
+    </marker>
+  </defs>
+
+  <!-- 画布底板 -->
+  <rect x="1" y="1" width="1148" height="648" rx="26" fill="#0D1420"/>
+
+  <!-- ============ 左侧：外部多语言系统（竖排，汇入客户端） ============ -->
+  <rect x="48" y="136" width="64" height="40" rx="10" fill="#121C30" stroke="#3B82F6" stroke-width="2"/>
+  <text x="80" y="161" text-anchor="middle" fill="#F5F8FF" font-size="13" font-weight="600">Java</text>
+  <rect x="48" y="192" width="64" height="40" rx="10" fill="#121C30" stroke="#3B82F6" stroke-width="2"/>
+  <text x="80" y="217" text-anchor="middle" fill="#F5F8FF" font-size="13" font-weight="600">Go</text>
+  <rect x="48" y="248" width="64" height="40" rx="10" fill="#121C30" stroke="#3B82F6" stroke-width="2"/>
+  <text x="80" y="273" text-anchor="middle" fill="#F5F8FF" font-size="13" font-weight="600">Python</text>
+  <rect x="48" y="304" width="64" height="40" rx="10" fill="none" stroke="#3B82F6" stroke-width="2" stroke-dasharray="5 4"/>
+  <g fill="#7DA7E8">
+    <circle cx="70" cy="324" r="2"/>
+    <circle cx="80" cy="324" r="2"/>
+    <circle cx="90" cy="324" r="2"/>
+  </g>
+  <line x1="112" y1="156" x2="188" y2="220" stroke="#3B82F6" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <line x1="112" y1="212" x2="188" y2="240" stroke="#3B82F6" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <line x1="112" y1="268" x2="188" y2="260" stroke="#3B82F6" stroke-width="2" marker-end="url(#arrowBlue)"/>
+
+  <!-- ============ 左下：连接器生态（经客户端 SDK 接入） ============ -->
+  <line x1="278" y1="282" x2="278" y2="340" stroke="#3B82F6" stroke-width="2" marker-start="url(#arrowBlue)" marker-end="url(#arrowBlue)"/>
+  <rect x="192" y="346" width="172" height="64" rx="16" fill="#121C30" stroke="#3B82F6" stroke-width="2.5"/>
+  <text x="278" y="374" text-anchor="middle" fill="#F5F8FF" font-size="18" font-weight="600">连接器</text>
+  <text x="278" y="396" text-anchor="middle" fill="#93B4E8" font-size="12.5">Connectors</text>
+  <line x1="278" y1="410" x2="177" y2="462" stroke="#3B82F6" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <line x1="278" y1="410" x2="259" y2="462" stroke="#3B82F6" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <line x1="278" y1="410" x2="341" y2="462" stroke="#3B82F6" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <rect x="140" y="466" width="74" height="40" rx="10" fill="#121C30" stroke="#3B82F6" stroke-width="2"/>
+  <text x="177" y="491" text-anchor="middle" fill="#F5F8FF" font-size="13" font-weight="600">Kafka</text>
+  <rect x="222" y="466" width="74" height="40" rx="10" fill="#121C30" stroke="#3B82F6" stroke-width="2"/>
+  <text x="259" y="491" text-anchor="middle" fill="#F5F8FF" font-size="13" font-weight="600">RocketMQ</text>
+  <rect x="304" y="466" width="74" height="40" rx="10" fill="#121C30" stroke="#3B82F6" stroke-width="2"/>
+  <text x="341" y="491" text-anchor="middle" fill="#F5F8FF" font-size="13" font-weight="600">邮件</text>
+  <rect x="386" y="466" width="34" height="40" rx="10" fill="none" stroke="#3B82F6" stroke-width="2" stroke-dasharray="5 4"/>
+  <g fill="#7DA7E8">
+    <circle cx="393" cy="486" r="2"/>
+    <circle cx="403" cy="486" r="2"/>
+    <circle cx="413" cy="486" r="2"/>
+  </g>
+
+  <!-- ============ 主链（中层） ============ -->
+  <!-- 客户端 -->
+  <rect x="192" y="202" width="172" height="76" rx="16" fill="#121C30" stroke="#3B82F6" stroke-width="2.5"/>
+  <text x="278" y="236" text-anchor="middle" fill="#F5F8FF" font-size="19" font-weight="600">客户端</text>
+  <text x="278" y="260" text-anchor="middle" fill="#93B4E8" font-size="12.5">Client SDK</text>
+
+  <!-- 客户端 -> 网关 -->
+  <line x1="364" y1="240" x2="424" y2="240" stroke="#3B82F6" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <text x="394" y="196" text-anchor="middle" fill="#93B4E8" font-size="12">gRPC</text>
+
+  <!-- 网关（多副本堆叠） -->
+  <rect x="430" y="184" width="172" height="76" rx="16" fill="#121C30" stroke="#3B82F6" stroke-width="2.5" opacity="0.5"/>
+  <rect x="430" y="193" width="172" height="76" rx="16" fill="#121C30" stroke="#3B82F6" stroke-width="2.5" opacity="0.8"/>
+  <rect x="430" y="202" width="172" height="76" rx="16" fill="#121C30" stroke="#3B82F6" stroke-width="2.5"/>
+  <text x="516" y="236" text-anchor="middle" fill="#F5F8FF" font-size="19" font-weight="600">网关</text>
+  <text x="516" y="260" text-anchor="middle" fill="#93B4E8" font-size="12.5">多副本 · 动态负载</text>
+
+  <!-- 网关 -> Broker -->
+  <line x1="602" y1="240" x2="656" y2="240" stroke="#3B82F6" stroke-width="2" marker-end="url(#arrowBlue)"/>
+
+  <!-- ============ 顶部：集群管理（管理面，虚线） ============ -->
+  <rect x="794" y="52" width="172" height="64" rx="16" fill="#121C30" stroke="#93B4E8" stroke-width="2.5"/>
+  <text x="880" y="80" text-anchor="middle" fill="#F5F8FF" font-size="18" font-weight="600">集群管理</text>
+  <text x="880" y="102" text-anchor="middle" fill="#93B4E8" font-size="12.5">Cluster Admin</text>
+  <line x1="880" y1="116" x2="880" y2="164" stroke="#93B4E8" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#arrowAdmin)"/>
+  <text x="896" y="145" fill="#93B4E8" font-size="11.5">动态扩缩容</text>
+
+  <!-- ============ Broker 集群（焦点面板：多节点 + 扩容位 + 能力芯片） ============ -->
+  <rect x="662" y="170" width="436" height="140" rx="18" fill="url(#focal)" filter="url(#glow)"/>
+  <text x="880" y="192" text-anchor="middle" fill="#F5F8FF" font-size="17" font-weight="600">Broker 集群</text>
+  <text x="880" y="212" text-anchor="middle" fill="#BFDBFE" font-size="11.5">Raft 复制</text>
+  <g font-size="12.5" fill="#DBEAFE">
+    <rect x="695" y="222" width="96" height="40" rx="9" fill="#0B1730" fill-opacity="0.45"/>
+    <text x="743" y="241" text-anchor="middle">Broker 1</text>
+    <rect x="801" y="222" width="96" height="40" rx="9" fill="#0B1730" fill-opacity="0.45"/>
+    <text x="849" y="241" text-anchor="middle">Broker 2</text>
+    <rect x="907" y="222" width="96" height="40" rx="9" fill="#0B1730" fill-opacity="0.45"/>
+    <text x="955" y="241" text-anchor="middle">Broker N</text>
+    <rect x="1013" y="222" width="52" height="40" rx="9" fill="none" stroke="#BFDBFE" stroke-width="2" stroke-dasharray="6 5"/>
+    <text x="1039" y="248" text-anchor="middle" fill="#BFDBFE" font-size="18">+</text>
+  </g>
+  <!-- 节点内分区条 -->
+  <g fill="#93B4E8" opacity="0.85">
+    <rect x="712" y="249" width="18" height="5" rx="2"/>
+    <rect x="734" y="249" width="18" height="5" rx="2"/>
+    <rect x="756" y="249" width="18" height="5" rx="2"/>
+    <rect x="818" y="249" width="18" height="5" rx="2"/>
+    <rect x="840" y="249" width="18" height="5" rx="2"/>
+    <rect x="862" y="249" width="18" height="5" rx="2"/>
+    <rect x="924" y="249" width="18" height="5" rx="2"/>
+    <rect x="946" y="249" width="18" height="5" rx="2"/>
+    <rect x="968" y="249" width="18" height="5" rx="2"/>
+  </g>
+  <!-- 能力芯片 -->
+  <g font-size="11.5" fill="#DBEAFE">
+    <rect x="700" y="272" width="112" height="26" rx="7" fill="#0B1730" fill-opacity="0.4"/>
+    <text x="756" y="289" text-anchor="middle">分区事件日志</text>
+    <rect x="824" y="272" width="112" height="26" rx="7" fill="#0B1730" fill-opacity="0.4"/>
+    <text x="880" y="289" text-anchor="middle">流程引擎</text>
+    <rect x="948" y="272" width="112" height="26" rx="7" fill="#0B1730" fill-opacity="0.4"/>
+    <text x="1004" y="289" text-anchor="middle">RocksDB 存储</text>
+  </g>
+
+  <!-- ============ 底部右侧：Sink 扇出 ============ -->
+  <line x1="880" y1="310" x2="880" y2="358" stroke="#F59E0B" stroke-width="2" marker-end="url(#arrowOrange)"/>
+
+  <rect x="780" y="364" width="200" height="64" rx="16" fill="#1A1710" stroke="#F59E0B" stroke-width="2.5"/>
+  <text x="880" y="392" text-anchor="middle" fill="#F5F8FF" font-size="18" font-weight="600">Sink 导出</text>
+  <text x="880" y="415" text-anchor="middle" fill="#93B4E8" font-size="12.5">Record Exporters</text>
+
+  <!-- 扇出箭头 -->
+  <line x1="880" y1="428" x2="723" y2="490" stroke="#F59E0B" stroke-width="2" marker-end="url(#arrowOrange)"/>
+  <line x1="880" y1="428" x2="880" y2="490" stroke="#F59E0B" stroke-width="2" marker-end="url(#arrowOrange)"/>
+  <line x1="880" y1="428" x2="1037" y2="490" stroke="#F59E0B" stroke-width="2" marker-end="url(#arrowOrange)"/>
+
+  <!-- 存储圆柱 -->
+  <g stroke="#22C55E" stroke-width="2.5" fill="none">
+    <ellipse cx="720" cy="502" rx="36" ry="11"/>
+    <path d="M684,502 L684,532 A36,11 0 0 0 756,532 L756,502"/>
+    <ellipse cx="880" cy="502" rx="36" ry="11"/>
+    <path d="M844,502 L844,532 A36,11 0 0 0 916,532 L916,502"/>
+    <ellipse cx="1040" cy="502" rx="36" ry="11"/>
+    <path d="M1004,502 L1004,532 A36,11 0 0 0 1076,532 L1076,502"/>
+  </g>
+  <g text-anchor="middle">
+    <text x="720" y="560" fill="#F5F8FF" font-size="14.5" font-weight="600">RDBMS</text>
+    <text x="720" y="578" fill="#93B4E8" font-size="11.5">关系数据库</text>
+    <text x="880" y="560" fill="#F5F8FF" font-size="14.5" font-weight="600">Elasticsearch</text>
+    <text x="880" y="578" fill="#93B4E8" font-size="11.5">搜索索引</text>
+    <text x="1040" y="560" fill="#F5F8FF" font-size="14.5" font-weight="600">自定义</text>
+    <text x="1040" y="578" fill="#93B4E8" font-size="11.5">Custom Sink</text>
+  </g>
+</svg>
