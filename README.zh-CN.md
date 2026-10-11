@@ -2,6 +2,14 @@
 
 [English](README.md) | 简体中文
 
+[![Stars](https://img.shields.io/github/stars/anyilanxin/kunpeng-engine?style=flat-square&logo=github)](https://github.com/anyilanxin/kunpeng-engine/stargazers)
+[![Forks](https://img.shields.io/github/forks/anyilanxin/kunpeng-engine?style=flat-square&logo=github)](https://github.com/anyilanxin/kunpeng-engine/network/members)
+[![Contributors](https://img.shields.io/github/contributors/anyilanxin/kunpeng-engine?style=flat-square&logo=github)](https://github.com/anyilanxin/kunpeng-engine/graphs/contributors)
+[![Commit Activity](https://img.shields.io/github/commit-activity/m/anyilanxin/kunpeng-engine?style=flat-square&logo=github)](https://github.com/anyilanxin/kunpeng-engine/commits)
+[![Release](https://img.shields.io/github/v/release/anyilanxin/kunpeng-engine?style=flat-square&logo=github)](https://github.com/anyilanxin/kunpeng-engine/releases)
+[![Issues](https://img.shields.io/github/issues/anyilanxin/kunpeng-engine?style=flat-square&logo=github)](https://github.com/anyilanxin/kunpeng-engine/issues)
+[![License](https://img.shields.io/github/license/anyilanxin/kunpeng-engine?style=flat-square)](./licenses)
+
 Kunpeng 为跨微服务的业务流程提供可视化与控制能力。
 
 ## 工作原理
@@ -23,6 +31,10 @@ Kunpeng 为跨微服务的业务流程提供可视化与控制能力。
 * 容错能力（无需关系型数据库）
 * 导出流程数据用于监控与分析
 * 参与活跃的社区
+
+## Star 趋势
+
+[![Star History Chart](https://api.star-history.com/svg?repos=anyilanxin/kunpeng-engine&type=Date)](https://star-history.com/#anyilanxin/kunpeng-engine&Date)
 
 ## 许可证
 

@@ -2,6 +2,14 @@
 
 English | [简体中文](README.zh-CN.md)
 
+[![Stars](https://img.shields.io/github/stars/anyilanxin/kunpeng-engine?style=flat-square&logo=github)](https://github.com/anyilanxin/kunpeng-engine/stargazers)
+[![Forks](https://img.shields.io/github/forks/anyilanxin/kunpeng-engine?style=flat-square&logo=github)](https://github.com/anyilanxin/kunpeng-engine/network/members)
+[![Contributors](https://img.shields.io/github/contributors/anyilanxin/kunpeng-engine?style=flat-square&logo=github)](https://github.com/anyilanxin/kunpeng-engine/graphs/contributors)
+[![Commit Activity](https://img.shields.io/github/commit-activity/m/anyilanxin/kunpeng-engine?style=flat-square&logo=github)](https://github.com/anyilanxin/kunpeng-engine/commits)
+[![Release](https://img.shields.io/github/v/release/anyilanxin/kunpeng-engine?style=flat-square&logo=github)](https://github.com/anyilanxin/kunpeng-engine/releases)
+[![Issues](https://img.shields.io/github/issues/anyilanxin/kunpeng-engine?style=flat-square&logo=github)](https://github.com/anyilanxin/kunpeng-engine/issues)
+[![License](https://img.shields.io/github/license/anyilanxin/kunpeng-engine?style=flat-square)](./licenses)
+
 Kunpeng provides visibility into and control over business processes that span multiple microservices.
 
 ## How it works
@@ -23,6 +31,10 @@ Clients spread load dynamically across stateless gateways, which route each requ
 * Fault tolerance (no relational database required)
 * Export process data for monitoring and analysis
 * Engage with an active community
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=anyilanxin/kunpeng-engine&type=Date)](https://star-history.com/#anyilanxin/kunpeng-engine&Date)
 
 ## Licenses
 
