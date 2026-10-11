@@ -4,7 +4,10 @@ Kunpeng provides visibility into and control over business processes that span m
 
 ## How it works
 
-![How Kunpeng works](docs/system-architecture-overview.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/kunpeng-hero-dark.svg">
+  <img src="docs/kunpeng-hero-light.svg" alt="How Kunpeng works">
+</picture>
 
 Clients spread load dynamically across stateless gateways, which route each request to the leading partition of a Raft group. There the BPMN 2.0 engine executes processes and appends every step to the partition's event log; the same log fans out through multiple sinks into multiple external stores — resumable, and off the execution path.
 
