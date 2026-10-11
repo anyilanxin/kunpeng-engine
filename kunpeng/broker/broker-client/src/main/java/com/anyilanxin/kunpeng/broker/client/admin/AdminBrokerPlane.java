@@ -19,7 +19,7 @@ package com.anyilanxin.kunpeng.broker.client.admin;
 import com.anyilanxin.kunpeng.broker.client.core.ApiResponseReader;
 import com.anyilanxin.kunpeng.broker.client.core.BrokerException;
 import com.anyilanxin.kunpeng.broker.client.core.BrokerPlane;
-import com.anyilanxin.kunpeng.broker.client.core.ClientRequest;
+import com.anyilanxin.kunpeng.broker.client.core.BrokerRequest;
 import com.anyilanxin.kunpeng.cluster.cluster.leaderfound.ClusterLeaderFoundService;
 import com.anyilanxin.kunpeng.cluster.utils.net.Address;
 import com.anyilanxin.kunpeng.protocol.admin.AdminValueLifeCycle;
@@ -45,7 +45,7 @@ public class AdminBrokerPlane implements BrokerPlane {
   }
 
   @Override
-  public Destination resolve(final ClientRequest<?> request) throws BrokerException {
+  public Destination resolve(final BrokerRequest<?> request) throws BrokerException {
     final Address address = leaderFoundService.getLeaderAddress();
     if (address == null) {
       throw new BrokerException(10, "not found leader");

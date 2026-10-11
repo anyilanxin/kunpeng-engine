@@ -16,7 +16,7 @@
  */
 package com.anyilanxin.kunpeng.gateway.rest.service.impl;
 
-import static com.anyilanxin.kunpeng.broker.client.core.ClientRequest.RANDOM_PARTITION;
+import static com.anyilanxin.kunpeng.broker.client.core.BrokerRequest.RANDOM_PARTITION;
 import static com.anyilanxin.kunpeng.gateway.grpc.utils.RequestUtil.ensureJsonSet;
 import static com.anyilanxin.kunpeng.gateway.rest.core.BrokerCall.awaitAck;
 

@@ -24,7 +24,7 @@ import com.anyilanxin.kunpeng.protocol.common.api.ResponseRecordValue;
  * @author zxuanhong
  * @since 2026.9.0
  */
-public class BrokerResponse<VALUE extends ResponseRecordValue> implements ClientResponse<VALUE> {
+public class BrokerResponse<VALUE extends ResponseRecordValue> {
   private final VALUE value;
   private final boolean success;
   private final boolean hasData;
@@ -39,27 +39,22 @@ public class BrokerResponse<VALUE extends ResponseRecordValue> implements Client
     this.value = value;
   }
 
-  @Override
   public VALUE getValue() {
     return value;
   }
 
-  @Override
   public boolean isSuccess() {
     return success;
   }
 
-  @Override
   public boolean isError() {
     return !success;
   }
 
-  @Override
   public int code() {
     return code;
   }
 
-  @Override
   public String message() {
     return message;
   }

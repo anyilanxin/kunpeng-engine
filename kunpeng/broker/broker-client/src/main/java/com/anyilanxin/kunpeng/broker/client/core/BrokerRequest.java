@@ -16,6 +16,8 @@
  */
 package com.anyilanxin.kunpeng.broker.client.core;
 
+import static com.anyilanxin.kunpeng.protocol.common.Protocol.DEPLOYMENT_PARTITION;
+
 import com.anyilanxin.kunpeng.broker.client.core.protocol.ApiRequestEncoder;
 import com.anyilanxin.kunpeng.protocol.common.api.RequestRecordValue;
 
@@ -25,8 +27,11 @@ import com.anyilanxin.kunpeng.protocol.common.api.RequestRecordValue;
  * @author zxuanhong
  * @since 2026.9.0
  */
-public abstract class BrokerRequest<VALUE extends RequestRecordValue>
-    implements ClientRequest<VALUE> {
+public abstract class BrokerRequest<VALUE extends RequestRecordValue> {
+  public static final int RANDOM_PARTITION = 0;
+  public static final int DISTRIBUTE_PARTITION = DEPLOYMENT_PARTITION;
+  public static final int NOT_SPECIFIED_PARTITION = -1;
+
   private long key = ApiRequestEncoder.keyNullValue();
   private final int requestType;
   private final int valueType;
@@ -42,42 +47,34 @@ public abstract class BrokerRequest<VALUE extends RequestRecordValue>
     this.value = value;
   }
 
-  @Override
   public VALUE getValue() {
     return value;
   }
 
-  @Override
   public void setKey(final long key) {
     this.key = key;
   }
 
-  @Override
   public long key() {
     return key;
   }
 
-  @Override
   public int partitionId() {
     return partitionId;
   }
 
-  @Override
   public void setPartitionId(final int partitionId) {
     this.partitionId = partitionId;
   }
 
-  @Override
   public int requestType() {
     return requestType;
   }
 
-  @Override
   public int valueType() {
     return valueType;
   }
 
-  @Override
   public int lifeCycle() {
     return lifeCycle;
   }

@@ -16,14 +16,14 @@
  */
 package com.anyilanxin.kunpeng.broker.client.business;
 
-import static com.anyilanxin.kunpeng.broker.client.core.ClientRequest.NOT_SPECIFIED_PARTITION;
-import static com.anyilanxin.kunpeng.broker.client.core.ClientRequest.RANDOM_PARTITION;
+import static com.anyilanxin.kunpeng.broker.client.core.BrokerRequest.NOT_SPECIFIED_PARTITION;
+import static com.anyilanxin.kunpeng.broker.client.core.BrokerRequest.RANDOM_PARTITION;
 import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.BUSINESS_RAFT_GROUP;
 
 import com.anyilanxin.kunpeng.broker.client.core.ApiResponseReader;
 import com.anyilanxin.kunpeng.broker.client.core.BrokerException;
 import com.anyilanxin.kunpeng.broker.client.core.BrokerPlane;
-import com.anyilanxin.kunpeng.broker.client.core.ClientRequest;
+import com.anyilanxin.kunpeng.broker.client.core.BrokerRequest;
 import com.anyilanxin.kunpeng.broker.client.core.protocol.RecordType;
 import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
@@ -55,7 +55,7 @@ public class BusinessBrokerPlane implements BrokerPlane {
   }
 
   @Override
-  public Destination resolve(final ClientRequest<?> request) throws BrokerException {
+  public Destination resolve(final BrokerRequest<?> request) throws BrokerException {
     return switch (RecordType.get((short) request.requestType())) {
       case COMMAND_API -> commandApiDestination(request);
       case QUERY -> queryDestination(request);
@@ -80,7 +80,7 @@ public class BusinessBrokerPlane implements BrokerPlane {
     return value;
   }
 
-  private Destination commandApiDestination(final ClientRequest<?> request) throws BrokerException {
+  private Destination commandApiDestination(final BrokerRequest<?> request) throws BrokerException {
     final int partitionId = request.partitionId();
     if (partitionId == RANDOM_PARTITION) {
       final PartitionId partition = randomPartition();
@@ -103,7 +103,7 @@ public class BusinessBrokerPlane implements BrokerPlane {
     return partitionDestination(PartitionId.from(BUSINESS_RAFT_GROUP, partitionId));
   }
 
-  private Destination queryDestination(final ClientRequest<?> request) throws BrokerException {
+  private Destination queryDestination(final BrokerRequest<?> request) throws BrokerException {
     final int partitionId = request.partitionId();
     if (partitionId <= 0) {
       throw new BrokerException(10, "No valid partition specified");

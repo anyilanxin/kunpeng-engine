@@ -36,7 +36,7 @@ public interface BrokerPlane {
    * @return 目标（主题 + 地址）
    * @throws BrokerException 无法解析目标（无分区/无 leader/地址不可得等明确失败）
    */
-  Destination resolve(ClientRequest<?> request) throws BrokerException;
+  Destination resolve(BrokerRequest<?> request) throws BrokerException;
 
   /**
    * 按统一响应封装物化面别 Record 实例并装载数据帧。
