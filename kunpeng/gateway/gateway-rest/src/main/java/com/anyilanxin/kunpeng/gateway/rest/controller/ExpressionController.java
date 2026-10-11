@@ -37,7 +37,10 @@ import reactor.core.publisher.Mono;
  * @since 2026.9.0
  */
 @RestController
-@RequestMapping(value = "/v1/expressions", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(
+    value = "/{version}/expressions",
+    version = "v1",
+    produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "表达式", description = "表达式求值")
 public class ExpressionController {
   private final ExpressionService expressionService;
@@ -47,9 +50,7 @@ public class ExpressionController {
   }
 
   @PostMapping("/evaluate")
-  @Operation(
-      summary = "求值表达式",
-      tags = {"v1.0.0"})
+  @Operation(summary = "求值表达式")
   public Mono<Result<EvaluateExpressionVo>> evaluate(
       @Valid @RequestBody final EvaluateExpressionDto dto) {
     return expressionService.evaluate(dto).map(Result::ok);

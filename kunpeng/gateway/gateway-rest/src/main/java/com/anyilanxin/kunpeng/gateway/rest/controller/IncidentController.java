@@ -35,7 +35,10 @@ import reactor.core.publisher.Mono;
  * @since 2026.9.0
  */
 @RestController
-@RequestMapping(value = "/v1/incidents", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(
+    value = "/{version}/incidents",
+    version = "v1",
+    produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "事件", description = "事件解决")
 public class IncidentController {
   private final IncidentService incidentService;
@@ -45,9 +48,7 @@ public class IncidentController {
   }
 
   @PostMapping("/{incidentKey}/resolve")
-  @Operation(
-      summary = "解决事件",
-      tags = {"v1.0.0"})
+  @Operation(summary = "解决事件")
   public Mono<Result<Void>> resolve(
       @PathVariable final long incidentKey, @RequestParam(required = false) final String tenantId) {
     return incidentService.resolve(incidentKey, tenantId).thenReturn(Result.ok());

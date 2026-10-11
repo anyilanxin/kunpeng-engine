@@ -39,7 +39,10 @@ import reactor.core.publisher.Mono;
  * @since 2026.9.0
  */
 @RestController
-@RequestMapping(value = "/v1/process-instances", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(
+    value = "/{version}/process-instances",
+    version = "v1",
+    produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "流程实例", description = "流程实例创建与取消")
 public class ProcessInstanceController {
   private final ProcessInstanceService processInstanceService;
@@ -49,27 +52,21 @@ public class ProcessInstanceController {
   }
 
   @PostMapping
-  @Operation(
-      summary = "创建并启动流程实例",
-      tags = {"v1.0.0"})
+  @Operation(summary = "创建并启动流程实例")
   public Mono<Result<ProcessInstanceVo>> create(
       @Valid @RequestBody final ProcessInstanceCreateDto dto) {
     return processInstanceService.create(dto).map(Result::ok);
   }
 
   @PostMapping("/with-result")
-  @Operation(
-      summary = "创建流程实例并等待结果（未实现）",
-      tags = {"v1.0.0"})
+  @Operation(summary = "创建流程实例并等待结果（未实现）")
   public Mono<Result<ProcessInstanceVo>> createWithResult(
       @Valid @RequestBody final ProcessInstanceCreateDto dto) {
     return processInstanceService.createWithResult(dto).map(Result::ok);
   }
 
   @DeleteMapping("/{processInstanceKey}")
-  @Operation(
-      summary = "取消流程实例",
-      tags = {"v1.0.0"})
+  @Operation(summary = "取消流程实例")
   public Mono<Result<Void>> cancel(@PathVariable final long processInstanceKey) {
     return processInstanceService.cancel(processInstanceKey).thenReturn(Result.ok());
   }

@@ -38,7 +38,10 @@ import reactor.core.publisher.Mono;
  * @since 2026.9.0
  */
 @RestController
-@RequestMapping(value = "/v1/user-tasks", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(
+    value = "/{version}/user-tasks",
+    version = "v1",
+    produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "用户任务", description = "用户任务完成与取消")
 public class UserTaskController {
   private final UserTaskService userTaskService;
@@ -48,18 +51,14 @@ public class UserTaskController {
   }
 
   @PostMapping("/{taskKey}/complete")
-  @Operation(
-      summary = "完成用户任务",
-      tags = {"v1.0.0"})
+  @Operation(summary = "完成用户任务")
   public Mono<Result<Void>> complete(
       @PathVariable final long taskKey, @Valid @RequestBody final UserTaskCompleteDto dto) {
     return userTaskService.complete(taskKey, dto).thenReturn(Result.ok());
   }
 
   @DeleteMapping("/{taskKey}")
-  @Operation(
-      summary = "取消用户任务",
-      tags = {"v1.0.0"})
+  @Operation(summary = "取消用户任务")
   public Mono<Result<Void>> cancel(@PathVariable final long taskKey) {
     return userTaskService.cancel(taskKey).thenReturn(Result.ok());
   }

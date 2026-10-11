@@ -47,7 +47,10 @@ import reactor.core.publisher.Mono;
  * @since 2026.9.0
  */
 @RestController
-@RequestMapping(value = "/v1/jobs", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(
+    value = "/{version}/jobs",
+    version = "v1",
+    produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Job", description = "job 命令与消费（SSE 推送 / 长轮询）")
 public class JobController {
   private final JobService jobService;
@@ -57,36 +60,28 @@ public class JobController {
   }
 
   @PostMapping("/{jobKey}/complete")
-  @Operation(
-      summary = "完成 job",
-      tags = {"v1.0.0"})
+  @Operation(summary = "完成 job")
   public Mono<Result<Void>> complete(
       @PathVariable final long jobKey, @Valid @RequestBody final JobCompleteDto dto) {
     return jobService.complete(jobKey, dto).thenReturn(Result.ok());
   }
 
   @PostMapping("/{jobKey}/fail")
-  @Operation(
-      summary = "标记 job 失败",
-      tags = {"v1.0.0"})
+  @Operation(summary = "标记 job 失败")
   public Mono<Result<Void>> fail(
       @PathVariable final long jobKey, @Valid @RequestBody final JobFailDto dto) {
     return jobService.fail(jobKey, dto).thenReturn(Result.ok());
   }
 
   @PutMapping("/{jobKey}/retries")
-  @Operation(
-      summary = "修改 job 重试次数（未实现）",
-      tags = {"v1.0.0"})
+  @Operation(summary = "修改 job 重试次数（未实现）")
   public Mono<Result<Void>> updateRetries(
       @PathVariable final long jobKey, @RequestParam final int retries) {
     return jobService.updateRetries(jobKey, retries).thenReturn(Result.ok());
   }
 
   @PostMapping("/{jobKey}/error")
-  @Operation(
-      summary = "对 job 抛出业务错误（未实现）",
-      tags = {"v1.0.0"})
+  @Operation(summary = "对 job 抛出业务错误（未实现）")
   public Mono<Result<Void>> throwError(
       @PathVariable final long jobKey,
       @RequestParam final String errorCode,
@@ -95,18 +90,14 @@ public class JobController {
   }
 
   @PutMapping("/{jobKey}/timeout")
-  @Operation(
-      summary = "修改 job 处理超时（未实现）",
-      tags = {"v1.0.0"})
+  @Operation(summary = "修改 job 处理超时（未实现）")
   public Mono<Result<Void>> updateTimeout(
       @PathVariable final long jobKey, @RequestParam final long timeout) {
     return jobService.updateTimeout(jobKey, timeout).thenReturn(Result.ok());
   }
 
   @GetMapping("/pull")
-  @Operation(
-      summary = "长轮询拉取 job（空批=窗口到期无任务）",
-      tags = {"v1.0.0"})
+  @Operation(summary = "长轮询拉取 job（空批=窗口到期无任务）")
   public Mono<Result<PullVo>> pull(
       @RequestParam @NotBlank(message = "消费类型不能为空") final String type,
       @RequestParam(defaultValue = "") final String worker,
@@ -119,9 +110,7 @@ public class JobController {
   }
 
   @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-  @Operation(
-      summary = "SSE 推送流订阅 job（event:job，注释帧保活）",
-      tags = {"v1.0.0"})
+  @Operation(summary = "SSE 推送流订阅 job（event:job，注释帧保活）")
   public Flux<ServerSentEvent<JobVo>> stream(
       @RequestParam @NotBlank(message = "消费类型不能为空") final String jobType,
       @RequestParam(defaultValue = "") final String worker,

@@ -36,7 +36,10 @@ import reactor.core.publisher.Mono;
  * @since 2026.9.0
  */
 @RestController
-@RequestMapping(value = "/v1/messages", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(
+    value = "/{version}/messages",
+    version = "v1",
+    produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "消息", description = "消息投递与流程关联")
 public class MessageController {
   private final MessageService messageService;
@@ -46,9 +49,7 @@ public class MessageController {
   }
 
   @PostMapping("/correlation")
-  @Operation(
-      summary = "投递消息并关联订阅流程",
-      tags = {"v1.0.0"})
+  @Operation(summary = "投递消息并关联订阅流程")
   public Mono<Result<Void>> correlate(@Valid @RequestBody final MessageCorrelationDto dto) {
     return messageService.correlate(dto).thenReturn(Result.ok());
   }

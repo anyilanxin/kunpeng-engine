@@ -37,7 +37,10 @@ import reactor.core.publisher.Mono;
  * @since 2026.9.0
  */
 @RestController
-@RequestMapping(value = "/v1/cluster", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(
+    value = "/{version}/cluster",
+    version = "v1",
+    produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "集群管理", description = "拓扑快照、网关发现与负载查询")
 public class ClusterController {
   private final ClusterService clusterService;
@@ -47,25 +50,19 @@ public class ClusterController {
   }
 
   @GetMapping("/topology")
-  @Operation(
-      summary = "集群拓扑快照",
-      tags = {"v1.0.0"})
+  @Operation(summary = "集群拓扑快照")
   public Mono<Result<ClusterTopologyVo>> topology() {
     return clusterService.topology().map(Result::ok);
   }
 
   @GetMapping("/gateways")
-  @Operation(
-      summary = "集群网关发现",
-      tags = {"v1.0.0"})
+  @Operation(summary = "集群网关发现")
   public Mono<Result<GatewayDiscoveryVo>> gateways() {
     return clusterService.gateways().map(Result::ok);
   }
 
   @GetMapping("/gateway-load")
-  @Operation(
-      summary = "网关负载查询",
-      tags = {"v1.0.0"})
+  @Operation(summary = "网关负载查询")
   public Mono<Result<GatewayLoadVo>> gatewayLoad(@RequestParam final String targetGrpcAddress) {
     return clusterService.gatewayLoad(targetGrpcAddress).map(Result::ok);
   }

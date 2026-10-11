@@ -16,7 +16,7 @@
  */
 package com.anyilanxin.kunpeng.gateway.rest.controller.dto;
 
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Min;
 
 /**
  * 流程实例创建请求：processDefinitionKey 与 processDefinitionId 二选一，version=-1 表示最新版本。
@@ -32,6 +32,6 @@ import jakarta.validation.constraints.Positive;
 public record ProcessInstanceCreateDto(
     String processDefinitionKey,
     Long processDefinitionId,
-    @Positive(message = "版本必须为正整数或 -1") int version,
+    @Min(value = -1, message = "版本必须为正整数或 -1") int version,
     String tenantId,
     String variable) {}

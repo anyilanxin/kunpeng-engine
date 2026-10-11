@@ -38,7 +38,10 @@ import reactor.core.publisher.Mono;
  * @since 2026.9.0
  */
 @RestController
-@RequestMapping(value = "/v1/variables", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(
+    value = "/{version}/variables",
+    version = "v1",
+    produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "变量", description = "变量更新与删除")
 public class VariableController {
   private final VariableService variableService;
@@ -48,17 +51,13 @@ public class VariableController {
   }
 
   @PutMapping
-  @Operation(
-      summary = "更新（合并写入）变量",
-      tags = {"v1.0.0"})
+  @Operation(summary = "更新（合并写入）变量")
   public Mono<Result<Void>> update(@Valid @RequestBody final VariableUpdateDto dto) {
     return variableService.update(dto).thenReturn(Result.ok());
   }
 
   @DeleteMapping
-  @Operation(
-      summary = "按变量名清单删除变量",
-      tags = {"v1.0.0"})
+  @Operation(summary = "按变量名清单删除变量")
   public Mono<Result<Void>> remove(@Valid @RequestBody final VariableRemoveDto dto) {
     return variableService.remove(dto).thenReturn(Result.ok());
   }

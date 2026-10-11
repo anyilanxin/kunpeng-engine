@@ -39,7 +39,10 @@ import reactor.core.publisher.Mono;
  * @since 2026.9.0
  */
 @RestController
-@RequestMapping(value = "/v1/deployments", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(
+    value = "/{version}/deployments",
+    version = "v1",
+    produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "部署管理", description = "流程资源部署与删除")
 public class DeploymentController {
   private final DeploymentService deploymentService;
@@ -49,17 +52,13 @@ public class DeploymentController {
   }
 
   @PostMapping
-  @Operation(
-      summary = "部署流程资源",
-      tags = {"v1.0.0"})
+  @Operation(summary = "部署流程资源")
   public Mono<Result<DeploymentVo>> deploy(@Valid @RequestBody final DeploymentCreateDto dto) {
     return deploymentService.deploy(dto).map(Result::ok);
   }
 
   @DeleteMapping("/{deploymentKey}")
-  @Operation(
-      summary = "删除部署",
-      tags = {"v1.0.0"})
+  @Operation(summary = "删除部署")
   public Mono<Result<Void>> delete(@PathVariable final long deploymentKey) {
     return deploymentService.delete(deploymentKey).thenReturn(Result.ok());
   }
