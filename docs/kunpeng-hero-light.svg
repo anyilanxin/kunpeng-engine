@@ -38,6 +38,27 @@
   <line x1="112" y1="212" x2="188" y2="240" stroke="#2563EB" stroke-width="2" marker-end="url(#arrowBlue)"/>
   <line x1="112" y1="268" x2="188" y2="260" stroke="#2563EB" stroke-width="2" marker-end="url(#arrowBlue)"/>
 
+  <!-- ============ 左下：连接器生态（经客户端 SDK 接入） ============ -->
+  <line x1="278" y1="282" x2="278" y2="340" stroke="#2563EB" stroke-width="2" marker-start="url(#arrowBlue)" marker-end="url(#arrowBlue)"/>
+  <rect x="192" y="346" width="172" height="64" rx="16" fill="#FFFFFF" stroke="#2563EB" stroke-width="2.5"/>
+  <text x="278" y="374" text-anchor="middle" fill="#1E293B" font-size="18" font-weight="600">连接器</text>
+  <text x="278" y="396" text-anchor="middle" fill="#64748B" font-size="12.5">Connectors</text>
+  <line x1="278" y1="410" x2="177" y2="462" stroke="#2563EB" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <line x1="278" y1="410" x2="259" y2="462" stroke="#2563EB" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <line x1="278" y1="410" x2="341" y2="462" stroke="#2563EB" stroke-width="2" marker-end="url(#arrowBlue)"/>
+  <rect x="140" y="466" width="74" height="40" rx="10" fill="#FFFFFF" stroke="#2563EB" stroke-width="2"/>
+  <text x="177" y="491" text-anchor="middle" fill="#1E293B" font-size="13" font-weight="600">Kafka</text>
+  <rect x="222" y="466" width="74" height="40" rx="10" fill="#FFFFFF" stroke="#2563EB" stroke-width="2"/>
+  <text x="259" y="491" text-anchor="middle" fill="#1E293B" font-size="13" font-weight="600">RocketMQ</text>
+  <rect x="304" y="466" width="74" height="40" rx="10" fill="#FFFFFF" stroke="#2563EB" stroke-width="2"/>
+  <text x="341" y="491" text-anchor="middle" fill="#1E293B" font-size="13" font-weight="600">邮件</text>
+  <rect x="386" y="466" width="34" height="40" rx="10" fill="none" stroke="#2563EB" stroke-width="2" stroke-dasharray="5 4"/>
+  <g fill="#2563EB">
+    <circle cx="393" cy="486" r="2"/>
+    <circle cx="403" cy="486" r="2"/>
+    <circle cx="413" cy="486" r="2"/>
+  </g>
+
   <!-- ============ 主链（中层） ============ -->
   <!-- 客户端 -->
   <rect x="192" y="202" width="172" height="76" rx="16" fill="#FFFFFF" stroke="#2563EB" stroke-width="2.5"/>
