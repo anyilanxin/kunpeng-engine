@@ -8,7 +8,6 @@
 [![Commit Activity](https://img.shields.io/github/commit-activity/m/anyilanxin/kunpeng-engine?style=flat-square&logo=github)](https://github.com/anyilanxin/kunpeng-engine/commits)
 [![Release](https://img.shields.io/github/v/release/anyilanxin/kunpeng-engine?style=flat-square&logo=github)](https://github.com/anyilanxin/kunpeng-engine/releases)
 [![Issues](https://img.shields.io/github/issues/anyilanxin/kunpeng-engine?style=flat-square&logo=github)](https://github.com/anyilanxin/kunpeng-engine/issues)
-[![License](https://img.shields.io/github/license/anyilanxin/kunpeng-engine?style=flat-square)](./licenses)
 
 Kunpeng 为跨微服务的业务流程提供可视化与控制能力。
 
