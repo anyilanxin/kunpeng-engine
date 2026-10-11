@@ -142,6 +142,11 @@ public class Gateway implements CloseableSilently {
     return jobHub;
   }
 
+  /** grpc 面网关拓扑视图（在线网关列表与负载查询），REST 集群查询域复用同一实例 */
+  public GatewayTopologyManager gatewayTopologyManager() {
+    return gatewayTopologyManager;
+  }
+
   private CompletionStage<GatewayTopologyManager> startGatewayTopology() {
     final var future = new CompletableFuture<GatewayTopologyManager>();
     schedulingService

@@ -25,8 +25,9 @@ import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologySer
 import com.anyilanxin.kunpeng.configuration.gateway.GatewayCfg;
 import com.anyilanxin.kunpeng.gateway.Gateway;
 import com.anyilanxin.kunpeng.gateway.SpringGatewayBridge;
+import com.anyilanxin.kunpeng.gateway.grpc.gatewaydiscover.GatewayTopologyManager;
 import com.anyilanxin.kunpeng.gateway.job.GatewayJobHub;
-import com.anyilanxin.kunpeng.gateway.topology.GatewayTopologyManager;
+import com.anyilanxin.kunpeng.gateway.topology.GatewayDiscoverTopologyManager;
 import com.anyilanxin.kunpeng.modules.gateway.configuration.GatewayPropertiesConfiguration;
 import com.anyilanxin.kunpeng.protocol.common.encoding.GatewayInfo;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
@@ -109,9 +110,9 @@ public class GatewayModuleConfiguration {
 
   /** gateway 地址发现收集服务(gateway 单边): 解析各网关成员的 GatewayInfo 实体汇总 client 接入地址, 供 client 集群网关发现 */
   @Bean(destroyMethod = "close")
-  public GatewayTopologyManager gatewayTopologyManager() {
-    final GatewayTopologyManager manager =
-        new GatewayTopologyManager(atomixCluster.getMembershipService());
+  public GatewayDiscoverTopologyManager gatewayTopologyManager() {
+    final GatewayDiscoverTopologyManager manager =
+        new GatewayDiscoverTopologyManager(atomixCluster.getMembershipService());
     schedulingService.submitActor(manager);
     return manager;
   }
@@ -120,6 +121,13 @@ public class GatewayModuleConfiguration {
   @Bean
   public GatewayJobHub gatewayJobHub(final Gateway gateway) {
     return gateway.jobHub();
+  }
+
+  /** grpc 面网关拓扑视图透出（REST 集群查询域复用同一实例） */
+  @Bean
+  public GatewayTopologyManager
+      grpcGatewayTopologyManager(final Gateway gateway) {
+    return gateway.gatewayTopologyManager();
   }
 
   /** 业务命令面客户端（按域拆分、泛型完全确定），REST service 层统一经此下发命令 */

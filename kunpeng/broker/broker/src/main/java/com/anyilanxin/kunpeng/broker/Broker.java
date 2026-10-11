@@ -144,6 +144,11 @@ public final class Broker implements AutoCloseable {
     return brokerStartupActor.getEmbeddedGatewayJobHub();
   }
 
+  /** 内嵌网关实例（装配用；未启用内嵌网关时为空；生命周期归 broker 关闭链） */
+  public Optional<com.anyilanxin.kunpeng.gateway.Gateway> getEmbeddedGateway() {
+    return brokerStartupActor.getEmbeddedGateway();
+  }
+
   @Override
   public void close() {
     LogUtil.doWithMDC(

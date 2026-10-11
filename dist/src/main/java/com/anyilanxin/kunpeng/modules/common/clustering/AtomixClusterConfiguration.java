@@ -20,6 +20,7 @@ import com.anyilanxin.kunpeng.broker.client.admin.ClusterDispatchClient;
 import com.anyilanxin.kunpeng.broker.client.admin.impl.DefaultClusterDispatchClient;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterConfig;
+import com.anyilanxin.kunpeng.cluster.cluster.leaderfound.ClusterLeaderFoundService;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.DefaultClusterTopologyService;
 import com.anyilanxin.kunpeng.cluster.utils.Version;
@@ -69,6 +70,12 @@ public final class AtomixClusterConfiguration {
             topologyService);
     dispatchClient.start();
     return dispatchClient;
+  }
+
+  /** 集群 leader 发现服务透出（生命周期归 AtomixCluster，此处不重复托管销毁） */
+  @Bean
+  public ClusterLeaderFoundService clusterLeaderFoundService(final AtomixCluster atomixCluster) {
+    return atomixCluster.getLeaderFoundService();
   }
 
   @Bean(destroyMethod = "close")

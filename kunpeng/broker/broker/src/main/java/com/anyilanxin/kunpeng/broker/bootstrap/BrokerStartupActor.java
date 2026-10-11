@@ -17,7 +17,9 @@
 package com.anyilanxin.kunpeng.broker.bootstrap;
 
 import com.anyilanxin.kunpeng.broker.BrokerContext;
+import com.anyilanxin.kunpeng.broker.gateway.EmbeddedGatewayService;
 import com.anyilanxin.kunpeng.broker.jobstream.JobStreamDispatcher;
+import com.anyilanxin.kunpeng.gateway.Gateway;
 import com.anyilanxin.kunpeng.gateway.job.GatewayJobHub;
 import com.anyilanxin.kunpeng.scheduler.Actor;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
@@ -65,6 +67,12 @@ public class BrokerStartupActor extends Actor {
   public Optional<GatewayJobHub> getEmbeddedGatewayJobHub() {
     return Optional.ofNullable(brokerStartup.getEmbeddedGatewayService())
         .map(service -> service.get().jobHub());
+  }
+
+  /** 内嵌网关实例（装配用；未启用内嵌网关时为空） */
+  public Optional<Gateway> getEmbeddedGateway() {
+    return Optional.ofNullable(brokerStartup.getEmbeddedGatewayService())
+        .map(EmbeddedGatewayService::get);
   }
 
   @Override
