@@ -16,15 +16,22 @@
  */
 package com.anyilanxin.kunpeng.broker.bootstrap.step.adminapi;
 
+import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.ADMIN_PARTITION_SOURCE;
+
 import com.anyilanxin.kunpeng.broker.BrokerLoggers;
 import com.anyilanxin.kunpeng.broker.bootstrap.step.idgenerator.NodeIdGeneratorService;
-import com.anyilanxin.kunpeng.broker.client.admin.*;
+import com.anyilanxin.kunpeng.broker.client.admin.TopicUtils;
 import com.anyilanxin.kunpeng.broker.client.admin.commandapi.AdminCommandApiHandle;
+import com.anyilanxin.kunpeng.broker.client.core.ApiRequestReader;
+import com.anyilanxin.kunpeng.broker.client.core.ApiRequestReaderImpl;
+import com.anyilanxin.kunpeng.broker.client.core.ApiResponseWriterImpl;
+import com.anyilanxin.kunpeng.broker.client.core.BrokerResponseWriter;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
 import com.anyilanxin.kunpeng.eventlog.AppendEntry;
 import com.anyilanxin.kunpeng.eventlog.AppendResult;
 import com.anyilanxin.kunpeng.eventlog.EventLogWriter;
 import com.anyilanxin.kunpeng.eventlog.WriteContext;
+import com.anyilanxin.kunpeng.protocol.admin.AdminValueLifeCycle;
 import com.anyilanxin.kunpeng.protocol.admin.AdminValueType;
 import com.anyilanxin.kunpeng.protocol.admin.impl.AdminRecordMetadata;
 import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.RecordAppendEntryFactory;
@@ -140,10 +147,17 @@ public class AdminCommandApiHandleImpl implements AdminCommandApiHandle, Closeab
       final ApiRequestReader requestReader) {
 
     final AppendEntry appendEntry;
+    // 面别编号 → 管理面枚举（与 AdminBrokerPlane 物化侧同一翻译惯例）
+    final AdminValueType valueType = AdminValueType.valueOf((short) requestReader.valueType());
+    final short lifeCycleValue = (short) requestReader.lifeCycle();
+    final AdminValueLifeCycle lifeCycle =
+        AdminValueLifeCycle.UNKNOWN.value() == lifeCycleValue
+            ? AdminValueLifeCycle.UNKNOWN
+            : AdminValueLifeCycle.fromProtocolValue(valueType, lifeCycleValue);
     final AdminRecordMetadata metadata = new AdminRecordMetadata();
     metadata.requestId(requestId);
-    metadata.valueType(requestReader.valueType());
-    metadata.valueLifeCycle(requestReader.lifeCycle());
+    metadata.valueType(valueType);
+    metadata.valueLifeCycle(lifeCycle);
     //    metadata.recordType(requestReader.requestType());
     metadata.recordType(RecordType.COMMAND_API);
     metadata.brokerVersion(brokerVersion);
@@ -185,7 +199,12 @@ public class AdminCommandApiHandleImpl implements AdminCommandApiHandle, Closeab
   @SuppressWarnings("unchecked")
   public <Response extends UnifiedRecordValue> BrokerResponseWriter<Response> newResponse(
       final CommandApiValueLifeCycle lifeCycle, final long requestId) {
-    return new BrokerResponseWriter<>(requestId, lifeCycle);
+    // null lifeCycle = 错误响应（无生命状态）：封装层落 UNKNOWN，与旧版 writer 的默认行为一致
+    return new BrokerResponseWriter<>(
+        requestId,
+        ADMIN_PARTITION_SOURCE,
+        lifeCycle == null ? -1 : lifeCycle.getValueType().getValue(),
+        lifeCycle == null ? AdminValueLifeCycle.UNKNOWN.value() : lifeCycle.value());
   }
 
   @Override
@@ -234,5 +253,5 @@ public class AdminCommandApiHandleImpl implements AdminCommandApiHandle, Closeab
   }
 
   record PartitionRequest(
-      CompletableFuture<byte[]> responseFuture, RecordType requestType, AdminValueType valueType) {}
+      CompletableFuture<byte[]> responseFuture, int requestType, int valueType) {}
 }

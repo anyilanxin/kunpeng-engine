@@ -150,7 +150,7 @@ business 计划 `CHANGE_PARTITION`（initialize + applyPlan，期望分区数取
 | 模块 | 职责 |
 |---|---|
 | `kunpeng/cluster/cluster-admin` | Leader 转换接线（DispatchProcessServiceTransitionStep）、业务节点执行服务（BOOTSTRAP/JOIN/LEAVE 等执行消息接收） |
-| `kunpeng/broker/broker-admin-client` | `DefaultClusterDispatchClient`：执行消息下发（topic = `PartitionType-ExecutionType`）与 ack，均带 5 次×2s 退避重试 |
+| `kunpeng/broker/broker-client`（admin 面） | `DefaultClusterDispatchClient`：执行消息下发（topic = `PartitionType-ExecutionType`）与 ack，均带 5 次×2s 退避重试 |
 | `kunpeng/protocol/protocol-admin(-impl)` | 记录与生命周期枚举定义（事实源） |
 | `kunpeng/repository/admin-repository` | EVENT 经 applier 落 RocksDB（计划/明细/source/delayed/clustermeta 全套已实现） |
 

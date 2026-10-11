@@ -12,10 +12,12 @@
  */
 package com.anyilanxin.kunpeng.protocol.business.record.commandapi.record.processdefinition.suspend;
 
+import com.anyilanxin.kunpeng.protocol.business.record.commandapi.ResponseRecordValue;
 import com.anyilanxin.kunpeng.structpack.JsonSerializable;
 
 /**
  * @author zxuanhong
  * @since 2026.9.0
  */
-public interface ProcessDefinitionSuspendResponseRecordValue extends JsonSerializable {}
+public interface ProcessDefinitionSuspendResponseRecordValue
+    extends ResponseRecordValue, JsonSerializable {}

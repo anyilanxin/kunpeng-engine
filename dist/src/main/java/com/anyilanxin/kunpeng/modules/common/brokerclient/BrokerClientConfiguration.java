@@ -16,12 +16,12 @@
  */
 package com.anyilanxin.kunpeng.modules.common.brokerclient;
 
-import com.anyilanxin.kunpeng.broker.client.business.BrokerClient;
-import com.anyilanxin.kunpeng.broker.client.business.impl.BrokerClientImpl;
+import com.anyilanxin.kunpeng.broker.client.business.BusinessBrokerPlane;
+import com.anyilanxin.kunpeng.broker.client.core.BrokerClient;
+import com.anyilanxin.kunpeng.broker.client.core.impl.BrokerClientImpl;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.scheduler.ActorScheduler;
-import java.time.Duration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,18 +31,15 @@ public final class BrokerClientConfiguration {
   private final AtomixCluster cluster;
   private final ActorScheduler scheduler;
   private final ClusterTopologyService topologyManager;
-  private final BrokerClientTimeoutConfiguration config;
 
   @Autowired
   public BrokerClientConfiguration(
-      final BrokerClientTimeoutConfiguration config,
       final AtomixCluster cluster,
       final ActorScheduler scheduler,
       final ClusterTopologyService topologyManager) {
     this.cluster = cluster;
     this.scheduler = scheduler;
     this.topologyManager = topologyManager;
-    this.config = config;
   }
 
   @Bean(destroyMethod = "close")
@@ -52,12 +49,9 @@ public final class BrokerClientConfiguration {
             // 发送侧直接使用集群面 Atomix 通信组件, 按分区 leader 广播的业务端口寻址(接收端为 broker 业务面独立实例)
             cluster.getMessagingService(),
             cluster.getEventService(),
-            topologyManager,
-            cluster.getLeaderFoundService(),
-            config.requestTimeout);
+            new BusinessBrokerPlane(topologyManager),
+            topologyManager);
     scheduler.submitActor(brokerClient);
     return brokerClient;
   }
-
-  public record BrokerClientTimeoutConfiguration(Duration requestTimeout) {}
 }

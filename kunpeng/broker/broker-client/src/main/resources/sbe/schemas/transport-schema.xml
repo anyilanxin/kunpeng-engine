@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+  统一传输封装格式（业务面/管理面共用）：
+  - 字段集与既有业务面 ApiRequest/ApiResponse 完全一致（业务面格式即超集，管理面迁入）
+  - valueType/lifeCycle 为面别编号池语义，由解码方按主题所属面别解释，编号池不合并
+-->
+<sbe:messageSchema xmlns:sbe="http://fixprotocol.io/2016/sbe"
+  package="com.anyilanxin.kunpeng.broker.client.core.protocol" id="14" version="1"
+  description="Kunpeng Unified Transport Envelope" byteOrder="littleEndian">
+
+  <types>
+    <composite name="messageHeader" description="Message identifiers and length of message root">
+      <type name="blockLength" primitiveType="uint16"/>
+      <type name="templateId" primitiveType="uint16"/>
+      <type name="schemaId" primitiveType="uint16"/>
+      <type name="version" primitiveType="uint16"/>
+    </composite>
+    <composite name="blob">
+      <type name="length" primitiveType="uint32" maxValue="2147483647"/>
+      <type name="varData" primitiveType="uint8" length="0"/>
+    </composite>
+    <composite name="varDataEncoding">
+      <type name="length" primitiveType="uint32" maxValue="2147483647"/>
+      <type name="varData" primitiveType="uint8" length="0" characterEncoding="UTF-8"/>
+    </composite>
+    <enum name="RecordType" encodingType="uint8">
+      <validValue name="EVENT">0</validValue>
+      <validValue name="COMMAND">1</validValue>
+      <validValue name="COMMAND_API">2</validValue>
+      <validValue name="QUERY">3</validValue>
+      <validValue name="COMMAND_REJECTION">4</validValue>
+      <validValue name="ADMIN">5</validValue>
+      <validValue name="CLUSTER_LEADER">6</validValue>
+    </enum>
+    <enum name="BooleanType" encodingType="uint8" semanticType="Boolean">
+      <validValue name="FALSE">0</validValue>
+      <validValue name="TRUE">1</validValue>
+    </enum>
+  </types>
+
+  <sbe:message name="ApiRequest" id="1" description="统一传输请求封装">
+    <field name="key" id="1" type="uint64"/>
+    <field name="requestType" id="2" type="RecordType"/>
+    <field name="valueType" id="3" type="uint8"/>
+    <field name="lifeCycle" id="4" type="uint8"/>
+    <field name="resourceId" id="5" type="int32"/>
+    <field name="hasData" id="6" type="BooleanType"/>
+    <field name="requestTime" id="7" type="uint64"/>
+    <data name="data" id="8" type="blob"/>
+  </sbe:message>
+
+  <sbe:message name="ApiResponse" id="2" description="统一传输响应封装">
+    <field name="requestType" id="1" type="RecordType"/>
+    <field name="code" id="2" type="int32"/>
+    <field name="success" id="3" type="BooleanType"/>
+    <field name="valueType" id="4" type="uint8"/>
+    <field name="lifeCycle" id="5" type="uint8"/>
+    <field name="hasData" id="6" type="BooleanType"/>
+    <data name="message" id="7" type="varDataEncoding" semanticType="string"/>
+    <data name="data" id="8" type="blob"/>
+  </sbe:message>
+</sbe:messageSchema>

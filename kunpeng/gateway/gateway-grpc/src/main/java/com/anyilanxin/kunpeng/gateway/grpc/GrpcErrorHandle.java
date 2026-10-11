@@ -16,7 +16,7 @@
  */
 package com.anyilanxin.kunpeng.gateway.grpc;
 
-import com.anyilanxin.kunpeng.broker.client.business.BrokerResponse;
+import com.anyilanxin.kunpeng.broker.client.core.BrokerResponse;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;

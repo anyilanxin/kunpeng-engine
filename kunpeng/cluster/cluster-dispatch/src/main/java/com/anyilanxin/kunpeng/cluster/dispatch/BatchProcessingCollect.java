@@ -16,8 +16,8 @@
  */
 package com.anyilanxin.kunpeng.cluster.dispatch;
 
-import com.anyilanxin.kunpeng.broker.client.admin.BrokerResponseWriter;
 import com.anyilanxin.kunpeng.broker.client.admin.commandapi.AdminCommandApiHandle;
+import com.anyilanxin.kunpeng.broker.client.core.BrokerResponseWriter;
 import com.anyilanxin.kunpeng.eventlog.AppendEntry;
 import com.anyilanxin.kunpeng.protocol.admin.impl.AdminRecordMetadata;
 import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;

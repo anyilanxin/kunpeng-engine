@@ -17,18 +17,19 @@
 package com.anyilanxin.kunpeng.broker.commandapi;
 
 import com.anyilanxin.kunpeng.broker.BrokerLoggers;
-import com.anyilanxin.kunpeng.broker.client.business.ApiRequestReader;
-import com.anyilanxin.kunpeng.broker.client.business.ApiRequestReaderImpl;
-import com.anyilanxin.kunpeng.broker.client.business.ApiResponseWriterImpl;
-import com.anyilanxin.kunpeng.broker.client.business.BrokerResponseWriter;
 import com.anyilanxin.kunpeng.broker.client.business.TopicUtils;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.CommandApiHandle;
+import com.anyilanxin.kunpeng.broker.client.core.ApiRequestReader;
+import com.anyilanxin.kunpeng.broker.client.core.ApiRequestReaderImpl;
+import com.anyilanxin.kunpeng.broker.client.core.ApiResponseWriterImpl;
+import com.anyilanxin.kunpeng.broker.client.core.BrokerResponseWriter;
 import com.anyilanxin.kunpeng.cluster.business.step.RaftPartitionSource;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
 import com.anyilanxin.kunpeng.eventlog.AppendEntry;
 import com.anyilanxin.kunpeng.eventlog.AppendResult;
 import com.anyilanxin.kunpeng.eventlog.EventLogWriter;
 import com.anyilanxin.kunpeng.eventlog.WriteContext;
+import com.anyilanxin.kunpeng.protocol.business.ValueLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.ValueType;
 import com.anyilanxin.kunpeng.protocol.business.impl.RecordMetadata;
 import com.anyilanxin.kunpeng.protocol.business.impl.eventlog.RecordAppendEntryFactory;
@@ -108,7 +109,8 @@ public class CommandApiHandleImpl implements CommandApiHandle, CloseableSilently
   }
 
   private void removeRequestHandlers(final int partitionId) {
-    final var topicName = TopicUtils.getTopicName(RecordType.COMMAND_API, partitionId);
+    final var topicName =
+        TopicUtils.getTopicName(RecordType.COMMAND_API.value(), String.valueOf(partitionId));
     LOG.info("Unsubscribe from topic {}", topicName);
     messagingService.unregisterHandler(topicName);
   }
@@ -116,7 +118,8 @@ public class CommandApiHandleImpl implements CommandApiHandle, CloseableSilently
   private void addRequestHandlers(
       final RaftPartitionSource partitionSource, final EventLogWriter logStreamWriter) {
     final int partitionId = partitionSource.getPartitionId().id();
-    final var topicName = TopicUtils.getTopicName(RecordType.COMMAND_API, partitionId);
+    final var topicName =
+        TopicUtils.getTopicName(RecordType.COMMAND_API.value(), String.valueOf(partitionId));
     LOG.info("subscribe from topic {}", topicName);
     messagingService.registerHandler(
         topicName, (sender, request) -> handleRequest(request, partitionSource, logStreamWriter));
@@ -179,11 +182,18 @@ public class CommandApiHandleImpl implements CommandApiHandle, CloseableSilently
       final ApiRequestReader requestReader) {
 
     final AppendEntry appendEntry;
+    // 面别编号 → 业务面枚举（与 BusinessBrokerPlane 物化侧同一翻译惯例）
+    final ValueType valueType = ValueType.valueOf((short) requestReader.valueType());
+    final short lifeCycleValue = (short) requestReader.lifeCycle();
+    final ValueLifeCycle lifeCycle =
+        ValueLifeCycle.UNKNOWN.value() == lifeCycleValue
+            ? ValueLifeCycle.UNKNOWN
+            : ValueLifeCycle.fromProtocolValue(valueType, lifeCycleValue);
     final RecordMetadata metadata = new RecordMetadata();
     metadata.requestId(requestId);
-    metadata.valueType(requestReader.valueType());
-    metadata.valueLifeCycle(requestReader.lifeCycle());
-    metadata.recordType(requestReader.requestType());
+    metadata.valueType(valueType);
+    metadata.valueLifeCycle(lifeCycle);
+    metadata.recordType(RecordType.get((short) requestReader.requestType()));
     metadata.brokerVersion(brokerVersion);
     final long key = requestReader.key();
 
@@ -232,7 +242,12 @@ public class CommandApiHandleImpl implements CommandApiHandle, CloseableSilently
   @SuppressWarnings("unchecked")
   public <Response extends UnifiedRecordValue> BrokerResponseWriter<Response> newResponse(
       final CommandApiValueLifeCycle lifeCycle, final long requestId, final int partitionId) {
-    return new BrokerResponseWriter<>(requestId, partitionId, lifeCycle);
+    // null lifeCycle = 错误响应（无生命状态）：封装层落 UNKNOWN，与旧版 writer 的默认行为一致
+    return new BrokerResponseWriter<>(
+        requestId,
+        partitionId,
+        lifeCycle == null ? -1 : lifeCycle.getValueType().getValue(),
+        lifeCycle == null ? ValueLifeCycle.UNKNOWN.value() : lifeCycle.value());
   }
 
   @Override
@@ -299,5 +314,5 @@ public class CommandApiHandleImpl implements CommandApiHandle, CloseableSilently
   }
 
   record PartitionRequest(
-      CompletableFuture<byte[]> responseFuture, RecordType requestType, ValueType valueType) {}
+      CompletableFuture<byte[]> responseFuture, int requestType, int valueType) {}
 }

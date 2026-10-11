@@ -18,8 +18,7 @@ package com.anyilanxin.kunpeng.gateway.grpc.service.impl;
 
 import static com.anyilanxin.kunpeng.gateway.grpc.utils.RequestUtil.ensureJsonSet;
 
-import com.anyilanxin.kunpeng.broker.client.business.BrokerClient;
-import com.anyilanxin.kunpeng.broker.client.business.BrokerResponse;
+import com.anyilanxin.kunpeng.broker.client.business.client.ProcessInstanceClient;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.processinstance.request.ProcessInstanceCancelRequest;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.processinstance.request.ProcessInstanceCreateRequest;
 import com.anyilanxin.kunpeng.gateway.grpc.GrpcErrorHandle;
@@ -27,9 +26,7 @@ import com.anyilanxin.kunpeng.gateway.grpc.service.GrpcService;
 import com.anyilanxin.kunpeng.gateway.grpc.service.ProcessInstanceServiceGrpc;
 import com.anyilanxin.kunpeng.gateway.grpc.service.ProcessInstanceServiceOuterClass;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.processinstance.create.ProcessInstanceCreateResponseRecord;
-import com.anyilanxin.kunpeng.protocol.business.record.commandapi.record.processinstance.cancel.ProcessInstanceCancelResponseRecordValue;
 import io.grpc.stub.StreamObserver;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * 流程实例 gRPC 服务实现。
@@ -39,12 +36,12 @@ import java.util.concurrent.CompletableFuture;
  */
 public class GrpcProcessInstanceServiceImpl
     extends ProcessInstanceServiceGrpc.ProcessInstanceServiceImplBase implements GrpcService {
-  private final BrokerClient brokerClient;
+  private final ProcessInstanceClient commands;
   private final GrpcErrorHandle handle;
 
   public GrpcProcessInstanceServiceImpl(
-      final BrokerClient brokerClient, final GrpcErrorHandle handle) {
-    this.brokerClient = brokerClient;
+      final ProcessInstanceClient commands, final GrpcErrorHandle handle) {
+    this.commands = commands;
     this.handle = handle;
   }
 
@@ -63,28 +60,27 @@ public class GrpcProcessInstanceServiceImpl
             .setProcessDefinitionId(request.getProcessDefinitionId())
             .setProcessDefinitionKey(request.getProcessDefinitionKey(), request.getVersion())
             .setVariable(ensureJsonSet(request.getVariable()));
-    final CompletableFuture<BrokerResponse<ProcessInstanceCreateResponseRecord>> future =
-        brokerClient.sendRequest(brokerRequest);
-
-    future.whenComplete(
-        (brokerResponse, throwable) -> {
-          if (throwable != null) {
-            responseObserver.onError(handle.error(responseObserver, throwable));
-          } else {
-            if (brokerResponse.isSuccess()) {
-              final ProcessInstanceCreateResponseRecord value = brokerResponse.getValue();
-              final ProcessInstanceServiceOuterClass.CreateProcessInstanceResponse response =
-                  ProcessInstanceServiceOuterClass.CreateProcessInstanceResponse.newBuilder()
-                      .setProcessInstanceId(value.getProcessInstanceId())
-                      .build();
-              responseObserver.onNext(response);
-              value.reset();
-              responseObserver.onCompleted();
-            } else {
-              responseObserver.onError(handle.error(responseObserver, brokerResponse));
-            }
-          }
-        });
+    commands
+        .createProcessInstance(brokerRequest)
+        .whenComplete(
+            (brokerResponse, throwable) -> {
+              if (throwable != null) {
+                responseObserver.onError(handle.error(responseObserver, throwable));
+              } else {
+                if (brokerResponse.isSuccess()) {
+                  final ProcessInstanceCreateResponseRecord value = brokerResponse.getValue();
+                  final ProcessInstanceServiceOuterClass.CreateProcessInstanceResponse response =
+                      ProcessInstanceServiceOuterClass.CreateProcessInstanceResponse.newBuilder()
+                          .setProcessInstanceId(value.getProcessInstanceId())
+                          .build();
+                  responseObserver.onNext(response);
+                  value.reset();
+                  responseObserver.onCompleted();
+                } else {
+                  responseObserver.onError(handle.error(responseObserver, brokerResponse));
+                }
+              }
+            });
   }
 
   @Override
@@ -103,23 +99,23 @@ public class GrpcProcessInstanceServiceImpl
     final long processInstanceId = request.getProcessInstanceId();
     final ProcessInstanceCancelRequest brokerRequest =
         new ProcessInstanceCancelRequest(processInstanceId);
-    final CompletableFuture<BrokerResponse<ProcessInstanceCancelResponseRecordValue>> future =
-        brokerClient.sendRequest(brokerRequest);
-    future.whenComplete(
-        (brokerResponse, throwable) -> {
-          if (throwable != null) {
-            responseObserver.onError(handle.error(responseObserver, throwable));
-          } else {
-            if (brokerResponse.isSuccess()) {
-              final ProcessInstanceServiceOuterClass.CancelProcessInstanceResponse response =
-                  ProcessInstanceServiceOuterClass.CancelProcessInstanceResponse.newBuilder()
-                      .build();
-              responseObserver.onNext(response);
-              responseObserver.onCompleted();
-            } else {
-              responseObserver.onError(handle.error(responseObserver, brokerResponse));
-            }
-          }
-        });
+    commands
+        .cancelProcessInstance(brokerRequest)
+        .whenComplete(
+            (brokerResponse, throwable) -> {
+              if (throwable != null) {
+                responseObserver.onError(handle.error(responseObserver, throwable));
+              } else {
+                if (brokerResponse.isSuccess()) {
+                  final ProcessInstanceServiceOuterClass.CancelProcessInstanceResponse response =
+                      ProcessInstanceServiceOuterClass.CancelProcessInstanceResponse.newBuilder()
+                          .build();
+                  responseObserver.onNext(response);
+                  responseObserver.onCompleted();
+                } else {
+                  responseObserver.onError(handle.error(responseObserver, brokerResponse));
+                }
+              }
+            });
   }
 }

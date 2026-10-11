@@ -39,7 +39,6 @@ dependencies {
     implementation project(':kunpeng:protocol:protocol-admin-impl')
     implementation project(':kunpeng:protocol:protocol-business')
     implementation project(':kunpeng:protocol:protocol-business-impl')
-    implementation project(':kunpeng:broker:broker-admin-client')
     implementation project(':kunpeng:broker:broker-client')
     implementation project(':kunpeng:repository:kvstore')
     implementation project(':kunpeng:repository:rocksdb')

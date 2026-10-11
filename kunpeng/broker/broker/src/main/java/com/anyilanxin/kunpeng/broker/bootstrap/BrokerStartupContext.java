@@ -21,7 +21,7 @@ import com.anyilanxin.kunpeng.broker.bootstrap.step.adminapi.AdminCommandApiServ
 import com.anyilanxin.kunpeng.broker.bootstrap.step.idgenerator.NodeIdGeneratorService;
 import com.anyilanxin.kunpeng.broker.bootstrap.step.idgenerator.NodeIdGeneratorServiceImpl;
 import com.anyilanxin.kunpeng.broker.business.ClusterBusinessService;
-import com.anyilanxin.kunpeng.broker.client.business.BrokerClient;
+import com.anyilanxin.kunpeng.broker.client.core.BrokerClient;
 import com.anyilanxin.kunpeng.broker.commandapi.CommandApiServiceImpl;
 import com.anyilanxin.kunpeng.broker.gateway.EmbeddedGatewayService;
 import com.anyilanxin.kunpeng.broker.jobstream.JobStreamDispatcher;

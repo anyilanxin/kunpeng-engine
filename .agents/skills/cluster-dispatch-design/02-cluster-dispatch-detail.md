@@ -276,7 +276,7 @@ admin 副本扩展与业务分区全量创建（CHANGE_PARTITION + oldMeta 为�
 
 与 `api/ClusterDispatchService` 无直接关系：前者是客户端命令入口，后者是成员间消息接收面。
 
-### 9.2 dispatchClient（broker-admin-client）
+### 9.2 dispatchClient（broker-client admin 面）
 
 `DefaultClusterDispatchClient`：执行消息 topic = `PartitionType-ExecutionType`
 （`PartitionExecutionType.getTopic`），node-source 用 `NODE-SOURCE`；ack 与下发均带 5 次×2s 退避重试。
@@ -376,7 +376,7 @@ stateDiagram-v2
 | 延迟触发 | `command/delayed/processor/DelayedTriggerProcessor` + `DelayedDelayChecker` | 四分支重入/重试 |
 | source 治理 | `command/source/processor/` | NodeSource / PartitionSource / 两套 Meta |
 | ACK 接收面 | `api/ClusterDispatchService` | topic 常量 `CLUSTER_DISPATCH_ACK` / `CLUSTER_NODE_SOURCE`（protocol-common `ClusterCommonConstant`） |
-| 下发客户端 | broker-admin-client `DefaultClusterDispatchClient` | topic 规则 + 5×2s 重试 |
+| 下发客户端 | broker-client admin 面 `DefaultClusterDispatchClient` | topic 规则 + 5×2s 重试 |
 | 客户端入口 | `commandapi/` | business 5 / admin 3 处理器 |
 | 记录与枚举 | protocol-admin `record/command/`、protocol-admin-impl `record/command/` | 生命周期/类型/记录定义（事实源） |
 | 落库 applier | admin-repository `modules/{admin,business}/applier/impl/` | dispatch 计划/明细/source/delayed/clustermeta 全套已实现 |

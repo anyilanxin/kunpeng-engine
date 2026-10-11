@@ -16,7 +16,7 @@
  */
 package com.anyilanxin.kunpeng.modules.common.endpoints;
 
-import com.anyilanxin.kunpeng.broker.client.admin.BrokerResponse;
+import com.anyilanxin.kunpeng.broker.client.core.BrokerResponse;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessClusterMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanExecutionRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanRecord;

@@ -16,7 +16,7 @@
 kunpeng-engine/
 ├── kunpeng/           # 核心引擎（settings.gradle 按二级目录自动 include）
 │   ├── bpm-model/     # BPMN/DMN/XML 模型与解析（bpmn-model、dmn-model、model-parse、xml-model）
-│   ├── broker/        # broker 本体与客户端（broker、broker-client、broker-admin-client）
+│   ├── broker/        # broker 本体与客户端（broker、broker-client 含 core 传输核心/business/admin 三面）
 │   ├── cluster/       # 集群能力（cluster、cluster-config、cluster-dispatch 调度子系统、cluster-raft）
 │   ├── engine/        # 执行引擎（bpmn-engine、dmn-engine、script-engine）
 │   ├── gateway/       # 网关（gateway、gateway-grpc、gateway-job、gateway-protocol、gateway-rest）

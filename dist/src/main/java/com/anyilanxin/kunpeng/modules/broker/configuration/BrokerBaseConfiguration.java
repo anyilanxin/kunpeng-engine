@@ -19,7 +19,6 @@ package com.anyilanxin.kunpeng.modules.broker.configuration;
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterConfig;
 import com.anyilanxin.kunpeng.configuration.cluster.ClusterConfigFactory;
 import com.anyilanxin.kunpeng.modules.common.actor.ActorSchedulerConfiguration;
-import com.anyilanxin.kunpeng.modules.common.brokerclient.BrokerClientConfiguration;
 import com.anyilanxin.kunpeng.modules.common.configuration.ClusterPropertiesConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -58,12 +57,6 @@ public class BrokerBaseConfiguration {
     // 集群面与业务面双实例共享同一内嵌驱动(测试等多节点同 JVM 场景不经此处, 保持每实例独占)
     config.getAeronConfig().setSharedDriver(true);
     return config;
-  }
-
-  @Bean
-  public BrokerClientConfiguration.BrokerClientTimeoutConfiguration brokerClientConfig() {
-    return new BrokerClientConfiguration.BrokerClientTimeoutConfiguration(
-        brokerProperties.getGateway().getRequestTimeout());
   }
 
   @Bean

@@ -18,18 +18,16 @@ package com.anyilanxin.kunpeng.gateway.grpc.service.impl;
 
 import static com.anyilanxin.kunpeng.gateway.grpc.utils.RequestUtil.ensureJsonSet;
 
-import com.anyilanxin.kunpeng.broker.client.business.BrokerClient;
-import com.anyilanxin.kunpeng.broker.client.business.BrokerResponse;
+import com.anyilanxin.kunpeng.broker.client.business.client.JobClient;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.job.request.JobCompleteRequest;
+import com.anyilanxin.kunpeng.broker.client.business.commandapi.job.request.JobFailRequest;
 import com.anyilanxin.kunpeng.gateway.grpc.GrpcErrorHandle;
 import com.anyilanxin.kunpeng.gateway.grpc.service.GrpcService;
 import com.anyilanxin.kunpeng.gateway.grpc.service.JobServiceGrpc;
 import com.anyilanxin.kunpeng.gateway.grpc.service.JobServiceOuterClass;
 import com.anyilanxin.kunpeng.gateway.job.GatewayJobHub;
-import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.job.complete.JobCompleteResponseRecord;
 import com.anyilanxin.kunpeng.protocol.gateway.GatewayLoggers;
 import io.grpc.stub.StreamObserver;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 
@@ -43,13 +41,13 @@ import org.slf4j.Logger;
 public class GrpcJobServiceImpl extends JobServiceGrpc.JobServiceImplBase implements GrpcService {
   private static final Logger LOG = GatewayLoggers.GATEWAY_LOGGER_GRPC;
 
-  private final BrokerClient brokerClient;
+  private final JobClient commands;
   private final GrpcErrorHandle handle;
   private final GatewayJobHub jobHub;
 
   public GrpcJobServiceImpl(
-      final BrokerClient brokerClient, final GrpcErrorHandle handle, final GatewayJobHub jobHub) {
-    this.brokerClient = brokerClient;
+      final JobClient commands, final GrpcErrorHandle handle, final GatewayJobHub jobHub) {
+    this.commands = commands;
     this.handle = handle;
     this.jobHub = jobHub;
   }
@@ -72,7 +70,27 @@ public class GrpcJobServiceImpl extends JobServiceGrpc.JobServiceImplBase implem
   public void failJob(
       final JobServiceOuterClass.FailJobRequest request,
       final StreamObserver<JobServiceOuterClass.FailJobResponse> responseObserver) {
-    super.failJob(request, responseObserver);
+    final JobFailRequest brokerRequest =
+        new JobFailRequest(
+                request.getJobKey(), request.getRetries(), (int) request.getRetryBackOff())
+            .setErrorMessage(request.getErrorMessage());
+    commands
+        .failJob(brokerRequest)
+        .whenComplete(
+            (brokerResponse, throwable) -> {
+              if (throwable != null) {
+                responseObserver.onError(handle.error(responseObserver, throwable));
+              } else {
+                if (brokerResponse.isSuccess()) {
+                  final JobServiceOuterClass.FailJobResponse response =
+                      JobServiceOuterClass.FailJobResponse.newBuilder().build();
+                  responseObserver.onNext(response);
+                  responseObserver.onCompleted();
+                } else {
+                  responseObserver.onError(handle.error(responseObserver, brokerResponse));
+                }
+              }
+            });
   }
 
   @Override
@@ -83,23 +101,23 @@ public class GrpcJobServiceImpl extends JobServiceGrpc.JobServiceImplBase implem
         new JobCompleteRequest(request.getJobKey())
             .setVariables(ensureJsonSet(request.getVariables()))
             .setLocalVariables(ensureJsonSet(request.getLocalVariables()));
-    final CompletableFuture<BrokerResponse<JobCompleteResponseRecord>> future =
-        brokerClient.sendRequest(brokerRequest);
-    future.whenComplete(
-        (brokerResponse, throwable) -> {
-          if (throwable != null) {
-            responseObserver.onError(handle.error(responseObserver, throwable));
-          } else {
-            if (brokerResponse.isSuccess()) {
-              final JobServiceOuterClass.CompleteJobResponse response =
-                  JobServiceOuterClass.CompleteJobResponse.newBuilder().build();
-              responseObserver.onNext(response);
-              responseObserver.onCompleted();
-            } else {
-              responseObserver.onError(handle.error(responseObserver, brokerResponse));
-            }
-          }
-        });
+    commands
+        .completeJob(brokerRequest)
+        .whenComplete(
+            (brokerResponse, throwable) -> {
+              if (throwable != null) {
+                responseObserver.onError(handle.error(responseObserver, throwable));
+              } else {
+                if (brokerResponse.isSuccess()) {
+                  final JobServiceOuterClass.CompleteJobResponse response =
+                      JobServiceOuterClass.CompleteJobResponse.newBuilder().build();
+                  responseObserver.onNext(response);
+                  responseObserver.onCompleted();
+                } else {
+                  responseObserver.onError(handle.error(responseObserver, brokerResponse));
+                }
+              }
+            });
   }
 
   // —— 消费面（流推送 + 长轮询；完成走 CompleteJob 命令 rpc） ——

@@ -27,8 +27,11 @@ configure(jarInfo) {
 
 dependencies {
     api project(':kunpeng:broker:broker-client')
+    api project(':kunpeng:gateway:gateway-grpc')
+    implementation project(':kunpeng:cluster:cluster-config')
     implementation project(':kunpeng:configuration')
     implementation project(':kunpeng:scheduler')
+    implementation project(':kunpeng:structpack')
     implementation project(':kunpeng:protocol:protocol-business')
     implementation project(':kunpeng:protocol:protocol-business-impl')
     implementation project(':kunpeng:utils')
@@ -36,6 +39,13 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot'
     implementation 'org.springframework:spring-webflux'
     implementation 'org.springframework.boot:spring-boot-autoconfigure'
+    implementation 'jakarta.validation:jakarta.validation-api'
+    implementation 'jakarta.annotation:jakarta.annotation-api'
+    implementation 'io.grpc:grpc-api'
+    implementation 'io.grpc:grpc-stub'
+    implementation 'com.google.protobuf:protobuf-java'
+    implementation 'org.agrona:agrona'
+    implementation 'io.swagger.core.v3:swagger-annotations-jakarta'
 
     implementation 'io.micrometer:micrometer-core'
     implementation 'io.micrometer:micrometer-commons'

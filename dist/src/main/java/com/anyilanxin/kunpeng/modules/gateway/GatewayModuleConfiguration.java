@@ -16,13 +16,16 @@
  */
 package com.anyilanxin.kunpeng.modules.gateway;
 
-import com.anyilanxin.kunpeng.broker.client.business.BrokerClient;
+import com.anyilanxin.kunpeng.broker.client.business.client.BusinessCommandClient;
+import com.anyilanxin.kunpeng.broker.client.business.client.impl.DefaultBusinessCommandClient;
+import com.anyilanxin.kunpeng.broker.client.core.BrokerClient;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
 import com.anyilanxin.kunpeng.cluster.cluster.leaderfound.ClusterLeaderFoundService;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.configuration.gateway.GatewayCfg;
 import com.anyilanxin.kunpeng.gateway.Gateway;
 import com.anyilanxin.kunpeng.gateway.SpringGatewayBridge;
+import com.anyilanxin.kunpeng.gateway.job.GatewayJobHub;
 import com.anyilanxin.kunpeng.gateway.topology.GatewayTopologyManager;
 import com.anyilanxin.kunpeng.modules.gateway.configuration.GatewayPropertiesConfiguration;
 import com.anyilanxin.kunpeng.protocol.common.encoding.GatewayInfo;
@@ -47,6 +50,7 @@ import org.springframework.context.annotation.Profile;
     basePackages = {
       "com.anyilanxin.kunpeng.modules.gateway",
       "com.anyilanxin.kunpeng.modules.common",
+      "com.anyilanxin.kunpeng.gateway.rest",
     })
 @EnableAutoConfiguration
 @Profile("gateway")
@@ -110,5 +114,17 @@ public class GatewayModuleConfiguration {
         new GatewayTopologyManager(atomixCluster.getMembershipService());
     schedulingService.submitActor(manager);
     return manager;
+  }
+
+  /** REST 面(SSE 流订阅/长轮询)复用的 job 消费枢纽，与 gRPC 面同一实例 */
+  @Bean
+  public GatewayJobHub gatewayJobHub(final Gateway gateway) {
+    return gateway.jobHub();
+  }
+
+  /** 业务命令面客户端（按域拆分、泛型完全确定），REST service 层统一经此下发命令 */
+  @Bean
+  public BusinessCommandClient businessCommandClient(final BrokerClient brokerClient) {
+    return new DefaultBusinessCommandClient(brokerClient);
   }
 }

@@ -18,18 +18,14 @@ package com.anyilanxin.kunpeng.gateway.grpc.service.impl;
 
 import static com.anyilanxin.kunpeng.gateway.grpc.utils.RequestUtil.ensureJsonSet;
 
-import com.anyilanxin.kunpeng.broker.client.business.BrokerClient;
-import com.anyilanxin.kunpeng.broker.client.business.BrokerResponse;
+import com.anyilanxin.kunpeng.broker.client.business.client.VariableClient;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.variable.request.VariableRemoveRequest;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.variable.request.VariableUpdateRequest;
 import com.anyilanxin.kunpeng.gateway.grpc.GrpcErrorHandle;
 import com.anyilanxin.kunpeng.gateway.grpc.service.GrpcService;
 import com.anyilanxin.kunpeng.gateway.grpc.service.VariableServiceGrpc;
 import com.anyilanxin.kunpeng.gateway.grpc.service.VariableServiceOuterClass;
-import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.variable.remove.VariableRemoveResponseRecord;
-import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.variable.update.VariableUpdateResponseRecord;
 import io.grpc.stub.StreamObserver;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * 变量 gRPC 服务实现。
@@ -39,11 +35,11 @@ import java.util.concurrent.CompletableFuture;
  */
 public class GrpcVariableServiceImpl extends VariableServiceGrpc.VariableServiceImplBase
     implements GrpcService {
-  private final BrokerClient brokerClient;
+  private final VariableClient commands;
   private final GrpcErrorHandle handle;
 
-  public GrpcVariableServiceImpl(final BrokerClient brokerClient, final GrpcErrorHandle handle) {
-    this.brokerClient = brokerClient;
+  public GrpcVariableServiceImpl(final VariableClient commands, final GrpcErrorHandle handle) {
+    this.commands = commands;
     this.handle = handle;
   }
 
@@ -62,23 +58,23 @@ public class GrpcVariableServiceImpl extends VariableServiceGrpc.VariableService
         .setActivityInstanceId(request.getActivityInstanceId())
         .setProcessInstanceId(request.getProcessInstanceId())
         .setTaskId(request.getTaskId());
-    final CompletableFuture<BrokerResponse<VariableUpdateResponseRecord>> future =
-        brokerClient.sendRequest(brokerRequest);
-    future.whenComplete(
-        (brokerResponse, throwable) -> {
-          if (throwable != null) {
-            responseObserver.onError(handle.error(responseObserver, throwable));
-          } else {
-            if (brokerResponse.isSuccess()) {
-              final VariableServiceOuterClass.VariableUpdateResponse response =
-                  VariableServiceOuterClass.VariableUpdateResponse.newBuilder().build();
-              responseObserver.onNext(response);
-              responseObserver.onCompleted();
-            } else {
-              responseObserver.onError(handle.error(responseObserver, brokerResponse));
-            }
-          }
-        });
+    commands
+        .updateVariable(brokerRequest)
+        .whenComplete(
+            (brokerResponse, throwable) -> {
+              if (throwable != null) {
+                responseObserver.onError(handle.error(responseObserver, throwable));
+              } else {
+                if (brokerResponse.isSuccess()) {
+                  final VariableServiceOuterClass.VariableUpdateResponse response =
+                      VariableServiceOuterClass.VariableUpdateResponse.newBuilder().build();
+                  responseObserver.onNext(response);
+                  responseObserver.onCompleted();
+                } else {
+                  responseObserver.onError(handle.error(responseObserver, brokerResponse));
+                }
+              }
+            });
   }
 
   @Override
@@ -91,22 +87,22 @@ public class GrpcVariableServiceImpl extends VariableServiceGrpc.VariableService
         .setActivityInstanceId(request.getActivityInstanceId())
         .setProcessInstanceId(request.getProcessInstanceId())
         .setTaskId(request.getTaskId());
-    final CompletableFuture<BrokerResponse<VariableRemoveResponseRecord>> future =
-        brokerClient.sendRequest(brokerRequest);
-    future.whenComplete(
-        (brokerResponse, throwable) -> {
-          if (throwable != null) {
-            responseObserver.onError(handle.error(responseObserver, throwable));
-          } else {
-            if (brokerResponse.isSuccess()) {
-              final VariableServiceOuterClass.VariableRemoveResponse response =
-                  VariableServiceOuterClass.VariableRemoveResponse.newBuilder().build();
-              responseObserver.onNext(response);
-              responseObserver.onCompleted();
-            } else {
-              responseObserver.onError(handle.error(responseObserver, brokerResponse));
-            }
-          }
-        });
+    commands
+        .removeVariable(brokerRequest)
+        .whenComplete(
+            (brokerResponse, throwable) -> {
+              if (throwable != null) {
+                responseObserver.onError(handle.error(responseObserver, throwable));
+              } else {
+                if (brokerResponse.isSuccess()) {
+                  final VariableServiceOuterClass.VariableRemoveResponse response =
+                      VariableServiceOuterClass.VariableRemoveResponse.newBuilder().build();
+                  responseObserver.onNext(response);
+                  responseObserver.onCompleted();
+                } else {
+                  responseObserver.onError(handle.error(responseObserver, brokerResponse));
+                }
+              }
+            });
   }
 }

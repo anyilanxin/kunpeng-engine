@@ -12,22 +12,21 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package com.anyilanxin.kunpeng.gateway.grpc.service.impl;
 
-import com.anyilanxin.kunpeng.broker.client.business.BrokerClient;
-import com.anyilanxin.kunpeng.broker.client.business.BrokerResponse;
+import com.anyilanxin.kunpeng.broker.client.business.client.DeploymentClient;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.deployment.request.DeploymentCreateRequest;
+import com.anyilanxin.kunpeng.broker.client.business.commandapi.deployment.request.DeploymentDeleteRequest;
 import com.anyilanxin.kunpeng.gateway.grpc.GrpcErrorHandle;
 import com.anyilanxin.kunpeng.gateway.grpc.service.DeploymentServiceGrpc;
 import com.anyilanxin.kunpeng.gateway.grpc.service.DeploymentServiceOuterClass;
 import com.anyilanxin.kunpeng.gateway.grpc.service.GrpcService;
-import com.anyilanxin.kunpeng.protocol.business.record.commandapi.record.deployment.create.DeploymentCreateResponseRecordValue;
+import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.deployment.create.DeploymentCreateResponseRecord;
 import com.anyilanxin.kunpeng.protocol.business.record.commandapi.record.deployment.create.DeploymentProcessDefinitionResponseRecordValue;
 import com.anyilanxin.kunpeng.protocol.gateway.GatewayLoggers;
 import io.grpc.stub.StreamObserver;
-import java.util.concurrent.CompletableFuture;
 import org.slf4j.Logger;
 
 /**
@@ -39,11 +38,11 @@ import org.slf4j.Logger;
 public class GrpcDeploymentServiceImpl extends DeploymentServiceGrpc.DeploymentServiceImplBase
     implements GrpcService {
   private static final Logger LOG = GatewayLoggers.GATEWAY_LOGGER_GRPC;
-  private final BrokerClient brokerClient;
+  private final DeploymentClient commands;
   private final GrpcErrorHandle handle;
 
-  public GrpcDeploymentServiceImpl(final BrokerClient brokerClient, final GrpcErrorHandle handle) {
-    this.brokerClient = brokerClient;
+  public GrpcDeploymentServiceImpl(final DeploymentClient commands, final GrpcErrorHandle handle) {
+    this.commands = commands;
     this.handle = handle;
   }
 
@@ -60,64 +59,70 @@ public class GrpcDeploymentServiceImpl extends DeploymentServiceGrpc.DeploymentS
     request
         .getResourcesList()
         .forEach(v -> brokerRequest.addResource(v.getName(), v.getContent().toByteArray()));
-    final CompletableFuture<BrokerResponse<DeploymentCreateResponseRecordValue>> future =
-        brokerClient.sendRequest(brokerRequest);
-    future.whenComplete(
-        (brokerResponse, throwable) -> {
-          if (throwable != null) {
-            responseObserver.onError(handle.error(responseObserver, throwable));
-          } else {
-            if (brokerResponse.isSuccess()) {
-              try {
-                final DeploymentCreateResponseRecordValue responseRecordValue =
-                    brokerResponse.getValue();
-                final DeploymentServiceOuterClass.DeployResourceResponse.Builder builder =
-                    DeploymentServiceOuterClass.DeployResourceResponse.newBuilder();
-                builder
-                    .setDeploymentId(responseRecordValue.getDeploymentId())
-                    .setTenantId(responseRecordValue.getTenantId());
-                for (final DeploymentProcessDefinitionResponseRecordValue processDefinitionValue :
-                    responseRecordValue.getProcessDefinitions()) {
-                  final DeploymentServiceOuterClass.ProcessDefinition processDefinition =
-                      DeploymentServiceOuterClass.ProcessDefinition.newBuilder()
-                          .setProcessDefinitionId(processDefinitionValue.getProcessDefinitionId())
-                          .setProcessDefinitionKey(processDefinitionValue.getProcessDefinitionKey())
-                          .setProcessDefinitionVersion(
-                              processDefinitionValue.getProcessDefinitionVersion())
-                          .setResourceName(processDefinitionValue.getResourceDefinitionName())
-                          .build();
-                  builder.addProcessDefinitions(processDefinition);
+    commands
+        .deployResource(brokerRequest)
+        .whenComplete(
+            (brokerResponse, throwable) -> {
+              if (throwable != null) {
+                responseObserver.onError(handle.error(responseObserver, throwable));
+              } else {
+                if (brokerResponse.isSuccess()) {
+                  try {
+                    final DeploymentCreateResponseRecord responseRecord = brokerResponse.getValue();
+                    final DeploymentServiceOuterClass.DeployResourceResponse.Builder builder =
+                        DeploymentServiceOuterClass.DeployResourceResponse.newBuilder();
+                    builder
+                        .setDeploymentId(responseRecord.getDeploymentId())
+                        .setTenantId(responseRecord.getTenantId());
+                    for (final DeploymentProcessDefinitionResponseRecordValue
+                        processDefinitionValue : responseRecord.getProcessDefinitions()) {
+                      final DeploymentServiceOuterClass.ProcessDefinition processDefinition =
+                          DeploymentServiceOuterClass.ProcessDefinition.newBuilder()
+                              .setProcessDefinitionId(
+                                  processDefinitionValue.getProcessDefinitionId())
+                              .setProcessDefinitionKey(
+                                  processDefinitionValue.getProcessDefinitionKey())
+                              .setProcessDefinitionVersion(
+                                  processDefinitionValue.getProcessDefinitionVersion())
+                              .setResourceName(processDefinitionValue.getResourceDefinitionName())
+                              .build();
+                      builder.addProcessDefinitions(processDefinition);
+                    }
+                    responseObserver.onNext(builder.build());
+                    responseRecord.reset();
+                    responseObserver.onCompleted();
+                  } catch (final Exception e) {
+                    LOG.error("Failed to build deployment response", e);
+                  }
+                } else {
+                  responseObserver.onError(handle.error(responseObserver, brokerResponse));
                 }
-                responseObserver.onNext(builder.build());
-                responseRecordValue.reset();
-                responseObserver.onCompleted();
-              } catch (final Exception e) {
-                LOG.error("Failed to build deployment response", e);
               }
-            } else {
-              responseObserver.onError(handle.error(responseObserver, brokerResponse));
-            }
-          }
-        });
+            });
   }
 
   @Override
   public void deleteResource(
       final DeploymentServiceOuterClass.DeleteResourceRequest request,
       final StreamObserver<DeploymentServiceOuterClass.DeleteResourceResponse> responseObserver) {
-    //    brokerClient
-    //        .sendRequest(new SimpleRequestDto())
-    //        .whenComplete(
-    //            (brokerResponse, throwable) -> {
-    //              if (throwable != null) {
-    //                responseObserver.onError(throwable);
-    //              } else {
-    //                final DeploymentServiceOuterClass.DeleteResourceResponse
-    // deleteResourceResponse =
-    //                    DeploymentServiceOuterClass.DeleteResourceResponse.newBuilder().build();
-    //                responseObserver.onNext(deleteResourceResponse);
-    //                responseObserver.onCompleted();
-    //              }
-    //            });
+    final DeploymentDeleteRequest brokerRequest =
+        new DeploymentDeleteRequest().setDeploymentId(request.getResourceKey());
+    commands
+        .deleteResource(brokerRequest)
+        .whenComplete(
+            (brokerResponse, throwable) -> {
+              if (throwable != null) {
+                responseObserver.onError(handle.error(responseObserver, throwable));
+              } else {
+                if (brokerResponse.isSuccess()) {
+                  final DeploymentServiceOuterClass.DeleteResourceResponse deleteResourceResponse =
+                      DeploymentServiceOuterClass.DeleteResourceResponse.newBuilder().build();
+                  responseObserver.onNext(deleteResourceResponse);
+                  responseObserver.onCompleted();
+                } else {
+                  responseObserver.onError(handle.error(responseObserver, brokerResponse));
+                }
+              }
+            });
   }
 }

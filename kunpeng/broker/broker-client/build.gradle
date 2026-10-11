@@ -36,6 +36,8 @@ dependencies {
     implementation project(':kunpeng:protocol:protocol-common')
     implementation project(":kunpeng:protocol:protocol-business")
     implementation project(":kunpeng:protocol:protocol-business-impl")
+    implementation project(":kunpeng:protocol:protocol-admin")
+    implementation project(":kunpeng:protocol:protocol-admin-impl")
     implementation project(':kunpeng:utils')
     implementation 'org.apache.commons:commons-lang3'
     implementation 'org.agrona:agrona'

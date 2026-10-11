@@ -12,10 +12,12 @@
  */
 package com.anyilanxin.kunpeng.protocol.business.record.commandapi.record.deployment.delete;
 
+import com.anyilanxin.kunpeng.protocol.business.record.commandapi.ResponseRecordValue;
 import com.anyilanxin.kunpeng.structpack.JsonSerializable;
 
 /**
  * @author zxuanhong
  * @since 2026.9.0
  */
-public interface DeploymentDeleteResponseRecordValue extends JsonSerializable {}
+public interface DeploymentDeleteResponseRecordValue
+    extends ResponseRecordValue, JsonSerializable {}

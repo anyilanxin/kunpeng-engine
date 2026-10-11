@@ -18,18 +18,14 @@ package com.anyilanxin.kunpeng.gateway.grpc.service.impl;
 
 import static com.anyilanxin.kunpeng.gateway.grpc.utils.RequestUtil.ensureJsonSet;
 
-import com.anyilanxin.kunpeng.broker.client.business.BrokerClient;
-import com.anyilanxin.kunpeng.broker.client.business.BrokerResponse;
+import com.anyilanxin.kunpeng.broker.client.business.client.UserTaskClient;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskCancelRequest;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskCompleteRequest;
 import com.anyilanxin.kunpeng.gateway.grpc.GrpcErrorHandle;
 import com.anyilanxin.kunpeng.gateway.grpc.service.GrpcService;
 import com.anyilanxin.kunpeng.gateway.grpc.service.UserTaskServiceGrpc;
 import com.anyilanxin.kunpeng.gateway.grpc.service.UserTaskServiceOuterClass;
-import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.cancel.UserTaskCancelResponseRecord;
-import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.complete.UserTaskCompleteResponseRecord;
 import io.grpc.stub.StreamObserver;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * 用户任务 gRPC 服务实现。
@@ -39,11 +35,11 @@ import java.util.concurrent.CompletableFuture;
  */
 public class GrpcUserTaskServiceImpl extends UserTaskServiceGrpc.UserTaskServiceImplBase
     implements GrpcService {
-  private final BrokerClient brokerClient;
+  private final UserTaskClient commands;
   private final GrpcErrorHandle handle;
 
-  public GrpcUserTaskServiceImpl(final BrokerClient brokerClient, final GrpcErrorHandle handle) {
-    this.brokerClient = brokerClient;
+  public GrpcUserTaskServiceImpl(final UserTaskClient commands, final GrpcErrorHandle handle) {
+    this.commands = commands;
     this.handle = handle;
   }
 
@@ -59,23 +55,23 @@ public class GrpcUserTaskServiceImpl extends UserTaskServiceGrpc.UserTaskService
     final long userTaskId = request.getUserTaskId();
     final UserTaskCompleteRequest brokerRequest = new UserTaskCompleteRequest(userTaskId);
     brokerRequest.setVariable(ensureJsonSet(request.getVariable()));
-    final CompletableFuture<BrokerResponse<UserTaskCompleteResponseRecord>> future =
-        brokerClient.sendRequest(brokerRequest);
-    future.whenComplete(
-        (brokerResponse, throwable) -> {
-          if (throwable != null) {
-            responseObserver.onError(handle.error(responseObserver, throwable));
-          } else {
-            if (brokerResponse.isSuccess()) {
-              final UserTaskServiceOuterClass.CompleteUserTaskResponse response =
-                  UserTaskServiceOuterClass.CompleteUserTaskResponse.newBuilder().build();
-              responseObserver.onNext(response);
-              responseObserver.onCompleted();
-            } else {
-              responseObserver.onError(handle.error(responseObserver, brokerResponse));
-            }
-          }
-        });
+    commands
+        .completeUserTask(brokerRequest)
+        .whenComplete(
+            (brokerResponse, throwable) -> {
+              if (throwable != null) {
+                responseObserver.onError(handle.error(responseObserver, throwable));
+              } else {
+                if (brokerResponse.isSuccess()) {
+                  final UserTaskServiceOuterClass.CompleteUserTaskResponse response =
+                      UserTaskServiceOuterClass.CompleteUserTaskResponse.newBuilder().build();
+                  responseObserver.onNext(response);
+                  responseObserver.onCompleted();
+                } else {
+                  responseObserver.onError(handle.error(responseObserver, brokerResponse));
+                }
+              }
+            });
   }
 
   @Override
@@ -84,22 +80,22 @@ public class GrpcUserTaskServiceImpl extends UserTaskServiceGrpc.UserTaskService
       final StreamObserver<UserTaskServiceOuterClass.CancelUserTaskResponse> responseObserver) {
     final long userTaskId = request.getUserTaskId();
     final UserTaskCancelRequest brokerRequest = new UserTaskCancelRequest(userTaskId);
-    final CompletableFuture<BrokerResponse<UserTaskCancelResponseRecord>> future =
-        brokerClient.sendRequest(brokerRequest);
-    future.whenComplete(
-        (brokerResponse, throwable) -> {
-          if (throwable != null) {
-            responseObserver.onError(handle.error(responseObserver, throwable));
-          } else {
-            if (brokerResponse.isSuccess()) {
-              final UserTaskServiceOuterClass.CancelUserTaskResponse response =
-                  UserTaskServiceOuterClass.CancelUserTaskResponse.newBuilder().build();
-              responseObserver.onNext(response);
-              responseObserver.onCompleted();
-            } else {
-              responseObserver.onError(handle.error(responseObserver, brokerResponse));
-            }
-          }
-        });
+    commands
+        .cancelUserTask(brokerRequest)
+        .whenComplete(
+            (brokerResponse, throwable) -> {
+              if (throwable != null) {
+                responseObserver.onError(handle.error(responseObserver, throwable));
+              } else {
+                if (brokerResponse.isSuccess()) {
+                  final UserTaskServiceOuterClass.CancelUserTaskResponse response =
+                      UserTaskServiceOuterClass.CancelUserTaskResponse.newBuilder().build();
+                  responseObserver.onNext(response);
+                  responseObserver.onCompleted();
+                } else {
+                  responseObserver.onError(handle.error(responseObserver, brokerResponse));
+                }
+              }
+            });
   }
 }

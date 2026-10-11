@@ -28,7 +28,6 @@ dependencies {
     implementation project(':kunpeng:cluster:cluster-config')
     implementation project(':kunpeng:broker:broker')
     implementation project(':kunpeng:broker:broker-client')
-    implementation project(':kunpeng:broker:broker-admin-client')
     implementation project(':kunpeng:protocol:protocol-common')
     implementation project(':kunpeng:protocol:protocol-admin')
     implementation project(':kunpeng:protocol:protocol-admin-impl')

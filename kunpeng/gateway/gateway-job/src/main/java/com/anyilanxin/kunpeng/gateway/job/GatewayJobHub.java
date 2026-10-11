@@ -16,8 +16,8 @@
  */
 package com.anyilanxin.kunpeng.gateway.job;
 
-import com.anyilanxin.kunpeng.broker.client.business.BrokerClient;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.job.request.JobBatchActivateRequest;
+import com.anyilanxin.kunpeng.broker.client.core.BrokerClient;
 import com.anyilanxin.kunpeng.broker.client.jobstream.JobStreamMessages.StreamPush;
 import com.anyilanxin.kunpeng.broker.client.jobstream.JobStreamMessages.SubscriptionSnapshot;
 import com.anyilanxin.kunpeng.gateway.grpc.service.JobServiceOuterClass.JobDelivery;

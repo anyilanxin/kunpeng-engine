@@ -16,7 +16,9 @@
  */
 package com.anyilanxin.kunpeng.gateway.grpc;
 
-import com.anyilanxin.kunpeng.broker.client.business.BrokerClient;
+import com.anyilanxin.kunpeng.broker.client.business.client.BusinessCommandClient;
+import com.anyilanxin.kunpeng.broker.client.business.client.impl.DefaultBusinessCommandClient;
+import com.anyilanxin.kunpeng.broker.client.core.BrokerClient;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationService;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
@@ -116,16 +118,18 @@ public class GatewayGrpcService extends Actor {
 
   private List<GrpcService> createGrpcServices() {
     final GrpcErrorHandle errorHandle = new GrpcErrorHandle();
+    // 业务命令统一走泛型完全确定的命令面客户端（按域拆分）
+    final BusinessCommandClient commands = new DefaultBusinessCommandClient(brokerClient);
     return List.of(
-        new GrpcDeploymentServiceImpl(brokerClient, errorHandle),
-        new GrpcIncidentServiceImpl(brokerClient, errorHandle),
-        new GrpcMessageServiceImpl(brokerClient, errorHandle),
-        new GrpcSignalServiceImpl(brokerClient, errorHandle),
-        new GrpcJobServiceImpl(brokerClient, errorHandle, jobHub),
-        new GrpcProcessInstanceServiceImpl(brokerClient, errorHandle),
-        new GrpcUserTaskServiceImpl(brokerClient, errorHandle),
-        new GrpcVariableServiceImpl(brokerClient, errorHandle),
-        new GrpcExpressionServiceImpl(brokerClient, errorHandle),
+        new GrpcDeploymentServiceImpl(commands.deployment(), errorHandle),
+        new GrpcIncidentServiceImpl(commands.incident(), errorHandle),
+        new GrpcMessageServiceImpl(commands.message(), errorHandle),
+        new GrpcSignalServiceImpl(commands.signal(), errorHandle),
+        new GrpcJobServiceImpl(commands.job(), errorHandle, jobHub),
+        new GrpcProcessInstanceServiceImpl(commands.processInstance(), errorHandle),
+        new GrpcUserTaskServiceImpl(commands.userTask(), errorHandle),
+        new GrpcVariableServiceImpl(commands.variable(), errorHandle),
+        new GrpcExpressionServiceImpl(commands.expression(), errorHandle),
         new GrpcClusterManageServiceImpl(
             brokerClient,
             errorHandle,

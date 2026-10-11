@@ -30,7 +30,7 @@ public class DeploymentDeleteRequest
     extends DeploymentAbstractRequest<DeploymentDeleteRequestRecord> {
 
   public DeploymentDeleteRequest() {
-    super(CommandApiDeploymentValueLifeCycle.CREATE_REQUEST, new DeploymentDeleteRequestRecord());
+    super(CommandApiDeploymentValueLifeCycle.DELETE_REQUEST, new DeploymentDeleteRequestRecord());
     setPartitionId(DISTRIBUTE_PARTITION);
   }
 

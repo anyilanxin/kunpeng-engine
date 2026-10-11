@@ -12,12 +12,11 @@
  */
 package com.anyilanxin.kunpeng.protocol.business.record.commandapi;
 
-import com.anyilanxin.kunpeng.structpack.buffer.BufferReader;
-
 /**
+ * 业务面响应 Record 值接口：桥接公共响应值契约（与 protocol.common.api 定义同源）。
+ *
  * @author zxuanhong
  * @since 2026.9.0
  */
-public interface ResponseRecordValue extends BufferReader {
-  void reset();
-}
+public interface ResponseRecordValue
+    extends com.anyilanxin.kunpeng.protocol.common.api.ResponseRecordValue {}

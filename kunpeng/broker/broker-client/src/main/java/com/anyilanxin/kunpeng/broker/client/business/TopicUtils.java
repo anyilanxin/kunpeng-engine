@@ -16,10 +16,10 @@
  */
 package com.anyilanxin.kunpeng.broker.client.business;
 
-import com.anyilanxin.kunpeng.protocol.business.record.RecordType;
+import com.anyilanxin.kunpeng.broker.client.core.protocol.RecordType;
 
 /**
- * 主题工具：构造 broker 间通信的主题字符串。
+ * 业务面主题工具：构造 broker 间通信的主题字符串（请求类别编号 + 分区资源）。
  *
  * @author zxuanhong
  * @since 2026.9.0
@@ -27,13 +27,11 @@ import com.anyilanxin.kunpeng.protocol.business.record.RecordType;
 public class TopicUtils {
   private static final String API_TOPIC_PREFIX = "-api-";
 
-  public static String getTopicName(
-      final RecordType requestType, final String requestTypeResourceId) {
-    return requestType.value() + API_TOPIC_PREFIX + requestTypeResourceId;
+  public static String getTopicName(final int requestType, final String requestTypeResourceId) {
+    return requestType + API_TOPIC_PREFIX + requestTypeResourceId;
   }
 
-  public static String getTopicName(
-      final RecordType requestType, final Integer requestTypeResourceId) {
-    return requestType.value() + API_TOPIC_PREFIX + requestTypeResourceId;
+  public static String getTopicName(final RecordType requestType, final Integer resourceId) {
+    return getTopicName(requestType.value(), String.valueOf(resourceId));
   }
 }

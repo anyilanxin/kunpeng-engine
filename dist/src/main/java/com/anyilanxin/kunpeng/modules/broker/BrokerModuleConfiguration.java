@@ -17,7 +17,7 @@
 package com.anyilanxin.kunpeng.modules.broker;
 
 import com.anyilanxin.kunpeng.broker.Broker;
-import com.anyilanxin.kunpeng.broker.client.business.BrokerClient;
+import com.anyilanxin.kunpeng.broker.client.core.BrokerClient;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.modules.broker.configuration.BrokerPropertiesConfiguration;

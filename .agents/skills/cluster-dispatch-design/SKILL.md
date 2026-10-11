@@ -14,7 +14,7 @@ description: Use when working with kunpeng/cluster/cluster-dispatch, the cluster
 
 ## 速查
 
-- 模块：`kunpeng/cluster/cluster-dispatch`，包 `com.anyilanxin.kunpeng.cluster.dispatch`；协作：cluster-admin（Leader 接线 + 业务节点执行）、broker-admin-client（DefaultClusterDispatchClient）、protocol-admin(-impl)（记录/枚举事实源）、admin-repository（applier 落库）
+- 模块：`kunpeng/cluster/cluster-dispatch`，包 `com.anyilanxin.kunpeng.cluster.dispatch`；协作：cluster-admin（Leader 接线 + 业务节点执行）、broker-client admin 面（DefaultClusterDispatchClient）、protocol-admin(-impl)（记录/枚举事实源）、admin-repository（applier 落库）
 - 类型驱动：无 INITIALIZE 命令；admin `CHANGE_REPLICATION` / business `CHANGE_PARTITION`+`CHANGE_REPLICATION`+`CLUSTER_BALANCE` 即生命周期入口命令；全量初始化 = CHANGE_PARTITION + oldMeta 为空
 - 计划链路：类型命令 → `PLAN_CREATING` →（成员不足 `PLAN_DELAYED` 延迟等待重入 | `createPlan` → `PLAN_CREATED`）→ applyPlan → 计划级 `EXECUTING` → `EXECUTED` → 明细串行 → `COMPLETING` → `COMPLETED`（+ ClusterMeta CREATING/UPDATING）
 - 明细粒度：操作级（拓扑 diff 的 Bootstrap/Join/Leave 逐成员一条），非每分区一条；缩容多阶段 leave→DATA_MERGE→STOP→SOURCE_TRANSFER

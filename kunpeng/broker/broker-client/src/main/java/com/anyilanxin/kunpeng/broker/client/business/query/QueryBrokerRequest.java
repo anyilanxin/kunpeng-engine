@@ -16,9 +16,9 @@
  */
 package com.anyilanxin.kunpeng.broker.client.business.query;
 
-import com.anyilanxin.kunpeng.broker.client.business.BrokerRequest;
+import com.anyilanxin.kunpeng.broker.client.core.BrokerRequest;
+import com.anyilanxin.kunpeng.broker.client.core.protocol.RecordType;
 import com.anyilanxin.kunpeng.protocol.business.ValueType;
-import com.anyilanxin.kunpeng.protocol.business.record.RecordType;
 import com.anyilanxin.kunpeng.protocol.business.record.commandapi.RequestRecordValue;
 import com.anyilanxin.kunpeng.protocol.business.record.query.QueryApiValueLifeCycle;
 
@@ -33,6 +33,6 @@ public abstract class QueryBrokerRequest<VALUE extends RequestRecordValue>
 
   public QueryBrokerRequest(
       final ValueType valueType, final QueryApiValueLifeCycle lifeCycle, final VALUE value) {
-    super(RecordType.QUERY, valueType, lifeCycle, value);
+    super(RecordType.QUERY.value(), valueType.getValue(), lifeCycle.value(), value);
   }
 }

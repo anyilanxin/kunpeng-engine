@@ -18,7 +18,7 @@ package com.anyilanxin.kunpeng.gateway.grpc.service.impl;
 
 import static com.anyilanxin.kunpeng.cluster.config.ClusterResourceInfo.to;
 
-import com.anyilanxin.kunpeng.broker.client.business.BrokerClient;
+import com.anyilanxin.kunpeng.broker.client.core.BrokerClient;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationService;
 import com.anyilanxin.kunpeng.cluster.config.BrokerClusterState;
 import com.anyilanxin.kunpeng.cluster.config.BrokerTopologyManager;

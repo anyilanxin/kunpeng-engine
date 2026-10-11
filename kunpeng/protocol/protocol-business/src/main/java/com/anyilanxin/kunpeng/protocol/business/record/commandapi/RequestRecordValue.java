@@ -12,16 +12,11 @@
  */
 package com.anyilanxin.kunpeng.protocol.business.record.commandapi;
 
-import com.anyilanxin.kunpeng.structpack.buffer.BufferWriter;
-
 /**
+ * 业务面请求 Record 值接口：桥接公共请求值契约（与 protocol.common.api 定义同源）。
+ *
  * @author zxuanhong
  * @since 2026.9.0
  */
-public interface RequestRecordValue extends BufferWriter {
-  default ValidateResult validate() {
-    return ValidateResult.ok();
-  }
-
-  void reset();
-}
+public interface RequestRecordValue
+    extends com.anyilanxin.kunpeng.protocol.common.api.RequestRecordValue {}

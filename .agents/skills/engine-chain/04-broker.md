@@ -116,7 +116,7 @@ messaging 收到（topic = COMMAND_API/{partitionId}）
 
 ## 管理面平行体系
 
-`broker-admin-client` + `broker/bootstrap/.../AdminCommandApiHandleImpl` 是管理面（cluster-dispatch 用）的同构实现（`AdminValueLifeCycle`/`AdminRecordProcessIndex`），业务命令不碰。
+`broker-client` 模块 `client.admin` 面 + `broker/bootstrap/.../AdminCommandApiHandleImpl` 是管理面（cluster-dispatch 用）的同构实现（`AdminValueLifeCycle`/`AdminRecordProcessIndex`），业务命令不碰；传输栈与业务面共用 `client.core` 统一封装格式（transport-schema，id=14）。
 
 ## 验证
 

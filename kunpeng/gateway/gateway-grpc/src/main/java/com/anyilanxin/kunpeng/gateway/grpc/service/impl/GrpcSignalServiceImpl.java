@@ -16,20 +16,17 @@
  */
 package com.anyilanxin.kunpeng.gateway.grpc.service.impl;
 
-import static com.anyilanxin.kunpeng.broker.client.business.ClientRequest.RANDOM_PARTITION;
+import static com.anyilanxin.kunpeng.broker.client.core.ClientRequest.RANDOM_PARTITION;
 import static com.anyilanxin.kunpeng.gateway.grpc.utils.RequestUtil.ensureJsonSet;
 
-import com.anyilanxin.kunpeng.broker.client.business.BrokerClient;
-import com.anyilanxin.kunpeng.broker.client.business.BrokerResponse;
+import com.anyilanxin.kunpeng.broker.client.business.client.SignalClient;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.signal.request.SignalCorrelationRequest;
 import com.anyilanxin.kunpeng.gateway.grpc.GrpcErrorHandle;
 import com.anyilanxin.kunpeng.gateway.grpc.service.GrpcService;
 import com.anyilanxin.kunpeng.gateway.grpc.service.SignalServiceGrpc;
 import com.anyilanxin.kunpeng.gateway.grpc.service.SignalServiceOuterClass;
-import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.signal.correlation.SignalCorrelationResponseRecord;
 import com.anyilanxin.kunpeng.protocol.gateway.GatewayLoggers;
 import io.grpc.stub.StreamObserver;
-import java.util.concurrent.CompletableFuture;
 import org.slf4j.Logger;
 
 /**
@@ -41,11 +38,11 @@ import org.slf4j.Logger;
 public class GrpcSignalServiceImpl extends SignalServiceGrpc.SignalServiceImplBase
     implements GrpcService {
   private static final Logger LOG = GatewayLoggers.GATEWAY_LOGGER_GRPC;
-  private final BrokerClient brokerClient;
+  private final SignalClient commands;
   private final GrpcErrorHandle handle;
 
-  public GrpcSignalServiceImpl(final BrokerClient brokerClient, final GrpcErrorHandle handle) {
-    this.brokerClient = brokerClient;
+  public GrpcSignalServiceImpl(final SignalClient commands, final GrpcErrorHandle handle) {
+    this.commands = commands;
     this.handle = handle;
   }
 
@@ -67,22 +64,22 @@ public class GrpcSignalServiceImpl extends SignalServiceGrpc.SignalServiceImplBa
     if (request.getProcessInstanceId() <= 0) {
       requestCorrelation.setPartitionId(RANDOM_PARTITION);
     }
-    final CompletableFuture<BrokerResponse<SignalCorrelationResponseRecord>> messageRequest =
-        brokerClient.sendRequest(requestCorrelation);
-    messageRequest.whenComplete(
-        (correlationResponse, messageThrowable) -> {
-          if (messageThrowable != null) {
-            responseObserver.onError(handle.error(responseObserver, messageThrowable));
-          } else {
-            if (correlationResponse.isSuccess()) {
-              final SignalServiceOuterClass.SignalCorrelationResponse response =
-                  SignalServiceOuterClass.SignalCorrelationResponse.newBuilder().build();
-              responseObserver.onNext(response);
-              responseObserver.onCompleted();
-            } else {
-              responseObserver.onError(handle.error(responseObserver, correlationResponse));
-            }
-          }
-        });
+    commands
+        .correlateSignal(requestCorrelation)
+        .whenComplete(
+            (correlationResponse, messageThrowable) -> {
+              if (messageThrowable != null) {
+                responseObserver.onError(handle.error(responseObserver, messageThrowable));
+              } else {
+                if (correlationResponse.isSuccess()) {
+                  final SignalServiceOuterClass.SignalCorrelationResponse response =
+                      SignalServiceOuterClass.SignalCorrelationResponse.newBuilder().build();
+                  responseObserver.onNext(response);
+                  responseObserver.onCompleted();
+                } else {
+                  responseObserver.onError(handle.error(responseObserver, correlationResponse));
+                }
+              }
+            });
   }
 }

@@ -16,9 +16,9 @@
  */
 package com.anyilanxin.kunpeng.broker.client.business.commandapi;
 
-import com.anyilanxin.kunpeng.broker.client.business.BrokerRequest;
+import com.anyilanxin.kunpeng.broker.client.core.BrokerRequest;
+import com.anyilanxin.kunpeng.broker.client.core.protocol.RecordType;
 import com.anyilanxin.kunpeng.protocol.business.ValueType;
-import com.anyilanxin.kunpeng.protocol.business.record.RecordType;
 import com.anyilanxin.kunpeng.protocol.business.record.commandapi.CommandApiValueLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.record.commandapi.RequestRecordValue;
 
@@ -33,6 +33,6 @@ public abstract class CommandApiBrokerRequest<VALUE extends RequestRecordValue>
 
   public CommandApiBrokerRequest(
       final ValueType valueType, final CommandApiValueLifeCycle lifeCycle, final VALUE value) {
-    super(RecordType.COMMAND_API, valueType, lifeCycle, value);
+    super(RecordType.COMMAND_API.value(), valueType.getValue(), lifeCycle.value(), value);
   }
 }

@@ -27,7 +27,6 @@ import com.anyilanxin.kunpeng.modules.common.endpoints.*;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
 import com.anyilanxin.kunpeng.utils.VersionUtil;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import java.time.Duration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -58,13 +57,16 @@ public final class AtomixClusterConfiguration {
 
   @Bean(destroyMethod = "stop")
   public ClusterDispatchClient dispatchClient(
-      final ActorSchedulingService actorSchedulingService, final AtomixCluster atomixCluster) {
+      final ActorSchedulingService actorSchedulingService,
+      final AtomixCluster atomixCluster,
+      final ClusterTopologyService topologyService) {
     final DefaultClusterDispatchClient dispatchClient =
         new DefaultClusterDispatchClient(
             actorSchedulingService,
             atomixCluster.getLeaderFoundService(),
             atomixCluster.getMessagingService(),
-            Duration.ofSeconds(30));
+            atomixCluster.getEventService(),
+            topologyService);
     dispatchClient.start();
     return dispatchClient;
   }

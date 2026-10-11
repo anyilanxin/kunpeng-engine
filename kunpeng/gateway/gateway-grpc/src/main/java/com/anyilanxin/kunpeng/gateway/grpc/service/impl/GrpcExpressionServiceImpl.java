@@ -19,8 +19,7 @@ package com.anyilanxin.kunpeng.gateway.grpc.service.impl;
 import static com.anyilanxin.kunpeng.gateway.grpc.utils.RequestUtil.ensureJsonSet;
 import static com.anyilanxin.kunpeng.structpack.util.DocumentUtil.convertToJson;
 
-import com.anyilanxin.kunpeng.broker.client.business.BrokerClient;
-import com.anyilanxin.kunpeng.broker.client.business.BrokerResponse;
+import com.anyilanxin.kunpeng.broker.client.business.client.ExpressionClient;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.expression.request.EvaluateExpressionRequest;
 import com.anyilanxin.kunpeng.gateway.grpc.GrpcErrorHandle;
 import com.anyilanxin.kunpeng.gateway.grpc.service.ExpressionServiceGrpc;
@@ -28,7 +27,6 @@ import com.anyilanxin.kunpeng.gateway.grpc.service.ExpressionServiceOuterClass;
 import com.anyilanxin.kunpeng.gateway.grpc.service.GrpcService;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.expression.EvaluateExpressionResponseRecord;
 import io.grpc.stub.StreamObserver;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * 表达式评估 gRPC 服务实现。
@@ -38,11 +36,11 @@ import java.util.concurrent.CompletableFuture;
  */
 public class GrpcExpressionServiceImpl extends ExpressionServiceGrpc.ExpressionServiceImplBase
     implements GrpcService {
-  private final BrokerClient brokerClient;
+  private final ExpressionClient commands;
   private final GrpcErrorHandle handle;
 
-  public GrpcExpressionServiceImpl(final BrokerClient brokerClient, final GrpcErrorHandle handle) {
-    this.brokerClient = brokerClient;
+  public GrpcExpressionServiceImpl(final ExpressionClient commands, final GrpcErrorHandle handle) {
+    this.commands = commands;
     this.handle = handle;
   }
 
@@ -63,26 +61,26 @@ public class GrpcExpressionServiceImpl extends ExpressionServiceGrpc.ExpressionS
             .setVariables(ensureJsonSet(request.getVariables()))
             .setTenantId(request.getTenantId())
             .setScopeKey(scopeKey > 0 ? scopeKey : null);
-    final CompletableFuture<BrokerResponse<EvaluateExpressionResponseRecord>> future =
-        brokerClient.sendRequest(brokerRequest);
-    future.whenComplete(
-        (brokerResponse, throwable) -> {
-          if (throwable != null) {
-            responseObserver.onError(handle.error(responseObserver, throwable));
-          } else {
-            if (brokerResponse.isSuccess()) {
-              final EvaluateExpressionResponseRecord value = brokerResponse.getValue();
-              final ExpressionServiceOuterClass.EvaluateExpressionResponse response =
-                  ExpressionServiceOuterClass.EvaluateExpressionResponse.newBuilder()
-                      .setResult(convertToJson(value.getResultBuffer()))
-                      .build();
-              responseObserver.onNext(response);
-              value.reset();
-              responseObserver.onCompleted();
-            } else {
-              responseObserver.onError(handle.error(responseObserver, brokerResponse));
-            }
-          }
-        });
+    commands
+        .evaluateExpression(brokerRequest)
+        .whenComplete(
+            (brokerResponse, throwable) -> {
+              if (throwable != null) {
+                responseObserver.onError(handle.error(responseObserver, throwable));
+              } else {
+                if (brokerResponse.isSuccess()) {
+                  final EvaluateExpressionResponseRecord value = brokerResponse.getValue();
+                  final ExpressionServiceOuterClass.EvaluateExpressionResponse response =
+                      ExpressionServiceOuterClass.EvaluateExpressionResponse.newBuilder()
+                          .setResult(convertToJson(value.getResultBuffer()))
+                          .build();
+                  responseObserver.onNext(response);
+                  value.reset();
+                  responseObserver.onCompleted();
+                } else {
+                  responseObserver.onError(handle.error(responseObserver, brokerResponse));
+                }
+              }
+            });
   }
 }

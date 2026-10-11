@@ -12,10 +12,11 @@
  */
 package com.anyilanxin.kunpeng.protocol.business.record.commandapi.record.job.fail;
 
+import com.anyilanxin.kunpeng.protocol.business.record.commandapi.ResponseRecordValue;
 import com.anyilanxin.kunpeng.structpack.JsonSerializable;
 
 /**
  * @author zxuanhong
  * @since 2026.9.0
  */
-public interface JobFailResponseRecordValue extends JsonSerializable {}
+public interface JobFailResponseRecordValue extends ResponseRecordValue, JsonSerializable {}

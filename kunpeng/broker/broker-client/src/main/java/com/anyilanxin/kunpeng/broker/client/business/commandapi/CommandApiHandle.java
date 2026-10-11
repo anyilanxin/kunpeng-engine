@@ -16,7 +16,7 @@
  */
 package com.anyilanxin.kunpeng.broker.client.business.commandapi;
 
-import com.anyilanxin.kunpeng.broker.client.business.BrokerResponseWriter;
+import com.anyilanxin.kunpeng.broker.client.core.BrokerResponseWriter;
 import com.anyilanxin.kunpeng.protocol.business.record.commandapi.CommandApiValueLifeCycle;
 import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 
