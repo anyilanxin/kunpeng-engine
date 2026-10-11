@@ -22,7 +22,7 @@ plugins {
 description = "Kunpeng Protocol Impl"
 
 configure(jarInfo) {
-    archiveName = "kunpeng-protocol-impl"
+    archiveName = "kunpeng-protocol-admin-impl"
 }
 
 dependencies {

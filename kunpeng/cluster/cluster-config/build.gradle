@@ -21,7 +21,7 @@ plugins {
 description = "Cluster Business"
 
 configure(jarInfo) {
-    archiveName = "kunpeng-cluster-business"
+    archiveName = "kunpeng-cluster-config"
 }
 dependencies {
     implementation project(':kunpeng:utils')
