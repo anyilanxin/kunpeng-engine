@@ -98,6 +98,7 @@ kunpeng-engine/
 | `commit-standards` | 提交规范：spotlessApply 根目录整库执行、commit message 英文分条无署名、先审核再提交 | 改动准备提交前 |
 | `sink-design` | sink 日志外发体系：RecordSink SPI 全生命周期、位置确认与重试、SinkService 运行时架构、SBE wire 协议与指标 | 理解/改动 sink、排查位置确认或暂停恢复问题 |
 | `workjob` | 分布式 Job 推拉系统设计 v1.6：注册同步、竞争消费、broker 能力三原语、分区化数据面（leader 绑定与水位线）、deadline 簿记与 Resolve、故障矩阵 | 理解/改动 gateway/broker job 派发链路、排查 job 投递问题 |
+| `readme-hero` | README 首图面板设计系统：kunpeng-hero 四文件矩阵（明暗×中英）、元素坐标总表、配色与字号规范、四文件同步铁律、渲染验证与 CDN 陷阱 | 修改 README 首图（docs/kunpeng-hero-*.svg）时 |
 
 新增技能时：建目录写 SKILL.md（含英文 description），并同步更新总览 `SKILL.md` 的模块表。
 
