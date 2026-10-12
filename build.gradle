@@ -50,7 +50,7 @@ allprojects {
 	// 编译jdk版本
 	java {
 		toolchain {
-			languageVersion = JavaLanguageVersion.of(25)
+			languageVersion = JavaLanguageVersion.of(26)
 		}
 	}
 	group = 'com.anyilanxin.kunpeng'
