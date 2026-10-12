@@ -1,0 +1,45 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # 引擎所有角色（gateway / broker）统一经 /actuator/prometheus 暴露指标，
+  # 管理端口为 management.server.port（默认 9600）。
+  # 单机多节点示例：gateway 9600、broker-1/2/3 9601/9602/9603
+  # （在各节点配置里覆盖 management.server.port，避免端口冲突）。
+  # 引擎部署在其他主机/容器时，把 target 换成对应地址即可。
+  - job_name: kunpeng-gateway
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['host.docker.internal:9600']
+        labels:
+          namespace: local
+          pod: kunpeng-gateway
+
+  - job_name: kunpeng-broker-1
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['host.docker.internal:9601']
+        labels:
+          namespace: local
+          pod: kunpeng-broker-1
+
+  - job_name: kunpeng-broker-2
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['host.docker.internal:9602']
+        labels:
+          namespace: local
+          pod: kunpeng-broker-2
+
+  - job_name: kunpeng-broker-3
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['host.docker.internal:9603']
+        labels:
+          namespace: local
+          pod: kunpeng-broker-3

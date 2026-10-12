@@ -24,6 +24,7 @@ description: Use as the top-level entry to discover kunpeng project's coding/gen
 | `sink-design/` | sink 日志外发体系：RecordSink SPI 全生命周期、位置确认与重试语义、SinkService 运行时架构（分发/leader-follower 位置广播）、SBE wire 协议与指标 | 实现/评审/接入 sink、查 sink API 用法、排查位置确认或暂停恢复行为、broker 接入 sink 服务时 | [sink-design/SKILL.md](./sink-design/SKILL.md) |
 | `workjob/` | 分布式 Job 推拉系统设计 v1.5：注册同步（快照对账+增量）、竞争消费、broker 层三原语能力服务、deadline 簿记与 Resolve、故障矩阵、gRPC/Netty 双段协议 | 理解/改动 gateway/broker job 派发链路、排查 job 投递问题、演进 job 推拉系统时 | [workjob/SKILL.md](./workjob/SKILL.md) |
 | `readme-hero/` | README 首图面板设计系统：kunpeng-hero 四文件矩阵（明暗×中英）、元素坐标总表、明暗配色对照、字号阶梯、中英文案对照、四文件同步铁律、渲染验证与 CDN 陷阱、先呈现后推送节奏 | 修改 README 首图（docs/kunpeng-hero-*.svg）的布局/配色/文案时 | [readme-hero/SKILL.md](./readme-hero/SKILL.md) |
+| `monitor-dashboards/` | 监控面板标准：添加引擎指标必须连带补面板（有指标就有面板，check-panels.py 覆盖归零为验收）、单面板六分节结构、指标名→Prometheus 映射与 tag 总表、面板 JSON 模板 | 新增/修改/删除引擎指标（MetricsDoc、builder 注册）；修改 monitor/ 监控面板与抓取配置时 | [monitor-dashboards/SKILL.md](./monitor-dashboards/SKILL.md) |
 
 > 后续添加新模块（规范类或知识库类）：在 `.agents/skills/` 下新建子目录 + 该目录的 `SKILL.md`，在上表加一行。
 
@@ -44,7 +45,8 @@ description: Use as the top-level entry to discover kunpeng project's coding/gen
 ├── cluster-dispatch-design/ ← 集群调度子系统知识库
 ├── sink-design/           ← sink 日志外发体系知识库
 ├── workjob/               ← 分布式 Job 推拉系统设计知识库
-└── readme-hero/           ← README 首图面板设计系统
+├── readme-hero/           ← README 首图面板设计系统
+└── monitor-dashboards/    ← 监控面板标准(指标↔面板一一对应 + 覆盖检查)
 ```
 
 ## 通用原则（跨模块）

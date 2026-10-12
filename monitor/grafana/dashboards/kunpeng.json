@@ -1,0 +1,4042 @@
+{
+    "graphTooltip": 1,
+    "schemaVersion": 41,
+    "editable": true,
+    "panels": [
+        {
+            "collapsed": false,
+            "panels": [],
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "id": 1,
+            "title": "总览 Overview",
+            "type": "row",
+            "gridPos": {
+                "w": 24,
+                "h": 1,
+                "x": 0,
+                "y": 0
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "reduceOptions": {
+                    "values": false,
+                    "fields": "",
+                    "calcs": ["lastNotNull"]
+                }
+            },
+            "id": 2,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "集群成员数",
+            "type": "stat",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{job}}",
+                "expr": "max by (job) (zeebe_smp_member_count{job=~\"$job\"})",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 6,
+                "h": 4,
+                "x": 0,
+                "y": 0
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "reduceOptions": {
+                    "values": false,
+                    "fields": "",
+                    "calcs": ["lastNotNull"]
+                }
+            },
+            "id": 3,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "Leader 分区数（role=LEADER）",
+            "type": "stat",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "leader partitions",
+                "expr": "sum(atomix_role{job=~\"$job\"} == 5)",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 6,
+                "h": 4,
+                "x": 6,
+                "y": 0
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "reduceOptions": {
+                    "values": false,
+                    "fields": "",
+                    "calcs": ["lastNotNull"]
+                }
+            },
+            "id": 4,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "最大 Raft 任期",
+            "type": "stat",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "term",
+                "expr": "max(atomix_term{job=~\"$job\"})",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 6,
+                "h": 4,
+                "x": 12,
+                "y": 0
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "reduceOptions": {
+                    "values": false,
+                    "fields": "",
+                    "calcs": ["lastNotNull"]
+                }
+            },
+            "description": "Actor 调度池待执行深度，持续上涨说明消费跟不上提交",
+            "id": 5,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "调度队列深度（最大）",
+            "type": "stat",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{job}}",
+                "expr": "max by (job) (scheduler_queue_depth{job=~\"$job\"})",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 6,
+                "h": 4,
+                "x": 18,
+                "y": 0
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "Raft 角色：0=INACTIVE 1=PASSIVE 2=PROMOTABLE 3=FOLLOWER 4=CANDIDATE 5=LEADER",
+            "id": 6,
+            "fieldConfig": {
+                "defaults": {
+                    "mappings": [{
+                        "options": {
+                            "0": {"text": "INACTIVE"},
+                            "1": {"text": "PASSIVE"},
+                            "2": {"text": "PROMOTABLE"},
+                            "3": {"text": "FOLLOWER"},
+                            "4": {"text": "CANDIDATE"},
+                            "5": {"text": "LEADER"}
+                        },
+                        "type": "value"
+                    }],
+                    "unit": "short"
+                },
+                "overrides": []
+            },
+            "title": "各分区 Raft 角色",
+            "type": "state-timeline",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{job}} {{partitionGroupName}}",
+                "expr": "max by (job, partitionGroupName) (atomix_role{job=~\"$job\", partitionGroupName=~\"$partition_group\"})",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 12,
+                "h": 8,
+                "x": 0,
+                "y": 4
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 7,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "Raft 日志水位（append / commit）",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "commit p{{partition}}",
+                    "expr": "max by (partition) (atomix_partition_raft_commit_index{job=~\"$job\"})",
+                    "refId": "A"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "append p{{partition}}",
+                    "expr": "max by (partition) (atomix_partition_raft_append_index{job=~\"$job\"})",
+                    "refId": "B"
+                }
+            ],
+            "gridPos": {
+                "w": 12,
+                "h": 8,
+                "x": 12,
+                "y": 4
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "Leader 向 Follower 追加条目的平均往返耗时",
+            "id": 8,
+            "fieldConfig": {
+                "defaults": {"unit": "s"},
+                "overrides": []
+            },
+            "title": "Leader 追加延迟（均值）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{job}}",
+                "expr": "sum by (job) (rate(atomix_append_entries_latency_seconds_sum{job=~\"$job\"}[5m])) / sum by (job) (rate(atomix_append_entries_latency_seconds_count{job=~\"$job\"}[5m]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 0,
+                "y": 12
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 9,
+            "fieldConfig": {
+                "defaults": {"unit": "ops"},
+                "overrides": []
+            },
+            "title": "条目提交速率（entries/s）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{job}}",
+                "expr": "sum by (job) (rate(atomix_commit_entries_rate_total{job=~\"$job\"}[5m]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 8,
+                "y": 12
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 10,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "SWIM 成员数趋势",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{job}}",
+                "expr": "zeebe_smp_member_count{job=~\"$job\"}",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 16,
+                "y": 12
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 11,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "成员加入 / 移除（10m）",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "added {{job}}",
+                    "expr": "sum by (job) (increase(zeebe_smp_member_added_count_total{job=~\"$job\"}[10m]))",
+                    "refId": "A"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "removed {{job}}",
+                    "expr": "sum by (job) (increase(zeebe_smp_member_removed_count_total{job=~\"$job\"}[10m]))",
+                    "refId": "B"
+                }
+            ],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 0,
+                "y": 20
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "分区事件日志三水位：written ≥ committed ≥ processed",
+            "id": 12,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "EventLog 水位",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "written {{job}}",
+                    "expr": "max by (job) (eventlog_position_written{job=~\"$job\"})",
+                    "refId": "A"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "committed {{job}}",
+                    "expr": "max by (job) (eventlog_position_committed{job=~\"$job\"})",
+                    "refId": "B"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "processed {{job}}",
+                    "expr": "max by (job) (eventlog_position_processed{job=~\"$job\"})",
+                    "refId": "C"
+                }
+            ],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 8,
+                "y": 20
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 13,
+            "fieldConfig": {
+                "defaults": {"unit": "ops"},
+                "overrides": []
+            },
+            "title": "Sink 记录处理速率",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{action}} {{job}}",
+                "expr": "sum by (job, action) (rate(kunpeng_sink_records_total{job=~\"$job\"}[5m]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 16,
+                "y": 20
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "各 Follower 落后 Leader 的字节数（日志复制 + 快照安装）",
+            "id": 14,
+            "fieldConfig": {
+                "defaults": {"unit": "bytes"},
+                "overrides": []
+            },
+            "title": "Follower 复制滞后（bytes）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{job}} {{partitionGroupName}} → {{follower}}",
+                "expr": "max by (job, partitionGroupName, follower) (zeebe_raft_replication_lag_bytes{job=~\"$job\"})",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 0,
+                "y": 28
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "频繁选举是集群不稳定的首要信号",
+            "id": 15,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "选举触发次数（10m）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{job}} {{partitionGroupName}}",
+                "expr": "sum by (job, partitionGroupName) (increase(atomix_election_triggered_count_total{job=~\"$job\"}[10m]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 8,
+                "y": 28
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 16,
+            "fieldConfig": {
+                "defaults": {"unit": "bytes"},
+                "overrides": []
+            },
+            "title": "JVM 堆使用",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "heap {{job}} {{pod}}",
+                "expr": "jvm_memory_used_bytes{job=~\"$job\", area=\"heap\"}",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 16,
+                "y": 28
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "SWIM 会话代号，跳变说明成员发生了重启/重加入",
+            "id": 17,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "成员 incarnation（按成员）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{memberId}} {{job}}",
+                "expr": "max by (job, memberId) (zeebe_smp_members_incarnation_number{job=~\"$job\"})",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 0,
+                "y": 36
+            }
+        },
+        {
+            "collapsed": false,
+            "panels": [],
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "id": 18,
+            "title": "Raft 复制与共识",
+            "type": "row",
+            "gridPos": {
+                "w": 24,
+                "h": 1,
+                "x": 0,
+                "y": 45
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "0=INACTIVE 1=PASSIVE 2=PROMOTABLE 3=FOLLOWER 4=CANDIDATE 5=LEADER",
+            "id": 19,
+            "fieldConfig": {
+                "defaults": {
+                    "mappings": [{
+                        "options": {
+                            "0": {"text": "INACTIVE"},
+                            "1": {"text": "PASSIVE"},
+                            "2": {"text": "PROMOTABLE"},
+                            "3": {"text": "FOLLOWER"},
+                            "4": {"text": "CANDIDATE"},
+                            "5": {"text": "LEADER"}
+                        },
+                        "type": "value"
+                    }],
+                    "unit": "short"
+                },
+                "overrides": []
+            },
+            "title": "Raft 角色",
+            "type": "state-timeline",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{job}} {{partitionGroupName}}",
+                "expr": "max by (job, partitionGroupName) (atomix_role{job=~\"$job\", partitionGroupName=~\"$partition_group\"})",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 12,
+                "h": 8,
+                "x": 0,
+                "y": 0
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 20,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "任期（term）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{job}} {{partitionGroupName}}",
+                "expr": "max by (job, partitionGroupName) (atomix_term{job=~\"$job\", partitionGroupName=~\"$partition_group\"})",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 12,
+                "h": 8,
+                "x": 12,
+                "y": 0
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "按 Follower 维度的追加平均往返耗时",
+            "id": 21,
+            "fieldConfig": {
+                "defaults": {"unit": "s"},
+                "overrides": []
+            },
+            "title": "追加延迟（均值，按 Follower）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{partitionGroupName}} → {{follower}}",
+                "expr": "sum by (job, partitionGroupName, follower) (rate(atomix_append_entries_latency_seconds_sum{job=~\"$job\", partitionGroupName=~\"$partition_group\"}[5m])) / sum by (job, partitionGroupName, follower) (rate(atomix_append_entries_latency_seconds_count{job=~\"$job\", partitionGroupName=~\"$partition_group\"}[5m]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 0,
+                "y": 8
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 22,
+            "fieldConfig": {
+                "defaults": {"unit": "s"},
+                "overrides": []
+            },
+            "title": "追加延迟（1m 最大，按 Follower）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{partitionGroupName}} → {{follower}}",
+                "expr": "max by (job, partitionGroupName, follower) (atomix_append_entries_latency_seconds_max{job=~\"$job\", partitionGroupName=~\"$partition_group\"})",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 8,
+                "y": 8
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 23,
+            "fieldConfig": {
+                "defaults": {"unit": "ops"},
+                "overrides": []
+            },
+            "title": "追加条目速率（entries/s）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{partitionGroupName}} → {{follower}}",
+                "expr": "sum by (job, partitionGroupName, follower) (rate(atomix_append_entries_rate_total{job=~\"$job\", partitionGroupName=~\"$partition_group\"}[5m]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 16,
+                "y": 8
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 24,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "追加数据速率（KB/s）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{partitionGroupName}} → {{follower}}",
+                "expr": "sum by (job, partitionGroupName, follower) (rate(atomix_append_entries_data_rate_total{job=~\"$job\", partitionGroupName=~\"$partition_group\"}[5m]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 0,
+                "y": 16
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 25,
+            "fieldConfig": {
+                "defaults": {"unit": "ops"},
+                "overrides": []
+            },
+            "title": "提交速率（entries/s）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{job}} {{partitionGroupName}}",
+                "expr": "sum by (job, partitionGroupName) (rate(atomix_commit_entries_rate_total{job=~\"$job\", partitionGroupName=~\"$partition_group\"}[5m]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 8,
+                "y": 16
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "Leader 上已追加但尚未提交的条目数，持续大于 0 说明复制/提交链路有积压",
+            "id": 26,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "未提交条目数",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{job}} {{partitionGroupName}}",
+                "expr": "max by (job, partitionGroupName) (atomix_non_committed_entries{job=~\"$job\", partitionGroupName=~\"$partition_group\"})",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 16,
+                "y": 16
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 27,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "Follower 未复制条目数",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{partitionGroupName}} → {{follower}}",
+                "expr": "max by (job, partitionGroupName, follower) (atomix_non_replicated_entries{job=~\"$job\", partitionGroupName=~\"$partition_group\"})",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 0,
+                "y": 24
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "协调式领导权转移的前置检查输入",
+            "id": 28,
+            "fieldConfig": {
+                "defaults": {"unit": "bytes"},
+                "overrides": []
+            },
+            "title": "Follower 复制滞后（bytes）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{partitionGroupName}} → {{follower}}",
+                "expr": "max by (job, partitionGroupName, follower) (zeebe_raft_replication_lag_bytes{job=~\"$job\", partitionGroupName=~\"$partition_group\"})",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 8,
+                "y": 24
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 29,
+            "fieldConfig": {
+                "defaults": {"unit": "Bps"},
+                "overrides": []
+            },
+            "title": "快照安装发送速率（bytes/s）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{job}} {{partitionGroupName}}",
+                "expr": "sum by (job, partitionGroupName) (rate(atomix_snapshot_install_sent_bytes_total{job=~\"$job\", partitionGroupName=~\"$partition_group\"}[5m]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 16,
+                "y": 24
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 30,
+            "fieldConfig": {
+                "defaults": {"unit": "s"},
+                "overrides": []
+            },
+            "title": "心跳间隔（均值）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{job}} {{partitionGroupName}}",
+                "expr": "sum by (job, partitionGroupName) (rate(atomix_heartbeat_time_seconds_sum{job=~\"$job\", partitionGroupName=~\"$partition_group\"}[5m])) / sum by (job, partitionGroupName) (rate(atomix_heartbeat_time_seconds_count{job=~\"$job\", partitionGroupName=~\"$partition_group\"}[5m]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 0,
+                "y": 32
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 31,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "心跳丢失次数（10m）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{job}} {{partitionGroupName}}",
+                "expr": "sum by (job, partitionGroupName) (increase(atomix_heartbeat_miss_count_total{job=~\"$job\", partitionGroupName=~\"$partition_group\"}[10m]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 8,
+                "y": 32
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 32,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "选举：延迟（ms）与触发次数",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "latency {{job}} {{partitionGroupName}}",
+                    "expr": "max by (job, partitionGroupName) (atomix_election_latency_in_ms{job=~\"$job\", partitionGroupName=~\"$partition_group\"})",
+                    "refId": "A"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "triggered {{job}} {{partitionGroupName}}",
+                    "expr": "sum by (job, partitionGroupName) (increase(atomix_election_triggered_count_total{job=~\"$job\", partitionGroupName=~\"$partition_group\"}[10m]))",
+                    "refId": "B"
+                }
+            ],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 16,
+                "y": 32
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 33,
+            "fieldConfig": {
+                "defaults": {"unit": "ops"},
+                "overrides": []
+            },
+            "title": "投票 granted / rejected",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "granted {{job}}",
+                    "expr": "sum by (job) (rate(atomix_vote_granted_count_total{job=~\"$job\"}[5m]))",
+                    "refId": "A"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "rejected {{job}}",
+                    "expr": "sum by (job) (rate(atomix_vote_rejected_count_total{job=~\"$job\"}[5m]))",
+                    "refId": "B"
+                }
+            ],
+            "gridPos": {
+                "w": 12,
+                "h": 8,
+                "x": 0,
+                "y": 40
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 34,
+            "fieldConfig": {
+                "defaults": {"unit": "ops"},
+                "overrides": []
+            },
+            "title": "Raft 消息发送 / 接收速率",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "send {{job}}",
+                    "expr": "sum by (job) (rate(atomix_raft_messages_send_total{job=~\"$job\"}[5m]))",
+                    "refId": "A"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "recv {{job}}",
+                    "expr": "sum by (job) (rate(atomix_raft_messages_received_total{job=~\"$job\"}[5m]))",
+                    "refId": "B"
+                }
+            ],
+            "gridPos": {
+                "w": 12,
+                "h": 8,
+                "x": 12,
+                "y": 40
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 35,
+            "fieldConfig": {
+                "defaults": {"unit": "s"},
+                "overrides": []
+            },
+            "title": "Journal 追加延迟（均值）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{job}} p{{partition}}",
+                "expr": "sum by (job, partition) (rate(atomix_journal_append_latency_seconds_sum{job=~\"$job\"}[5m])) / sum by (job, partition) (rate(atomix_journal_append_latency_seconds_count{job=~\"$job\"}[5m]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 6,
+                "h": 8,
+                "x": 0,
+                "y": 48
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 36,
+            "fieldConfig": {
+                "defaults": {"unit": "s"},
+                "overrides": []
+            },
+            "title": "Journal flush 耗时（均值）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{job}} p{{partition}}",
+                "expr": "sum by (job, partition) (rate(atomix_journal_flush_time_seconds_sum{job=~\"$job\"}[5m])) / sum by (job, partition) (rate(atomix_journal_flush_time_seconds_count{job=~\"$job\"}[5m]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 6,
+                "h": 8,
+                "x": 6,
+                "y": 48
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 37,
+            "fieldConfig": {
+                "defaults": {"unit": "bytes"},
+                "overrides": []
+            },
+            "title": "Journal 大小（bytes）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{job}} p{{partition}}",
+                "expr": "max by (job, partition) (atomix_journal_size_bytes{job=~\"$job\"})",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 6,
+                "h": 8,
+                "x": 12,
+                "y": 48
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 38,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "日志段数量",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{job}} p{{partition}}",
+                "expr": "max by (job, partition) (atomix_segment_count{job=~\"$job\"})",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 6,
+                "h": 8,
+                "x": 18,
+                "y": 48
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 39,
+            "fieldConfig": {
+                "defaults": {"unit": "ops"},
+                "overrides": []
+            },
+            "title": "Journal 追加速势（批速率 / 数据速率）",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "batches {{job}} p{{partition}}",
+                    "expr": "sum by (job, partition) (rate(atomix_journal_append_rate_total{job=~\"$job\"}[5m]))",
+                    "refId": "A"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "KB {{job}} p{{partition}}",
+                    "expr": "sum by (job, partition) (rate(atomix_journal_append_data_rate_total{job=~\"$job\"}[5m]))",
+                    "refId": "B"
+                }
+            ],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 0,
+                "y": 56
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "日志段/日志对象的 open 操作耗时（源生 gauge）",
+            "id": 40,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "Journal 打开耗时（gauge）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{job}} p{{partition}}",
+                "expr": "max by (job, partition) (atomix_journal_open_time{job=~\"$job\"})",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 8,
+                "y": 56
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 41,
+            "fieldConfig": {
+                "defaults": {"unit": "s"},
+                "overrides": []
+            },
+            "title": "Journal seek 延迟（均值）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{job}} p{{partition}}",
+                "expr": "sum by (job, partition) (rate(atomix_journal_seek_latency_seconds_sum{job=~\"$job\"}[5m])) / sum by (job, partition) (rate(atomix_journal_seek_latency_seconds_count{job=~\"$job\"}[5m]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 16,
+                "y": 56
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "分配 / 创建 / flush / 截断四类段操作的耗时",
+            "id": 42,
+            "fieldConfig": {
+                "defaults": {"unit": "s"},
+                "overrides": []
+            },
+            "title": "日志段操作耗时（均值）",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "alloc {{job}}",
+                    "expr": "sum by (job, partition) (rate(atomix_segment_allocation_time_seconds_sum{job=~\"$job\"}[5m])) / sum by (job, partition) (rate(atomix_segment_allocation_time_seconds_count{job=~\"$job\"}[5m]))",
+                    "refId": "A"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "create {{job}}",
+                    "expr": "sum by (job, partition) (rate(atomix_segment_creation_time_seconds_sum{job=~\"$job\"}[5m])) / sum by (job, partition) (rate(atomix_segment_creation_time_seconds_count{job=~\"$job\"}[5m]))",
+                    "refId": "B"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "flush {{job}}",
+                    "expr": "sum by (job, partition) (rate(atomix_segment_flush_time_seconds_sum{job=~\"$job\"}[5m])) / sum by (job, partition) (rate(atomix_segment_flush_time_seconds_count{job=~\"$job\"}[5m]))",
+                    "refId": "C"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "truncate {{job}}",
+                    "expr": "sum by (job, partition) (rate(atomix_segment_truncate_time_seconds_sum{job=~\"$job\"}[5m])) / sum by (job, partition) (rate(atomix_segment_truncate_time_seconds_count{job=~\"$job\"}[5m]))",
+                    "refId": "D"
+                }
+            ],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 0,
+                "y": 64
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "Raft 元数据存储 last flushed index 更新耗时",
+            "id": 43,
+            "fieldConfig": {
+                "defaults": {"unit": "s"},
+                "overrides": []
+            },
+            "title": "MetaStore 刷盘更新耗时（均值）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{job}} p{{partition}}",
+                "expr": "sum by (job, partition) (rate(atomix_last_flushed_index_update_seconds_sum{job=~\"$job\"}[5m])) / sum by (job, partition) (rate(atomix_last_flushed_index_update_seconds_count{job=~\"$job\"}[5m]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 8,
+                "y": 64
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 44,
+            "fieldConfig": {
+                "defaults": {"unit": "s"},
+                "overrides": []
+            },
+            "title": "快照复制耗时（均值）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{job}}",
+                "expr": "sum by (job) (rate(atomix_snapshot_replication_duration_seconds_sum{job=~\"$job\"}[5m])) / sum by (job) (rate(atomix_snapshot_replication_duration_seconds_count{job=~\"$job\"}[5m]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 16,
+                "y": 64
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 45,
+            "fieldConfig": {
+                "defaults": {"unit": "ops"},
+                "overrides": []
+            },
+            "title": "快照接收分片 / 字节速率",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "chunks {{job}}",
+                    "expr": "sum by (job) (rate(atomix_snapshot_replication_received_chunks_total{job=~\"$job\"}[5m]))",
+                    "refId": "A"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "bytes {{job}}",
+                    "expr": "sum by (job) (rate(atomix_snapshot_replication_received_bytes_total{job=~\"$job\"}[5m]))",
+                    "refId": "B"
+                }
+            ],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 0,
+                "y": 72
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 46,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "快照复制次数（1h）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "replications {{job}}",
+                "expr": "sum by (job) (increase(atomix_snapshot_replication_count_total{job=~\"$job\"}[1h]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 8,
+                "y": 72
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 47,
+            "fieldConfig": {
+                "defaults": {"unit": "s"},
+                "overrides": []
+            },
+            "title": "日志压缩耗时（均值）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{job}} p{{partition}}",
+                "expr": "sum by (job, partition) (rate(atomix_compaction_time_ms_seconds_sum{job=~\"$job\"}[5m])) / sum by (job, partition) (rate(atomix_compaction_time_ms_seconds_count{job=~\"$job\"}[5m]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 16,
+                "y": 72
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "分区服务启动链路耗时：bootstrap（本机自举）与 join（加入已有分区）",
+            "id": 48,
+            "fieldConfig": {
+                "defaults": {"unit": "s"},
+                "overrides": []
+            },
+            "title": "分区启动耗时（bootstrap / join）",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "bootstrap {{job}} p{{partition}}",
+                    "expr": "max by (job, partition) (atomix_partition_server_bootstrap_time_seconds_max{job=~\"$job\"})",
+                    "refId": "A"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "join {{job}} p{{partition}}",
+                    "expr": "max by (job, partition) (atomix_partition_server_join_time_seconds_max{job=~\"$job\"})",
+                    "refId": "B"
+                }
+            ],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 0,
+                "y": 80
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "分区再平衡：单分区迁移耗时、暂停时长与暂停中的分区数",
+            "id": 49,
+            "fieldConfig": {
+                "defaults": {"unit": "s"},
+                "overrides": []
+            },
+            "title": "分区再平衡",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "duration {{job}}",
+                    "expr": "sum by (job) (rate(zeebe_cluster_rebalance_partition_duration_seconds_sum{job=~\"$job\"}[15m])) / sum by (job) (rate(zeebe_cluster_rebalance_partition_duration_seconds_count{job=~\"$job\"}[15m]))",
+                    "refId": "A"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "paused {{job}}",
+                    "expr": "sum by (job) (zeebe_cluster_rebalance_partition_paused{job=~\"$job\"})",
+                    "refId": "B"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "pause duration {{job}}",
+                    "expr": "sum by (job) (rate(zeebe_cluster_rebalance_partition_pause_duration_seconds_sum{job=~\"$job\"}[15m])) / sum by (job) (rate(zeebe_cluster_rebalance_partition_pause_duration_seconds_count{job=~\"$job\"}[15m]))",
+                    "refId": "C"
+                }
+            ],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 8,
+                "y": 80
+            }
+        },
+        {
+            "collapsed": false,
+            "panels": [],
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "id": 50,
+            "title": "EventLog 事件日志",
+            "type": "row",
+            "gridPos": {
+                "w": 24,
+                "h": 1,
+                "x": 0,
+                "y": 89
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "分区事件日志三水位，须保持 written ≥ committed ≥ processed",
+            "id": 51,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "EventLog 水位（written / committed / processed）",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "written {{job}} p{{partition}}",
+                    "expr": "max by (job, partition) (eventlog_position_written{job=~\"$job\", partition=~\"$partition\"})",
+                    "refId": "A"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "committed {{job}} p{{partition}}",
+                    "expr": "max by (job, partition) (eventlog_position_committed{job=~\"$job\", partition=~\"$partition\"})",
+                    "refId": "B"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "processed {{job}} p{{partition}}",
+                    "expr": "max by (job, partition) (eventlog_position_processed{job=~\"$job\", partition=~\"$partition\"})",
+                    "refId": "C"
+                }
+            ],
+            "gridPos": {
+                "w": 12,
+                "h": 8,
+                "x": 0,
+                "y": 0
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "written − committed 为未提交积压；committed − processed 为已提交未消费积压",
+            "id": 52,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "水位差（未提交 / 未消费）",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "uncommitted {{job}} p{{partition}}",
+                    "expr": "max by (job, partition) (clamp_min(eventlog_position_written{job=~\"$job\", partition=~\"$partition\"} - on (job, partition) eventlog_position_committed{job=~\"$job\", partition=~\"$partition\"}, 0))",
+                    "refId": "A"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "unconsumed {{job}} p{{partition}}",
+                    "expr": "max by (job, partition) (clamp_min(eventlog_position_committed{job=~\"$job\", partition=~\"$partition\"} - on (job, partition) eventlog_position_processed{job=~\"$job\", partition=~\"$partition\"}, 0))",
+                    "refId": "B"
+                }
+            ],
+            "gridPos": {
+                "w": 12,
+                "h": 8,
+                "x": 12,
+                "y": 0
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 53,
+            "fieldConfig": {
+                "defaults": {"unit": "ops"},
+                "overrides": []
+            },
+            "title": "定序批速率（batches/s）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{job}} p{{partition}}",
+                "expr": "sum by (job, partition) (rate(eventlog_append_count_total{job=~\"$job\", partition=~\"$partition\"}[5m]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 0,
+                "y": 8
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 54,
+            "fieldConfig": {
+                "defaults": {"unit": "ops"},
+                "overrides": []
+            },
+            "title": "提交批速率（batches/s）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{job}} p{{partition}}",
+                "expr": "sum by (job, partition) (rate(eventlog_commit_count_total{job=~\"$job\", partition=~\"$partition\"}[5m]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 8,
+                "y": 8
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "在途窗口拒绝：AIMD 流控降窗的表现，大量出现说明写入压力超过复制能力",
+            "id": 55,
+            "fieldConfig": {
+                "defaults": {"unit": "ops"},
+                "overrides": []
+            },
+            "title": "定序拒绝速率（窗口 / 非法）",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "window {{job}} p{{partition}}",
+                    "expr": "sum by (job, partition) (rate(eventlog_append_rejected_window_total{job=~\"$job\", partition=~\"$partition\"}[5m]))",
+                    "refId": "A"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "invalid {{job}} p{{partition}}",
+                    "expr": "sum by (job, partition) (rate(eventlog_append_rejected_invalid_total{job=~\"$job\", partition=~\"$partition\"}[5m]))",
+                    "refId": "B"
+                }
+            ],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 16,
+                "y": 8
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "失败批烧毁的 position 数（日志上留下的洞）",
+            "id": 56,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "烧毁 position 数（10m）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{job}} p{{partition}}",
+                "expr": "sum by (job, partition) (increase(eventlog_append_burned_positions_total{job=~\"$job\", partition=~\"$partition\"}[10m]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 0,
+                "y": 16
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "AIMD 拥塞窗口：随成功提交增大、随失败/超时减半",
+            "id": 57,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "AIMD 拥塞窗口",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{job}} p{{partition}}",
+                "expr": "eventlog_flow_window{job=~\"$job\", partition=~\"$partition\"}",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 8,
+                "y": 16
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 58,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "在途请求数与驱逐速率",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "inflight {{job}} p{{partition}}",
+                    "expr": "eventlog_flow_inflight{job=~\"$job\", partition=~\"$partition\"}",
+                    "refId": "A"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "evicted {{job}} p{{partition}}",
+                    "expr": "sum by (job, partition) (rate(eventlog_flow_evicted_total{job=~\"$job\", partition=~\"$partition\"}[5m]))",
+                    "refId": "B"
+                }
+            ],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 16,
+                "y": 16
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "按写入上下文（如命令处理、快照等）拆分的成功定序批速率",
+            "id": 59,
+            "fieldConfig": {
+                "defaults": {"unit": "ops"},
+                "overrides": []
+            },
+            "title": "按上下文的定序批速率",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{context}} {{job}}",
+                "expr": "sum by (job, context) (rate(eventlog_append_context_count_total{job=~\"$job\", partition=~\"$partition\"}[5m]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 12,
+                "h": 8,
+                "x": 0,
+                "y": 24
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 60,
+            "fieldConfig": {
+                "defaults": {"unit": "ops"},
+                "overrides": []
+            },
+            "title": "按上下文的条目速率（entries/s）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{context}} {{job}}",
+                "expr": "sum by (job, context) (rate(eventlog_append_context_entries_total{job=~\"$job\", partition=~\"$partition\"}[5m]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 12,
+                "h": 8,
+                "x": 12,
+                "y": 24
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "right",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "按上下文与拒绝原因拆分的被拒批速率",
+            "id": 61,
+            "fieldConfig": {
+                "defaults": {"unit": "ops"},
+                "overrides": []
+            },
+            "title": "按上下文与原因的拒绝速率",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{context}}/{{reason}} {{job}}",
+                "expr": "sum by (job, context, reason) (rate(eventlog_append_context_rejected_total{job=~\"$job\", partition=~\"$partition\"}[5m]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 24,
+                "h": 8,
+                "x": 0,
+                "y": 32
+            }
+        },
+        {
+            "collapsed": false,
+            "panels": [],
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "id": 62,
+            "title": "调度器 Scheduler",
+            "type": "row",
+            "gridPos": {
+                "w": 24,
+                "h": 1,
+                "x": 0,
+                "y": 90
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "submitted 与 started 的差值是仍在启动中的 actor；closed 持续增长属正常生命周期",
+            "id": 63,
+            "fieldConfig": {
+                "defaults": {"unit": "ops"},
+                "overrides": []
+            },
+            "title": "Actor 生命周期（提交 / 启动 / 关闭）",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "submitted {{job}}",
+                    "expr": "sum by (job) (rate(scheduler_actor_submitted_total{job=~\"$job\"}[5m]))",
+                    "refId": "A"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "started {{job}}",
+                    "expr": "sum by (job) (rate(scheduler_actor_started_total{job=~\"$job\"}[5m]))",
+                    "refId": "B"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "closed {{job}}",
+                    "expr": "sum by (job) (rate(scheduler_actor_closed_total{job=~\"$job\"}[5m]))",
+                    "refId": "C"
+                }
+            ],
+            "gridPos": {
+                "w": 12,
+                "h": 8,
+                "x": 0,
+                "y": 0
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "待执行 cell 深度，持续上涨说明调度消费跟不上提交",
+            "id": 64,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "调度队列深度",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{job}}",
+                "expr": "max by (job) (scheduler_queue_depth{job=~\"$job\"})",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 12,
+                "y": 0
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "reduceOptions": {
+                    "values": false,
+                    "fields": "",
+                    "calcs": ["lastNotNull"]
+                }
+            },
+            "description": "actor 进入 FAILED 状态次数，正常应为 0",
+            "id": 65,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "Actor 失败次数（1h）",
+            "type": "stat",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{job}}",
+                "expr": "sum by (job) (increase(scheduler_actor_failed_total{job=~\"$job\"}[1h]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 6,
+                "h": 4,
+                "x": 0,
+                "y": 8
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 66,
+            "fieldConfig": {
+                "defaults": {"unit": "ops"},
+                "overrides": []
+            },
+            "title": "调度器定时器（调度 / 触发 / 取消）",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "scheduled {{job}}",
+                    "expr": "sum by (job) (rate(scheduler_timer_scheduled_total{job=~\"$job\"}[5m]))",
+                    "refId": "A"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "fired {{job}}",
+                    "expr": "sum by (job) (rate(scheduler_timer_fired_total{job=~\"$job\"}[5m]))",
+                    "refId": "B"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "cancelled {{job}}",
+                    "expr": "sum by (job) (rate(scheduler_timer_cancelled_total{job=~\"$job\"}[5m]))",
+                    "refId": "C"
+                }
+            ],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 6,
+                "y": 8
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "submitted − completed 为外包执行中的阻塞任务数",
+            "id": 67,
+            "fieldConfig": {
+                "defaults": {"unit": "ops"},
+                "overrides": []
+            },
+            "title": "阻塞任务外包（提交 / 完成）",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "submitted {{job}}",
+                    "expr": "sum by (job) (rate(scheduler_blocking_submitted_total{job=~\"$job\"}[5m]))",
+                    "refId": "A"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "completed {{job}}",
+                    "expr": "sum by (job) (rate(scheduler_blocking_completed_total{job=~\"$job\"}[5m]))",
+                    "refId": "B"
+                }
+            ],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 14,
+                "y": 8
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "调度器 job 池：rejected 非零说明池满或已关闭，需关注",
+            "id": 68,
+            "fieldConfig": {
+                "defaults": {"unit": "ops"},
+                "overrides": []
+            },
+            "title": "Job 池（提交 / 执行 / 拒绝）",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "submitted {{job}}",
+                    "expr": "sum by (job) (rate(scheduler_job_submitted_total{job=~\"$job\"}[5m]))",
+                    "refId": "A"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "executed {{job}}",
+                    "expr": "sum by (job) (rate(scheduler_job_executed_total{job=~\"$job\"}[5m]))",
+                    "refId": "B"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "rejected {{job}}",
+                    "expr": "sum by (job) (rate(scheduler_job_rejected_total{job=~\"$job\"}[5m]))",
+                    "refId": "C"
+                }
+            ],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 0,
+                "y": 16
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "引擎侧流程定时器（BPMN timer）触发耗时",
+            "id": 69,
+            "fieldConfig": {
+                "defaults": {"unit": "s"},
+                "overrides": []
+            },
+            "title": "引擎定时器触发耗时（均值）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{job}} p{{partition}}",
+                "expr": "sum by (job, partition) (rate(kunpeng_engine_timers_duration_seconds_sum{job=~\"$job\", partition=~\"$partition\"}[5m])) / sum by (job, partition) (rate(kunpeng_engine_timers_duration_seconds_count{job=~\"$job\", partition=~\"$partition\"}[5m]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 8,
+                "y": 16
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "到期定时器与实际触发之间的滞后（timer 指标）",
+            "id": 70,
+            "fieldConfig": {
+                "defaults": {"unit": "s"},
+                "overrides": []
+            },
+            "title": "引擎定时器滞后（均值）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{job}} p{{partition}}",
+                "expr": "sum by (job, partition) (rate(kunpeng_engine_timers_lag_seconds_sum{job=~\"$job\", partition=~\"$partition\"}[5m])) / sum by (job, partition) (rate(kunpeng_engine_timers_lag_seconds_count{job=~\"$job\", partition=~\"$partition\"}[5m]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 16,
+                "y": 16
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 71,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "引擎定时器排队数",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{job}} p{{partition}}",
+                "expr": "max by (job, partition) (kunpeng_engine_timers_queued{job=~\"$job\", partition=~\"$partition\"})",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 0,
+                "y": 24
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "right",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "流程实例迁移/重放时的定时器去重表大小，按 intent 拆分",
+            "id": 72,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "定时器去重表大小（按 intent）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{intent}} {{job}}",
+                "expr": "max by (job, intent) (kunpeng_engine_timers_dedup_size{job=~\"$job\"})",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 24,
+                "h": 8,
+                "x": 0,
+                "y": 32
+            }
+        },
+        {
+            "collapsed": false,
+            "panels": [],
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "id": 73,
+            "title": "Sink 日志外发",
+            "type": "row",
+            "gridPos": {
+                "w": 24,
+                "h": 1,
+                "x": 0,
+                "y": 91
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "delivered 为实际外发记录，skipped 为按配置跳过的记录",
+            "id": 74,
+            "fieldConfig": {
+                "defaults": {"unit": "ops"},
+                "overrides": []
+            },
+            "title": "记录处理速率（按 sink 与动作）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{sinkId}} {{action}} {{job}}",
+                "expr": "sum by (job, sinkId, action) (rate(kunpeng_sink_records_total{job=~\"$job\", sinkId=~\"$sink_id\"}[5m]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 0,
+                "y": 0
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "记录写入日志到被 sink 拾起处理的间隔，反映消费跟不上生产的程度",
+            "id": 75,
+            "fieldConfig": {
+                "defaults": {"unit": "s"},
+                "overrides": []
+            },
+            "title": "拾起延迟（均值）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{sinkId}} {{job}}",
+                "expr": "sum by (job, sinkId) (rate(kunpeng_sink_pickup_latency_seconds_sum{job=~\"$job\", sinkId=~\"$sink_id\"}[5m])) / sum by (job, sinkId) (rate(kunpeng_sink_pickup_latency_seconds_count{job=~\"$job\", sinkId=~\"$sink_id\"}[5m]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 8,
+                "y": 0
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 76,
+            "fieldConfig": {
+                "defaults": {"unit": "s"},
+                "overrides": []
+            },
+            "title": "单条处理耗时（均值）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{sinkId}} {{job}}",
+                "expr": "sum by (job, sinkId) (rate(kunpeng_sink_process_duration_seconds_sum{job=~\"$job\", sinkId=~\"$sink_id\"}[5m])) / sum by (job, sinkId) (rate(kunpeng_sink_process_duration_seconds_count{job=~\"$job\", sinkId=~\"$sink_id\"}[5m]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 16,
+                "y": 0
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "delivered 为已外发的最高 position，committed 为 sink 已确认回执的 position",
+            "id": 77,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "交付 / 确认水位",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "delivered {{sinkId}} p{{partition}} {{job}}",
+                    "expr": "max by (job, sinkId, partition) (kunpeng_sink_position_delivered{job=~\"$job\", sinkId=~\"$sink_id\"})",
+                    "refId": "A"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "committed {{sinkId}} p{{partition}} {{job}}",
+                    "expr": "max by (job, sinkId, partition) (kunpeng_sink_position_committed{job=~\"$job\", sinkId=~\"$sink_id\"})",
+                    "refId": "B"
+                }
+            ],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 0,
+                "y": 8
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "事件日志已写入 position 与该 sink 已交付 position 之差：外发积压",
+            "id": 78,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "外发积压（log 写入位 − sink 交付位）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{sinkId}} p{{partition}} {{job}}",
+                "expr": "max by (job, sinkId, partition) (clamp_min(eventlog_position_written{job=~\"$job\"} - on (job, partition) group_left (sinkId) kunpeng_sink_position_delivered{job=~\"$job\", sinkId=~\"$sink_id\"}, 0))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 16,
+                "h": 8,
+                "x": 8,
+                "y": 8
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "colorMode": "background",
+                "graphMode": "area",
+                "reduceOptions": {
+                    "values": false,
+                    "fields": "",
+                    "calcs": ["lastNotNull"]
+                }
+            },
+            "description": "sink 服务相位：0=running 1=paused 2=soft paused 3=closed",
+            "id": 79,
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "short",
+                    "mappings": [{
+                        "options": {
+                            "0": {
+                                "color": "green",
+                                "text": "RUNNING"
+                            },
+                            "1": {
+                                "color": "orange",
+                                "text": "PAUSED"
+                            },
+                            "2": {
+                                "color": "yellow",
+                                "text": "SOFT PAUSED"
+                            },
+                            "3": {
+                                "color": "red",
+                                "text": "CLOSED"
+                            }
+                        },
+                        "type": "value"
+                    }],
+                    "color": {"mode": "continuous-GrYlRd"}
+                },
+                "overrides": []
+            },
+            "title": "Sink 相位",
+            "type": "stat",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{sinkId}} {{job}}",
+                "expr": "max by (job, sinkId) (kunpeng_sink_phase{job=~\"$job\", sinkId=~\"$sink_id\"})",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 0,
+                "y": 16
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "right",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "按记录值类型拆分的处理速率，观察哪类记录占大头",
+            "id": 80,
+            "fieldConfig": {
+                "defaults": {"unit": "ops"},
+                "overrides": []
+            },
+            "title": "按记录类型的处理速率",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{sinkId}} {{type}} {{job}}",
+                "expr": "sum by (job, sinkId, type) (rate(kunpeng_sink_records_total{job=~\"$job\", sinkId=~\"$sink_id\"}[5m]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 16,
+                "h": 8,
+                "x": 8,
+                "y": 16
+            }
+        },
+        {
+            "collapsed": false,
+            "panels": [],
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "id": 81,
+            "title": "JVM 与运行时",
+            "type": "row",
+            "gridPos": {
+                "w": 24,
+                "h": 1,
+                "x": 0,
+                "y": 92
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 82,
+            "fieldConfig": {
+                "defaults": {"unit": "bytes"},
+                "overrides": []
+            },
+            "title": "堆内存（used / committed / max）",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "used {{pod}}",
+                    "expr": "sum by (job, pod) (jvm_memory_used_bytes{job=~\"$job\", area=\"heap\"})",
+                    "refId": "A"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "max {{pod}}",
+                    "expr": "sum by (job, pod) (jvm_memory_max_bytes{job=~\"$job\", area=\"heap\"})",
+                    "refId": "B"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "committed {{pod}}",
+                    "expr": "sum by (job, pod) (jvm_memory_committed_bytes{job=~\"$job\", area=\"heap\"})",
+                    "refId": "C"
+                }
+            ],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 0,
+                "y": 0
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 83,
+            "fieldConfig": {
+                "defaults": {"unit": "bytes"},
+                "overrides": []
+            },
+            "title": "非堆内存（metaspace 等）",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "used {{pod}}",
+                    "expr": "sum by (job, pod) (jvm_memory_used_bytes{job=~\"$job\", area=\"nonheap\"})",
+                    "refId": "A"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "committed {{pod}}",
+                    "expr": "sum by (job, pod) (jvm_memory_committed_bytes{job=~\"$job\", area=\"nonheap\"})",
+                    "refId": "B"
+                }
+            ],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 8,
+                "y": 0
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 84,
+            "fieldConfig": {
+                "defaults": {"unit": "percentunit"},
+                "overrides": []
+            },
+            "title": "CPU 使用率",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "process {{pod}}",
+                    "expr": "process_cpu_usage{job=~\"$job\"}",
+                    "refId": "A"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "system {{pod}}",
+                    "expr": "system_cpu_usage{job=~\"$job\"}",
+                    "refId": "B"
+                }
+            ],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 16,
+                "y": 0
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 85,
+            "fieldConfig": {
+                "defaults": {"unit": "s"},
+                "overrides": []
+            },
+            "title": "GC 暂停（均值 / 最大）",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "mean {{job}}",
+                    "expr": "sum by (job) (rate(jvm_gc_pause_seconds_sum{job=~\"$job\"}[5m])) / sum by (job) (rate(jvm_gc_pause_seconds_count{job=~\"$job\"}[5m]))",
+                    "refId": "A"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "max {{job}}",
+                    "expr": "max by (job) (jvm_gc_pause_seconds_max{job=~\"$job\"})",
+                    "refId": "B"
+                }
+            ],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 0,
+                "y": 8
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 86,
+            "fieldConfig": {
+                "defaults": {"unit": "ops"},
+                "overrides": []
+            },
+            "title": "GC 次数速率（按动作）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{action}} {{job}}",
+                "expr": "sum by (job, action) (rate(jvm_gc_pause_seconds_count{job=~\"$job\"}[5m]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 8,
+                "y": 8
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 87,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "线程（live / peak / blocked）",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "live {{pod}}",
+                    "expr": "jvm_threads_live_threads{job=~\"$job\"}",
+                    "refId": "A"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "peak {{pod}}",
+                    "expr": "jvm_threads_peak_threads{job=~\"$job\"}",
+                    "refId": "B"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "blocked {{pod}}",
+                    "expr": "sum by (job, pod) (jvm_threads_states_threads{job=~\"$job\", state=\"blocked\"})",
+                    "refId": "C"
+                }
+            ],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 16,
+                "y": 8
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "REST 面流量（gateway-rest 暴露）",
+            "id": 88,
+            "fieldConfig": {
+                "defaults": {"unit": "ops"},
+                "overrides": []
+            },
+            "title": "HTTP 请求速率（按 URI / 状态码）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{uri}} {{status}}",
+                "expr": "sum by (job, uri, status) (rate(http_server_requests_seconds_count{job=~\"$job\"}[5m]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 12,
+                "h": 8,
+                "x": 0,
+                "y": 16
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 89,
+            "fieldConfig": {
+                "defaults": {"unit": "s"},
+                "overrides": []
+            },
+            "title": "HTTP 请求延迟（均值，按 URI）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{uri}}",
+                "expr": "sum by (job, uri) (rate(http_server_requests_seconds_sum{job=~\"$job\"}[5m])) / sum by (job, uri) (rate(http_server_requests_seconds_count{job=~\"$job\"}[5m]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 12,
+                "h": 8,
+                "x": 12,
+                "y": 16
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 90,
+            "fieldConfig": {
+                "defaults": {"unit": "ops"},
+                "overrides": []
+            },
+            "title": "日志事件速率（按级别）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{level}} {{job}}",
+                "expr": "sum by (job, level) (rate(logback_events_total{job=~\"$job\"}[5m]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 12,
+                "h": 8,
+                "x": 0,
+                "y": 24
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 91,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "文件描述符（open / max）",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "open {{pod}}",
+                    "expr": "process_files_open_files{job=~\"$job\"}",
+                    "refId": "A"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "max {{pod}}",
+                    "expr": "process_files_max_files{job=~\"$job\"}",
+                    "refId": "B"
+                }
+            ],
+            "gridPos": {
+                "w": 6,
+                "h": 8,
+                "x": 12,
+                "y": 24
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "id": 92,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "系统负载（1m）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "load1 {{pod}}",
+                "expr": "system_load_average_1m{job=~\"$job\"}",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 6,
+                "h": 8,
+                "x": 18,
+                "y": 24
+            }
+        }
+    ],
+    "timezone": "browser",
+    "annotations": {"list": [{
+        "hide": true,
+        "datasource": {
+            "uid": "-- Grafana --",
+            "type": "grafana"
+        },
+        "enable": true,
+        "builtIn": 1,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+    }]},
+    "refresh": "30s",
+    "title": "Kunpeng",
+    "version": 1,
+    "templating": {"list": [
+        {
+            "current": {},
+            "hide": 2,
+            "query": "prometheus",
+            "name": "DS_PROMETHEUS",
+            "type": "datasource"
+        },
+        {
+            "current": {
+                "text": ["All"],
+                "value": ["$__all"],
+                "selected": true
+            },
+            "hide": 0,
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "query": {
+                "query": "label_values(up{job=~\"kunpeng.*\"}, job)",
+                "refId": "PrometheusVariableQueryEditor-VariableQuery"
+            },
+            "allValue": ".*",
+            "name": "job",
+            "refresh": 1,
+            "definition": "label_values(up{job=~\"kunpeng.*\"}, job)",
+            "includeAll": true,
+            "type": "query",
+            "multi": true
+        },
+        {
+            "current": {
+                "text": ["All"],
+                "value": ["$__all"],
+                "selected": true
+            },
+            "hide": 0,
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "query": {
+                "query": "label_values(atomix_role{job=~\"$job\"}, partitionGroupName)",
+                "refId": "PrometheusVariableQueryEditor-VariableQuery"
+            },
+            "allValue": ".*",
+            "name": "partition_group",
+            "refresh": 1,
+            "definition": "label_values(atomix_role{job=~\"$job\"}, partitionGroupName)",
+            "includeAll": true,
+            "type": "query",
+            "multi": true
+        },
+        {
+            "current": {
+                "text": ["All"],
+                "value": ["$__all"],
+                "selected": true
+            },
+            "hide": 0,
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "query": {
+                "query": "label_values(eventlog_position_written{job=~\"$job\"}, partition)",
+                "refId": "PrometheusVariableQueryEditor-VariableQuery"
+            },
+            "allValue": ".*",
+            "name": "partition",
+            "refresh": 1,
+            "definition": "label_values(eventlog_position_written{job=~\"$job\"}, partition)",
+            "includeAll": true,
+            "type": "query",
+            "multi": true
+        },
+        {
+            "current": {
+                "text": ["All"],
+                "value": ["$__all"],
+                "selected": true
+            },
+            "hide": 0,
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "query": {
+                "query": "label_values(kunpeng_sink_position_delivered{job=~\"$job\"}, sinkId)",
+                "refId": "PrometheusVariableQueryEditor-VariableQuery"
+            },
+            "allValue": ".*",
+            "name": "sink_id",
+            "refresh": 1,
+            "definition": "label_values(kunpeng_sink_position_delivered{job=~\"$job\"}, sinkId)",
+            "includeAll": true,
+            "type": "query",
+            "multi": true
+        }
+    ]},
+    "tags": ["kunpeng"],
+    "uid": "kunpeng",
+    "weekStart": "",
+    "fiscalYearStartMonth": 0,
+    "timepicker": {},
+    "links": [],
+    "time": {
+        "from": "now-3h",
+        "to": "now"
+    }
+}

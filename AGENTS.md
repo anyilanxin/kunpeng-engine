@@ -34,6 +34,7 @@ kunpeng-engine/
 ├── sinks/             # sink 外发实现
 ├── bom/               # 三个 BOM：dependency-bom（总依赖）、client-sdk-bom、connector-sdk-bom
 ├── dist/              # 发行版装配
+├── monitor/           # 监控观测栈（Prometheus + Grafana compose 与全量面板；纯部署物，无 build.gradle 不参与构建）
 ├── example/           # 可运行示例应用（示例 BPMN 流程、job worker 接入、启停脚本）
 ├── docs/              # 仓库级文档（系统架构图 mermaid/svg、集群消息层基准结论）
 ├── licenses/          # 多许可文件（AGPL-3.0 / Apache-2.0 / MPL-2.0）
@@ -99,6 +100,7 @@ kunpeng-engine/
 | `sink-design` | sink 日志外发体系：RecordSink SPI 全生命周期、位置确认与重试、SinkService 运行时架构、SBE wire 协议与指标 | 理解/改动 sink、排查位置确认或暂停恢复问题 |
 | `workjob` | 分布式 Job 推拉系统设计 v1.6：注册同步、竞争消费、broker 能力三原语、分区化数据面（leader 绑定与水位线）、deadline 簿记与 Resolve、故障矩阵 | 理解/改动 gateway/broker job 派发链路、排查 job 投递问题 |
 | `readme-hero` | README 首图面板设计系统：kunpeng-hero 四文件矩阵（明暗×中英）、元素坐标总表、配色与字号规范、四文件同步铁律、渲染验证与 CDN 陷阱 | 修改 README 首图（docs/kunpeng-hero-*.svg）时 |
+| `monitor-dashboards` | 监控面板标准：**添加引擎指标必须连带补面板**（有指标就有面板，check-panels.py 覆盖归零为验收）、单面板六分节结构、指标名→Prometheus 映射与 tag 总表 | 新增/修改/删除引擎指标；修改 monitor/ 面板与抓取配置 |
 
 新增技能时：建目录写 SKILL.md（含英文 description），并同步更新总览 `SKILL.md` 的模块表。
 
@@ -112,6 +114,8 @@ kunpeng-engine/
 | 序列化格式、协议编号池、新 Record key 定义 | `structpack` + `enum-standards`（破坏性评估先行，编号错=Raft 反序列化错位） |
 | 理解/改动调度器、事件日志、集群调度子系统 | `scheduler` / `eventlog-design` / `cluster-dispatch-design` |
 | 理解/改动 job 推拉派发链路（gateway-job / broker job 能力服务 / client 消费端） | `workjob`（设计契约：竞争消费、三原语、deadline 簿记） |
+| **新增/修改/删除引擎指标**（MetricsDoc 枚举、builder 注册） | 对应域技能 + `monitor-dashboards`（指标↔面板一一对应是加指标的标准收口，覆盖检查归零） |
+| 修改 monitor/ 监控面板、Prometheus 抓取配置 | `monitor-dashboards` |
 | 改动收尾提交 | `commit-standards`（spotlessApply 根目录整库 + 英文分条 message） |
 
 > 分流规则（iteration 铁律）：跨层全链路改动用 iteration；**广而浅**的大改动走总控派发模式（iteration 当总控把各模块派发专项窗口）；**深而窄**的大改动（新算法/重构核心机制）走设计先行，iteration 不强行接；**破坏性协议变更**（重排编号池/改 key-id/改批帧格式）必须先出方案交评估，不直接改。
@@ -128,7 +132,7 @@ kunpeng-engine/
 # connector/ 为纯源码保留（上游 Maven 根工程已移除），不参与任何构建
 ```
 
-- **JDK**：toolchain 25；`JavaExec`/`Test` 已统一注入 `--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED`，勿在模块里重复加
+- **JDK**：toolchain 25；`JavaExec`/`Test` 已统一注入 `--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED` 与 `--add-opens=java.base/java.util.zip=ALL-UNNAMED`（后者供 agrona `Crc32c` 反射调用 JDK 私有内建方法，journal 校验和热路径），勿在模块里重复加
 - **私仓**：`com.anyilanxin.*` 依赖走阿里云私仓（`buildSrc/common-config.gradle`，凭据读环境变量 `ALIYUN_REPO_USERNAME` 等），构建需凭据可达
 - **根工程约束**：root 的 `boot*`/`jar` 任务已禁用（聚合壳）；无 `build.gradle` 的空目录除 `clean` 外任务全部禁用；jqwik 数据库已关（不落 `.jqwik-database`）
 

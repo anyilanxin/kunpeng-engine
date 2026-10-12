@@ -65,7 +65,7 @@ RUNNING ──pause──▶ PAUSED ──resume──▶ RUNNING
 - 位置+元数据持久化到 repository（`RepositoryMutableSink`）；重启后从最后确认位置续传（不重复投递）。
 - 软暂停期间确认只缓冲（pending），恢复时一并写回。
 - 引擎跳过不需要的记录时替 Sink 推进位置，但**绝不越过在途记录**（守卫：`committedPosition >= lastDeliveredPosition` 才允许 skip 推进）。
-- `getLowestPosition()`（全部 Sink 最低已提交位置）是日志压缩门槛；从不确认的 Sink 会永久阻塞压缩。
+- `getLowestPosition()`（全部 Sink 最低已提交位置）是日志压缩门槛；从不确认的 Sink 会永久阻塞压缩。门槛经 `RaftSnapshotProvider.getCompactionFloorPosition()` 生效：`BusinessRaftSnapshotProvider` 直读 repository 的最低位置（`-1` 即无约束），`RaftPartition` 拍快照时把快照 index 钳制到该位置对应条目（`seekToAsqn` 换算，取条目自身 term），压缩边界因此永远不越过未导出数据；强制拍摄时钳制结果不低于当前快照边界（只进不退）。
 - 新 Sink 可用 `SinkInitInfo.inheritFrom(旧id)` 继承前身的 position/metadata。
 
 ## 快速开始：实现一个 Sink
