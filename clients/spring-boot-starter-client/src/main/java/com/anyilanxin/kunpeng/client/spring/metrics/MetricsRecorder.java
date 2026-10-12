@@ -24,7 +24,7 @@ package com.anyilanxin.kunpeng.client.spring.metrics;
  */
 public interface MetricsRecorder {
 
-  String METRIC_NAME_JOB = "camunda.job.invocations";
+  String METRIC_NAME_JOB = "kunpeng.job.invocations";
   String ACTION_ACTIVATED = "activated";
   String ACTION_COMPLETED = "completed";
   String ACTION_FAILED = "failed";

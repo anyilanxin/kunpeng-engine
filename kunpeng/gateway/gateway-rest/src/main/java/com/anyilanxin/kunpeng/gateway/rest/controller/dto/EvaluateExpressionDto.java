@@ -17,6 +17,7 @@
 package com.anyilanxin.kunpeng.gateway.rest.controller.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 /**
  * 表达式求值请求。
@@ -29,7 +30,7 @@ import jakarta.validation.constraints.NotBlank;
  * @since 2026.9.0
  */
 public record EvaluateExpressionDto(
-    @NotBlank(message = "表达式不能为空") String expression,
+    @NotBlank(message = "表达式不能为空") @Size(max = 2048, message = "表达式过长") String expression,
     String variables,
-    String tenantId,
+    @Size(max = 64, message = "租户标识过长") String tenantId,
     Long scopeKey) {}

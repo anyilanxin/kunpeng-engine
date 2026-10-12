@@ -211,26 +211,33 @@ final class JobStreamerImpl implements JobStreamer {
       return;
     }
 
-    if (error != null) {
-      if (error instanceof StatusRuntimeException) {
-        final StatusRuntimeException statusError = (StatusRuntimeException) error;
-        if (statusError.getStatus().getCode() == Status.CANCELLED.getCode()
-            && statusError.getCause() instanceof StatusException
-            && statusError.getCause().getCause() instanceof StreamLeaseTimeoutException) {
-          LOGGER.debug("租约到期，立即轮换重建 job 流 [type: {}, worker: {}]", jobType, workerName);
-          openUnderLock();
-          return;
-        }
-      }
-      reportStreamFailure(error);
-      backoffDelay = backoffSupplier.supplyRetryDelay(backoffDelay);
-      LOGGER.debug(
-          "{} 后重挂 job 流 [type: {}, worker: {}]",
-          Duration.ofMillis(backoffDelay),
-          jobType,
-          workerName);
-      executor.schedule(() -> reopen(command), backoffDelay, TimeUnit.MILLISECONDS);
+    if (error == null) {
+      // 服务端正常结束流（如网关滚动重启）同样需要重挂，否则流静默死亡
+      LOGGER.debug("服务端正常结束流，立即重挂 [type: {}, worker: {}]", jobType, workerName);
+      executor.execute(() -> reopen(command));
+      return;
     }
+
+    if (error instanceof StatusRuntimeException) {
+      final StatusRuntimeException statusError = (StatusRuntimeException) error;
+      if (statusError.getStatus().getCode() == Status.CANCELLED.getCode()
+          && statusError.getCause() instanceof StatusException
+          && statusError.getCause().getCause() instanceof StreamLeaseTimeoutException) {
+        LOGGER.debug("租约到期，立即轮换重建 job 流 [type: {}, worker: {}]", jobType, workerName);
+        // 流撑满整个租约周期说明连接健康，历史失败退避不再适用
+        backoffDelay = 0;
+        openUnderLock();
+        return;
+      }
+    }
+    reportStreamFailure(error);
+    backoffDelay = backoffSupplier.supplyRetryDelay(backoffDelay);
+    LOGGER.debug(
+        "{} 后重挂 job 流 [type: {}, worker: {}]",
+        Duration.ofMillis(backoffDelay),
+        jobType,
+        workerName);
+    executor.schedule(() -> reopen(command), backoffDelay, TimeUnit.MILLISECONDS);
   }
 
   private void reportStreamFailure(final Throwable error) {

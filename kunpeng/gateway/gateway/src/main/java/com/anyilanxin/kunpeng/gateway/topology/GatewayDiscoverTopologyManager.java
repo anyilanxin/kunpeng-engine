@@ -34,7 +34,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author zxuanhong
  * @since 2026.9.0
  */
-public final class GatewayDiscoverTopologyManager extends Actor implements ClusterMembershipEventListener {
+public final class GatewayDiscoverTopologyManager extends Actor
+    implements ClusterMembershipEventListener {
   private final ClusterMembershipService membershipService;
 
   /** 网关接入地址视图：gateway 成员 -> (host, port)；host 为空回落成员主机 */

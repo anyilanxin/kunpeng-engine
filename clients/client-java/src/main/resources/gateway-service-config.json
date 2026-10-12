@@ -1,0 +1,17 @@
+{"methodConfig": [{
+    "retryPolicy": {
+        "backoffMultiplier": 2,
+        "maxAttempts": 3,
+        "initialBackoff": "0.05s",
+        "retryableStatusCodes": [
+            "CANCELLED",
+            "DEADLINE_EXCEEDED",
+            "RESOURCE_EXHAUSTED",
+            "ABORTED",
+            "UNAVAILABLE",
+            "DATA_LOSS"
+        ],
+        "maxBackoff": "0.5s"
+    },
+    "name": [{}]
+}]}

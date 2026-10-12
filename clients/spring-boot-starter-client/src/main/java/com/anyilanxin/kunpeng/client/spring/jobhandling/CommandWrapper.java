@@ -23,6 +23,8 @@ import com.anyilanxin.kunpeng.client.spring.metrics.MetricsRecorder;
 import java.time.Instant;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 命令包装器：命令执行的重试与超时控制。
@@ -32,6 +34,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class CommandWrapper {
 
+  private static final Logger LOG = LoggerFactory.getLogger(CommandWrapper.class);
   private final FinalCommandStep<?> command;
   private final ActivatedJob job;
   private final CommandExceptionHandlingStrategy commandExceptionHandlingStrategy;
@@ -60,7 +63,12 @@ public class CommandWrapper {
         .send()
         .exceptionally(
             t -> {
-              commandExceptionHandlingStrategy.handleCommandError(this, t);
+              try {
+                commandExceptionHandlingStrategy.handleCommandError(this, t);
+              } catch (final RuntimeException e) {
+                // 该 future 无人消费，终态失败必须落日志，否则静默丢失
+                LOG.error("Failed to execute command {}", this, e);
+              }
               return null;
             });
   }
@@ -77,7 +85,12 @@ public class CommandWrapper {
             })
         .exceptionally(
             t -> {
-              commandExceptionHandlingStrategy.handleCommandError(this, t);
+              try {
+                commandExceptionHandlingStrategy.handleCommandError(this, t);
+              } catch (final RuntimeException e) {
+                // 该 future 无人消费，终态失败必须落日志，否则静默丢失
+                LOG.error("Failed to execute command {}", this, e);
+              }
               return null;
             });
   }
@@ -112,6 +125,7 @@ public class CommandWrapper {
   }
 
   private boolean jobDeadlineExceeded() {
-    return (Instant.now().getEpochSecond() > job.getDeadline());
+    // ActivatedJob.getDeadline() 是毫秒时间戳，必须用毫秒比较（用秒比较恒为 false，截止检查形同虚设）
+    return (Instant.now().toEpochMilli() > job.getDeadline());
   }
 }

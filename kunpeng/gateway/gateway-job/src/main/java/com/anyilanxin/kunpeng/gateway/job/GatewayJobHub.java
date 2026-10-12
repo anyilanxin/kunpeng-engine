@@ -16,6 +16,8 @@
  */
 package com.anyilanxin.kunpeng.gateway.job;
 
+import static com.anyilanxin.kunpeng.structpack.util.DocumentUtil.convertToJsonBytes;
+
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.job.request.JobBatchActivateRequest;
 import com.anyilanxin.kunpeng.broker.client.core.BrokerClient;
 import com.anyilanxin.kunpeng.broker.client.jobstream.JobStreamMessages.StreamPush;
@@ -27,10 +29,8 @@ import com.anyilanxin.kunpeng.protocol.business.impl.record.command.job.JobRecor
 import com.anyilanxin.kunpeng.protocol.business.record.commandapi.record.job.activate.JobInfoRecordValue;
 import com.anyilanxin.kunpeng.protocol.gateway.GatewayLoggers;
 import com.anyilanxin.kunpeng.structpack.util.BufferUtil;
-import com.anyilanxin.kunpeng.structpack.util.DocumentUtil;
 import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -60,6 +60,12 @@ public final class GatewayJobHub {
   private static final long DEFAULT_LONG_POLL_MILLIS = 30_000;
   private static final long DEFAULT_LOCK_TIMEOUT_MILLIS = 60_000;
 
+  /** 单次长轮询 maxBatch 上限（clamp 目标区间 [1, 上限]） */
+  private static final int MAX_PULL_BATCH = 1_000;
+
+  /** 单次长轮询挂起窗口上限（同时是激活锁超时上限） */
+  private static final long MAX_PULL_DEADLINE_MILLIS = 300_000;
+
   private final ConcurrentHashMap<Long, DeliveryStream> streams = new ConcurrentHashMap<>();
 
   /** jobType → 会话表（稳定会话 ID → 投递流）：流下线只删自身项，其他会话寻址不受影响 */
@@ -70,6 +76,7 @@ public final class GatewayJobHub {
       new ConcurrentHashMap<>();
   private final ScheduledExecutorService scheduler;
   private final AtomicLong streamIdGenerator = new AtomicLong();
+  private final AtomicLong pullIdGenerator = new AtomicLong();
   private final AtomicLong generation = new AtomicLong();
   private final long longPollDefaultMillis;
 
@@ -218,11 +225,26 @@ public final class GatewayJobHub {
 
   // ———————— PULL（长轮询，标准命令通道） ————————
 
-  /** gRPC PullJobs：立即探测全部分区，全空挂起等待唤醒；挂起超时返回空批（client 立即重挂）。 */
-  public void pullJobs(final PullRequest request, final StreamObserver<PullResponse> observer) {
+  /**
+   * gRPC PullJobs：立即探测全部分区，全空挂起等待唤醒；挂起超时返回空批（client 立即重挂）。
+   *
+   * @return 取消句柄：客户端断开时调用可立即释放挂起槽位（等价超时路径，不投递响应）
+   */
+  public Runnable pullJobs(final PullRequest request, final StreamObserver<PullResponse> observer) {
+    // 参数 clamp：maxBatch 收敛到 [1, 上限]、deadlineMs 收敛到 (0, 5min]；worker 空则生成 pull-{n}
+    // （与 stream-{id} 同理：裸 gRPC/非 Java client 漏传时保证落库 lockOwner 永不为空）
+    final int maxBatch = Math.max(1, Math.min(request.getMaxBatch(), MAX_PULL_BATCH));
     final long deadlineMillis =
-        request.getDeadlineMs() > 0 ? request.getDeadlineMs() : longPollDefaultMillis;
-    final PendingPull pending = new PendingPull(request, observer);
+        Math.min(
+            request.getDeadlineMs() > 0 ? request.getDeadlineMs() : longPollDefaultMillis,
+            MAX_PULL_DEADLINE_MILLIS);
+    final String worker =
+        request.getWorker().isEmpty()
+            ? "pull-" + pullIdGenerator.incrementAndGet()
+            : request.getWorker();
+    final PullRequest effective =
+        PullRequest.newBuilder(request).setMaxBatch(maxBatch).setWorker(worker).build();
+    final PendingPull pending = new PendingPull(effective, observer);
     pending.beginProbe();
     probe(pending);
     scheduler.schedule(
@@ -233,6 +255,7 @@ public final class GatewayJobHub {
         },
         deadlineMillis,
         TimeUnit.MILLISECONDS);
+    return pending::setDone;
   }
 
   /** job-ready 广播到达：唤醒该类型队首挂起请求（探测落空自动挂回） */
@@ -275,8 +298,7 @@ public final class GatewayJobHub {
       final JobBatchActivateRequest activate =
           new JobBatchActivateRequest(request.getType())
               .setWorker(request.getWorker())
-              .setMaxJobsToActivate(
-                  request.getMaxBatch() <= 0 ? Integer.MAX_VALUE : request.getMaxBatch())
+              .setMaxJobsToActivate(request.getMaxBatch())
               .setTimeout(lockTimeout);
       activate.setPartitionId(partitionId.id());
       if (!request.getTenantIdsList().isEmpty()) {
@@ -309,7 +331,7 @@ public final class GatewayJobHub {
     }
   }
 
-  /** 首个非空响应胜出；请求已超时则把 job 转交同类型其他挂起请求，无人可接则丢弃（分区到期自愈） */
+  /** 首个非空响应胜出；请求已超时则直接丢弃（不跨请求转交——jobs 已按 source 请求的 worker 落 lockOwner， 交给其他请求会错归属），分区到期自愈。 */
   private void deliverProbeResult(
       final String jobType,
       final PendingPull source,
@@ -319,21 +341,10 @@ public final class GatewayJobHub {
       respond(source, deliveries(jobs, jobKeys));
       return;
     }
-    final ConcurrentLinkedQueue<PendingPull> queue = pendingPulls.get(jobType);
-    PendingPull next = queue == null ? null : queue.poll();
-    while (next != null && !next.setDone()) {
-      next = queue.poll();
-    }
-    if (next != null) {
-      LOG.debug(
-          "Probe result handed to next parked request [type: {}, jobs: {}]", jobType, jobs.size());
-      respond(next, deliveries(jobs, jobKeys));
-    } else {
-      LOG.warn(
-          "Probe result arrived with no waiting request, jobs await deadline disposal [type: {}, jobs: {}]",
-          jobType,
-          jobs.size());
-    }
+    LOG.warn(
+        "Probe result arrived with no waiting request, jobs await deadline disposal [type: {}, jobs: {}]",
+        jobType,
+        jobs.size());
   }
 
   /** 挂回队列（保持 QUEUED 状态，等待唤醒/超时）；状态已被取走则丢弃 */
@@ -388,6 +399,8 @@ public final class GatewayJobHub {
         .setDeadline(info.getDeadline())
         .setActivityInstanceId(info.getActivityInstanceId())
         .setJobKind(info.getJobKind() == null ? -1 : info.getJobKind().ordinal())
+        // 拉取链路当前只承载普通 job（wire 记录无监听事件类型字段），非监听 job 约定为 -1，缺省 0 会误报监听类型
+        .setListenerEventType(-1)
         .setVariables(jsonBytes(info.getVariablesBuffer()))
         .build();
   }
@@ -407,6 +420,8 @@ public final class GatewayJobHub {
         .setDeadline(push.deadline())
         .setActivityInstanceId(record.getActivityInstanceId())
         .setJobKind(record.getJobKind() == null ? -1 : record.getJobKind().ordinal())
+        // 推送链路当前只承载普通 job（wire 记录无监听事件类型字段），非监听 job 约定为 -1，缺省 0 会误报监听类型
+        .setListenerEventType(-1)
         .setVariables(jsonBytes(record.getVariablesBuffer()))
         .build();
   }
@@ -419,10 +434,8 @@ public final class GatewayJobHub {
     if (msgpack == null) {
       return ByteString.EMPTY;
     }
-    final String json = DocumentUtil.convertToJson(msgpack);
-    return json == null || json.isEmpty()
-        ? ByteString.EMPTY
-        : ByteString.copyFrom(json.getBytes(StandardCharsets.UTF_8));
+    final byte[] json = convertToJsonBytes(msgpack);
+    return json.length == 0 ? ByteString.EMPTY : ByteString.copyFrom(json);
   }
 
   /**

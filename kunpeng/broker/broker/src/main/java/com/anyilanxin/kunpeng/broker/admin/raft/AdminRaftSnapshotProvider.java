@@ -165,7 +165,7 @@ public class AdminRaftSnapshotProvider
             rocksdbFactory.createDb(
                 runtimeDirectory.toFile().getPath(),
                 registry,
-                1,
+                partition.id().id(),
                 rocksdbConfiguration,
                 AdminRepositoryColumnFamilies.DEFAULT);
         LOG.debug("Opened database from '{}'.", runtimeDirectory);

@@ -17,6 +17,7 @@
 package com.anyilanxin.kunpeng.gateway.rest.controller.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 /**
  * 消息投递请求：按消息名（及可选 correlationKey/processInstanceId）关联订阅中的流程。
@@ -30,8 +31,8 @@ import jakarta.validation.constraints.NotBlank;
  * @since 2026.9.0
  */
 public record MessageCorrelationDto(
-    @NotBlank(message = "消息名不能为空") String messageName,
-    String correlationKey,
-    String tenantId,
+    @NotBlank(message = "消息名不能为空") @Size(max = 256, message = "消息名过长") String messageName,
+    @Size(max = 256, message = "关联键过长") String correlationKey,
+    @Size(max = 64, message = "租户标识过长") String tenantId,
     long processInstanceId,
     String variable) {}

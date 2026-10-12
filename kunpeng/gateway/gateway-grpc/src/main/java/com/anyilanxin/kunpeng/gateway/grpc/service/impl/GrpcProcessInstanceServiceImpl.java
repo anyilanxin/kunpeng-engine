@@ -55,11 +55,26 @@ public class GrpcProcessInstanceServiceImpl
       final ProcessInstanceServiceOuterClass.CreateProcessInstanceRequest request,
       final StreamObserver<ProcessInstanceServiceOuterClass.CreateProcessInstanceResponse>
           responseObserver) {
-    final ProcessInstanceCreateRequest brokerRequest =
-        new ProcessInstanceCreateRequest()
-            .setProcessDefinitionId(request.getProcessDefinitionId())
-            .setProcessDefinitionKey(request.getProcessDefinitionKey(), request.getVersion())
-            .setVariable(ensureJsonSet(request.getVariable()));
+    // 定义定位二选一：processDefinitionId 与 processDefinitionKey（含版本）不可同时缺省或同时提供
+    final boolean byId = request.getProcessDefinitionId() > 0;
+    final boolean byKey = !request.getProcessDefinitionKey().isEmpty();
+    if (byId == byKey) {
+      responseObserver.onError(
+          handle.error(
+              responseObserver,
+              new IllegalArgumentException("processDefinitionId 与 processDefinitionKey 必须二选一")));
+      return;
+    }
+    final ProcessInstanceCreateRequest brokerRequest = new ProcessInstanceCreateRequest();
+    if (byId) {
+      brokerRequest.setProcessDefinitionId(request.getProcessDefinitionId());
+    } else {
+      brokerRequest.setProcessDefinitionKey(
+          request.getProcessDefinitionKey(), request.getVersion());
+    }
+    brokerRequest
+        .setVariable(ensureJsonSet(request.getVariable()))
+        .setTenantId(request.getTenantId());
     commands
         .createProcessInstance(brokerRequest)
         .whenComplete(
@@ -88,7 +103,11 @@ public class GrpcProcessInstanceServiceImpl
       final ProcessInstanceServiceOuterClass.CreateProcessInstanceWithResultRequest request,
       final StreamObserver<ProcessInstanceServiceOuterClass.CreateProcessInstanceWithResultResponse>
           responseObserver) {
-    throw new RuntimeException("暂未实现");
+    // 引擎侧暂无结果等待语义（创建即返回），显式回 UNIMPLEMENTED；裸抛异常只会得到无信息量的 UNKNOWN
+    responseObserver.onError(
+        io.grpc.Status.UNIMPLEMENTED
+            .withDescription("createProcessInstanceWithResult is not implemented yet")
+            .asException());
   }
 
   @Override

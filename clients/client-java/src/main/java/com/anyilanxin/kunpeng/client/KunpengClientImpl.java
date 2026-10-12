@@ -94,6 +94,7 @@ public class KunpengClientImpl implements KunpengClient {
   private final VariableServiceGrpc.VariableServiceStub variableService;
   private final ExpressionServiceGrpc.ExpressionServiceStub expressionService;
   private final KunpengClientConfiguration configuration;
+  private final ManagedChannel channel;
   private final JobClient jobClient;
   private final ExecutorResource executorResource;
   private final List<Closeable> closeables = new CopyOnWriteArrayList<>();
@@ -131,13 +132,15 @@ public class KunpengClientImpl implements KunpengClient {
     expressionService = buildExpressionService(channel, configuration);
     this.configuration = configuration;
     jsonMapper = configuration.getJsonMapper();
-    retryPredicate = (code) -> configuration.getCredentialsProvider().shouldRetryRequest(code);
-    if (configuration.getCredentialsProvider() != null) {
-      credentialsProvider = configuration.getCredentialsProvider();
-    } else {
-      credentialsProvider = new NoopCredentialsProvider();
-    }
+    // 先定凭据提供者（null 落 Noop），再构造重试谓词；谓词内直接解引用未判空的提供者会在调用时空指针
+    final CredentialsProvider resolvedProvider =
+        configuration.getCredentialsProvider() != null
+            ? configuration.getCredentialsProvider()
+            : new NoopCredentialsProvider();
+    credentialsProvider = resolvedProvider;
+    retryPredicate = resolvedProvider::shouldRetryRequest;
     this.executorResource = executorResource;
+    this.channel = channel;
     jobClient = newJobClient();
   }
 
@@ -292,26 +295,17 @@ public class KunpengClientImpl implements KunpengClient {
     return buildChannel(config, createAddressAdapter(config));
   }
 
-  private static volatile NameResolverProvider registeredGatewayProvider;
-  private static final Object PROVIDER_LOCK = new Object();
-
   public static ManagedChannel buildChannel(
       final KunpengClientConfiguration config, final GatewayServiceDiscoverAdapter addressAdapter) {
-    synchronized (PROVIDER_LOCK) {
-      final NameResolverRegistry registry = NameResolverRegistry.getDefaultRegistry();
-      if (registeredGatewayProvider != null) {
-        registry.deregister(registeredGatewayProvider);
-      }
-      final NameResolverProvider gatewayProvider =
-          new GatewayDiscoveryNameResolverProvider(
-              addressAdapter, config.getGatewayDiscover(), config.getGatewayLoadQuery());
-      registry.register(gatewayProvider);
-      registeredGatewayProvider = gatewayProvider;
-    }
+    // nameResolverFactory 按通道直接绑定本客户端的发现适配器；
+    // 走全局注册表注册/注销会在多客户端并存时互相串线（后建者顶掉先建者的解析器）
+    final GatewayDiscoveryNameResolverProvider gatewayProvider =
+        new GatewayDiscoveryNameResolverProvider(
+            addressAdapter, config.getGatewayDiscover(), config.getGatewayLoadQuery());
     return buildChannel(
         config,
-        NettyChannelBuilder.forTarget(
-            GatewayDiscoveryNameResolverProvider.GATEWAY_DISCOVER_TARGET));
+        NettyChannelBuilder.forTarget(GatewayDiscoveryNameResolverProvider.GATEWAY_DISCOVER_TARGET)
+            .nameResolverFactory(gatewayProvider));
   }
 
   public static ManagedChannel buildChannel(
@@ -373,8 +367,9 @@ public class KunpengClientImpl implements KunpengClient {
 
   private static Map<String, Object> defaultServiceConfig() {
     final ObjectMapper objectMapper = new ObjectMapper();
+    // 用本类类加载器定位资源：系统类加载器在打包应用（fat jar）里看不到类路径资源
     final URL defaultServiceConfig =
-        ClassLoader.getSystemClassLoader().getResource("gateway-service-config.json");
+        KunpengClientImpl.class.getClassLoader().getResource("gateway-service-config.json");
     if (defaultServiceConfig == null) {
       LOGGER.info(
           "No default service config found on classpath; will not configure a default retry policy");
@@ -393,7 +388,27 @@ public class KunpengClientImpl implements KunpengClient {
   }
 
   @Override
-  public void close() {}
+  public void close() {
+    // 先关 worker（停止消费），再关执行器与通道
+    for (final Closeable closeable : closeables) {
+      try {
+        closeable.close();
+      } catch (final Exception e) {
+        LOGGER.warn("Failed to close resource {}", closeable, e);
+      }
+    }
+    executorResource.close();
+    // 优雅关闭：给在途 RPC 一个完成窗口，超时或被中断才强制断开
+    channel.shutdown();
+    try {
+      if (!channel.awaitTermination(15, TimeUnit.SECONDS)) {
+        channel.shutdownNow();
+      }
+    } catch (final InterruptedException e) {
+      Thread.currentThread().interrupt();
+      channel.shutdownNow();
+    }
+  }
 
   @Override
   public KunpengClientConfiguration getConfiguration() {

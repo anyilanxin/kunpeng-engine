@@ -18,6 +18,7 @@ package com.anyilanxin.kunpeng.gateway.rest.controller.dto;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 /**
  * job 失败请求：retries 为失败后剩余重试次数，retryBackOff 为重试退避（ms）。
@@ -31,4 +32,4 @@ import jakarta.validation.constraints.NotNull;
 public record JobFailDto(
     @NotNull(message = "剩余重试次数不能为空") @Min(value = 0, message = "剩余重试次数不能为负") Integer retries,
     @NotNull(message = "重试退避不能为空") @Min(value = 0, message = "重试退避不能为负") Integer retryBackOff,
-    String errorMessage) {}
+    @Size(max = 2048, message = "失败原因过长") String errorMessage) {}

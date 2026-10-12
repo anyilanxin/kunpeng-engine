@@ -58,6 +58,11 @@ public class AdminCommandApiServiceStep extends AbstractBrokerStartupStep {
       final ConcurrencyControl concurrencyControl,
       final ActorFuture<BrokerStartupContext> shutdownFuture) {
     final var commandApiServiceActor = brokerShutdownContext.getCommandApiService();
+    if (commandApiServiceActor == null) {
+      // 启动未触达本步骤即停机：shutdown 容忍未启动状态
+      shutdownFuture.complete(brokerShutdownContext);
+      return;
+    }
     concurrencyControl.runOnCompletion(
         commandApiServiceActor.closeAsync(),
         proceed(

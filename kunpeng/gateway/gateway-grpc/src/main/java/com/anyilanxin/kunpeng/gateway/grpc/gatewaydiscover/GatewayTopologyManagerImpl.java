@@ -139,6 +139,13 @@ public final class GatewayTopologyManagerImpl extends Actor
     registerLoadQueryHandler();
   }
 
+  /** 与 onActorStarted 对称注销：成员监听与负载查询应答订阅，避免关闭后仍被回调 */
+  @Override
+  protected void onActorClosing() {
+    membershipService.removeListener(this);
+    communicationService.unsubscribe(LOAD_QUERY_SUBJECT);
+  }
+
   /**
    * Replies to {@value #LOAD_QUERY_SUBJECT} requests from peer gateways with this node's current
    * active-connection count. Runs on the actor thread; the counter is a volatile read so the

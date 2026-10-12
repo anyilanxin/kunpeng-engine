@@ -12,7 +12,6 @@
  */
 package com.anyilanxin.kunpeng.client.command.job;
 
-import com.anyilanxin.kunpeng.client.KunpengClientConfiguration;
 import com.anyilanxin.kunpeng.client.command.CommandWithOneOrMoreTenantsStep;
 import com.anyilanxin.kunpeng.client.command.FinalCommandStep;
 import java.time.Duration;
@@ -102,11 +101,6 @@ public interface ActivateJobsCommandStep1 {
 
     /**
      * Sets the request timeout for the command.
-     *
-     * <p>Additionally, it sets the HTTP response timeout to the specified value, incremented by the
-     * offset defined in {@link KunpengClientConfiguration#getDefaultRequestTimeoutOffset()}
-     * (default 1 second), ensuring that the client timeout does not occur before the server
-     * timeout.
      *
      * @param requestTimeout the request timeout
      * @return the configured command

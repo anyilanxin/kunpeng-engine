@@ -77,4 +77,10 @@ public class AdminCommandApiServiceImpl extends Actor implements AdminCommandApi
         });
     return future;
   }
+
+  @Override
+  protected void onActorClosing() {
+    // 关闭句柄：注销消息处理器并失败在途请求，避免关闭后请求悬挂
+    handle.close();
+  }
 }

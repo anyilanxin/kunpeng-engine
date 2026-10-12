@@ -42,6 +42,11 @@ public class ProcessInstanceCreateRequest
     return this;
   }
 
+  public ProcessInstanceCreateRequest setTenantId(final String tenantId) {
+    getValue().setTenantId(tenantId);
+    return this;
+  }
+
   public ProcessInstanceCreateRequest setProcessDefinitionKey(
       final String processDefinitionKey, final int processDefinitionVersion) {
     getValue().setProcessDefinitionKey(processDefinitionKey, processDefinitionVersion);

@@ -93,7 +93,15 @@ public class BusinessRaftSnapshotProvider
     return Map.of(
         PROCESS_POSITION, processPositionSupplier.get(),
         SINK_POSITION, sinkPositionSupplier.get(),
+        COMPACTION_POSITION, getCompactionFloorPosition(),
         SNAPSHOT_TIME, timerClock.millis());
+  }
+
+  /** 压缩下限取全部 sink 的最低已确认位置（repository 直读，同步）；{@code -1}（未装配 supplier 或尚无 sink 状态） 表示无约束，不阻塞日志压缩。 */
+  @Override
+  public long getCompactionFloorPosition() {
+    final long lowest = sinkPositionSupplier.get();
+    return lowest < 0 ? Long.MAX_VALUE : lowest;
   }
 
   public void setProcessPositionSupplier(final Supplier<Long> processPositionSupplier) {
@@ -185,7 +193,7 @@ public class BusinessRaftSnapshotProvider
             rocksdbFactory.createDb(
                 runtimeDirectory.toFile().getPath(),
                 registry,
-                1,
+                partition.id().id(),
                 rocksdbConfiguration,
                 BusinessRepositoryColumnFamilies.DEFAULT);
         LOG.debug("Opened database from '{}'.", runtimeDirectory);

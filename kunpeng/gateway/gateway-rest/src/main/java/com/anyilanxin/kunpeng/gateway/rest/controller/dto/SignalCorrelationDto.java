@@ -17,6 +17,7 @@
 package com.anyilanxin.kunpeng.gateway.rest.controller.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 /**
  * 信号广播请求。
@@ -29,7 +30,7 @@ import jakarta.validation.constraints.NotBlank;
  * @since 2026.9.0
  */
 public record SignalCorrelationDto(
-    @NotBlank(message = "信号名不能为空") String signalName,
-    String tenantId,
+    @NotBlank(message = "信号名不能为空") @Size(max = 256, message = "信号名过长") String signalName,
+    @Size(max = 64, message = "租户标识过长") String tenantId,
     long processInstanceId,
     String variable) {}

@@ -38,14 +38,12 @@ public final class KunpengClientBuilderImpl
   public static final String DEFAULT_GATEWAY_ADDRESS = "0.0.0.0:2024";
   public static final URI DEFAULT_GRPC_ADDRESS = URI.create("https://" + DEFAULT_GATEWAY_ADDRESS);
   public static final String DEFAULT_JOB_WORKER_NAME_VAR = "default";
-  public static final Duration DEFAULT_MESSAGE_TTL = Duration.ofHours(1);
   public static final boolean DEFAULT_PREFER_REST_OVER_GRPC = false;
   public static final int DEFAULT_NUM_JOB_WORKER_EXECUTION_THREADS = 1;
   public static final int DEFAULT_MAX_MESSAGE_SIZE = 5 * ONE_MB;
   public static final int DEFAULT_MAX_METADATA_SIZE = 16 * ONE_KB;
   public static final Duration DEFAULT_KEEP_ALIVE = Duration.ofSeconds(45);
   public static final Duration DEFAULT_REQUEST_TIMEOUT = Duration.ofSeconds(10);
-  public static final Duration DEFAULT_REQUEST_TIMEOUT_OFFSET = Duration.ofSeconds(1);
   public static final Duration DEFAULT_GATEWAY_DISCOVER = Duration.ofSeconds(10);
   public static final Duration DEFAULT_GATEWAY_LOAD_QUERY = Duration.ofSeconds(10);
   public static final List<String> DEFAULT_JOB_WORKER_TENANT_IDS =
@@ -70,9 +68,7 @@ public final class KunpengClientBuilderImpl
   private String defaultJobWorkerName = DEFAULT_JOB_WORKER_NAME_VAR;
   private Duration defaultJobTimeout = DEFAULT_JOB_TIMEOUT;
   private Duration defaultJobPollInterval = DEFAULT_JOB_POLL_INTERVAL;
-  private Duration defaultMessageTimeToLive = DEFAULT_MESSAGE_TTL;
   private Duration defaultRequestTimeout = DEFAULT_REQUEST_TIMEOUT;
-  private Duration defaultRequestTimeoutOffset = DEFAULT_REQUEST_TIMEOUT_OFFSET;
   private boolean usePlaintextConnection = false;
   private String certificatePath;
   private CredentialsProvider credentialsProvider;
@@ -233,18 +229,8 @@ public final class KunpengClientBuilderImpl
 
     BuilderUtils.applyPropertyValueIfNotNull(
         properties,
-        value -> defaultMessageTimeToLive(Duration.ofMillis(Long.parseLong(value))),
-        ClientProperties.DEFAULT_MESSAGE_TIME_TO_LIVE);
-
-    BuilderUtils.applyPropertyValueIfNotNull(
-        properties,
         value -> defaultRequestTimeout(Duration.ofMillis(Long.parseLong(value))),
         ClientProperties.DEFAULT_REQUEST_TIMEOUT);
-
-    BuilderUtils.applyPropertyValueIfNotNull(
-        properties,
-        value -> defaultRequestTimeoutOffset(Duration.ofMillis(Long.parseLong(value))),
-        ClientProperties.DEFAULT_REQUEST_TIMEOUT_OFFSET);
 
     BuilderUtils.applyPropertyValueIfNotNull(
         properties,
@@ -382,20 +368,8 @@ public final class KunpengClientBuilderImpl
   }
 
   @Override
-  public KunpengClientBuilder defaultMessageTimeToLive(final Duration timeToLive) {
-    defaultMessageTimeToLive = timeToLive;
-    return this;
-  }
-
-  @Override
   public KunpengClientBuilder defaultRequestTimeout(final Duration requestTimeout) {
     defaultRequestTimeout = requestTimeout;
-    return this;
-  }
-
-  @Override
-  public KunpengClientBuilder defaultRequestTimeoutOffset(final Duration requestTimeoutOffset) {
-    defaultRequestTimeoutOffset = requestTimeoutOffset;
     return this;
   }
 
@@ -573,9 +547,7 @@ public final class KunpengClientBuilderImpl
     BuilderUtils.appendProperty(sb, "defaultJobWorkerName", defaultJobWorkerName);
     BuilderUtils.appendProperty(sb, "defaultJobTimeout", defaultJobTimeout);
     BuilderUtils.appendProperty(sb, "defaultJobPollInterval", defaultJobPollInterval);
-    BuilderUtils.appendProperty(sb, "defaultMessageTimeToLive", defaultMessageTimeToLive);
     BuilderUtils.appendProperty(sb, "defaultRequestTimeout", defaultRequestTimeout);
-    BuilderUtils.appendProperty(sb, "defaultRequestTimeoutOffset", defaultRequestTimeoutOffset);
     BuilderUtils.appendProperty(sb, "overrideAuthority", overrideAuthority);
     BuilderUtils.appendProperty(sb, "maxMessageSize", maxMessageSize);
     BuilderUtils.appendProperty(sb, "maxMetadataSize", maxMetadataSize);

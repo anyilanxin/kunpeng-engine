@@ -248,6 +248,10 @@ public final class JobWorkerImpl implements JobWorker, Closeable {
     try {
       executor.execute(jobHandlerFactory.create(job, finalizer));
     } catch (final RejectedExecutionException e) {
+      // 任务未提交成功，必须先执行收尾（remainingJobs 减计），否则轮询缓冲计数只增不减导致永久停摆
+      metrics.jobHandled(1);
+      finalizer.run();
+
       if (isClosed()) {
         return;
       }

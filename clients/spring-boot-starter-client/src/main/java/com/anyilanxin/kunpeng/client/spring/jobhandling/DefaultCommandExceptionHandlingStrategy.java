@@ -69,9 +69,8 @@ public class DefaultCommandExceptionHandlingStrategy implements CommandException
       final StatusRuntimeException exception = (StatusRuntimeException) throwable;
       final Status.Code code = exception.getStatus().getCode();
 
-      if (!RETRIABLE_CODES.contains(code)
-          || !IGNORABLE_FAILURE_CODES.contains(code)
-          || FAILURE_CODES.contains(code)) {
+      // 不可重试或硬失败错误立即抛出（IGNORABLE/RETRIABLE 与 FAILURE 互斥，可重试错误走下方重试分支）
+      if (!RETRIABLE_CODES.contains(code) || FAILURE_CODES.contains(code)) {
         throw new RuntimeException(
             "Could not execute " + command + " due to exception: " + throwable.getMessage(),
             throwable);

@@ -69,30 +69,34 @@ public class GrpcDeploymentServiceImpl extends DeploymentServiceGrpc.DeploymentS
                 if (brokerResponse.isSuccess()) {
                   try {
                     final DeploymentCreateResponseRecord responseRecord = brokerResponse.getValue();
-                    final DeploymentServiceOuterClass.DeployResourceResponse.Builder builder =
-                        DeploymentServiceOuterClass.DeployResourceResponse.newBuilder();
-                    builder
-                        .setDeploymentId(responseRecord.getDeploymentId())
-                        .setTenantId(responseRecord.getTenantId());
-                    for (final DeploymentProcessDefinitionResponseRecordValue
-                        processDefinitionValue : responseRecord.getProcessDefinitions()) {
-                      final DeploymentServiceOuterClass.ProcessDefinition processDefinition =
-                          DeploymentServiceOuterClass.ProcessDefinition.newBuilder()
-                              .setProcessDefinitionId(
-                                  processDefinitionValue.getProcessDefinitionId())
-                              .setProcessDefinitionKey(
-                                  processDefinitionValue.getProcessDefinitionKey())
-                              .setProcessDefinitionVersion(
-                                  processDefinitionValue.getProcessDefinitionVersion())
-                              .setResourceName(processDefinitionValue.getResourceDefinitionName())
-                              .build();
-                      builder.addProcessDefinitions(processDefinition);
+                    try {
+                      final DeploymentServiceOuterClass.DeployResourceResponse.Builder builder =
+                          DeploymentServiceOuterClass.DeployResourceResponse.newBuilder();
+                      builder
+                          .setDeploymentId(responseRecord.getDeploymentId())
+                          .setTenantId(responseRecord.getTenantId());
+                      for (final DeploymentProcessDefinitionResponseRecordValue
+                          processDefinitionValue : responseRecord.getProcessDefinitions()) {
+                        final DeploymentServiceOuterClass.ProcessDefinition processDefinition =
+                            DeploymentServiceOuterClass.ProcessDefinition.newBuilder()
+                                .setProcessDefinitionId(
+                                    processDefinitionValue.getProcessDefinitionId())
+                                .setProcessDefinitionKey(
+                                    processDefinitionValue.getProcessDefinitionKey())
+                                .setProcessDefinitionVersion(
+                                    processDefinitionValue.getProcessDefinitionVersion())
+                                .setResourceName(processDefinitionValue.getResourceDefinitionName())
+                                .build();
+                        builder.addProcessDefinitions(processDefinition);
+                      }
+                      responseObserver.onNext(builder.build());
+                      responseObserver.onCompleted();
+                    } finally {
+                      responseRecord.reset();
                     }
-                    responseObserver.onNext(builder.build());
-                    responseRecord.reset();
-                    responseObserver.onCompleted();
                   } catch (final Exception e) {
                     LOG.error("Failed to build deployment response", e);
+                    responseObserver.onError(handle.error(responseObserver, e));
                   }
                 } else {
                   responseObserver.onError(handle.error(responseObserver, brokerResponse));

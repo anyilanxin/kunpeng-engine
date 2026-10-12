@@ -37,10 +37,9 @@ public final class OAuthCredentialsProviderBuilder {
   public static final Duration DEFAULT_CONNECT_TIMEOUT = Duration.ofSeconds(5);
   public static final Duration DEFAULT_READ_TIMEOUT = DEFAULT_CONNECT_TIMEOUT;
   public static final String DEFAULT_CREDENTIALS_CACHE_PATH =
-      Paths.get(System.getProperty("user.home"), ".camunda", "credentials")
+      Paths.get(System.getProperty("user.home"), ".kunpeng", "credentials")
           .toAbsolutePath()
           .toString();
-  private static final String DEFAULT_AUTHZ_SERVER = "https://login.cloud.camunda.io/oauth/token/";
   private String clientId;
   private String clientSecret;
   private String audience;
@@ -431,10 +430,6 @@ public final class OAuthCredentialsProviderBuilder {
       credentialsCachePath = DEFAULT_CREDENTIALS_CACHE_PATH;
     }
 
-    if (authorizationServerUrl == null) {
-      authorizationServerUrl = DEFAULT_AUTHZ_SERVER;
-    }
-
     if (connectTimeout == null) {
       connectTimeout = DEFAULT_CONNECT_TIMEOUT;
     }
@@ -475,7 +470,7 @@ public final class OAuthCredentialsProviderBuilder {
       }
 
       if (truststorePath != null && !truststorePath.toFile().exists()) {
-        throw new IllegalArgumentException("Truststore path does not exist: " + keystorePath);
+        throw new IllegalArgumentException("Truststore path does not exist: " + truststorePath);
       }
 
       credentialsCache = new File(credentialsCachePath);

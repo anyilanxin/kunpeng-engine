@@ -72,8 +72,23 @@ public class NodeIdGeneratorStep implements StartupStep<BrokerStartupContext> {
       final BrokerStartupContext brokerStartupContext) {
     final ActorFuture<BrokerStartupContext> stopFuture =
         brokerStartupContext.getConcurrencyControl().createFuture();
+    final NodeIdGeneratorService requestIdGenerator = brokerStartupContext.getRequestIdGenerator();
     brokerStartupContext.setRequestIdGenerator(null);
-    stopFuture.complete(brokerStartupContext);
+    if (requestIdGenerator == null) {
+      // startup 未执行（启动失败回滚路径），无需注销
+      stopFuture.complete(brokerStartupContext);
+      return stopFuture;
+    }
+    requestIdGenerator
+        .stop()
+        .onComplete(
+            (unused, throwable) -> {
+              if (throwable != null) {
+                stopFuture.completeExceptionally(throwable);
+              } else {
+                stopFuture.complete(brokerStartupContext);
+              }
+            });
     return stopFuture;
   }
 }

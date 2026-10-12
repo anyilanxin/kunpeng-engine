@@ -63,7 +63,10 @@ public final class BrokerStartupProcess {
     result.add(new JobStreamBootstrapStep());
     result.add(new ClusterRaftStep());
     result.add(new ClusterAdminStep());
-    result.add(new EmbeddedGatewayServiceStep());
+    // 内嵌网关可经配置关闭（kunpeng.broker.gateway.enable=false，纯 broker 节点部署）
+    if (config.getGateway().isEnable()) {
+      result.add(new EmbeddedGatewayServiceStep());
+    }
     return result;
   }
 

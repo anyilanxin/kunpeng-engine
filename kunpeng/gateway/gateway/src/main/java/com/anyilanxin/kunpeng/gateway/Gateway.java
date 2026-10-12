@@ -85,7 +85,8 @@ public class Gateway implements CloseableSilently {
             atomixCluster.getCommunicationService(),
             localGateway);
     jobHubScheduler = newDaemonScheduler("gateway-job-hub");
-    jobHub = new GatewayJobHub(jobHubScheduler, DEFAULT_LONG_POLL_MILLIS);
+    // 长轮询默认挂起时长走配置（kunpeng.gateway.long-polling.timeout，毫秒），不再硬编码
+    jobHub = new GatewayJobHub(jobHubScheduler, gatewayCfg.getLongPolling().getTimeout());
     jobHub.setBrokerClient(brokerClient);
     jobStreamClient =
         new GatewayJobStreamClient(

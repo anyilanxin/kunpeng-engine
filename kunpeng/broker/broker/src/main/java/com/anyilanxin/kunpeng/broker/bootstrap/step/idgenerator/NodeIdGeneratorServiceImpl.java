@@ -145,6 +145,19 @@ public class NodeIdGeneratorServiceImpl
   @Override
   public void loseLeader(final LeaderInfo memberId) {}
 
+  /** 与 start 对称注销：摘除 leader 监听与初始化消息处理器（未注册时注销为 no-op） */
+  @Override
+  public ActorFuture<Void> stop() {
+    final ActorFuture<Void> future = concurrencyControl.createFuture();
+    concurrencyControl.run(
+        () -> {
+          leaderFoundService.removeLeaderChangeListener(this);
+          messagingService.unregisterHandler(NODE_SOURCE_TOPIC);
+          future.complete(null);
+        });
+    return future;
+  }
+
   private void initializeIdGenerator(final int nodeUniqueId) {
     initialized.set(true);
     localMember.properties().setProperty(NODE_SOURCE_PROPERTY_KEY, String.valueOf(nodeUniqueId));

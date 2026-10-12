@@ -17,7 +17,6 @@
 package com.anyilanxin.kunpeng.broker.business.raft.step.transition;
 
 import com.anyilanxin.kunpeng.broker.business.raft.BusinessPartitionStartupContext;
-import com.anyilanxin.kunpeng.broker.business.raft.step.transition.apibackup.BackupApiServiceTransitionStep;
 import com.anyilanxin.kunpeng.broker.business.raft.step.transition.apicommand.CommandApiServiceTransitionStep;
 import com.anyilanxin.kunpeng.broker.business.raft.step.transition.apipartition.InterPartitionCommandServiceStep;
 import com.anyilanxin.kunpeng.broker.business.raft.step.transition.bpmnengine.EngineProcessServiceTransitionStep;
@@ -48,7 +47,6 @@ public final class BusinessPartitionTransitionStep
       List.of(
           new BusinessLogStoragePartitionTransitionStep(),
           new BusinessLogStreamPartitionTransitionStep(),
-          new BackupApiServiceTransitionStep(),
           new CommandApiServiceTransitionStep(),
           new InterPartitionCommandServiceStep(),
           new RocksdbPartitionTransitionStep(),

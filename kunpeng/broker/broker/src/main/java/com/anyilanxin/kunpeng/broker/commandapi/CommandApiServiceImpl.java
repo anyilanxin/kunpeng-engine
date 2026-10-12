@@ -22,10 +22,8 @@ import com.anyilanxin.kunpeng.broker.monitoring.DiskSpaceUsageListener;
 import com.anyilanxin.kunpeng.cluster.business.step.RaftPartitionSource;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
 import com.anyilanxin.kunpeng.eventlog.EventLog;
-import com.anyilanxin.kunpeng.eventlog.EventLogWriter;
 import com.anyilanxin.kunpeng.scheduler.Actor;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
-import org.agrona.collections.Int2ObjectHashMap;
 import org.agrona.concurrent.IdGenerator;
 
 /**
@@ -36,7 +34,6 @@ import org.agrona.concurrent.IdGenerator;
  */
 public class CommandApiServiceImpl extends Actor
     implements CommandApiService, DiskSpaceUsageListener {
-  private final Int2ObjectHashMap<EventLogWriter> leadingStreams = new Int2ObjectHashMap<>();
   private final CommandApiHandleImpl handle;
 
   public CommandApiServiceImpl(
@@ -93,5 +90,11 @@ public class CommandApiServiceImpl extends Actor
           future.complete(null);
         });
     return future;
+  }
+
+  @Override
+  protected void onActorClosing() {
+    // 关闭句柄：注销消息处理器并失败在途请求，避免关闭后请求悬挂
+    handle.close();
   }
 }

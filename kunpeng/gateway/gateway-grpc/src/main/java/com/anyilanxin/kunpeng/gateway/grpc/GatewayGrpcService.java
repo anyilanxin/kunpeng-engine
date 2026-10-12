@@ -114,6 +114,16 @@ public class GatewayGrpcService extends Actor {
   @Override
   public void close() {
     grpcServer.shutdown();
+    workerPool.shutdown();
+    try {
+      if (!workerPool.awaitTermination(15, TimeUnit.SECONDS)) {
+        workerPool.shutdownNow();
+      }
+    } catch (final InterruptedException e) {
+      Thread.currentThread().interrupt();
+      workerPool.shutdownNow();
+    }
+    super.close();
   }
 
   private List<GrpcService> createGrpcServices() {

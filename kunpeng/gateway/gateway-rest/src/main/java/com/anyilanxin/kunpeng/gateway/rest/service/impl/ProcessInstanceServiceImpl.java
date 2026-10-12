@@ -47,13 +47,23 @@ public class ProcessInstanceServiceImpl implements ProcessInstanceService {
 
   @Override
   public Mono<ProcessInstanceVo> create(final ProcessInstanceCreateDto dto) {
+    // 定义定位二选一：id 与 key 不可同时缺省或同时提供
+    final boolean byId = dto.processDefinitionId() != null && dto.processDefinitionId() > 0;
+    final boolean byKey =
+        dto.processDefinitionKey() != null && !dto.processDefinitionKey().isEmpty();
+    if (byId == byKey) {
+      return Mono.error(
+          new IllegalArgumentException("processDefinitionKey 与 processDefinitionId 必须二选一"));
+    }
     final ProcessInstanceCreateRequest request = new ProcessInstanceCreateRequest();
-    if (dto.processDefinitionId() != null) {
+    if (byId) {
       request.setProcessDefinitionId(dto.processDefinitionId());
     } else {
-      request.setProcessDefinitionKey(dto.processDefinitionKey(), dto.version());
+      // version 缺省 -1 表示最新版本
+      request.setProcessDefinitionKey(
+          dto.processDefinitionKey(), dto.version() == null ? -1 : dto.version());
     }
-    request.setVariable(ensureJsonSet(dto.variable()));
+    request.setVariable(ensureJsonSet(dto.variable())).setTenantId(dto.tenantId());
     return awaitValue(processInstance.createProcessInstance(request), ProcessInstanceVo::of);
   }
 

@@ -43,7 +43,6 @@ import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
 import com.anyilanxin.kunpeng.utils.CloseableSilently;
 import com.anyilanxin.kunpeng.utils.VersionUtil;
 import java.util.concurrent.CompletableFuture;
-import org.agrona.DirectBuffer;
 import org.agrona.MutableDirectBuffer;
 import org.agrona.collections.Hashing;
 import org.agrona.collections.Int2ObjectHashMap;
@@ -61,6 +60,10 @@ import org.slf4j.Logger;
 public class CommandApiHandleImpl implements CommandApiHandle, CloseableSilently {
   private static final String ERROR_MSG_MISSING_PARTITON_MAP =
       "Node already unsubscribed from partition %d, this can only happen when atomix does not cleanly remove its handlers.";
+
+  /** 日志写入被拒（流控窗口耗尽/事件日志拒绝追加）的错误码 */
+  private static final int ERROR_CODE_APPEND_REJECTED = 1;
+
   private final MessagingService messagingService;
   private boolean isDiskSpaceAvailable = true;
   private final ConcurrencyControl actor;
@@ -95,7 +98,19 @@ public class CommandApiHandleImpl implements CommandApiHandle, CloseableSilently
 
   @Override
   public void close() {
-    for (final int partitionId : partitionsRequestMap.keySet()) {
+    // 先失败在途请求：注销处理器后响应无法送回，立即失败避免调用方悬挂到超时
+    for (final int partitionId : partitionsRequestMap.keySet().toArray(new Integer[0])) {
+      final var requestMap = partitionsRequestMap.get(partitionId);
+      if (requestMap != null) {
+        requestMap
+            .values()
+            .forEach(
+                request ->
+                    request
+                        .responseFuture()
+                        .completeExceptionally(
+                            new IllegalStateException("Command API handle closed")));
+      }
       removePartition(partitionId);
     }
   }
@@ -207,35 +222,31 @@ public class CommandApiHandleImpl implements CommandApiHandle, CloseableSilently
     if (logStreamWriter.canAppend(1, appendEntry.getLength())) {
       final AppendResult result = logStreamWriter.tryAppend(WriteContext.USER_COMMAND, appendEntry);
       if (result instanceof AppendResult.Rejected) {
-        errorResponse(0, null, partitionSource, requestId);
+        errorResponse(
+            ERROR_CODE_APPEND_REJECTED,
+            "Append of command to the event log was rejected by the log writer",
+            partitionSource,
+            requestId);
       }
     } else {
-      errorResponse(0, null, partitionSource, requestId);
+      errorResponse(
+          ERROR_CODE_APPEND_REJECTED,
+          "Cannot append command to the event log: in-flight window is exhausted",
+          partitionSource,
+          requestId);
     }
   }
 
+  /** 写入日志被拒（流控窗口耗尽/事件日志拒绝追加）时立即回失败应答： 走统一响应路径清理请求登记并让调用方拿到明确失败，而非悬挂至超时。 */
   void errorResponse(
       final int code,
-      final long key,
-      final DirectBuffer directBuffer,
+      final String message,
       final RaftPartitionSource partitionSource,
       final long requestId) {
-    actor.run(
-        () -> {
-          //          final ApiResponseWriter response = new ApiResponseWriterImpl();
-          //          response.key(key);
-          //          response.requestId(requestId);
-          //          response.dataType(DataType.USERINFO);
-          //                    sendResponse(response);
-        });
-  }
-
-  void errorResponse(
-      final int code,
-      final DirectBuffer directBuffer,
-      final RaftPartitionSource partitionSource,
-      final long requestId) {
-    errorResponse(code, 0L, directBuffer, partitionSource, requestId);
+    final BrokerResponseWriter<UnifiedRecordValue> response =
+        newResponse(null, requestId, partitionSource.getPartitionId().id());
+    response.setError(code, message);
+    sendResponse(response);
   }
 
   @Override

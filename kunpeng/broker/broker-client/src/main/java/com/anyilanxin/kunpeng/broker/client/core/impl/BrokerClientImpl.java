@@ -35,6 +35,7 @@ import com.anyilanxin.kunpeng.protocol.common.api.ResponseRecordValue;
 import com.anyilanxin.kunpeng.scheduler.Actor;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import org.agrona.MutableDirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
@@ -127,26 +128,62 @@ public class BrokerClientImpl extends Actor implements BrokerClient {
           final Duration requestTimeout,
           final boolean retry,
           final CompletableFuture<BrokerResponse<Response>> responseFuture) {
+    // 重试共用首次发送的截止预算：只在预算内重试，超预算即超时失败，不无限延长
+    final long deadlineNs = System.nanoTime() + requestTimeout.toNanos();
     // 寻址与编码都必须在 actor 线程内执行：sendRequest 由多个调用方线程并发调用，
     // 而 reusableValueBytes/Buffer 是实例字段。在 actor.run 内串行化，既消除竞态，又能让池化跨请求真正安全生效。
-    actor.run(() -> resolveAndSend(request, retry, requestTimeout, responseFuture));
+    actor.run(() -> resolveAndSend(request, retry, requestTimeout, deadlineNs, responseFuture));
   }
 
-  /** 在 actor 线程上解析目标并派发请求；解析失败以异常完结 future（明确失败语义，不空等超时）。 */
+  /**
+   * 在 actor 线程上解析目标并派发请求；解析失败在重试语义下随截止预算重试（leader 未选出/地址未广播是暂态）， 非重试或预算耗尽时以异常完结
+   * future（明确失败语义，不空等超时）。
+   */
   private <Request extends RequestRecordValue, Response extends ResponseRecordValue>
       void resolveAndSend(
           final BrokerRequest<Request> request,
           final boolean retry,
           final Duration requestTimeout,
+          final long deadlineNs,
           final CompletableFuture<BrokerResponse<Response>> responseFuture) {
     final BrokerPlane.Destination destination;
     try {
       destination = plane.resolve(request);
     } catch (final BrokerException e) {
-      responseFuture.completeExceptionally(e);
+      retryOrFail(request, retry, requestTimeout, deadlineNs, responseFuture, e);
       return;
     }
-    encodeAndSend(request, destination, retry, requestTimeout, responseFuture);
+    encodeAndSend(request, destination, retry, requestTimeout, deadlineNs, responseFuture);
+  }
+
+  /** 重试公共出口：预算内调度重试（重新寻址），否则失败完结 future。 */
+  private <Request extends RequestRecordValue, Response extends ResponseRecordValue>
+      void retryOrFail(
+          final BrokerRequest<Request> request,
+          final boolean retry,
+          final Duration requestTimeout,
+          final long deadlineNs,
+          final CompletableFuture<BrokerResponse<Response>> responseFuture,
+          final Throwable failure) {
+    if (!retry) {
+      responseFuture.completeExceptionally(failure);
+      return;
+    }
+    if (System.nanoTime() >= deadlineNs) {
+      final var timeout =
+          new TimeoutException(
+              "Retry budget of "
+                  + requestTimeout.toMillis()
+                  + " ms exhausted, last failure: "
+                  + failure.getMessage());
+      timeout.initCause(failure);
+      responseFuture.completeExceptionally(timeout);
+      return;
+    }
+    // 重试前重新寻址（leader 可能已切换）
+    actor.schedule(
+        RETRY_DELAY,
+        () -> resolveAndSend(request, retry, requestTimeout, deadlineNs, responseFuture));
   }
 
   private <Request extends RequestRecordValue, Response extends ResponseRecordValue>
@@ -155,6 +192,7 @@ public class BrokerClientImpl extends Actor implements BrokerClient {
           final BrokerPlane.Destination destination,
           final boolean retry,
           final Duration requestTimeout,
+          final long deadlineNs,
           final CompletableFuture<BrokerResponse<Response>> responseFuture) {
     // 统一封装格式
     final ApiRequestWriterImpl apiRequestWriter = new ApiRequestWriterImpl();
@@ -188,11 +226,16 @@ public class BrokerClientImpl extends Actor implements BrokerClient {
             requestTimeout,
             requestDataBuffer.byteArray(),
             responseFuture);
-    sendInternal(requestContent);
+    sendInternal(request, retry, requestTimeout, deadlineNs, requestContent);
   }
 
-  private <Response extends ResponseRecordValue> void sendInternal(
-      final RequestContent<Response> requestContext) {
+  private <Request extends RequestRecordValue, Response extends ResponseRecordValue>
+      void sendInternal(
+          final BrokerRequest<Request> request,
+          final boolean retry,
+          final Duration requestTimeout,
+          final long deadlineNs,
+          final RequestContent<Response> requestContext) {
     messagingService
         .sendAndReceive(
             requestContext.apiAddress(),
@@ -202,11 +245,13 @@ public class BrokerClientImpl extends Actor implements BrokerClient {
         .whenComplete(
             (bytes, throwable) -> {
               if (throwable != null) {
-                if (requestContext.shouldRetry()) {
-                  actor.schedule(RETRY_DELAY, () -> sendInternal(requestContext));
-                } else {
-                  requestContext.responseFuture().completeExceptionally(throwable);
-                }
+                retryOrFail(
+                    request,
+                    retry,
+                    requestTimeout,
+                    deadlineNs,
+                    requestContext.responseFuture(),
+                    throwable);
               } else {
                 handleResponse(requestContext.responseFuture(), bytes);
               }
@@ -223,8 +268,9 @@ public class BrokerClientImpl extends Actor implements BrokerClient {
       final Response value = (Response) plane.materialize(responseReader);
       responseFuture.complete(new BrokerResponse<>(responseReader, value));
     } catch (final Exception e) {
+      // 解码失败以异常完结 future；此处运行在消息回调线程，抛出会打断传输层回调循环
       LOG.error("Failed to handle response", e);
-      throw new RuntimeException("Failed to handle response", e);
+      responseFuture.completeExceptionally(e);
     }
   }
 
@@ -238,6 +284,7 @@ public class BrokerClientImpl extends Actor implements BrokerClient {
     if (jobAvailableSubscription != null) {
       jobAvailableSubscription.close();
     }
+    super.close();
   }
 
   @Override

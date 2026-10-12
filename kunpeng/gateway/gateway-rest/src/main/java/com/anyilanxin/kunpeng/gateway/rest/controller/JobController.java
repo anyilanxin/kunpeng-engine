@@ -25,10 +25,13 @@ import com.anyilanxin.kunpeng.gateway.rest.service.vo.PullVo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import java.util.List;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -47,6 +50,7 @@ import reactor.core.publisher.Mono;
  * @since 2026.9.0
  */
 @RestController
+@Validated
 @RequestMapping(
     value = "/{version}/jobs",
     version = "v1",
@@ -101,8 +105,9 @@ public class JobController {
   public Mono<Result<PullVo>> pull(
       @RequestParam @NotBlank(message = "消费类型不能为空") final String type,
       @RequestParam(defaultValue = "") final String worker,
-      @RequestParam(defaultValue = "10") final int maxBatch,
-      @RequestParam(defaultValue = "0") final long deadlineMs,
+      @RequestParam(defaultValue = "10") @Min(value = 1, message = "maxBatch 至少为 1") final int maxBatch,
+      @RequestParam(defaultValue = "0")
+          @Min(value = 0, message = "deadlineMs 不能为负") @Max(value = 300_000, message = "deadlineMs 上限 5 分钟") final long deadlineMs,
       @RequestParam(required = false) final List<String> tenantIds) {
     return jobService
         .pull(type, worker, maxBatch, deadlineMs, tenantIds == null ? List.of() : tenantIds)
@@ -117,7 +122,7 @@ public class JobController {
       @RequestParam(defaultValue = "0") final int capacity,
       @RequestParam(required = false) final List<String> tenantIds,
       @RequestParam(required = false) final List<String> fetchVariables,
-      @RequestParam(defaultValue = "30000") final long heartbeatMs) {
+      @RequestParam(defaultValue = "30000") @Min(value = 1000, message = "heartbeatMs 至少 1000ms") final long heartbeatMs) {
     return jobService.stream(
         jobType,
         worker,

@@ -30,6 +30,8 @@ public final class GatewayLoggers {
       LoggerFactory.getLogger("com.anyilanxin.kunpeng.gateway");
   public static final Logger GATEWAY_LOGGER_GRPC =
       LoggerFactory.getLogger("com.anyilanxin.kunpeng.gateway.grpc");
+  public static final Logger GATEWAY_LOGGER_REST =
+      LoggerFactory.getLogger("com.anyilanxin.kunpeng.gateway.rest");
   public static final Logger GATEWAY_LOGGER_JOB =
       LoggerFactory.getLogger("com.anyilanxin.kunpeng.gateway.job");
 }

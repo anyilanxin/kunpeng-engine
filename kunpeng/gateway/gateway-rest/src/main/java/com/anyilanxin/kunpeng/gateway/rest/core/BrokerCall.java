@@ -50,16 +50,18 @@ public final class BrokerCall {
             response -> {
               if (response.isSuccess()) {
                 final Value value = response.getValue();
-                final Target target = mapper.apply(value);
-                value.reset();
-                return Mono.just(target);
+                try {
+                  return Mono.just(mapper.apply(value));
+                } finally {
+                  value.reset();
+                }
               }
               return Mono.error(new BrokerCommandException(response.code(), response.message()));
             });
   }
 
   /**
-   * 仅回执（无数据载荷）的命令：成功即完成，响应值不读取。
+   * 仅回执（无数据载荷）的命令：成功即完成，响应值不读取但仍归还缓冲。
    *
    * @param future 命令响应 future
    * @param <Value> 响应记录类型
@@ -71,6 +73,7 @@ public final class BrokerCall {
         .flatMap(
             response -> {
               if (response.isSuccess()) {
+                response.getValue().reset();
                 return Mono.empty();
               }
               return Mono.error(new BrokerCommandException(response.code(), response.message()));

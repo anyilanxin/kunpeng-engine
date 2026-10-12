@@ -19,7 +19,7 @@ package com.anyilanxin.kunpeng.gateway.rest.core;
 import com.anyilanxin.kunpeng.protocol.gateway.GatewayLoggers;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
-import org.springframework.http.HttpStatus;
+import org.springframework.core.io.buffer.DataBufferLimitException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -34,11 +34,18 @@ import reactor.core.publisher.Mono;
  */
 @RestControllerAdvice
 public class GlobalRestExceptionHandler {
-  private static final Logger LOG = GatewayLoggers.GATEWAY_LOGGER_GRPC;
+  private static final Logger LOG = GatewayLoggers.GATEWAY_LOGGER_REST;
 
   @ExceptionHandler({WebExchangeBindException.class, ConstraintViolationException.class})
   public Mono<ResponseEntity<Result<Void>>> handleValidation(final Exception exception) {
     return Mono.just(ResponseEntity.ok(Result.fail(400, "参数校验失败：" + exception.getMessage())));
+  }
+
+  /** 请求体超出 codec 缓冲上限（spring.codec.max-in-memory-size）：归 413，提示上限值可调 */
+  @ExceptionHandler(DataBufferLimitException.class)
+  public Mono<ResponseEntity<Result<Void>>> handlePayloadTooLarge(
+      final DataBufferLimitException exception) {
+    return Mono.just(ResponseEntity.ok(Result.fail(413, "请求体超过网关缓冲上限：" + exception.getMessage())));
   }
 
   @ExceptionHandler(NotImplementedException.class)
@@ -53,16 +60,23 @@ public class GlobalRestExceptionHandler {
     return Mono.just(ResponseEntity.ok(Result.fail(exception.getCode(), exception.getMessage())));
   }
 
+  /** 客户端入参错误：消息面向调用方可读，归 400 */
+  @ExceptionHandler({IllegalArgumentException.class, NullPointerException.class})
+  public Mono<ResponseEntity<Result<Void>>> handleClientError(final RuntimeException exception) {
+    return Mono.just(
+        ResponseEntity.ok(
+            Result.fail(
+                400,
+                exception.getMessage() == null
+                    ? exception.getClass().getSimpleName()
+                    : exception.getMessage())));
+  }
+
   @ExceptionHandler(Exception.class)
   public Mono<ResponseEntity<Result<Void>>> handleUnexpected(final Exception exception) {
     LOG.error("Rest request failed", exception);
+    // 内部异常细节只进日志，对外只暴露类型不泄露消息
     return Mono.just(
-        ResponseEntity.status(HttpStatus.OK)
-            .body(
-                Result.fail(
-                    500,
-                    exception.getMessage() == null
-                        ? exception.getClass().getSimpleName()
-                        : exception.getMessage())));
+        ResponseEntity.ok(Result.fail(500, "服务内部错误：" + exception.getClass().getSimpleName())));
   }
 }

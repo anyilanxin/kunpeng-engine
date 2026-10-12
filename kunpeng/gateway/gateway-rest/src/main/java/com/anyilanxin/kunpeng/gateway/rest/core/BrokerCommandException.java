@@ -23,11 +23,13 @@ package com.anyilanxin.kunpeng.gateway.rest.core;
  * @since 2026.9.0
  */
 public class BrokerCommandException extends RuntimeException {
+  private static final int DEFAULT_REJECT_CODE = 500;
   private final int code;
 
   public BrokerCommandException(final int code, final String message) {
     super(message);
-    this.code = code;
+    // broker 逻辑拒绝时失败码可能未置位(=0)，归一为非 0，避免产出 code=0 且 success=false 的矛盾信封
+    this.code = code > 0 ? code : DEFAULT_REJECT_CODE;
   }
 
   public int getCode() {

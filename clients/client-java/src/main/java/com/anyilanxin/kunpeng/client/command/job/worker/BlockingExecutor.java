@@ -41,16 +41,24 @@ final class BlockingExecutor implements Executor {
                 "Not able to acquire lease in %d%s", timeoutMillis, TIMEOUT_UNIT.toString()));
       }
 
-      wrappedExecutor.execute(
-          () -> {
-            try {
-              command.run();
-            } finally {
-              semaphore.release();
-            }
-          });
+      try {
+        wrappedExecutor.execute(
+            () -> {
+              try {
+                command.run();
+              } finally {
+                semaphore.release();
+              }
+            });
+      } catch (final RejectedExecutionException e) {
+        // 已取许可但提交被拒（如执行器已关闭）：归还许可，否则并发额度只减不增永久缩容
+        semaphore.release();
+        throw e;
+      }
     } catch (final InterruptedException e) {
+      // 任务尚未提交，静默吞掉中断会丢失已激活的 job；恢复中断标记并按拒绝上报
       Thread.currentThread().interrupt();
+      throw new RejectedExecutionException("Interrupted before submitting task", e);
     }
   }
 }

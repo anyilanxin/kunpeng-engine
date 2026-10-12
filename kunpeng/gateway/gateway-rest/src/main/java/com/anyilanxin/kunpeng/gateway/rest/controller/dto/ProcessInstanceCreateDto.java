@@ -17,13 +17,14 @@
 package com.anyilanxin.kunpeng.gateway.rest.controller.dto;
 
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 
 /**
- * 流程实例创建请求：processDefinitionKey 与 processDefinitionId 二选一，version=-1 表示最新版本。
+ * 流程实例创建请求：processDefinitionKey 与 processDefinitionId 二选一，version 缺省 -1 表示最新版本。
  *
  * @param processDefinitionKey 流程定义 key
  * @param processDefinitionId 流程定义 id（与 key 二选一）
- * @param version 流程定义版本，-1 最新
+ * @param version 流程定义版本，缺省 -1 最新
  * @param tenantId 租户
  * @param variable 启动变量（JSON 字符串）
  * @author zxuanhong
@@ -32,6 +33,6 @@ import jakarta.validation.constraints.Min;
 public record ProcessInstanceCreateDto(
     String processDefinitionKey,
     Long processDefinitionId,
-    @Min(value = -1, message = "版本必须为正整数或 -1") int version,
-    String tenantId,
+    @Min(value = -1, message = "版本必须为正整数或 -1") Integer version,
+    @Size(max = 64, message = "租户标识过长") String tenantId,
     String variable) {}

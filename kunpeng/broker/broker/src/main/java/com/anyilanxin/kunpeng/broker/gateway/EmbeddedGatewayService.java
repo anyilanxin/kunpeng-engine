@@ -66,10 +66,10 @@ public final class EmbeddedGatewayService implements AutoCloseable {
 
   @Override
   public void close() {
+    // brokerClient 由 broker 引导链持有并关闭，这里只关自己创建的网关
     CloseHelper.closeAll(
         error -> LOGGER.warn("Error occurred while shutting down embedded gateway", error),
-        gateway,
-        brokerClient);
+        gateway);
   }
 
   public Gateway get() {

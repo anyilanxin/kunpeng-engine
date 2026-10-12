@@ -40,10 +40,12 @@ public final class SseDeliveryObserver implements StreamObserver<JobDelivery> {
 
   @Override
   public void onNext(final JobDelivery delivery) {
+    sink.next(ServerSentEvent.builder(JobVo.of(delivery)).event("job").build());
+    // Reactor 取消后 next() 是静默丢弃而非抛错，必须在 next 之后补检取消态，
+    // 让 DeliveryStream.tryDeliver 感知失败并走 WITHDRAW 重派
     if (sink.isCancelled()) {
       throw new IllegalStateException("SSE consumer already cancelled");
     }
-    sink.next(ServerSentEvent.builder(JobVo.of(delivery)).event("job").build());
   }
 
   @Override

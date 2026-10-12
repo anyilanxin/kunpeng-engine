@@ -19,14 +19,14 @@ package com.anyilanxin.kunpeng.client.spring.metrics;
 import com.anyilanxin.kunpeng.client.command.job.worker.JobWorkerMetrics;
 
 /**
- * Bridge between spring-sdk metrics and camunda-client metrics. One way flow where camunda-client
- * metrics get propagated to MetricRecorder format in Spring.
+ * spring-sdk 指标与客户端指标的桥接：客户端 worker 指标单向传播到 Spring 的 MetricsRecorder。
  *
  * @author zxuanhong
  * @since 2026.9.0
  */
 public class KunpengClientMetricsBridge implements JobWorkerMetrics {
 
+  private static final String METRIC_NAME_WORKER_JOB = "kunpeng.client.worker.job";
   private final MetricsRecorder metricsRecorder;
   private final String jobType;
 
@@ -37,11 +37,11 @@ public class KunpengClientMetricsBridge implements JobWorkerMetrics {
 
   @Override
   public void jobActivated(final int count) {
-    metricsRecorder.increase("camunda.client.worker.job", "activated", jobType, count);
+    metricsRecorder.increase(METRIC_NAME_WORKER_JOB, "activated", jobType, count);
   }
 
   @Override
   public void jobHandled(final int count) {
-    metricsRecorder.increase("camunda.client.worker.job", "handled", jobType, count);
+    metricsRecorder.increase(METRIC_NAME_WORKER_JOB, "handled", jobType, count);
   }
 }

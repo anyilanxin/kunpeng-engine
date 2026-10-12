@@ -23,13 +23,17 @@
 
 ## 必需 JVM 参数
 
-由于 agrona 限制，必须添加：
+由于 agrona 限制，必须添加以下两条（`--add-opens` 按"模块/包"粒度生效，一条只开一个包，互不涵盖）：
 
 ```text
 --add-opens=java.base/jdk.internal.misc=ALL-UNNAMED
+--add-opens=java.base/java.util.zip=ALL-UNNAMED
 ```
 
-分发包 `bin/kunpeng` 脚本与 jib 镜像已内置该参数；直接 `java -jar` 启动 fat jar 时必须手动加上，否则启动失败。
+- `jdk.internal.misc`：agrona `UnsafeBuffer` 等基础能力所需；
+- `java.util.zip`：agrona `Crc32c` 反射调用 JDK `CRC32C` 私有内建方法（journal 校验和热路径）所需，缺失时启动即抛 `InaccessibleObjectException`。
+
+分发包 `bin/kunpeng` 脚本与 jib 镜像已内置这两条参数；直接 `java -jar` 启动 fat jar 时必须手动加上，否则启动失败。
 
 ## 启动形态
 
@@ -52,7 +56,7 @@ START_TYPE=gateway java ... -jar kunpeng-<version>.jar     # 环境变量
 ### 1. broker + gateway 一起启动（默认形态）
 
 ```bash
-java --add-opens=java.base/jdk.internal.misc=ALL-UNNAMED -jar kunpeng-2026.9.0-alpha1.jar
+java --add-opens=java.base/jdk.internal.misc=ALL-UNNAMED --add-opens=java.base/java.util.zip=ALL-UNNAMED -jar kunpeng-2026.9.0-alpha1.jar
 ```
 
 内嵌 gateway 默认开启，gRPC 监听 `kunpeng.broker.gateway.network.port`（默认 2024）。
@@ -61,7 +65,7 @@ java --add-opens=java.base/jdk.internal.misc=ALL-UNNAMED -jar kunpeng-2026.9.0-a
 
 ```bash
 java -Dstart.type=broker -Dkunpeng.broker.gateway.enable=false \
-  --add-opens=java.base/jdk.internal.misc=ALL-UNNAMED \
+  --add-opens=java.base/jdk.internal.misc=ALL-UNNAMED --add-opens=java.base/java.util.zip=ALL-UNNAMED \
   -jar kunpeng-2026.9.0-alpha1.jar
 ```
 
@@ -77,7 +81,7 @@ java -Dstart.type=gateway \
   -Dkunpeng.cluster.node-id=gateway01 \
   -Dkunpeng.cluster.network.start-port=2085 \
   -Dkunpeng.gateway.network.port=2084 \
-  --add-opens=java.base/jdk.internal.misc=ALL-UNNAMED \
+  --add-opens=java.base/jdk.internal.misc=ALL-UNNAMED --add-opens=java.base/java.util.zip=ALL-UNNAMED \
   -jar kunpeng-2026.9.0-alpha1.jar
 ```
 
@@ -104,16 +108,16 @@ node01 的 membership 端口为 2026，与默认 seed（`127.0.0.1:2026`）一�
 
 ```bash
 # node01
-java -Dserver.port=2021 -Dmanagement.server.port=9601 -Dkunpeng.cluster.node-id=node01 -Dkunpeng.cluster.network.start-port=2026 -Dkunpeng.broker.gateway.network.port=2024 --add-opens=java.base/jdk.internal.misc=ALL-UNNAMED -jar kunpeng-2026.9.0-alpha1.jar
+java -Dserver.port=2021 -Dmanagement.server.port=9601 -Dkunpeng.cluster.node-id=node01 -Dkunpeng.cluster.network.start-port=2026 -Dkunpeng.broker.gateway.network.port=2024 --add-opens=java.base/jdk.internal.misc=ALL-UNNAMED --add-opens=java.base/java.util.zip=ALL-UNNAMED -jar kunpeng-2026.9.0-alpha1.jar
 
 # node02
-java -Dserver.port=2022 -Dmanagement.server.port=9602 -Dkunpeng.cluster.node-id=node02 -Dkunpeng.cluster.network.start-port=2035 -Dkunpeng.broker.gateway.network.port=2034 --add-opens=java.base/jdk.internal.misc=ALL-UNNAMED -jar kunpeng-2026.9.0-alpha1.jar
+java -Dserver.port=2022 -Dmanagement.server.port=9602 -Dkunpeng.cluster.node-id=node02 -Dkunpeng.cluster.network.start-port=2035 -Dkunpeng.broker.gateway.network.port=2034 --add-opens=java.base/jdk.internal.misc=ALL-UNNAMED --add-opens=java.base/java.util.zip=ALL-UNNAMED -jar kunpeng-2026.9.0-alpha1.jar
 
 # node03
-java -Dserver.port=2023 -Dmanagement.server.port=9603 -Dkunpeng.cluster.node-id=node03 -Dkunpeng.cluster.network.start-port=2045 -Dkunpeng.broker.gateway.network.port=2044 --add-opens=java.base/jdk.internal.misc=ALL-UNNAMED -jar kunpeng-2026.9.0-alpha1.jar
+java -Dserver.port=2023 -Dmanagement.server.port=9603 -Dkunpeng.cluster.node-id=node03 -Dkunpeng.cluster.network.start-port=2045 -Dkunpeng.broker.gateway.network.port=2044 --add-opens=java.base/jdk.internal.misc=ALL-UNNAMED --add-opens=java.base/java.util.zip=ALL-UNNAMED -jar kunpeng-2026.9.0-alpha1.jar
 
 # node04
-java -Dserver.port=2024 -Dmanagement.server.port=9604 -Dkunpeng.cluster.node-id=node04 -Dkunpeng.cluster.network.start-port=2055 -Dkunpeng.broker.gateway.network.port=2054 --add-opens=java.base/jdk.internal.misc=ALL-UNNAMED -jar kunpeng-2026.9.0-alpha1.jar
+java -Dserver.port=2024 -Dmanagement.server.port=9604 -Dkunpeng.cluster.node-id=node04 -Dkunpeng.cluster.network.start-port=2055 -Dkunpeng.broker.gateway.network.port=2054 --add-opens=java.base/jdk.internal.misc=ALL-UNNAMED --add-opens=java.base/java.util.zip=ALL-UNNAMED -jar kunpeng-2026.9.0-alpha1.jar
 ```
 
 ## Docker 启动

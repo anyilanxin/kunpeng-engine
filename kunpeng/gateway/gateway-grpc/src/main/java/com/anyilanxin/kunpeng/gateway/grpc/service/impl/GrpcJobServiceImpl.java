@@ -27,6 +27,7 @@ import com.anyilanxin.kunpeng.gateway.grpc.service.JobServiceGrpc;
 import com.anyilanxin.kunpeng.gateway.grpc.service.JobServiceOuterClass;
 import com.anyilanxin.kunpeng.gateway.job.GatewayJobHub;
 import com.anyilanxin.kunpeng.protocol.gateway.GatewayLoggers;
+import io.grpc.stub.ServerCallStreamObserver;
 import io.grpc.stub.StreamObserver;
 import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
@@ -70,9 +71,18 @@ public class GrpcJobServiceImpl extends JobServiceGrpc.JobServiceImplBase implem
   public void failJob(
       final JobServiceOuterClass.FailJobRequest request,
       final StreamObserver<JobServiceOuterClass.FailJobResponse> responseObserver) {
+    final long retryBackOff = request.getRetryBackOff();
+    if (retryBackOff < 0 || retryBackOff > Integer.MAX_VALUE) {
+      // proto 为 int64，裸截断会把大值静默变成负数写入重试调度，越界直接拒绝
+      responseObserver.onError(
+          handle.error(
+              responseObserver,
+              new IllegalArgumentException(
+                  "retryBackOff out of range [0, " + Integer.MAX_VALUE + "]: " + retryBackOff)));
+      return;
+    }
     final JobFailRequest brokerRequest =
-        new JobFailRequest(
-                request.getJobKey(), request.getRetries(), (int) request.getRetryBackOff())
+        new JobFailRequest(request.getJobKey(), request.getRetries(), (int) retryBackOff)
             .setErrorMessage(request.getErrorMessage());
     commands
         .failJob(brokerRequest)
@@ -174,6 +184,12 @@ public class GrpcJobServiceImpl extends JobServiceGrpc.JobServiceImplBase implem
   public void pullJobs(
       final JobServiceOuterClass.PullRequest request,
       final StreamObserver<JobServiceOuterClass.PullResponse> responseObserver) {
-    jobHub.pullJobs(request, responseObserver);
+    final Runnable cancelPull = jobHub.pullJobs(request, responseObserver);
+    if (responseObserver
+        instanceof
+        final ServerCallStreamObserver<JobServiceOuterClass.PullResponse> serverObserver) {
+      // 客户端断开立即释放挂起槽位，不留等窗口超时
+      serverObserver.setOnCancelHandler(cancelPull);
+    }
   }
 }

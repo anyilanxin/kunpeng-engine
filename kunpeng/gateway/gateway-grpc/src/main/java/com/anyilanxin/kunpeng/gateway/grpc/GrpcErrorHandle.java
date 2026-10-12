@@ -20,6 +20,8 @@ import com.anyilanxin.kunpeng.broker.client.core.BrokerResponse;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.TimeoutException;
 
 /**
  * gRPC 错误处理：异常到 gRPC Status 的统一转换。
@@ -31,13 +33,30 @@ public class GrpcErrorHandle {
 
   public <T> StatusRuntimeException error(
       final StreamObserver<T> streamObserver, final Throwable throwable) {
-    return new StatusRuntimeException(
-        Status.INVALID_ARGUMENT.withDescription(throwable.getMessage()));
+    // 解开 CompletableFuture 的 CompletionException 包装
+    Throwable error = throwable;
+    while (error instanceof final CompletionException completion && completion.getCause() != null) {
+      error = completion.getCause();
+    }
+    if (error instanceof final StatusRuntimeException statusError) {
+      return statusError;
+    }
+    if (error instanceof TimeoutException) {
+      return new StatusRuntimeException(
+          Status.DEADLINE_EXCEEDED.withDescription(error.getMessage()));
+    }
+    if (error instanceof IllegalArgumentException || error instanceof NullPointerException) {
+      return new StatusRuntimeException(
+          Status.INVALID_ARGUMENT.withDescription(error.getMessage()));
+    }
+    // 其余（传输中断/引擎内部错误）如实按内部错误上报，不伪装成参数错误
+    return new StatusRuntimeException(Status.INTERNAL.withDescription(error.getMessage()));
   }
 
   public <T> StatusRuntimeException error(
       final StreamObserver<T> streamObserver, final BrokerResponse brokerResponse) {
+    // broker 业务拒绝（定义不存在/状态机不符等）不是参数格式问题
     return new StatusRuntimeException(
-        Status.INVALID_ARGUMENT.withDescription(brokerResponse.message()));
+        Status.FAILED_PRECONDITION.withDescription(brokerResponse.message()));
   }
 }

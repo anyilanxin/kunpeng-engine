@@ -95,8 +95,8 @@ public class EmbeddedGatewayConfiguration {
     return embeddedGateway.jobHub();
   }
 
-  /** grpc 面网关拓扑视图透出（REST 集群查询域复用同一实例） */
-  @Bean
+  /** grpc 面网关拓扑视图透出（REST 集群查询域复用同一实例；生命周期归 Gateway 关闭链，不托管销毁） */
+  @Bean(destroyMethod = "")
   public com.anyilanxin.kunpeng.gateway.grpc.gatewaydiscover.GatewayTopologyManager
       grpcGatewayTopologyManager(final Gateway embeddedGateway) {
     return embeddedGateway.gatewayTopologyManager();

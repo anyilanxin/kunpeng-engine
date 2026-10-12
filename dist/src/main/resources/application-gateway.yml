@@ -2,3 +2,13 @@ spring:
   application:
     name: kunpeng-gateway
     version: #@version@#
+  # REST 请求体缓冲上限（BPMN 部署走 base64，需高于默认 256KB；超限走 DataBufferLimitException → 413）
+  codec:
+    max-in-memory-size: 32MB
+
+springdoc:
+  # API 文档开关（生产可关）：false 时 /v3/api-docs 与 swagger-ui 均不可用
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true

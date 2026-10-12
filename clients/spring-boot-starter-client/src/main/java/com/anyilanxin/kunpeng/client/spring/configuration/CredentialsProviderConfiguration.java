@@ -16,10 +16,13 @@
  */
 package com.anyilanxin.kunpeng.client.spring.configuration;
 
+import static java.util.Optional.ofNullable;
+
 import com.anyilanxin.kunpeng.client.command.CredentialsProvider;
 import com.anyilanxin.kunpeng.client.command.NoopCredentialsProvider;
 import com.anyilanxin.kunpeng.client.oauth.OAuthCredentialsProviderBuilder;
 import com.anyilanxin.kunpeng.client.spring.properties.KunpengClientProperties;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.slf4j.Logger;
@@ -44,82 +47,48 @@ public class CredentialsProviderConfiguration {
       final KunpengClientProperties kunpengClientProperties) {
     final var authMethod = kunpengClientProperties.getAuth().getMethod();
 
-    //    return authMethod == null
-    //        ? new NoopCredentialsProvider()
-    //        : switch (authMethod) {
-    //          case basic -> buildBasicAuthCredentialsProvider(kunpengClientProperties);
-    //          case oidc -> buildOAuthCredentialsProvider(kunpengClientProperties);
-    //          case none -> new NoopCredentialsProvider();
-    //        };
-    return new NoopCredentialsProvider();
+    return authMethod == null
+        ? new NoopCredentialsProvider()
+        : switch (authMethod) {
+          case oidc -> buildOAuthCredentialsProvider(kunpengClientProperties);
+          case none -> new NoopCredentialsProvider();
+          // 本客户端未实现 basic 凭据提供者；静默降级为无认证会掩盖配置错误，明确失败
+          case basic ->
+              throw new IllegalStateException(
+                  "Auth method 'basic' is not supported by this client; use 'oidc', 'none', or"
+                      + " provide a custom CredentialsProvider bean");
+        };
   }
 
-  //  private CredentialsProvider buildBasicAuthCredentialsProvider(
-  //      final KunpengClientProperties kunpengClientProperties) {
-  //    final var username = kunpengClientProperties.getAuth().getUsername();
-  //    final var password = kunpengClientProperties.getAuth().getPassword();
-  //
-  //    final var builder =
-  //        new BasicAuthCredentialsProviderBuilder()
-  //            .applyEnvironmentOverrides(false)
-  //            .username(username)
-  //            .password(password);
-  //
-  //    try {
-  //      return builder.build();
-  //    } catch (final Exception e) {
-  //      LOG.warn(
-  //          "Failed to configure basic credential provider, falling back to use no authentication,
-  // cause: {}",
-  //          e.getMessage());
-  //      if (LOG.isDebugEnabled()) {
-  //        LOG.debug(e.getMessage(), e);
-  //      }
-  //      return new NoopCredentialsProvider();
-  //    }
-  //  }
-  //
-  //  private CredentialsProvider buildOAuthCredentialsProvider(
-  //      final KunpengClientProperties kunpengClientProperties) {
-  //    final OAuthCredentialsProviderBuilder credBuilder =
-  //        CredentialsProvider.newCredentialsProviderBuilder()
-  //            .applyEnvironmentOverrides(false)
-  //            .clientId(kunpengClientProperties.getAuth().getClientId())
-  //            .clientSecret(kunpengClientProperties.getAuth().getClientSecret())
-  //            .audience(kunpengClientProperties.getAuth().getAudience())
-  //            .scope(kunpengClientProperties.getAuth().getScope())
-  //            .resource(kunpengClientProperties.getAuth().getResource())
-  //            .authorizationServerUrl(
-  //                ofNullable(kunpengClientProperties.getAuth().getTokenUrl())
-  //                    .map(URI::toString)
-  //                    .orElse(null))
-  //            .credentialsCachePath(kunpengClientProperties.getAuth().getCredentialsCachePath())
-  //            .connectTimeout(kunpengClientProperties.getAuth().getConnectTimeout())
-  //            .readTimeout(kunpengClientProperties.getAuth().getReadTimeout())
-  //            .clientAssertionKeystorePath(
-  //                kunpengClientProperties.getAuth().getClientAssertion().getKeystorePath())
-  //            .clientAssertionKeystorePassword(
-  //                kunpengClientProperties.getAuth().getClientAssertion().getKeystorePassword())
-  //            .clientAssertionKeystoreKeyAlias(
-  //                kunpengClientProperties.getAuth().getClientAssertion().getKeystoreKeyAlias())
-  //            .clientAssertionKeystoreKeyPassword(
-  //
-  // kunpengClientProperties.getAuth().getClientAssertion().getKeystoreKeyPassword());
-  //
-  //    maybeConfigureIdentityProviderSSLConfig(credBuilder, kunpengClientProperties);
-  //    try {
-  //      return credBuilder.build();
-  //    } catch (final Exception e) {
-  //      LOG.warn(
-  //          "Failed to configure oidc credential provider, falling back to use no authentication,
-  // cause: {}",
-  //          e.getMessage());
-  //      if (LOG.isDebugEnabled()) {
-  //        LOG.debug(e.getMessage(), e);
-  //      }
-  //      return new NoopCredentialsProvider();
-  //    }
-  //  }
+  private CredentialsProvider buildOAuthCredentialsProvider(
+      final KunpengClientProperties kunpengClientProperties) {
+    final OAuthCredentialsProviderBuilder credBuilder =
+        CredentialsProvider.newCredentialsProviderBuilder()
+            .applyEnvironmentOverrides(false)
+            .clientId(kunpengClientProperties.getAuth().getClientId())
+            .clientSecret(kunpengClientProperties.getAuth().getClientSecret())
+            .audience(kunpengClientProperties.getAuth().getAudience())
+            .scope(kunpengClientProperties.getAuth().getScope())
+            .resource(kunpengClientProperties.getAuth().getResource())
+            .authorizationServerUrl(
+                ofNullable(kunpengClientProperties.getAuth().getTokenUrl())
+                    .map(URI::toString)
+                    .orElse(null))
+            .credentialsCachePath(kunpengClientProperties.getAuth().getCredentialsCachePath())
+            .connectTimeout(kunpengClientProperties.getAuth().getConnectTimeout())
+            .readTimeout(kunpengClientProperties.getAuth().getReadTimeout())
+            .clientAssertionKeystorePath(
+                kunpengClientProperties.getAuth().getClientAssertion().getKeystorePath())
+            .clientAssertionKeystorePassword(
+                kunpengClientProperties.getAuth().getClientAssertion().getKeystorePassword())
+            .clientAssertionKeystoreKeyAlias(
+                kunpengClientProperties.getAuth().getClientAssertion().getKeystoreKeyAlias())
+            .clientAssertionKeystoreKeyPassword(
+                kunpengClientProperties.getAuth().getClientAssertion().getKeystoreKeyPassword());
+
+    maybeConfigureIdentityProviderSSLConfig(credBuilder, kunpengClientProperties);
+    return credBuilder.build();
+  }
 
   private void maybeConfigureIdentityProviderSSLConfig(
       final OAuthCredentialsProviderBuilder builder,

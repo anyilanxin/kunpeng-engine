@@ -92,8 +92,9 @@ public class PropertyBasedJobWorkerValueCustomizer implements JobWorkerValueCust
   }
 
   private boolean hasActivatedJobInjected(final JobWorkerValue jobWorkerValue) {
+    // 方向不能反：判定参数类型是否为 ActivatedJob（或其子类型），反转写法会让任意 Object 参数误判
     return jobWorkerValue.getMethodInfo().getParameters().stream()
-        .anyMatch(p -> p.getParameterInfo().getType().isAssignableFrom(ActivatedJob.class));
+        .anyMatch(p -> ActivatedJob.class.isAssignableFrom(p.getParameterInfo().getType()));
   }
 
   private List<ParameterInfo> readVariableParameters(final MethodInfo methodInfo) {
@@ -163,8 +164,8 @@ public class PropertyBasedJobWorkerValueCustomizer implements JobWorkerValueCust
     copyProperty("pollInterval", overrideSource, source::getPollInterval, target::setPollInterval);
     copyProperty("autoComplete", overrideSource, source::getAutoComplete, target::setAutoComplete);
     copyProperty("enabled", overrideSource, source::getEnabled, target::setEnabled);
-    //    copyProperty(
-    //        "streamEnabled", overrideSource, source::getStreamEnabled, target::setStreamEnabled);
+    copyProperty(
+        "streamEnabled", overrideSource, source::getStreamEnabled, target::setStreamEnabled);
     copyProperty(
         "streamTimeout", overrideSource, source::getStreamTimeout, target::setStreamTimeout);
     copyProperty(

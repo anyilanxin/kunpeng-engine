@@ -78,19 +78,9 @@ public final class ClientProperties {
   public static final String DEFAULT_JOB_POLL_INTERVAL = "kunpeng.client.job.pollinterval";
 
   /**
-   * @see KunpengClientBuilder#defaultMessageTimeToLive(Duration)
-   */
-  public static final String DEFAULT_MESSAGE_TIME_TO_LIVE = "kunpeng.client.message.timeToLive";
-
-  /**
    * @see KunpengClientBuilder#defaultRequestTimeout(Duration)
    */
   public static final String DEFAULT_REQUEST_TIMEOUT = "kunpeng.client.requestTimeout";
-
-  /**
-   * @see KunpengClientBuilder#defaultRequestTimeoutOffset(Duration)
-   */
-  public static final String DEFAULT_REQUEST_TIMEOUT_OFFSET = "kunpeng.client.requestTimeoutOffset";
 
   /**
    * @see KunpengClientBuilder#usePlaintext()

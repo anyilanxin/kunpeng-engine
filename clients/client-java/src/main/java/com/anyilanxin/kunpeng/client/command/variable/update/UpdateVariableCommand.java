@@ -17,6 +17,7 @@ import com.anyilanxin.kunpeng.client.command.FinalCommandStep;
 import java.io.InputStream;
 import java.util.Map;
 
+/** 变量更新命令：按用户任务/流程实例/活动实例定位作用域并更新其变量。 */
 public interface UpdateVariableCommand {
   UpdateVariableCommandStep1 taskId(long userTaskId);
 
@@ -28,7 +29,7 @@ public interface UpdateVariableCommand {
       extends FinalCommandStep<UpdateVariableCommandResponse>,
           CommandWithVariables<UpdateVariableCommandStep1> {
     /**
-     * Set the initial variables of the process instance.
+     * Set the variables of the scoped element (task/process/activity instance).
      *
      * @param variables the variables JSON document as String
      * @return the builder for this command. Call {@link #send()} to complete the command and send
@@ -38,7 +39,7 @@ public interface UpdateVariableCommand {
     UpdateVariableCommandStep1 variables(String variables);
 
     /**
-     * Set the initial variables of the process instance.
+     * Set the variables of the scoped element (task/process/activity instance).
      *
      * @param variables the variables document as object to be serialized to JSON
      * @return the builder for this command. Call {@link #send()} to complete the command and send
@@ -48,7 +49,7 @@ public interface UpdateVariableCommand {
     UpdateVariableCommandStep1 variables(Object variables);
 
     /**
-     * Set the initial variables of the process instance.
+     * Set the variables of the scoped element (task/process/activity instance).
      *
      * @param variables the variables JSON document as stream
      * @return the builder for this command. Call {@link #send()} to complete the command and send
@@ -58,7 +59,7 @@ public interface UpdateVariableCommand {
     UpdateVariableCommandStep1 variables(InputStream variables);
 
     /**
-     * Set the initial variables of the process instance.
+     * Set the variables of the scoped element (task/process/activity instance).
      *
      * @param variables the variables document as map
      * @return the builder for this command. Call {@link #send()} to complete the command and send
@@ -68,7 +69,7 @@ public interface UpdateVariableCommand {
     UpdateVariableCommandStep1 variables(Map<String, Object> variables);
 
     /**
-     * Set a single initial variable of the process instance.
+     * Set a single variable of the scoped element (task/process/activity instance).
      *
      * @param key the key of the variable as string
      * @param value the value of the variable as object

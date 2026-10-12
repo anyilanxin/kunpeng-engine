@@ -50,9 +50,6 @@ public class KunpengClientProperties {
   /** The number of threads for invocation of job workers. */
   private Integer executionThreads = DEFAULT_NUM_JOB_WORKER_EXECUTION_THREADS;
 
-  /** The default time-to-live for a message when no value is provided. */
-  private Duration messageTimeToLive = DEFAULT_MESSAGE_TTL;
-
   /**
    * A custom `maxMessageSize` sets the maximum inbound message size the client can receive from
    * kunpeng。它指定 the `maxInboundMessageSize` of the gRPC channel.
@@ -112,27 +109,12 @@ public class KunpengClientProperties {
   /** The request timeout to use when not overridden by a specific command. */
   private Duration requestTimeout = DEFAULT_REQUEST_TIMEOUT;
 
-  /**
-   * The request timeout client offset applies to commands that also pass the request timeout to the
-   * server. It ensures the client timeout occurs after the server timeout. For these commands, the
-   * client-side timeout equals the request timeout plus the offset.
-   */
-  private Duration requestTimeoutOffset = DEFAULT_REQUEST_TIMEOUT_OFFSET;
-
   public Duration getRequestTimeout() {
     return requestTimeout;
   }
 
   public void setRequestTimeout(final Duration requestTimeout) {
     this.requestTimeout = requestTimeout;
-  }
-
-  public Duration getRequestTimeoutOffset() {
-    return requestTimeoutOffset;
-  }
-
-  public void setRequestTimeoutOffset(final Duration requestTimeoutOffset) {
-    this.requestTimeoutOffset = requestTimeoutOffset;
   }
 
   public String getTenantId() {
@@ -157,14 +139,6 @@ public class KunpengClientProperties {
 
   public void setExecutionThreads(final Integer executionThreads) {
     this.executionThreads = executionThreads;
-  }
-
-  public Duration getMessageTimeToLive() {
-    return messageTimeToLive;
-  }
-
-  public void setMessageTimeToLive(final Duration messageTimeToLive) {
-    this.messageTimeToLive = messageTimeToLive;
   }
 
   public String getCaCertificatePath() {
@@ -283,8 +257,6 @@ public class KunpengClientProperties {
         + auth
         + ", executionThreads="
         + executionThreads
-        + ", messageTimeToLive="
-        + messageTimeToLive
         + ", maxMessageSize="
         + maxMessageSize
         + ", maxMetadataSize="

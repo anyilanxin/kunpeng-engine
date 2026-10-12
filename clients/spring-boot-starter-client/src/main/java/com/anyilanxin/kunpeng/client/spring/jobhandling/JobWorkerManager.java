@@ -144,6 +144,11 @@ public class JobWorkerManager {
   public void closeWorker(final JobWorker worker) {
     worker.close();
     final int i = openedWorkers.indexOf(worker);
+    // indexOf 未命中返回 -1，直接 remove(-1) 会抛难定位的越界异常；未登记属调用方错误，明确抛出
+    if (i < 0) {
+      throw new IllegalStateException(
+          "Cannot close worker that was not opened by this manager: " + worker);
+    }
     openedWorkers.remove(i);
     workerValues.remove(i);
   }

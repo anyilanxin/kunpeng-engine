@@ -121,24 +121,28 @@ public class JobServiceImpl implements JobService {
                   .setDeadlineMs(deadlineMs)
                   .addAllTenantIds(tenantIds)
                   .build();
-          jobHub.pullJobs(
-              request,
-              new StreamObserver<>() {
-                @Override
-                public void onNext(final PullResponse response) {
-                  sink.success(PullVo.of(response));
-                }
+          final Runnable cancelPull =
+              jobHub.pullJobs(
+                  request,
+                  new StreamObserver<>() {
+                    @Override
+                    public void onNext(final PullResponse response) {
+                      sink.success(PullVo.of(response));
+                    }
 
-                @Override
-                public void onError(final Throwable throwable) {
-                  sink.error(throwable);
-                }
+                    @Override
+                    public void onError(final Throwable throwable) {
+                      sink.error(throwable);
+                    }
 
-                @Override
-                public void onCompleted() {
-                  // 首个响应即整体结果，hub 不会再次回调
-                }
-              });
+                    @Override
+                    public void onCompleted() {
+                      // 首个响应即整体结果，hub 不会再次回调
+                    }
+                  });
+          // 客户端断开（SSE/HTTP 取消）立即释放挂起槽位，不留等窗口超时
+          sink.onCancel(cancelPull::run);
+          sink.onDispose(cancelPull::run);
         });
   }
 

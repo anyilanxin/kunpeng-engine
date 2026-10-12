@@ -16,6 +16,8 @@
  */
 package com.anyilanxin.kunpeng.broker.bootstrap.step.idgenerator;
 
+import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
+
 /**
  * 节点 ID 生成服务：为 broker 分配唯一节点 ID。
  *
@@ -24,4 +26,7 @@ package com.anyilanxin.kunpeng.broker.bootstrap.step.idgenerator;
  */
 public interface NodeIdGeneratorService {
   long nextId();
+
+  /** 停止服务：注销成员监听与消息处理器，与 start 对称 */
+  ActorFuture<Void> stop();
 }

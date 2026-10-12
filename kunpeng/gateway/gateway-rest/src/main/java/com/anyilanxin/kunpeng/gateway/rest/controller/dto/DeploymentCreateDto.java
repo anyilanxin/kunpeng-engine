@@ -19,6 +19,7 @@ package com.anyilanxin.kunpeng.gateway.rest.controller.dto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Size;
 import java.util.List;
 
 /**
@@ -30,7 +31,8 @@ import java.util.List;
  * @since 2026.9.0
  */
 public record DeploymentCreateDto(
-    String tenantId, @NotEmpty @Valid List<DeploymentResourceDto> resources) {
+    @Size(max = 64, message = "租户标识过长") String tenantId,
+    @NotEmpty @Valid List<DeploymentResourceDto> resources) {
 
   /**
    * 单个部署资源。
@@ -39,6 +41,6 @@ public record DeploymentCreateDto(
    * @param contentBase64 资源内容（Base64）
    */
   public record DeploymentResourceDto(
-      @NotBlank(message = "资源名不能为空") String name,
+      @NotBlank(message = "资源名不能为空") @Size(max = 256, message = "资源名过长") String name,
       @NotBlank(message = "资源内容不能为空") String contentBase64) {}
 }
