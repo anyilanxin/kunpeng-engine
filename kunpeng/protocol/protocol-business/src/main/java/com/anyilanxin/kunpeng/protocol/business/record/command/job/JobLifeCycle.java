@@ -56,6 +56,7 @@ public enum JobLifeCycle implements ValueLifeCycle {
       case 8 -> REFUSING;
       case 9 -> REFUSED;
       case 10 -> WITHDRAW;
+      case 11 -> TIME_OUT;
       case 12 -> TIMED_OUT;
       default -> UNKNOWN;
     };
@@ -72,6 +73,7 @@ public enum JobLifeCycle implements ValueLifeCycle {
       case 8 -> REFUSING;
       case 9 -> REFUSED;
       case 10 -> WITHDRAW;
+      case 11 -> TIME_OUT;
       case 12 -> TIMED_OUT;
       default -> NULL_VAL;
     };
