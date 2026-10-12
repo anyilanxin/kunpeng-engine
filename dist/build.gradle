@@ -155,7 +155,7 @@ jib {
     }
     containerizingMode = 'packaged'
     container {
-        ports = ['2020', '9600', '24500', '24501', '24502']
+        ports = ['2020', '9600', '2024', '2025', '2026']
         jvmFlags = ['-Xms1025m', '--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED', '--add-opens=java.base/java.util.zip=ALL-UNNAMED']
         environment = ["TZ": 'Asia/Shanghai']
         volumes = ["/kunpeng/data", "/kunpeng/logs"]
