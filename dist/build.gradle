@@ -139,7 +139,7 @@ distributions {
 jib {
     allowInsecureRegistries = true
     from {
-        image = 'eclipse-temurin:25-jre'
+        image = rootProject.ext.docker.baseImage
     }
     to {
         image = 'kunpeng'
@@ -159,7 +159,7 @@ jib {
         jvmFlags = ['-Xms1025m', '--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED', '--add-opens=java.base/java.util.zip=ALL-UNNAMED']
         environment = ["TZ": 'Asia/Shanghai']
         volumes = ["/kunpeng/data", "/kunpeng/logs"]
-        mainClass = 'com.anyilanxin.Application'
+        mainClass = 'com.anyilanxin.kunpeng.Application'
         appRoot = '/kunpeng'
         workingDirectory = '/kunpeng'
     }

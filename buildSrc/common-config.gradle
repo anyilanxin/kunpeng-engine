@@ -31,7 +31,7 @@ ext {
 
 
 	docker = [
-			'baseImage'   : 'eclipse-temurin:21.0.5_11-jre-jammy',
+			'baseImage'   : 'eclipse-temurin:26.0.2.1_1-jre-jammy',
 			'imageRepoUrl': 'harbor.anyilanxin.com',
 			'username'    : 'username',
 			'password'    : 'password',
