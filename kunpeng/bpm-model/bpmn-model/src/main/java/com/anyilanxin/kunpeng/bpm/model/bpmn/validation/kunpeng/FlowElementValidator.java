@@ -25,9 +25,7 @@ public class FlowElementValidator implements ModelElementValidator<FlowElement> 
   private static final Set<Class<?>> NON_EXECUTABLE_ELEMENT_TYPES = new HashSet<>();
 
   static {
-    SUPPORTED_ELEMENT_TYPES.add(AdHocSubProcess.class);
     SUPPORTED_ELEMENT_TYPES.add(BoundaryEvent.class);
-    SUPPORTED_ELEMENT_TYPES.add(BusinessRuleTask.class);
     SUPPORTED_ELEMENT_TYPES.add(EndEvent.class);
     SUPPORTED_ELEMENT_TYPES.add(EventBasedGateway.class);
     SUPPORTED_ELEMENT_TYPES.add(ExclusiveGateway.class);
@@ -37,15 +35,12 @@ public class FlowElementValidator implements ModelElementValidator<FlowElement> 
     SUPPORTED_ELEMENT_TYPES.add(ReceiveTask.class);
     SUPPORTED_ELEMENT_TYPES.add(ScriptTask.class);
     SUPPORTED_ELEMENT_TYPES.add(SequenceFlow.class);
-    SUPPORTED_ELEMENT_TYPES.add(SendTask.class);
     SUPPORTED_ELEMENT_TYPES.add(ServiceTask.class);
     SUPPORTED_ELEMENT_TYPES.add(StartEvent.class);
     SUPPORTED_ELEMENT_TYPES.add(SubProcess.class);
     SUPPORTED_ELEMENT_TYPES.add(CallActivity.class);
     SUPPORTED_ELEMENT_TYPES.add(UserTask.class);
     SUPPORTED_ELEMENT_TYPES.add(IntermediateThrowEvent.class);
-    SUPPORTED_ELEMENT_TYPES.add(ManualTask.class);
-    SUPPORTED_ELEMENT_TYPES.add(Task.class);
 
     NON_EXECUTABLE_ELEMENT_TYPES.add(DataObject.class);
     NON_EXECUTABLE_ELEMENT_TYPES.add(DataObjectReference.class);
@@ -72,6 +67,31 @@ public class FlowElementValidator implements ModelElementValidator<FlowElement> 
                   + "to the documentation for a list of supported elements: "
                   + "https://docs.camunda.io/docs/components/modeler/bpmn/bpmn-coverage/",
               elementType.getSimpleName()));
+      return;
+    }
+
+    // 事件子流程与普通子流程共用 XSD 元素（triggeredByEvent 属性区分），需单独拦截
+    if (element instanceof SubProcess subProcess && subProcess.triggeredByEvent()) {
+      validationResultCollector.addError(
+          0, "Elements of type 'EventSubProcess' are currently not supported");
+      return;
+    }
+
+    // 边界事件引擎侧仅实现 timer/message/signal 三类，其余类型部署期即拒绝（运行期抛未实现属于隐性故障）
+    if (element instanceof BoundaryEvent boundaryEvent) {
+      for (final EventDefinition definition : boundaryEvent.getEventDefinitions()) {
+        final Class<?> definitionType = definition.getElementType().getInstanceType();
+        if (!definitionType.equals(TimerEventDefinition.class)
+            && !definitionType.equals(MessageEventDefinition.class)
+            && !definitionType.equals(SignalEventDefinition.class)) {
+          validationResultCollector.addError(
+              0,
+              String.format(
+                  "Boundary events of type '%s' are currently not supported. Supported boundary"
+                      + " event definitions: timer, message, signal",
+                  definitionType.getSimpleName()));
+        }
+      }
     }
   }
 }

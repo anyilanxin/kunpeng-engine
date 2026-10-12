@@ -73,6 +73,10 @@ public final class AeronMessagingService implements ManagedMessagingService {
   private final AtomicLong correlationIdGenerator = new AtomicLong();
   private final Map<String, RegisteredHandler> handlers = new ConcurrentHashMap<>();
   private final Map<Long, PendingRequest> pendingRequests = new ConcurrentHashMap<>();
+
+  /** 超时扫描节流：代理线程每轮 duty cycle 都回调，全表扫描按 50ms 粒度执行即可 */
+  private volatile long lastRequestSweepNs;
+
   private final Collection<Address> bindingAddresses = new ArrayList<>();
 
   public AeronMessagingService(
@@ -404,11 +408,13 @@ public final class AeronMessagingService implements ManagedMessagingService {
     }
   }
 
-  /** 代理线程回调：扫描超时请求。 */
+  /** 代理线程回调：扫描超时请求（50ms 节流，超时判定粒度随之±50ms，远小于秒级超时本身）。 */
   private void onTick(final long nowNs) {
-    if (pendingRequests.isEmpty()) {
+    if (pendingRequests.isEmpty()
+        || nowNs - lastRequestSweepNs < TimeUnit.MILLISECONDS.toNanos(50)) {
       return;
     }
+    lastRequestSweepNs = nowNs;
     pendingRequests
         .values()
         .removeIf(

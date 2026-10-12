@@ -172,6 +172,11 @@ public class RdbmsSinkSettings {
   }
 
   public void setFlushInterval(final Duration flushInterval) {
+    // 负间隔无意义且会被定时器拒绝得很晚（启动后首次调度才炸），配置期即报错
+    if (flushInterval == null || flushInterval.isNegative()) {
+      throw new IllegalArgumentException(
+          "flushInterval must be zero or positive, got: " + flushInterval);
+    }
     this.flushInterval = flushInterval;
   }
 

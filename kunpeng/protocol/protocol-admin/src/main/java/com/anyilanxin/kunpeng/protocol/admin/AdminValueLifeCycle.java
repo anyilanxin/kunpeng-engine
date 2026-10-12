@@ -117,12 +117,13 @@ public interface AdminValueLifeCycle {
 
     @Override
     public short processIndex() {
-      return 0;
+      // 无处理槽位哨兵：不能返回 0——0 是真实槽位下标，UNKNOWN 记录会误路由到首个处理器
+      return NOT_PROCESS_INDEX;
     }
 
     @Override
     public short recordIndex() {
-      return 0;
+      return NOT_PROCESS_INDEX;
     }
 
     @Override

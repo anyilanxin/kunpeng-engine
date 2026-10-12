@@ -175,7 +175,12 @@ public class CatchEventBehavior {
     return Either.right(false);
   }
 
-  public void subscribeCatchEvent(
+  /**
+   * 订阅中间捕获事件（定时/消息/信号）。
+   *
+   * @return Right(true)-已建立订阅；Right(false)-无需订阅；Left-订阅表达式计算失败
+   */
+  public Either<String, Boolean> subscribeCatchEvent(
       final BpmnCatchEventElement element, final ActivityContent activityContext) {
     if (element.isTimer()) {
       final BpmnCatchEventElement.TimerProperties timerProperties = element.getTimerProperties();
@@ -184,11 +189,7 @@ public class CatchEventBehavior {
       final Either<String, Timer> apply =
           timerFactory.apply(variableBehavior.scriptContext(activityContext));
       if (apply.isLeft()) {
-        LOG.error(
-            "Catch event timer factory failed for activity {}: {}",
-            activityContext.getActivityInstanceId(),
-            apply.getLeft());
-        return;
+        return Either.left("Catch event timer factory failed: " + apply.getLeft());
       }
 
       subscribeToTimerEvent(
@@ -202,6 +203,7 @@ public class CatchEventBehavior {
           activityContext.getTenantIdBuffer(),
           apply.get(),
           TimerElementType.ACTIVITY);
+      return Either.right(true);
     } else if (element.isMessage()) {
       final BpmnMessage message = element.getMessage();
       final String messageName;
@@ -211,11 +213,7 @@ public class CatchEventBehavior {
                 .getMessageNameExpression()
                 .evaluateString(variableBehavior.scriptContext(activityContext));
         if (result.isLeft()) {
-          LOG.error(
-              "Catch event message name expression failed for activity {}: {}",
-              activityContext.getActivityInstanceId(),
-              result.getLeft());
-          return;
+          return Either.left("Catch event message name expression failed: " + result.getLeft());
         }
         messageName = result.get();
       } else {
@@ -225,11 +223,7 @@ public class CatchEventBehavior {
       final Either<String, String> result =
           correlationKeyExpression.evaluateString(variableBehavior.scriptContext(activityContext));
       if (result.isLeft()) {
-        LOG.error(
-            "Catch event correlation key expression failed for activity {}: {}",
-            activityContext.getActivityInstanceId(),
-            result.getLeft());
-        return;
+        return Either.left("Catch event correlation key expression failed: " + result.getLeft());
       }
       final String correlationKey = result.get();
       // 注册消息
@@ -250,6 +244,7 @@ public class CatchEventBehavior {
           MessageSubscriptionLifeCycle.CREATED,
           activityContext.getRequestId(),
           messageSubscriptionRecord);
+      return Either.right(true);
     } else if (element.isSignal()) {
       final BpmnSignal signal = element.getSignal();
       final String signalName;
@@ -259,11 +254,7 @@ public class CatchEventBehavior {
                 .getSignalNameExpression()
                 .evaluateString(variableBehavior.scriptContext(activityContext));
         if (result.isLeft()) {
-          LOG.error(
-              "Catch event signal name expression failed for activity {}: {}",
-              activityContext.getActivityInstanceId(),
-              result.getLeft());
-          return;
+          return Either.left("Catch event signal name expression failed: " + result.getLeft());
         }
         signalName = result.get();
       } else {
@@ -286,7 +277,9 @@ public class CatchEventBehavior {
           SignalSubscriptionLifeCycle.CREATED,
           activityContext.getRequestId(),
           signalSubscriptionRecord);
+      return Either.right(true);
     }
+    return Either.right(false);
   }
 
   public void unsubscribeEvent(final ActivityContent activityContext) {
@@ -444,36 +437,6 @@ public class CatchEventBehavior {
       }
     }
     return Either.right(true);
-  }
-
-  private void subscribeBoundaryEventToTimerEvent(
-      final BpmnBoundaryEvent boundaryEvent, final ActivityContent activityContext) {
-    final BpmnCatchEventElement.TimerProperties timerProperties =
-        boundaryEvent.getTimerProperties();
-    final Function<ScriptContext, Either<String, Timer>> timerFactory =
-        timerProperties.getTimerFactory();
-    final Either<String, Timer> apply =
-        timerFactory.apply(
-            variableBehavior.scriptContext(
-                activityContext.getProcessInstanceId(), activityContext.getActivityInstanceId()));
-    if (apply.isLeft()) {
-      LOG.error(
-          "Boundary event timer factory failed for activity {}: {}",
-          activityContext.getActivityInstanceId(),
-          apply.getLeft());
-      return;
-    }
-    subscribeToTimerEvent(
-        timerProperties,
-        boundaryEvent.isInterrupting(),
-        activityContext.getActivityInstanceId(),
-        activityContext.getProcessInstanceId(),
-        activityContext.getProcessDefinitionId(),
-        activityContext.getProcessDefinitionKeyBuffer(),
-        boundaryEvent.getId(),
-        activityContext.getTenantIdBuffer(),
-        apply.get(),
-        TimerElementType.BOUNDARY_EVENT);
   }
 
   public void subscribeToTimerEvent(

@@ -29,8 +29,6 @@ import com.anyilanxin.kunpeng.engine.script.ScriptExpression;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.activityinstance.ActivityInstanceRecord;
 import com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance.ActivityInstanceLifeCycle;
 import com.anyilanxin.kunpeng.utils.Either;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 排他网关元素处理器。
@@ -40,13 +38,13 @@ import org.slf4j.LoggerFactory;
  */
 public class ExclusiveGatewayElementProcessor
     implements BpmnActivityElementProcessor<BpmnBranchingGateway> {
-  private static final Logger LOG = LoggerFactory.getLogger(ExclusiveGatewayElementProcessor.class);
   private final LogEventWriter writer;
   private final SequenceFlowBehavior sequenceFlowBehavior;
   private final ActivityInstanceBehavior activityInstanceBehavior;
   private final VariableBehavior variableBehavior;
   private final BatchBehavior batchBehavior;
   private final InputOutputBehavior inputOutputBehavior;
+  private final IncidentBehavior incidentBehavior;
 
   public ExclusiveGatewayElementProcessor(final LogEventWriter writer) {
     this.writer = writer;
@@ -56,6 +54,7 @@ public class ExclusiveGatewayElementProcessor
     variableBehavior = behavior.variableBehavior();
     batchBehavior = behavior.batchBehavior();
     inputOutputBehavior = behavior.inputOutputBehavior();
+    incidentBehavior = behavior.incidentBehavior();
   }
 
   @Override
@@ -108,17 +107,29 @@ public class ExclusiveGatewayElementProcessor
       final ScriptExpression condition = sequenceFlow.getCondition();
       final Either<String, Boolean> result = condition.evaluateBoolean(scriptContext);
       if (result.isLeft()) {
-        LOG.error(
-            "Exclusive gateway {} condition evaluation failed: {}",
-            element.getId(),
-            result.getLeft());
+        incidentBehavior.createActivityIncident(
+            activityContext, ActivityInstanceLifeCycle.COMPLETED, result.getLeft());
         return;
-      } else {
-        final Boolean data = result.get();
-        if (data) {
-          outgoingSequenceFlow = sequenceFlow;
-          break;
-        }
+      }
+      final Boolean data = result.get();
+      if (data) {
+        outgoingSequenceFlow = sequenceFlow;
+        break;
+      }
+    }
+    if (outgoingSequenceFlow == null) {
+      // 条件流均不满足且无默认流：存在无条件出边（汇聚/直通形态）则走第一条，否则挂 incident
+      outgoingSequenceFlow =
+          element.getOutgoing().stream()
+              .filter(flow -> !flow.isConditional())
+              .findFirst()
+              .orElse(null);
+      if (outgoingSequenceFlow == null && !element.getOutgoing().isEmpty()) {
+        incidentBehavior.createActivityIncident(
+            activityContext,
+            ActivityInstanceLifeCycle.COMPLETED,
+            "Exclusive gateway " + element.getId() + " 没有满足条件的出边且未声明默认流");
+        return;
       }
     }
     activityInstanceBehavior.onCompleted(activityContext);

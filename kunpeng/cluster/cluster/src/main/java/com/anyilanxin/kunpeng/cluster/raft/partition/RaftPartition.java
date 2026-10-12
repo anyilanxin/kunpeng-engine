@@ -947,8 +947,9 @@ public final class RaftPartition implements Partition, HealthMonitorable {
       return CompletableFuture.failedFuture(
           new IllegalStateException("partition " + partitionId + " is not started"));
     }
-    final long index = current.getCommitIndex();
-    final long term = current.getTerm();
+    final var bound = snapshotBound(current, force);
+    final long index = bound.index();
+    final long term = bound.term();
     if (!force && (index <= 0 || index <= snapshotStore.getCurrentSnapshotIndex())) {
       return CompletableFuture.completedFuture(null);
     }
@@ -964,6 +965,52 @@ public final class RaftPartition implements Partition, HealthMonitorable {
               return pending.persist().toCompletableFuture().thenApply(ignored -> null);
             });
   }
+
+  /**
+   * 推导本次快照的 {@code (index, term)}：以 commitIndex 为上界，再按业务压缩下限（如 sink 最低已确认位置， {@link
+   * RaftSnapshotProvider#getCompactionFloorPosition()}）钳制——快照边界不得越过业务尚未消费完的日志位置，
+   * 否则日志压缩后恢复点在日志中已不存在、未导出数据永久丢失。
+   *
+   * <p>position 经 {@code seekToAsqn} 换算为"asqn 不超过下限的最后一条"日志条目，index 与 term 均取自该条目 （快照新旧比较看 {@code
+   * (index, term)} 二元组）。强制拍摄时钳制结果不低于当前快照边界：边界只进不退，落后时重拍当前边界以刷新 内容（对应 camunda 在 exporter 未就绪时复用上一快照
+   * index 的做法）。日志中找不到对应条目（数据世代更换后的陈旧 下限值等）时本次不构成约束。
+   */
+  private SnapshotBound snapshotBound(final RaftPartitionServer current, final boolean force) {
+    final long commitIndex = current.getCommitIndex();
+    final long currentTerm = current.getTerm();
+    final long floor = snapshotProvider.getCompactionFloorPosition();
+    if (floor == Long.MAX_VALUE) {
+      return new SnapshotBound(commitIndex, currentTerm);
+    }
+
+    long index = commitIndex;
+    long term = currentTerm;
+    try (final var reader = current.openReader()) {
+      reader.seekToAsqn(floor);
+      if (reader.hasNext()) {
+        final var entry = reader.next();
+        index = Math.min(commitIndex, entry.index());
+        term = entry.term();
+      } else {
+        LOG.debug(
+            "Partition {} found no entry at or below compaction floor position {}; "
+                + "snapshot bound unconstrained this round",
+            partitionId,
+            floor);
+      }
+    }
+
+    if (force) {
+      final long currentSnapshotIndex = snapshotStore.getCurrentSnapshotIndex();
+      if (index < currentSnapshotIndex) {
+        return new SnapshotBound(currentSnapshotIndex, currentTerm);
+      }
+    }
+    return new SnapshotBound(index, term);
+  }
+
+  /** 快照边界二元组：镜像标识比较只看 {@code (index, term)}。 */
+  private record SnapshotBound(long index, long term) {}
 
   /** 周期拍摄入口：运行在快照 actor 线程，失败仅记录日志。 */
   private void takeSnapshotScheduled() {

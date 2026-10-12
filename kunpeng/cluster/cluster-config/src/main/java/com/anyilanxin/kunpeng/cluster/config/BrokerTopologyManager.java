@@ -31,12 +31,22 @@ public final class BrokerTopologyManager {
   private final ClusterTopologyService topologyService;
   private final List<TopologyListener> listeners = new CopyOnWriteArrayList<>();
 
+  /** 快照缓存：拓扑版本未变时直接复用，避免每次查询深拷贝全量视图 */
+  private volatile long cachedVersion = -1;
+
+  private volatile BrokerClusterState cachedTopology;
+
   public BrokerTopologyManager(final ClusterTopologyService topologyService) {
     this.topologyService = topologyService;
   }
 
   public BrokerClusterState getTopology() {
-    return new BrokerClusterState(topologyService.getMemberPartitions());
+    final long version = topologyService.getTopologyVersion();
+    if (version != cachedVersion) {
+      cachedTopology = new BrokerClusterState(topologyService.getMemberPartitions());
+      cachedVersion = version;
+    }
+    return cachedTopology;
   }
 
   public void addTopologyListener(final TopologyListener listener) {

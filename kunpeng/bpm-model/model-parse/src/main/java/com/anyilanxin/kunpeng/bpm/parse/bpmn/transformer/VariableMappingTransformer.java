@@ -78,27 +78,38 @@ final class VariableMappingTransformer {
     return root.render(new StringBuilder(), mergeNestedContext, "").toString();
   }
 
-  /** 按目标路径（点号分隔）把源表达式插入路径树；中间节点自动创建。 */
+  /** 按目标路径（点号分隔）把源表达式插入路径树；中间节点自动创建；同路径/前缀冲突抛解析异常。 */
   private void insertMapping(
       final MappingNode parent, final String targetPath, final ScriptExpression source) {
     final int separatorIndex = targetPath.indexOf(PATH_SEPARATOR);
     if (separatorIndex < 0) {
-      parent.entries().put(targetPath, source);
+      if (parent.entries().put(targetPath, source) != null) {
+        throw new BpmnParseException(
+            "Variable mapping target path duplicate: '" + targetPath + "'");
+      }
       return;
     }
     final String key = targetPath.substring(0, separatorIndex);
-    final MappingNode existing = (MappingNode) parent.entries().get(key);
-    final MappingNode child = existing == null ? new MappingNode() : existing;
-    parent.entries().put(key, child);
+    final Object existing = parent.entries().get(key);
+    final MappingNode child;
+    if (existing == null) {
+      child = new MappingNode();
+      parent.entries().put(key, child);
+    } else if (existing instanceof final MappingNode node) {
+      child = node;
+    } else {
+      throw new BpmnParseException(
+          "Variable mapping target path conflict: '" + targetPath + "' 与叶子映射 '" + key + "' 冲突");
+    }
     insertMapping(child, targetPath.substring(separatorIndex + 1), source);
   }
 
-  /** 解析渲染结果，编译失败即抛出解析异常（引擎的 {@code isValid()} 为 true 表示校验未通过）。 */
+  /** 解析渲染结果，编译失败即抛出解析异常。 */
   private ScriptExpression compileContextExpression(
       final String contextExpression, final BpmnTransformContext context) {
     final ScriptExpression expression =
         context.parseExpression(ASSIGNMENT_PREFIX + contextExpression);
-    if (expression.isValid()) {
+    if (!expression.isValid()) {
       throw new BpmnParseException(
           "Failed to build variable mapping expression: "
               + contextExpression

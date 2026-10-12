@@ -38,6 +38,7 @@ dependencies {
     implementation project(':kunpeng:protocol:protocol-business')
     implementation project(':kunpeng:protocol:protocol-business-impl')
     implementation project(':kunpeng:bpm-model:model-parse')
+    // model-parse 公共 API（BpmnFactory/BpmnTransformer）签名引用 script-engine 类型，编译期传递需要
     implementation project(':kunpeng:engine:script-engine')
 
     implementation 'com.google.guava:guava'

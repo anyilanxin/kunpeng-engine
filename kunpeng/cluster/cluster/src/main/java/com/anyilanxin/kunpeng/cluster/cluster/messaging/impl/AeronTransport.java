@@ -31,9 +31,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -75,6 +77,11 @@ public final class AeronTransport {
   private static final long BROADCAST_DESTINATION_TTL_NS = TimeUnit.SECONDS.toNanos(60);
 
   private static final long BROADCAST_DESTINATION_SWEEP_NS = TimeUnit.SECONDS.toNanos(1);
+
+  /** 单播发布通道空闲驱逐阈值：成员下线后其通道不再使用，不驱逐会无限累积（每条独占 term 缓冲） */
+  private static final long UNICAST_PUBLICATION_TTL_NS = TimeUnit.SECONDS.toNanos(60);
+
+  private static final long UNICAST_PUBLICATION_SWEEP_NS = TimeUnit.SECONDS.toNanos(1);
 
   private final MessagingConfig messagingConfig;
   private final AeronMessagingConfig config;
@@ -257,6 +264,11 @@ public final class AeronTransport {
     if (!sendQueue.offer(task)) {
       warnQueueFullThrottled(task.channelUri);
       task.fail(new IllegalStateException("发送队列已满(背压): " + task.channelUri));
+      return;
+    }
+    if (!running) {
+      // 与停止竞态：failPendingSends 已清排后 offer 进来的任务无人消费，按失败归还调用方
+      task.fail(new IllegalStateException("Aeron transport is not running."));
     }
   }
 
@@ -273,6 +285,10 @@ public final class AeronTransport {
     if (!broadcastQueue.offer(task)) {
       warnQueueFullThrottled(task.destinationUris.toString());
       task.fail(new IllegalStateException("广播队列已满(背压): " + task.destinationUris));
+      return;
+    }
+    if (!running) {
+      task.fail(new IllegalStateException("Aeron transport is not running."));
     }
   }
 
@@ -436,13 +452,22 @@ public final class AeronTransport {
     };
   }
 
+  /** 发布通道 URI 缓存：URI 由（地址, term 长度）决定，逐条消息重复拼接属纯浪费 */
+  private final Map<Address, Map<Integer, String>> publicationChannelCache =
+      new ConcurrentHashMap<>();
+
   /** 目的地发布通道 URI（每个对端一条独占发布通道，term 长度按流配置）。 */
   String publicationChannel(final Address destination, final int termBufferLength) {
-    return "aeron:udp?endpoint="
-        + endpoint(destination)
-        + "|term-length="
-        + termBufferLength
-        + tuningParams();
+    return publicationChannelCache
+        .computeIfAbsent(destination, ignored -> new ConcurrentHashMap<>())
+        .computeIfAbsent(
+            termBufferLength,
+            ignored ->
+                "aeron:udp?endpoint="
+                    + endpoint(destination)
+                    + "|term-length="
+                    + termBufferLength
+                    + tuningParams());
   }
 
   private static String endpoint(final Address address) {
@@ -498,7 +523,11 @@ public final class AeronTransport {
     /** streamId → (目的地通道 URI → 最近使用 nanoTime)；代理线程访问。 */
     private final HashMap<Integer, HashMap<String, Long>> broadcastDestinations = new HashMap<>();
 
+    /** 单播通道 URI → 最近使用 nanoTime；代理线程访问 */
+    private final HashMap<String, Long> publicationLastUseNs = new HashMap<>();
+
     private long lastDestinationSweepNs;
+    private long lastPublicationSweepNs;
     private final FragmentAssembler messagingAssembler =
         new FragmentAssembler(
             (buffer, offset, length, header) ->
@@ -529,6 +558,7 @@ public final class AeronTransport {
         LOGGER.error("单播流接收失败", error);
       }
       sweepIdleBroadcastDestinations(System.nanoTime());
+      sweepIdlePublications(System.nanoTime());
       final long nowNs = System.nanoTime();
       for (final Tickable tickable : tickables) {
         try {
@@ -546,6 +576,7 @@ public final class AeronTransport {
         publication.close();
       }
       publications.clear();
+      publicationLastUseNs.clear();
       for (final ExclusivePublication publication : broadcastPublications.values()) {
         publication.close();
       }
@@ -619,6 +650,7 @@ public final class AeronTransport {
     private ExclusivePublication publication(final SendTask task) {
       ExclusivePublication publication = publications.get(task.channelUri);
       if (publication != null && !publication.isClosed()) {
+        publicationLastUseNs.put(task.channelUri, System.nanoTime());
         return publication;
       }
       if (publication != null) {
@@ -631,6 +663,7 @@ public final class AeronTransport {
           publication.termBufferLength(),
           publication.maxMessageLength());
       publications.put(task.channelUri, publication);
+      publicationLastUseNs.put(task.channelUri, System.nanoTime());
       return publication;
     }
 
@@ -762,6 +795,26 @@ public final class AeronTransport {
                       return false;
                     });
           });
+    }
+
+    /** 单播发布通道空闲驱逐：成员下线后其通道不再使用，按 TTL 回收（后续任务到来时按需重建） */
+    private void sweepIdlePublications(final long nowNs) {
+      if (nowNs - lastPublicationSweepNs < UNICAST_PUBLICATION_SWEEP_NS || publications.isEmpty()) {
+        return;
+      }
+      lastPublicationSweepNs = nowNs;
+      final Iterator<java.util.Map.Entry<String, ExclusivePublication>> it =
+          publications.entrySet().iterator();
+      while (it.hasNext()) {
+        final java.util.Map.Entry<String, ExclusivePublication> entry = it.next();
+        final long lastUseNs = publicationLastUseNs.getOrDefault(entry.getKey(), nowNs);
+        if (nowNs - lastUseNs >= UNICAST_PUBLICATION_TTL_NS) {
+          it.remove();
+          publicationLastUseNs.remove(entry.getKey());
+          entry.getValue().close();
+          LOGGER.info("空闲单播发布通道已驱逐: {}", entry.getKey());
+        }
+      }
     }
   }
 }

@@ -180,11 +180,17 @@ public final class PartitionTopologyDiff {
     return ids;
   }
 
-  /** 主成员 ID，缺失时回退首个成员 */
+  /** 主成员 ID，缺失时回退首个成员；完全无成员属上游计划数据错误，带分区标识明确报错 */
   private static String primaryMemberId(final PartitionInfoMetaRecord partition) {
     final String primary = partition.getPrimaryMemberId();
     if (primary == null || primary.isEmpty()) {
-      return partition.members().stream().findFirst().orElseThrow().getMemberId();
+      return partition.members().stream()
+          .findFirst()
+          .orElseThrow(
+              () ->
+                  new IllegalStateException(
+                      "Partition " + partitionKey(partition) + " has no members to pick primary"))
+          .getMemberId();
     }
     return primary;
   }

@@ -70,4 +70,20 @@ public interface RaftSnapshotProvider<T> extends CloseableSilently {
   SnapshotStore getSnapshotStore();
 
   ActorFuture<T> recover();
+
+  /**
+   * 读取压缩下限 position（asqn 语义）。
+   *
+   * <p>拍摄常规镜像时，快照 index 会被钳制到不高于该位置对应的日志条目（经 {@code seekToAsqn} 换算）， 从而保证日志压缩永远不越过业务尚未消费完的位置（如 sink
+   * 的最低已确认位置）——否则截断后 sink 恢复点在日志中已不存在，未导出数据永久丢失。 数据源应为可同步读取的持久化状态（如 repository 落库值）， 调用方位于快照
+   * actor，不得跨 actor 异步取。
+   *
+   * <p>三态语义：无此类消费者（如管理面分区）返回 {@link Long#MAX_VALUE}，不阻塞压缩；有消费者且正常确认时 钳到其最低位置；有消费者但从不确认时压缩边界原地停住
+   * （保数据优先，磁盘持续膨胀由运维介入解除）。 钳制只作用于快照边界推导，镜像内容始终拍摄当前全量状态。
+   *
+   * @return 压缩下限 position；无业务约束时 {@link Long#MAX_VALUE}
+   */
+  default long getCompactionFloorPosition() {
+    return Long.MAX_VALUE;
+  }
 }

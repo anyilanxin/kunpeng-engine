@@ -74,6 +74,15 @@ public final class DocumentUtil {
     return writeJson(DocumentCodec.unpack(msgPack));
   }
 
+  /** msgpack 缓冲 → JSON 字节（UTF-8），跳过中间 String，供逐字节直写的调用方使用 */
+  public static byte[] convertToJsonBytes(final DirectBuffer buffer) {
+    try {
+      return MAPPER.writeValueAsBytes(DocumentCodec.unpack(readBuffer(buffer)));
+    } catch (final JacksonException e) {
+      throw new IllegalArgumentException("msgpack 转换为 JSON 失败", e);
+    }
+  }
+
   public static Map<String, Object> convertToMap(final DirectBuffer buffer) {
     final Object result = convertToObject(buffer);
     if (result instanceof Map) {

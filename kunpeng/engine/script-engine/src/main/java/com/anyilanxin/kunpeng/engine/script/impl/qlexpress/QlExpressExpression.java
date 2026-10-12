@@ -55,10 +55,10 @@ public final class QlExpressExpression extends ScriptAbstractExpression {
       parsedText = expression;
       sourceText = expression;
       outVarNames = express4Runner.getOutVarNames(parsedText);
-      isValid = false;
+      isValid = true;
     } catch (final Exception e) {
       failureMessage = e.getMessage();
-      isValid = true;
+      isValid = false;
       parsedText = "";
       sourceText = expression;
       outVarNames = new HashSet<>();
@@ -103,7 +103,7 @@ public final class QlExpressExpression extends ScriptAbstractExpression {
   @Override
   protected EvaluationResult evaluate(final ScriptContext scriptContext) {
     final EvaluationResultImpl evaluationResult = new EvaluationResultImpl(getSourceText());
-    if (isValid()) {
+    if (!isValid()) {
       evaluationResult.setFailure(true);
       evaluationResult.setFailureMessage(getFailureMessage());
     } else {

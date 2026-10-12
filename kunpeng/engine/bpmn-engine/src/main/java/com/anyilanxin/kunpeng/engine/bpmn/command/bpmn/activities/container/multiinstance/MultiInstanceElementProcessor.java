@@ -39,8 +39,6 @@ import com.anyilanxin.kunpeng.utils.Either;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 多实例元素处理器：串行/并行多实例展开。
@@ -50,7 +48,6 @@ import org.slf4j.LoggerFactory;
  */
 public class MultiInstanceElementProcessor
     implements BpmnContainerActivityElementProcessor<BpmnMultiInstanceBody> {
-  private static final Logger LOG = LoggerFactory.getLogger(MultiInstanceElementProcessor.class);
   private final LogEventWriter writer;
   private final Behavior behavior;
   private final ActivityInstanceBehavior activityInstanceBehavior;
@@ -111,12 +108,10 @@ public class MultiInstanceElementProcessor
 
     final boolean sequential = loopCharacteristics.isSequential();
     final InstanceVariable variable = getVariable(activityContext);
-    final boolean completed;
-    if (sequential) {
-      completed = createSequential(element, activityContext, variable);
-    } else {
-      completed = createNoSequential(element, activityContext, variable);
-    }
+    final Either<String, Boolean> completed =
+        sequential
+            ? createSequential(element, activityContext, variable)
+            : createNoSequential(element, activityContext, variable);
     saveOrUpdateVariable(activityContext, variable);
 
     // 标记激活完成
@@ -140,20 +135,26 @@ public class MultiInstanceElementProcessor
           activityContext, ActivityInstanceLifeCycle.ACTIVATED, either.getLeft());
       return;
     }
-    if (completed) {
+    if (completed.isLeft()) {
+      // 集合/基数计算失败：挂 incident 阻止空实例体被错误完结
+      incidentBehavior.createActivityIncident(
+          activityContext, ActivityInstanceLifeCycle.ACTIVATED, completed.getLeft());
+      return;
+    }
+    if (completed.get()) {
       activityInstanceBehavior.onCompleting(element, activityContext);
       return;
     }
 
     // 计算完成条件
-    calculateComplete(activityContext, element);
+    calculateComplete(activityContext, element, ActivityInstanceLifeCycle.ACTIVATED);
   }
 
   private void updateVariable(final ActivityContent content, final Map<String, Object> variables) {
     variableBehavior.variableUpdate(content, variables);
   }
 
-  private boolean createNoSequential(
+  private Either<String, Boolean> createNoSequential(
       final BpmnMultiInstanceBody element,
       final ActivityContent activityContext,
       final InstanceVariable variable) {
@@ -165,16 +166,12 @@ public class MultiInstanceElementProcessor
       final Either<String, List<String>> result =
           collectionExpression.evaluateListString(scriptContext);
       if (result.isLeft()) {
-        LOG.error(
-            "Multi-instance collection evaluation failed (parallel) for activity {}: {}",
-            activityContext.getActivityInstanceId(),
-            result.getLeft());
-        return false;
+        return Either.left("多实例(parallel)集合表达式计算失败: " + result.getLeft());
       }
       final List<String> collection = result.get();
       variable.nrOfInstances = collection.size();
       if (variable.nrOfInstances == 0) {
-        return true;
+        return Either.right(true);
       }
 
       final String elementVariable = loopCharacteristics.getElementVariable();
@@ -188,20 +185,27 @@ public class MultiInstanceElementProcessor
       if (loopCardinalityExpression != null) {
         final int loopCardinality;
         if (loopCardinalityExpression.isStatic()) {
-          loopCardinality = Integer.parseInt(loopCardinalityExpression.getParsedText());
+          try {
+            loopCardinality = Integer.parseInt(loopCardinalityExpression.getParsedText());
+          } catch (final NumberFormatException e) {
+            return Either.left(
+                "多实例(parallel)静态基数解析失败: " + loopCardinalityExpression.getParsedText());
+          }
         } else {
           final Either<String, Number> result =
               loopCardinalityExpression.evaluateNumber(scriptContext);
           if (result.isLeft()) {
-            LOG.error(
-                "Multi-instance loopCardinality evaluation failed (parallel) for activity {}: {}",
-                activityContext.getActivityInstanceId(),
-                result.getLeft());
-            return false;
+            return Either.left("多实例(parallel)基数表达式计算失败: " + result.getLeft());
           }
           loopCardinality = result.get().intValue();
         }
+        if (loopCardinality < 0) {
+          return Either.left("多实例(parallel)基数为负数: " + loopCardinality);
+        }
         variable.nrOfInstances = loopCardinality;
+        if (loopCardinality == 0) {
+          return Either.right(true);
+        }
         for (int i = 0; i < loopCardinality; i++) {
           variable.nrOfActiveInstances = variable.nrOfActiveInstances + 1;
           variable.loopCounter = variable.loopCounter + 1;
@@ -209,16 +213,16 @@ public class MultiInstanceElementProcessor
         }
       }
     }
-    return false;
+    return Either.right(false);
   }
 
   /**
    * @param element
    * @param activityContext
    * @param variable
-   * @return boolean 是否完结：true-完结，false-不完结
+   * @return 是否完结：Right(true)-完结，Right(false)-不完结，Left-计算失败
    */
-  private boolean createSequential(
+  private Either<String, Boolean> createSequential(
       final BpmnMultiInstanceBody element,
       final ActivityContent activityContext,
       final InstanceVariable variable) {
@@ -232,11 +236,7 @@ public class MultiInstanceElementProcessor
       final Either<String, List<String>> result =
           collectionExpression.evaluateListString(scriptContext);
       if (result.isLeft()) {
-        LOG.error(
-            "Multi-instance collection evaluation failed (sequential) for activity {}: {}",
-            activityContext.getActivityInstanceId(),
-            result.getLeft());
-        return false;
+        return Either.left("多实例(sequential)集合表达式计算失败: " + result.getLeft());
       }
       final List<String> collection = result.get();
       variable.nrOfInstances = collection.size();
@@ -244,7 +244,7 @@ public class MultiInstanceElementProcessor
       variable.nrOfActiveInstances = variable.nrOfActiveInstances + 1;
       variable.loopCounter = variable.loopCounter + 1;
       if (variable.nrOfInstances == 0 || variable.loopCounter >= variable.nrOfInstances) {
-        return true;
+        return Either.right(true);
       }
       collectionItem = collection.get(variable.loopCounter);
     } else {
@@ -253,22 +253,18 @@ public class MultiInstanceElementProcessor
         final Either<String, Number> result =
             loopCardinalityExpression.evaluateNumber(scriptContext);
         if (result.isLeft()) {
-          LOG.error(
-              "Multi-instance loopCardinality evaluation failed (sequential) for activity {}: {}",
-              activityContext.getActivityInstanceId(),
-              result.getLeft());
-          return false;
+          return Either.left("多实例(sequential)基数表达式计算失败: " + result.getLeft());
         }
         final Integer loopCardinality = result.get().intValue();
         variable.loopCounter = variable.loopCounter + 1;
         if (loopCardinality <= 0 || variable.loopCounter + 1 > loopCardinality) {
-          return true;
+          return Either.right(true);
         }
         variable.nrOfActiveInstances = variable.nrOfActiveInstances + 1;
       }
     }
     createChild(activityContext, element.getInnerActivity(), elementVariable, collectionItem);
-    return false;
+    return Either.right(false);
   }
 
   /** 1-3 */
@@ -320,7 +316,7 @@ public class MultiInstanceElementProcessor
     variable.nrOfCompletedInstances = variable.nrOfCompletedInstances + 1;
     variable.nrOfActiveInstances = variable.nrOfActiveInstances - 1;
     saveOrUpdateVariable(activityContext, variable);
-    if (calculateComplete(activityContext, element)) {
+    if (calculateComplete(activityContext, element, ActivityInstanceLifeCycle.COMPLETING)) {
       if (activityInstance.haveChildRecord(activityContext.getActivityInstanceId())) {
         variable.nrOfActiveInstances = 0;
         saveOrUpdateVariable(activityContext, variable);
@@ -332,9 +328,15 @@ public class MultiInstanceElementProcessor
       return;
     }
     if (element.getLoopCharacteristics().isSequential()) {
-      final boolean enableComplete = createSequential(element, activityContext, variable);
+      final Either<String, Boolean> enableComplete =
+          createSequential(element, activityContext, variable);
       saveOrUpdateVariable(activityContext, variable);
-      if (enableComplete) {
+      if (enableComplete.isLeft()) {
+        incidentBehavior.createActivityIncident(
+            activityContext, ActivityInstanceLifeCycle.COMPLETING, enableComplete.getLeft());
+        return;
+      }
+      if (enableComplete.get()) {
         activityInstanceBehavior.onCompleting(element, activityContext);
       }
     }
@@ -347,7 +349,9 @@ public class MultiInstanceElementProcessor
   }
 
   private boolean calculateComplete(
-      final ActivityContent activityContext, final BpmnMultiInstanceBody element) {
+      final ActivityContent activityContext,
+      final BpmnMultiInstanceBody element,
+      final ActivityInstanceLifeCycle lifeCycle) {
     final ScriptExpression completionCondition =
         element.getLoopCharacteristics().getCompletionCondition();
     if (completionCondition == null) {
@@ -357,10 +361,7 @@ public class MultiInstanceElementProcessor
       final ScriptContext scriptContext = variableBehavior.scriptContext(activityContext);
       final Either<String, Boolean> result = scriptExpression.evaluateBoolean(scriptContext);
       if (result.isLeft()) {
-        LOG.error(
-            "Multi-instance completionCondition evaluation failed for activity {}: {}",
-            activityContext.getActivityInstanceId(),
-            result.getLeft());
+        incidentBehavior.createActivityIncident(activityContext, lifeCycle, result.getLeft());
         return false;
       } else {
         return result.get();
@@ -435,7 +436,7 @@ public class MultiInstanceElementProcessor
       return;
     }
     // 计算完成条件
-    if (calculateComplete(activityContext, element)) {
+    if (calculateComplete(activityContext, element, ActivityInstanceLifeCycle.TERMINATING)) {
       variable.nrOfActiveInstances = 0;
       saveOrUpdateVariable(activityContext, variable);
       // 转向批处理
@@ -488,11 +489,12 @@ public class MultiInstanceElementProcessor
     if (directVariable == null || directVariable.isEmpty()) {
       return new InstanceVariable(0, 0, 0, -1);
     }
+    // body 作用域可能存在输入映射等用户变量，计数器未写入时取初值
     return new InstanceVariable(
-        (Integer) directVariable.get(NR_OF_ACTIVE_INSTANCES),
-        (Integer) directVariable.get(NR_OF_INSTANCES),
-        (Integer) directVariable.get(NR_OF_COMPLETED_INSTANCES),
-        (Integer) directVariable.get(LOOP_COUNTER));
+        (Integer) directVariable.getOrDefault(NR_OF_ACTIVE_INSTANCES, 0),
+        (Integer) directVariable.getOrDefault(NR_OF_INSTANCES, 0),
+        (Integer) directVariable.getOrDefault(NR_OF_COMPLETED_INSTANCES, 0),
+        (Integer) directVariable.getOrDefault(LOOP_COUNTER, -1));
   }
 
   private void saveOrUpdateVariable(

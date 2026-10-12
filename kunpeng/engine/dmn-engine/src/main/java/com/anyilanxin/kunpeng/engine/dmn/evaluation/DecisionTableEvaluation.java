@@ -33,6 +33,7 @@ import com.anyilanxin.kunpeng.engine.dmn.evaluation.event.impl.DmnDecisionTableE
 import com.anyilanxin.kunpeng.engine.dmn.evaluation.event.impl.DmnEvaluatedDecisionRuleImpl;
 import com.anyilanxin.kunpeng.engine.dmn.evaluation.event.impl.DmnEvaluatedInputImpl;
 import com.anyilanxin.kunpeng.engine.dmn.evaluation.event.impl.DmnEvaluatedOutputImpl;
+import com.anyilanxin.kunpeng.engine.dmn.exception.DmnEvaluationException;
 import com.anyilanxin.kunpeng.engine.dmn.hitpolicy.DmnHitPolicyHandler;
 import com.anyilanxin.kunpeng.engine.dmn.hitpolicy.DmnHitPolicyHandlerRegistry;
 import com.anyilanxin.kunpeng.engine.script.ScriptContext;
@@ -202,6 +203,13 @@ public class DecisionTableEvaluation implements DmnDecisionEvaluation {
       final DmnExpressionImpl expression, final ScriptContext scriptContext) {
     final Either<String, Object> objectEither =
         expression.getScriptExpression().evaluateObject(scriptContext);
+    if (objectEither.isLeft()) {
+      throw new DmnEvaluationException(
+          "Decision table input expression evaluation failed: "
+              + expression.getExpression()
+              + ", reason: "
+              + objectEither.getLeft());
+    }
     return objectEither.get();
   }
 
@@ -236,6 +244,13 @@ public class DecisionTableEvaluation implements DmnDecisionEvaluation {
       final DmnExpressionImpl conclusion, final ScriptContext scriptContext) {
     final Either<String, Object> objectEither =
         conclusion.getScriptExpression().evaluateObject(scriptContext);
+    if (objectEither.isLeft()) {
+      throw new DmnEvaluationException(
+          "Decision table output entry evaluation failed: "
+              + conclusion.getExpression()
+              + ", reason: "
+              + objectEither.getLeft());
+    }
     return objectEither.get();
   }
 

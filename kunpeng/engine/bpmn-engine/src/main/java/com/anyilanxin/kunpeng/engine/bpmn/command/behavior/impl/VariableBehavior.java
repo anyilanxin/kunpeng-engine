@@ -45,6 +45,12 @@ public class VariableBehavior {
   private final ImmutableVariableRepository variable;
   private final ImmutableActivityInstanceRepository activityInstance;
 
+  /**
+   * 命令批次内变量快照缓存：scopeId → 变量集。 首次触碰从仓储加载，本行为内的更新写后回填；其他写入方经 {@link LogEventWriter#addEvent}
+   * 的变量记录失效钩子摘除对应项。批次开始时整体清空（引擎 actor 单线程，无并发访问）。
+   */
+  private final Map<Long, Map<String, Object>> batchVariableCache = new HashMap<>();
+
   public VariableBehavior(final LogEventWriter writer) {
     this.writer = writer;
     final ImmutableBusinessRepository repository = writer.getRepository();
@@ -52,12 +58,29 @@ public class VariableBehavior {
     activityInstance = repository.instanceRepository();
   }
 
+  /** 批次开始清空缓存：跨批次仓储可能有本批次之外的变更，不复用旧快照 */
+  public void resetBatchCache() {
+    batchVariableCache.clear();
+  }
+
+  /** 其他写入方落了变量记录后摘除对应快照，下一次读取回仓储加载最新值 */
+  public void invalidateScope(final long scopeId) {
+    batchVariableCache.remove(scopeId);
+  }
+
+  /** 读取作用域变量（缓存穿透加载，返回缓存所有的映射实例，仅本类内部使用） */
+  private Map<String, Object> scopeVariables(final long scopeId) {
+    return batchVariableCache.computeIfAbsent(
+        scopeId,
+        id -> {
+          final Map<String, Object> loaded = new HashMap<>();
+          variable.getRecord(id).ifPresent(record -> loaded.putAll(record.getVariables()));
+          return loaded;
+        });
+  }
+
   public Map<String, Object> getDirectVariable(final ActivityContent activityContext) {
-    final long currentActivityInstanceId = activityContext.getActivityInstanceId();
-    final Optional<VariableRecord> optional = variable.getRecord(currentActivityInstanceId);
-    final Map<String, Object> variableMap = new HashMap<>();
-    optional.ifPresent(record -> variableMap.putAll(record.getVariables()));
-    return variableMap;
+    return new HashMap<>(scopeVariables(activityContext.getActivityInstanceId()));
   }
 
   public ScriptContext scriptContext(final UserTaskRecord userTaskRecord) {
@@ -67,41 +90,19 @@ public class VariableBehavior {
 
   public Map<String, Object> getVariable(
       final long processInstanceId, final long activityInstanceId) {
-    long currentActivityInstanceId = activityInstanceId;
-    final Optional<VariableRecord> optional = variable.getRecord(currentActivityInstanceId);
-    final Map<String, Object> variableMap = new HashMap<>();
-    if (optional.isEmpty()) {
-      if (processInstanceId == currentActivityInstanceId) {
-        return new HashMap<>();
-      }
-    } else {
-      variableMap.putAll(optional.get().getVariables());
-    }
+    final Map<String, Object> variableMap = new HashMap<>(scopeVariables(activityInstanceId));
 
+    long currentActivityInstanceId = activityInstanceId;
     long currentParentActivityInstanceId = -1;
     do {
       final ActivityInstanceRecord record = activityInstance.getRecord(currentActivityInstanceId);
       if (record != null) {
         currentParentActivityInstanceId = record.getParentActivityInstanceId();
         currentActivityInstanceId = currentParentActivityInstanceId;
-        final Optional<VariableRecord> currentOptional =
-            variable.getRecord(currentParentActivityInstanceId);
-        if (currentOptional.isPresent()) {
-          final Map<String, Object> currentVariable = currentOptional.get().getVariables();
-          final Map<String, Object> newCurrentVariable = new HashMap<>(currentVariable);
-          newCurrentVariable.putAll(variableMap);
-          variableMap.clear();
-          variableMap.putAll(newCurrentVariable);
-        }
+        // 子作用域优先：父作用域变量只补齐子作用域未定义的键
+        scopeVariables(currentParentActivityInstanceId).forEach(variableMap::putIfAbsent);
       } else {
-        final Optional<VariableRecord> currentOptional = variable.getRecord(processInstanceId);
-        if (currentOptional.isPresent()) {
-          final Map<String, Object> currentVariable = currentOptional.get().getVariables();
-          final Map<String, Object> newCurrentVariable = new HashMap<>(currentVariable);
-          newCurrentVariable.putAll(variableMap);
-          variableMap.clear();
-          variableMap.putAll(newCurrentVariable);
-        }
+        scopeVariables(processInstanceId).forEach(variableMap::putIfAbsent);
         break;
       }
     } while (processInstanceId != currentParentActivityInstanceId);
@@ -121,33 +122,13 @@ public class VariableBehavior {
     if (variables == null || variables.isEmpty()) {
       return;
     }
-
-    final VariableRecord variableRecord = new VariableRecord();
-    variableRecord.setParentScopId(content.getParentActivityInstanceId());
-    variableRecord.setScopId(content.getActivityInstanceId());
-    variableRecord.setProcessDefinitionId(content.getProcessDefinitionId());
-    variableRecord.setProcessInstanceId(content.getProcessInstanceId());
-
-    final Optional<VariableRecord> optional = variable.getRecord(content.getActivityInstanceId());
-    if (optional.isPresent()) {
-      final VariableRecord oldRecord = optional.get();
-      final Map<String, Object> newVariableMap = new HashMap<>();
-      newVariableMap.putAll(oldRecord.getVariables());
-      newVariableMap.putAll(variables);
-      variableRecord.setVariables(newVariableMap);
-      writer.addEvent(
-          variableRecord.getScopId(),
-          VariableLifeCycle.UPDATED,
-          content.getRequestId(),
-          variableRecord);
-    } else {
-      variableRecord.setVariables(variables);
-      writer.addEvent(
-          variableRecord.getScopId(),
-          VariableLifeCycle.CREATED,
-          content.getRequestId(),
-          variableRecord);
-    }
+    updateScopeVariables(
+        content.getActivityInstanceId(),
+        content.getParentActivityInstanceId(),
+        content.getProcessDefinitionId(),
+        content.getProcessInstanceId(),
+        content.getRequestId(),
+        variables);
   }
 
   public void variableUpdate(
@@ -158,60 +139,54 @@ public class VariableBehavior {
     if (variables == null || variables.isEmpty()) {
       return;
     }
-
-    final VariableRecord variableRecord = new VariableRecord();
-    variableRecord.setParentScopId(processInstanceId);
-    variableRecord.setScopId(processInstanceId);
-    variableRecord.setProcessDefinitionId(processDefinitionId);
-    variableRecord.setProcessInstanceId(processInstanceId);
-
-    final Optional<VariableRecord> optional = variable.getRecord(processInstanceId);
-    if (optional.isPresent()) {
-      final VariableRecord oldRecord = optional.get();
-      final Map<String, Object> newVariableMap = new HashMap<>();
-      newVariableMap.putAll(oldRecord.getVariables());
-      newVariableMap.putAll(variables);
-      variableRecord.setVariables(newVariableMap);
-      writer.addEvent(
-          variableRecord.getScopId(), VariableLifeCycle.UPDATED, requestId, variableRecord);
-    } else {
-      variableRecord.setVariables(variables);
-      writer.addEvent(
-          variableRecord.getScopId(), VariableLifeCycle.CREATED, requestId, variableRecord);
-    }
+    updateScopeVariables(
+        processInstanceId,
+        processInstanceId,
+        processDefinitionId,
+        processInstanceId,
+        requestId,
+        variables);
   }
 
   public void variableUpdate(final ActivityContent content, final DirectBuffer variables) {
     if (variables == null) {
       return;
     }
+    updateScopeVariables(
+        content.getActivityInstanceId(),
+        content.getParentActivityInstanceId(),
+        content.getProcessDefinitionId(),
+        content.getProcessInstanceId(),
+        content.getRequestId(),
+        convertToMap(variables));
+  }
+
+  /** 变量更新统一路径：合并（旧值 ← 新值）后落事件，写后回填缓存。 事件写入会经失效钩子摘除旧快照，随后以合并结果重建。 */
+  private void updateScopeVariables(
+      final long scopeId,
+      final long parentScopeId,
+      final long processDefinitionId,
+      final long processInstanceId,
+      final long requestId,
+      final Map<String, Object> variables) {
+    final Map<String, Object> merged = scopeVariables(scopeId);
+    // 有旧变量即视为更新；空变量集时补一次仓储存在性判定（空记录也算已存在，避免重复 CREATED）
+    final boolean existed = !merged.isEmpty() || variable.getRecord(scopeId).isPresent();
+    merged.putAll(variables);
 
     final VariableRecord variableRecord = new VariableRecord();
-    variableRecord.setParentScopId(content.getParentActivityInstanceId());
-    variableRecord.setScopId(content.getActivityInstanceId());
-    variableRecord.setProcessDefinitionId(content.getProcessDefinitionId());
-    variableRecord.setProcessInstanceId(content.getProcessInstanceId());
+    variableRecord.setParentScopId(parentScopeId);
+    variableRecord.setScopId(scopeId);
+    variableRecord.setProcessDefinitionId(processDefinitionId);
+    variableRecord.setProcessInstanceId(processInstanceId);
+    variableRecord.setVariables(merged);
 
-    final Optional<VariableRecord> optional = variable.getRecord(content.getActivityInstanceId());
-    if (optional.isPresent()) {
-      final VariableRecord oldRecord = optional.get();
-      final Map<String, Object> newVariableMap = new HashMap<>();
-      newVariableMap.putAll(oldRecord.getVariables());
-      newVariableMap.putAll(convertToMap(variables));
-      variableRecord.setVariables(newVariableMap);
-      writer.addEvent(
-          variableRecord.getScopId(),
-          VariableLifeCycle.UPDATED,
-          content.getRequestId(),
-          variableRecord);
-    } else {
-      variableRecord.setVariables(convertToMap(variables));
-      writer.addEvent(
-          variableRecord.getScopId(),
-          VariableLifeCycle.CREATED,
-          content.getRequestId(),
-          variableRecord);
-    }
+    writer.addEvent(
+        scopeId,
+        existed ? VariableLifeCycle.UPDATED : VariableLifeCycle.CREATED,
+        requestId,
+        variableRecord);
+    batchVariableCache.put(scopeId, merged);
   }
 
   public void variableCreate(
@@ -219,16 +194,13 @@ public class VariableBehavior {
     if (variables == null || variables.isEmpty()) {
       return;
     }
-
-    final VariableRecord variableRecord = new VariableRecord();
-    variableRecord.setVariables(variables);
-    variableRecord.setParentScopId(content.getParentActivityInstanceId());
-    variableRecord.setScopId(content.getActivityInstanceId());
-    variableRecord.setProcessDefinitionId(content.getProcessDefinitionId());
-    variableRecord.setProcessInstanceId(content.getProcessInstanceId());
-
-    writer.addEvent(
-        variableRecord.getScopId(), VariableLifeCycle.CREATED, requestId, variableRecord);
+    createScopeVariables(
+        requestId,
+        content.getActivityInstanceId(),
+        content.getParentActivityInstanceId(),
+        content.getProcessDefinitionId(),
+        content.getProcessInstanceId(),
+        variables);
   }
 
   public void variableCreate(
@@ -238,16 +210,13 @@ public class VariableBehavior {
     if (variables == null) {
       return;
     }
-
-    final VariableRecord variableRecord = new VariableRecord();
-    variableRecord.setVariables(variables);
-    variableRecord.setParentScopId(instanceRecord.getParentActivityInstanceId());
-    variableRecord.setScopId(instanceRecord.getActivityInstanceId());
-    variableRecord.setProcessDefinitionId(instanceRecord.getProcessDefinitionId());
-    variableRecord.setProcessInstanceId(instanceRecord.getProcessInstanceId());
-
-    writer.addEvent(
-        variableRecord.getScopId(), VariableLifeCycle.CREATED, requestId, variableRecord);
+    createScopeVariables(
+        requestId,
+        instanceRecord.getActivityInstanceId(),
+        instanceRecord.getParentActivityInstanceId(),
+        instanceRecord.getProcessDefinitionId(),
+        instanceRecord.getProcessInstanceId(),
+        convertToMap(variables));
   }
 
   public void variableCreate(
@@ -257,16 +226,33 @@ public class VariableBehavior {
     if (variables == null) {
       return;
     }
+    createScopeVariables(
+        requestId,
+        instanceRecord.getProcessInstanceId(),
+        instanceRecord.getProcessInstanceId(),
+        instanceRecord.getProcessDefinitionId(),
+        instanceRecord.getProcessInstanceId(),
+        convertToMap(variables));
+  }
 
+  /** 变量创建统一路径：落事件后回填缓存（写路径的失效钩子先摘除，再以新值重建） */
+  private void createScopeVariables(
+      final long requestId,
+      final long scopeId,
+      final long parentScopeId,
+      final long processDefinitionId,
+      final long processInstanceId,
+      final Map<String, Object> variables) {
     final VariableRecord variableRecord = new VariableRecord();
     variableRecord.setVariables(variables);
-    variableRecord.setParentScopId(instanceRecord.getProcessInstanceId());
-    variableRecord.setScopId(instanceRecord.getProcessInstanceId());
-    variableRecord.setProcessDefinitionId(instanceRecord.getProcessDefinitionId());
-    variableRecord.setProcessInstanceId(instanceRecord.getProcessInstanceId());
+    variableRecord.setParentScopId(parentScopeId);
+    variableRecord.setScopId(scopeId);
+    variableRecord.setProcessDefinitionId(processDefinitionId);
+    variableRecord.setProcessInstanceId(processInstanceId);
 
     writer.addEvent(
         variableRecord.getScopId(), VariableLifeCycle.CREATED, requestId, variableRecord);
+    batchVariableCache.put(scopeId, new HashMap<>(variables));
   }
 
   public void variableHistory(final long requestId, final ProcessInstanceRecord instanceRecord) {

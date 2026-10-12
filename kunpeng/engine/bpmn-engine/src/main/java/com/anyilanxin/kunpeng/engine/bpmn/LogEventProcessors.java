@@ -46,12 +46,15 @@ public final class LogEventProcessors {
     return this;
   }
 
+  /**
+   * 按记录生命状态取处理器，未注册或状态无处理槽位（NOT_PROCESS_INDEX 哨兵，如 UNKNOWN）时返回 null，
+   * 由调用方（BpmnEngine）对该记录回失败应答，不抛异常打断整批处理。
+   */
   public LogEventProcessor<?> getProcessor(final BusinessLogRecord record) {
-    final LogEventProcessor processor = processors[record.getValueState().processIndex()];
-    if (processor == null) {
-      throw new IllegalStateException(
-          "Not Have LogEventProcessor registered for record:" + record.getValueState());
+    final short index = record.getValueState().processIndex();
+    if (index < 0) {
+      return null;
     }
-    return processor;
+    return processors[index];
   }
 }

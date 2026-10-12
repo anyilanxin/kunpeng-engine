@@ -119,46 +119,45 @@ public class AdminRepositoryProcessService extends Actor implements RecordAvaila
     if (processing || !logStreamReader.hasNext()) {
       return;
     }
+    processing = true;
     try {
-      processing = true;
       while (logStreamReader.hasNext()) {
         final BatchEntryReader.Batch batch = logStreamReader.next();
         processReplayEvent(batch);
       }
-    } finally {
       processing = false;
       actor.submit(this::processNextReplayEvent);
+    } catch (final Exception e) {
+      processing = false;
+      // 停在失败批次（位置不推进）：越过它会永久丢失该批投影；后续 record-available 触发会从失败位置重试
+      LOG.error("Failed to process log records; replay halted at position {}", processPosition, e);
     }
   }
 
-  void processReplayEvent(final BatchEntryReader.Batch batch) {
-    try {
-      currentTransaction = context.getCurrentTransaction();
-      currentTransaction.run(
-          () -> {
-            while (batch.hasNext()) {
-              final LoggedEntry loggedEvent = batch.next();
-              metadata.reset();
-              loggedEvent.readMetadata(metadata);
-              final AdminValueType valueType = metadata.getValueType();
-              final AdminValueLifeCycle lifeCycle = metadata.getLifeCycle();
-              final RecordType recordType = metadata.getRecordType();
-              final long key = loggedEvent.getKey();
-              if (recordType == RecordType.EVENT) {
-                final UnifiedRecordValue recordValue = valueMapper.getCacheValue(lifeCycle);
-                recordValue.reset();
-                loggedEvent.readValue(recordValue);
-                applier.applyState(key, valueType, lifeCycle, recordValue);
-              }
-              processPosition = loggedEvent.getPosition();
-              repositoryKey.setKeyIfHigher(key);
+  void processReplayEvent(final BatchEntryReader.Batch batch) throws Exception {
+    currentTransaction = context.getCurrentTransaction();
+    currentTransaction.run(
+        () -> {
+          while (batch.hasNext()) {
+            final LoggedEntry loggedEvent = batch.next();
+            metadata.reset();
+            loggedEvent.readMetadata(metadata);
+            final AdminValueType valueType = metadata.getValueType();
+            final AdminValueLifeCycle lifeCycle = metadata.getLifeCycle();
+            final RecordType recordType = metadata.getRecordType();
+            final long key = loggedEvent.getKey();
+            if (recordType == RecordType.EVENT) {
+              final UnifiedRecordValue recordValue = valueMapper.getCacheValue(lifeCycle);
+              recordValue.reset();
+              loggedEvent.readValue(recordValue);
+              applier.applyState(key, valueType, lifeCycle, recordValue);
             }
-            repositoryPosition.markAsProcessed(processPosition);
-          });
-      currentTransaction.commit();
-      currentTransaction = null;
-    } catch (final Exception e) {
-      LOG.error("Failed to process log records", e);
-    }
+            processPosition = loggedEvent.getPosition();
+            repositoryKey.setKeyIfHigher(key);
+          }
+          repositoryPosition.markAsProcessed(processPosition);
+        });
+    currentTransaction.commit();
+    currentTransaction = null;
   }
 }

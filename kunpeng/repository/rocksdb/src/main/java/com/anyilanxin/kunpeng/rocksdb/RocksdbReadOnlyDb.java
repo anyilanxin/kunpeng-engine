@@ -116,9 +116,13 @@ public final class RocksdbReadOnlyDb<ColumnFamilyType extends ColumnFamilies>
     throw new RuntimeException("Non supported");
   }
 
-  /** 获取指定列族对应的 handle */
+  /** 获取指定列族对应的 handle；库中不存在该列族时直接抛出（缺失句柄晚点 NPE 无任何上下文） */
   public ColumnFamilyHandle columnFamilyHandle(final ColumnFamilyType columnFamilies) {
-    return columnFamilyHandles[columnFamilies.entityFamily()];
+    final ColumnFamilyHandle handle = columnFamilyHandles[columnFamilies.entityFamily()];
+    if (handle == null) {
+      throw new IllegalStateException("只读库 " + dbPath + " 中不存在列族: " + columnFamilies);
+    }
+    return handle;
   }
 
   /** 只读数据库不支持该操作，直接抛出异常 */

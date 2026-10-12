@@ -76,8 +76,8 @@ public class CompletableActorFuture<V> implements ActorFuture<V> {
   private final Object completionSync = new Object();
 
   // 惰性创建的阻塞等待设施（多数 future 不会被外部线程等待）
-  private ReentrantLock completionLock;
-  private Condition isDoneCondition;
+  private volatile ReentrantLock completionLock;
+  private volatile Condition isDoneCondition;
   private final ManyToOneConcurrentLinkedQueue<BiConsumer<V, Throwable>> blockedCallbacks =
       new ManyToOneConcurrentLinkedQueue<>();
 

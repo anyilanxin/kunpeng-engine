@@ -325,15 +325,22 @@ public class DispatchProcessService extends Actor implements RecordAvailableList
         partitionId);
     final long startTime = clock.millis();
     int replayedBatches = 0;
-    while (logStreamBatchReader.hasNext()) {
-      final BatchEntryReader.Batch batch = logStreamBatchReader.next();
-      replayedBatches++;
-      final boolean b = processReplayEvent(batch, lastCommittedPosition);
-      if (!b) {
-        break;
+    try {
+      while (logStreamBatchReader.hasNext()) {
+        final BatchEntryReader.Batch batch = logStreamBatchReader.next();
+        replayedBatches++;
+        final boolean b = processReplayEvent(batch, lastCommittedPosition);
+        if (!b) {
+          break;
+        }
       }
+    } catch (final Exception e) {
+      // 回放失败必须让恢复失败，伪装成功会让分区带残缺状态继续服务
+      future.completeExceptionally(e);
+      return;
+    } finally {
+      logStreamBatchReader.close();
     }
-    logStreamBatchReader.close();
     LOGGER.info(
         "Log replay finished at position {} with {} batches, took {} ms [partition: {}]",
         processPosition,
@@ -343,37 +350,34 @@ public class DispatchProcessService extends Actor implements RecordAvailableList
     future.complete(null);
   }
 
-  boolean processReplayEvent(final BatchEntryReader.Batch batch, final long lastCommittedPosition) {
+  boolean processReplayEvent(final BatchEntryReader.Batch batch, final long lastCommittedPosition)
+      throws Exception {
     final AtomicBoolean continueProcess = new AtomicBoolean(false);
-    try {
-      currentTransaction = context.getCurrentTransaction();
-      currentTransaction.run(
-          () -> {
-            while (batch.hasNext()) {
-              final LoggedEntry loggedEvent = batch.next();
-              metadata.reset();
-              loggedEvent.readMetadata(metadata);
-              final AdminValueType valueType = metadata.getValueType();
-              final AdminValueLifeCycle lifeCycle = metadata.getLifeCycle();
-              final RecordType recordType = metadata.getRecordType();
-              final long key = loggedEvent.getKey();
-              if (recordType == RecordType.EVENT) {
-                final UnifiedRecordValue recordValue = recordValueMapper.getCacheValue(lifeCycle);
-                recordValue.reset();
-                loggedEvent.readValue(recordValue);
-                appliers.applyState(key, valueType, lifeCycle, recordValue);
-              }
-              processPosition = loggedEvent.getPosition();
-              continueProcess.set(lastCommittedPosition > processPosition);
-              mutableKeyGenerator.setKeyIfHigher(key);
+    currentTransaction = context.getCurrentTransaction();
+    currentTransaction.run(
+        () -> {
+          while (batch.hasNext()) {
+            final LoggedEntry loggedEvent = batch.next();
+            metadata.reset();
+            loggedEvent.readMetadata(metadata);
+            final AdminValueType valueType = metadata.getValueType();
+            final AdminValueLifeCycle lifeCycle = metadata.getLifeCycle();
+            final RecordType recordType = metadata.getRecordType();
+            final long key = loggedEvent.getKey();
+            if (recordType == RecordType.EVENT) {
+              final UnifiedRecordValue recordValue = recordValueMapper.getCacheValue(lifeCycle);
+              recordValue.reset();
+              loggedEvent.readValue(recordValue);
+              appliers.applyState(key, valueType, lifeCycle, recordValue);
             }
-            mutableRepositoryPosition.markAsProcessed(processPosition);
-          });
-      currentTransaction.commit();
-      currentTransaction = null;
-    } catch (final Exception e) {
-      LOGGER.error("Failed to process log records", e);
-    }
+            processPosition = loggedEvent.getPosition();
+            continueProcess.set(lastCommittedPosition > processPosition);
+            mutableKeyGenerator.setKeyIfHigher(key);
+          }
+          mutableRepositoryPosition.markAsProcessed(processPosition);
+        });
+    currentTransaction.commit();
+    currentTransaction = null;
     return continueProcess.get();
   }
 
@@ -394,7 +398,9 @@ public class DispatchProcessService extends Actor implements RecordAvailableList
   }
 
   /**
-   * 异步关闭：先经各 checker 的 onClose 取消定时任务，随后在引擎 actor 上关闭车道池与主调度器。
+   * 异步关闭：先经各 checker 的 onClose 取消定时任务，随后在引擎 actor 上回滚事务、关闭流读写器、关闭车道池与主调度器。
+   *
+   * <p>事务回滚与流读写器关闭必须与 {@code processNextEvent} 同线程串行，跨线程直闯会与在途事件处理竞态损坏读取器。
    *
    * <p>返回的 future 完成即本调度服务不再执行任何定时任务（含飞行中任务）——关闭链必须等它完成后再放行后续步骤关闭 RocksDB。
    */
@@ -403,35 +409,48 @@ public class DispatchProcessService extends Actor implements RecordAvailableList
     dispatchService.stop();
     logStream.removeRecordAvailableListener(this);
     logEventWriter.schedulerCheckerAwares().forEach(SchedulerCheckerAware::onClose);
-    if (currentTransaction != null) {
-      try {
-        currentTransaction.rollback();
-        currentTransaction = null;
-      } catch (final Exception e) {
-        throw new RuntimeException(e);
-      }
-    }
-    logStreamReader.close();
-    logStreamWriter.close();
-    if (lanePool == null) {
-      return CompletableActorFuture.completed();
-    }
     final CompletableActorFuture<Void> drained = new CompletableActorFuture<>();
-    actor.run(
-        () ->
-            lanePool
-                .shutdown(actor)
-                .onComplete(
-                    (ignored, error) -> {
-                      primaryScheduler.close();
-                      if (error != null) {
-                        drained.completeExceptionally(error);
-                      } else {
-                        drained.complete(null);
-                      }
-                    }));
+    actor
+        .run(
+            () -> {
+              if (currentTransaction != null) {
+                try {
+                  currentTransaction.rollback();
+                  currentTransaction = null;
+                } catch (final Exception e) {
+                  throw new RuntimeException(e);
+                }
+              }
+              logStreamReader.close();
+              logStreamWriter.close();
+            })
+        .onComplete(
+            (ignored, error) -> {
+              if (error != null) {
+                drained.completeExceptionally(error);
+                return;
+              }
+              if (lanePool == null) {
+                drained.complete(null);
+                return;
+              }
+              lanePool
+                  .shutdown(actor)
+                  .onComplete(
+                      (ignored2, error2) -> {
+                        primaryScheduler.close();
+                        if (error2 != null) {
+                          drained.completeExceptionally(error2);
+                        } else {
+                          drained.complete(null);
+                        }
+                      });
+            });
     return drained;
   }
+
+  /** 单轮消费的记录预算：到量即让位重排，积压消化期间外部控制指令得以插队先行 */
+  private static final int PROCESS_BATCH_LIMIT = 1_000;
 
   void processNextEvent() {
     if (processing || !logStreamReader.hasNext()) {
@@ -439,6 +458,7 @@ public class DispatchProcessService extends Actor implements RecordAvailableList
     }
     try {
       processing = true;
+      int processed = 0;
       while (logStreamReader.hasNext()) {
         final LoggedEntry loggedEvent = logStreamReader.next();
         final long position = loggedEvent.getPosition();
@@ -454,6 +474,10 @@ public class DispatchProcessService extends Actor implements RecordAvailableList
           // 处理/跳过即释放: 推进流控在途水位（释放窗口占位与在途环槽位）
           logStream.getFlowControl().onProcessed(processPosition);
         }
+        // 预算让位：finally 重排续跑，控制指令（关闭/暂停等）不再被长积压饿死
+        if (++processed >= PROCESS_BATCH_LIMIT) {
+          break;
+        }
       }
     } finally {
       processing = false;
@@ -462,6 +486,8 @@ public class DispatchProcessService extends Actor implements RecordAvailableList
   }
 
   private void processEvent(final LoggedEntry loggedEvent) {
+    // 初始命令的请求 id 在批处理前留存：批次失败时用于失败应答闭环
+    final long requestId = metadata.getRequestId();
     try (final var ignore = processingCollect) {
       currentTransaction = context.getCurrentTransaction();
       try {
@@ -509,10 +535,34 @@ public class DispatchProcessService extends Actor implements RecordAvailableList
           currentTransaction = null;
         }
       } catch (final EngineErrorHandleException errorHandleException) {
-        LOGGER.error("---需要内部处理--", errorHandleException);
+        LOGGER.error("调度处理内部异常，回滚当前批次并回失败应答", errorHandleException);
+        rollbackFailedBatch(requestId, errorHandleException);
       } catch (final Exception e) {
-        LOGGER.error("---其他异常--", e);
+        LOGGER.error("调度处理未知异常，回滚当前批次并回失败应答", e);
+        rollbackFailedBatch(requestId, e);
       }
+    }
+  }
+
+  /**
+   * 批次处理失败收尾：回滚当前事务，并以失败应答闭环初始命令的请求（批次内半置的成功应答一并覆盖）。
+   *
+   * <p>事务不回滚会让事务上下文滞留在途状态，污染该分区后续所有批次；不回失败应答会让网关侧请求悬挂到超时。
+   */
+  private void rollbackFailedBatch(final long requestId, final Throwable error) {
+    if (currentTransaction == null) {
+      return;
+    }
+    processingCollect.adErrorResponse(
+        requestId, -1, "Process dispatch command failed: " + error.getMessage());
+    try {
+      processingCollect.sendResponse();
+      currentTransaction.rollback();
+    } catch (final Exception e) {
+      error.addSuppressed(e);
+      throw new RuntimeException(e);
+    } finally {
+      currentTransaction = null;
     }
   }
 

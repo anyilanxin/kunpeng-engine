@@ -35,6 +35,7 @@ import com.anyilanxin.kunpeng.bpm.parse.dmn.expression.DefaultSimpleUnaryTestsTr
 import com.anyilanxin.kunpeng.bpm.parse.dmn.expression.SimpleUnaryTestsTransform;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.ModelElementTransformer;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.TransformContext;
+import com.anyilanxin.kunpeng.bpm.parse.exception.DmnParseException;
 import com.anyilanxin.kunpeng.engine.script.ScriptEngine;
 import com.anyilanxin.kunpeng.engine.script.ScriptExpression;
 import java.util.List;
@@ -107,6 +108,13 @@ public final class DecisionTableTransformer implements ModelElementTransformer<D
           final String expression =
               unaryTestsTransform.transformSimpleUnaryTests(conditions.get(i), inputs.get(i));
           final ScriptExpression scriptExpression = expressionLanguage.parse("=" + expression);
+          if (!scriptExpression.isValid()) {
+            throw new DmnParseException(
+                "Failed to parse DMN decision table condition: "
+                    + expression
+                    + ", reason: "
+                    + scriptExpression.getFailureMessage());
+          }
           conditionExpression.setScriptExpression(scriptExpression);
         } else {
           final ScriptExpression scriptExpression = expressionLanguage.parse("=true");
@@ -120,6 +128,13 @@ public final class DecisionTableTransformer implements ModelElementTransformer<D
         if (isNonEmptyExpression(conclusionExpression)) {
           final ScriptExpression scriptExpression =
               expressionLanguage.parse("=" + conclusionExpression.getExpression());
+          if (!scriptExpression.isValid()) {
+            throw new DmnParseException(
+                "Failed to parse DMN decision table conclusion: "
+                    + conclusionExpression.getExpression()
+                    + ", reason: "
+                    + scriptExpression.getFailureMessage());
+          }
           conclusionExpression.setScriptExpression(scriptExpression);
         } else {
           final ScriptExpression scriptExpression = expressionLanguage.parse("=null");

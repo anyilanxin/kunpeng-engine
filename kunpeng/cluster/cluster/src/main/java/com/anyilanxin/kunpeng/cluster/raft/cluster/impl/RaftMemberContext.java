@@ -27,6 +27,7 @@ import com.anyilanxin.kunpeng.cluster.raft.storage.log.IndexedRaftLogEntry;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLog;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLogReader;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +35,9 @@ import org.slf4j.LoggerFactory;
 public final class RaftMemberContext {
 
   private static final Logger LOG = LoggerFactory.getLogger(RaftMemberContext.class);
+
+  /** canAppend 自适应节流所用的 append 耗时滑动窗口大小。 */
+  private static final int APPEND_WINDOW_SIZE = 8;
 
   private final DefaultRaftMember member;
   private final int maxAppendsPerMember;
@@ -47,6 +51,8 @@ public final class RaftMemberContext {
   private long heartbeatTime;
   private long responseTime;
   private int inFlightAppendCount;
+  private long lastAppendStartTime;
+  private final AppendTimeWindow appendTimeWindow = new AppendTimeWindow();
   private boolean appendSucceeded;
   private boolean configuring;
   private boolean installing;
@@ -101,6 +107,7 @@ public final class RaftMemberContext {
     heartbeatTime = 0;
     responseTime = 0;
     inFlightAppendCount = 0;
+    appendTimeWindow.clear();
     configuring = false;
     installing = false;
     appendSucceeded = false;
@@ -189,7 +196,12 @@ public final class RaftMemberContext {
   public boolean canAppend() {
     return open
         && (inFlightAppendCount == 0
-            || (appendSucceeded && inFlightAppendCount < maxAppendsPerMember));
+            || (appendSucceeded
+                && inFlightAppendCount < maxAppendsPerMember
+                // 发送间隔须达到"平均耗时/在途上限"，避免对慢 follower 突发堆满在途窗口
+                && appendTimeWindow.hasSamples()
+                && System.currentTimeMillis() - lastAppendStartTime
+                    >= (long) (appendTimeWindow.mean() / maxAppendsPerMember)));
   }
 
   /**
@@ -228,6 +240,7 @@ public final class RaftMemberContext {
   /** Starts an append request to the member. */
   public void startAppend() {
     inFlightAppendCount++;
+    lastAppendStartTime = System.currentTimeMillis();
   }
 
   /** Completes an append request to the member. */
@@ -237,6 +250,17 @@ public final class RaftMemberContext {
     if (inFlightAppendCount > 0) {
       inFlightAppendCount--;
     }
+  }
+
+  /**
+   * Completes a successful append request and feeds its round-trip time into the pacing window used
+   * by {@link #canAppend()}.
+   *
+   * @param latencyMillis the append round-trip time in milliseconds
+   */
+  public void completeAppend(final long latencyMillis) {
+    completeAppend();
+    appendTimeWindow.add(latencyMillis);
   }
 
   /**
@@ -307,6 +331,7 @@ public final class RaftMemberContext {
         .add("matchIndex", matchIndex)
         .add("heartbeatTime", heartbeatTime)
         .add("appending", inFlightAppendCount)
+        .add("appendTimeMeanMs", (long) appendTimeWindow.mean())
         .add("appendSucceeded", appendSucceeded)
         .add("configuring", configuring)
         .add("installing", installing)
@@ -673,5 +698,36 @@ public final class RaftMemberContext {
     // position.
     acknowledgedAppendWatermark = sentAppendWatermark;
     logReplicationLag = lagReader.bytesUntilEnd();
+  }
+
+  /** 最近 {@value #APPEND_WINDOW_SIZE} 次 append 成功耗时的环形窗口，供 {@link #canAppend()} 计算自适应发送间隔。 */
+  private static final class AppendTimeWindow {
+    private final long[] samples = new long[APPEND_WINDOW_SIZE];
+    private int index;
+    private int count;
+    private long sum;
+
+    void add(final long sample) {
+      sum -= samples[index];
+      samples[index] = sample;
+      sum += sample;
+      index = (index + 1) % samples.length;
+      count = Math.min(count + 1, samples.length);
+    }
+
+    boolean hasSamples() {
+      return count > 0;
+    }
+
+    double mean() {
+      return count == 0 ? 0d : (double) sum / count;
+    }
+
+    void clear() {
+      Arrays.fill(samples, 0L);
+      index = 0;
+      count = 0;
+      sum = 0;
+    }
   }
 }

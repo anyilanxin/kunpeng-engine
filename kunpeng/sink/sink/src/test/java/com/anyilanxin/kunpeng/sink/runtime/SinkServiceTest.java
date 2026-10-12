@@ -486,6 +486,11 @@ class SinkServiceTest {
     }
 
     @Override
+    public long getTopologyVersion() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
     public com.anyilanxin.kunpeng.cluster.utils.net.Address getPartitionBusinessAddress(
         final PartitionId partitionId) {
       throw new UnsupportedOperationException();

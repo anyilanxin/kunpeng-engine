@@ -1011,12 +1011,21 @@ public class SwimMembershipProtocol
   /**
    * 应用拉取到的元数据; 仅当响应版本更新时采纳(版本号仲裁, 旧响应/旧中转缓存直接忽略)。
    *
-   * @return 是否采纳
+   * @return 是否终止拉取链（已采纳/本地已足够新/成员已离线为 true；应答者不认识该成员为 false，换下一候选）
    */
   private boolean applyPulledMetadata(final MemberId memberId, final Pair<Long, Properties> data) {
     final SwimMember member = members.get(memberId);
-    if (member == null || data.getKey() <= member.pulledMetadataVersion()) {
-      return data.getKey() > 0 && member != null;
+    if (member == null) {
+      // 本地已无该成员（离线）：无采纳目标，终止拉取链
+      return true;
+    }
+    if (data.getKey() <= 0) {
+      // 应答者不认识该成员（版本 0）：本候选无效，继续尝试下一候选
+      return false;
+    }
+    if (data.getKey() <= member.pulledMetadataVersion()) {
+      // 本地缓存不旧于响应（旧响应/旧中转缓存）：无需继续
+      return true;
     }
     final Properties metadata = data.getValue();
     if (metadata != null && !Objects.equals(metadata, member.properties())) {

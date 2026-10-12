@@ -80,13 +80,13 @@ public final class EvaluationResultImpl implements EvaluationResult {
     if (result instanceof final Boolean booleanValue) {
       return booleanValue;
     } else if (result instanceof final String booleanStr) {
-      try {
+      // 仅接受字面 true/false，其余字符串（如 "yes"）静默按 false 处理会掩盖条件错误
+      if ("true".equalsIgnoreCase(booleanStr) || "false".equalsIgnoreCase(booleanStr)) {
         return Boolean.parseBoolean(booleanStr);
-      } catch (final Exception e) {
-        failureMessage = e.getMessage();
-        failure = true;
       }
     }
+    failureMessage = "无法转换为Boolean: " + (result == null ? "null" : result.toString());
+    failure = true;
     return null;
   }
 

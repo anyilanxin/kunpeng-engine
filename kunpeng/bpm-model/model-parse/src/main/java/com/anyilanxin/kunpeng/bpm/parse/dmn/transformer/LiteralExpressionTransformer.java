@@ -24,7 +24,9 @@ import com.anyilanxin.kunpeng.bpm.model.dmn.instance.LiteralExpression;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.common.DmnExpressionImpl;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.ModelElementTransformer;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.TransformContext;
+import com.anyilanxin.kunpeng.bpm.parse.exception.DmnParseException;
 import com.anyilanxin.kunpeng.engine.script.ScriptEngine;
+import com.anyilanxin.kunpeng.engine.script.ScriptExpression;
 
 /**
  * 将 DMN LiteralExpression（字面表达式）转换为运行时 DmnExpression 元素：提取表达式语言与文本，并立即编译为脚本表达式。
@@ -58,8 +60,16 @@ public final class LiteralExpressionTransformer
     dmnExpression.setExpression(getExpression(element));
     final ScriptEngine expressionLanguage = context.getExpressionLanguage();
     if (isNonEmptyExpression(dmnExpression)) {
-      dmnExpression.setScriptExpression(
-          expressionLanguage.parse("=" + dmnExpression.getExpression()));
+      final ScriptExpression scriptExpression =
+          expressionLanguage.parse("=" + dmnExpression.getExpression());
+      if (!scriptExpression.isValid()) {
+        throw new DmnParseException(
+            "Failed to parse DMN literal expression: "
+                + dmnExpression.getExpression()
+                + ", reason: "
+                + scriptExpression.getFailureMessage());
+      }
+      dmnExpression.setScriptExpression(scriptExpression);
     } else {
       dmnExpression.setScriptExpression(expressionLanguage.parse("=null"));
     }

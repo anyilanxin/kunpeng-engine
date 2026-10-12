@@ -29,6 +29,7 @@ import com.anyilanxin.kunpeng.engine.dmn.DmnDecisionResultImpl;
 import com.anyilanxin.kunpeng.engine.dmn.evaluation.event.DmnDecisionLiteralExpressionEvaluationEvent;
 import com.anyilanxin.kunpeng.engine.dmn.evaluation.event.DmnDecisionLogicEvaluationEvent;
 import com.anyilanxin.kunpeng.engine.dmn.evaluation.event.impl.DmnDecisionLiteralExpressionEvaluationEventImpl;
+import com.anyilanxin.kunpeng.engine.dmn.exception.DmnEvaluationException;
 import com.anyilanxin.kunpeng.engine.script.ScriptContext;
 import com.anyilanxin.kunpeng.engine.script.ScriptEngine;
 import com.anyilanxin.kunpeng.utils.Either;
@@ -68,6 +69,13 @@ public class DecisionLiteralExpressionEvaluation implements DmnDecisionEvaluatio
       final DmnExpressionImpl expression, final ScriptContext scriptContext) {
     final Either<String, Object> objectEither =
         expression.getScriptExpression().evaluateObject(scriptContext);
+    if (objectEither.isLeft()) {
+      throw new DmnEvaluationException(
+          "Decision literal expression evaluation failed: "
+              + expression.getExpression()
+              + ", reason: "
+              + objectEither.getLeft());
+    }
     return objectEither.get();
   }
 

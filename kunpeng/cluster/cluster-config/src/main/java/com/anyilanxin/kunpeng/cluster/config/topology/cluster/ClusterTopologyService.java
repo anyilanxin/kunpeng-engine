@@ -41,6 +41,9 @@ public interface ClusterTopologyService {
   /** 全集群按成员维度的分区拓扑视图：member -> 其广播的分区状态列表 */
   Map<MemberId, List<PartitionMemberInfo>> getMemberPartitions();
 
+  /** 拓扑版本号：任一视图变更（成员增删/元数据变化）后单调递增，供快照缓存方判定是否需要重建。 */
+  long getTopologyVersion();
+
   /**
    * 查询分区 leader 的业务面通信地址（成员主机 + 其广播的业务端口）。
    *

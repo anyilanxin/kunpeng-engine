@@ -146,7 +146,7 @@ public class ActivityInstanceRepository
           if (record != null && supplier.test(record)) {
             activityInstanceRecords.add(key.getSecond().getValue());
           }
-          return maxNum <= 0 || maxNum >= activityInstanceRecords.size();
+          return maxNum <= 0 || maxNum > activityInstanceRecords.size();
         });
     return activityInstanceRecords;
   }

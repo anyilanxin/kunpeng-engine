@@ -58,19 +58,34 @@ public class DefaultClusterTopologyService extends Actor
   private final Map<MemberId, Set<PartitionMemberInfo>> memberPartitionInfos =
       new ConcurrentHashMap<>();
 
-  /** 分区维度视图：partition -> 各成员的分区状态 */
-  private final Map<PartitionId, Set<PartitionMemberInfo>> partitionMemberInfos =
-      new ConcurrentHashMap<>();
+  /**
+   * 分区派生视图快照：五张表单次重建、单一 volatile 引用整体换入。 读者拿到的一组视图永远来自同一次重建——避免 clear-then-refill
+   * 期间跨线程读者看到空视图（瞬时报"无 leader 可用"）。
+   */
+  private volatile PartitionViews views = emptyViews();
 
-  /** 分区 Leader 专表：partition -> 当前认定的 Leader 状态，高频查询走 O(1) 读取 */
-  private final Map<PartitionId, PartitionMemberInfo> partitionLeaders = new ConcurrentHashMap<>();
+  /** 分区派生视图组：分区成员表、Leader 专表、来源映射与来源/分区集合。 发布后只读；agrona 容器经 volatile 写安全发布。 */
+  private record PartitionViews(
+      Map<PartitionId, Set<PartitionMemberInfo>> partitionMemberInfos,
+      Map<PartitionId, PartitionMemberInfo> partitionLeaders,
+      Int2ObjectHashMap<PartitionId> partitionSourceIds,
+      IntHashSet partitionSources,
+      IntHashSet businessPartitions) {}
+
+  private static PartitionViews emptyViews() {
+    return new PartitionViews(
+        new ConcurrentHashMap<>(),
+        new ConcurrentHashMap<>(),
+        new Int2ObjectHashMap<>(),
+        new IntHashSet(),
+        new IntHashSet());
+  }
 
   /** 成员业务面地址视图：member -> 事件到达时解析合成的业务地址（查询零解析） */
   private final Map<MemberId, Address> businessAddresses = new ConcurrentHashMap<>();
 
-  private final Int2ObjectHashMap<PartitionId> partitionSourceIds = new Int2ObjectHashMap<>();
-  private final IntHashSet partitionSources = new IntHashSet();
-  private final IntHashSet businessPartitions = new IntHashSet();
+  /** 拓扑版本：每次视图重建后在 actor 线程递增，读取方凭它缓存快照 */
+  private volatile long topologyVersion;
 
   public DefaultClusterTopologyService(final ClusterMembershipService membershipService) {
     this.membershipService = membershipService;
@@ -199,73 +214,86 @@ public class DefaultClusterTopologyService extends Actor
     }
   }
 
-  /** 以 memberPartitionInfos 为准重建分区视图与 Leader 专表，避免残留成员已不再持有的分区旧状态 */
+  /**
+   * 以 memberPartitionInfos 为准重建分区派生视图： 本地构建全新一组容器后经单一 volatile 引用整体换入，
+   * 避免残留成员已不再持有的分区旧状态，也避免读者看到清空与回填之间的空窗。
+   */
   private void rebuildPartitionViews() {
-    partitionMemberInfos.clear();
-    partitionLeaders.clear();
-    partitionSourceIds.clear();
-    partitionSources.clear();
-    businessPartitions.clear();
+    final Map<PartitionId, Set<PartitionMemberInfo>> memberInfos = new ConcurrentHashMap<>();
+    final Map<PartitionId, PartitionMemberInfo> leaders = new ConcurrentHashMap<>();
+    final Int2ObjectHashMap<PartitionId> sourceIds = new Int2ObjectHashMap<>();
+    final IntHashSet sources = new IntHashSet();
+    final IntHashSet business = new IntHashSet();
     memberPartitionInfos.forEach(
         (memberId, infos) ->
             infos.forEach(
                 info -> {
-                  partitionMemberInfos
+                  memberInfos
                       .computeIfAbsent(
                           info.getPartitionId(), ignored -> ConcurrentHashMap.newKeySet())
                       .add(info);
                   if (info.getRole() == PartitionRole.LEADER) {
                     // 选举窗口期可能多个成员广播 LEADER：保留 term 更大者
-                    partitionLeaders.merge(
+                    leaders.merge(
                         info.getPartitionId(),
                         info,
                         (current, candidate) ->
                             candidate.getTerm() > current.getTerm() ? candidate : current);
-                    partitionSourceIds.put(info.getSourceId(), info.getPartitionId());
-                    partitionSources.add(info.getSourceId());
+                    sourceIds.put(info.getSourceId(), info.getPartitionId());
+                    sources.add(info.getSourceId());
                     if (!ADMIN_RAFT_GROUP.equalsIgnoreCase(info.getPartitionId().group())) {
-                      businessPartitions.add(info.getPartitionId().id());
+                      business.add(info.getPartitionId().id());
                     }
                     if (info.getAgentSourceIds() != null) {
+                      // 代理来源集合逐项登记（v 是代理来源 id，不能误加自身 sourceId）
                       info.getAgentSourceIds()
                           .forEach(
                               v -> {
-                                partitionSources.add(info.getSourceId());
-                                partitionSourceIds.put(v, info.getPartitionId());
+                                sources.add(v);
+                                sourceIds.put(v, info.getPartitionId());
                               });
                     }
                   }
                 }));
+    views = new PartitionViews(memberInfos, leaders, sourceIds, sources, business);
+    topologyVersion++;
+  }
+
+  @Override
+  public long getTopologyVersion() {
+    return topologyVersion;
   }
 
   @Override
   public MemberId getPartitionLeader(final PartitionId partitionId) {
     // 多成员自称 Leader 的选举窗口期取 term 最大者
-    final PartitionMemberInfo leader = partitionLeaders.get(partitionId);
+    final PartitionMemberInfo leader = views.partitionLeaders().get(partitionId);
     return leader == null ? null : leader.getMemberId();
   }
 
   @Override
   public Address getPartitionBusinessAddress(final PartitionId partitionId) {
-    final PartitionMemberInfo leader = partitionLeaders.get(partitionId);
+    final PartitionMemberInfo leader = views.partitionLeaders().get(partitionId);
     return leader == null ? null : businessAddresses.get(leader.getMemberId());
   }
 
   @Override
   public List<PartitionMemberInfo> getPartitionMemberInfo(final PartitionId partitionId) {
-    final Set<PartitionMemberInfo> infos = partitionMemberInfos.get(partitionId);
+    final Set<PartitionMemberInfo> infos = views.partitionMemberInfos().get(partitionId);
     return infos == null ? List.of() : List.copyOf(infos);
   }
 
   @Override
   public Map<PartitionId, List<PartitionMemberInfo>> getRaftGroup(final String groupName) {
     final Map<PartitionId, List<PartitionMemberInfo>> result = new ConcurrentHashMap<>();
-    partitionMemberInfos.forEach(
-        (partitionId, infos) -> {
-          if (partitionId.group().equals(groupName)) {
-            result.put(partitionId, List.copyOf(infos));
-          }
-        });
+    views
+        .partitionMemberInfos()
+        .forEach(
+            (partitionId, infos) -> {
+              if (partitionId.group().equals(groupName)) {
+                result.put(partitionId, List.copyOf(infos));
+              }
+            });
     return result;
   }
 
@@ -278,22 +306,31 @@ public class DefaultClusterTopologyService extends Actor
 
   @Override
   public IntHashSet getActivitySourceIds() {
-    return partitionSources;
+    // 返回快照拷贝：内部容器非线程安全且不暴露给调用方修改
+    final IntHashSet copy = new IntHashSet();
+    views.partitionSources().forEachInt(copy::add);
+    return copy;
   }
 
   @Override
   public IntHashSet getActivityPartitionIds() {
-    return businessPartitions;
+    final IntHashSet copy = new IntHashSet();
+    views.businessPartitions().forEachInt(copy::add);
+    return copy;
   }
 
   @Override
   public PartitionId getPartitionBySourceId(final int sourceId) {
-    return partitionSourceIds.get(sourceId);
+    return views.partitionSourceIds().get(sourceId);
   }
 
   @Override
   public int getPartitionSource(final PartitionId partitionId) {
-    final PartitionMemberInfo partitionMemberInfo = partitionLeaders.get(partitionId);
-    return partitionMemberInfo.getSourceId();
+    final PartitionMemberInfo leader = views.partitionLeaders().get(partitionId);
+    // 无 leader 即前置条件不满足：明确失败，不用 -1 之类的哨兵值污染下游寻址
+    if (leader == null) {
+      throw new IllegalStateException("No leader known for partition " + partitionId);
+    }
+    return leader.getSourceId();
   }
 }

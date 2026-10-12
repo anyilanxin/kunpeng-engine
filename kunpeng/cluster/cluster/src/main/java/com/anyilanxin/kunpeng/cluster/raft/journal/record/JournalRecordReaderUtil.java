@@ -27,7 +27,7 @@ import org.agrona.concurrent.UnsafeBuffer;
  * 按当前编码格式从 segment 缓冲解出单条记录。
  *
  * <p>SegmentWriter 重放校验与 SegmentReader 顺序读取共用本工具。解析顺序：剩余空间判定 -> 读头部 -> （可选）CRC32C 复核 ->
- * 读体部并对齐索引。除头部越界外，任何失败都会把 position 回退到进入方法前的值；全部通过后 position 停在下一条记录起点。
+ * 读体部并对齐索引。索引不连续时回退 position 后抛出；全部通过后 position 停在下一条记录起点。
  *
  * @author zxuanhong
  * @since 2026.9.0
@@ -82,7 +82,7 @@ public final class JournalRecordReaderUtil {
     final int bodyLength = header.length();
 
     if (verifyChecksum) {
-      assertChecksum(buffer, recordOffset, headerLength, bodyLength, header);
+      assertChecksum(recordView, headerLength, bodyLength, header);
     }
 
     final JournalRecordData body = serializer.readData(recordView, headerLength);
@@ -120,17 +120,15 @@ public final class JournalRecordReaderUtil {
     return header;
   }
 
-  /** 对体部重算 CRC32C 并与头部声明比对；不一致则回退 position 后抛出损坏异常。 */
+  /** 对体部重算 CRC32C 并与头部声明比对；不一致则抛出损坏异常。 */
   private void assertChecksum(
-      final ByteBuffer buffer,
-      final int recordOffset,
+      final UnsafeBuffer recordView,
       final int headerLength,
       final int bodyLength,
       final JournalRecordMetadata header) {
     final long expected = header.checksum();
-    final long actual = crc.compute(buffer, recordOffset + headerLength, bodyLength);
+    final long actual = crc.compute(recordView, headerLength, bodyLength);
     if (expected != actual) {
-      buffer.reset();
       throw new CorruptedJournalException("体部校验和不一致：重算值 %d，头部声明值 %d".formatted(actual, expected));
     }
   }

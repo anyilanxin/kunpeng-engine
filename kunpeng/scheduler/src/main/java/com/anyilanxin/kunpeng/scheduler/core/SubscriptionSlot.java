@@ -25,7 +25,7 @@ package com.anyilanxin.kunpeng.scheduler.core;
 public abstract class SubscriptionSlot {
 
   protected final Runnable action;
-  protected boolean cancelled;
+  protected volatile boolean cancelled;
 
   protected SubscriptionSlot(final Runnable action) {
     this.action = action;

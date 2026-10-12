@@ -28,6 +28,7 @@ import com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance.
 import com.anyilanxin.kunpeng.repository.business.ImmutableBusinessRepository;
 import com.anyilanxin.kunpeng.repository.business.modules.activityinstance.ImmutableActivityInstanceRepository;
 import com.anyilanxin.kunpeng.utils.Either;
+import java.util.Collections;
 
 /**
  * 脚本任务元素处理器。
@@ -95,6 +96,21 @@ public class ScriptTaskElementProcessor implements BpmnActivityElementProcessor<
       return;
     }
     activityInstanceBehavior.onActivated(element, activityContext);
+    // 执行脚本：失败挂 incident；成功按 resultVariable 写回结果后进入完成中
+    final Either<String, Object> result =
+        element.getExpression().evaluateObject(variableBehavior.scriptContext(activityContext));
+    if (result.isLeft()) {
+      incidentBehavior.createActivityIncident(
+          activityContext, ActivityInstanceLifeCycle.ACTIVATED, result.getLeft());
+      return;
+    }
+    final String resultVariable = element.getResultVariable();
+    if (null != resultVariable && !resultVariable.isBlank()) {
+      // 脚本结果可能为 null，singletonMap 允许 null 值
+      variableBehavior.variableUpdate(
+          activityContext, Collections.singletonMap(resultVariable, result.get()));
+    }
+    activityInstanceBehavior.toCompleting(activityContext);
   }
 
   @Override

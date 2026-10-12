@@ -36,6 +36,25 @@ import java.util.stream.Collectors;
  */
 public final class ClusterConfigFactory {
 
+  /** DataSize 显式转 int 字节数：越界直接拒绝，防止 2GB 以上配置被静默截断为负数 */
+  public static int toIntBytes(final org.springframework.util.unit.DataSize size) {
+    final long bytes = size.toBytes();
+    if (bytes < 0 || bytes > Integer.MAX_VALUE) {
+      throw new IllegalArgumentException(
+          "DataSize out of int range [0, " + Integer.MAX_VALUE + "]: " + bytes + " bytes");
+    }
+    return (int) bytes;
+  }
+
+  /** long 字节数显式转 int：越界直接拒绝，防止静默截断为负数 */
+  public static int toIntBytes(final long bytes) {
+    if (bytes < 0 || bytes > Integer.MAX_VALUE) {
+      throw new IllegalArgumentException(
+          "bytes out of int range [0, " + Integer.MAX_VALUE + "]: " + bytes);
+    }
+    return (int) bytes;
+  }
+
   public ClusterConfig mapConfiguration(final ClusterCfg cluster, final boolean broker) {
     final var name = cluster.getClusterName();
     final var discovery = discoveryConfig(cluster.getSeedNodes());
@@ -65,10 +84,10 @@ public final class ClusterConfigFactory {
             .setInterfaces(Collections.singletonList(business.getHost()))
             .setPort(business.getPort());
     if (business.getSocketSendBuffer() != null) {
-      messaging.setSocketSendBuffer((int) business.getSocketSendBuffer().toBytes());
+      messaging.setSocketSendBuffer(toIntBytes(business.getSocketSendBuffer()));
     }
     if (business.getSocketReceiveBuffer() != null) {
-      messaging.setSocketReceiveBuffer((int) business.getSocketReceiveBuffer().toBytes());
+      messaging.setSocketReceiveBuffer(toIntBytes(business.getSocketReceiveBuffer()));
     }
     return messaging;
   }
@@ -114,10 +133,10 @@ public final class ClusterConfigFactory {
             .setHeartbeatTimeout(membershipNetwork.getHeartbeatTimeout())
             .setHeartbeatInterval(membershipNetwork.getHeartbeatInterval());
     if (membershipNetwork.getSocketSendBuffer() != null) {
-      messaging.setSocketSendBuffer((int) membershipNetwork.getSocketSendBuffer().toBytes());
+      messaging.setSocketSendBuffer(toIntBytes(membershipNetwork.getSocketSendBuffer()));
     }
     if (membershipNetwork.getSocketReceiveBuffer() != null) {
-      messaging.setSocketReceiveBuffer((int) membershipNetwork.getSocketReceiveBuffer().toBytes());
+      messaging.setSocketReceiveBuffer(toIntBytes(membershipNetwork.getSocketReceiveBuffer()));
     }
 
     if (membershipNetwork.getSecurity().isEnabled()) {

@@ -239,7 +239,7 @@ final class SegmentWriter {
       final int recordLength) {
     final long checksum =
         checksumGenerator.compute(
-            buffer, startPosition + frameLength + metadataLength, recordLength);
+            writeBuffer, startPosition + frameLength + metadataLength, recordLength);
 
     if (expectedChecksum != null && expectedChecksum != checksum) {
       buffer.position(startPosition);

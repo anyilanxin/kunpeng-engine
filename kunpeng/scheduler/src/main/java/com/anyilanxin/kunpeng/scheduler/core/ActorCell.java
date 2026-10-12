@@ -68,8 +68,8 @@ public final class ActorCell {
   private SchedulerMetrics metrics;
 
   private ActorControl control;
-  private CompletableActorFuture<Void> startingFuture;
-  private CompletableActorFuture<Void> closeFuture;
+  private volatile CompletableActorFuture<Void> startingFuture;
+  private volatile CompletableActorFuture<Void> closeFuture;
   private boolean closeRequestedBeforeStarted;
   private boolean yieldRequested;
 
@@ -386,9 +386,25 @@ public final class ActorCell {
     }
   }
 
-  /** 显式失败（control.fail; 任意相位致死） */
+  /** 显式失败（control.fail; 任意相位致死）。非 owner 线程调用时经 submitted 队列转交 owner 执行。 */
   public void failNow(final Throwable error) {
     if (!phase.isTerminal()) {
+      if (pool != null && !isOnOwnerThread()) {
+        // fastLane/subscriptions 与 actor 失败钩子均为 owner 线程专属，死亡处理不能在调用方线程直闯
+        final ActorEnvelope envelope = new ActorEnvelope();
+        envelope.wrap(
+            ActorEnvelope.Kind.RUN,
+            () -> {
+              if (!phase.isTerminal()) {
+                transitionFailed(error, null);
+              }
+            },
+            null);
+        submittedCount.incrementAndGet();
+        submitted.offer(envelope);
+        wakeSignal();
+        return;
+      }
       transitionFailed(error, null);
     }
   }
@@ -404,9 +420,16 @@ public final class ActorCell {
 
   // ===== 执行（owner 线程） =====
 
-  /** 排空执行循环：fastLane 优先 → submitted FIFO → 订阅轮询；全空后推进相位并收尾。 */
+  /**
+   * 单次排空的工作预算（信封数 + 订阅轮询次数）：到量即让位——经休眠复查协议重新排队， 排到同池其他 cell 之后，避免热点 actor 长期独占载体线程饿死同池其他 actor
+   * 与外部提交的控制指令。
+   */
+  private static final int DRAIN_BUDGET = 256;
+
+  /** 排空执行循环：fastLane 优先 → submitted FIFO → 订阅轮询；全空或预算耗尽后推进相位并收尾。 */
   public void drain() {
     final int ticketsAtStart = wakeTickets.get();
+    int executed = 0;
     while (true) {
       ActorEnvelope envelope = fastLane.poll();
       if (envelope == null) {
@@ -417,12 +440,22 @@ public final class ActorCell {
       }
       if (envelope != null) {
         if (!execute(envelope)) {
+          // 死亡退出也必须走休眠收尾：VirtualCarrier 以 终态+WAITING 判定退线程，
+          // 跳过会令门停在 RUNNING、载体永久驻留
+          finishDrain(ticketsAtStart);
           return;
         }
         jobExecuted(envelope);
+        if (++executed >= DRAIN_BUDGET && hasPendingWork()) {
+          // 预算让位：仍有工作时休眠复查会自行重排，让出载体线程一轮
+          break;
+        }
         continue;
       }
       if (pollSubscriptions()) {
+        if (++executed >= DRAIN_BUDGET && hasPendingWork()) {
+          break;
+        }
         continue;
       }
       break;
@@ -516,6 +549,10 @@ public final class ActorCell {
     phase = Phases.FAILED;
     if (metrics != null) {
       metrics.incActorFailed();
+    }
+    // 当前正在执行的信封已不在两级队列中，须单独失败其 future，否则提交方永挂
+    if (current != null) {
+      failEnvelope(current, error);
     }
     ActorEnvelope envelope;
     while ((envelope = fastLane.poll()) != null) {
@@ -712,6 +749,11 @@ public final class ActorCell {
       return runner;
     }
     throw new IllegalStateException("actor 操作必须在 actor " + getName() + " 内调用");
+  }
+
+  private boolean isOnOwnerThread() {
+    final CellRunner runner = homeRunner;
+    return runner != null && runner.isOnOwnerThread();
   }
 
   /** runUntilDone 的让步标记 */

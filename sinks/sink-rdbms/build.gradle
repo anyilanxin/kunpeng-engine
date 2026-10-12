@@ -23,6 +23,7 @@ configure(jarInfo) {
 dependencies {
     implementation project(':kunpeng:sink:sink-api')
 
+    // 主代码 ActivityInstanceRecordHandler 引用 BpmnElementType（nameOf 映射），编译期传递需要
     implementation project(':kunpeng:bpm-model:model-parse')
     implementation project(':kunpeng:protocol:protocol-business')
     implementation project(':kunpeng:protocol:protocol-common')

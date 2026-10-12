@@ -18,6 +18,7 @@ package com.anyilanxin.kunpeng.kvstore.types;
 
 import com.anyilanxin.kunpeng.structpack.util.BufferUtil;
 import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 import org.agrona.DirectBuffer;
 import org.agrona.MutableDirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
@@ -32,9 +33,9 @@ public class StringType implements StoreKey, StoreValue {
 
   private final DirectBuffer bytes = new UnsafeBuffer(0, 0);
 
-  /** 设置字符串内容并编码为字节 */
+  /** 设置字符串内容并编码为字节（显式 UTF-8，与解码侧 getStringWithoutLengthUtf8 对齐） */
   public void wrapString(final String string) {
-    bytes.wrap(string.getBytes());
+    bytes.wrap(string.getBytes(StandardCharsets.UTF_8));
   }
 
   /** 直接包装给定缓冲区作为字符串内容 */

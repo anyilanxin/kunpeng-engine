@@ -34,7 +34,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 /**
- * 跟随者复制上下文：字节级复制延迟（lag）统计、快照安装状态与追加成功标记。
+ * 跟随者复制上下文：字节级复制延迟（lag）统计、快照安装状态、追加成功标记与按平均耗时的自适应追加节流。
  *
  * @author zxuanhong
  * @since 2026.9.0
@@ -43,10 +43,15 @@ final class RaftMemberContextTest {
 
   /** 构造一个未打开复制上下文的成员，返回其上下文对象。 */
   private static RaftMemberContext freshContext() {
+    return freshContext(1);
+  }
+
+  /** 构造指定在途追加上限的成员上下文（节流分支需上限 ≥2 才可达）。 */
+  private static RaftMemberContext freshContext(final int maxAppendsPerMember) {
     return new RaftMemberContext(
         new DefaultRaftMember(MemberId.from("m"), Type.ACTIVE, Instant.now()),
         mock(RaftClusterContext.class),
-        1);
+        maxAppendsPerMember);
   }
 
   /** 打开复制上下文：日志 reader 返回 hasNext=false、seek 原样返回、给定剩余字节数。 */
@@ -330,5 +335,52 @@ final class RaftMemberContextTest {
 
     assertThat(context.canAppend()).isTrue();
     assertThat(context.canHeartbeat()).isTrue();
+  }
+
+  /**
+   * 无成功耗时样本时不允许叠新追加（首样本到达前一次只允许一个在途），有样本后须距上次
+   * 发起达到"平均耗时/在途上限"的间隔才放行，避免对慢跟随者突发堆满在途窗口。
+   */
+  @Test
+  void appendPacingGatesOnObservedMeanLatency() {
+    final var context = freshContext(2);
+    context.startAppend();
+    context.startAppend();
+    context.appendSucceeded();
+
+    // 窗口为空：等待首个完成样本
+    assertThat(context.canAppend()).isFalse();
+
+    // 平均耗时 10000ms / 2 = 5000ms 发送间隔，距上次发起仅毫秒级 → 拒绝
+    context.completeAppend(10_000L);
+    assertThat(context.canAppend()).isFalse();
+  }
+
+  /** 平均耗时为 0（本地快速路径）时间隔为 0，完成即可立即发起下一次追加。 */
+  @Test
+  void zeroMeanLatencyAllowsImmediateNextAppend() {
+    final var context = freshContext(2);
+    context.startAppend();
+    context.startAppend();
+    context.appendSucceeded();
+    context.completeAppend(0L);
+
+    assertThat(context.canAppend()).isTrue();
+  }
+
+  /** 失败路径的普通完成不喂耗时窗口，且 resetState 会清空节流窗口。 */
+  @Test
+  void resetStateClearsPacingWindow() {
+    final var context = freshContext(2);
+    context.startAppend();
+    context.completeAppend(0L);
+
+    context.resetState(mock(RaftLog.class));
+    context.startAppend();
+    context.startAppend();
+    context.appendSucceeded();
+    context.completeAppend(); // 失败路径语义：仅递减在途计数
+
+    assertThat(context.canAppend()).isFalse();
   }
 }

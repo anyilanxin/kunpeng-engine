@@ -40,7 +40,7 @@ public class StaticExpression extends ScriptAbstractExpression {
   public StaticExpression(final String expression, final Language language) {
     if (!Strings.CS.startsWith(expression, "=")) {
       isStatic = true;
-      isValid = false;
+      isValid = true;
       failureMessage = null;
       parsedText = expression;
       sourceText = expression;

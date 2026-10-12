@@ -16,23 +16,25 @@
  */
 package com.anyilanxin.kunpeng.engine.bpmn.command.distribute.parallel;
 
-import com.anyilanxin.kunpeng.engine.bpmn.LogEventWriter;
 import com.anyilanxin.kunpeng.engine.bpmn.SchedulerCheckerAware;
+import com.anyilanxin.kunpeng.engine.bpmn.scheduling.CommandBatch;
+import com.anyilanxin.kunpeng.engine.bpmn.scheduling.CommandCollector;
 import com.anyilanxin.kunpeng.engine.bpmn.scheduling.SchedulerContext;
+import com.anyilanxin.kunpeng.engine.bpmn.scheduling.TimerJob;
 import com.anyilanxin.kunpeng.engine.bpmn.scheduling.TimerScheduler;
 import com.anyilanxin.kunpeng.protocol.business.record.command.distribute.parallel.DistributeParallelLifeCycle;
 import com.anyilanxin.kunpeng.repository.business.modules.distribute.parallel.ImmutableDistributeParallelRepository;
 import java.time.Duration;
 
 /**
- * 并行分发检查器：全部分区 ACK 齐后驱动流转。
+ * 并行分发检查器：全部分区 ACK 齐后驱动流转。 两个周期均以 {@link TimerJob} 形态执行——仓库遍历与命令追加发生在调度载体线程上， 命令经 {@link
+ * CommandCollector} 暂存后统一提交（与 JobTimeoutCheckerTask 同一线程封闭模式）， 不在定时器线程直闯引擎状态。
  *
  * @author zxuanhong
  * @since 2026.9.0
  */
 public class DistributeParallelChecker implements SchedulerCheckerAware {
   private final ImmutableDistributeParallelRepository distribute;
-  private final LogEventWriter writer;
   public static final Duration COMMAND_REDISTRIBUTION_INTERVAL = Duration.ofSeconds(10);
 
   /** 是否继续执行周期任务；关闭/失败期间置否，恢复后重新置真 */
@@ -43,23 +45,19 @@ public class DistributeParallelChecker implements SchedulerCheckerAware {
 
   private volatile TimerScheduler.TimerHandle retryAfterCycle;
 
-  public DistributeParallelChecker(
-      final ImmutableDistributeParallelRepository distribute, final LogEventWriter writer) {
+  public DistributeParallelChecker(final ImmutableDistributeParallelRepository distribute) {
     this.distribute = distribute;
-    this.writer = writer;
   }
 
   @Override
   public void onRecovered(final SchedulerContext context) {
     running = true;
     retryCycle =
-        context
-            .scheduler()
-            .scheduleEvery(COMMAND_REDISTRIBUTION_INTERVAL, this::runRetryDistributionCycle);
+        context.scheduler().scheduleEvery(COMMAND_REDISTRIBUTION_INTERVAL, new RetryDistribution());
     retryAfterCycle =
         context
             .scheduler()
-            .scheduleEvery(COMMAND_REDISTRIBUTION_INTERVAL, this::runRetryDistributionAfterCycle);
+            .scheduleEvery(COMMAND_REDISTRIBUTION_INTERVAL, new RetryDistributionAfter());
   }
 
   @Override
@@ -86,33 +84,37 @@ public class DistributeParallelChecker implements SchedulerCheckerAware {
     }
   }
 
-  public void runRetryDistributionCycle() {
-    if (!running) {
-      return;
+  /** 待重试的首轮分发改标 DISTRIBUTE_START */
+  private final class RetryDistribution implements TimerJob {
+    @Override
+    public CommandBatch run(final CommandCollector output) {
+      if (!running) {
+        return output.build();
+      }
+      distribute.foreachRetriableDistribution(
+          (distributionKey, distributeRecord) ->
+              output.appendCommand(
+                  distributeRecord.getDistributeId(),
+                  DistributeParallelLifeCycle.DISTRIBUTE_START,
+                  distributeRecord));
+      return output.build();
     }
-    //    distribute.foreachRetriableDistribution(
-    //        (distributionKey, distributeRecord) -> {
-    //          writer.addCommand(
-    //              distributeRecord.getDistributeId(),
-    //              DistributeParallelLifeCycle.DISTRIBUTE_START,
-    //              -1,
-    //              distributeRecord);
-    //          return true;
-    //        });
   }
 
-  public void runRetryDistributionAfterCycle() {
-    if (!running) {
-      return;
+  /** 待重试的 ACK 后流转改标 DISTRIBUTE_AFTER_START */
+  private final class RetryDistributionAfter implements TimerJob {
+    @Override
+    public CommandBatch run(final CommandCollector output) {
+      if (!running) {
+        return output.build();
+      }
+      distribute.foreachRetriableDistributionAfter(
+          (distributionKey, distributeRecord) ->
+              output.appendCommand(
+                  distributeRecord.getDistributeId(),
+                  DistributeParallelLifeCycle.DISTRIBUTE_AFTER_START,
+                  distributeRecord));
+      return output.build();
     }
-    distribute.foreachRetriableDistributionAfter(
-        (distributionKey, distributeRecord) -> {
-          writer.addCommand(
-              distributeRecord.getDistributeId(),
-              DistributeParallelLifeCycle.DISTRIBUTE_AFTER_START,
-              -1,
-              distributeRecord);
-          return true;
-        });
   }
 }

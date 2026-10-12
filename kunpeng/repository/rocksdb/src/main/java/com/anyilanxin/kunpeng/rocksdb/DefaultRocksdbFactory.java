@@ -37,12 +37,8 @@ public final class DefaultRocksdbFactory<ColumnFamilyNames extends ColumnFamilie
     RocksDB.loadLibrary();
   }
 
-  private final List<AutoCloseable> closeables;
-
-  /** 构造工厂实例，并初始化待关闭资源列表。 */
-  public DefaultRocksdbFactory() {
-    closeables = new ArrayList<>();
-  }
+  /** 构造工厂实例。 */
+  public DefaultRocksdbFactory() {}
 
   @Override
   public RocksdbTransactionDb<ColumnFamilyNames> createDb(
@@ -51,6 +47,8 @@ public final class DefaultRocksdbFactory<ColumnFamilyNames extends ColumnFamilie
       final int partitionId,
       final RocksdbConfiguration rocksDbConfiguration,
       final ColumnFamilies columnFamilies) {
+    // 待关闭资源按库隔离：close 会反转整个列表，共享会让先关的库连带关闭后开的库的句柄
+    final List<AutoCloseable> closeables = new ArrayList<>();
     final RocksdbTransactionDb<ColumnFamilyNames> transactionDb =
         new RocksdbTransactionDb<>(
             pathName,
@@ -67,6 +65,7 @@ public final class DefaultRocksdbFactory<ColumnFamilyNames extends ColumnFamilie
   @Override
   public RocksdbReadOnlyDb<ColumnFamilyNames> createReadOnlyDb(
       final String pathName, final ColumnFamilies columnFamilies) {
+    final List<AutoCloseable> closeables = new ArrayList<>();
     final RocksdbReadOnlyDb<ColumnFamilyNames> snapshotOnlyDb =
         new RocksdbReadOnlyDb<>(pathName, closeables, columnFamilies);
     snapshotOnlyDb.open();

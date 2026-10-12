@@ -263,7 +263,7 @@ final class SegmentIndexFile implements AutoCloseable {
     }
 
     final var checksum = new ChecksumGenerator();
-    if (checksum.compute(buffer, HEADER_LENGTH, entryCount * ENTRY_LENGTH)
+    if (checksum.compute(content, HEADER_LENGTH, entryCount * ENTRY_LENGTH)
         != buffer.getLong(CHECKSUM_OFFSET)) {
       return null;
     }

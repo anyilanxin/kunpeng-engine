@@ -38,6 +38,7 @@ import com.anyilanxin.kunpeng.engine.dmn.DmnEngine;
 import com.anyilanxin.kunpeng.engine.dmn.DmnEngineFactory;
 import com.anyilanxin.kunpeng.engine.script.ScriptEngine;
 import com.anyilanxin.kunpeng.protocol.business.ValueLifeCycle;
+import com.anyilanxin.kunpeng.protocol.business.ValueType;
 import com.anyilanxin.kunpeng.protocol.business.impl.RecordMetadata;
 import com.anyilanxin.kunpeng.protocol.business.impl.eventlog.BusinessLogRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.DefaultRecordValueMapper;
@@ -148,10 +149,9 @@ public class LogEventWriter {
             repositoryFactory.create().historyCleanupRepository(), clock);
 
     final DistributeParallelChecker distributeParallelProcessor =
-        new DistributeParallelChecker(
-            repositoryFactory.create().distributeParallelRepository(), this);
+        new DistributeParallelChecker(repositoryFactory.create().distributeParallelRepository());
     final DistributeSerialChecker distributeSerialProcessor =
-        new DistributeSerialChecker(repositoryFactory.create().distributeSerialRepository(), this);
+        new DistributeSerialChecker(repositoryFactory.create().distributeSerialRepository());
 
     checkerAwareList.add(jobChecker);
     checkerAwareList.add(timerChecker);
@@ -251,6 +251,10 @@ public class LogEventWriter {
     final UnifiedRecordValue value = valueMapper.copyValue(lifeCycle, recordValue);
     collectSupplier.get().addEvent(key, value, metadata);
     collectSupplier.get().addState(key, value, metadata);
+    // 变量记录落库后失效批次快照缓存：任何写入方（含 VariableBehavior 之外的处理器）都经此钩子
+    if (lifeCycle.getValueType() == ValueType.VARIABLE) {
+      behavior.variableBehavior().invalidateScope(key);
+    }
   }
 
   public void adResponse(

@@ -132,7 +132,9 @@ public final class RaftPartitionFactory {
 
     partitionConfig.setStorageConfig(storageConfig);
     partitionConfig.setEntryValidator(entryValidator);
-    partitionConfig.setMaxAppendBatchSize((int) brokerCfg.getRaft().getMaxAppendBatchSizeInBytes());
+    partitionConfig.setMaxAppendBatchSize(
+        com.anyilanxin.kunpeng.configuration.cluster.ClusterConfigFactory.toIntBytes(
+            brokerCfg.getRaft().getMaxAppendBatchSizeInBytes()));
     partitionConfig.setMaxAppendsPerFollower(brokerCfg.getRaft().getMaxAppendsPerFollower());
     partitionConfig.setPriorityElectionEnabled(brokerCfg.getRaft().isEnablePriorityElection());
     partitionConfig.setElectionTimeout(brokerCfg.getRaft().getElectionTimeout());
@@ -140,7 +142,8 @@ public final class RaftPartitionFactory {
     partitionConfig.setRequestTimeout(brokerCfg.getRaft().getRequestTimeout());
     partitionConfig.setSnapshotRequestTimeout(brokerCfg.getRaft().getSnapshotRequestTimeout());
     partitionConfig.setSnapshotChunkSize(
-        (int) brokerCfg.getRaft().getSnapshotChunkSize().toBytes());
+        com.anyilanxin.kunpeng.configuration.cluster.ClusterConfigFactory.toIntBytes(
+            brokerCfg.getRaft().getSnapshotChunkSize()));
     partitionConfig.setConfigurationChangeTimeout(
         brokerCfg.getRaft().getConfigurationChangeTimeout());
     partitionConfig.setMaxQuorumResponseTimeout(brokerCfg.getRaft().getMaxQuorumResponseTimeout());

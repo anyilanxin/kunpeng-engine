@@ -67,10 +67,10 @@ public final class StartupProcess<CONTEXT> {
       final int index,
       final CompletableActorFuture<CONTEXT> result) {
     if (shutdownRequested.get()) {
-      // 与 failWith 同一语义: 逆序关闭已启动步骤再异常完成, 否则已启动步骤的资源会泄漏
+      // 与 failWith 同一语义: 逆序关闭已启动步骤（含启动在途的当前步）再异常完成, 否则已启动步骤的资源会泄漏
       final var shutdownError =
           new StartupProcessShutdownException("startup interrupted by shutdown");
-      shutdownStarted(control, context, index)
+      shutdownStarted(control, context, index + 1)
           .onComplete(
               (ignored, closeError) -> {
                 final var aggregate =
@@ -159,8 +159,8 @@ public final class StartupProcess<CONTEXT> {
         failedName,
         error);
     final var stepException = new StartupProcessStepException(failedName, error);
-    // 逆序关闭已启动步骤
-    shutdownStarted(control, context, failedIndex)
+    // 逆序关闭已启动步骤（含失败步自身——其 startup 可能已半启动资源，shutdown 按契约容忍未启动状态）
+    shutdownStarted(control, context, failedIndex + 1)
         .onComplete(
             (ignored, closeError) -> {
               final var aggregate = new StartupProcessException("startup process failed");

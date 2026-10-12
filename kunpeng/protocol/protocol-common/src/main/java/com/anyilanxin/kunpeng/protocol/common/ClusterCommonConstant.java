@@ -54,4 +54,5 @@ public interface ClusterCommonConstant {
   String PROCESS_POSITION = "processPosition";
   String SNAPSHOT_TIME = "snapshotTimeMillis";
   String SINK_POSITION = "sinkPosition";
+  String COMPACTION_POSITION = "compactionPosition";
 }

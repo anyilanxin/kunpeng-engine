@@ -16,103 +16,24 @@
  */
 package com.anyilanxin.kunpeng.engine.script.impl.javascript;
 
-import com.anyilanxin.kunpeng.engine.script.EvaluationResult;
 import com.anyilanxin.kunpeng.engine.script.Language;
-import com.anyilanxin.kunpeng.engine.script.ScriptAbstractExpression;
-import com.anyilanxin.kunpeng.engine.script.ScriptContext;
-import com.anyilanxin.kunpeng.engine.script.impl.EvaluationResultImpl;
+import com.anyilanxin.kunpeng.engine.script.impl.jsr223.Jsr223Expression;
 import com.oracle.truffle.js.scriptengine.GraalJSScriptEngine;
-import java.util.Set;
-import javax.script.SimpleScriptContext;
 
 /**
- * JavaScript 表达式实现。
+ * JavaScript 表达式实现：编译/求值复用 {@link Jsr223Expression} 基类（CompiledScript 构造期编译、求值期复用）。
  *
  * @author zxuanhong
  * @since 2026.9.0
  */
-public final class JavaScriptExpression extends ScriptAbstractExpression {
-  private boolean isValid;
-  private String failureMessage;
-  private String parsedText;
-  private String sourceText;
-  final GraalJSScriptEngine engine;
+public final class JavaScriptExpression extends Jsr223Expression {
 
   public JavaScriptExpression(final GraalJSScriptEngine engine, final String expression) {
-    this.engine = engine;
-    try {
-      engine.compile(expression);
-      parsedText = expression;
-      sourceText = expression;
-      isValid = false;
-    } catch (final Exception e) {
-      failureMessage = e.getMessage();
-      isValid = true;
-      parsedText = "";
-      sourceText = expression;
-    }
+    super(engine, expression);
   }
 
   @Override
   public Language getLanguage() {
-    return Language.PYTHON;
-  }
-
-  @Override
-  public boolean isStatic() {
-    return false;
-  }
-
-  @Override
-  public boolean isValid() {
-    return isValid;
-  }
-
-  @Override
-  public String getFailureMessage() {
-    return failureMessage;
-  }
-
-  @Override
-  public String getParsedText() {
-    return parsedText;
-  }
-
-  @Override
-  public Set<String> outVarNames() {
-    throw new RuntimeException("not implemented");
-  }
-
-  @Override
-  public String getSourceText() {
-    return sourceText;
-  }
-
-  @Override
-  protected EvaluationResult evaluate(final ScriptContext scriptContext) {
-    final EvaluationResultImpl evaluationResult = new EvaluationResultImpl(getSourceText());
-    if (isValid()) {
-      evaluationResult.setFailure(true);
-      evaluationResult.setFailureMessage(getFailureMessage());
-    } else {
-      final javax.script.ScriptContext context = new SimpleScriptContext();
-      if (scriptContext != null
-          && scriptContext.getVariable() != null
-          && !scriptContext.getVariable().isEmpty()) {
-        for (final String key : scriptContext.getVariable().keySet()) {
-          context.setAttribute(
-              key, scriptContext.getVariable().get(key), javax.script.ScriptContext.ENGINE_SCOPE);
-        }
-      }
-      try {
-        final Object result = engine.eval(parsedText, context);
-        evaluationResult.setFailure(false);
-        evaluationResult.setResult(result);
-      } catch (final Exception e) {
-        evaluationResult.setFailure(true);
-        evaluationResult.setFailureMessage(e.getMessage());
-      }
-    }
-    return evaluationResult;
+    return Language.JAVA_SCRIPT;
   }
 }

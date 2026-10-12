@@ -20,6 +20,7 @@ import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
 import com.anyilanxin.kunpeng.cluster.cluster.Member;
 import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
 import com.anyilanxin.kunpeng.protocol.common.encoding.BrokerInfo;
+import com.anyilanxin.kunpeng.protocol.common.member.PartitionRole;
 import java.util.Optional;
 
 /**
@@ -45,22 +46,28 @@ public final class RaftPartitionTopology {
         RaftPartition.PARTITION_NAME_FORMAT, partitionId.group(), partitionId.id());
   }
 
-  /** 返回指定分区当前的 leader 成员；拓扑中无该分区 leader 时为空。 */
+  /**
+   * 返回指定分区当前的 leader 成员；选举窗口期可能有多成员同时宣称 leader（旧 leader 的角色属性尚未被新任期覆盖）， 按 term 高者胜出做仲裁，无 leader
+   * 时为空。
+   */
   public Optional<Member> leaderOf(final PartitionId partitionId) {
-    return membershipService.getMembers().stream()
-        .filter(
-            member -> {
-              final BrokerInfo info = BrokerInfo.fromProperties(member.properties());
-              return info != null
-                  && info.getPartitions().stream()
-                      .anyMatch(
-                          entry ->
-                              entry.partitionId == partitionId.id()
-                                  && partitionId.group().equals(entry.groupName)
-                                  && entry.role
-                                      == com.anyilanxin.kunpeng.protocol.common.member.PartitionRole
-                                          .LEADER);
-            })
-        .findFirst();
+    Member best = null;
+    long bestTerm = -1;
+    for (final Member member : membershipService.getMembers()) {
+      final BrokerInfo info = BrokerInfo.fromProperties(member.properties());
+      if (info == null) {
+        continue;
+      }
+      for (final BrokerInfo.PartitionEntry entry : info.getPartitions()) {
+        if (entry.partitionId == partitionId.id()
+            && partitionId.group().equals(entry.groupName)
+            && entry.role == PartitionRole.LEADER
+            && entry.term > bestTerm) {
+          best = member;
+          bestTerm = entry.term;
+        }
+      }
+    }
+    return Optional.ofNullable(best);
   }
 }

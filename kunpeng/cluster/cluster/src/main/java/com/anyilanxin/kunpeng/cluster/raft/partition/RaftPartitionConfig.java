@@ -54,7 +54,9 @@ public class RaftPartitionConfig {
   private Duration electionTimeout = DEFAULT_ELECTION_TIMEOUT;
   private Duration heartbeatInterval = DEFAULT_HEARTBEAT_INTERVAL;
   private int maxAppendsPerFollower = 2;
-  private int maxAppendBatchSize = 32 * 1024;
+  // KB 级记录（含 job/部署/变量批）单条即可吃满 32KB 批上限，复制吞吐被人为压低；1MB 让批
+  // 尺寸随记录粒度走，仍受 maxAppendsPerFollower 与在途流控约束
+  private int maxAppendBatchSize = 1024 * 1024;
   private boolean priorityElectionEnabled = DEFAULT_PRIORITY_ELECTION;
   private Duration requestTimeout = DEFAULT_REQUEST_TIMEOUT;
   private Duration snapshotRequestTimeout = DEFAULT_SNAPSHOT_REQUEST_TIMEOUT;

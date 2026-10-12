@@ -27,6 +27,7 @@ import com.anyilanxin.kunpeng.protocol.business.impl.record.command.activityinst
 import com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance.ActivityInstanceLifeCycle;
 import com.anyilanxin.kunpeng.repository.business.ImmutableBusinessRepository;
 import com.anyilanxin.kunpeng.repository.business.modules.timer.ImmutableTimerEventRepository;
+import com.anyilanxin.kunpeng.utils.Either;
 
 /**
  * 中间捕获事件处理器。
@@ -45,6 +46,7 @@ public class IntermediateCatchEventProcessor
   private final BatchBehavior batchBehavior;
   private final JobBehavior jobBehavior;
   private final InputOutputBehavior inputOutputBehavior;
+  private final IncidentBehavior incidentBehavior;
 
   public IntermediateCatchEventProcessor(final LogEventWriter writer) {
     this.writer = writer;
@@ -58,6 +60,7 @@ public class IntermediateCatchEventProcessor
     batchBehavior = behavior.batchBehavior();
     jobBehavior = behavior.jobBehavior();
     inputOutputBehavior = behavior.inputOutputBehavior();
+    incidentBehavior = behavior.incidentBehavior();
   }
 
   @Override
@@ -85,7 +88,14 @@ public class IntermediateCatchEventProcessor
   @Override
   public void onActivated(
       final BpmnCatchEventElement element, final ActivityContent activityContext) {
-    catchEventBehavior.subscribeCatchEvent(element, activityContext);
+    final Either<String, Boolean> either =
+        catchEventBehavior.subscribeCatchEvent(element, activityContext);
+    if (either.isLeft()) {
+      // 订阅表达式计算失败：挂 incident，等待修复后重试
+      incidentBehavior.createActivityIncident(
+          activityContext, ActivityInstanceLifeCycle.ACTIVATED, either.getLeft());
+      return;
+    }
     activityInstanceBehavior.onActivated(element, activityContext);
   }
 

@@ -25,7 +25,9 @@ import com.anyilanxin.kunpeng.bpm.model.dmn.instance.InputExpression;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.element.common.DmnExpressionImpl;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.ModelElementTransformer;
 import com.anyilanxin.kunpeng.bpm.parse.dmn.transformation.TransformContext;
+import com.anyilanxin.kunpeng.bpm.parse.exception.DmnParseException;
 import com.anyilanxin.kunpeng.engine.script.ScriptEngine;
+import com.anyilanxin.kunpeng.engine.script.ScriptExpression;
 
 /**
  * 将 DMN InputExpression（决策表输入列表达式）转换为运行时 DmnExpression 元素：解析类型定义并立即编译为脚本表达式。
@@ -59,8 +61,16 @@ public final class InputExpressionTransformer implements ModelElementTransformer
     dmnExpression.setExpression(getExpression(element));
     final ScriptEngine expressionLanguage = context.getExpressionLanguage();
     if (isNonEmptyExpression(dmnExpression)) {
-      dmnExpression.setScriptExpression(
-          expressionLanguage.parse("=" + dmnExpression.getExpression()));
+      final ScriptExpression scriptExpression =
+          expressionLanguage.parse("=" + dmnExpression.getExpression());
+      if (!scriptExpression.isValid()) {
+        throw new DmnParseException(
+            "Failed to parse DMN input expression: "
+                + dmnExpression.getExpression()
+                + ", reason: "
+                + scriptExpression.getFailureMessage());
+      }
+      dmnExpression.setScriptExpression(scriptExpression);
     } else {
       dmnExpression.setScriptExpression(expressionLanguage.parse("=null"));
     }

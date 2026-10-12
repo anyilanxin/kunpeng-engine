@@ -41,12 +41,14 @@
     )
   </insert>
 
-  <!-- 只推进位置与更新时间；sink / created_time 是创建期列不被覆盖 -->
+  <!-- 只推进位置与更新时间；sink / created_time 是创建期列不被覆盖。
+       WHERE 带单调守卫：位置只许前进，滞后的并发/恢复写入不影响已有水位 -->
   <update id="update" parameterType="com.anyilanxin.kunpeng.sink.rdbms.model.SinkPositionDbModel">
     UPDATE ${table.sink_position}
     SET exported_position = #{exportedPosition},
         update_time = #{updateTime,jdbcType=TIMESTAMP}
     WHERE partition_id = #{partitionId}
+      AND exported_position &lt; #{exportedPosition}
   </update>
 
   <delete id="removePartition">
