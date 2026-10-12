@@ -433,21 +433,19 @@ class AutoDeclarePropertiesTask extends DefaultTask {
       }
     }
 
-    // 3. 分配: 取 [1,127] 内最小空闲 id —— 空洞先回填（低位空洞/删除遗留）,
-    //    紧凑无洞时即 max+1 递增, 两端序号都用起来, 避免一味增大越过 127
+    // 3. 分配: max+1 严格递增 —— 空洞不复用（id 身份强管理：已删除字段的 id 可能仍被
+    //    旧序列化数据/Raft 日志引用, 回填会让同 id 语义漂移导致读错位）
+    int next = usedIds.isEmpty() ? 1 : (usedIds.last() + 1)
     unassigned.each { creation ->
-      int candidate = 1
-      while (candidate <= 127 && usedIds.contains(candidate)) {
-        candidate++
-      }
-      if (candidate > 127) {
+      if (next > 127) {
         throw new GradleException(
-            "${typeDecl.nameAsString}: 可用 id 耗尽（>127, 1 字节保证）—— 请整理现有 id")
+            "${typeDecl.nameAsString}: 可用 id 耗尽（>127, 1 字节保证）—— 请整理现有 id（空洞不可复用）")
       }
-      usedIds.add(candidate)
-      ((ObjectCreationExpr) creation).arguments.addFirst(new IntegerLiteralExpr(candidate))
+      usedIds.add(next)
+      ((ObjectCreationExpr) creation).arguments.addFirst(new IntegerLiteralExpr(next))
       modified = true
-      logger.lifecycle("${typeDecl.nameAsString}: 分配 id=${candidate}")
+      logger.lifecycle("${typeDecl.nameAsString}: 分配 id=${next}")
+      next++
     }
 
     // 4. 构造器链

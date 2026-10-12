@@ -116,6 +116,8 @@ subprojects {
 		tasks.withType(JavaExec).configureEach {
 			jvmArgs += [
 					"--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED",
+					// agrona Crc32c 反射调用 java.util.zip.CRC32C 私有内建方法（journal 校验和热路径）
+					"--add-opens=java.base/java.util.zip=ALL-UNNAMED",
 					// FFM 本地调用（文件预分配 posix_fallocate 等）需要原生访问授权
 					"--enable-native-access=ALL-UNNAMED"
 			]
@@ -125,6 +127,7 @@ subprojects {
 			useJUnitPlatform()
 			jvmArgs += [
 					"--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED",
+					"--add-opens=java.base/java.util.zip=ALL-UNNAMED",
 					"--enable-native-access=ALL-UNNAMED"
 			]
 			// 关闭 jqwik 测试运行数据库（不再生成 .jqwik-database 文件）

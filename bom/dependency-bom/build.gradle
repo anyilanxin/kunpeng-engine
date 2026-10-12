@@ -56,7 +56,7 @@ dependencies {
         api "co.elastic.clients:elasticsearch-java:$elasticsearch"
         api "org.elasticsearch:elasticsearch-x-content:$elasticsearch"
 
-        def immutables = "2.12.2"
+        def immutables = "2.12.3"
         api "org.immutables:annotate:$immutables"
         api "org.immutables:value:$immutables"
 
@@ -67,7 +67,7 @@ dependencies {
         api 'com.github.javaparser:javaparser-core:3.28.2'
         api 'com.google.http-client:google-http-client:2.2.0'
         api 'org.apache.httpcomponents.core5:httpcore5:5.4.4'
-        api 'org.apache.httpcomponents.client5:httpclient5:5.6.4'
+        api 'org.apache.httpcomponents.client5:httpclient5:5.6.5'
         api 'com.alibaba:druid-spring-boot-4-starter:1.2.28'
         api "com.fasterxml.uuid:java-uuid-generator:5.2.0"
         api 'com.lihaoyi:fastparse_2.13:3.1.1'
@@ -78,15 +78,14 @@ dependencies {
         api "com.google.code.gson:gson:2.14.0"
         api "com.google.errorprone:error_prone_annotations:2.50.0"
         api "org.objenesis:objenesis:3.6"
-        api "org.checkerframework:checker-qual:4.3.0"
+        api "org.checkerframework:checker-qual:4.3.1"
         api "com.google.code.findbugs:jsr305:3.0.2"
-        api "org.apache.commons:commons-math3:3.6.1"
-        api "io.github.classgraph:classgraph:4.8.197"
+        api "io.github.classgraph:classgraph:4.8.198"
         api 'com.hazelcast:hazelcast:5.7.0'
         api 'com.github.jnr:jnr-posix:3.2.4'
         api "org.apache.commons:commons-compress:1.28.0"
         api 'com.google.api.grpc:proto-google-common-protos:2.78.0'
-        api 'com.github.spotbugs:spotbugs-annotations:4.10.4'
+        api 'com.github.spotbugs:spotbugs-annotations:4.10.5'
         api 'commons-validator:commons-validator:1.11.0'
         api "commons-beanutils:commons-beanutils:1.11.0"
         api "com.github.tomakehurst:wiremock-jre8:3.0.1"
@@ -115,9 +114,9 @@ dependencies {
         api "com.auth0:java-jwt:4.6.1"
         api "com.auth0:auth0:5.4.0"
         api "com.auth0:jwks-rsa:0.24.1"
-        api "com.google.cloud:spring-cloud-gcp-logging:8.2.2"
+        api "com.google.cloud:spring-cloud-gcp-logging:8.2.3"
         api "org.apache.commons:commons-collections4:4.6.0"
-        api 'commons-codec:commons-codec:1.22.1'
+        api 'commons-codec:commons-codec:1.23.0'
         api 'org.apache.commons:commons-lang3:3.21.0'
         api 'commons-io:commons-io:2.22.0'
         api "org.wiremock:wiremock-standalone:3.13.2"
@@ -147,7 +146,7 @@ dependencies {
         api 'org.eclipse.jgit:org.eclipse.jgit:7.8.0.202609011348-r'
         api 'com.samskivert:jmustache:1.16'
         api 'org.apache.groovy:groovy-all:6.0.0'
-        api 'org.jetbrains.kotlin:kotlin-scripting-jsr223:2.4.20'
+        api 'org.jetbrains.kotlin:kotlin-scripting-jsr223:2.4.21'
         // connector fork相关----end
 
         def mapstructPlus = "1.5.3"
@@ -202,7 +201,7 @@ dependencies {
 
         // 压缩工具----start
         api 'org.lz4:lz4-java:1.8.1'
-        api 'com.github.luben:zstd-jni:1.5.7-22'
+        api 'com.github.luben:zstd-jni:1.5.7-23'
         // 压缩工具----end
 
         // sink相关---start
@@ -226,7 +225,7 @@ dependencies {
         api "com.tngtech.archunit:archunit-junit5-engine:$archunit"
         api "com.tngtech.archunit:archunit-junit5-api:$archunit"
 
-        def jqwik = "1.10.1"
+        def jqwik = "1.10.2"
         api "net.jqwik:jqwik:$jqwik"
         api "net.jqwik:jqwik-api:$jqwik"
 
