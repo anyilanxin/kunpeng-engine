@@ -19,6 +19,7 @@ package structpack
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
+import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.compile.JavaCompile
 
 /**
@@ -46,6 +47,12 @@ class AutoDeclarePropertiesPlugin implements Plugin<Project> {
 
       project.tasks.withType(JavaCompile).configureEach { compileTask ->
         compileTask.dependsOn(autoDeclareTask)
+      }
+
+      // sourcesJar 等打包 src/main/java 的 Jar 任务消费被本任务改写的源文件，
+      // 未定序会被 Gradle 9 隐式依赖校验直接判 FAIL
+      project.tasks.withType(Jar).configureEach { jarTask ->
+        jarTask.dependsOn(autoDeclareTask)
       }
     }
 
