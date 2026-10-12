@@ -1,0 +1,89 @@
+# ==============================================================================
+# 独立网关全量配置模板：纯 gateway 进程（无 broker 存储），接收客户端命令并转发到 broker 集群
+# （与 application-broker.yml.template 搭配：broker 关闭内嵌网关，客户端接入统一走本进程）
+#
+# 启动：java -Dstart.type=gateway -jar kunpeng-xxx.jar（gateway profile 由启动器注入）
+# 使用：复制为 jar 同级 config/application-gateway.yml 后按需删改；
+#       所列值均为默认值（注释掉的项为空默认或需按环境填写）
+#       基础配置（HTTP/actuator/日志）见 application.yml.template
+# ==============================================================================
+
+kunpeng:
+  # ================================ 集群（节点落位 + membership/SWIM） ================================
+  cluster:
+    # 网关节点 ID（集群内唯一，建议与 broker 区分命名：gateway01 / gateway02 ...）
+    node-id: gateway01
+    # 集群名称
+    cluster-name: kunpeng-cluster
+    # 种子节点（host:membership 端口）：指向 broker node01，网关借此加入集群发现 broker 列表
+    seed-nodes:
+      - 127.0.0.1:2025
+    # 对外通告地址：默认自动探测网卡；多网卡/容器环境显式指定
+    advance-host: 127.0.0.1
+    # 网关也是集群成员，占用 membership 端口；与 broker 同机部署时必须错开 broker 的端口阶梯
+    # （例：broker node01 占 2025/2026，本网关示例用 2085）
+    start-port: 2085
+    # 端口偏移量（保持默认即可；网关无 broker 业务端口，不占用该偏移）
+    port-offset: 1
+    # 集群面 TLS（默认关闭；membership 面与各 broker 业务面共享此默认，各平面 network.security 可覆盖）
+    security:
+      enabled: false
+      # certificate-chain-path: /path/to/ca.crt     # 证书链路径
+      # private-key-path: /path/to/server.key       # 私钥路径
+      # key-store:                                  # 密钥库（与证书+私钥二选一）
+      #   file-path: /path/to/keystore.p12          # 文件路径（相对路径基于 basedir）
+      #   password: changeit
+    # SWIM 成员协议参数
+    membership:
+      broadcast-updates: false        # 成员变更是否广播全集群
+      broadcast-disputes: true        # 成员状态争议是否广播
+      notify-suspect: false           # 节点进入 suspect 是否立即通知
+      gossip-interval: 250ms          # gossip 扩散间隔
+      gossip-fanout: 2                # 每轮 gossip 传播的成员数
+      probe-interval: 1s              # 故障探测间隔
+      probe-timeout: 100ms            # 单次探测超时
+      suspect-probes: 3               # 确认 suspect 的直接探测次数
+      failure-timeout: 10s            # 判定成员死亡时长
+      sync-interval: 10s              # 全量成员状态同步间隔
+    # membership 网络（host/port/security 默认取 advance-host / start-port / 集群 security，无需显式配置）
+    network:
+      # host: 127.0.0.1               # 绑定地址（默认 advance-host）
+      # port: 2085                    # 绑定端口（默认 start-port）
+      request-timeout: 15s            # 成员间请求超时
+      message-compression: none       # none | gzip
+      heartbeat-timeout: 15s          # 消息层心跳判定超时
+      heartbeat-interval: 5s          # 消息层心跳间隔
+      # socket-send-buffer: 2MB       # socket 发送缓冲（默认系统值）
+      # socket-receive-buffer: 2MB    # socket 接收缓冲（默认系统值）
+      # security:                     # 本平面 TLS 覆盖（结构同 cluster.security，默认继承集群 security）
+
+  # ================================ 网关 gRPC（内嵌与独立两种形态共用） ================================
+  gateway:
+    # 命令转发到 broker 的默认超时
+    request-timeout: 15s
+    # 是否允许被客户端发现（拓扑发现返回接入地址列表）；关闭后客户端需静态配置网关地址
+    allow-client-discovery: true
+    network:
+      host: 127.0.0.1                  # gRPC 绑定地址（默认自动探测）
+      # gRPC 绑定端口：与 broker 同机部署时避开 broker 内嵌网关的 2024（本例 2084）
+      port: 2084
+      # grpc-host: 10.0.0.1            # 对外通告地址（默认回落 host/port；客户端经拓扑发现网关时使用）
+      # grpc-port: 2084
+      max-message-size: 4MB            # 单条 RPC 消息上限
+      flow-control-window: 8MB         # HTTP/2 每流流量控制窗口
+      max-inbound-metadata-size: 1MB   # header 上限
+      min-keep-alive-interval: 30s     # 允许客户端 keep-alive 的最小间隔
+      keep-alive-time: 2m              # 服务端 keep-alive 探测间隔（检测半开连接）
+      keep-alive-timeout: 20s          # 判定连接死亡前等待 ack 的时长
+      # security:                      # gRPC TLS（默认关闭；启用后客户端需 TLS 接入，结构同 cluster.security）
+    # 客户端长轮询（REST/SSE 拉取；timeout/probe-timeout 单位毫秒）
+    long-polling:
+      enabled: true
+      timeout: 10000
+      probe-timeout: 10000
+      min-empty-responses: 3           # 连续空响应达到该次数后停止挂起
+    # 线程：管理线程 1、gRPC 线程池按 CPU 核数自适应（只读，不可配置）
+
+# 独立网关与 broker 同机部署时 HTTP 端口（REST/SSE/长轮询）也要错开 broker 的 8080
+# server:
+#   port: 8081

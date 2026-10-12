@@ -1,0 +1,59 @@
+# ==============================================================================
+# kunpeng 通用基础配置模板（所有形态共用：单节点内嵌 / 独立 broker / 独立 gateway）
+#
+# 使用：复制为 jar 同级 config/application.yml（外部配置优先于 jar 内默认值），
+#       并按节点形态搭配 application-single.yml.template / application-broker.yml.template /
+#       application-gateway.yml.template 对应的内容（application-broker.yml / application-gateway.yml）。
+# ==============================================================================
+
+spring:
+  # 优雅停机：每个生命周期阶段（broker/gateway 关闭链各步骤）最长等待时长
+  lifecycle.timeout-per-shutdown-phase: 30s
+  # 关闭静态资源映射（本服务只暴露 REST 与 actuator，不服务静态文件）
+  web.resources.add-mappings: false
+  # 排除与本引擎无关的自动装配，缩短启动时间并避免误配
+  autoconfigure:
+    exclude:
+      org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration,
+      org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration,
+      org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration,
+      org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchClientAutoConfiguration
+
+server:
+  port: 8080          # HTTP 端口（REST / OpenAPI）
+  shutdown: graceful  # 优雅停机：先停止接收新请求，等待处理中的请求完成再退出
+
+management:
+  server.port: 9600   # actuator 独立端口（与业务 HTTP 隔离）
+  health.defaults.enabled: true
+  endpoint:
+    info.access: unrestricted
+    # 运行时动态调整日志级别（POST /actuator/loggers/com.anyilanxin.kunpeng）
+    loggers.access: unrestricted
+    # Prometheus 抓取指标（GET /actuator/prometheus）
+    prometheus.access: unrestricted
+    configprops:
+      access: unrestricted
+      # 生效配置核对（含明文值；注意生产环境的暴露面）
+      show-values: always
+    health:
+      access: unrestricted
+      # 健康检查展示细节（分区/组件状态）
+      show-details: always
+    metrics.access: unrestricted
+  endpoints:
+    access.default: unrestricted
+    web.exposure.include: "*"
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+        step: 30s   # 指标聚合步长
+
+logging:
+  register-shutdown-hook: true
+  level:
+    root: info   # 全局日志级别（详细排查时可临时调 debug）
+  # 日志实现配置。如需外置日志配置：复制 log4j2-spring.xml.template 为 config/log4j2-spring.xml，
+  # 并把下一行改为 logging.config: config/log4j2-spring.xml
+  config: classpath:log4j2-spring.xml

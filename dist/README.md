@@ -132,7 +132,7 @@ docker run -d --name kunpeng \
 
 ## 常用配置项
 
-配置可通过 `config/application-*.yml`、命令行 `-D` 系统属性或 `--` 参数指定（Spring 松散绑定）。
+配置可通过 `config/application-*.yml`、命令行 `-D` 系统属性或 `--` 参数指定（Spring 松散绑定）。发行包 `config/` 目录内含配置模板，按需复制改名后使用：`application.yml.template`（通用基础）、`application-single.yml.template`（单节点：broker 内嵌网关）、`application-broker.yml.template`（独立 broker，内嵌网关关闭）、`application-gateway.yml.template`（独立网关）、`log4j2-spring.xml.template`（日志）。后三份为对应形态的**全量配置模板**，列出该形态下全部可配置项及其默认值（注释项为空默认或需按环境填写）。
 
 | 配置项 | 默认值 | 说明 |
 |--------|--------|------|

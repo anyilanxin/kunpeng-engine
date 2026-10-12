@@ -1,0 +1,227 @@
+# ==============================================================================
+# 单节点全量配置模板：一个 broker + 内嵌 gateway（默认形态，客户端直连 127.0.0.1:2024）
+#
+# 启动：java -jar kunpeng-xxx.jar（start.type 缺省即 broker；内嵌网关默认开启）
+# 使用：复制为 jar 同级 config/application-broker.yml（或直接并入 config/application.yml）后按需删改；
+#       所列值均为默认值（注释掉的项为空默认或需按环境填写）
+#       基础配置（HTTP/actuator/日志）见 application.yml.template
+# 其他形态：独立 broker 见 application-broker.yml.template，独立网关见 application-gateway.yml.template
+# ==============================================================================
+
+kunpeng:
+  # ================================ 集群（节点落位 + membership/SWIM） ================================
+  cluster:
+    # 节点 ID，集群内唯一
+    node-id: node01
+    # 集群名称
+    cluster-name: kunpeng-cluster
+    # 种子节点（host:membership 端口）。单节点自举，指向自身 start-port
+    seed-nodes:
+      - 127.0.0.1:2025
+    # 对外通告地址，默认自动探测网卡；容器/多网卡环境建议显式指定
+    advance-host: 127.0.0.1
+    # 起始端口：membership 端口 = start-port；broker 业务（raft）端口默认 start-port + port-offset
+    start-port: 2025
+    # 端口偏移量（broker 业务端口 = start-port + port-offset）
+    port-offset: 1
+    # 集群面 TLS（默认关闭；membership 与 broker 业务面共享此默认，各平面 network.security 可覆盖）
+    security:
+      enabled: false
+      # certificate-chain-path: /path/to/ca.crt     # 证书链路径
+      # private-key-path: /path/to/server.key       # 私钥路径
+      # key-store:                                  # 密钥库（与证书+私钥二选一）
+      #   file-path: /path/to/keystore.p12          # 文件路径（相对路径基于 basedir）
+      #   password: changeit
+    # SWIM 成员协议参数
+    membership:
+      broadcast-updates: false        # 成员变更是否广播全集群
+      broadcast-disputes: true        # 成员状态争议是否广播
+      notify-suspect: false           # 节点进入 suspect 是否立即通知
+      gossip-interval: 250ms          # gossip 扩散间隔
+      gossip-fanout: 2                # 每轮 gossip 传播的成员数
+      probe-interval: 1s              # 故障探测间隔
+      probe-timeout: 100ms            # 单次探测超时
+      suspect-probes: 3               # 确认 suspect 的直接探测次数
+      failure-timeout: 10s            # 判定成员死亡时长
+      sync-interval: 10s              # 全量成员状态同步间隔
+    # membership 网络（host/port/security 默认取 advance-host / start-port / 集群 security，无需显式配置）
+    network:
+      # host: 127.0.0.1               # 绑定地址（默认 advance-host）
+      # port: 2025                    # 绑定端口（默认 start-port）
+      request-timeout: 15s            # 成员间请求超时
+      message-compression: none       # none | gzip
+      heartbeat-timeout: 15s          # 消息层心跳判定超时
+      heartbeat-interval: 5s          # 消息层心跳间隔
+      # socket-send-buffer: 2MB       # socket 发送缓冲（默认系统值）
+      # socket-receive-buffer: 2MB    # socket 接收缓冲（默认系统值）
+      # security:                     # 本平面 TLS 覆盖（结构同 cluster.security，默认继承集群 security）
+
+  # ================================ 网关 gRPC（内嵌与独立两种形态共用） ================================
+  gateway:
+    # 命令转发到 broker 的默认超时
+    request-timeout: 15s
+    # 是否允许被客户端发现（拓扑发现返回接入地址列表）；关闭后客户端需静态配置网关地址
+    allow-client-discovery: true
+    network:
+      host: 127.0.0.1                  # gRPC 绑定地址（默认自动探测）
+      port: 2024                       # gRPC 绑定端口（客户端接入端口）
+      # grpc-host: 10.0.0.1            # 对外通告地址（默认回落 host/port；客户端经拓扑发现网关时使用）
+      # grpc-port: 2024
+      max-message-size: 4MB            # 单条 RPC 消息上限
+      flow-control-window: 8MB         # HTTP/2 每流流量控制窗口
+      max-inbound-metadata-size: 1MB   # header 上限
+      min-keep-alive-interval: 30s     # 允许客户端 keep-alive 的最小间隔
+      keep-alive-time: 2m              # 服务端 keep-alive 探测间隔（检测半开连接）
+      keep-alive-timeout: 20s          # 判定连接死亡前等待 ack 的时长
+      # security:                      # gRPC TLS（默认关闭；启用后客户端需 TLS 接入，结构同 cluster.security）
+    # 客户端长轮询（REST/SSE 拉取；timeout/probe-timeout 单位毫秒）
+    long-polling:
+      enabled: true
+      timeout: 10000
+      probe-timeout: 10000
+      min-empty-responses: 3           # 连续空响应达到该次数后停止挂起
+    # 线程：管理线程 1、gRPC 线程池按 CPU 核数自适应（只读，不可配置）
+
+  # ================================ broker（引擎/存储） ================================
+  broker:
+    # 内嵌网关开关：默认 true（网络与运行参数复用 kunpeng.gateway.*，与独立网关同一份）
+    gateway:
+      enable: true
+    # actor 调度线程
+    threads:
+      cpu-thread-count: 2              # CPU 线程数（计算密集）
+      io-thread-count: 2               # IO 线程数（阻塞调用）
+    # 业务（raft）通信网络（host/port/security 默认取 advance-host / start-port+port-offset / 集群 security）
+    network:
+      # host: 127.0.0.1                # 绑定地址（默认 advance-host）
+      # port: 2026                     # 绑定端口（默认 start-port + port-offset）
+      max-message-size: 4MB            # 单条消息上限
+      message-compression: none        # none | gzip
+      heartbeat-timeout: 15s           # 心跳判定超时
+      heartbeat-interval: 5s           # 心跳间隔
+      # socket-send-buffer: 2MB        # socket 发送缓冲（默认系统值）
+      # socket-receive-buffer: 2MB     # socket 接收缓冲（默认系统值）
+      # security:                      # 本平面 TLS 覆盖（结构同 cluster.security，默认继承集群 security）
+    # 数据落盘
+    data:
+      directory: data                  # 数据目录（相对路径基于 basedir）
+      # runtime-directory: runtime     # 运行时目录（默认复用 directory）
+      log-segment-size: 128MB          # 日志段大小
+      snapshot-period: 5m              # 快照周期
+      log-index-density: 100           # 日志索引密度（每多少条写一次索引）
+      disk:
+        enable-monitoring: true        # 磁盘使用监控
+        monitoring-interval: 1s        # 监控间隔
+        free-space:                    # 空闲空间阈值（低于阈值拒绝对应命令）
+          processing: 2GB              # 处理命令所需最小空闲
+          replication: 1GB             # 复制所需最小空闲
+    # 业务 raft 分区（业务数据复制组）
+    raft:
+      partitioning:
+        scheme: ROUND_ROBIN            # 分区分布方案：ROUND_ROBIN | FIXED
+        partitions-count: 2            # 分区数
+        replication-factor: 1          # 每分区副本数（单节点只能为 1；多节点建议奇数且不超过节点数）
+      election-timeout: 2500ms         # 选举超时
+      heartbeat-interval: 250ms        # leader 心跳间隔
+      request-timeout: 2500ms          # 请求超时
+      max-message-size: 4MB            # 单条 raft 消息上限
+      max-append-batch-size: 32KB      # 追加日志批大小上限
+      max-appends-per-follower: 6      # 每 follower 并发 append 请求数
+      min-step-down-failure-count: 3   # leader 收到连续失败响应后让位的阈值
+      prefer-snapshot-replication-threshold: 100   # follower 落后超过该条数优先走快照复制
+      enable-priority-election: true   # 优先级选举
+      snapshot-request-timeout: 2500ms # 快照请求超时
+      snapshot-chunk-size: 1GB         # 快照分块大小
+      configuration-change-timeout: 10s   # 成员变更超时
+      max-quorum-response-timeout: 0s  # quorum 响应最大超时
+      flush:
+        enabled: true                  # 刷盘开关
+        delay-time: 0s                 # 刷盘延迟
+    # 管理 raft（集群元数据）
+    manage:
+      init-broker-id: node01           # 初始引导节点 ID（必填，指向首个引导节点，各节点配置一致）
+      replication-factor: 1            # 副本数
+      # 以下参数含义同 broker.raft
+      election-timeout: 2500ms
+      heartbeat-interval: 250ms
+      request-timeout: 2500ms
+      max-message-size: 4MB
+      max-append-batch-size: 32KB
+      max-appends-per-follower: 6
+      min-step-down-failure-count: 3
+      prefer-snapshot-replication-threshold: 100
+      enable-priority-election: true
+      snapshot-request-timeout: 2500ms
+      snapshot-chunk-size: 1GB
+      configuration-change-timeout: 10s
+      max-quorum-response-timeout: 0s
+      flush:
+        enabled: true
+        delay-time: 0s
+    # record 外发公共配置
+    sinking:
+      skip-records: []                 # 跳过的 record 类型 ID 集合（如 [11, 12]）
+      distribution-interval: 15s       # 分发间隔
+    # sink：record 外发实现（按名字可配多个）
+    sinks:
+      dbms:
+        # jar-path: /path/to/sink.jar  # 外部 sink jar（缺省从 classpath 加载）
+        className: com.anyilanxin.kunpeng.sink.rdbms.RdbmsSink
+        args:
+          url: jdbc:mysql://localhost:3306/kunpeng_process?allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=utf8&useSSL=false&rewriteBatchedStatement=true&serverTimezone=Asia/Shanghai
+          #          url: jdbc:postgresql://localhost:5432/kunpeng_process
+          userName: root
+          password: root
+          tablePrefix: ANYI_           # 生成表前缀（大写渲染）
+          caseSensitive: true          # 表名大小写敏感
+          autoDdl: true                # 启动时自动建表/补列
+    # RocksDB 存储引擎
+    rocksdb:
+      memory-limit: 512MB                    # RocksDB 内存预算（block cache + memtable）
+      block-cache-memory-ratio: 0.333        # 预算中 block cache 占比（其余给 memtable）
+      block-cache-shard-bits: 8              # block cache 分片位数（2^bits 个分片）
+      max-open-files: -1                     # 打开文件数上限（-1 不限制）
+      max-write-buffer-number: 6             # memtable 写缓冲数
+      min-write-buffer-number-to-merge: 3    # 触发合并的最小写缓冲数
+      disable-wal: true                      # 关闭 WAL（单列族时安全）
+      enable-sst-partitioning: true          # 按列族前缀 compaction（SST 更多但更聚集）
+      max-background-jobs: 0                 # 后台任务数（flush+compaction；0=按 CPU 自适应且至少 4）
+      io-rate-bytes-per-second: 0            # IO 速率限制（0 不限制）
+      enable-statistics: false               # RocksDB 统计
+      access-metrics: NONE                   # 访问指标采集：NONE | FINE
+      consistency-checks:
+        enable-preconditions: false          # 前置条件校验
+        enable-foreign-key-checks: false     # 外键校验
+      # column-family-options:               # RocksDB 原生列族选项透传（键用下划线形式）
+      #   write_buffer_size: 8388608
+    # 写入流控
+    flow-control:
+      # 请求并发限制（入口命令准入）
+      request:
+        enabled: true
+        use-windowed: true                   # 窗口化平滑限流
+        algorithm: AIMD                      # AIMD | FIXED | VEGAS | GRADIENT | GRADIENT2 | LEGACY_VEGAS
+        aimd:                                # 各算法参数块（仅 algorithm 选中的生效）
+          request-timeout: 200ms
+          initial-limit: 100
+          min-limit: 1
+          max-limit: 1000
+          backoff-ratio: 0.9
+        fixed: { limit: 20 }
+        vegas: { alpha: 3, beta: 6, initial-limit: 20 }
+        gradient: { min-limit: 10, initial-limit: 20, rtt-tolerance: 2.0 }
+        gradient2: { min-limit: 10, initial-limit: 20, rtt-tolerance: 2.0, long-window: 600 }
+        legacy-vegas: { initial-limit: 1024, max-concurrency: 32768, alpha-limit: 0.7, beta-limit: 0.95 }
+      # 写入速率限制（默认关闭）
+      write:
+        enabled: false
+        # limit: 100                         # 启用后必填：速率上限
+        ramp-up: 0s                          # 限速爬坡时长
+        throttling:
+          enabled: false                     # 背压节流
+          acceptable-backlog: 100000         # 可接受积压量
+          minimum-limit: 100                 # 节流下限
+          resolution: 15s                    # 节流判定粒度
+    # BPMN 引擎
+    engine:
+      max-batch: 200                   # 单批 follow-up 命令/状态上限（越大吞吐越高、单批内存与延迟越高）
