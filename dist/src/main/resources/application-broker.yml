@@ -7,9 +7,7 @@ kunpeng:
   cluster:
     node-id: node01
     seed-nodes:
-      - 127.0.0.1:2026
-    network:
-      advance-host: 127.0.0.1
+      - 127.0.0.1:2025
   broker:
     raft:
       partitioning:
@@ -21,10 +19,6 @@ kunpeng:
     threads:
       cpu-thread-count: 2
       io-thread-count: 2
-    gateway:
-      network:
-        host: 127.0.0.1
-        port: 2024
     sinks:
       dbms:
         className: com.anyilanxin.kunpeng.sink.rdbms.RdbmsSink

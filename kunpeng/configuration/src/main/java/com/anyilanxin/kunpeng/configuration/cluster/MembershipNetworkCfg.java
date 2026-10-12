@@ -48,15 +48,15 @@ public class MembershipNetworkCfg extends NetworkInfo {
   private Duration heartbeatTimeout = Duration.ofSeconds(15);
   private Duration heartbeatInterval = Duration.ofSeconds(5);
 
-  public void init(final NetworkInfoCfg infoCfg, final String basePath) {
+  public void init(final ClusterCfg clusterCfg, final String basePath) {
     if (getSecurity() == null) {
-      setSecurity(infoCfg.getSecurity());
+      setSecurity(clusterCfg.getSecurity());
     }
     if (getHost() == null) {
-      setHost(infoCfg.getAdvanceHost());
+      setHost(clusterCfg.getAdvanceHost());
     }
     if (getPort() <= 0) {
-      setPort(infoCfg.getStartPort());
+      setPort(clusterCfg.getStartPort());
     }
     super.init(basePath);
   }

@@ -59,7 +59,7 @@ START_TYPE=gateway java ... -jar kunpeng-<version>.jar     # 环境变量
 java --add-opens=java.base/jdk.internal.misc=ALL-UNNAMED --add-opens=java.base/java.util.zip=ALL-UNNAMED -jar kunpeng-2026.9.0-alpha1.jar
 ```
 
-内嵌 gateway 默认开启，gRPC 监听 `kunpeng.broker.gateway.network.port`（默认 2024）。
+内嵌 gateway 默认开启，gRPC 监听 `kunpeng.gateway.network.port`（默认 2024；内嵌与独立 gateway 共用 `kunpeng.gateway.*` 同一份配置）。
 
 ### 2. 单独启动 broker
 
@@ -79,13 +79,13 @@ java -Dstart.type=broker -Dkunpeng.broker.gateway.enable=false \
 java -Dstart.type=gateway \
   -Dserver.port=2021 -Dmanagement.server.port=9601 \
   -Dkunpeng.cluster.node-id=gateway01 \
-  -Dkunpeng.cluster.network.start-port=2085 \
+  -Dkunpeng.cluster.start-port=2085 \
   -Dkunpeng.gateway.network.port=2084 \
   --add-opens=java.base/jdk.internal.misc=ALL-UNNAMED --add-opens=java.base/java.util.zip=ALL-UNNAMED \
   -jar kunpeng-2026.9.0-alpha1.jar
 ```
 
-与 broker 同机部署时注意错开端口：`start-port`（本例 2085，默认 seed `127.0.0.1:2026` 指向 broker node01 的 membership 端口）、gRPC 端口（本例 2084，避开 broker 内嵌 gateway 的 2024）。
+与 broker 同机部署时注意错开端口：`start-port`（本例 2085，默认 seed `127.0.0.1:2025` 指向 broker node01 的 membership 端口）、gRPC 端口（本例 2084，避开 broker 内嵌 gateway 的 2024）。
 
 ## 默认端口与运行时目录
 
@@ -93,10 +93,10 @@ java -Dstart.type=gateway \
 
 | 端口 | 用途 |
 |------|------|
-| 2020 | HTTP（REST / OpenAPI） |
+| 8080 | HTTP（REST / OpenAPI） |
 | 2024 | gRPC 客户端接入（broker 内嵌 gateway 或独立 gateway） |
 | 9600 | Actuator（健康检查、指标、Prometheus） |
-| 2026 ~ 2028 | 集群内部端口，由 `start-port`（2026）按偏移 1 依次分配：membership / client / business |
+| 2025 ~ 2026 | 集群内部端口：membership（`cluster.start-port`=2025）与业务通信（`broker.network`，默认 start-port+偏移=2026） |
 
 - 数据目录：基于 `basedir`（默认当前目录）；
 - 日志文件：`kunpeng-<启动类型>.log`；
@@ -104,27 +104,27 @@ java -Dstart.type=gateway \
 
 ## 本机多节点 demo（4 节点）
 
-node01 的 membership 端口为 2026，与默认 seed（`127.0.0.1:2026`）一致，其余节点保持默认 seed 即可加入集群：
+node01 的 membership 端口为 2025，与默认 seed（`127.0.0.1:2025`）一致，其余节点保持默认 seed 即可加入集群：
 
 ```bash
 # node01
-java -Dserver.port=2021 -Dmanagement.server.port=9601 -Dkunpeng.cluster.node-id=node01 -Dkunpeng.cluster.network.start-port=2026 -Dkunpeng.broker.gateway.network.port=2024 --add-opens=java.base/jdk.internal.misc=ALL-UNNAMED --add-opens=java.base/java.util.zip=ALL-UNNAMED -jar kunpeng-2026.9.0-alpha1.jar
+java -Dserver.port=2021 -Dmanagement.server.port=9601 -Dkunpeng.cluster.node-id=node01 -Dkunpeng.cluster.start-port=2025 -Dkunpeng.gateway.network.port=2024 --add-opens=java.base/jdk.internal.misc=ALL-UNNAMED --add-opens=java.base/java.util.zip=ALL-UNNAMED -jar kunpeng-2026.9.0-alpha1.jar
 
 # node02
-java -Dserver.port=2022 -Dmanagement.server.port=9602 -Dkunpeng.cluster.node-id=node02 -Dkunpeng.cluster.network.start-port=2035 -Dkunpeng.broker.gateway.network.port=2034 --add-opens=java.base/jdk.internal.misc=ALL-UNNAMED --add-opens=java.base/java.util.zip=ALL-UNNAMED -jar kunpeng-2026.9.0-alpha1.jar
+java -Dserver.port=2022 -Dmanagement.server.port=9602 -Dkunpeng.cluster.node-id=node02 -Dkunpeng.cluster.start-port=2035 -Dkunpeng.gateway.network.port=2034 --add-opens=java.base/jdk.internal.misc=ALL-UNNAMED --add-opens=java.base/java.util.zip=ALL-UNNAMED -jar kunpeng-2026.9.0-alpha1.jar
 
 # node03
-java -Dserver.port=2023 -Dmanagement.server.port=9603 -Dkunpeng.cluster.node-id=node03 -Dkunpeng.cluster.network.start-port=2045 -Dkunpeng.broker.gateway.network.port=2044 --add-opens=java.base/jdk.internal.misc=ALL-UNNAMED --add-opens=java.base/java.util.zip=ALL-UNNAMED -jar kunpeng-2026.9.0-alpha1.jar
+java -Dserver.port=2023 -Dmanagement.server.port=9603 -Dkunpeng.cluster.node-id=node03 -Dkunpeng.cluster.start-port=2045 -Dkunpeng.gateway.network.port=2044 --add-opens=java.base/jdk.internal.misc=ALL-UNNAMED --add-opens=java.base/java.util.zip=ALL-UNNAMED -jar kunpeng-2026.9.0-alpha1.jar
 
 # node04
-java -Dserver.port=2024 -Dmanagement.server.port=9604 -Dkunpeng.cluster.node-id=node04 -Dkunpeng.cluster.network.start-port=2055 -Dkunpeng.broker.gateway.network.port=2054 --add-opens=java.base/jdk.internal.misc=ALL-UNNAMED --add-opens=java.base/java.util.zip=ALL-UNNAMED -jar kunpeng-2026.9.0-alpha1.jar
+java -Dserver.port=2028 -Dmanagement.server.port=9604 -Dkunpeng.cluster.node-id=node04 -Dkunpeng.cluster.start-port=2055 -Dkunpeng.gateway.network.port=2054 --add-opens=java.base/jdk.internal.misc=ALL-UNNAMED --add-opens=java.base/java.util.zip=ALL-UNNAMED -jar kunpeng-2026.9.0-alpha1.jar
 ```
 
 ## Docker 启动
 
 ```bash
 docker run -d --name kunpeng \
-  -p 2020:2020 -p 2024:2024 -p 9600:9600 -p 2026-2028:2026-2028 \
+  -p 8080:8080 -p 2024:2024 -p 9600:9600 -p 2025-2026:2025-2026 \
   -v $PWD/data:/kunpeng/data -v $PWD/logs:/kunpeng/logs \
   -e TZ=Asia/Shanghai \
   kunpeng:2026.9.0-alpha1
@@ -137,15 +137,15 @@ docker run -d --name kunpeng \
 | 配置项 | 默认值 | 说明 |
 |--------|--------|------|
 | `start.type` | `broker` | 启动类型：`broker` / `gateway` |
-| `server.port` | `2020` | HTTP 端口 |
+| `server.port` | `8080` | HTTP 端口 |
 | `management.server.port` | `9600` | Actuator 端口 |
 | `kunpeng.cluster.node-id` | `node01` | 节点 ID，集群内唯一 |
-| `kunpeng.cluster.seed-nodes` | `127.0.0.1:2026` | 种子节点地址列表 |
-| `kunpeng.cluster.network.start-port` | `2026` | 集群起始端口（membership=起始值，client=+偏移，business=+2×偏移，偏移默认 1） |
-| `kunpeng.cluster.network.advance-host` | 自动探测 | 对外通告地址 |
-| `kunpeng.broker.gateway.enable` | `true` | 是否启用 broker 内嵌 gateway |
-| `kunpeng.broker.gateway.network.host` / `port` | `127.0.0.1` / `2024` | broker 内嵌 gateway 的 gRPC 监听 |
-| `kunpeng.gateway.network.host` / `port` | 自动探测 / `2024` | 独立 gateway 的 gRPC 监听 |
+| `kunpeng.cluster.seed-nodes` | `127.0.0.1:2025` | 种子节点地址列表 |
+| `kunpeng.cluster.start-port` | `2025` | 集群起始端口（membership=起始值，偏移默认 1） |
+| `kunpeng.cluster.advance-host` | 自动探测 | 对外通告地址 |
+| `kunpeng.broker.network.host` / `port` | 集群通告地址 / start-port+偏移（`2026`） | broker 业务（raft）通信网络 |
+| `kunpeng.broker.gateway.enable` | `true` | 是否启用 broker 内嵌 gateway（内嵌网关配置复用 `kunpeng.gateway.*`） |
+| `kunpeng.gateway.network.host` / `port` | 自动探测 / `2024` | gRPC 监听（内嵌与独立 gateway 共用） |
 | `kunpeng.broker.raft.partitioning.partitions-count` | `1` | 分区数 |
 | `kunpeng.broker.raft.partitioning.replication-factor` | `1` | 副本数 |
 | `kunpeng.broker.threads.cpu-thread-count` / `io-thread-count` | `2` / `2` | broker CPU / IO 线程数 |

@@ -23,6 +23,7 @@ import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
 import com.anyilanxin.kunpeng.configuration.cluster.ClusterCfg;
+import com.anyilanxin.kunpeng.configuration.gateway.GatewayCfg;
 import com.anyilanxin.kunpeng.gateway.job.GatewayJobHub;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
 import com.anyilanxin.kunpeng.sink.config.SinksConfig;
@@ -62,6 +63,7 @@ public final class Broker implements AutoCloseable {
       final ActorSchedulingService schedulingService,
       final ClusterCfg clusterCfg,
       final BrokerCfg brokerCfg,
+      final GatewayCfg gatewayCfg,
       final AtomixCluster atomixCluster,
       final BrokerClient brokerClient,
       final MeterRegistry meterRegistry,
@@ -77,6 +79,7 @@ public final class Broker implements AutoCloseable {
             atomixCluster,
             brokerCfg,
             clusterCfg,
+            gatewayCfg,
             schedulingService,
             meterRegistry,
             beanFactory,

@@ -20,6 +20,7 @@ import com.anyilanxin.kunpeng.cluster.cluster.ClusterConfig;
 import com.anyilanxin.kunpeng.configuration.cluster.ClusterConfigFactory;
 import com.anyilanxin.kunpeng.modules.common.actor.ActorSchedulerConfiguration;
 import com.anyilanxin.kunpeng.modules.common.configuration.ClusterPropertiesConfiguration;
+import com.anyilanxin.kunpeng.modules.gateway.configuration.GatewayPropertiesConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,12 +43,17 @@ public class BrokerBaseConfiguration {
   public BrokerBaseConfiguration(
       final ClusterPropertiesConfiguration.ClusterProperties clusterProperties,
       final BrokerPropertiesConfiguration.BrokerProperties brokerProperties,
+      final GatewayPropertiesConfiguration.GatewayProperties gatewayProperties,
       final BrokerWorkingDirectoryConfiguration.WorkingDirectory workingDirectory,
       final Environment environment) {
     this.clusterProperties = clusterProperties;
     this.brokerProperties = brokerProperties;
-    brokerProperties.init(workingDirectory.path().toAbsolutePath().toString(), environment);
-    clusterProperties.init(workingDirectory.path().toAbsolutePath().toString());
+    final String basePath = workingDirectory.path().toAbsolutePath().toString();
+    // 先初始化集群配置（start-port/通告地址等），broker 业务网络端口默认值由其派生；
+    // 内嵌网关复用 kunpeng.gateway.* 配置，同样需要完成默认值初始化
+    clusterProperties.init(basePath);
+    brokerProperties.init(basePath, environment, clusterProperties);
+    gatewayProperties.init(basePath);
   }
 
   @Bean

@@ -49,6 +49,7 @@ public class BrokerStartupActor extends Actor {
         brokerContext.getBrokerClient(),
         brokerContext.getBrokerCfg(),
         brokerContext.getClusterCfg(),
+        brokerContext.getGatewayCfg(),
         brokerContext.getActorSchedulingService(),
         brokerContext.getAtomixCluster(),
         this,

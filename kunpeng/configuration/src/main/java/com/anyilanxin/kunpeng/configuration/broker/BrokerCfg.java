@@ -16,6 +16,7 @@
  */
 package com.anyilanxin.kunpeng.configuration.broker;
 
+import com.anyilanxin.kunpeng.configuration.cluster.ClusterCfg;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,7 +30,7 @@ import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.core.env.Environment;
 
 /**
- * Broker 根配置，聚合线程、数据、网关与 raft 等子配置。
+ * Broker 根配置，聚合线程、数据、网络与 raft 等子配置。
  *
  * @author zxuanhong
  * @since 2026.9.0
@@ -43,6 +44,9 @@ public class BrokerCfg {
   @NestedConfigurationProperty private BrokerThreadsCfg threads = new BrokerThreadsCfg();
 
   @NestedConfigurationProperty private DataCfg data = new DataCfg();
+
+  /** 业务（raft）通信网络配置 */
+  @NestedConfigurationProperty private BrokerNetworkCfg network = new BrokerNetworkCfg();
 
   @NestedConfigurationProperty private EmbeddedGatewayCfg gateway = new EmbeddedGatewayCfg();
 
@@ -66,13 +70,14 @@ public class BrokerCfg {
 
   private boolean enableDebugSink;
 
-  public void init(final String brokerBase, final Environment environment) {
+  public void init(
+      final String brokerBase, final Environment environment, final ClusterCfg clusterCfg) {
     this.brokerBase = Path.of(brokerBase);
     applyEnvironment(environment);
     threads.init(this, brokerBase);
     rocksdb.init(this, brokerBase);
     data.init(this, brokerBase);
-    gateway.init(this, brokerBase);
+    network.init(clusterCfg, brokerBase);
     raft.init(this, brokerBase);
     manage.init(this, brokerBase);
   }

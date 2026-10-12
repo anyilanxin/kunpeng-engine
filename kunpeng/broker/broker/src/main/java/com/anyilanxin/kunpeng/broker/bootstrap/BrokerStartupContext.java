@@ -34,6 +34,7 @@ import com.anyilanxin.kunpeng.cluster.dispatch.api.ClusterDispatchClient;
 import com.anyilanxin.kunpeng.cluster.dispatch.scheduling.TimerClock;
 import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
 import com.anyilanxin.kunpeng.configuration.cluster.ClusterCfg;
+import com.anyilanxin.kunpeng.configuration.gateway.GatewayCfg;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
 import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
 import com.anyilanxin.kunpeng.sink.config.SinksConfig;
@@ -54,6 +55,9 @@ public interface BrokerStartupContext {
   BrokerClient getBrokerClient();
 
   ClusterCfg getClusterCft();
+
+  /** 内嵌网关配置（kunpeng.gateway.*，与独立网关同一份；构造注入，随上下文常驻） */
+  GatewayCfg getGatewayCfg();
 
   SinksConfig getSinksConfig();
 

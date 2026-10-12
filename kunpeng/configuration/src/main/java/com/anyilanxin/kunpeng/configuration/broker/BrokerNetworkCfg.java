@@ -14,10 +14,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.anyilanxin.kunpeng.configuration.cluster;
+package com.anyilanxin.kunpeng.configuration.broker;
 
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingConfig;
 import com.anyilanxin.kunpeng.configuration.NetworkInfo;
+import com.anyilanxin.kunpeng.configuration.cluster.ClusterCfg;
 import java.time.Duration;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -26,7 +27,9 @@ import lombok.ToString;
 import org.springframework.util.unit.DataSize;
 
 /**
- * 客户端网络配置，定义客户端通信的端口、心跳与消息压缩等参数。
+ * broker 业务（raft）网络配置，定义业务通信的端口、心跳与消息压缩等参数。
+ *
+ * <p>端口默认取 {@code cluster.start-port + port-offset}，host 默认取集群通告地址。
  *
  * @author zxuanhong
  * @since 2026.9.0
@@ -35,7 +38,7 @@ import org.springframework.util.unit.DataSize;
 @Setter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class ClientNetworkCfg extends NetworkInfo {
+public class BrokerNetworkCfg extends NetworkInfo {
   public static final DataSize DEFAULT_MAX_MESSAGE_SIZE = DataSize.ofMegabytes(4);
   private DataSize maxMessageSize = DEFAULT_MAX_MESSAGE_SIZE;
   private MessagingConfig.CompressionAlgorithm messageCompression =
@@ -45,15 +48,15 @@ public class ClientNetworkCfg extends NetworkInfo {
   private DataSize socketSendBuffer = null;
   private DataSize socketReceiveBuffer = null;
 
-  public void init(final NetworkInfoCfg infoCfg, final String basePath) {
+  public void init(final ClusterCfg clusterCfg, final String basePath) {
     if (getSecurity() == null) {
-      setSecurity(infoCfg.getSecurity());
+      setSecurity(clusterCfg.getSecurity());
     }
     if (getHost() == null) {
-      setHost(infoCfg.getAdvanceHost());
+      setHost(clusterCfg.getAdvanceHost());
     }
     if (getPort() <= 0) {
-      setPort(infoCfg.getStartPort() + infoCfg.getPortOffset());
+      setPort(clusterCfg.getStartPort() + clusterCfg.getPortOffset());
     }
     super.init(basePath);
   }

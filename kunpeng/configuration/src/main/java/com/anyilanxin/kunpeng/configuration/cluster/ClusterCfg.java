@@ -16,6 +16,8 @@
  */
 package com.anyilanxin.kunpeng.configuration.cluster;
 
+import com.anyilanxin.kunpeng.cluster.utils.net.Address;
+import com.anyilanxin.kunpeng.configuration.SecurityCfg;
 import com.anyilanxin.kunpeng.configuration.ZoneType;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,10 +25,11 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
 
 /**
- * 集群配置，定义节点 ID、节点类型、集群名、种子节点与成员/网络配置。
+ * 集群配置，定义节点 ID、节点类型、集群名、种子节点、节点落位（通告地址/端口阶梯/加密）与 membership 网络配置。
  *
  * @author zxuanhong
  * @since 2026.9.0
@@ -39,6 +42,12 @@ public class ClusterCfg {
 
   public static final String DEFAULT_CLUSTER_NAME = "kunpeng-cluster";
 
+  private static final int DEFAULT_START_PORT = 2025;
+  private static final int DEFAULT_PORT_OFFSET = 1;
+  private static final String DEFAULT_ADVERTISED_HOST =
+      Address.defaultAdvertisedHost().getHostAddress();
+  private static final String DEFAULT_HOST = "0.0.0.0";
+
   /** 节点 id */
   private String nodeId = "node-1";
 
@@ -50,13 +59,38 @@ public class ClusterCfg {
   /** 集群种子节点信息 */
   private List<String> seedNodes = new ArrayList<>();
 
+  /** 起始端口：membership 端口；broker 业务端口默认 startPort + portOffset */
+  private int startPort = DEFAULT_START_PORT;
+
+  /** 端口偏移量 */
+  private int portOffset = DEFAULT_PORT_OFFSET;
+
+  /** 优先地址（各网络平面默认通告地址） */
+  private String advanceHost;
+
+  /** 加密信息（各网络平面默认加密配置） */
+  @NestedConfigurationProperty private SecurityCfg security = new SecurityCfg();
+
   /** 成员配置 */
   private MembershipCfg membership = new MembershipCfg();
 
-  /** 网络配置信息 */
-  @NestedConfigurationProperty private NetworkInfoCfg network = new NetworkInfoCfg();
+  /** 集群（membership）网络配置 */
+  @NestedConfigurationProperty private MembershipNetworkCfg network = new MembershipNetworkCfg();
 
   public void init(final String base) {
-    network.init(base);
+    if (StringUtils.isBlank(advanceHost)) {
+      advanceHost = DEFAULT_ADVERTISED_HOST;
+    }
+    if (StringUtils.isBlank(advanceHost)) {
+      advanceHost = DEFAULT_HOST;
+    }
+    if (portOffset <= 0) {
+      throw new IllegalArgumentException("portOffset must be greater than 0");
+    }
+    security.init(base);
+    if (startPort <= 0 || (startPort + portOffset) >= 65535) {
+      throw new IllegalArgumentException("(startPort + portOffset) must be less than 65535");
+    }
+    network.init(this, base);
   }
 }

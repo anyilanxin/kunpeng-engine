@@ -37,7 +37,7 @@ public class EmbeddedGatewayServiceStep extends AbstractBrokerStartupStep {
       final ActorFuture<BrokerStartupContext> startupFuture) {
     final var embeddedGatewayService =
         new EmbeddedGatewayService(
-            brokerStartupContext.getBrokerConfiguration(),
+            brokerStartupContext.getGatewayCfg(),
             brokerStartupContext.getActorSchedulingService(),
             brokerStartupContext.getConcurrencyControl(),
             brokerStartupContext.getBrokerClient(),

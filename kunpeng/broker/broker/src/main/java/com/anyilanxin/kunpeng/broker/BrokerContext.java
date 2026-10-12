@@ -21,6 +21,7 @@ import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
 import com.anyilanxin.kunpeng.configuration.cluster.ClusterCfg;
+import com.anyilanxin.kunpeng.configuration.gateway.GatewayCfg;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
 import com.anyilanxin.kunpeng.sink.config.SinksConfig;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -42,6 +43,9 @@ public interface BrokerContext {
   BrokerCfg getBrokerCfg();
 
   ClusterCfg getClusterCfg();
+
+  /** 内嵌网关配置（kunpeng.gateway.*，与独立网关同一份） */
+  GatewayCfg getGatewayCfg();
 
   ActorSchedulingService getActorSchedulingService();
 

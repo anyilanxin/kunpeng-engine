@@ -23,6 +23,7 @@ import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
 import com.anyilanxin.kunpeng.configuration.cluster.ClusterCfg;
+import com.anyilanxin.kunpeng.configuration.gateway.GatewayCfg;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
 import com.anyilanxin.kunpeng.sink.config.SinksConfig;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -39,6 +40,7 @@ final class BrokerContextImpl implements BrokerContext {
   private final AtomixCluster atomixCluster;
   private final BrokerCfg brokerCfg;
   private final ClusterCfg clusterCfg;
+  private final GatewayCfg gatewayCfg;
   private final ActorSchedulingService schedulingService;
   private final MeterRegistry meterRegistry;
   private final BeanFactory beanFactory;
@@ -51,6 +53,7 @@ final class BrokerContextImpl implements BrokerContext {
       final AtomixCluster atomixCluster,
       final BrokerCfg brokerCfg,
       final ClusterCfg clusterCfg,
+      final GatewayCfg gatewayCfg,
       final ActorSchedulingService schedulingService,
       final MeterRegistry meterRegistry,
       final BeanFactory beanFactory,
@@ -60,6 +63,7 @@ final class BrokerContextImpl implements BrokerContext {
     this.atomixCluster = requireNonNull(atomixCluster);
     this.brokerCfg = requireNonNull(brokerCfg);
     this.clusterCfg = requireNonNull(clusterCfg);
+    this.gatewayCfg = requireNonNull(gatewayCfg);
     this.schedulingService = requireNonNull(schedulingService);
     this.meterRegistry = meterRegistry;
     this.beanFactory = beanFactory;
@@ -85,6 +89,11 @@ final class BrokerContextImpl implements BrokerContext {
   @Override
   public ClusterCfg getClusterCfg() {
     return clusterCfg;
+  }
+
+  @Override
+  public GatewayCfg getGatewayCfg() {
+    return gatewayCfg;
   }
 
   @Override

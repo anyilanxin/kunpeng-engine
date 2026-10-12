@@ -22,10 +22,11 @@ import com.anyilanxin.kunpeng.broker.client.business.client.impl.DefaultBusiness
 import com.anyilanxin.kunpeng.broker.client.core.BrokerClient;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
 import com.anyilanxin.kunpeng.configuration.broker.EmbeddedGatewayCfg;
+import com.anyilanxin.kunpeng.configuration.gateway.GatewayCfg;
 import com.anyilanxin.kunpeng.gateway.Gateway;
 import com.anyilanxin.kunpeng.gateway.job.GatewayJobHub;
 import com.anyilanxin.kunpeng.gateway.topology.GatewayDiscoverTopologyManager;
-import com.anyilanxin.kunpeng.modules.broker.configuration.BrokerPropertiesConfiguration;
+import com.anyilanxin.kunpeng.modules.gateway.configuration.GatewayPropertiesConfiguration;
 import com.anyilanxin.kunpeng.protocol.common.encoding.GatewayInfo;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,9 +39,9 @@ import org.springframework.context.annotation.Configuration;
  * broker 内嵌网关装配：将 broker 引导链启动的内嵌网关实例透出为 bean，REST 面一并加载。
  *
  * <p>条件启用：{@code kunpeng.broker.gateway.enable}（缺省 true，对应 {@link
- * EmbeddedGatewayCfg#isEnable()}）；网关配置取 {@code kunpeng.broker.gateway.*} （{@code
- * BrokerProperties.gateway}）。置于 broker 包内由 broker 装配扫描拾取， gateway 独立形态的扫描范围不含本包，两种形态天然互斥。内嵌网关实例由
- * {@code EmbeddedGatewayServiceStep} 创建，生命周期归 broker 关闭链，此处仅透出不重建。
+ * EmbeddedGatewayCfg#isEnable()}）；网关配置取 {@code kunpeng.gateway.*}（与独立网关同一份）。置于 broker 包内由 broker
+ * 装配扫描拾取， gateway 独立形态的扫描范围不含本包，两种形态天然互斥。内嵌网关实例由 {@code EmbeddedGatewayServiceStep} 创建，生命周期归 broker
+ * 关闭链，此处仅透出不重建。
  *
  * @author zxuanhong
  * @since 2026.9.0
@@ -53,16 +54,16 @@ import org.springframework.context.annotation.Configuration;
 @ComponentScan(basePackages = "com.anyilanxin.kunpeng.gateway.rest")
 public class EmbeddedGatewayConfiguration {
   private final ActorSchedulingService schedulingService;
-  private final EmbeddedGatewayCfg gatewayCfg;
+  private final GatewayCfg gatewayCfg;
   private final AtomixCluster atomixCluster;
 
   @Autowired
   public EmbeddedGatewayConfiguration(
       final ActorSchedulingService schedulingService,
-      final BrokerPropertiesConfiguration.BrokerProperties brokerProperties,
+      final GatewayPropertiesConfiguration.GatewayProperties gatewayProperties,
       final AtomixCluster atomixCluster) {
     this.schedulingService = schedulingService;
-    gatewayCfg = brokerProperties.getGateway();
+    gatewayCfg = gatewayProperties;
     this.atomixCluster = atomixCluster;
   }
 

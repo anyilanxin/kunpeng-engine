@@ -38,5 +38,5 @@ spring:
       org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchClientAutoConfiguration
 
 server:
-  port: 2020
+  port: 8080
   shutdown: graceful

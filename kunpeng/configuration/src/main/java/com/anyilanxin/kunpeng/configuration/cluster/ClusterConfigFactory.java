@@ -24,6 +24,8 @@ import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingConfig;
 import com.anyilanxin.kunpeng.cluster.cluster.protocol.SwimMembershipProtocolConfig;
 import com.anyilanxin.kunpeng.cluster.utils.net.Address;
 import com.anyilanxin.kunpeng.configuration.ZoneType;
+import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
+import com.anyilanxin.kunpeng.configuration.broker.BrokerNetworkCfg;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.stream.Collectors;
@@ -61,7 +63,7 @@ public final class ClusterConfigFactory {
     final var membership = membershipConfig(cluster.getMembership());
     final var network = cluster.getNetwork();
     final var member = memberConfig(network, cluster.getNodeId(), broker);
-    final MessagingConfig messagingConfig = memberMessagingConfig(network.getMembership());
+    final MessagingConfig messagingConfig = memberMessagingConfig(network);
 
     return new ClusterConfig()
         .setClusterId(name)
@@ -74,29 +76,27 @@ public final class ClusterConfigFactory {
   /**
    * 业务面消息服务（独立端口）的 {@link MessagingConfig}：与集群面隔离，承载 gateway↔broker 业务命令 RPC。
    *
-   * <p>端口与压缩等取自业务网络配置（{@code network.business}，默认 startPort + 2×portOffset）。
+   * <p>端口与压缩等取自 broker 网络配置（{@code broker.network}，默认 start-port + port-offset）。
    */
-  public MessagingConfig businessMessagingConfig(final ClusterCfg cluster) {
-    final RaftNetworkCfg business = cluster.getNetwork().getBusiness();
+  public MessagingConfig businessMessagingConfig(final BrokerCfg broker) {
+    final BrokerNetworkCfg network = broker.getNetwork();
     final var messaging =
         new MessagingConfig()
-            .setCompressionAlgorithm(business.getMessageCompression())
-            .setInterfaces(Collections.singletonList(business.getHost()))
-            .setPort(business.getPort());
-    if (business.getSocketSendBuffer() != null) {
-      messaging.setSocketSendBuffer(toIntBytes(business.getSocketSendBuffer()));
+            .setCompressionAlgorithm(network.getMessageCompression())
+            .setInterfaces(Collections.singletonList(network.getHost()))
+            .setPort(network.getPort());
+    if (network.getSocketSendBuffer() != null) {
+      messaging.setSocketSendBuffer(toIntBytes(network.getSocketSendBuffer()));
     }
-    if (business.getSocketReceiveBuffer() != null) {
-      messaging.setSocketReceiveBuffer(toIntBytes(business.getSocketReceiveBuffer()));
+    if (network.getSocketReceiveBuffer() != null) {
+      messaging.setSocketReceiveBuffer(toIntBytes(network.getSocketReceiveBuffer()));
     }
     return messaging;
   }
 
   private MemberConfig memberConfig(
-      final NetworkInfoCfg network, final String nodeId, final boolean broker) {
-    final MembershipNetworkCfg membershipNetwork = network.getMembership();
-    final var memberAddress =
-        Address.from(membershipNetwork.getHost(), membershipNetwork.getPort());
+      final MembershipNetworkCfg network, final String nodeId, final boolean broker) {
+    final var memberAddress = Address.from(network.getHost(), network.getPort());
     final String zone = broker ? ZoneType.BROKER.getType() : ZoneType.GATEWAY.getType();
     return new MemberConfig().setId(nodeId, zone).setAddress(memberAddress);
   }

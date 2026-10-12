@@ -20,7 +20,7 @@ import com.anyilanxin.kunpeng.broker.client.core.BrokerClient;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
 import com.anyilanxin.kunpeng.cluster.cluster.leaderfound.ClusterLeaderFoundService;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
-import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
+import com.anyilanxin.kunpeng.configuration.gateway.GatewayCfg;
 import com.anyilanxin.kunpeng.gateway.Gateway;
 import com.anyilanxin.kunpeng.protocol.gateway.GatewayLoggers;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
@@ -43,7 +43,7 @@ public final class EmbeddedGatewayService implements AutoCloseable {
   private static final Logger LOGGER = GatewayLoggers.GATEWAY_LOGGER;
 
   public EmbeddedGatewayService(
-      final BrokerCfg configuration,
+      final GatewayCfg gatewayCfg,
       final ActorSchedulingService actorScheduler,
       final ConcurrencyControl concurrencyControl,
       final BrokerClient brokerClient,
@@ -56,7 +56,7 @@ public final class EmbeddedGatewayService implements AutoCloseable {
     gateway =
         new Gateway(
             actorScheduler,
-            configuration.getGateway(),
+            gatewayCfg,
             atomixCluster,
             meterRegistry,
             leaderService,

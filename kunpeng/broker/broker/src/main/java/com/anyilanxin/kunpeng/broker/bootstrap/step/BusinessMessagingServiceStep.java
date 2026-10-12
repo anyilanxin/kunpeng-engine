@@ -24,6 +24,7 @@ import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingConfig;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.impl.AeronMessagingService;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.impl.AeronTransport;
 import com.anyilanxin.kunpeng.cluster.utils.net.Address;
+import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
 import com.anyilanxin.kunpeng.configuration.cluster.ClusterCfg;
 import com.anyilanxin.kunpeng.configuration.cluster.ClusterConfigFactory;
 import com.anyilanxin.kunpeng.protocol.common.member.CommPortType;
@@ -57,7 +58,9 @@ public final class BusinessMessagingServiceStep extends AbstractBrokerStartupSte
             () -> {
               try {
                 final AeronMessagingService service =
-                    buildService(brokerStartupContext.getClusterCft());
+                    buildService(
+                        brokerStartupContext.getBrokerConfiguration(),
+                        brokerStartupContext.getClusterCft());
                 service.start().join();
                 // 端口写入唯一传播实体并经管理服务发布（成员属性的唯一写入者）
                 final TopologyManager topologyManager =
@@ -105,9 +108,10 @@ public final class BusinessMessagingServiceStep extends AbstractBrokerStartupSte
   }
 
   /** 构建业务面消息服务实例：独立端口的传输底座（与集群面各自的代理线程/队列/socket，内嵌驱动为进程级共享）。 */
-  private static AeronMessagingService buildService(final ClusterCfg clusterCfg) {
+  private static AeronMessagingService buildService(
+      final BrokerCfg brokerCfg, final ClusterCfg clusterCfg) {
     final MessagingConfig messagingConfig =
-        new ClusterConfigFactory().businessMessagingConfig(clusterCfg);
+        new ClusterConfigFactory().businessMessagingConfig(brokerCfg);
     if (messagingConfig.getPort() == null) {
       throw new IllegalArgumentException("业务面消息服务缺少端口配置");
     }
