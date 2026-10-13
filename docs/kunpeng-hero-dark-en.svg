@@ -80,7 +80,7 @@
   <!-- 客户端 -->
   <rect x="192" y="202" width="172" height="76" rx="16" fill="#121C30" stroke="#3B82F6" stroke-width="2.5"/>
   <text x="278" y="236" text-anchor="middle" fill="#F5F8FF" font-size="19" font-weight="600">Client SDK</text>
-  <text x="278" y="260" text-anchor="middle" fill="#93B4E8" font-size="12.5">any language</text>
+  <text x="278" y="260" text-anchor="middle" fill="#93B4E8" font-size="12.5">discovery · client LB</text>
 
   <!-- 客户端 -> 网关 -->
   <line x1="364" y1="240" x2="424" y2="240" stroke="#3B82F6" stroke-width="2" marker-end="url(#arrowBlue)"/>
@@ -91,7 +91,7 @@
   <rect x="430" y="193" width="172" height="76" rx="16" fill="#121C30" stroke="#3B82F6" stroke-width="2.5" opacity="0.8"/>
   <rect x="430" y="202" width="172" height="76" rx="16" fill="#121C30" stroke="#3B82F6" stroke-width="2.5"/>
   <text x="516" y="236" text-anchor="middle" fill="#F5F8FF" font-size="19" font-weight="600">Gateway</text>
-  <text x="516" y="260" text-anchor="middle" fill="#93B4E8" font-size="12.5">load-balanced replicas</text>
+  <text x="516" y="260" text-anchor="middle" fill="#93B4E8" font-size="12.5">stateless replicas</text>
 
   <!-- 网关 -> Broker -->
   <line x1="602" y1="240" x2="656" y2="240" stroke="#3B82F6" stroke-width="2" marker-end="url(#arrowBlue)"/>
