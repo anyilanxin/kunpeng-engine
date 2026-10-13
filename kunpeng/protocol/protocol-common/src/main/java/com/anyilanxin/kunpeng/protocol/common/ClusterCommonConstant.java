@@ -29,6 +29,10 @@ public interface ClusterCommonConstant {
   String PARTITIONS_DIRECTORY = "partitions";
   String CLUSTER_DISPATCH_TOPIC_ACK = "CLUSTER_DISPATCH_ACK";
   String CLUSTER_NODE_SOURCE_TOPIC = "CLUSTER_NODE_SOURCE";
+
+  /** 集群元数据读取主题：定向发 leader 应答，读 raft 复制的本地副本，不写日志 */
+  String CLUSTER_META_READ_TOPIC = "CLUSTER_META_READ";
+
   String NODE_SOURCE_PROPERTY_KEY = "cluster.topology.nodesource";
   String INNER_PARTITION_TOPIC_PREFIX = "inter-partition-";
 

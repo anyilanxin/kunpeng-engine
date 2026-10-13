@@ -17,9 +17,19 @@
 package com.anyilanxin.kunpeng.cluster.dispatch.api;
 
 import static com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter.BROKER_VERSION;
+import static com.anyilanxin.kunpeng.cluster.dispatch.api.ClusterMetaReadProtocol.TYPE_ADMIN_CLUSTER_META;
+import static com.anyilanxin.kunpeng.cluster.dispatch.api.ClusterMetaReadProtocol.TYPE_NODE_SOURCE;
+import static com.anyilanxin.kunpeng.cluster.dispatch.api.ClusterMetaReadProtocol.TYPE_NODE_SOURCE_META;
+import static com.anyilanxin.kunpeng.cluster.dispatch.api.ClusterMetaReadProtocol.TYPE_PARTITION_SOURCE;
+import static com.anyilanxin.kunpeng.cluster.dispatch.api.ClusterMetaReadProtocol.TYPE_PARTITION_SOURCES;
+import static com.anyilanxin.kunpeng.cluster.dispatch.api.ClusterMetaReadProtocol.TYPE_PARTITION_SOURCE_META;
+import static com.anyilanxin.kunpeng.cluster.dispatch.api.ClusterMetaReadProtocol.decodeRequest;
+import static com.anyilanxin.kunpeng.cluster.dispatch.api.ClusterMetaReadProtocol.encodeList;
+import static com.anyilanxin.kunpeng.cluster.dispatch.api.ClusterMetaReadProtocol.encodeSingle;
 import static com.anyilanxin.kunpeng.protocol.admin.impl.record.command.common.ExecutionRecordSerialize.decodeNodeSourceApply;
 import static com.anyilanxin.kunpeng.protocol.admin.impl.record.command.common.ExecutionRecordSerialize.decodePartitionExecutionAck;
 import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.CLUSTER_DISPATCH_TOPIC_ACK;
+import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.CLUSTER_META_READ_TOPIC;
 import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.CLUSTER_NODE_SOURCE_TOPIC;
 
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
@@ -34,11 +44,15 @@ import com.anyilanxin.kunpeng.kvstore.TransactionContext;
 import com.anyilanxin.kunpeng.protocol.admin.AdminValueType;
 import com.anyilanxin.kunpeng.protocol.admin.impl.AdminRecordMetadata;
 import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.RecordAppendEntryFactory;
+import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminClusterMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminDispatchPlanExecutionRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanExecutionRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.common.NodeSourceApplyRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.common.PartitionExecutionAckRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.source.NodeSourceMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.source.NodeSourceRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.source.PartitionSourceMetaRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.source.PartitionSourceRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.CommandValueLifeCycle;
 import com.anyilanxin.kunpeng.protocol.admin.record.RecordType;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.DispatchExecutionState;
@@ -54,6 +68,7 @@ import com.anyilanxin.kunpeng.repository.admin.modules.admin.ImmutableAdminRepos
 import com.anyilanxin.kunpeng.repository.admin.modules.business.ImmutableBusinessRepository;
 import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
+import java.util.List;
 import org.slf4j.Logger;
 
 /**
@@ -93,6 +108,8 @@ public class ClusterDispatchService {
               CLUSTER_DISPATCH_TOPIC_ACK, this::handleDispatchAck, concurrencyControl);
           messagingService.registerHandler(
               CLUSTER_NODE_SOURCE_TOPIC, this::handleNodeSource, concurrencyControl);
+          messagingService.registerHandler(
+              CLUSTER_META_READ_TOPIC, this::handleMetaRead, concurrencyControl);
           future.complete(null);
         });
     return future;
@@ -104,6 +121,7 @@ public class ClusterDispatchService {
         () -> {
           messagingService.unregisterHandler(CLUSTER_DISPATCH_TOPIC_ACK);
           messagingService.unregisterHandler(CLUSTER_NODE_SOURCE_TOPIC);
+          messagingService.unregisterHandler(CLUSTER_META_READ_TOPIC);
           repository = null;
           repositoryAdmin = null;
           repositoryBusiness = null;
@@ -127,6 +145,54 @@ public class ClusterDispatchService {
     if (result instanceof final AppendResult.Rejected rejected) {
       logWriteFailure(applyRecord, rejected);
     }
+  }
+
+  /** 元数据读应答：读请求定向发 leader（由 {@link ClusterMetaReader} 路由），本 handler 读本地已提交副本 */
+  private byte[] handleMetaRead(final Address address, final byte[] bytes) {
+    final ClusterMetaReadProtocol.Request request = decodeRequest(bytes);
+    return switch (request.type()) {
+      case TYPE_NODE_SOURCE -> encodeSingle(readLocalNodeSource(request.param()));
+      case TYPE_NODE_SOURCE_META -> encodeSingle(readLocalNodeSourceMeta());
+      case TYPE_PARTITION_SOURCE -> {
+        final String param = request.param();
+        final int separator = param.lastIndexOf(':');
+        yield encodeSingle(
+            readLocalPartitionSource(
+                param.substring(0, separator), Integer.parseInt(param.substring(separator + 1))));
+      }
+      case TYPE_PARTITION_SOURCES -> encodeList(readLocalPartitionSources());
+      case TYPE_PARTITION_SOURCE_META -> encodeSingle(readLocalPartitionSourceMeta());
+      case TYPE_ADMIN_CLUSTER_META -> encodeSingle(readLocalAdminClusterMeta());
+      default ->
+          throw new IllegalArgumentException("Unknown cluster meta read type: " + request.type());
+    };
+  }
+
+  /* ---------- 本地读（标定脏读）：直读本成员 raft 复制副本，可能落后 leader ---------- */
+
+  public NodeSourceRecord readLocalNodeSource(final String memberId) {
+    return repository.sourceRepository().getNodeSource(memberId);
+  }
+
+  public NodeSourceMetaRecord readLocalNodeSourceMeta() {
+    return repository.sourceRepository().getNodeSourceMeta();
+  }
+
+  public PartitionSourceRecord readLocalPartitionSource(
+      final String partitionGroup, final int partitionId) {
+    return repository.sourceRepository().getPartitionSource(partitionGroup, partitionId);
+  }
+
+  public List<PartitionSourceRecord> readLocalPartitionSources() {
+    return repository.sourceRepository().getPartitionSources();
+  }
+
+  public PartitionSourceMetaRecord readLocalPartitionSourceMeta() {
+    return repository.sourceRepository().getPartitionSourceMeta();
+  }
+
+  public AdminClusterMetaRecord readLocalAdminClusterMeta() {
+    return repositoryAdmin.getClusterMeta();
   }
 
   private void logWriteFailure(

@@ -59,6 +59,10 @@ public class NodeSourceApplyingProcessor extends AbstractNodeSourceProcessor {
       writer.addEvent(-1, NodeSourceMetaLifeCycle.UPDATED, record.getRequestId(), nodeSourceMeta);
       writer.addEvent(-1, NodeSourceLifeCycle.APPLIED, record.getRequestId(), value);
       dispatchClient.send(MemberId.from(value.getMemberId()), value.getSourceId());
+    } else {
+      // 幂等重发：回发丢失后申请节点重发 APPLYING 时，已分配记录也要回应当前 sourceId，
+      // 否则 leader 稳定期间申请节点将永久等待
+      dispatchClient.send(MemberId.from(value.getMemberId()), nodeSource.getSourceId());
     }
   }
 
