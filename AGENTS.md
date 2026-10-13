@@ -83,7 +83,7 @@ kunpeng-engine/
 
 ## 技能体系（.agents/skills/）
 
-技能 = `.agents/skills/` 下一个子目录 + `SKILL.md`（YAML frontmatter `name` + `description`；**description 用英文**便于技能匹配，正文中文；目录/文件名一律英文；引用文档放同目录编号文件）。总览入口：[.agents/skills/SKILL.md](./.agents/skills/SKILL.md)（kunpeng-skills）。
+技能 = `.agents/skills/` 下一个子目录 + `SKILL.md`（YAML frontmatter `name` + `description`；**description 用英文**便于技能匹配，正文中文；目录/文件名一律英文；引用文档放同目录编号文件；示意图用手绘 SVG 放该技能 `images/` 子目录引用，不用 mermaid/ASCII 文字图、不放 PNG，SVG 带自家 AGPL 注释头）。总览入口：[.agents/skills/SKILL.md](./.agents/skills/SKILL.md)（kunpeng-skills）。
 
 | 技能 | 主题 | 何时用 |
 |------|------|--------|
@@ -99,6 +99,7 @@ kunpeng-engine/
 | `cluster-messaging` | 集群通信体系：三平面网络（cluster membership / broker 业务 / gateway gRPC）与协议（节点间全 Aeron UDP、gRPC 为 HTTP/2 TCP）、消息 API 四层、subject 路由与寻址、五条典型调用链路、Aeron wire 帧与参数表 | 理解/改动节点间通信、排查端口与连通性问题、给新功能选协议、新增集群消息 subject 或 gRPC 接口时 |
 | `commit-standards` | 提交规范：spotlessApply 根目录整库执行、commit message 英文分条无署名、先审核再提交 | 改动准备提交前 |
 | `sink-design` | sink 日志外发体系：RecordSink SPI 全生命周期、位置确认与重试、SinkService 运行时架构、SBE wire 协议与指标 | 理解/改动 sink、排查位置确认或暂停恢复问题 |
+| `backpressure-design` | 全链路背压控流设计：三道闸门（磁盘水位 / sink 滞后 / AIMD 在途窗口）闭环反馈模型、sink 背压双阈值迟滞、配置面（可配可启停）、错误码与网关映射、SVG 设计图 | 理解/改动 broker 准入与背压控制、设计评审 sink 滞后限流、排查积压可见性问题、调整流控配置时 |
 | `workjob` | 分布式 Job 推拉系统设计 v1.6：注册同步、竞争消费、broker 能力三原语、分区化数据面（leader 绑定与水位线）、deadline 簿记与 Resolve、故障矩阵 | 理解/改动 gateway/broker job 派发链路、排查 job 投递问题 |
 | `readme-hero` | README 首图面板设计系统：kunpeng-hero 四文件矩阵（明暗×中英）、元素坐标总表、配色与字号规范、四文件同步铁律、渲染验证与 CDN 陷阱 | 修改 README 首图（docs/kunpeng-hero-*.svg）时 |
 | `monitor-dashboards` | 监控面板标准：**添加引擎指标必须连带补面板**（有指标就有面板，check-panels.py 覆盖归零为验收）、单面板六分节结构、指标名→Prometheus 映射与 tag 总表 | 新增/修改/删除引擎指标；修改 monitor/ 面板与抓取配置 |
@@ -117,6 +118,7 @@ kunpeng-engine/
 | 理解/改动调度器、事件日志、集群调度子系统 | `scheduler` / `eventlog-design` / `cluster-dispatch-design` |
 | **理解/改动集群通信**（三平面端口与协议、节点间消息、subject 路由、Aeron wire/参数、排查连通性） | `cluster-messaging`（三平面、API 分层、调用链、开发指引；帧格式与参数细节见其 01 号文档） |
 | 理解/改动 job 推拉派发链路（gateway-job / broker job 能力服务 / client 消费端） | `workjob`（设计契约：竞争消费、三原语、deadline 簿记） |
+| 理解/改动 broker 准入与背压控流（磁盘水位、sink 滞后限流、AIMD 在途窗口、流控配置） | `backpressure-design`（三闸门闭环模型、双阈值迟滞语义、配置面与错误码链路） |
 | **新增/修改/删除引擎指标**（MetricsDoc 枚举、builder 注册） | 对应域技能 + `monitor-dashboards`（指标↔面板一一对应是加指标的标准收口，覆盖检查归零） |
 | 修改 monitor/ 监控面板、Prometheus 抓取配置 | `monitor-dashboards` |
 | 改动收尾提交 | `commit-standards`（spotlessApply 根目录整库 + 英文分条 message） |

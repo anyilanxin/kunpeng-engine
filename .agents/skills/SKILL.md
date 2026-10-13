@@ -1,6 +1,6 @@
 ---
 name: kunpeng-skills
-description: Use as the top-level entry to discover kunpeng project's coding/generation skills. Lists all skill modules (iteration, engine-chain, record-standards, enum-standards, repository-standards, structpack, scheduler, eventlog-design, cluster-dispatch-design, commit-standards, sink-design, workjob) with one-line descriptions and links to each module's entry file.
+description: Use as the top-level entry to discover kunpeng project's coding/generation skills. Lists all skill modules (iteration, engine-chain, record-standards, enum-standards, repository-standards, structpack, scheduler, eventlog-design, cluster-dispatch-design, cluster-messaging, commit-standards, sink-design, backpressure-design, workjob, readme-hero, monitor-dashboards, bpm) with one-line descriptions and links to each module's entry file.
 ---
 
 # kunpeng Skills 总览
@@ -23,6 +23,7 @@ description: Use as the top-level entry to discover kunpeng project's coding/gen
 | `cluster-messaging/` | 集群通信体系：三平面网络（membership / broker 业务 / gateway gRPC）与协议标注（节点间全 Aeron UDP、gRPC 为 HTTP/2 TCP）、消息 API 四层、subject 路由与寻址、五条典型调用链路、新增集群消息 subject 与新增 gRPC 接口指引、Aeron wire 帧与参数表 | 理解/改动节点间通信、排查端口与连通性问题、给新功能选协议、新增集群消息或 gRPC 接口时 | [cluster-messaging/SKILL.md](./cluster-messaging/SKILL.md) |
 | `commit-standards/` | 提交规范：spotlessApply 必须根目录整库执行（模块级任务不存在会报错）、commit message 规范（英文 type 前缀分条、无 Claude 署名尾行）、先审核再提交流程 | 改动准备提交前、跑 spotlessApply 前、写 commit message 时 | [commit-standards/SKILL.md](./commit-standards/SKILL.md) |
 | `sink-design/` | sink 日志外发体系：RecordSink SPI 全生命周期、位置确认与重试语义、SinkService 运行时架构（分发/leader-follower 位置广播）、SBE wire 协议与指标 | 实现/评审/接入 sink、查 sink API 用法、排查位置确认或暂停恢复行为、broker 接入 sink 服务时 | [sink-design/SKILL.md](./sink-design/SKILL.md) |
+| `backpressure-design/` | 全链路背压控流设计：三道闸门（磁盘水位 / sink 滞后 / AIMD 在途窗口）闭环反馈模型、sink 背压闸门双阈值迟滞、配置面（kunpeng/configuration 可配可启停）、错误码与网关映射、SVG 设计图 | 设计/评审 broker 准入与背压控制、实现 sink 滞后限流、排查积压可见性问题、调整流控配置时 | [backpressure-design/SKILL.md](./backpressure-design/SKILL.md) |
 | `workjob/` | 分布式 Job 推拉系统设计 v1.5：注册同步（快照对账+增量）、竞争消费、broker 层三原语能力服务、deadline 簿记与 Resolve、故障矩阵、gRPC/Netty 双段协议 | 理解/改动 gateway/broker job 派发链路、排查 job 投递问题、演进 job 推拉系统时 | [workjob/SKILL.md](./workjob/SKILL.md) |
 | `readme-hero/` | README 首图面板设计系统：kunpeng-hero 四文件矩阵（明暗×中英）、元素坐标总表、明暗配色对照、字号阶梯、中英文案对照、四文件同步铁律、渲染验证与 CDN 陷阱、先呈现后推送节奏 | 修改 README 首图（docs/kunpeng-hero-*.svg）的布局/配色/文案时 | [readme-hero/SKILL.md](./readme-hero/SKILL.md) |
 | `monitor-dashboards/` | 监控面板标准：添加引擎指标必须连带补面板（有指标就有面板，check-panels.py 覆盖归零为验收）、单面板六分节结构、指标名→Prometheus 映射与 tag 总表、面板 JSON 模板 | 新增/修改/删除引擎指标（MetricsDoc、builder 注册）；修改 monitor/ 监控面板与抓取配置时 | [monitor-dashboards/SKILL.md](./monitor-dashboards/SKILL.md) |
@@ -47,6 +48,7 @@ description: Use as the top-level entry to discover kunpeng project's coding/gen
 ├── cluster-dispatch-design/ ← 集群调度子系统知识库
 ├── cluster-messaging/      ← 集群通信体系知识库(三平面/调用链/wire 协议)
 ├── sink-design/           ← sink 日志外发体系知识库
+├── backpressure-design/   ← 全链路背压控流设计知识库(三道闸门 + SVG 设计图)
 ├── workjob/               ← 分布式 Job 推拉系统设计知识库
 ├── readme-hero/           ← README 首图面板设计系统
 ├── monitor-dashboards/    ← 监控面板标准(指标↔面板一一对应 + 覆盖检查)
@@ -72,6 +74,6 @@ description: Use as the top-level entry to discover kunpeng project's coding/gen
 
 1. `mkdir .agents/skills/<新模块名>/`（英文 kebab-case）
 2. 写 `SKILL.md`（frontmatter `name` + `description`；规范型参考 `record-standards/SKILL.md`，知识库型参考 `scheduler/SKILL.md`）；多文档模块再加 `Index.md`
-3. 把具体章节 md 文件加进去
+3. 把具体章节 md 文件加进去；示意图一律手绘 SVG 放本目录 `images/` 子目录，md 内用 `![图题](images/xxx.svg)` 引用——不用 mermaid/ASCII 文字图，不放 PNG，SVG 文件头加自家 AGPL 注释头（风格基线参考 `backpressure-design/images/` 与 `eventlog-design/images/`）
 4. 回到本文件，在"模块列表"表格里加一行
 5. （可选）如有跨模块的通用约定，更新"通用原则"章节
