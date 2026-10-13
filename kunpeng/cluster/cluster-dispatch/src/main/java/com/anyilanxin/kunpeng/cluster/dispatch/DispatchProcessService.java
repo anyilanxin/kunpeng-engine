@@ -434,17 +434,22 @@ public class DispatchProcessService extends Actor implements RecordAvailableList
                 drained.complete(null);
                 return;
               }
-              lanePool
-                  .shutdown(actor)
-                  .onComplete(
-                      (ignored2, error2) -> {
-                        primaryScheduler.close();
-                        if (error2 != null) {
-                          drained.completeExceptionally(error2);
-                        } else {
-                          drained.complete(null);
-                        }
-                      });
+              // 本回调运行在完成方（如 PartitionTransition）线程；lanePool.shutdown 内部经
+              // runOnCompletion 订阅车道关闭 future，必须在 DispatchProcessService actor
+              // 线程内注册执行，故提交回本 actor
+              actor.run(
+                  () ->
+                      lanePool
+                          .shutdown(actor)
+                          .onComplete(
+                              (ignored2, error2) -> {
+                                primaryScheduler.close();
+                                if (error2 != null) {
+                                  drained.completeExceptionally(error2);
+                                } else {
+                                  drained.complete(null);
+                                }
+                              }));
             });
     return drained;
   }
