@@ -37,6 +37,8 @@ Clients spread load dynamically across stateless gateways, which route each requ
 
 ## Licenses
 
+The repository is multi-licensed with **GNU-AGPL-3.0 as the default**: unless a directory is explicitly designated otherwise, all code is licensed under GNU-AGPL-3.0. A few directories use Apache-2.0 or MPL-2.0 instead — licensing follows the directory, so externally imported files without a header still fall under the license of the directory they live in. Full license texts are kept under [`licenses/`](./licenses/).
+
 ### 1. Use License
 
 1. [APACHE-2.0](./licenses/APACHE-2.0.txt)
@@ -45,8 +47,19 @@ Clients spread load dynamically across stateless gateways, which route each requ
 
 ### 2. License Notice
 
-1. For details about the file license, see the file header
+1. The license of each directory is designated by this project; see [`licenses/`](./licenses) for the full texts. File headers only carry copyright attribution.
 2. Please do not touch the copyright headers, we need to keep their copyright on their files. On new files we create, we
    will have our License headers with our copyright.
 3. Where agreement compatibility permits, most of the files have been added with our own copyright header(We made
    extensive adjustments to the file to allow for quick iteration).
+
+### 3. License Compliance Feedback
+
+This repository incorporates and adapts multiple upstream projects. We make good-faith efforts to comply with every upstream license, but unintended violations may still exist (e.g., missing attribution or mis-designated licensing).
+
+If you find a license violation, copyright misattribution, or any other compliance concern, please reach out:
+
+1. Open a [GitHub Issue](https://github.com/anyilanxin/kunpeng-engine/issues)
+2. Email anyilanxin@aliyun.com
+
+We commit to verifying every report promptly and, once confirmed, fixing it within a reasonable timeframe (fixing attribution, re-designating the license, or removing the code) with the outcome published on the issue.
