@@ -59,7 +59,8 @@ kunpeng:
 
   # ================================ broker（引擎/存储） ================================
   broker:
-    # 关键：关闭内嵌网关（本形态客户端接入统一走独立 gateway 进程，网关配置见 application-gateway.yml.template）
+    # 关键：关闭内嵌网关（本形态客户端接入统一走独立 gateway 进程，其配置见 application-gateway.yml.template；
+    # 若改回内嵌，整套网关参数在本树下配置，见 application-single.yml.template 的 broker.gateway 段）
     gateway:
       enable: false
     # actor 调度线程

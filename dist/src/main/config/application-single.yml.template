@@ -56,37 +56,35 @@ kunpeng:
       # socket-receive-buffer: 2MB    # socket 接收缓冲（默认系统值）
       # security:                     # 本平面 TLS 覆盖（结构同 cluster.security，默认继承集群 security）
 
-  # ================================ 网关 gRPC（内嵌与独立两种形态共用） ================================
-  gateway:
-    # 命令转发到 broker 的默认超时
-    request-timeout: 15s
-    # 是否允许被客户端发现（拓扑发现返回接入地址列表）；关闭后客户端需静态配置网关地址
-    allow-client-discovery: true
-    network:
-      host: 127.0.0.1                  # gRPC 绑定地址（默认自动探测）
-      port: 2024                       # gRPC 绑定端口（客户端接入端口）
-      # grpc-host: 10.0.0.1            # 对外通告地址（默认回落 host/port；客户端经拓扑发现网关时使用）
-      # grpc-port: 2024
-      max-message-size: 4MB            # 单条 RPC 消息上限
-      flow-control-window: 8MB         # HTTP/2 每流流量控制窗口
-      max-inbound-metadata-size: 1MB   # header 上限
-      min-keep-alive-interval: 30s     # 允许客户端 keep-alive 的最小间隔
-      keep-alive-time: 2m              # 服务端 keep-alive 探测间隔（检测半开连接）
-      keep-alive-timeout: 20s          # 判定连接死亡前等待 ack 的时长
-      # security:                      # gRPC TLS（默认关闭；启用后客户端需 TLS 接入，结构同 cluster.security）
-    # 客户端长轮询（REST/SSE 拉取；timeout/probe-timeout 单位毫秒）
-    long-polling:
-      enabled: true
-      timeout: 10000
-      probe-timeout: 10000
-      min-empty-responses: 3           # 连续空响应达到该次数后停止挂起
-    # 线程：管理线程 1、gRPC 线程池按 CPU 核数自适应（只读，不可配置）
-
-  # ================================ broker（引擎/存储） ================================
+  # ================================ broker（引擎/存储 + 内嵌网关） ================================
   broker:
-    # 内嵌网关开关：默认 true（网络与运行参数复用 kunpeng.gateway.*，与独立网关同一份）
+    # 内嵌网关（enable 开关 + 整套网关参数；绑定于 kunpeng.broker.gateway.*，与独立网关的 kunpeng.gateway.* 互不影响）
     gateway:
+      # 内嵌网关开关：默认 true（关闭后客户端接入走独立 gateway 进程）
       enable: true
+      # 命令转发到 broker 的默认超时
+      request-timeout: 15s
+      # 是否允许被客户端发现（拓扑发现返回接入地址列表）；关闭后客户端需静态配置网关地址
+      allow-client-discovery: true
+      network:
+        host: 127.0.0.1                  # gRPC 绑定地址（默认自动探测）
+        port: 2024                       # gRPC 绑定端口（客户端接入端口）
+        # grpc-host: 10.0.0.1            # 对外通告地址（默认回落 host/port；客户端经拓扑发现网关时使用）
+        # grpc-port: 2024
+        max-message-size: 4MB            # 单条 RPC 消息上限
+        flow-control-window: 8MB         # HTTP/2 每流流量控制窗口
+        max-inbound-metadata-size: 1MB   # header 上限
+        min-keep-alive-interval: 30s     # 允许客户端 keep-alive 的最小间隔
+        keep-alive-time: 2m              # 服务端 keep-alive 探测间隔（检测半开连接）
+        keep-alive-timeout: 20s          # 判定连接死亡前等待 ack 的时长
+        # security:                      # gRPC TLS（默认关闭；启用后客户端需 TLS 接入，结构同 cluster.security）
+      # 客户端长轮询（REST/SSE 拉取；timeout/probe-timeout 单位毫秒）
+      long-polling:
+        enabled: true
+        timeout: 10000
+        probe-timeout: 10000
+        min-empty-responses: 3           # 连续空响应达到该次数后停止挂起
+      # 线程：管理线程 1、gRPC 线程池按 CPU 核数自适应（只读，不可配置）
     # actor 调度线程
     threads:
       cpu-thread-count: 2              # CPU 线程数（计算密集）

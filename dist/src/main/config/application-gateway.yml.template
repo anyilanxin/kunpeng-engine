@@ -57,7 +57,7 @@ kunpeng:
       # socket-receive-buffer: 2MB    # socket 接收缓冲（默认系统值）
       # security:                     # 本平面 TLS 覆盖（结构同 cluster.security，默认继承集群 security）
 
-  # ================================ 网关 gRPC（内嵌与独立两种形态共用） ================================
+  # ================================ 网关 gRPC（独立网关，绑定 kunpeng.gateway.*） ================================
   gateway:
     # 命令转发到 broker 的默认超时
     request-timeout: 15s
