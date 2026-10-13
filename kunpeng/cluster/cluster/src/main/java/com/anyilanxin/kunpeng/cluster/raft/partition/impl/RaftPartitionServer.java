@@ -50,6 +50,7 @@ import com.anyilanxin.kunpeng.cluster.raft.snapshot.raft.RaftSnapshotStore;
 import com.anyilanxin.kunpeng.cluster.raft.snapshot.transfer.SnapshotTransferServer;
 import com.anyilanxin.kunpeng.cluster.raft.storage.RaftStorage;
 import com.anyilanxin.kunpeng.cluster.raft.storage.log.RaftLogReader;
+import com.anyilanxin.kunpeng.cluster.raft.storage.system.BusinessMetaStore;
 import com.anyilanxin.kunpeng.cluster.utils.VisibleForTesting;
 import com.anyilanxin.kunpeng.cluster.utils.health.FailureListener;
 import com.anyilanxin.kunpeng.cluster.utils.health.HealthMonitorable;
@@ -454,9 +455,46 @@ public class RaftPartitionServer implements HealthMonitorable {
     return Optional.empty();
   }
 
-  /** 当前已提交业务元数据（内存只读视图）。 */
-  public PartitionBusinessMeta businessMeta() {
-    return server.getContext().getBusinessMetaManager().current();
+  /**
+   * 读取当前已提交业务元数据，读取模式由入参决定：LOCAL 读本机 raft 投影（内存只读视图，可能落后）； LEADER 读 leader 权威副本——本机即 leader
+   * 时直接读本地投影，否则经同步主题向 leader 拉取全量状态构造只读视图（不落盘、不推进本地水位）。
+   */
+  public CompletableFuture<PartitionBusinessMeta> businessMeta(final RaftPartition.ReadMode mode) {
+    final var context = server.getContext();
+    if (mode == RaftPartition.ReadMode.LOCAL || context.isLeader()) {
+      return CompletableFuture.completedFuture(context.getBusinessMetaManager().current());
+    }
+    final var leader = context.getLeader();
+    if (leader == null) {
+      return CompletableFuture.failedFuture(
+          new IllegalStateException("partition " + partition.name() + " has no leader"));
+    }
+    return clusterCommunicator
+        .send(
+            BusinessMetaSync.syncSubjectOf(partition.name()),
+            new byte[0],
+            Function.identity(),
+            BusinessMetaSync::decodeSyncResponse,
+            leader.memberId(),
+            requestTimeout)
+        .thenApply(
+            payload -> {
+              if (payload == null) {
+                // leader 易主瞬间旧 leader 应答不可用，读取失败由调用方重试
+                throw new IllegalStateException(
+                    "leader returned no business meta for partition " + partition.name());
+              }
+              final var state =
+                  BusinessMetaStore.decode(payload)
+                      .orElseThrow(
+                          () ->
+                              new IllegalStateException(
+                                  "leader returned unreadable business meta for partition "
+                                      + partition.name()));
+              final PartitionBusinessMeta view = new PartitionBusinessMeta();
+              view.apply(state.index(), state.term(), state.entries());
+              return view;
+            });
   }
 
   /**

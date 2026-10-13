@@ -1271,16 +1271,32 @@ public final class RaftPartition implements Partition, HealthMonitorable {
     return current.updateBusinessMeta(entries);
   }
 
+  /** 业务元数据读取模式：LEADER=leader 权威读（本机即 leader 时读本地）；LOCAL=本机 raft 投影读（可能落后） */
+  public enum ReadMode {
+    LEADER,
+    LOCAL
+  }
+
   /**
-   * 读取当前已提交业务元数据（内存只读视图，线程安全；含 appliedIndex/appliedTerm 水位）。 分区尚未启动时抛 {@link
-   * IllegalStateException}——此时投影尚未从磁盘加载，返回空视图会掩盖既有元数据。
+   * 读取当前已提交业务元数据：默认 leader 权威读（等同 {@link #businessMeta(ReadMode)} 传 {@link
+   * ReadMode#LEADER}）。分区尚未启动时 future 异常完成。
    */
-  public PartitionBusinessMeta businessMeta() {
+  public CompletableFuture<PartitionBusinessMeta> businessMeta() {
+    return businessMeta(ReadMode.LEADER);
+  }
+
+  /**
+   * 读取当前已提交业务元数据，读取模式由入参决定：LOCAL 读本机投影（内存只读视图，含 appliedIndex/appliedTerm 水位，可能落后 leader）；LEADER 读
+   * leader 权威副本（非 leader 时经同步主题向 leader 拉取，无 leader/易主瞬间应答不可用则 future 异常完成）。 分区尚未启动时 future 异常完成——
+   * 此时投影尚未从磁盘加载，返回空视图会掩盖既有元数据。
+   */
+  public CompletableFuture<PartitionBusinessMeta> businessMeta(final ReadMode mode) {
     final RaftPartitionServer current = server;
     if (current == null) {
-      throw new IllegalStateException("partition " + partitionId + " is not started");
+      return CompletableFuture.failedFuture(
+          new IllegalStateException("partition " + partitionId + " is not started"));
     }
-    return current.businessMeta();
+    return current.businessMeta(mode);
   }
 
   public CompletableFuture<Void> stop() {

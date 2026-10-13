@@ -78,19 +78,25 @@ public class BusinessSourceMetaUtils {
     return MAPPER.readValue(sourceMetaStr, PartitionSourceMeta.class);
   }
 
-  /** 读取分区资源 */
+  /** 读取分区资源（本机 raft 投影读） */
   public static PartitionSourceMeta getSourceMeta(final RaftPartition raftPartition) {
-    final String sourceMetaStr = raftPartition.businessMeta().entries().get(PARTITION_SOURCE_KEY);
+    final String sourceMetaStr =
+        raftPartition
+            .businessMeta(RaftPartition.ReadMode.LOCAL)
+            .join()
+            .entries()
+            .get(PARTITION_SOURCE_KEY);
     if (StringUtils.isBlank(sourceMetaStr)) {
       return PartitionSourceMeta.createDefault();
     }
     return MAPPER.readValue(sourceMetaStr, PartitionSourceMeta.class);
   }
 
-  /** 更新分区资源 */
+  /** 更新分区资源（本机 raft 投影读 + 全量覆盖写） */
   public static void updateSourceMeta(
       final PartitionSourceMeta partitionSourceMeta, final RaftPartition raftPartition) {
-    final PartitionBusinessMeta partitionBusinessMeta = raftPartition.businessMeta();
+    final PartitionBusinessMeta partitionBusinessMeta =
+        raftPartition.businessMeta(RaftPartition.ReadMode.LOCAL).join();
     final Map<String, String> entries = new HashMap<>(partitionBusinessMeta.entries());
     entries.put(PARTITION_SOURCE_KEY, MAPPER.writeValueAsString(partitionSourceMeta));
     raftPartition.updateBusinessMeta(entries);
