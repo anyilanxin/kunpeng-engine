@@ -31,7 +31,6 @@ import com.anyilanxin.kunpeng.cluster.cluster.messaging.impl.AeronMessagingServi
 import com.anyilanxin.kunpeng.cluster.config.ClusterMetaStore;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.cluster.dispatch.api.ClusterDispatchClient;
-import com.anyilanxin.kunpeng.cluster.dispatch.api.ClusterMetaReader;
 import com.anyilanxin.kunpeng.cluster.dispatch.scheduling.TimerClock;
 import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
 import com.anyilanxin.kunpeng.configuration.cluster.ClusterCfg;
@@ -97,11 +96,6 @@ public interface BrokerStartupContext {
   ClusterDispatchClient getClusterDispatchClient();
 
   void setClusterDispatchClient(ClusterDispatchClient dispatchClient);
-
-  /** 集群元数据统一读门面（leader 权威读；允许脏读的调用方走 ClusterDispatchService.readLocal*） */
-  ClusterMetaReader getClusterMetaReader();
-
-  void setClusterMetaReader(ClusterMetaReader clusterMetaReader);
 
   /** broker 层 job 流推送服务件（协调器 + 引擎适配器 + 失败回退）；raft 业务层 transition 消费 */
   JobStreamDispatcher getJobStreamDispatcher();

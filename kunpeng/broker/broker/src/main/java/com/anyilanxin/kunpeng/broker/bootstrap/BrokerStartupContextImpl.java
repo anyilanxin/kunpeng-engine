@@ -32,7 +32,6 @@ import com.anyilanxin.kunpeng.cluster.cluster.messaging.impl.AeronMessagingServi
 import com.anyilanxin.kunpeng.cluster.config.ClusterMetaStore;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.cluster.dispatch.api.ClusterDispatchClient;
-import com.anyilanxin.kunpeng.cluster.dispatch.api.ClusterMetaReader;
 import com.anyilanxin.kunpeng.cluster.dispatch.scheduling.TimerClock;
 import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
 import com.anyilanxin.kunpeng.configuration.cluster.ClusterCfg;
@@ -71,7 +70,6 @@ public final class BrokerStartupContextImpl implements BrokerStartupContext {
   private ClusterMetaStore clusterMetaStore;
   private NodeIdGeneratorServiceImpl idGenerator;
   private ClusterDispatchClient dispatchClient;
-  private ClusterMetaReader clusterMetaReader;
   private JobStreamDispatcher jobStreamDispatcher;
   private AeronMessagingService businessMessagingService;
   private CommandApiServiceImpl businessCommandApiService;
@@ -208,16 +206,6 @@ public final class BrokerStartupContextImpl implements BrokerStartupContext {
   @Override
   public void setClusterDispatchClient(final ClusterDispatchClient dispatchClient) {
     this.dispatchClient = dispatchClient;
-  }
-
-  @Override
-  public ClusterMetaReader getClusterMetaReader() {
-    return clusterMetaReader;
-  }
-
-  @Override
-  public void setClusterMetaReader(final ClusterMetaReader clusterMetaReader) {
-    this.clusterMetaReader = clusterMetaReader;
   }
 
   @Override
