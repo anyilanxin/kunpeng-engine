@@ -1,0 +1,67 @@
+<!--
+  Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU Affero General Public License for more details.
+
+  You should have received a copy of the GNU Affero General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 560" font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+  <defs>
+    <marker id="aGray" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L10,4 L0,8 Z" fill="#475569"/></marker>
+  </defs>
+
+  <rect x="0" y="0" width="1000" height="560" fill="#ffffff"/>
+  <text x="500" y="40" text-anchor="middle" font-size="22" font-weight="700" fill="#0f172a">帧体积随批大小（B, 同载荷规格）</text>
+
+  <!-- 网格 -->
+  <line x1="140" y1="440" x2="920" y2="440" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4 4"/>
+  <line x1="140" y1="380" x2="920" y2="380" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4 4"/>
+  <line x1="140" y1="320" x2="920" y2="320" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4 4"/>
+  <line x1="140" y1="260" x2="920" y2="260" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4 4"/>
+  <line x1="140" y1="200" x2="920" y2="200" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4 4"/>
+  <line x1="140" y1="140" x2="920" y2="140" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4 4"/>
+
+  <!-- 轴 -->
+  <line x1="140" y1="500" x2="940" y2="500" stroke="#475569" stroke-width="1.5" marker-end="url(#aGray)"/>
+  <line x1="140" y1="500" x2="140" y2="100" stroke="#475569" stroke-width="1.5" marker-end="url(#aGray)"/>
+  <line x1="132" y1="500" x2="140" y2="500" stroke="#475569" stroke-width="1.5"/>
+  <line x1="132" y1="440" x2="140" y2="440" stroke="#475569" stroke-width="1.5"/>
+  <line x1="132" y1="380" x2="140" y2="380" stroke="#475569" stroke-width="1.5"/>
+  <line x1="132" y1="320" x2="140" y2="320" stroke="#475569" stroke-width="1.5"/>
+  <line x1="132" y1="260" x2="140" y2="260" stroke="#475569" stroke-width="1.5"/>
+  <line x1="132" y1="200" x2="140" y2="200" stroke="#475569" stroke-width="1.5"/>
+  <line x1="132" y1="140" x2="140" y2="140" stroke="#475569" stroke-width="1.5"/>
+  <line x1="132" y1="110" x2="140" y2="110" stroke="#475569" stroke-width="1.5"/>
+  <text x="124" y="504" text-anchor="end" font-size="11" fill="#64748b">0</text>
+  <text x="124" y="444" text-anchor="end" font-size="11" fill="#64748b">200</text>
+  <text x="124" y="384" text-anchor="end" font-size="11" fill="#64748b">400</text>
+  <text x="124" y="324" text-anchor="end" font-size="11" fill="#64748b">600</text>
+  <text x="124" y="264" text-anchor="end" font-size="11" fill="#64748b">800</text>
+  <text x="124" y="204" text-anchor="end" font-size="11" fill="#64748b">1000</text>
+  <text x="124" y="144" text-anchor="end" font-size="11" fill="#64748b">1200</text>
+  <text x="124" y="114" text-anchor="end" font-size="11" fill="#64748b">1300</text>
+  <text x="140" y="88" font-size="11.5" fill="#475569">字节</text>
+  <text x="920" y="530" text-anchor="end" font-size="11" fill="#64748b">批大小</text>
+
+  <!-- 柱 -->
+  <rect x="200" y="459.8" width="140" height="40.2" rx="3" fill="#2563eb"/>
+  <rect x="460" y="379.4" width="140" height="120.6" rx="3" fill="#2563eb"/>
+  <rect x="720" y="173" width="140" height="327" rx="3" fill="#2563eb"/>
+
+  <text x="270" y="449" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a8a">134</text>
+  <text x="530" y="369" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a8a">402</text>
+  <text x="790" y="163" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a8a">1090</text>
+
+  <text x="270" y="524" text-anchor="middle" font-size="12" fill="#334155">2 条目小批</text>
+  <text x="530" y="524" text-anchor="middle" font-size="12" fill="#334155">7 条目典型批</text>
+  <text x="790" y="524" text-anchor="middle" font-size="12" fill="#334155">20 条目大批</text>
+</svg>

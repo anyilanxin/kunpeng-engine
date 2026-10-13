@@ -21,10 +21,7 @@
 
 > 定位一句话：引擎是**决策者**——收命令、判规则、改状态、发响应；所有"业务上对不对"的判断只发生在这里。
 
-```
-LogEventProcessor<T>                    基接口：valueType() + valueLifeCycles() + processRecord(record)
-  └── LogEventProcessorSingleState<T>   单状态便捷接口：只声明 valueLifeCycle() 一个标记
-```
+![LogEventProcessor 接口层级](images/05-processor-hierarchy.svg)
 
 - 分发依据是 `lifeCycle.processIndex()`（③ 编号池的 `PROCESS_INDEX_N`）——`LogEventProcessors` 内部就是 `LogEventProcessor[RecordProcessIndex.size()]` 数组
 - 重复注册同一 processIndex → 启动抛 `IllegalStateException`；有 Record 没处理器 → 处理时抛 `Not Have LogEventProcessor`

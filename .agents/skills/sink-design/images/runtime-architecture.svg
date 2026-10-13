@@ -1,0 +1,88 @@
+<!--
+  Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU Affero General Public License for more details.
+
+  You should have received a copy of the GNU Affero General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 760" font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+  <defs>
+    <marker id="aGray" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L10,4 L0,8 Z" fill="#475569"/></marker>
+  </defs>
+
+  <rect x="0" y="0" width="1240" height="760" fill="#ffffff"/>
+  <text x="620" y="40" text-anchor="middle" font-size="22" font-weight="700" fill="#0f172a">sink 运行时架构：组件与协作</text>
+  <text x="620" y="64" text-anchor="middle" font-size="12.5" fill="#64748b">模块 kunpeng:sink:sink · SinkService 为 actor，每分区一个</text>
+
+  <!-- EventLog -->
+  <rect x="56" y="180" width="170" height="76" rx="10" fill="#f0fdfa" stroke="#14b8a6" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="141" y="212" text-anchor="middle" font-size="13.5" font-weight="700" fill="#134e4a">EventLog</text>
+  <text x="141" y="236" text-anchor="middle" font-size="11.5" fill="#0f766e">（日志流）</text>
+
+  <line x1="226" y1="218" x2="284" y2="218" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+
+  <!-- SinkService 容器 -->
+  <rect x="290" y="120" width="640" height="450" rx="14" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="306" y="146" font-size="13" font-weight="700" fill="#475569">SinkService（actor，每分区一个）</text>
+
+  <rect x="320" y="180" width="180" height="64" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="410" y="217" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1e3a8a">RecordDispatcher</text>
+
+  <line x1="500" y1="212" x2="534" y2="212" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+
+  <rect x="540" y="180" width="140" height="64" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="610" y="217" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1e3a8a">SinkSlot</text>
+
+  <line x1="680" y1="212" x2="714" y2="212" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+
+  <rect x="720" y="180" width="180" height="64" rx="8" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="810" y="206" text-anchor="middle" font-size="13.5" font-weight="700" fill="#14532d">RecordSink</text>
+  <text x="810" y="228" text-anchor="middle" font-size="11" fill="#166534">（用户实现）</text>
+
+  <rect x="540" y="272" width="170" height="68" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <text x="625" y="299" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a8a">SinkSlot …</text>
+  <text x="625" y="323" text-anchor="middle" font-size="10.5" fill="#64748b">（每个已配置 Sink 一个）</text>
+
+  <rect x="320" y="380" width="190" height="64" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="415" y="417" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1e3a8a">PositionBroadcaster</text>
+
+  <line x1="510" y1="412" x2="956" y2="412" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+
+  <rect x="320" y="470" width="180" height="64" rx="8" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+  <text x="410" y="497" text-anchor="middle" font-size="13" font-weight="700" fill="#334155">SinkMetrics</text>
+  <text x="410" y="519" text-anchor="middle" font-size="10.5" fill="#64748b">（micrometer）</text>
+
+  <rect x="530" y="470" width="280" height="64" rx="8" fill="#faf5ff" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="670" y="497" text-anchor="middle" font-size="13" font-weight="700" fill="#6b21a8">RepositoryMutableSink</text>
+  <text x="670" y="519" text-anchor="middle" font-size="10.5" fill="#6b21a8">（位置/元数据持久化，repository().sink()）</text>
+
+  <!-- PartitionMessagingService -->
+  <rect x="960" y="380" width="210" height="64" rx="8" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+  <text x="1065" y="406" text-anchor="middle" font-size="13" font-weight="700" fill="#334155">PartitionMessagingService</text>
+  <text x="1065" y="428" text-anchor="middle" font-size="10.5" fill="#64748b">（leader 广播/follower 应用）</text>
+
+  <!-- SinkRegistry 装配链 -->
+  <rect x="56" y="620" width="330" height="84" rx="10" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="221" y="650" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1e3a8a">SinkRegistry</text>
+  <text x="221" y="674" text-anchor="middle" font-size="10.5" fill="#64748b">（broker 启动时按 BrokerCfg.sinks 构建；</text>
+  <text x="221" y="692" text-anchor="middle" font-size="10.5" fill="#64748b">className 加载或外部 jar）</text>
+
+  <line x1="386" y1="662" x2="452" y2="662" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+
+  <rect x="456" y="620" width="180" height="84" rx="10" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="546" y="666" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1e3a8a">SinkDescriptor</text>
+
+  <line x1="636" y1="662" x2="702" y2="662" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+
+  <rect x="706" y="620" width="200" height="84" rx="10" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="806" y="666" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1e3a8a">SinkServiceContext</text>
+</svg>

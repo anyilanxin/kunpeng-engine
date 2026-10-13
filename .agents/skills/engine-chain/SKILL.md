@@ -13,32 +13,7 @@ description: Engine-side full-chain development guide for adding a new business 
 
 ## 链路总览（一条命令的一生）
 
-```
-client-java                    gateway                        broker                          引擎(bpmn-engine)               存储
-──────────                     ───────                        ──────                          ────────────────                ────
-XxxCommand.send() ──gRPC──▶ GrpcXxxServiceImpl ──broker-client──▶ CommandApiHandleImpl
-                              (proto→broker请求)    EvaluateExpressionRequest          │ 分配 requestId，挂 future
-                                                                   │ valueMapper.getValue(lifeCycle) 反序列化 ★没注册直接挂
-                                                                   │ RecordAppendEntryFactory
-                                                                   ▼
-                                                            eventlog.tryAppend(USER_COMMAND)
-                                                                   │ Raft 复制 → commit → 重放
-                                                                   ▼
-                                                            EngineProcessService.processEvent（分区事务）
-                                                                   │ 按 processIndex 分发
-                                                                   ▼
-                                                            XxxApiProcessor.processRecord
-                              ◀──ApiResponseWriter(SBE)── CommandApiHandle.sendResponse
-XxxCommandResponse ◀─gRPC── responseObserver.onNext          │
-                              (requestId 关联回程)             ├─ 直答型：adResponse 直接回写（不落日志）
-                                                                   └─ 持久化型：addCommand/addEvent → 状态机推进
-                                                                        │ addEvent 同时 addState
-                                                                        ▼
-                                                                   RocksdbBusinessRepositoryApplier
-                                                                        │ Entity.wrap(record)
-                                                                        ▼
-                                                                   KvStore → RocksDB
-```
+![一条命令的一生（链路总览）](images/command-call-chain.svg)
 
 ## 六层职责表（快速索引）
 

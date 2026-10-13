@@ -1,0 +1,119 @@
+<!--
+  Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU Affero General Public License for more details.
+
+  You should have received a copy of the GNU Affero General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1082" font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+  <defs>
+    <marker id="aGray" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L10,4 L0,8 Z" fill="#475569"/></marker>
+    <marker id="aTeal" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L10,4 L0,8 Z" fill="#0d9488"/></marker>
+  </defs>
+
+  <rect x="0" y="0" width="1400" height="1082" fill="#ffffff"/>
+  <text x="700" y="40" text-anchor="middle" font-size="22" font-weight="700" fill="#0f172a">集群调度子系统总体架构</text>
+  <text x="700" y="64" text-anchor="middle" font-size="12.5" fill="#64748b">调度命令经管理 Raft 仲裁生成调度计划 · 逐条下发执行明细并回流 ACK（admin Leader 单线程流处理）</text>
+
+  <!-- 入口面板 -->
+  <rect x="84" y="86" width="1000" height="138" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="100" y="110" font-size="13" font-weight="700" fill="#475569">入口</text>
+
+  <rect x="109" y="122" width="210" height="84" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="214" y="152" text-anchor="middle" font-size="13" font-weight="700" fill="#1e293b">commandapi/</text>
+  <text x="214" y="178" text-anchor="middle" font-size="11" fill="#64748b">客户端命令（COMMAND_API）</text>
+
+  <rect x="760" y="122" width="290" height="84" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="905" y="152" text-anchor="middle" font-size="13" font-weight="700" fill="#1e293b">adminInit()</text>
+  <text x="905" y="178" text-anchor="middle" font-size="11" fill="#64748b">集群初始化（7 条命令）</text>
+
+  <!-- cluster-dispatch 面板 -->
+  <rect x="48" y="280" width="908" height="480" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="64" y="306" font-size="13" font-weight="700" fill="#475569">cluster-dispatch</text>
+
+  <rect x="84" y="330" width="260" height="110" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="214" y="356" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1e3a8a">command/</text>
+  <text x="214" y="380" text-anchor="middle" font-size="11" fill="#64748b">admin·business 计划与执行处理器</text>
+  <text x="214" y="400" text-anchor="middle" font-size="11" fill="#64748b">source 治理 · delayed 触发</text>
+
+  <rect x="420" y="316" width="310" height="140" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="575" y="344" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1e3a8a">planner/</text>
+  <text x="575" y="370" text-anchor="middle" font-size="11" fill="#64748b">AdminDispatchPlanMaker</text>
+  <text x="575" y="390" text-anchor="middle" font-size="11" fill="#64748b">BusinessDispatchPlanMaker</text>
+  <text x="575" y="410" text-anchor="middle" font-size="11" fill="#64748b">+ 3 个 generator</text>
+
+  <rect x="420" y="496" width="310" height="76" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="575" y="524" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a8a">PartitionTopologyDiff</text>
+  <text x="575" y="548" text-anchor="middle" font-size="11" fill="#64748b">拓扑差异推导</text>
+
+  <rect x="776" y="316" width="160" height="140" rx="8" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+  <text x="856" y="344" text-anchor="middle" font-size="13" font-weight="700" fill="#1e293b">distributor/</text>
+  <text x="856" y="370" text-anchor="middle" font-size="11" fill="#64748b">RoundRobin /</text>
+  <text x="856" y="390" text-anchor="middle" font-size="11" fill="#64748b">Fixed</text>
+
+  <rect x="84" y="565" width="260" height="90" rx="8" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+  <text x="214" y="596" text-anchor="middle" font-size="13" font-weight="700" fill="#1e293b">scheduling/ + cache/</text>
+  <text x="214" y="622" text-anchor="middle" font-size="11" fill="#64748b">车道池 · 定时器 · 在途去重</text>
+
+  <rect x="420" y="592" width="310" height="90" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="575" y="624" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a8a">api/ClusterDispatchService</text>
+  <text x="575" y="650" text-anchor="middle" font-size="11" fill="#64748b">成员间消息接收面</text>
+
+  <!-- 外围面板 -->
+  <rect x="1000" y="280" width="352" height="610" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="1016" y="306" font-size="13" font-weight="700" fill="#475569">外围</text>
+
+  <rect x="1024" y="330" width="304" height="110" rx="8" fill="#faf5ff" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="1176" y="362" text-anchor="middle" font-size="13.5" font-weight="700" fill="#6b21a8">EventStore SPI</text>
+  <text x="1176" y="388" text-anchor="middle" font-size="11" fill="#6b21a8">（admin 分区事件日志）</text>
+
+  <rect x="1024" y="560" width="304" height="100" rx="8" fill="#faf5ff" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="1176" y="594" text-anchor="middle" font-size="13.5" font-weight="700" fill="#6b21a8">admin-repository</text>
+  <text x="1176" y="620" text-anchor="middle" font-size="11" fill="#6b21a8">applier 落 RocksDB</text>
+
+  <rect x="1024" y="760" width="304" height="100" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="1176" y="794" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1e3a8a">业务节点执行服务</text>
+  <text x="1176" y="820" text-anchor="middle" font-size="11" fill="#64748b">cluster-admin 侧</text>
+
+  <!-- 边 -->
+  <line x1="214" y1="206" x2="214" y2="326" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <polyline points="905,206 905,252 1240,252 1240,326" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <line x1="344" y1="385" x2="416" y2="385" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <line x1="575" y1="456" x2="575" y2="492" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <line x1="730" y1="386" x2="772" y2="386" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <line x1="214" y1="440" x2="214" y2="565" stroke="#94a3b8" stroke-width="1.6" stroke-dasharray="6 4"/>
+
+  <polyline points="280,330 280,298 1110,298 1110,326" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="695" y="290" text-anchor="middle" font-size="12" fill="#475569" style="paint-order:stroke" stroke="#ffffff" stroke-width="4">addCommand/addEvent</text>
+
+  <polyline points="730,630 990,630 990,400 1020,400" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="860" y="622" text-anchor="middle" font-size="12" fill="#475569" style="paint-order:stroke" stroke="#ffffff" stroke-width="4">写 ACKNOWLEDGE 命令</text>
+
+  <line x1="1176" y1="440" x2="1176" y2="556" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="1190" y="505" font-size="11.5" fill="#475569">EVENT 经 applier</text>
+
+  <polyline points="344,425 382,425 382,930 1176,930 1176,864" fill="none" stroke="#0d9488" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#aTeal)"/>
+  <text x="779" y="920" text-anchor="middle" font-size="12" fill="#0f766e" style="paint-order:stroke" stroke="#ffffff" stroke-width="4">执行明细下发</text>
+
+  <polyline points="1024,810 970,810 970,720 575,720 575,686" fill="none" stroke="#0d9488" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#aTeal)"/>
+  <text x="772" y="712" text-anchor="middle" font-size="12" fill="#0f766e" style="paint-order:stroke" stroke="#ffffff" stroke-width="4">executionAck</text>
+
+  <!-- 图例 -->
+  <rect x="48" y="958" width="320" height="96" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+  <text x="66" y="980" font-size="12" font-weight="700" fill="#0f172a">图例</text>
+  <line x1="66" y1="1002" x2="98" y2="1002" stroke="#475569" stroke-width="2"/>
+  <text x="106" y="1006" font-size="11" fill="#475569">进程内调用 / 事件写入</text>
+  <line x1="66" y1="1024" x2="98" y2="1024" stroke="#0d9488" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="106" y="1028" font-size="11" fill="#475569">异步消息（明细下发 / ack 回流）</text>
+  <line x1="66" y1="1040" x2="98" y2="1040" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="106" y="1044" font-size="11" fill="#475569">组件关联（无流向）</text>
+</svg>

@@ -1,0 +1,157 @@
+<!--
+  Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU Affero General Public License for more details.
+
+  You should have received a copy of the GNU Affero General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 780" font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+  <defs>
+    <marker id="aGray" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L10,4 L0,8 Z" fill="#475569"/></marker>
+  </defs>
+
+  <rect x="0" y="0" width="1240" height="780" fill="#ffffff"/>
+  <text x="620" y="40" text-anchor="middle" font-size="22" font-weight="700" fill="#0f172a">批帧字节布局实例（2 条目，可手工复算）</text>
+  <text x="620" y="64" text-anchor="middle" font-size="12.5" fill="#64748b">firstPosition=1001 · sourcePosition=-1 · timestamp=1500 · entry0 = {key:-1, flags:0, sourceIndex:-1, meta:16B, value:48B}</text>
+
+  <!-- 帧头 -->
+  <rect x="238" y="110" width="220" height="88" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="246" y="126" font-size="10" fill="#94a3b8">0x00</text>
+  <text x="348" y="150" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1e3a8a">magic "EL"</text>
+  <text x="348" y="170" text-anchor="middle" font-size="11" fill="#475569">45 4C</text>
+  <text x="348" y="190" text-anchor="middle" font-size="10.5" fill="#64748b">误定位/格式快速识别</text>
+
+  <rect x="476" y="110" width="110" height="88" rx="8" fill="#eff6ff" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="484" y="126" font-size="10" fill="#94a3b8">0x02</text>
+  <text x="531" y="154" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1e3a8a">version</text>
+  <text x="531" y="176" text-anchor="middle" font-size="11" fill="#475569">01</text>
+
+  <rect x="604" y="110" width="180" height="88" rx="8" fill="#eff6ff" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="612" y="126" font-size="10" fill="#94a3b8">0x03</text>
+  <text x="694" y="150" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1e3a8a">flags</text>
+  <text x="694" y="170" text-anchor="middle" font-size="11" fill="#475569">00</text>
+  <text x="694" y="190" text-anchor="middle" font-size="10.5" fill="#64748b">bit0 预留 CRC</text>
+
+  <rect x="802" y="110" width="200" height="88" rx="8" fill="#eff6ff" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="810" y="126" font-size="10" fill="#94a3b8">0x04</text>
+  <text x="902" y="150" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1e3a8a">batchLength = 128</text>
+  <text x="902" y="170" text-anchor="middle" font-size="11" fill="#475569">80 01 · uvarint</text>
+  <text x="902" y="190" text-anchor="middle" font-size="10.5" fill="#64748b">本字段之后到帧尾</text>
+
+  <line x1="902" y1="198" x2="902" y2="242" stroke="#d97706" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#aGray)"/>
+
+  <!-- batchLength 区域 -->
+  <rect x="40" y="246" width="1160" height="450" rx="10" fill="#fffbeb" stroke="#d97706" stroke-width="1.8" stroke-dasharray="8 5"/>
+  <text x="56" y="272" font-size="13" font-weight="700" fill="#b45309">以下计入 batchLength</text>
+
+  <!-- 批级字段 -->
+  <rect x="223" y="282" width="200" height="88" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="1.5"/>
+  <text x="231" y="298" font-size="10" fill="#94a3b8">0x06</text>
+  <text x="323" y="322" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0f172a">firstPosition = 1001</text>
+  <text x="323" y="342" text-anchor="middle" font-size="11" fill="#475569">E9 07</text>
+  <text x="323" y="360" text-anchor="middle" font-size="10.5" fill="#64748b">批级, 2B</text>
+
+  <rect x="437" y="282" width="150" height="88" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="1.5"/>
+  <text x="445" y="298" font-size="10" fill="#94a3b8">0x08</text>
+  <text x="512" y="326" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0f172a">entryCount = 2</text>
+  <text x="512" y="350" text-anchor="middle" font-size="11" fill="#475569">02</text>
+
+  <rect x="601" y="282" width="190" height="88" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="1.5"/>
+  <text x="609" y="298" font-size="10" fill="#94a3b8">0x09</text>
+  <text x="696" y="322" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0f172a">sourcePosition = -1</text>
+  <text x="696" y="342" text-anchor="middle" font-size="11" fill="#475569">01</text>
+  <text x="696" y="360" text-anchor="middle" font-size="10.5" fill="#64748b">zigzag→1</text>
+
+  <rect x="805" y="282" width="200" height="88" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="1.5"/>
+  <text x="813" y="298" font-size="10" fill="#94a3b8">0x0A</text>
+  <text x="905" y="322" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0f172a">timestamp = 1500</text>
+  <text x="905" y="342" text-anchor="middle" font-size="11" fill="#475569">DC 0B</text>
+  <text x="905" y="360" text-anchor="middle" font-size="10.5" fill="#64748b">批级毫秒</text>
+
+  <!-- entry[0] -->
+  <text x="47" y="424" font-size="12.5" font-weight="700" fill="#92400e">entry[0]（position=1001）</text>
+
+  <rect x="47" y="432" width="160" height="96" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="1.5"/>
+  <text x="55" y="448" font-size="10" fill="#94a3b8">0x0C</text>
+  <text x="127" y="474" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0f172a">key = -1</text>
+  <text x="127" y="496" text-anchor="middle" font-size="10.5" fill="#475569">01 · zigzag→1</text>
+  <text x="127" y="516" text-anchor="middle" font-size="10.5" fill="#64748b">条目头 4B + 长度前缀</text>
+
+  <rect x="223" y="432" width="100" height="96" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="1.5"/>
+  <text x="231" y="448" font-size="10" fill="#94a3b8">0x0D</text>
+  <text x="273" y="476" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0f172a">entryFlags</text>
+  <text x="273" y="500" text-anchor="middle" font-size="10.5" fill="#475569">00</text>
+
+  <rect x="339" y="432" width="150" height="96" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="1.5"/>
+  <text x="347" y="448" font-size="10" fill="#94a3b8">0x0E</text>
+  <text x="414" y="474" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0f172a">sourceIndex = -1</text>
+  <text x="414" y="496" text-anchor="middle" font-size="10.5" fill="#475569">01 · zigzag→1</text>
+
+  <rect x="505" y="432" width="150" height="96" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="1.5"/>
+  <text x="513" y="448" font-size="10" fill="#94a3b8">0x0F</text>
+  <text x="580" y="474" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0f172a">metadataLen = 16</text>
+  <text x="580" y="496" text-anchor="middle" font-size="10.5" fill="#475569">10</text>
+
+  <rect x="671" y="432" width="170" height="96" rx="8" fill="#f0fdfa" stroke="#14b8a6" stroke-width="1.5"/>
+  <text x="679" y="448" font-size="10" fill="#94a3b8">0x10</text>
+  <text x="756" y="474" text-anchor="middle" font-size="12.5" font-weight="700" fill="#134e4a">metadata ‹16B›</text>
+  <text x="756" y="496" text-anchor="middle" font-size="10.5" fill="#475569">SBE 字节, 透传</text>
+
+  <rect x="857" y="432" width="130" height="96" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="1.5"/>
+  <text x="865" y="448" font-size="10" fill="#94a3b8">0x20</text>
+  <text x="922" y="474" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0f172a">valueLen = 48</text>
+  <text x="922" y="496" text-anchor="middle" font-size="10.5" fill="#475569">30</text>
+
+  <rect x="1003" y="432" width="190" height="96" rx="8" fill="#f0fdfa" stroke="#14b8a6" stroke-width="1.5"/>
+  <text x="1011" y="448" font-size="10" fill="#94a3b8">0x21</text>
+  <text x="1098" y="474" text-anchor="middle" font-size="12.5" font-weight="700" fill="#134e4a">value ‹48B›</text>
+  <text x="1098" y="496" text-anchor="middle" font-size="10.5" fill="#475569">structpack 帧字节, 透传</text>
+
+  <!-- entry[1] -->
+  <text x="47" y="568" font-size="12.5" font-weight="700" fill="#92400e">entry[1]（position=1002）</text>
+
+  <rect x="47" y="576" width="130" height="96" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="1.5"/>
+  <text x="55" y="592" font-size="10" fill="#94a3b8">0x51</text>
+  <text x="112" y="618" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0f172a">key = 42</text>
+  <text x="112" y="640" text-anchor="middle" font-size="10.5" fill="#475569">54 · zigzag→84</text>
+
+  <rect x="193" y="576" width="150" height="96" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="1.5"/>
+  <text x="201" y="592" font-size="10" fill="#94a3b8">0x52</text>
+  <text x="268" y="618" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0f172a">entryFlags</text>
+  <text x="268" y="640" text-anchor="middle" font-size="10.5" fill="#475569">01 · skipProcessing</text>
+
+  <rect x="359" y="576" width="190" height="96" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="1.5"/>
+  <text x="367" y="592" font-size="10" fill="#94a3b8">0x53</text>
+  <text x="454" y="618" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0f172a">sourceIndex = 0</text>
+  <text x="454" y="638" text-anchor="middle" font-size="10.5" fill="#475569">00</text>
+  <text x="454" y="658" text-anchor="middle" font-size="10.5" fill="#64748b">→ source = 1001+0 = 1001</text>
+
+  <rect x="565" y="576" width="150" height="96" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="1.5"/>
+  <text x="573" y="592" font-size="10" fill="#94a3b8">0x54</text>
+  <text x="640" y="618" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0f172a">metadataLen = 16</text>
+  <text x="640" y="640" text-anchor="middle" font-size="10.5" fill="#475569">10</text>
+
+  <rect x="731" y="576" width="150" height="96" rx="8" fill="#f0fdfa" stroke="#14b8a6" stroke-width="1.5"/>
+  <text x="739" y="592" font-size="10" fill="#94a3b8">0x55</text>
+  <text x="806" y="618" text-anchor="middle" font-size="12.5" font-weight="700" fill="#134e4a">metadata ‹16B›</text>
+
+  <rect x="897" y="576" width="130" height="96" rx="8" fill="#ffffff" stroke="#d97706" stroke-width="1.5"/>
+  <text x="905" y="592" font-size="10" fill="#94a3b8">0x65</text>
+  <text x="962" y="618" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0f172a">valueLen = 32</text>
+  <text x="962" y="640" text-anchor="middle" font-size="10.5" fill="#475569">20</text>
+
+  <rect x="1043" y="576" width="150" height="96" rx="8" fill="#f0fdfa" stroke="#14b8a6" stroke-width="1.5"/>
+  <text x="1051" y="592" font-size="10" fill="#94a3b8">0x66</text>
+  <text x="1118" y="618" text-anchor="middle" font-size="12.5" font-weight="700" fill="#134e4a">value ‹32B›</text>
+
+  <text x="620" y="742" text-anchor="middle" font-size="13.5" font-weight="700" fill="#0f172a">帧总长 = 134 B（载荷 112B，协议开销 22B）</text>
+</svg>

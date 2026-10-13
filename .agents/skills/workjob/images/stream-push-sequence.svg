@@ -1,0 +1,147 @@
+<!--
+  Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU Affero General Public License for more details.
+
+  You should have received a copy of the GNU Affero General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1640 1470" font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+  <defs>
+    <marker id="aGray" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L10,4 L0,8 Z" fill="#475569"/></marker>
+  </defs>
+
+  <rect x="0" y="0" width="1640" height="1470" fill="#ffffff"/>
+  <text x="820" y="40" text-anchor="middle" font-size="22" font-weight="700" fill="#0f172a">② 流推送时序</text>
+  <text x="820" y="64" text-anchor="middle" font-size="12.5" fill="#64748b">主路径 broker 定点、网关直达；降级与回退</text>
+
+  <!-- alt 分组框（先铺底，生命线压在其上） -->
+  <rect x="690" y="666" width="895" height="730" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <rect x="690" y="1016" width="640" height="364" rx="8" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+
+  <!-- 生命线 -->
+  <line x1="170" y1="144" x2="170" y2="1420" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3 4"/>
+  <line x1="470" y1="144" x2="470" y2="1420" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3 4"/>
+  <line x1="700" y1="144" x2="700" y2="1420" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3 4"/>
+  <line x1="970" y1="144" x2="970" y2="1420" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3 4"/>
+  <line x1="1250" y1="144" x2="1250" y2="1420" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3 4"/>
+  <line x1="1520" y1="144" x2="1520" y2="1420" stroke="#94a3b8" stroke-width="1" stroke-dasharray="3 4"/>
+
+  <!-- 参与者 -->
+  <rect x="110" y="96" width="120" height="48" rx="8" fill="#eef2ff" stroke="#818cf8" stroke-width="1.5"/>
+  <text x="170" y="125" text-anchor="middle" font-size="13" font-weight="700" fill="#1e1b4b">引擎处理循环</text>
+
+  <rect x="360" y="96" width="220" height="48" rx="8" fill="#eff6ff" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="470" y="125" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1e3a8a">CoordinatorJobDeliveryPort</text>
+
+  <rect x="610" y="96" width="180" height="48" rx="8" fill="#eff6ff" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="700" y="117" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1e3a8a">JobStreamCoordinator</text>
+  <text x="700" y="136" text-anchor="middle" font-size="11" fill="#64748b">(actor)</text>
+
+  <rect x="880" y="96" width="180" height="48" rx="8" fill="#fffbeb" stroke="#d97706" stroke-width="1.5"/>
+  <text x="970" y="117" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">PushFailureFallback</text>
+  <text x="970" y="136" text-anchor="middle" font-size="11" fill="#64748b">(actor)</text>
+
+  <rect x="1175" y="96" width="150" height="48" rx="8" fill="#eff6ff" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="1250" y="125" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a8a">GatewayJobHub</text>
+
+  <rect x="1465" y="96" width="110" height="48" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="1520" y="125" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">client 流</text>
+
+  <!-- E→CS pickStream -->
+  <line x1="170" y1="190" x2="464" y2="190" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="317" y="178" text-anchor="middle" font-size="12" fill="#475569">pickStream(jobType)</text>
+
+  <!-- CS→K select -->
+  <line x1="470" y1="246" x2="694" y2="246" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="582" y="234" text-anchor="middle" font-size="12" fill="#475569">select(jobType) 单游标轮转</text>
+
+  <!-- K-->>CS PushPoint -->
+  <line x1="700" y1="302" x2="476" y2="302" stroke="#475569" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#aGray)"/>
+  <text x="585" y="278" text-anchor="middle" font-size="12" fill="#475569">PushPoint(网关,</text>
+  <text x="585" y="294" text-anchor="middle" font-size="12" fill="#475569">sessionId, worker)</text>
+
+  <!-- E 自消息：写 ACTIVATED -->
+  <polyline points="170,358 230,358 230,388 176,388" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="242" y="362" font-size="12" fill="#475569">写 ACTIVATED</text>
+  <text x="242" y="380" font-size="12" fill="#475569">（worker=会话归属, deadline）</text>
+  <text x="242" y="398" font-size="12" fill="#475569">+ 到期索引</text>
+
+  <!-- Note over E -->
+  <rect x="45" y="424" width="250" height="58" rx="8" fill="#fffbeb" stroke="#d97706" stroke-width="1.5"/>
+  <text x="170" y="446" text-anchor="middle" font-size="11.5" fill="#854d0e">事件先行（raft 复制归属/deadline）</text>
+  <text x="170" y="466" text-anchor="middle" font-size="11.5" fill="#854d0e">推送是提交后的副作用</text>
+
+  <!-- E→CS push -->
+  <line x1="170" y1="520" x2="464" y2="520" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="317" y="508" text-anchor="middle" font-size="11.5" fill="#475569">push(jobKey, partitionId, deadline, record)</text>
+
+  <!-- CS→K enqueue -->
+  <line x1="470" y1="576" x2="694" y2="576" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="582" y="564" text-anchor="middle" font-size="12" fill="#475569">enqueue（出站限深队列）</text>
+
+  <!-- K→H PUSH -->
+  <line x1="700" y1="634" x2="1244" y2="634" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="990" y="610" font-size="12" fill="#475569">PUSH(StreamPush:</text>
+  <text x="990" y="626" font-size="12" fill="#475569">sessionId/worker/record) 请求-应答</text>
+
+  <!-- alt 标签 -->
+  <text x="706" y="690" font-size="12" font-weight="700" fill="#475569">alt 主路径：会话直达（99%）</text>
+
+  <!-- H 自消息：会话直达 -->
+  <polyline points="1250,700 1310,700 1310,728 1256,728" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="1238" y="718" text-anchor="end" font-size="12" fill="#475569">sessions.get(sessionId)，worker 匹配</text>
+
+  <!-- H→W tryDeliver -->
+  <line x1="1250" y1="770" x2="1514" y2="770" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="1382" y="758" text-anchor="middle" font-size="12" fill="#475569">tryDeliver(JobDelivery)</text>
+
+  <!-- W-->>H onNext -->
+  <line x1="1520" y1="826" x2="1256" y2="826" stroke="#475569" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#aGray)"/>
+  <text x="1388" y="814" text-anchor="middle" font-size="12" fill="#475569">onNext</text>
+
+  <!-- H-->>K PushResult(ok) -->
+  <line x1="1250" y1="882" x2="706" y2="882" stroke="#475569" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#aGray)"/>
+  <text x="1110" y="870" text-anchor="middle" font-size="12" fill="#475569">PushResult(ok)</text>
+
+  <!-- else 分隔 -->
+  <line x1="690" y1="916" x2="1585" y2="916" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="706" y="940" font-size="12" font-weight="700" fill="#475569">else 降级：对账窗口失配/流控暂满</text>
+
+  <!-- H 自消息：同 worker 兜底 -->
+  <polyline points="1250,964 1310,964 1310,992 1256,992" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="1238" y="982" text-anchor="end" font-size="12" fill="#475569">同 worker 其他流兜底</text>
+
+  <!-- 嵌套 alt -->
+  <text x="706" y="1040" font-size="12" font-weight="700" fill="#475569">alt 兜底成功</text>
+
+  <line x1="1250" y1="1064" x2="706" y2="1064" stroke="#475569" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#aGray)"/>
+  <text x="835" y="1052" text-anchor="middle" font-size="12" fill="#475569">PushResult(ok)</text>
+
+  <line x1="690" y1="1098" x2="1330" y2="1098" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="706" y="1122" font-size="12" font-weight="700" fill="#475569">else 全落空（跨 worker 不凑合）</text>
+
+  <line x1="1250" y1="1146" x2="706" y2="1146" stroke="#475569" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#aGray)"/>
+  <text x="835" y="1134" text-anchor="middle" font-size="12" fill="#475569">PushResult(fail)</text>
+
+  <!-- K→Y failureHandler -->
+  <line x1="700" y1="1202" x2="964" y2="1202" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="832" y="1190" text-anchor="middle" font-size="12" fill="#475569">failureHandler(StreamPush)</text>
+
+  <!-- Y 自消息：WITHDRAW -->
+  <polyline points="970,1252 1030,1252 1030,1282 976,1282" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="1042" y="1262" font-size="12" fill="#475569">WITHDRAW 命令直写分区日志</text>
+  <text x="1042" y="1280" font-size="12" fill="#475569">→ TIMED_OUT → 回 READY</text>
+
+  <!-- Note over Y -->
+  <rect x="865" y="1310" width="210" height="52" rx="8" fill="#fffbeb" stroke="#d97706" stroke-width="1.5"/>
+  <text x="970" y="1340" text-anchor="middle" font-size="11.5" fill="#854d0e">即时回退，不等 deadline 周期</text>
+</svg>

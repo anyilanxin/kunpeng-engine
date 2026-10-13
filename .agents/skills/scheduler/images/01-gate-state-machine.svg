@@ -1,0 +1,61 @@
+<!--
+  Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU Affero General Public License for more details.
+
+  You should have received a copy of the GNU Affero General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 610" font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+  <defs>
+    <marker id="aGray" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L10,4 L0,8 Z" fill="#475569"/></marker>
+  </defs>
+
+  <rect x="0" y="0" width="1000" height="610" fill="#ffffff"/>
+  <text x="500" y="40" text-anchor="middle" font-size="22" font-weight="700" fill="#0f172a">三态调度门状态机</text>
+  <text x="500" y="64" text-anchor="middle" font-size="12.5" fill="#64748b">gate 只回答"谁负责把 cell 放进调度队列 / 谁在执行"</text>
+
+  <!-- 初始态 -->
+  <circle cx="100" cy="460" r="7" fill="#0f172a"/>
+  <line x1="107" y1="460" x2="166" y2="460" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+
+  <!-- 状态 -->
+  <rect x="170" y="436" width="130" height="48" rx="14" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+  <text x="235" y="466" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">WAITING</text>
+
+  <rect x="480" y="176" width="150" height="48" rx="14" fill="#fffbeb" stroke="#d97706" stroke-width="1.5"/>
+  <text x="555" y="206" text-anchor="middle" font-size="14" font-weight="700" fill="#92400e">WAKING_UP</text>
+
+  <rect x="820" y="436" width="130" height="48" rx="14" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="885" y="466" text-anchor="middle" font-size="14" font-weight="700" fill="#1e3a8a">RUNNING</text>
+
+  <!-- 迁移：提交者 CAS 成功 -->
+  <line x1="215" y1="436" x2="503" y2="230" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="340" y="320" text-anchor="end" font-size="12" font-weight="700" fill="#475569">提交者 CAS 成功</text>
+  <text x="340" y="338" text-anchor="end" font-size="12" fill="#475569">（唯一入队责任人）</text>
+
+  <!-- 迁移：owner 复查发现新工作 -->
+  <line x1="285" y1="436" x2="583" y2="230" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="472" y="320" font-size="12" font-weight="700" fill="#475569">owner 复查发现新工作</text>
+  <text x="472" y="338" font-size="12" fill="#475569">（自行重新入队）</text>
+
+  <!-- 迁移：runner 从队列取走 cell -->
+  <line x1="630" y1="212" x2="873" y2="430" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="761" y="318" font-size="12" font-weight="700" fill="#475569">runner 从队列取走 cell</text>
+
+  <!-- 迁移：owner 排空后 trySleep -->
+  <line x1="820" y1="460" x2="304" y2="460" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="562" y="446" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">owner 排空后 trySleep</text>
+
+  <!-- 脚注 -->
+  <text x="500" y="556" text-anchor="middle" font-size="12" fill="#64748b">队列物理移除（poll 即得）意味着不存在任务级竞争</text>
+  <text x="500" y="576" text-anchor="middle" font-size="12" fill="#64748b">单 actor 串行由"同一 cell 在 runner 队列中至多一个实例"结构性保证</text>
+</svg>

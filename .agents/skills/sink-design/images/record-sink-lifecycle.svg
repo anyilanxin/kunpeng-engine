@@ -1,0 +1,64 @@
+<!--
+  Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU Affero General Public License for more details.
+
+  You should have received a copy of the GNU Affero General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 640" font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+  <defs>
+    <marker id="aGray" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L10,4 L0,8 Z" fill="#475569"/></marker>
+  </defs>
+
+  <rect x="0" y="0" width="720" height="640" fill="#ffffff"/>
+  <text x="360" y="40" text-anchor="middle" font-size="22" font-weight="700" fill="#0f172a">用户侧 RecordSink 生命周期</text>
+  <text x="360" y="64" text-anchor="middle" font-size="12.5" fill="#64748b">按日志顺序逐条投递 · 引擎级暂停/恢复，可反复多次</text>
+
+  <rect x="290" y="96" width="300" height="64" rx="10" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="440" y="124" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1e3a8a">initialize(SinkContext)</text>
+  <text x="440" y="146" text-anchor="middle" font-size="11" fill="#64748b">初始化/校验配置</text>
+
+  <line x1="440" y1="160" x2="440" y2="186" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+
+  <rect x="290" y="190" width="300" height="64" rx="10" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="440" y="218" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1e3a8a">start(SinkController)</text>
+  <text x="440" y="240" text-anchor="middle" font-size="11" fill="#64748b">分配资源，拿到确认句柄</text>
+
+  <line x1="440" y1="254" x2="440" y2="280" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+
+  <rect x="290" y="284" width="300" height="64" rx="10" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="440" y="312" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1e3a8a">sink(Record)</text>
+  <text x="440" y="334" text-anchor="middle" font-size="11" fill="#64748b">按日志顺序逐条投递</text>
+
+  <line x1="440" y1="348" x2="440" y2="374" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+
+  <rect x="170" y="378" width="170" height="64" rx="10" fill="#fffbeb" stroke="#d97706" stroke-width="1.5"/>
+  <text x="255" y="415" text-anchor="middle" font-size="13.5" font-weight="700" fill="#92400e">pause()</text>
+
+  <line x1="340" y1="410" x2="424" y2="410" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="382" y="398" text-anchor="middle" font-size="11.5" fill="#475569">恢复</text>
+
+  <rect x="430" y="378" width="170" height="64" rx="10" fill="#fffbeb" stroke="#d97706" stroke-width="1.5"/>
+  <text x="515" y="415" text-anchor="middle" font-size="13.5" font-weight="700" fill="#92400e">resume()</text>
+
+  <polyline points="600,410 664,410 664,316 596,316" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+
+  <text x="515" y="472" text-anchor="middle" font-size="11.5" fill="#64748b">引擎级暂停/恢复，可反复多次</text>
+
+  <polyline points="255,442 255,518 284,518" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+
+  <rect x="290" y="486" width="300" height="64" rx="10" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+  <text x="440" y="514" text-anchor="middle" font-size="13.5" font-weight="700" fill="#334155">close()</text>
+  <text x="440" y="536" text-anchor="middle" font-size="11" fill="#64748b">释放资源，终态</text>
+
+  <text x="440" y="594" text-anchor="middle" font-size="11.5" fill="#64748b">（按需）purge() / onPartitionRemoved()</text>
+</svg>

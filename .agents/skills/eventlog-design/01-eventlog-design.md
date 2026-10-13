@@ -17,46 +17,7 @@
 
 ## 2. 总体架构
 
-```mermaid
-flowchart TB
-    subgraph 消费方
-        CMD["broker CommandApi"]
-        ENG["engine EngineProcessService"]
-        EXP["exporter ExporterProcessService"]
-        REP["repository RepositoryProcessService"]
-    end
-
-    subgraph eventlog ["kunpeng/eventlog (com.anyilanxin.kunpeng.eventlog)"]
-        EL["EventLog 门面<br/>(EventLogImpl)"]
-        SEQ["PositionSequencer<br/>无锁定序器"]
-        PQ["PendingAppendQueue<br/>有序提交链"]
-        FC["FlowController<br/>三态水位+双限流"]
-        RING["InflightRing<br/>1024 槽位环"]
-        AIMD["AimdWindow"] & TB["TokenBucket"] & BT["BacklogThrottle"]
-        BF["BatchFrame/Decoder<br/>批帧编解码"]
-        RD["EventLogReaderImpl<br/>BatchEntryReaderImpl"]
-        SPI["EventStore / EventStoreReader<br/>存储 SPI"]
-    end
-
-    subgraph broker ["broker 模块"]
-        RAFT["RaftEventStore<br/>implements EventStore"]
-        JOURNAL["Raft journal (cluster 模块, 零改动)"]
-    end
-
-    CMD -->|"tryAppend"| SEQ
-    ENG -->|"newReader + awaiter"| RD
-    ENG -->|"tryAppend(ProcessingResult)"| SEQ
-    EXP -->|"reader + onExported"| RD
-    REP -->|"newBatchReader"| RD
-    EL --- SEQ & RD & FC
-    SEQ --> PQ --> SPI
-    SEQ --> BF
-    SEQ --> FC
-    FC --- RING & AIMD & TB & BT
-    SPI <-.->|"append/commit 回调"| RAFT
-    RAFT --- JOURNAL
-    RD -->|"seek/next 块"| SPI
-```
+![EventLog 总体架构](images/01-overview-architecture.svg)
 
 **分层职责**：
 
@@ -73,24 +34,7 @@ flowchart TB
 
 小端 LEB128 varint、无对齐无 padding（Raft journal 顺序消费，无需对齐）。
 
-```text
-偏移   字段                类型          说明
-0x00   magic               2B            0x45 0x4C ("EL") —— 注意不可用 "KP"(structpack 已占)
-0x02   version             1B            0x01
-0x03   flags               1B            bit0 预留 CRC
-0x04   batchLength         uvarint32     本字段之后到帧尾的字节数
-────── 以下计入 batchLength ──────
-       firstPosition       uvarint64     批首 position（恒 ≥1）
-       entryCount          uvarint32
-       sourcePosition      svarint64     批级源 position（-1 = 无）
-       timestamp           uvarint64     批级毫秒时间戳（同批同时间戳）
-       entry[entryCount]:
-         key               svarint64     -1 = null key
-         entryFlags        1B            bit0 = skipProcessing
-         sourceIndex       svarint32     -1 = 无；批内回指（见 §3.1）
-         metadataLen       uvarint32 + bytes
-         valueLen          uvarint32     + bytes
-```
+![批帧格式 v1（字段布局）](images/01-frame-format.svg)
 
 设计要点：position/timestamp 批级存一次（条目 position 由 `firstPosition + 下标` 推算），条目头部仅 6–12B varint。
 
@@ -106,114 +50,21 @@ entry.sourcePosition = sourceIndex ≥ 0 ? firstPosition + sourceIndex : 批级 
 
 一次 `tryAppend` 产生的数据在物理存储中的完整嵌套结构：
 
-```mermaid
-flowchart TB
-    subgraph JOURNAL["Raft journal 段文件（cluster 模块, 零改动）"]
-        direction LR
-        SEG["段: {name}-{id}.log<br/>SBE 段头 + 索引条目流"]
-        SEG --> E1["journal 条目 #k<br/>(term, index, CRC)"]
-        E1 --> APP["SerializedApplicationEntry<br/>lowestPosition = 批帧 firstPosition<br/>highestPosition = 批帧 lastPosition<br/>(Raft 按 ASQN 区间定位)"]
-        APP --> DATA["data = 批帧字节（不透明, raft 不解析）"]
-    end
-
-    subgraph FRAME["批帧 BatchFrame（本模块定义, magic 'EL'）"]
-        direction TB
-        H["帧头: EL 01 flags batchLength<br/>(4B + varint)"]
-        B["批级字段: firstPosition(uvarint)<br/>entryCount(uvarint)<br/>sourcePosition(svarint)<br/>timestamp(uvarint)"]
-        H --> B
-        B --> E0["entry[0]: key(svarint) + flags(1B)<br/>+ sourceIndex(svarint)<br/>+ metadataLen + metadata 字节<br/>+ valueLen + value 字节"]
-        E0 --> E1x["entry[1]: ..."]
-        E1x --> EN["entry[n-1]: ..."]
-    end
-
-    DATA -.->|"同一字节"| FRAME
-
-    subgraph PAYLOADS["载荷内嵌格式（透传不解析）"]
-        M["metadata = SBE 编码 RecordMetadata<br/>(recordType/valueType/lifeCycle/<br/>requestId/operationReference...)"]
-        V["value = structpack 帧的 UnifiedRecordValue<br/>(id 升序 + 长度前缀值, 见 structpack 模块)"]
-    end
-
-    E0 -.-> M
-    E0 -.-> V
-```
+![端到端数据结构（磁盘 → 批帧 → 条目 → 载荷）](images/01-end-to-end-data-structure.svg)
 
 **position 体系**（一个批帧承载连续区间）：
 
-```mermaid
-flowchart LR
-    subgraph BATCH["批帧: firstPosition=F, entryCount=3, sourcePosition=S"]
-        P0["entry[0].position = F+0"]
-        P1["entry[1].position = F+1"]
-        P2["entry[2].position = F+2"]
-    end
-    RES["解码侧还原:<br/>position = firstPosition + 下标<br/>sourcePosition = sourceIndex≥0<br/>  ? firstPosition+sourceIndex : S"]
-    BATCH --> RES
-```
+![position 体系（一个批帧承载连续区间）](images/01-position-system.svg)
 
 ### 3.3 批帧字节布局实例（2 条目，可手工复算）
 
 以 `firstPosition=1001, sourcePosition=-1, timestamp=1500`，entry0 = `{key:-1, flags:0, sourceIndex:-1, meta:16B, value:48B}`，entry1 = `{key:42, flags:skipProcessing, sourceIndex:0, meta:16B, value:32B}` 为例：
 
-```text
-偏移    字节                 字段                          说明
-──────────────────────────────────────────────────────────────────
-0x00    45 4C                magic "EL"                    误定位/格式快速识别
-0x02    01                   version
-0x03    00                   flags                         bit0 预留 CRC
-0x04    80 01                batchLength = 128 (uvarint)   本字段之后到帧尾
-────── 以下计入 batchLength ──────────────────────────────────────
-0x06    E9 07                firstPosition = 1001          批级, 2B
-0x08    02                   entryCount = 2
-0x09    01                   sourcePosition = -1 (zigzag→1)
-0x0A    DC 0B                timestamp = 1500              批级毫秒
-────── entry[0]（position=1001）─────────────────────────────────
-0x0C    01                   key = -1 (zigzag→1)           条目头 4B + 长度前缀
-0x0D    00                   entryFlags
-0x0E    01                   sourceIndex = -1 (zigzag→1)
-0x0F    10                   metadataLen = 16
-0x10    ‹16B›                metadata（SBE 字节, 透传）
-0x20    30                   valueLen = 48
-0x21    ‹48B›                value（structpack 帧字节, 透传）
-────── entry[1]（position=1002）─────────────────────────────────
-0x51    54                   key = 42 (zigzag→84)
-0x52    01                   entryFlags = skipProcessing
-0x53    00                   sourceIndex = 0                → source = 1001+0 = 1001
-0x54    10                   metadataLen = 16
-0x55    ‹16B›                metadata
-0x65    20                   valueLen = 32
-0x66    ‹32B›                value
-──────────────────────────────────────────────────────────────────
-帧总长 = 134 B（载荷 112B，协议开销 22B）
-```
+![批帧字节布局实例（2 条目，可手工复算）](images/01-frame-byte-layout-example.svg)
 
 ### 3.4 运行期数据结构（写路径内存视图）
 
-```mermaid
-flowchart TB
-    subgraph WRITER["PositionSequencer（每分区 1 个）"]
-        NP["AtomicLong nextPosition<br/>（CAS 预约, 无锁）"]
-        WM["volatile submittedThrough<br/>（watermark 提交链头）"]
-    end
-
-    subgraph QUEUE["PendingAppendQueue（开放寻址槽位表, 容量 64）"]
-        S0["slot: CLAIMED→RESERVED→READY(帧|null)→SUBMITTING→EMPTY<br/>firstPosition / lastPosition / deadline(5s 看门狗)"]
-    end
-
-    subgraph FLOW["FlowController"]
-        RING["InflightRing[1024]<br/>idx = lastPosition & 1023<br/>{position, appendedAtNanos, state:<br/>APPENDING→WRITTEN→COMMITTED}"]
-        AIMD["AimdWindow<br/>(volatile window + AtomicInteger inflight)"]
-        TB2["TokenBucket<br/>(long tokensMicro 定点)"]
-    end
-
-    NP -->|"getAndAdd(n)"| QUEUE
-    WM -->|"slotOfFirst(watermark+1)"| QUEUE
-    QUEUE -->|"onAppend 登记"| RING
-    RING -->|"RTT 采样"| AIMD
-    AIMD -.->|"仅 USER_COMMAND"| GATE["tryAcquire 准入"]
-    TB2 -.-> GATE
-    FRAMEBUF["ExpandableArrayBuffer 帧缓冲<br/>（每批独立自持 — Raft 延迟序列化持有引用）"]
-    QUEUE --> FRAMEBUF -->|"store.append<br/>(first, last, frame)"| STORE["EventStore SPI → Raft"]
-```
+![运行期数据结构（写路径内存视图）](images/01-runtime-memory-view.svg)
 
 关键内存约束：在途批数 ≤ 提交链容量 64 ≪ 在途环 1024（槽位复用必在旧批释放后）；帧缓冲生命周期 = append 调用 → Raft 落盘序列化完成（`onWrite`），期间不可复用。
 
@@ -230,50 +81,13 @@ flowchart TB
 
 ### 4.2 写入路径流程图
 
-```mermaid
-flowchart TB
-    A["tryAppend(ctx, entries, sourcePos)"] --> B{"closed?"}
-    B -->|是| R1["Rejected(CLOSED)"]
-    B -->|否| C{"空批 / 提交链满 / 流控拒绝?"}
-    C -->|是| R2["Rejected(WINDOW / RATE / INVALID)"]
-    C -->|否| D["first = nextPosition.getAndAdd(n)<br/>（CAS 预约, 无锁）"]
-    D --> E["flowControl.onAppend(first, last, n)<br/>（在途环登记）"]
-    E --> F["pending.reserve(first, last, deadline)<br/>（占位, 5s 看门狗）"]
-    F --> G{"帧序列化<br/>(calculateLength + serialize)"}
-    G -->|"超限/异常"| H["fulfill(null) + 流控回滚 + drain<br/>→ Rejected(INVALID)"]
-    G -->|成功| I["fulfill(frame)"]
-    I --> J["drain()"]
-    J --> K{"watermark+1 槽位状态?"}
-    K -->|"READY(帧)"| L["store.append(first, last, frame)<br/>→ watermark = last"]
-    K -->|"READY(null)"| M["烧毁推进<br/>watermark = last"]
-    K -->|"RESERVED 未超期"| N["停止, 等写线程 fulfill"]
-    K -->|"RESERVED 超期"| O["看门狗烧毁<br/>(log.warn + metrics)"]
-    K -->|EMPTY| N
-    L --> K
-    M --> K
-    O --> M
-    J2["多写者交错: 后到 position 先序列化完<br/>→ PARKED 等待, tryAppend 立即返回 Appended"] --> J
-    I -.-> J2
-```
+![写入路径流程图](images/01-append-path-flow.svg)
 
 **快路径（单写者常态）**：预约（1 次 CAS）→ 序列化（无锁区）→ `drain`（无竞争监视器，槽位即自身）→ append。`synchronized` 仅覆盖已就绪槽位的逐个提交，**不含 position 分配与帧序列化**——追加的并行区最大化。
 
 ### 4.3 槽位状态机
 
-```mermaid
-stateDiagram-v2
-    [*] --> EMPTY
-    EMPTY --> RESERVED: reserve() 预占用位<br/>(deadline = now + 5s)
-    RESERVED --> READY: fulfill(frame) 帧就绪
-    RESERVED --> READY: fulfill(null) 烧毁标记
-    READY --> SUBMITTING: drain() take()
-    SUBMITTING --> EMPTY: free() 提交/烧毁完成
-    note right of RESERVED
-        看门狗: 超期未 fulfill
-        → drain 强制 fulfill(null) 烧毁
-        （防写线程死亡导致 watermark 永久停滞）
-    end note
-```
+![槽位状态机](images/01-slot-state-machine.svg)
 
 ### 4.4 失败语义
 
@@ -289,15 +103,7 @@ stateDiagram-v2
 
 ### 5.1 三态水位与线程契约
 
-```mermaid
-stateDiagram-v2
-    [*] --> ACQUIRED: tryAcquire (写线程, 并发)<br/>仅 USER_COMMAND 受限
-    ACQUIRED --> APPENDING: onAppend (提交路径, 升序串行)<br/>InflightRing.add + 时间戳
-    APPENDING --> WRITTEN: onWrite (raft 线程)<br/>markWritten + lastWritten
-    WRITTEN --> COMMITTED: onCommit (raft 线程)<br/>markCommitted + lastCommitted<br/>BacklogThrottle 计入
-    COMMITTED --> [*]: onProcessed (处理 actor, 单线程)<br/>RTT 采样 → AIMD 窗口调整<br/>释放窗口占位
-    APPENDING --> [*]: onFailure / onAppendRolledBack<br/>释放全部占位, 不采样
-```
+![三态水位与线程契约](images/01-flowcontrol-states.svg)
 
 ### 5.2 双限流
 
@@ -322,16 +128,7 @@ stateDiagram-v2
 
 ## 6. 读路径
 
-```mermaid
-flowchart LR
-    subgraph "EventLogReaderImpl"
-        PR["peek 预读模型<br/>(复用视图实例)"] --> BE{"块内有下一条?<br/>decoder.nextEntry()"}
-        BE -->|是| WRAP["LoggedEntryImpl.wrap(block, dec)<br/>零拷贝视图"]
-        BE -->|否| LB["storeReader.next()<br/>取下一块 + decoder.wrap"]
-        LB -->|"无块"| END["null (读到尾)"]
-    end
-    SEEK["seek(p) / seekToNextEntry(p)"] -->|"store.seek(p) 后<br/>逐条推进至 entry ≥ p"| PR
-```
+![读路径](images/01-read-path.svg)
 
 - seek 族语义：`seek(p)` 命中 position==p 或最近大于项；`seekToEnd()` 返回 lastPosition（空日志 0），供恢复续号
 - gap（烧毁区间）表现为 position 跳跃，不报错

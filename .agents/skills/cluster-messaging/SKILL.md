@@ -47,14 +47,7 @@ description: kunpeng engine inter-node communication skill. Documents the three 
 
 ### 1. 客户端命令（command API 主链路）
 
-```
-client SDK ──gRPC(HTTP/2, TCP 2024)──▶ gateway GrpcXxxServiceImpl
-    │ BusinessCommandClient → BusinessBrokerPlane.resolve()
-    │   partitionId 随机 → 有 leader 的分区随机挑；key → decodeResourceId → getPartitionBySourceId
-    │   目标 = topologyService.getPartitionBusinessAddress(分区 leader 主机 + 业务端口)
-    │   topic = TopicUtils.getTopicName(RecordType.COMMAND_API, partitionId)
-    └──集群面 Aeron(UDP)──▶ broker 业务面接收(2026) ──▶ 引擎处理 ──▶ 响应原路返回
-```
+![客户端命令调用链（command API 主链路）](images/client-command-chain.svg)
 
 要点：`BusinessBrokerPlane` 只处理 `COMMAND_API` / `QUERY` 两类请求类型；地址不可解析立即抛 `BrokerException`。
 
@@ -67,15 +60,7 @@ client SDK ──gRPC(HTTP/2, TCP 2024)──▶ gateway GrpcXxxServiceImpl
 
 ### 3. 拓扑广播（业务端口如何被全集群知道）
 
-```
-broker 启动: BusinessMessagingServiceStep
-  service.start() → localBroker().addPort(CommPortType.BUSINESS, 业务端口)
-  → topologyManager.publishBroadcast()（BrokerInfo 实体经集群面拓扑服务发布）
-  ▶ 各节点 DefaultClusterTopologyService.businessAddressOf(member, brokerInfo)
-      = member.address().host() + ports[BUSINESS]（未广播端口 → null）
-  ▶ 供发送方 getPartitionBusinessAddress 寻址（链路 1）
-停机逆序: 先摘端口注册并广播，再停业务面服务（见 shutdownInternal）
-```
+![业务端口拓扑广播](images/topology-broadcast.svg)
 
 ### 4. Raft 复制
 

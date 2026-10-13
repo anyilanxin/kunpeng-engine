@@ -19,21 +19,7 @@ kunpeng 引擎的日志外发体系，位于仓库 `kunpeng/sink/`。三个模�
 
 ### 用户侧 RecordSink
 
-```
-initialize(SinkContext)   初始化/校验配置
-        │
-        ▼
-start(SinkController)     分配资源，拿到确认句柄
-        │
-        ▼
-sink(Record) ◀─────┐      按日志顺序逐条投递
-        │           │
-     pause() ─恢复─▶ resume()  引擎级暂停/恢复，可反复多次
-        │
-        ▼
-close()                     释放资源，终态
-（按需）purge() / onPartitionRemoved()
-```
+![用户侧 RecordSink 生命周期](images/record-sink-lifecycle.svg)
 
 关键语义：
 
@@ -47,12 +33,7 @@ close()                     释放资源，终态
 
 阶段状态机：
 
-```
-RUNNING ──pause──▶ PAUSED ──resume──▶ RUNNING
-    │                                        ▲
-    └──softPause──▶ SOFT_PAUSED ──resume─────┘
-（任一阶段服务关闭后进入终态 CLOSED）
-```
+![SinkService 阶段状态机](images/sink-phase-state.svg)
 
 启动：`startAsync(scheduler)` → `onActorStarting`（leader 建日志读取器）→ `onActorStarted`（建广播器、逐槽位 init + `initializeSink`、清理已移除 Sink 的残留持久化状态；leader 逐槽位 loadPersistedState + startSink（带重试）→ 从最低已提交位置 seek → 注册记录监听 + 周期广播 → drain；follower 只 loadPersistedState + 订阅广播）。
 关闭：`stopAsync` → `onActorCloseRequested`（started=false、关全部槽位即用户 close、关广播器）→ `onActorClosing`（关读取器、注销监听）→ `onActorClosed`（CLOSED 终态）。

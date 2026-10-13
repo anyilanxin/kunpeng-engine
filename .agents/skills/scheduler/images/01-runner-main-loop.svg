@@ -1,0 +1,95 @@
+<!--
+  Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU Affero General Public License for more details.
+
+  You should have received a copy of the GNU Affero General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1130 940" font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+  <defs>
+    <marker id="aGray" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L10,4 L0,8 Z" fill="#475569"/></marker>
+  </defs>
+
+  <rect x="0" y="0" width="1130" height="940" fill="#ffffff"/>
+  <text x="565" y="40" text-anchor="middle" font-size="22" font-weight="700" fill="#0f172a">StealingRunner 主循环</text>
+  <text x="565" y="64" text-anchor="middle" font-size="12.5" fill="#64748b">① 排空跨线程回调 → ② 时间轮扫描 → ③ 取 cell → ④ execute·drain → ⑤ finishDrain → 回到 ①</text>
+
+  <!-- runner 主循环 -->
+  <rect x="330" y="96" width="160" height="46" rx="8" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+  <text x="410" y="125" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1e293b">runner 主循环</text>
+
+  <line x1="410" y1="142" x2="410" y2="172" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+
+  <!-- ① -->
+  <rect x="290" y="176" width="240" height="64" rx="8" fill="#f0fdfa" stroke="#14b8a6" stroke-width="1.5"/>
+  <text x="410" y="203" text-anchor="middle" font-size="12.5" font-weight="700" fill="#134e4a">① 排空跨线程回调队列</text>
+  <text x="410" y="223" text-anchor="middle" font-size="11.5" fill="#0f766e">（定时器取消路由等）</text>
+
+  <line x1="410" y1="240" x2="410" y2="272" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+
+  <!-- ② -->
+  <rect x="265" y="276" width="290" height="88" rx="8" fill="#f0fdfa" stroke="#14b8a6" stroke-width="1.5"/>
+  <text x="410" y="304" text-anchor="middle" font-size="12.5" font-weight="700" fill="#134e4a">② clock.update() 跨毫秒？</text>
+  <text x="410" y="324" text-anchor="middle" font-size="11.5" fill="#0f766e">→ 时间轮扫描</text>
+  <text x="410" y="344" text-anchor="middle" font-size="11.5" fill="#0f766e">（到期置 pending + wakeSignal 目标 cell）</text>
+
+  <line x1="410" y1="364" x2="410" y2="400" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+
+  <!-- ③ -->
+  <rect x="300" y="404" width="220" height="56" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="410" y="437" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1e3a8a">③ queue.poll() 取 cell</text>
+
+  <!-- 偷取分支 -->
+  <line x1="520" y1="430" x2="646" y2="414" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="566" y="408" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">空</text>
+
+  <rect x="650" y="380" width="190" height="68" rx="8" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+  <text x="745" y="408" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1e293b">偷取：随机起点</text>
+  <text x="745" y="428" text-anchor="middle" font-size="11.5" fill="#475569">遍历其他 runner 队列</text>
+
+  <line x1="840" y1="414" x2="886" y2="414" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="863" y="400" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">空</text>
+
+  <rect x="890" y="372" width="200" height="88" rx="8" fill="#fffbeb" stroke="#d97706" stroke-width="1.5"/>
+  <text x="990" y="401" text-anchor="middle" font-size="12.5" font-weight="700" fill="#92400e">BackoffIdleStrategy</text>
+  <text x="990" y="421" text-anchor="middle" font-size="11.5" fill="#b45309">（100 spin / 100 yield /</text>
+  <text x="990" y="441" text-anchor="middle" font-size="11.5" fill="#b45309">park 1ms）</text>
+
+  <!-- 偷得 → execute -->
+  <polyline points="745,448 745,664 546,664" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="757" y="560" font-size="12" font-weight="700" fill="#475569">得</text>
+
+  <!-- 直得 → execute -->
+  <line x1="410" y1="460" x2="410" y2="626" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="422" y="545" font-size="12" font-weight="700" fill="#475569">得</text>
+
+  <!-- ④ -->
+  <rect x="270" y="630" width="280" height="76" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="410" y="661" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1e3a8a">④ execute：claimedBy(gate RUNNING)</text>
+  <text x="410" y="683" text-anchor="middle" font-size="11.5" fill="#475569">+ ThreadLocal 注入 + MDC</text>
+
+  <line x1="410" y1="706" x2="410" y2="744" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+
+  <!-- drain -->
+  <rect x="350" y="748" width="120" height="48" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="410" y="777" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a8a">drain</text>
+
+  <line x1="410" y1="796" x2="410" y2="832" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+
+  <!-- ⑤ -->
+  <rect x="290" y="836" width="240" height="64" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="410" y="864" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1e3a8a">⑤ finishDrain：trySleep</text>
+  <text x="410" y="884" text-anchor="middle" font-size="11.5" fill="#475569">→ 票复查 → 必要时自行重入队</text>
+
+  <!-- 回环 -->
+  <polyline points="290,868 150,868 150,208 286,208" fill="none" stroke="#475569" stroke-width="1.8" stroke-dasharray="2 4" marker-end="url(#aGray)"/>
+</svg>

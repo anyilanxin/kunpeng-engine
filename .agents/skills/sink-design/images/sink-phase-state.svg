@@ -1,0 +1,52 @@
+<!--
+  Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU Affero General Public License for more details.
+
+  You should have received a copy of the GNU Affero General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 430" font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+  <defs>
+    <marker id="aGray" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L10,4 L0,8 Z" fill="#475569"/></marker>
+  </defs>
+
+  <rect x="0" y="0" width="880" height="430" fill="#ffffff"/>
+  <text x="440" y="40" text-anchor="middle" font-size="22" font-weight="700" fill="#0f172a">SinkService 阶段状态机（actor）</text>
+  <text x="440" y="64" text-anchor="middle" font-size="12.5" fill="#64748b">pause / softPause / resume 驱动 · 硬暂停与软暂停并行两条路径</text>
+
+  <rect x="120" y="180" width="200" height="80" rx="12" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="220" y="227" text-anchor="middle" font-size="15" font-weight="700" fill="#1e3a8a">RUNNING</text>
+
+  <rect x="614" y="100" width="200" height="80" rx="12" fill="#fffbeb" stroke="#d97706" stroke-width="2"/>
+  <text x="714" y="147" text-anchor="middle" font-size="15" font-weight="700" fill="#92400e">PAUSED</text>
+
+  <rect x="614" y="300" width="200" height="80" rx="12" fill="#fffbeb" stroke="#d97706" stroke-width="2"/>
+  <text x="714" y="347" text-anchor="middle" font-size="15" font-weight="700" fill="#92400e">SOFT_PAUSED</text>
+
+  <!-- RUNNING → PAUSED (pause) -->
+  <polyline points="220,180 220,140 610,140" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="415" y="132" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">pause</text>
+
+  <!-- PAUSED → RUNNING (resume) -->
+  <polyline points="650,180 650,222 326,222" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="488" y="214" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">resume</text>
+
+  <!-- RUNNING → SOFT_PAUSED (softPause) -->
+  <polyline points="220,260 220,340 610,340" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="415" y="332" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">softPause</text>
+
+  <!-- SOFT_PAUSED → RUNNING (resume) -->
+  <polyline points="690,300 690,282 260,282 260,264" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="475" y="274" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">resume</text>
+
+  <text x="440" y="404" text-anchor="middle" font-size="12" fill="#64748b">（任一阶段服务关闭后进入终态 CLOSED）</text>
+</svg>

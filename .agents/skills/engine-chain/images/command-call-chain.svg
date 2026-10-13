@@ -1,0 +1,143 @@
+<!--
+  Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU Affero General Public License for more details.
+
+  You should have received a copy of the GNU Affero General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1640 1000" font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+  <defs>
+    <marker id="aGray" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L10,4 L0,8 Z" fill="#475569"/></marker>
+    <marker id="aSlate" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L10,4 L0,8 Z" fill="#94a3b8"/></marker>
+  </defs>
+
+  <rect x="0" y="0" width="1640" height="1000" fill="#ffffff"/>
+  <text x="820" y="40" text-anchor="middle" font-size="22" font-weight="700" fill="#0f172a">一条命令的一生（链路总览）</text>
+  <text x="820" y="64" text-anchor="middle" font-size="12.5" fill="#64748b">client-java → gateway → broker → 引擎（bpmn-engine）→ 存储 · 实线为请求去程，虚线为响应回程</text>
+
+  <!-- 五层容器 -->
+  <rect x="40" y="100" width="200" height="840" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="56" y="126" font-size="13" font-weight="700" fill="#475569">client-java</text>
+
+  <rect x="264" y="100" width="250" height="840" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="280" y="126" font-size="13" font-weight="700" fill="#475569">gateway</text>
+
+  <rect x="538" y="100" width="420" height="840" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="554" y="126" font-size="13" font-weight="700" fill="#475569">broker</text>
+
+  <rect x="1062" y="100" width="320" height="840" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="1078" y="126" font-size="13" font-weight="700" fill="#475569">引擎（bpmn-engine）</text>
+
+  <rect x="1406" y="100" width="194" height="840" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="1422" y="126" font-size="13" font-weight="700" fill="#475569">存储</text>
+
+  <!-- 请求去程：顶行 -->
+  <rect x="56" y="160" width="168" height="56" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="140" y="193" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1e3a8a">XxxCommand.send()</text>
+
+  <line x1="224" y1="188" x2="276" y2="188" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="250" y="176" text-anchor="middle" font-size="12" fill="#475569">gRPC</text>
+
+  <rect x="282" y="152" width="214" height="76" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="389" y="182" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1e3a8a">GrpcXxxServiceImpl</text>
+  <text x="389" y="206" text-anchor="middle" font-size="11.5" fill="#64748b">(proto→broker请求)</text>
+
+  <line x1="496" y1="188" x2="600" y2="188" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="502" y="176" font-size="12" fill="#475569">broker-client</text>
+
+  <rect x="606" y="152" width="250" height="76" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="731" y="182" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1e3a8a">CommandApiHandleImpl</text>
+  <text x="731" y="206" text-anchor="middle" font-size="11.5" fill="#64748b">EvaluateExpressionRequest</text>
+
+  <!-- broker 入口内部步骤 -->
+  <line x1="731" y1="228" x2="731" y2="236" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+
+  <rect x="566" y="240" width="330" height="40" rx="8" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+  <text x="731" y="265" text-anchor="middle" font-size="12" fill="#334155">分配 requestId，挂 future</text>
+
+  <line x1="731" y1="280" x2="731" y2="300" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+
+  <rect x="566" y="304" width="330" height="52" rx="8" fill="#fffbeb" stroke="#d97706" stroke-width="1.5"/>
+  <text x="731" y="327" text-anchor="middle" font-size="12" fill="#334155">valueMapper.getValue(lifeCycle) 反序列化</text>
+  <text x="731" y="347" text-anchor="middle" font-size="11" font-weight="700" fill="#dc2626">★ 没注册直接挂</text>
+
+  <line x1="731" y1="356" x2="731" y2="376" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+
+  <rect x="566" y="380" width="330" height="40" rx="8" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+  <text x="731" y="405" text-anchor="middle" font-size="12" fill="#334155">RecordAppendEntryFactory</text>
+
+  <line x1="731" y1="420" x2="731" y2="440" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+
+  <rect x="566" y="444" width="330" height="52" rx="8" fill="#faf5ff" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="731" y="474" text-anchor="middle" font-size="13.5" font-weight="700" fill="#6b21a8">eventlog.tryAppend(USER_COMMAND)</text>
+
+  <!-- eventlog → 引擎 -->
+  <line x1="896" y1="470" x2="1074" y2="470" stroke="#475569" stroke-width="2" marker-end="url(#aGray)"/>
+  <text x="986" y="446" text-anchor="middle" font-size="11" fill="#475569" style="paint-order:stroke" stroke="#ffffff" stroke-width="4">Raft 复制 → commit</text>
+  <text x="986" y="462" text-anchor="middle" font-size="11" fill="#475569" style="paint-order:stroke" stroke="#ffffff" stroke-width="4">→ 重放</text>
+
+  <rect x="1078" y="444" width="288" height="68" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="1222" y="472" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1e3a8a">EngineProcessService.processEvent</text>
+  <text x="1222" y="494" text-anchor="middle" font-size="11.5" fill="#64748b">分区事务</text>
+
+  <line x1="1222" y1="512" x2="1222" y2="532" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="1210" y="528" text-anchor="end" font-size="11.5" fill="#475569">按 processIndex 分发</text>
+
+  <rect x="1078" y="536" width="288" height="52" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="1222" y="567" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1e3a8a">XxxApiProcessor.processRecord</text>
+
+  <!-- 两种模式分叉 -->
+  <line x1="1222" y1="588" x2="1222" y2="596" stroke="#475569" stroke-width="1.8"/>
+  <polyline points="1222,596 1130,596 1130,609" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <polyline points="1222,596 1348,596 1348,720 1321,720" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+
+  <rect x="1078" y="612" width="240" height="64" rx="8" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="1198" y="638" text-anchor="middle" font-size="12" font-weight="700" fill="#14532d">直答型：adResponse 直接回写</text>
+  <text x="1198" y="658" text-anchor="middle" font-size="11" fill="#475569">（不落日志）</text>
+
+  <rect x="1078" y="700" width="240" height="64" rx="8" fill="#faf5ff" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="1198" y="726" text-anchor="middle" font-size="12" font-weight="700" fill="#6b21a8">持久化型：addCommand/addEvent</text>
+  <text x="1198" y="748" text-anchor="middle" font-size="11" fill="#6b21a8">→ 状态机推进</text>
+
+  <!-- 持久化型 → 存储 -->
+  <polyline points="1198,764 1198,808 1418,808" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="1300" y="796" text-anchor="middle" font-size="11.5" fill="#475569">addEvent 同时 addState</text>
+
+  <rect x="1422" y="776" width="162" height="64" rx="8" fill="#faf5ff" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="1503" y="802" text-anchor="middle" font-size="12.5" font-weight="700" fill="#6b21a8">RocksdbBusiness</text>
+  <text x="1503" y="822" text-anchor="middle" font-size="12.5" font-weight="700" fill="#6b21a8">RepositoryApplier</text>
+
+  <line x1="1503" y1="840" x2="1503" y2="858" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="1491" y="856" text-anchor="end" font-size="11" fill="#475569">Entity.wrap(record)</text>
+
+  <rect x="1422" y="862" width="162" height="52" rx="8" fill="#faf5ff" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="1503" y="893" text-anchor="middle" font-size="13" font-weight="700" fill="#6b21a8">KvStore → RocksDB</text>
+
+  <!-- 响应回程（虚线） -->
+  <rect x="624" y="548" width="240" height="56" rx="8" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+  <text x="744" y="580" text-anchor="middle" font-size="13" font-weight="700" fill="#334155">CommandApiHandle.sendResponse</text>
+
+  <rect x="288" y="540" width="188" height="76" rx="8" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+  <text x="382" y="570" text-anchor="middle" font-size="12.5" font-weight="700" fill="#334155">responseObserver.onNext</text>
+  <text x="382" y="594" text-anchor="middle" font-size="11" fill="#64748b">(requestId 关联回程)</text>
+
+  <rect x="56" y="548" width="168" height="56" rx="8" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+  <text x="140" y="580" text-anchor="middle" font-size="13" font-weight="700" fill="#334155">XxxCommandResponse</text>
+
+  <polyline points="1078,644 988,644 988,576 867,576" fill="none" stroke="#94a3b8" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#aSlate)"/>
+
+  <line x1="624" y1="576" x2="480" y2="576" stroke="#94a3b8" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#aSlate)"/>
+  <text x="550" y="564" text-anchor="middle" font-size="11" fill="#475569">ApiResponseWriter(SBE)</text>
+
+  <line x1="288" y1="576" x2="228" y2="576" stroke="#94a3b8" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#aSlate)"/>
+  <text x="258" y="564" text-anchor="middle" font-size="12" fill="#475569">gRPC</text>
+</svg>

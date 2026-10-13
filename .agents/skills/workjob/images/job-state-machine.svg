@@ -1,0 +1,68 @@
+<!--
+  Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU Affero General Public License for more details.
+
+  You should have received a copy of the GNU Affero General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 600" font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+  <defs>
+    <marker id="aGray" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L10,4 L0,8 Z" fill="#475569"/></marker>
+    <marker id="aGreen" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L10,4 L0,8 Z" fill="#16a34a"/></marker>
+    <marker id="aRed" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L10,4 L0,8 Z" fill="#dc2626"/></marker>
+    <marker id="aOrange" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L10,4 L0,8 Z" fill="#d97706"/></marker>
+  </defs>
+
+  <rect x="0" y="0" width="1180" height="600" fill="#ffffff"/>
+  <text x="590" y="40" text-anchor="middle" font-size="22" font-weight="700" fill="#0f172a">job 状态机</text>
+  <text x="590" y="64" text-anchor="middle" font-size="12.5" fill="#64748b">引擎事件溯源，raft 复制</text>
+
+  <!-- READY -->
+  <rect x="80" y="280" width="170" height="64" rx="14" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+  <text x="165" y="318" text-anchor="middle" font-size="14" font-weight="700" fill="#0f172a">READY</text>
+
+  <!-- ACTIVATED（带落账注释） -->
+  <rect x="450" y="268" width="240" height="84" rx="14" fill="#eff6ff" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="570" y="296" text-anchor="middle" font-size="14" font-weight="700" fill="#1e3a8a">ACTIVATED</text>
+  <text x="570" y="318" text-anchor="middle" font-size="11" fill="#475569">lockOwner/dueDate</text>
+  <text x="570" y="338" text-anchor="middle" font-size="11" fill="#475569">+ 写 (deadline,jobKey) 到期索引</text>
+
+  <!-- COMPLETED（终态双环） -->
+  <rect x="920" y="120" width="190" height="64" rx="14" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+  <rect x="928" y="128" width="174" height="48" rx="8" fill="none" stroke="#16a34a" stroke-width="1"/>
+  <text x="1015" y="158" text-anchor="middle" font-size="14" font-weight="700" fill="#14532d">COMPLETED</text>
+
+  <!-- TIMED_OUT -->
+  <rect x="450" y="470" width="180" height="64" rx="14" fill="#fffbeb" stroke="#d97706" stroke-width="1.5"/>
+  <text x="540" y="508" text-anchor="middle" font-size="14" font-weight="700" fill="#92400e">TIMED_OUT</text>
+
+  <!-- READY → ACTIVATED -->
+  <line x1="250" y1="312" x2="446" y2="312" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="348" y="298" text-anchor="middle" font-size="12" font-weight="700" fill="#475569">ACTIVATE</text>
+
+  <!-- ACTIVATED → COMPLETED -->
+  <polyline points="570,268 570,152 916,152" fill="none" stroke="#16a34a" stroke-width="1.8" marker-end="url(#aGreen)"/>
+  <text x="743" y="138" text-anchor="middle" font-size="12" font-weight="700" fill="#15803d">COMPLETING（完成，销账）</text>
+
+  <!-- ACTIVATED → TIMED_OUT：TIME_OUT -->
+  <line x1="520" y1="352" x2="520" y2="466" stroke="#d97706" stroke-width="1.8" marker-end="url(#aOrange)"/>
+  <text x="532" y="414" font-size="12" font-weight="700" fill="#b45309">TIME_OUT(到期扫描)</text>
+
+  <!-- ACTIVATED → TIMED_OUT：WITHDRAW -->
+  <polyline points="690,312 770,312 770,502 636,502" fill="none" stroke="#dc2626" stroke-width="1.8" marker-end="url(#aRed)"/>
+  <text x="782" y="414" font-size="12" font-weight="700" fill="#b91c1c">WITHDRAW(推送失败回退)</text>
+
+  <!-- TIMED_OUT → READY -->
+  <polyline points="446,502 165,502 165,348" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="305" y="488" text-anchor="middle" font-size="12" fill="#475569">（回待激活）</text>
+  <text x="305" y="526" text-anchor="middle" font-size="12" fill="#475569">（即时回退，不等 deadline）</text>
+</svg>

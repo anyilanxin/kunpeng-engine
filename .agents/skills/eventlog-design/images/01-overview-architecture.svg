@@ -1,0 +1,146 @@
+<!--
+  Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU Affero General Public License for more details.
+
+  You should have received a copy of the GNU Affero General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1360 1050" font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+  <defs>
+    <marker id="aGray" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L10,4 L0,8 Z" fill="#475569"/></marker>
+    <marker id="aGrayRev" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0,0 L10,4 L0,8 Z" fill="#475569"/></marker>
+  </defs>
+
+  <rect x="0" y="0" width="1360" height="1050" fill="#ffffff"/>
+  <text x="680" y="40" text-anchor="middle" font-size="22" font-weight="700" fill="#0f172a">EventLog 总体架构</text>
+  <text x="680" y="64" text-anchor="middle" font-size="12.5" fill="#64748b">定序 · 批帧编解码 · 流控 · 拉读 · commit 通知 · 恢复 —— 为引擎提供分区级事件日志抽象</text>
+
+  <!-- 消费方 -->
+  <rect x="60" y="88" width="1240" height="124" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="76" y="112" font-size="13" font-weight="700" fill="#475569">消费方</text>
+
+  <rect x="100" y="124" width="230" height="72" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="215" y="149" text-anchor="middle" font-size="11" fill="#64748b">exporter</text>
+  <text x="215" y="172" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">ExporterProcessService</text>
+
+  <rect x="360" y="124" width="260" height="72" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="490" y="149" text-anchor="middle" font-size="11" fill="#64748b">repository</text>
+  <text x="490" y="172" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">RepositoryProcessService</text>
+
+  <rect x="650" y="124" width="220" height="72" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="760" y="149" text-anchor="middle" font-size="11" fill="#64748b">engine</text>
+  <text x="760" y="172" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">EngineProcessService</text>
+
+  <rect x="1060" y="124" width="180" height="72" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="1150" y="149" text-anchor="middle" font-size="11" fill="#64748b">broker</text>
+  <text x="1150" y="172" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">CommandApi</text>
+
+  <!-- eventlog 模块面板 -->
+  <rect x="60" y="252" width="1240" height="588" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="76" y="278" font-size="13" font-weight="700" fill="#475569">kunpeng/eventlog（com.anyilanxin.kunpeng.eventlog）</text>
+
+  <rect x="140" y="330" width="220" height="80" rx="8" fill="#eff6ff" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="250" y="363" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a8a">EventLogReaderImpl</text>
+  <text x="250" y="385" text-anchor="middle" font-size="11.5" fill="#475569">BatchEntryReaderImpl</text>
+
+  <rect x="420" y="330" width="220" height="80" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="530" y="363" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1e3a8a">EventLog 门面</text>
+  <text x="530" y="385" text-anchor="middle" font-size="11.5" fill="#475569">（EventLogImpl）</text>
+
+  <rect x="970" y="330" width="230" height="80" rx="8" fill="#eff6ff" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="1085" y="363" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a8a">PositionSequencer</text>
+  <text x="1085" y="385" text-anchor="middle" font-size="11.5" fill="#475569">无锁定序器</text>
+
+  <rect x="420" y="470" width="220" height="80" rx="8" fill="#eff6ff" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="530" y="503" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a8a">FlowController</text>
+  <text x="530" y="525" text-anchor="middle" font-size="11.5" fill="#475569">三态水位 + 双限流</text>
+
+  <rect x="700" y="470" width="220" height="80" rx="8" fill="#eff6ff" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="810" y="503" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a8a">BatchFrame / Decoder</text>
+  <text x="810" y="525" text-anchor="middle" font-size="11.5" fill="#475569">批帧编解码</text>
+
+  <rect x="970" y="470" width="230" height="80" rx="8" fill="#eff6ff" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="1085" y="503" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a8a">PendingAppendQueue</text>
+  <text x="1085" y="525" text-anchor="middle" font-size="11.5" fill="#475569">有序提交链</text>
+
+  <rect x="970" y="610" width="230" height="80" rx="8" fill="#faf5ff" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="1085" y="641" text-anchor="middle" font-size="12.5" font-weight="700" fill="#6b21a8">EventStore / EventStoreReader</text>
+  <text x="1085" y="665" text-anchor="middle" font-size="11.5" fill="#6b21a8">存储 SPI</text>
+
+  <rect x="370" y="610" width="210" height="80" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="475" y="641" text-anchor="middle" font-size="12.5" font-weight="700" fill="#334155">InflightRing</text>
+  <text x="475" y="663" text-anchor="middle" font-size="11" fill="#64748b">1024 槽位环</text>
+
+  <rect x="600" y="610" width="210" height="80" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="705" y="648" text-anchor="middle" font-size="12.5" font-weight="700" fill="#334155">AimdWindow</text>
+
+  <rect x="370" y="720" width="210" height="80" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="475" y="758" text-anchor="middle" font-size="12.5" font-weight="700" fill="#334155">TokenBucket</text>
+
+  <rect x="600" y="720" width="210" height="80" rx="8" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="705" y="758" text-anchor="middle" font-size="12.5" font-weight="700" fill="#334155">BacklogThrottle</text>
+
+  <!-- 消费方 → eventlog -->
+  <line x1="215" y1="196" x2="215" y2="326" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="225" y="268" font-size="12" fill="#475569" style="paint-order:stroke" stroke="#ffffff" stroke-width="4">reader + onExported</text>
+
+  <line x1="490" y1="196" x2="250" y2="326" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="432" y="254" font-size="12" fill="#475569" style="paint-order:stroke" stroke="#ffffff" stroke-width="4">newBatchReader</text>
+
+  <line x1="760" y1="196" x2="330" y2="326" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="600" y="280" font-size="12" fill="#475569" style="paint-order:stroke" stroke="#ffffff" stroke-width="4">newReader + awaiter</text>
+
+  <line x1="800" y1="196" x2="1055" y2="326" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="930" y="300" font-size="12" fill="#475569" style="paint-order:stroke" stroke="#ffffff" stroke-width="4">tryAppend(ProcessingResult)</text>
+
+  <line x1="1150" y1="196" x2="1150" y2="326" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="1160" y="268" font-size="12" fill="#475569" style="paint-order:stroke" stroke="#ffffff" stroke-width="4">tryAppend</text>
+
+  <!-- 门面关联（无向） -->
+  <line x1="418" y1="370" x2="362" y2="370" stroke="#94a3b8" stroke-width="1.5"/>
+  <line x1="642" y1="370" x2="968" y2="370" stroke="#94a3b8" stroke-width="1.5"/>
+  <line x1="530" y1="412" x2="530" y2="468" stroke="#94a3b8" stroke-width="1.5"/>
+
+  <!-- 写路径 -->
+  <line x1="985" y1="412" x2="905" y2="466" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <line x1="1000" y1="412" x2="632" y2="468" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <line x1="1085" y1="412" x2="1085" y2="466" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <line x1="1085" y1="552" x2="1085" y2="606" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+
+  <!-- FlowController 组件关联（无向） -->
+  <line x1="470" y1="552" x2="470" y2="606" stroke="#94a3b8" stroke-width="1.5"/>
+  <line x1="560" y1="552" x2="700" y2="606" stroke="#94a3b8" stroke-width="1.5"/>
+  <polyline points="418,540 330,540 330,760 366,760" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
+  <polyline points="600,552 600,578 850,578 850,760 814,760" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
+
+  <!-- 读路径 → SPI -->
+  <polyline points="250,412 250,820 1030,820 1030,694" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#aGray)"/>
+  <text x="640" y="812" text-anchor="middle" font-size="12" fill="#475569" style="paint-order:stroke" stroke="#ffffff" stroke-width="4">seek / next 块</text>
+
+  <!-- broker 模块 -->
+  <rect x="60" y="880" width="800" height="120" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="76" y="904" font-size="13" font-weight="700" fill="#475569">broker 模块</text>
+
+  <rect x="140" y="910" width="300" height="80" rx="8" fill="#faf5ff" stroke="#a855f7" stroke-width="1.5"/>
+  <text x="290" y="943" text-anchor="middle" font-size="13" font-weight="700" fill="#6b21a8">RaftEventStore</text>
+  <text x="290" y="965" text-anchor="middle" font-size="11.5" fill="#6b21a8">implements EventStore</text>
+
+  <rect x="500" y="910" width="320" height="80" rx="8" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+  <text x="660" y="943" text-anchor="middle" font-size="13" font-weight="700" fill="#334155">Raft journal</text>
+  <text x="660" y="965" text-anchor="middle" font-size="11.5" fill="#64748b">（cluster 模块, 零改动）</text>
+
+  <!-- SPI ↔ Raft -->
+  <polyline points="1130,694 1130,860 290,860 290,906" fill="none" stroke="#94a3b8" stroke-width="1.8" stroke-dasharray="6 4" marker-start="url(#aGrayRev)" marker-end="url(#aGray)"/>
+  <text x="710" y="852" text-anchor="middle" font-size="12" fill="#475569" style="paint-order:stroke" stroke="#ffffff" stroke-width="4">append / commit 回调</text>
+
+  <line x1="442" y1="950" x2="498" y2="950" stroke="#94a3b8" stroke-width="1.5"/>
+</svg>

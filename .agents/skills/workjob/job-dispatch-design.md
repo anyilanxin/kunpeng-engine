@@ -6,9 +6,7 @@
 ---
 ## 1. 背景与目标
 
-```
-client ──gRPC──> gateway ──cluster/messaging──> broker(raft group)
-```
+![job 派发总体链路](images/job-dispatch-chain.svg)
 
 - broker raft group 是 job 数据的**生产方**（job 提交并复制成功后成为待派发任务）。
 - client 上运行多个 **JobWorker**（消费者），每个 worker 绑定一种 `jobType`。
@@ -38,37 +36,7 @@ client ──gRPC──> gateway ──cluster/messaging──> broker(raft grou
 
 ## 2. 总体架构与角色
 
-```mermaid
-flowchart LR
-    subgraph Client["client 进程"]
-        W1["JobWorker(type=A, STREAM)"]
-        W2["JobWorker(type=A, PULL)"]
-    end
-    subgraph GW["gateway"]
-        GRPC["JobService gRPC\nOpenJobStream / PullJobs\nCompleteJob→标准命令"]
-        HUB["GatewayJobHub\nstreamsByType(会话表)\n长轮询挂起表"]
-        SC["GatewayJobStreamClient(actor)\nPUSH 受理 + 快照对账"]
-    end
-    subgraph BR["broker"]
-        CO["JobStreamCoordinator(actor)\nbyType 扁平索引 + 单游标轮转\nSWIM 快照合并 + 出站队列"]
-        CS["CoordinatorJobDeliveryPort\n(引擎 JobDeliveryPort 端口实现)"]
-        YH["PushFailureFallback(actor)\n分区写入器 + WITHDRAW 回退"]
-        CMD["标准命令通道 commandapi\nACTIVATE_REQUEST / COMPLETE"]
-        ENG["引擎状态机\ndeliver / 批量激活 / 到期扫描"]
-        SM["raft state machine"]
-    end
-    W1 -- gRPC 流 --> GRPC
-    W2 -- gRPC 长轮询 --> GRPC
-    GRPC --- HUB
-    HUB --- SC
-    SC -- "①snapshot 对账\n②push(请求-应答)\n③job-ready 广播" --> CO
-    CO --- CS
-    CO --- YH
-    GRPC -- "拉取/完成(标准命令)" --> CMD
-    CMD --- ENG
-    CS --- ENG
-    ENG --- SM
-```
+![总体架构与角色](images/job-dispatch-architecture.svg)
 
 **job 链路仅 3 个专属 wire 触点，其余全部走标准命令通道**（与部署、启动流程同路）：
 
@@ -116,12 +84,7 @@ interface JobDeliveryPort {
 
 **job 状态机**（引擎事件溯源，raft 复制）：
 
-```
-READY ──ACTIVATE──> ACTIVATED(lockOwner/dueDate + 写 (deadline,jobKey) 到期索引)
-ACTIVATED ──COMPLETING──> COMPLETED（完成，销账）
-ACTIVATED ──TIME_OUT(到期扫描)──> TIMED_OUT ──> READY（回待激活）
-ACTIVATED ──WITHDRAW(推送失败回退)──> TIMED_OUT ──> READY（即时回退，不等 deadline）
-```
+![job 状态机（事件迁移）](images/job-state-machine.svg)
 
 ---
 
@@ -176,96 +139,19 @@ client 直接调 `CompleteJob` / `FailJob` 命令 rpc → commandapi → `COMPLE
 
 **① 订阅注册与对账**（变化即写属性，SWIM 版本反熵扩散）：
 
-```mermaid
-sequenceDiagram
-    participant C as client（OpenJobStream）
-    participant H as GatewayJobHub
-    participant S as GatewayJobStreamClient(actor)
-    participant K as JobStreamCoordinator(actor)
-    C->>H: register(type, worker)
-    H->>H: 分配稳定会话 ID，sessions[sessionId] 注册（空名兜底 stream-{id}）
-    H->>S: snapshotChanged（generation++）
-    S->>S: 快照写入本地成员属性（SBE + base64）
-    Note over S,K: SWIM checkMetadata（≤250ms）bump metadataVersion → 版本戳随 gossip 扩散（万级 ≈1.7s）→ 各 broker 按版本从源网关直拉属性（去重+抖动+版本仲裁）
-    K->>K: METADATA_CHANGED 解析 → 代次比对 → 桶替换 → rebuildView
-    Note over H,K: 断流删会话即时重写属性；SWIM 成员移除自动摘桶；稳态零流量（版本不变不拉）
-```
+![① 订阅注册与对账时序](images/subscribe-reconcile-sequence.svg)
 
 **② 流推送**（主路径 broker 定点、网关直达；降级与回退）：
 
-```mermaid
-sequenceDiagram
-    participant E as 引擎处理循环
-    participant CS as CoordinatorJobDeliveryPort
-    participant K as JobStreamCoordinator(actor)
-    participant Y as PushFailureFallback(actor)
-    participant H as GatewayJobHub
-    participant W as client 流
-    E->>CS: pickStream(jobType)
-    CS->>K: select(jobType) 单游标轮转
-    K-->>CS: PushPoint(网关, sessionId, worker)
-    E->>E: 写 ACTIVATED（worker=会话归属, deadline）+ 到期索引
-    Note over E: 事件先行（raft 复制归属/deadline），推送是提交后的副作用
-    E->>CS: push(jobKey, partitionId, deadline, record)
-    CS->>K: enqueue（出站限深队列）
-    K->>H: PUSH(StreamPush: sessionId/worker/record) 请求-应答
-    alt 主路径：会话直达（99%）
-        H->>H: sessions.get(sessionId)，worker 匹配
-        H->>W: tryDeliver(JobDelivery)
-        W-->>H: onNext
-        H-->>K: PushResult(ok)
-    else 降级：对账窗口失配/流控暂满
-        H->>H: 同 worker 其他流兜底
-        alt 兜底成功
-            H-->>K: PushResult(ok)
-        else 全落空（跨 worker 不凑合）
-            H-->>K: PushResult(fail)
-            K->>Y: failureHandler(StreamPush)
-            Y->>Y: WITHDRAW 命令直写分区日志 → TIMED_OUT → 回 READY
-            Note over Y: 即时回退，不等 deadline 周期
-        end
-    end
-```
+![② 流推送时序](images/stream-push-sequence.svg)
 
 **③ 长轮询**（标准命令通道全分区探测，空批挂起等广播唤醒）：
 
-```mermaid
-sequenceDiagram
-    participant W as client（PullJobs）
-    participant H as GatewayJobHub
-    participant B as BrokerClient → commandapi
-    participant P as JobBatchActivateProcessor
-    W->>H: PullJobs(type, maxBatch, deadlineMs)
-    H->>B: JobBatchActivateRequest × 每分区（并行）
-    B->>P: ACTIVATE_REQUEST → ACTIVATE 命令
-    P->>P: 扫描 READY（分区内串行，无竞态）
-    alt 有 job
-        P->>P: ACTIVATED 事件 + 到期索引
-        P-->>B: 响应（JobInfo + deadline + worker）
-        B-->>H: 首个非空批次胜出（迟到批次转交其他挂起请求）
-        H-->>W: PullResponse(jobs)
-    else 全分区空
-        P-->>H: 空批
-        H->>H: 挂起（QUEUED）
-        Note over H: job-ready 广播到达 → 唤醒重探测；<br/>挂起超时返回空批，client 立即重挂
-    end
-```
+![③ 长轮询时序](images/long-polling-sequence.svg)
 
 **④ 完成与超时回退**（完成走标准命令通道；到期由状态机自愈）：
 
-```mermaid
-sequenceDiagram
-    participant W as client
-    participant G as gateway
-    participant A as commandapi
-    participant E as 引擎状态机
-    W->>G: CompleteJob(jobKey)
-    G->>A: JobCompleteRequest（标准命令通道，失败自动重试）
-    A->>E: COMPLETING 命令
-    E->>E: COMPLETED 事件（销账，摘到期索引）
-    E-->>W: 完成响应
-    Note over E: 超时未完成：JobTimeoutChecker 断点扫 JOB_DEADLINE 索引<br/>TIME_OUT → TIMED_OUT → 回 READY 供重新消费
-```
+![④ 完成与超时回退时序](images/complete-timeout-sequence.svg)
 
 ---
 

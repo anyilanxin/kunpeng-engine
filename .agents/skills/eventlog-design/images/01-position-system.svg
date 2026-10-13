@@ -1,0 +1,45 @@
+<!--
+  Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU Affero General Public License for more details.
+
+  You should have received a copy of the GNU Affero General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 400" font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+  <defs>
+    <marker id="aGray" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L10,4 L0,8 Z" fill="#475569"/></marker>
+  </defs>
+
+  <rect x="0" y="0" width="1100" height="400" fill="#ffffff"/>
+  <text x="550" y="40" text-anchor="middle" font-size="22" font-weight="700" fill="#0f172a">position 体系：一个批帧承载连续区间</text>
+
+  <!-- 批帧面板 -->
+  <rect x="60" y="100" width="560" height="240" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="76" y="126" font-size="13" font-weight="700" fill="#475569">批帧：firstPosition = F，entryCount = 3，sourcePosition = S</text>
+
+  <rect x="140" y="142" width="300" height="56" rx="8" fill="#eff6ff" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="290" y="176" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a8a">entry[0].position = F+0</text>
+
+  <rect x="140" y="208" width="300" height="56" rx="8" fill="#eff6ff" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="290" y="242" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a8a">entry[1].position = F+1</text>
+
+  <rect x="140" y="274" width="300" height="56" rx="8" fill="#eff6ff" stroke="#60a5fa" stroke-width="1.5"/>
+  <text x="290" y="308" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a8a">entry[2].position = F+2</text>
+
+  <line x1="622" y1="220" x2="696" y2="220" stroke="#475569" stroke-width="2" marker-end="url(#aGray)"/>
+
+  <rect x="700" y="140" width="360" height="160" rx="8" fill="#f0fdfa" stroke="#14b8a6" stroke-width="1.5"/>
+  <text x="880" y="170" text-anchor="middle" font-size="13.5" font-weight="700" fill="#134e4a">解码侧还原：</text>
+  <text x="880" y="198" text-anchor="middle" font-size="12" fill="#0f766e">position = firstPosition + 下标</text>
+  <text x="880" y="226" text-anchor="middle" font-size="12" fill="#0f766e">sourcePosition = sourceIndex ≥ 0</text>
+  <text x="880" y="252" text-anchor="middle" font-size="12" fill="#0f766e">? firstPosition + sourceIndex : S</text>
+</svg>

@@ -24,38 +24,7 @@
 
 ## 2. 总体架构
 
-```mermaid
-flowchart TB
-    subgraph 入口
-        API["commandapi/<br/>客户端命令(COMMAND_API)"]
-        INIT["adminInit()<br/>集群初始化(7 条命令)"]
-    end
-
-    subgraph dispatch ["cluster-dispatch"]
-        CMD["command/<br/>admin·business 计划与执行处理器<br/>source 治理 · delayed 触发"]
-        PLANNER["planner/<br/>AdminDispatchPlanMaker<br/>BusinessDispatchPlanMaker<br/>+ 3 个 generator"]
-        DIFF["PartitionTopologyDiff<br/>拓扑差异推导"]
-        DIST["distributor/<br/>RoundRobin / Fixed"]
-        SCHED["scheduling/ + cache/<br/>车道池 · 定时器 · 在途去重"]
-        APIFACE["api/ClusterDispatchService<br/>成员间消息接收面"]
-    end
-
-    subgraph 外围
-        STORE["EventStore SPI<br/>(admin 分区事件日志)"]
-        REPO["admin-repository<br/>applier 落 RocksDB"]
-        NODE["业务节点执行服务<br/>cluster-admin 侧"]
-    end
-
-    API --> CMD
-    INIT --> STORE
-    CMD --> PLANNER --> DIFF
-    PLANNER --> DIST
-    CMD -->|"执行明细下发"| NODE
-    NODE -->|"executionAck"| APIFACE -->|"写 ACKNOWLEDGE 命令"| STORE
-    CMD -->|"addCommand/addEvent"| STORE
-    STORE -->|"EVENT 经 applier"| REPO
-    CMD --- SCHED
-```
+![集群调度总体架构](images/01-architecture.svg)
 
 **分层职责**（均为 admin Leader 单线程流处理模型，COMMAND/COMMAND_API 记录驱动）：
 
@@ -89,17 +58,7 @@ flowchart TB
 
 ### 4.1 生命周期链路
 
-```mermaid
-flowchart LR
-    T["类型入口命令<br/>CHANGE_REPLICATION /<br/>CHANGE_PARTITION / CLUSTER_BALANCE"] --> PC["PLAN_CREATING"]
-    PC -->|"成员不足"| PD["PLAN_DELAYED<br/>(延迟等待)"] -->|"到期重入"| PC
-    PC -->|"计划制定完成"| PR["PLAN_CREATED"] --> EX["EXECUTING<br/>(计划级, 启动首条明细)"]
-    EX --> ED["EXECUTED"] --> XE["明细串行:<br/>EXECUTING→EXECUTED→ACKNOWLEDGE<br/>→SUCCEED/FAILED"]
-    XE -->|"全部完成"| CP["COMPLETING"] --> CD["COMPLETED<br/>+ 集群元数据落库"]
-    XE -.->|"失败重试(不终止)" .-> XE
-    T2["CANCELING"] --> CZ["CANCELED"]
-    FL["FAILING"] --> FD["FAILED"]
-```
+![统一计划生命周期链路](images/01-plan-lifecycle.svg)
 
 - admin 与 business 两套同构生命周期（`AdminDispatchPlanLifeCycle` / `BusinessDispatchPlanLifeCycle`），
   business 侧多出 `CHANGE_PARTITION`/`CLUSTER_BALANCE` 两个类型入口。

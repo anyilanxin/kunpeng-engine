@@ -58,54 +58,7 @@ applier 全部已实现）。写入门面 `LogEventWriter`：`addCommand`（仅�
 
 ## 3. 端到端流程
 
-```mermaid
-sequenceDiagram
-    participant REQ as 客户端/adminInit
-    participant LOG as admin 分区日志
-    participant PLAN as 计划层处理器
-    participant MAKER as PlanMaker/Generator
-    participant XE as 明细层处理器
-    participant NODE as 业务节点执行服务
-    participant API as ClusterDispatchService
-
-    REQ->>LOG: 类型入口命令(CHANGE_*)
-    LOG->>PLAN: Change{Replication,Partition}/ClusterBalance 处理器
-    PLAN->>LOG: PLAN_CREATING
-    LOG->>PLAN: ClusterCreatingProcessor
-    alt 成员不足
-        PLAN->>LOG: 延迟任务 CREATED + PLAN_DELAYED
-        Note over PLAN: DelayedDelayChecker 到期<br/>DelayedTriggerProcessor 重发 PLAN_CREATING
-    else 满足条件
-        PLAN->>MAKER: createPlan(拓扑 diff 推导明细)
-        MAKER-->>PLAN: 计划 + executionPlan
-        PLAN->>LOG: PLAN_CREATED(事件, 落库)
-        opt applyPlan
-            PLAN->>LOG: EXECUTING(计划级命令)
-        end
-    end
-    LOG->>PLAN: ClusterExecutingProcessor
-    alt 明细为空
-        PLAN->>LOG: COMPLETED
-    else
-        PLAN->>LOG: EXECUTED(事件) + 首条明细 EXECUTING
-    end
-    loop 每条明细(executionOrder 串行)
-        LOG->>XE: ExecutionExecutingProcessor
-        XE->>LOG: EXECUTED(事件) + 延迟看门狗注册
-        XE->>NODE: dispatchClient.send(topic=面-执行类型)
-        NODE->>NODE: 执行 + executionAck()
-        NODE->>API: ack 消息(topic CLUSTER_DISPATCH_ACK)
-        API->>LOG: 写明细 ACKNOWLEDGE 命令(附成败/errorMessage)
-        LOG->>XE: ExecutionAcknowledgeProcessor
-        alt 成功
-            XE->>LOG: SUCCEED + 下一条 EXECUTING 或计划 COMPLETING
-        else 失败
-            XE->>LOG: FAILED + 注册延迟重试(不终止计划)
-        end
-    end
-    LOG->>PLAN: CompleteProcessor(COMPLETING)
-    PLAN->>LOG: COMPLETED + ClusterMeta CREATING/UPDATING(落库)
-```
+![集群调度端到端流程](images/02-end-to-end.svg)
 
 ---
 
@@ -319,25 +272,7 @@ admin（`AdminDispatchPlanLifeCycle`，recordIndex=0）：
 business（`BusinessDispatchPlanLifeCycle`，recordIndex=3）同构，多两个类型入口：
 CHANGE_PARTITION=1、CLUSTER_BALANCE=2、CHANGE_REPLICATION=3，PLAN_DELAYED=4 … FAILED=14。
 
-```mermaid
-stateDiagram-v2
-    [*] --> CHANGE_x: 类型入口命令
-    CHANGE_x --> PLAN_CREATING
-    PLAN_CREATING --> PLAN_DELAYED: 成员不足(注册延迟)
-    PLAN_DELAYED --> PLAN_CREATING: 延迟到期重入
-    PLAN_CREATING --> PLAN_CREATED: createPlan 落库
-    PLAN_CREATED --> EXECUTING: applyPlan
-    EXECUTING --> EXECUTED: 启动首条明细
-    EXECUTED --> COMPLETING: 全部明细 SUCCEED
-    COMPLETING --> COMPLETED: + 集群元数据
-    COMPLETING --> FAILING
-    FAILING --> FAILED
-    CHANGE_x --> CANCELING: 取消
-    CANCELING --> CANCELED
-    COMPLETED --> [*]
-    FAILED --> [*]
-    CANCELED --> [*]
-```
+![计划生命周期状态机](images/02-plan-state-machine.svg)
 
 ### 10.2 执行明细生命周期（admin/business 同构）
 

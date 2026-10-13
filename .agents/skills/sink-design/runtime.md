@@ -4,15 +4,7 @@
 
 ## 组件与协作
 
-```
-EventLog(日志流) ─▶ SinkService(actor, 每分区一个)
-                     ├─ RecordDispatcher ──▶ SinkSlot ──▶ RecordSink(用户实现)
-                     ├─ SinkSlot ...（每个已配置 Sink 一个）
-                     ├─ PositionBroadcaster ──▶ PartitionMessagingService（leader 广播/follower 应用）
-                     ├─ SinkMetrics（micrometer）
-                     └─ RepositoryMutableSink（位置/元数据持久化，repository().sink()）
-SinkRegistry（broker 启动时按 BrokerCfg.sinks 构建；className 加载或外部 jar）─▶ SinkDescriptor ─▶ SinkServiceContext
-```
+![sink 运行时架构：组件与协作](images/runtime-architecture.svg)
 
 | 组件 | 职责 |
 |---|---|
