@@ -82,7 +82,7 @@ public class BusinessSourceMetaUtils {
   public static PartitionSourceMeta getSourceMeta(final RaftPartition raftPartition) {
     final String sourceMetaStr =
         raftPartition
-            .businessMeta(RaftPartition.ReadMode.LOCAL)
+            .businessMeta(RaftPartition.ReadMode.LEADER)
             .join()
             .entries()
             .get(PARTITION_SOURCE_KEY);
@@ -96,7 +96,7 @@ public class BusinessSourceMetaUtils {
   public static void updateSourceMeta(
       final PartitionSourceMeta partitionSourceMeta, final RaftPartition raftPartition) {
     final PartitionBusinessMeta partitionBusinessMeta =
-        raftPartition.businessMeta(RaftPartition.ReadMode.LOCAL).join();
+        raftPartition.businessMeta(RaftPartition.ReadMode.LEADER).join();
     final Map<String, String> entries = new HashMap<>(partitionBusinessMeta.entries());
     entries.put(PARTITION_SOURCE_KEY, MAPPER.writeValueAsString(partitionSourceMeta));
     raftPartition.updateBusinessMeta(entries);
