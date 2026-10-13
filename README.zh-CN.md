@@ -57,7 +57,7 @@ Kunpeng 为跨微服务的业务流程提供可视化与控制能力。
 
 如发现许可违规、版权标注错误或其他合规问题，欢迎通过以下渠道反馈：
 
-1. 提交 [GitHub Issue](https://github.com/anyilanxin/kunpeng-engine/issues)
+1. 提交 [GitHub Issue](https://github.com/anyilanxin/kunpeng-engine/issues/new)
 2. 发送邮件至 anyilanxin@aliyun.com
 
 我们承诺尽快核实每一条反馈，确认问题后在合理期限内修正（补全标注、调整协议归属或移除相关代码），并在 Issue 中公开处理结果。

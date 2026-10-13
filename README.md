@@ -59,7 +59,7 @@ This repository incorporates and adapts multiple upstream projects. We make good
 
 If you find a license violation, copyright misattribution, or any other compliance concern, please reach out:
 
-1. Open a [GitHub Issue](https://github.com/anyilanxin/kunpeng-engine/issues)
+1. Open a [GitHub Issue](https://github.com/anyilanxin/kunpeng-engine/issues/new)
 2. Email anyilanxin@aliyun.com
 
 We commit to verifying every report promptly and, once confirmed, fixing it within a reasonable timeframe (fixing attribution, re-designating the license, or removing the code) with the outcome published on the issue.
