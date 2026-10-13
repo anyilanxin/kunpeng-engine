@@ -20,11 +20,13 @@ description: Use as the top-level entry to discover kunpeng project's coding/gen
 | `scheduler/` | scheduler Actor 调度器：并发协议（gate+wakeTickets）、执行模型、相位机、future 语义、指标、使用契约（含历史设计与性能分析归档） | 理解调度原理、排查调度/启动链问题、写 actor 消费方代码、查指标 | [scheduler/Index.md](./scheduler/Index.md) |
 | `eventlog-design/` | eventlog 事件日志流：append 管线（无锁定序器 + pending 队列 + AIMD 流控）、EL 批帧 v1 格式、读路径 seek 族语义、EventStore SPI 桥接 Raft、崩溃恢复 | 理解/改动 eventlog、排查定序/流控/恢复问题、查写读路径性能基线 | [eventlog-design/SKILL.md](./eventlog-design/SKILL.md) |
 | `cluster-dispatch-design/` | cluster-dispatch 集群调度子系统：调度计划生命周期（admin/business 三类入口、PLAN 状态流）、拓扑 diff 计划生成、执行明细下发与 ACK、延迟看门狗重试、source 治理、adminInit | 理解/改动 cluster-dispatch、排查调度计划与执行明细问题 | [cluster-dispatch-design/SKILL.md](./cluster-dispatch-design/SKILL.md) |
+| `cluster-messaging/` | 集群通信体系：三平面网络（membership / broker 业务 / gateway gRPC）与协议标注（节点间全 Aeron UDP、gRPC 为 HTTP/2 TCP）、消息 API 四层、subject 路由与寻址、五条典型调用链路、新增集群消息 subject 与新增 gRPC 接口指引、Aeron wire 帧与参数表 | 理解/改动节点间通信、排查端口与连通性问题、给新功能选协议、新增集群消息或 gRPC 接口时 | [cluster-messaging/SKILL.md](./cluster-messaging/SKILL.md) |
 | `commit-standards/` | 提交规范：spotlessApply 必须根目录整库执行（模块级任务不存在会报错）、commit message 规范（英文 type 前缀分条、无 Claude 署名尾行）、先审核再提交流程 | 改动准备提交前、跑 spotlessApply 前、写 commit message 时 | [commit-standards/SKILL.md](./commit-standards/SKILL.md) |
 | `sink-design/` | sink 日志外发体系：RecordSink SPI 全生命周期、位置确认与重试语义、SinkService 运行时架构（分发/leader-follower 位置广播）、SBE wire 协议与指标 | 实现/评审/接入 sink、查 sink API 用法、排查位置确认或暂停恢复行为、broker 接入 sink 服务时 | [sink-design/SKILL.md](./sink-design/SKILL.md) |
 | `workjob/` | 分布式 Job 推拉系统设计 v1.5：注册同步（快照对账+增量）、竞争消费、broker 层三原语能力服务、deadline 簿记与 Resolve、故障矩阵、gRPC/Netty 双段协议 | 理解/改动 gateway/broker job 派发链路、排查 job 投递问题、演进 job 推拉系统时 | [workjob/SKILL.md](./workjob/SKILL.md) |
 | `readme-hero/` | README 首图面板设计系统：kunpeng-hero 四文件矩阵（明暗×中英）、元素坐标总表、明暗配色对照、字号阶梯、中英文案对照、四文件同步铁律、渲染验证与 CDN 陷阱、先呈现后推送节奏 | 修改 README 首图（docs/kunpeng-hero-*.svg）的布局/配色/文案时 | [readme-hero/SKILL.md](./readme-hero/SKILL.md) |
 | `monitor-dashboards/` | 监控面板标准：添加引擎指标必须连带补面板（有指标就有面板，check-panels.py 覆盖归零为验收）、单面板六分节结构、指标名→Prometheus 映射与 tag 总表、面板 JSON 模板 | 新增/修改/删除引擎指标（MetricsDoc、builder 注册）；修改 monitor/ 监控面板与抓取配置时 | [monitor-dashboards/SKILL.md](./monitor-dashboards/SKILL.md) |
+| `bpm/` | BPMN 2.0.2 官方规范参考：规范正文+示例 PDF、流程分类定义（processType/isExecutable §10.2.1、Category/CategoryValue）、pdftotext 查询法、已索引结论 | 核对 BPMN 元素/属性语义与 XSD、标准仲裁、bpm-model/model-parse 与引擎开发对标准时 | [bpm/SKILL.md](./bpm/SKILL.md) |
 
 > 后续添加新模块（规范类或知识库类）：在 `.agents/skills/` 下新建子目录 + 该目录的 `SKILL.md`，在上表加一行。
 
@@ -43,10 +45,12 @@ description: Use as the top-level entry to discover kunpeng project's coding/gen
 ├── scheduler/             ← Actor 调度器知识库
 ├── eventlog-design/       ← 事件日志流知识库
 ├── cluster-dispatch-design/ ← 集群调度子系统知识库
+├── cluster-messaging/      ← 集群通信体系知识库(三平面/调用链/wire 协议)
 ├── sink-design/           ← sink 日志外发体系知识库
 ├── workjob/               ← 分布式 Job 推拉系统设计知识库
 ├── readme-hero/           ← README 首图面板设计系统
-└── monitor-dashboards/    ← 监控面板标准(指标↔面板一一对应 + 覆盖检查)
+├── monitor-dashboards/    ← 监控面板标准(指标↔面板一一对应 + 覆盖检查)
+└── bpm/                   ← BPMN 2.0.2 官方规范参考(规范正文+示例 PDF)
 ```
 
 ## 通用原则（跨模块）

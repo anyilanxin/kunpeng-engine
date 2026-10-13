@@ -96,11 +96,13 @@ kunpeng-engine/
 | `scheduler` | Actor 调度器：gate + wakeTickets 并发协议、ActorCell 执行模型、相位机、future 语义、使用契约 | 理解调度原理、排查调度/启动链问题、写 actor 消费代码 |
 | `eventlog-design` | 事件日志流：append 管线（无锁定序器/AIMD 流控）、EL 批帧格式、读路径、EventStore SPI 与 Raft 桥接 | 理解/改动 eventlog、排查恢复与流控问题 |
 | `cluster-dispatch-design` | 集群调度子系统：调度计划生命周期、拓扑 diff 计划生成、执行明细下发与 ACK、延迟看门狗、source 治理 | 理解/改动 cluster-dispatch、排查调度问题 |
+| `cluster-messaging` | 集群通信体系：三平面网络（cluster membership / broker 业务 / gateway gRPC）与协议（节点间全 Aeron UDP、gRPC 为 HTTP/2 TCP）、消息 API 四层、subject 路由与寻址、五条典型调用链路、Aeron wire 帧与参数表 | 理解/改动节点间通信、排查端口与连通性问题、给新功能选协议、新增集群消息 subject 或 gRPC 接口时 |
 | `commit-standards` | 提交规范：spotlessApply 根目录整库执行、commit message 英文分条无署名、先审核再提交 | 改动准备提交前 |
 | `sink-design` | sink 日志外发体系：RecordSink SPI 全生命周期、位置确认与重试、SinkService 运行时架构、SBE wire 协议与指标 | 理解/改动 sink、排查位置确认或暂停恢复问题 |
 | `workjob` | 分布式 Job 推拉系统设计 v1.6：注册同步、竞争消费、broker 能力三原语、分区化数据面（leader 绑定与水位线）、deadline 簿记与 Resolve、故障矩阵 | 理解/改动 gateway/broker job 派发链路、排查 job 投递问题 |
 | `readme-hero` | README 首图面板设计系统：kunpeng-hero 四文件矩阵（明暗×中英）、元素坐标总表、配色与字号规范、四文件同步铁律、渲染验证与 CDN 陷阱 | 修改 README 首图（docs/kunpeng-hero-*.svg）时 |
 | `monitor-dashboards` | 监控面板标准：**添加引擎指标必须连带补面板**（有指标就有面板，check-panels.py 覆盖归零为验收）、单面板六分节结构、指标名→Prometheus 映射与 tag 总表 | 新增/修改/删除引擎指标；修改 monitor/ 面板与抓取配置 |
+| `bpm` | BPMN 2.0.2 官方规范参考：规范正文+示例 PDF、流程分类定义（processType/isExecutable §10.2.1、Category/CategoryValue）、pdftotext 查询法、已索引结论 | 核对 BPMN 元素/属性语义与 XSD、标准仲裁、bpm-model/model-parse 与引擎开发对标准时 |
 
 新增技能时：建目录写 SKILL.md（含英文 description），并同步更新总览 `SKILL.md` 的模块表。
 
@@ -113,6 +115,7 @@ kunpeng-engine/
 | 纯单模块内部实现/修 bug（不动协议契约） | 直接改，遵循对应规范技能（`record-standards` / `enum-standards` / `repository-standards`） |
 | 序列化格式、协议编号池、新 Record key 定义 | `structpack` + `enum-standards`（破坏性评估先行，编号错=Raft 反序列化错位） |
 | 理解/改动调度器、事件日志、集群调度子系统 | `scheduler` / `eventlog-design` / `cluster-dispatch-design` |
+| **理解/改动集群通信**（三平面端口与协议、节点间消息、subject 路由、Aeron wire/参数、排查连通性） | `cluster-messaging`（三平面、API 分层、调用链、开发指引；帧格式与参数细节见其 01 号文档） |
 | 理解/改动 job 推拉派发链路（gateway-job / broker job 能力服务 / client 消费端） | `workjob`（设计契约：竞争消费、三原语、deadline 簿记） |
 | **新增/修改/删除引擎指标**（MetricsDoc 枚举、builder 注册） | 对应域技能 + `monitor-dashboards`（指标↔面板一一对应是加指标的标准收口，覆盖检查归零） |
 | 修改 monitor/ 监控面板、Prometheus 抓取配置 | `monitor-dashboards` |
