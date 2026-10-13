@@ -19,6 +19,8 @@ package com.anyilanxin.kunpeng.protocol.business.impl.record.command.deployment;
 import static com.anyilanxin.kunpeng.protocol.business.impl.BusinessRecordConstant.DEPLOYMENT_ID;
 import static com.anyilanxin.kunpeng.protocol.business.impl.BusinessRecordConstant.TENANT_ID;
 import static com.anyilanxin.kunpeng.structpack.util.BufferUtil.*;
+import static com.anyilanxin.kunpeng.structpack.util.DocumentUtil.convertToMap;
+import static com.anyilanxin.kunpeng.structpack.util.DocumentUtil.convertToMsgPack;
 
 import com.anyilanxin.kunpeng.protocol.business.record.command.deployment.ResourceDefinitionValue;
 import com.anyilanxin.kunpeng.protocol.business.record.command.deployment.ResourceType;
@@ -28,6 +30,7 @@ import com.anyilanxin.kunpeng.structpack.AutoDeclareProperties;
 import com.anyilanxin.kunpeng.structpack.property.*;
 import com.anyilanxin.kunpeng.structpack.util.BufferUtil;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.Map;
 import org.agrona.DirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -56,8 +59,10 @@ public class ResourceDefinitionRecord extends UnifiedRecordValue<ResourceDefinit
   private final StringProperty tenantIdProp =
       new StringProperty(8, TENANT_ID, TenantOwned.DEFAULT_TENANT_IDENTIFIER);
 
+  private final DocumentProperty extendedDataProp = new DocumentProperty(9, "EXTENDED_DATA");
+
   public ResourceDefinitionRecord() {
-    super(8);
+    super(9);
     declareProperty(resourceDefinitionIdProp)
         .declareProperty(resourceDefinitionNameProp)
         .declareProperty(definitionVersionProp)
@@ -65,7 +70,8 @@ public class ResourceDefinitionRecord extends UnifiedRecordValue<ResourceDefinit
         .declareProperty(resourceProp)
         .declareProperty(checksumProp)
         .declareProperty(deploymentIdProp)
-        .declareProperty(tenantIdProp);
+        .declareProperty(tenantIdProp)
+        .declareProperty(extendedDataProp);
   }
 
   @Override
@@ -190,6 +196,26 @@ public class ResourceDefinitionRecord extends UnifiedRecordValue<ResourceDefinit
 
   public ResourceDefinitionRecord setTenantId(final DirectBuffer tenantId) {
     tenantIdProp.setValue(tenantId);
+    return this;
+  }
+
+  @Override
+  public Map<String, Object> getExtendedData() {
+    return convertToMap(extendedDataProp.getValue());
+  }
+
+  @JsonIgnore
+  public DirectBuffer getExtendedDataBuffer() {
+    return extendedDataProp.getValue();
+  }
+
+  public ResourceDefinitionRecord setExtendedData(final Map<String, Object> extendedData) {
+    extendedDataProp.setValue(wrapArray(convertToMsgPack(extendedData)));
+    return this;
+  }
+
+  public ResourceDefinitionRecord setExtendedData(final DirectBuffer extendedData) {
+    extendedDataProp.setValue(extendedData);
     return this;
   }
 

@@ -67,6 +67,7 @@ public final class ProcessDefinitionRecordHandler implements RecordModelHandler 
         value.getResource() == null
             ? null
             : new String(value.getResource(), StandardCharsets.UTF_8));
+    model.setExtendedData(JsonValues.toJson(value.getExtendedData()));
     model.setResourceId(record.getResourceId());
     buffer.offer(
         RowChange.insert(PROCESS_DEFINITION, List.of(value.getProcessDefinitionId()), model));

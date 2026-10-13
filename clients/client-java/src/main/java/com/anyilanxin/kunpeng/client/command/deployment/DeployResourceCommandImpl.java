@@ -26,6 +26,7 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
@@ -53,6 +54,29 @@ public final class DeployResourceCommandImpl
     tenantId(config.getDefaultTenantId());
     this.jsonMapper = jsonMapper;
     requestTimeout(requestTimeout);
+  }
+
+  /** 业务扩展数据属于具体资源：绑定到最近添加的资源；未添加资源时调用直接失败 */
+  @Override
+  public DeployResourceCommandStep2 extendedData(final Map<String, String> extendedData) {
+    currentResourceBuilder().clearExtendedData().putAllExtendedData(extendedData);
+    return this;
+  }
+
+  @Override
+  public DeployResourceCommandStep2 extendedData(final String key, final String value) {
+    currentResourceBuilder().putExtendedData(key, value);
+    return this;
+  }
+
+  private DeploymentServiceOuterClass.Resource.Builder currentResourceBuilder() {
+    final int count = requestBuilder.getResourcesCount();
+    if (count == 0) {
+      throw new IllegalStateException(
+          "extendedData must be called after addResource: business extended data belongs to a "
+              + "concrete resource");
+    }
+    return requestBuilder.getResourcesBuilder(count - 1);
   }
 
   @Override

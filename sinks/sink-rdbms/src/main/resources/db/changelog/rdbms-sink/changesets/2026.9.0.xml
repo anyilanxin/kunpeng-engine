@@ -402,4 +402,11 @@
     <renameColumn tableName="${table.signal_subscription}" oldColumnName="activity_key" newColumnName="activity_definition_key" columnDataType="VARCHAR(255)"/>
   </changeSet>
 
+  <!-- 业务扩展数据：部署资源级扩展信息（随 DeployResource 命令携带、引擎原样透传），JSON 文本列 -->
+  <changeSet id="2026.9.0-process-definition-extended-data" author="anyilanxin">
+    <addColumn tableName="${table.process_definition}">
+      <column name="extended_data" type="${text.type}"/>
+    </addColumn>
+  </changeSet>
+
 </databaseChangeLog>

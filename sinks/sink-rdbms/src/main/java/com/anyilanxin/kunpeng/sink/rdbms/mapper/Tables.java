@@ -43,7 +43,8 @@ public final class Tables {
               "candidate_starter_groups",
               "candidate_starter_users",
               "resource_content",
-              "resource_id"),
+              "resource_id",
+              "extended_data"),
           List.of("process_definition_id"));
 
   public static final TableSpec PROCESS_INSTANCE =

@@ -15,6 +15,7 @@ package com.anyilanxin.kunpeng.protocol.business.record.command.deployment;
 import com.anyilanxin.kunpeng.protocol.common.RecordValue;
 import com.anyilanxin.kunpeng.protocol.common.TenantOwned;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -76,4 +77,7 @@ public interface ProcessDefinitionRecordValue extends TenantOwned, RecordValue {
   byte[] getResource();
 
   List<StarterEventRecordValue> getStarterEvents();
+
+  /** 业务扩展数据（资源级，随部署携带） */
+  Map<String, Object> getExtendedData();
 }

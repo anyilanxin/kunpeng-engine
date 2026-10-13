@@ -18,6 +18,8 @@ message Resource {
   string name = 1;
   // the file content as a UTF8-encoded string
   bytes content = 2;
+  // business extended data of the resource, e.g. category/owner tags for the deployed definition
+  map<string, string> extendedData = 3;
 }
 
 message DeployResourceResponse {

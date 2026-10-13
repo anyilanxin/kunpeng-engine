@@ -35,4 +35,7 @@ public class ProcessDefinitionDbModel {
   private String candidateStarterUsers;
   private String resourceContent;
   private Integer resourceId;
+
+  /** 业务扩展数据（资源级，随部署携带），JSON 文本 */
+  private String extendedData;
 }

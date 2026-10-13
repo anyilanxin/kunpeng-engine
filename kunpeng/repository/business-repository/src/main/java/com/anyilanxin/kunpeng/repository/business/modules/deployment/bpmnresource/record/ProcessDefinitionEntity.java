@@ -19,6 +19,7 @@ package com.anyilanxin.kunpeng.repository.business.modules.deployment.bpmnresour
 import static com.anyilanxin.kunpeng.protocol.business.impl.BusinessRecordConstant.*;
 import static com.anyilanxin.kunpeng.structpack.util.BufferUtil.bufferAsString;
 import static com.anyilanxin.kunpeng.structpack.util.BufferUtil.wrapString;
+import static com.anyilanxin.kunpeng.structpack.util.DocumentUtil.convertToMap;
 
 import com.anyilanxin.kunpeng.kvstore.types.StoreValue;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.deployment.ProcessDefinitionRecord;
@@ -31,8 +32,10 @@ import com.anyilanxin.kunpeng.structpack.value.StringValue;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.agrona.DirectBuffer;
+import org.agrona.concurrent.UnsafeBuffer;
 
 /**
  * 流程定义 Entity：流程定义 Record 的落库映射。
@@ -69,8 +72,11 @@ public class ProcessDefinitionEntity extends UnpackedObject implements StoreValu
   private final ArrayProperty<StarterEventEntity> starterEventsProp =
       new ArrayProperty<>(15, "STARTER_EVENTS", StarterEventEntity::new);
 
+  private final BinaryProperty extendedDataProp =
+      new BinaryProperty(16, "EXTENDED_DATA", new UnsafeBuffer());
+
   public ProcessDefinitionEntity() {
-    super(15);
+    super(16);
     declareProperty(processDefinitionIdProp)
         .declareProperty(processDefinitionNameProp)
         .declareProperty(processDefinitionKeyProp)
@@ -85,7 +91,8 @@ public class ProcessDefinitionEntity extends UnpackedObject implements StoreValu
         .declareProperty(resourceDefinitionIdProp)
         .declareProperty(resourceDefinitionNameProp)
         .declareProperty(tenantIdProp)
-        .declareProperty(starterEventsProp);
+        .declareProperty(starterEventsProp)
+        .declareProperty(extendedDataProp);
   }
 
   public void wrap(final ProcessDefinitionRecord record) {
@@ -102,7 +109,8 @@ public class ProcessDefinitionEntity extends UnpackedObject implements StoreValu
         .setDeploymentId(record.getDeploymentId())
         .setResourceDefinitionId(record.getResourceDefinitionId())
         .setResourceDefinitionName(record.getResourceDefinitionNameBuffer())
-        .setTenantId(record.getTenantIdBuffer());
+        .setTenantId(record.getTenantIdBuffer())
+        .setExtendedData(record.getExtendedDataBuffer());
     starterEventsProp.reset();
     for (final StarterEventRecord event : record.starterEvents()) {
       starterEventsProp
@@ -140,7 +148,8 @@ public class ProcessDefinitionEntity extends UnpackedObject implements StoreValu
         .setDeploymentId(getDeploymentId())
         .setResourceDefinitionId(getResourceDefinitionId())
         .setResourceDefinitionName(getResourceDefinitionNameBuffer())
-        .setTenantId(getTenantIdBuffer());
+        .setTenantId(getTenantIdBuffer())
+        .setExtendedData(getExtendedDataBuffer());
   }
 
   public long getProcessDefinitionId() {
@@ -370,6 +379,22 @@ public class ProcessDefinitionEntity extends UnpackedObject implements StoreValu
           .setStartEventName(event.getStartEventNameBuffer())
           .setActivityDefinitionKey(event.getActivityDefinitionKeyBuffer())
           .setType(event.getType());
+    }
+    return this;
+  }
+
+  /** 业务扩展数据（msgpack document 原始字节） */
+  public Map<String, Object> getExtendedData() {
+    return convertToMap(extendedDataProp.getValue());
+  }
+
+  public DirectBuffer getExtendedDataBuffer() {
+    return extendedDataProp.getValue();
+  }
+
+  public ProcessDefinitionEntity setExtendedData(final DirectBuffer extendedData) {
+    if (extendedData != null) {
+      extendedDataProp.setValue(extendedData, 0, extendedData.capacity());
     }
     return this;
   }

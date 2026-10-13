@@ -58,7 +58,15 @@ public class GrpcDeploymentServiceImpl extends DeploymentServiceGrpc.DeploymentS
     final DeploymentCreateRequest brokerRequest = new DeploymentCreateRequest();
     request
         .getResourcesList()
-        .forEach(v -> brokerRequest.addResource(v.getName(), v.getContent().toByteArray()));
+        .forEach(
+            v -> {
+              if (v.getExtendedDataMap().isEmpty()) {
+                brokerRequest.addResource(v.getName(), v.getContent().toByteArray());
+              } else {
+                brokerRequest.addResource(
+                    v.getName(), v.getContent().toByteArray(), v.getExtendedDataMap());
+              }
+            });
     commands
         .deployResource(brokerRequest)
         .whenComplete(

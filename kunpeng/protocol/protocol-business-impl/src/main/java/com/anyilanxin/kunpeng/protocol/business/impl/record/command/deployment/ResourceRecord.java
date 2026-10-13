@@ -17,16 +17,20 @@
 package com.anyilanxin.kunpeng.protocol.business.impl.record.command.deployment;
 
 import static com.anyilanxin.kunpeng.structpack.util.BufferUtil.*;
+import static com.anyilanxin.kunpeng.structpack.util.DocumentUtil.convertToMap;
+import static com.anyilanxin.kunpeng.structpack.util.DocumentUtil.convertToMsgPack;
 
 import com.anyilanxin.kunpeng.protocol.business.record.command.deployment.ResourceRecordValue;
 import com.anyilanxin.kunpeng.protocol.business.record.command.deployment.ResourceType;
 import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 import com.anyilanxin.kunpeng.structpack.AutoDeclareProperties;
 import com.anyilanxin.kunpeng.structpack.property.BinaryProperty;
+import com.anyilanxin.kunpeng.structpack.property.DocumentProperty;
 import com.anyilanxin.kunpeng.structpack.property.EnumProperty;
 import com.anyilanxin.kunpeng.structpack.property.StringProperty;
 import com.anyilanxin.kunpeng.structpack.util.BufferUtil;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.Map;
 import org.agrona.DirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
 
@@ -44,12 +48,15 @@ public class ResourceRecord extends UnifiedRecordValue<ResourceRecord>
       new EnumProperty<>(2, "RESOURCE_TYPE", ResourceType.class, ResourceType.NULL_VAL);
   private final BinaryProperty bytesProp = new BinaryProperty(3, "BYTES", new UnsafeBuffer());
 
+  private final DocumentProperty extendedDataProp = new DocumentProperty(4, "EXTENDED_DATA");
+
   public ResourceRecord() {
-    super(3);
+    super(4);
     // formatting:off
     declareProperty(resourceNameProp)
         .declareProperty(resourceTypeProp)
-        .declareProperty(bytesProp);
+        .declareProperty(bytesProp)
+        .declareProperty(extendedDataProp);
     // formatting:on
   }
 
@@ -105,5 +112,25 @@ public class ResourceRecord extends UnifiedRecordValue<ResourceRecord>
     final String[] split = resourceName.split("\\.");
     final ResourceType byteArrayType = ResourceType.valueOf(split[split.length - 1].toUpperCase());
     resourceTypeProp.setValue(byteArrayType);
+  }
+
+  @Override
+  public Map<String, Object> getExtendedData() {
+    return convertToMap(extendedDataProp.getValue());
+  }
+
+  @JsonIgnore
+  public DirectBuffer getExtendedDataBuffer() {
+    return extendedDataProp.getValue();
+  }
+
+  public ResourceRecord setExtendedData(final Map<String, Object> extendedData) {
+    extendedDataProp.setValue(wrapArray(convertToMsgPack(extendedData)));
+    return this;
+  }
+
+  public ResourceRecord setExtendedData(final DirectBuffer extendedData) {
+    extendedDataProp.setValue(extendedData);
+    return this;
   }
 }

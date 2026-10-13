@@ -21,6 +21,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 部署创建请求。
@@ -39,8 +40,10 @@ public record DeploymentCreateDto(
    *
    * @param name 资源名（含扩展名，如 order-process.bpmn）
    * @param contentBase64 资源内容（Base64）
+   * @param extendedData 业务扩展数据（资源级，如分类/归属标注，随部署落库导出）
    */
   public record DeploymentResourceDto(
       @NotBlank(message = "资源名不能为空") @Size(max = 256, message = "资源名过长") String name,
-      @NotBlank(message = "资源内容不能为空") String contentBase64) {}
+      @NotBlank(message = "资源内容不能为空") String contentBase64,
+      Map<String, String> extendedData) {}
 }

@@ -354,6 +354,7 @@ public class DeploymentCreateProcessor extends LogEventDistributeProcessor<Deplo
           .setVersionTag("")
           .setResourceDefinitionId(resourceDefinition.getResourceDefinitionId())
           .setResourceDefinitionName(resourceDefinition.getResourceDefinitionNameBuffer())
+          .setExtendedData(resourceDefinition.getExtendedDataBuffer())
           .setTenantId(resourceDefinition.getTenantIdBuffer());
       response.addProcessDefinition(processDefinitionRecord);
     }
@@ -400,7 +401,8 @@ public class DeploymentCreateProcessor extends LogEventDistributeProcessor<Deplo
         .setResource(resourceBuffer, 0, resourceBuffer.capacity())
         .setChecksum(checksum, 0, checksum.capacity())
         .setResourceDefinitionName(resourceDefinition.getResourceDefinitionNameBuffer())
-        .setResourceDefinitionId(resourceDefinition.getResourceDefinitionId());
+        .setResourceDefinitionId(resourceDefinition.getResourceDefinitionId())
+        .setExtendedData(resourceDefinition.getExtendedDataBuffer());
 
     response.addDecisionRequirementDefinition(decisionRequirementDefinition);
     for (final DmnDecision dmnDecision : dmnDecisionRequirementsGraph.getDecisions()) {
@@ -423,6 +425,7 @@ public class DeploymentCreateProcessor extends LogEventDistributeProcessor<Deplo
           .setDeploymentId(deploymentRecord.getDeploymentId())
           .setResourceDefinitionId(resourceDefinition.getResourceDefinitionId())
           .setResourceDefinitionName(resourceDefinition.getResourceDefinitionNameBuffer())
+          .setExtendedData(resourceDefinition.getExtendedDataBuffer())
           .setTenantId(deploymentRecord.getTenantIdBuffer());
       response.addDecisionDefinition(decisionDefinition);
     }

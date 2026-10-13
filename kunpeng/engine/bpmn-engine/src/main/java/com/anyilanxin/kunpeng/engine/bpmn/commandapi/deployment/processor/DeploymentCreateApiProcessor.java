@@ -56,7 +56,8 @@ public class DeploymentCreateApiProcessor
           .resourceDefinitions()
           .add()
           .setResource(bytes, 0, bytes.capacity())
-          .setResourceDefinitionName(resource.getResourceNameBuffer());
+          .setResourceDefinitionName(resource.getResourceNameBuffer())
+          .setExtendedData(resource.getExtendedDataBuffer());
     }
     writer.addCommand(
         deploymentRecord.getDeploymentId(),

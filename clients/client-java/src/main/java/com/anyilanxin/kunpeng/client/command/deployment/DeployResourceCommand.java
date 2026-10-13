@@ -13,6 +13,7 @@
 package com.anyilanxin.kunpeng.client.command.deployment;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelInstance;
+import com.anyilanxin.kunpeng.client.command.CommandWithExtendedData;
 import com.anyilanxin.kunpeng.client.command.CommandWithTenantStep;
 import com.anyilanxin.kunpeng.client.command.FinalCommandStep;
 import java.io.InputStream;
@@ -96,6 +97,7 @@ public interface DeployResourceCommand {
   interface DeployResourceCommandStep2
       extends DeployResourceCommand,
           CommandWithTenantStep<DeployResourceCommandStep2>,
+          CommandWithExtendedData<DeployResourceCommandStep2>,
           FinalCommandStep<DeployResourceCommandResponse> {
     // the place for new optional parameters
   }

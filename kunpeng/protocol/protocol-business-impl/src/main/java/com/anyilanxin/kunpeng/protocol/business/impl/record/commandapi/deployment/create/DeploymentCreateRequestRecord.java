@@ -27,6 +27,8 @@ import com.anyilanxin.kunpeng.structpack.AutoDeclareProperties;
 import com.anyilanxin.kunpeng.structpack.property.ArrayProperty;
 import com.anyilanxin.kunpeng.structpack.property.LongProperty;
 import com.anyilanxin.kunpeng.structpack.property.StringProperty;
+import java.util.HashMap;
+import java.util.Map;
 import org.agrona.DirectBuffer;
 
 /**
@@ -89,6 +91,17 @@ public class DeploymentCreateRequestRecord extends UnifiedRecordValue<Deployment
   public DeploymentCreateRequestRecordValue addResources(
       final String resourceName, final byte[] bytes) {
     resourcesProp.add().setResourceName(resourceName).setBytes(bytes);
+    return this;
+  }
+
+  /** 添加部署资源（携带业务扩展数据，资源级） */
+  public DeploymentCreateRequestRecordValue addResources(
+      final String resourceName, final byte[] bytes, final Map<String, String> extendedData) {
+    resourcesProp
+        .add()
+        .setResourceName(resourceName)
+        .setBytes(bytes)
+        .setExtendedData(extendedData == null ? null : new HashMap<String, Object>(extendedData));
     return this;
   }
 

@@ -14,6 +14,7 @@ package com.anyilanxin.kunpeng.protocol.business.record.command.deployment;
 
 import com.anyilanxin.kunpeng.protocol.common.RecordValue;
 import com.anyilanxin.kunpeng.protocol.common.TenantOwned;
+import java.util.Map;
 
 /**
  * @author zxuanhong
@@ -73,4 +74,7 @@ public interface DecisionDefinitionRecordValue extends TenantOwned, RecordValue 
    * @return returns the corresponding binary resource
    */
   byte[] getResource();
+
+  /** 业务扩展数据（资源级，随部署携带） */
+  Map<String, Object> getExtendedData();
 }

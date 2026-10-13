@@ -19,16 +19,20 @@ package com.anyilanxin.kunpeng.repository.business.modules.deployment.dmnresourc
 import static com.anyilanxin.kunpeng.protocol.business.impl.BusinessRecordConstant.*;
 import static com.anyilanxin.kunpeng.structpack.util.BufferUtil.bufferAsString;
 import static com.anyilanxin.kunpeng.structpack.util.BufferUtil.wrapString;
+import static com.anyilanxin.kunpeng.structpack.util.DocumentUtil.convertToMap;
 
 import com.anyilanxin.kunpeng.kvstore.types.StoreValue;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.deployment.DecisionDefinitionRecord;
 import com.anyilanxin.kunpeng.protocol.common.TenantOwned;
 import com.anyilanxin.kunpeng.structpack.AutoDeclareProperties;
 import com.anyilanxin.kunpeng.structpack.UnpackedObject;
+import com.anyilanxin.kunpeng.structpack.property.BinaryProperty;
 import com.anyilanxin.kunpeng.structpack.property.IntegerProperty;
 import com.anyilanxin.kunpeng.structpack.property.LongProperty;
 import com.anyilanxin.kunpeng.structpack.property.StringProperty;
+import java.util.Map;
 import org.agrona.DirectBuffer;
+import org.agrona.concurrent.UnsafeBuffer;
 
 /**
  * 决策定义 Entity：决策定义 Record 的落库映射。
@@ -61,8 +65,11 @@ public class DecisionDefinitionEntity extends UnpackedObject implements StoreVal
   private final StringProperty tenantIdProp =
       new StringProperty(12, TENANT_ID, TenantOwned.DEFAULT_TENANT_IDENTIFIER);
 
+  private final BinaryProperty extendedDataProp =
+      new BinaryProperty(13, "EXTENDED_DATA", new UnsafeBuffer());
+
   public DecisionDefinitionEntity() {
-    super(12);
+    super(13);
     declareProperty(decisionDefinitionIdProp)
         .declareProperty(decisionDefinitionKeyProp)
         .declareProperty(decisionDefinitionNameProp)
@@ -74,7 +81,8 @@ public class DecisionDefinitionEntity extends UnpackedObject implements StoreVal
         .declareProperty(deploymentIdProp)
         .declareProperty(resourceDefinitionIdProp)
         .declareProperty(resourceDefinitionNameProp)
-        .declareProperty(tenantIdProp);
+        .declareProperty(tenantIdProp)
+        .declareProperty(extendedDataProp);
   }
 
   public void wrap(final DecisionDefinitionRecord record) {
@@ -89,7 +97,8 @@ public class DecisionDefinitionEntity extends UnpackedObject implements StoreVal
         .setDeploymentId(record.getDeploymentId())
         .setResourceDefinitionId(record.getResourceDefinitionId())
         .setResourceDefinitionName(record.getResourceDefinitionNameBuffer())
-        .setTenantId(record.getTenantIdBuffer());
+        .setTenantId(record.getTenantIdBuffer())
+        .setExtendedData(record.getExtendedDataBuffer());
   }
 
   public DecisionDefinitionRecord unwrap(final DecisionDefinitionRecord record) {
@@ -106,7 +115,8 @@ public class DecisionDefinitionEntity extends UnpackedObject implements StoreVal
         .setDeploymentId(getDeploymentId())
         .setResourceDefinitionId(getResourceDefinitionId())
         .setResourceDefinitionName(getResourceDefinitionNameBuffer())
-        .setTenantId(getTenantIdBuffer());
+        .setTenantId(getTenantIdBuffer())
+        .setExtendedData(getExtendedDataBuffer());
   }
 
   public long getDecisionDefinitionId() {
@@ -287,6 +297,22 @@ public class DecisionDefinitionEntity extends UnpackedObject implements StoreVal
 
   public DecisionDefinitionEntity setTenantId(final DirectBuffer tenantId) {
     tenantIdProp.setValue(tenantId);
+    return this;
+  }
+
+  /** 业务扩展数据（msgpack document 原始字节） */
+  public Map<String, Object> getExtendedData() {
+    return convertToMap(extendedDataProp.getValue());
+  }
+
+  public DirectBuffer getExtendedDataBuffer() {
+    return extendedDataProp.getValue();
+  }
+
+  public DecisionDefinitionEntity setExtendedData(final DirectBuffer extendedData) {
+    if (extendedData != null) {
+      extendedDataProp.setValue(extendedData, 0, extendedData.capacity());
+    }
     return this;
   }
 }

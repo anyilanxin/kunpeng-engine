@@ -20,6 +20,7 @@ import com.anyilanxin.kunpeng.broker.client.business.commandapi.deployment.Deplo
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.deployment.create.DeploymentCreateRequestRecord;
 import com.anyilanxin.kunpeng.protocol.business.record.commandapi.record.deployment.CommandApiDeploymentValueLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.record.commandapi.record.deployment.create.DeploymentCreateRequestRecordValue;
+import java.util.Map;
 
 /**
  * 部署创建请求。
@@ -37,6 +38,13 @@ public class DeploymentCreateRequest
 
   public DeploymentCreateRequest addResource(final String resourceName, final byte[] bytes) {
     getValue().addResources(resourceName, bytes);
+    return this;
+  }
+
+  /** 添加部署资源（携带业务扩展数据，资源级） */
+  public DeploymentCreateRequest addResource(
+      final String resourceName, final byte[] bytes, final Map<String, String> extendedData) {
+    getValue().addResources(resourceName, bytes, extendedData);
     return this;
   }
 

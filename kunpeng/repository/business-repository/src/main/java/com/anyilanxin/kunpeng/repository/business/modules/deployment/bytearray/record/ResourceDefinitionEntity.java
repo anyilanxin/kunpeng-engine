@@ -19,6 +19,7 @@ package com.anyilanxin.kunpeng.repository.business.modules.deployment.bytearray.
 import static com.anyilanxin.kunpeng.protocol.business.impl.BusinessRecordConstant.DEPLOYMENT_ID;
 import static com.anyilanxin.kunpeng.protocol.business.impl.BusinessRecordConstant.TENANT_ID;
 import static com.anyilanxin.kunpeng.structpack.util.BufferUtil.*;
+import static com.anyilanxin.kunpeng.structpack.util.DocumentUtil.convertToMap;
 
 import com.anyilanxin.kunpeng.kvstore.types.StoreValue;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.deployment.ResourceDefinitionRecord;
@@ -27,10 +28,12 @@ import com.anyilanxin.kunpeng.protocol.common.TenantOwned;
 import com.anyilanxin.kunpeng.structpack.AutoDeclareProperties;
 import com.anyilanxin.kunpeng.structpack.UnpackedObject;
 import com.anyilanxin.kunpeng.structpack.property.*;
+import com.anyilanxin.kunpeng.structpack.property.BinaryProperty;
 import com.anyilanxin.kunpeng.structpack.util.BufferUtil;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Map;
 import org.agrona.DirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
 
@@ -56,8 +59,11 @@ public class ResourceDefinitionEntity extends UnpackedObject implements StoreVal
   private final StringProperty tenantIdProp =
       new StringProperty(8, TENANT_ID, TenantOwned.DEFAULT_TENANT_IDENTIFIER);
 
+  private final BinaryProperty extendedDataProp =
+      new BinaryProperty(9, "EXTENDED_DATA", new UnsafeBuffer());
+
   public ResourceDefinitionEntity() {
-    super(8);
+    super(9);
     declareProperty(resourceDefinitionIdProp)
         .declareProperty(resourceDefinitionNameProp)
         .declareProperty(definitionVersionProp)
@@ -65,7 +71,8 @@ public class ResourceDefinitionEntity extends UnpackedObject implements StoreVal
         .declareProperty(resourceProp)
         .declareProperty(checksumProp)
         .declareProperty(deploymentIdProp)
-        .declareProperty(tenantIdProp);
+        .declareProperty(tenantIdProp)
+        .declareProperty(extendedDataProp);
   }
 
   public void wrap(final ResourceDefinitionRecord record) {
@@ -75,7 +82,8 @@ public class ResourceDefinitionEntity extends UnpackedObject implements StoreVal
         .setDefinitionVersion(record.getDefinitionVersion())
         .setResourceType(record.getResourceType())
         .setDeploymentId(record.getDeploymentId())
-        .setTenantId(record.getTenantIdBuffer());
+        .setTenantId(record.getTenantIdBuffer())
+        .setExtendedData(record.getExtendedDataBuffer());
     final DirectBuffer resourceBuffer = record.getResourceBuffer();
     setResource(resourceBuffer, 0, resourceBuffer.capacity());
     final DirectBuffer checksumBuffer = record.getChecksumBuffer();
@@ -93,7 +101,8 @@ public class ResourceDefinitionEntity extends UnpackedObject implements StoreVal
         .setResource(resourceBuffer, 0, resourceBuffer.capacity())
         .setChecksum(checksumBuffer, 0, checksumBuffer.capacity())
         .setDeploymentId(getDeploymentId())
-        .setTenantId(getTenantIdBuffer());
+        .setTenantId(getTenantIdBuffer())
+        .setExtendedData(getExtendedDataBuffer());
   }
 
   public long getResourceDefinitionId() {
@@ -235,5 +244,21 @@ public class ResourceDefinitionEntity extends UnpackedObject implements StoreVal
     } catch (final NoSuchAlgorithmException e) {
       throw new IllegalStateException("SHA-256 algorithm not available", e);
     }
+  }
+
+  /** 业务扩展数据（msgpack document 原始字节） */
+  public Map<String, Object> getExtendedData() {
+    return convertToMap(extendedDataProp.getValue());
+  }
+
+  public DirectBuffer getExtendedDataBuffer() {
+    return extendedDataProp.getValue();
+  }
+
+  public ResourceDefinitionEntity setExtendedData(final DirectBuffer extendedData) {
+    if (extendedData != null) {
+      extendedDataProp.setValue(extendedData, 0, extendedData.capacity());
+    }
+    return this;
   }
 }

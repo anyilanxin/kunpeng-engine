@@ -14,6 +14,7 @@ package com.anyilanxin.kunpeng.protocol.business.record.commandapi.record.deploy
 
 import com.anyilanxin.kunpeng.protocol.business.record.commandapi.RequestRecordValue;
 import com.anyilanxin.kunpeng.structpack.JsonSerializable;
+import java.util.Map;
 
 /**
  * @author zxuanhong
@@ -29,4 +30,8 @@ public interface DeploymentCreateRequestRecordValue extends RequestRecordValue, 
   DeploymentCreateRequestRecordValue setTenantId(final String tenantId);
 
   DeploymentCreateRequestRecordValue addResources(final String resourceName, final byte[] bytes);
+
+  /** 添加部署资源（携带业务扩展数据，资源级） */
+  DeploymentCreateRequestRecordValue addResources(
+      final String resourceName, final byte[] bytes, final Map<String, String> extendedData);
 }

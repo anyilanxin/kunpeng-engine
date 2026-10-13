@@ -13,6 +13,7 @@
 package com.anyilanxin.kunpeng.protocol.business.record.command.deployment;
 
 import com.anyilanxin.kunpeng.structpack.JsonSerializable;
+import java.util.Map;
 
 /**
  * @author zxuanhong
@@ -24,4 +25,7 @@ public interface ResourceRecordValue extends JsonSerializable {
   ResourceType getResourceType();
 
   byte[] getBytes();
+
+  /** 业务扩展数据（资源级，随部署携带） */
+  Map<String, Object> getExtendedData();
 }

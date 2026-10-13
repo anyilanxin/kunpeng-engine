@@ -51,7 +51,10 @@ public class DeploymentServiceImpl implements DeploymentService {
       request.setTenantId(dto.tenantId());
     }
     for (final DeploymentCreateDto.DeploymentResourceDto resource : dto.resources()) {
-      request.addResource(resource.name(), Base64.getDecoder().decode(resource.contentBase64()));
+      request.addResource(
+          resource.name(),
+          Base64.getDecoder().decode(resource.contentBase64()),
+          resource.extendedData());
     }
     return awaitValue(deployment.deployResource(request), DeploymentVo::of);
   }

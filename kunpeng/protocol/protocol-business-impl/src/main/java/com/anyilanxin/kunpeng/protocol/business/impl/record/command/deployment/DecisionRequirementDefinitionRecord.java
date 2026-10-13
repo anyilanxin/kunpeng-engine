@@ -18,17 +18,21 @@ package com.anyilanxin.kunpeng.protocol.business.impl.record.command.deployment;
 
 import static com.anyilanxin.kunpeng.protocol.business.impl.BusinessRecordConstant.*;
 import static com.anyilanxin.kunpeng.structpack.util.BufferUtil.*;
+import static com.anyilanxin.kunpeng.structpack.util.DocumentUtil.convertToMap;
+import static com.anyilanxin.kunpeng.structpack.util.DocumentUtil.convertToMsgPack;
 
 import com.anyilanxin.kunpeng.protocol.business.record.command.deployment.DecisionRequirementDefinitionRecordValue;
 import com.anyilanxin.kunpeng.protocol.common.TenantOwned;
 import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 import com.anyilanxin.kunpeng.structpack.AutoDeclareProperties;
 import com.anyilanxin.kunpeng.structpack.property.BinaryProperty;
+import com.anyilanxin.kunpeng.structpack.property.DocumentProperty;
 import com.anyilanxin.kunpeng.structpack.property.IntegerProperty;
 import com.anyilanxin.kunpeng.structpack.property.LongProperty;
 import com.anyilanxin.kunpeng.structpack.property.StringProperty;
 import com.anyilanxin.kunpeng.structpack.util.BufferUtil;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.Map;
 import org.agrona.DirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
 
@@ -60,8 +64,10 @@ public class DecisionRequirementDefinitionRecord
   private final StringProperty tenantIdProp =
       new StringProperty(10, TENANT_ID, TenantOwned.DEFAULT_TENANT_IDENTIFIER);
 
+  private final DocumentProperty extendedDataProp = new DocumentProperty(11, "EXTENDED_DATA");
+
   public DecisionRequirementDefinitionRecord() {
-    super(10);
+    super(11);
     declareProperty(decisionRequirementDefinitionIdProp)
         .declareProperty(decisionRequirementDefinitionKeyProp)
         .declareProperty(decisionRequirementDefinitionNameProp)
@@ -71,7 +77,8 @@ public class DecisionRequirementDefinitionRecord
         .declareProperty(resourceDefinitionNameProp)
         .declareProperty(checksumProp)
         .declareProperty(resourceProp)
-        .declareProperty(tenantIdProp);
+        .declareProperty(tenantIdProp)
+        .declareProperty(extendedDataProp);
   }
 
   @Override
@@ -248,6 +255,27 @@ public class DecisionRequirementDefinitionRecord
 
   public DecisionRequirementDefinitionRecord setTenantId(final DirectBuffer tenantId) {
     tenantIdProp.setValue(tenantId);
+    return this;
+  }
+
+  @Override
+  public Map<String, Object> getExtendedData() {
+    return convertToMap(extendedDataProp.getValue());
+  }
+
+  @JsonIgnore
+  public DirectBuffer getExtendedDataBuffer() {
+    return extendedDataProp.getValue();
+  }
+
+  public DecisionRequirementDefinitionRecord setExtendedData(
+      final Map<String, Object> extendedData) {
+    extendedDataProp.setValue(wrapArray(convertToMsgPack(extendedData)));
+    return this;
+  }
+
+  public DecisionRequirementDefinitionRecord setExtendedData(final DirectBuffer extendedData) {
+    extendedDataProp.setValue(extendedData);
     return this;
   }
 

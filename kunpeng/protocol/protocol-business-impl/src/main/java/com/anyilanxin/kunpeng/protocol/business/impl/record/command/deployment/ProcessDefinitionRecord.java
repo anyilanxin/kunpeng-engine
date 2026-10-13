@@ -18,6 +18,8 @@ package com.anyilanxin.kunpeng.protocol.business.impl.record.command.deployment;
 
 import static com.anyilanxin.kunpeng.protocol.business.impl.BusinessRecordConstant.*;
 import static com.anyilanxin.kunpeng.structpack.util.BufferUtil.*;
+import static com.anyilanxin.kunpeng.structpack.util.DocumentUtil.convertToMap;
+import static com.anyilanxin.kunpeng.structpack.util.DocumentUtil.convertToMsgPack;
 
 import com.anyilanxin.kunpeng.protocol.business.record.command.deployment.ProcessDefinitionRecordValue;
 import com.anyilanxin.kunpeng.protocol.business.record.command.deployment.StarterEventRecordValue;
@@ -31,6 +33,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.agrona.DirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
@@ -73,25 +76,30 @@ public class ProcessDefinitionRecord extends UnifiedRecordValue<ProcessDefinitio
   private final ArrayProperty<StarterEventRecord> starterEventsProp =
       new ArrayProperty<>(10, "STARTER_EVENTS", StarterEventRecord::new);
 
+  private final DocumentProperty extendedDataProp = new DocumentProperty(18, "EXTENDED_DATA");
+
   public ProcessDefinitionRecord() {
-    super(17);
-    declareProperty(processDefinitionIdProp)
-        .declareProperty(processDefinitionNameProp)
-        .declareProperty(processDefinitionKeyProp)
-        .declareProperty(processDefinitionVersionProp)
-        .declareProperty(suspensionProp)
-        .declareProperty(startableProp)
-        .declareProperty(historyTimeToLiveProp)
-        .declareProperty(candidateGroupsProp)
-        .declareProperty(candidateUsersProp)
-        .declareProperty(versionTagProp)
-        .declareProperty(deploymentIdProp)
-        .declareProperty(resourceDefinitionIdProp)
-        .declareProperty(resourceDefinitionNameProp)
-        .declareProperty(checksumProp)
-        .declareProperty(resourceProp)
-        .declareProperty(tenantIdProp)
-        .declareProperty(starterEventsProp);
+    super(18);
+    // formatting:off
+      declareProperty(processDefinitionIdProp)
+          .declareProperty(processDefinitionNameProp)
+          .declareProperty(processDefinitionKeyProp)
+          .declareProperty(processDefinitionVersionProp)
+          .declareProperty(suspensionProp)
+          .declareProperty(startableProp)
+          .declareProperty(historyTimeToLiveProp)
+          .declareProperty(candidateGroupsProp)
+          .declareProperty(candidateUsersProp)
+          .declareProperty(versionTagProp)
+          .declareProperty(deploymentIdProp)
+          .declareProperty(resourceDefinitionIdProp)
+          .declareProperty(resourceDefinitionNameProp)
+          .declareProperty(checksumProp)
+          .declareProperty(resourceProp)
+          .declareProperty(tenantIdProp)
+          .declareProperty(starterEventsProp)
+          .declareProperty(extendedDataProp);
+      // formatting:on
   }
 
   @Override
@@ -374,6 +382,26 @@ public class ProcessDefinitionRecord extends UnifiedRecordValue<ProcessDefinitio
       list.add(record);
     }
     return list;
+  }
+
+  @Override
+  public Map<String, Object> getExtendedData() {
+    return convertToMap(extendedDataProp.getValue());
+  }
+
+  @JsonIgnore
+  public DirectBuffer getExtendedDataBuffer() {
+    return extendedDataProp.getValue();
+  }
+
+  public ProcessDefinitionRecord setExtendedData(final Map<String, Object> extendedData) {
+    extendedDataProp.setValue(wrapArray(convertToMsgPack(extendedData)));
+    return this;
+  }
+
+  public ProcessDefinitionRecord setExtendedData(final DirectBuffer extendedData) {
+    extendedDataProp.setValue(extendedData);
+    return this;
   }
 
   @Override
