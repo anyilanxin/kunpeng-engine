@@ -34,7 +34,8 @@ import com.anyilanxin.kunpeng.cluster.dispatch.api.ClusterDispatchClient;
 import com.anyilanxin.kunpeng.cluster.dispatch.scheduling.TimerClock;
 import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
 import com.anyilanxin.kunpeng.configuration.cluster.ClusterCfg;
-import com.anyilanxin.kunpeng.configuration.gateway.GatewayCfg;
+import com.anyilanxin.kunpeng.gateway.grpc.gatewaydiscover.GatewayTopologyManagerImpl;
+import com.anyilanxin.kunpeng.gateway.job.GatewayJobHub;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
 import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
 import com.anyilanxin.kunpeng.sink.config.SinksConfig;
@@ -56,8 +57,11 @@ public interface BrokerStartupContext {
 
   ClusterCfg getClusterCft();
 
-  /** 内嵌网关配置（kunpeng.gateway.*，与独立网关同一份；构造注入，随上下文常驻） */
-  GatewayCfg getGatewayCfg();
+  /** 网关 job 中枢（装配层共享 bean 注入，REST 面与网关同一实例；未启用内嵌网关时为空） */
+  GatewayJobHub getGatewayJobHub();
+
+  /** grpc 面网关拓扑视图（装配层共享 bean 注入；未启用内嵌网关时为空） */
+  GatewayTopologyManagerImpl getGatewayTopologyManager();
 
   SinksConfig getSinksConfig();
 

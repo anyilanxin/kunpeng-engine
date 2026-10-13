@@ -36,7 +36,7 @@ import org.springframework.core.env.Profiles;
  * @since 2026.9.0
  */
 @Configuration(proxyBeanMethods = false)
-@Profile(value = {"gateway", "restore"})
+@Profile(value = {"gateway"})
 public class GatewayWorkingDirectoryConfiguration {
   protected static final Logger LOGGER = LoggerFactory.getLogger("com.anyilanxin.kunpeng.gateway");
 

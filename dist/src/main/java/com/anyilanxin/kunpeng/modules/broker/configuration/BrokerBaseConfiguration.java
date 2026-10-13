@@ -18,9 +18,9 @@ package com.anyilanxin.kunpeng.modules.broker.configuration;
 
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterConfig;
 import com.anyilanxin.kunpeng.configuration.cluster.ClusterConfigFactory;
+import com.anyilanxin.kunpeng.configuration.gateway.GatewayCfg;
 import com.anyilanxin.kunpeng.modules.common.actor.ActorSchedulerConfiguration;
 import com.anyilanxin.kunpeng.modules.common.configuration.ClusterPropertiesConfiguration;
-import com.anyilanxin.kunpeng.modules.gateway.configuration.GatewayPropertiesConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -43,17 +43,14 @@ public class BrokerBaseConfiguration {
   public BrokerBaseConfiguration(
       final ClusterPropertiesConfiguration.ClusterProperties clusterProperties,
       final BrokerPropertiesConfiguration.BrokerProperties brokerProperties,
-      final GatewayPropertiesConfiguration.GatewayProperties gatewayProperties,
       final BrokerWorkingDirectoryConfiguration.WorkingDirectory workingDirectory,
       final Environment environment) {
     this.clusterProperties = clusterProperties;
     this.brokerProperties = brokerProperties;
     final String basePath = workingDirectory.path().toAbsolutePath().toString();
-    // 先初始化集群配置（start-port/通告地址等），broker 业务网络端口默认值由其派生；
-    // 内嵌网关复用 kunpeng.gateway.* 配置，同样需要完成默认值初始化
+    // 先初始化集群配置（start-port/通告地址等），broker 业务网络与内嵌网关的默认值由其派生（含于 brokerProperties.init 链）
     clusterProperties.init(basePath);
     brokerProperties.init(basePath, environment, clusterProperties);
-    gatewayProperties.init(basePath);
   }
 
   @Bean
@@ -63,6 +60,12 @@ public class BrokerBaseConfiguration {
     // 集群面与业务面双实例共享同一内嵌驱动(测试等多节点同 JVM 场景不经此处, 保持每实例独占)
     config.getAeronConfig().setSharedDriver(true);
     return config;
+  }
+
+  /** 内嵌网关配置透出为 GatewayCfg bean（kunpeng.broker.gateway.*），网关面共享件装配统一按此类型注入 */
+  @Bean
+  public GatewayCfg gatewayCfg() {
+    return brokerProperties.getGateway();
   }
 
   @Bean

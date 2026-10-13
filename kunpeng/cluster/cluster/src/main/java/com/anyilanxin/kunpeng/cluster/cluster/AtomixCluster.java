@@ -285,6 +285,12 @@ public class AtomixCluster implements BootstrapService, Managed<Void> {
   protected CompletableFuture<Void> startServices() {
     return messagingService
         .start()
+        .thenAcceptAsync(
+            v ->
+                LOGGER.info(
+                    "Membership messaging started on port {} (aeron-udp)",
+                    messagingService.bindingAddresses().iterator().next().port()),
+            threadContext)
         .thenComposeAsync(v -> unicastService.start(), threadContext)
         .thenComposeAsync(v -> membershipService.start(), threadContext)
         .thenComposeAsync(v -> communicationService.start(), threadContext)

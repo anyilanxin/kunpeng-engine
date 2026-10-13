@@ -19,6 +19,7 @@ package com.anyilanxin.kunpeng.modules.broker.configuration;
 import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 /**
@@ -29,6 +30,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @EnableConfigurationProperties(BrokerPropertiesConfiguration.BrokerProperties.class)
+@Profile(value = {"broker", "restore"})
 public class BrokerPropertiesConfiguration {
 
   @ConfigurationProperties("kunpeng.broker")

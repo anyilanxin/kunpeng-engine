@@ -18,6 +18,7 @@ package com.anyilanxin.kunpeng.modules.broker;
 import com.anyilanxin.kunpeng.broker.Broker;
 import com.anyilanxin.kunpeng.broker.client.jobstream.JobStreamCoordinator.PushPoint;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
+import com.anyilanxin.kunpeng.gateway.job.GatewayJobHub;
 import com.anyilanxin.kunpeng.modules.common.endpoints.JobStreamEndpoint;
 import com.anyilanxin.kunpeng.modules.common.endpoints.JobStreamEndpoint.GatewayView;
 import com.anyilanxin.kunpeng.modules.common.endpoints.JobStreamEndpoint.SubscriptionSession;
@@ -26,6 +27,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 /**
@@ -38,19 +40,22 @@ import org.springframework.stereotype.Component;
 @Component
 final class BrokerJobStreamService implements JobStreamEndpoint.Service {
   private final Broker broker;
+  private final ObjectProvider<GatewayJobHub> gatewayJobHub;
   private final AtomixCluster atomixCluster;
 
-  BrokerJobStreamService(final Broker broker, final AtomixCluster atomixCluster) {
+  BrokerJobStreamService(
+      final Broker broker,
+      final ObjectProvider<GatewayJobHub> gatewayJobHub,
+      final AtomixCluster atomixCluster) {
     this.broker = broker;
+    this.gatewayJobHub = gatewayJobHub;
     this.atomixCluster = atomixCluster;
   }
 
   @Override
   public GatewayView gateway() {
-    return broker
-        .getEmbeddedGatewayJobHub()
-        .map(hub -> JobStreamEndpoint.gatewayOf(atomixCluster, hub))
-        .orElse(null);
+    final GatewayJobHub jobHub = gatewayJobHub.getIfAvailable();
+    return jobHub == null ? null : JobStreamEndpoint.gatewayOf(atomixCluster, jobHub);
   }
 
   @Override

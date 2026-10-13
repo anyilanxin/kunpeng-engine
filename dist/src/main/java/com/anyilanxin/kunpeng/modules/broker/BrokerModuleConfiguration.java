@@ -20,11 +20,13 @@ import com.anyilanxin.kunpeng.broker.Broker;
 import com.anyilanxin.kunpeng.broker.client.core.BrokerClient;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
+import com.anyilanxin.kunpeng.gateway.grpc.gatewaydiscover.GatewayTopologyManagerImpl;
+import com.anyilanxin.kunpeng.gateway.job.GatewayJobHub;
 import com.anyilanxin.kunpeng.modules.broker.configuration.BrokerPropertiesConfiguration;
 import com.anyilanxin.kunpeng.modules.common.configuration.ClusterPropertiesConfiguration;
-import com.anyilanxin.kunpeng.modules.gateway.configuration.GatewayPropertiesConfiguration;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.ApplicationContext;
@@ -51,7 +53,6 @@ public class BrokerModuleConfiguration {
   private final ActorSchedulingService schedulingService;
   private final BrokerPropertiesConfiguration.BrokerProperties brokerProperties;
   private final ClusterPropertiesConfiguration.ClusterProperties clusterProperties;
-  private final GatewayPropertiesConfiguration.GatewayProperties gatewayProperties;
   private final AtomixCluster atomixCluster;
   private final MeterRegistry meterRegistry;
   private final ApplicationContext applicationContext;
@@ -62,7 +63,6 @@ public class BrokerModuleConfiguration {
   public BrokerModuleConfiguration(
       final BrokerPropertiesConfiguration.BrokerProperties brokerProperties,
       final ClusterPropertiesConfiguration.ClusterProperties clusterProperties,
-      final GatewayPropertiesConfiguration.GatewayProperties gatewayProperties,
       final ActorSchedulingService schedulingService,
       final AtomixCluster atomixCluster,
       final MeterRegistry meterRegistry,
@@ -72,7 +72,6 @@ public class BrokerModuleConfiguration {
     this.brokerClient = brokerClient;
     this.brokerProperties = brokerProperties;
     this.clusterProperties = clusterProperties;
-    this.gatewayProperties = gatewayProperties;
     this.atomixCluster = atomixCluster;
     this.schedulingService = schedulingService;
     this.meterRegistry = meterRegistry;
@@ -81,19 +80,23 @@ public class BrokerModuleConfiguration {
   }
 
   @Bean(destroyMethod = "close")
-  public Broker broker() {
+  public Broker broker(
+      final ObjectProvider<GatewayJobHub> gatewayJobHub,
+      final ObjectProvider<GatewayTopologyManagerImpl> gatewayTopologyManager) {
     final Broker broker =
         new Broker(
             applicationContext,
             schedulingService,
             clusterProperties,
             brokerProperties,
-            gatewayProperties,
+            gatewayJobHub.getIfAvailable(),
+            gatewayTopologyManager.getIfAvailable(),
             atomixCluster,
             brokerClient,
             meterRegistry,
             clusterTopologyService);
-    broker.start();
+    // 阻塞至引导链完成（含内嵌网关），启动失败快速抛出
+    broker.start().join();
     return broker;
   }
 }

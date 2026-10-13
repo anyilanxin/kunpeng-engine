@@ -22,6 +22,9 @@ import com.anyilanxin.kunpeng.cluster.cluster.leaderfound.ClusterLeaderFoundServ
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.configuration.gateway.GatewayCfg;
 import com.anyilanxin.kunpeng.gateway.Gateway;
+import com.anyilanxin.kunpeng.gateway.grpc.gatewaydiscover.GatewayTopologyManagerImpl;
+import com.anyilanxin.kunpeng.gateway.job.GatewayJobHub;
+import com.anyilanxin.kunpeng.protocol.common.encoding.GatewayInfo;
 import com.anyilanxin.kunpeng.protocol.gateway.GatewayLoggers;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
 import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
@@ -38,12 +41,16 @@ import org.slf4j.Logger;
  */
 public final class EmbeddedGatewayService implements AutoCloseable {
   private final Gateway gateway;
+  private final GatewayCfg gatewayCfg;
+  private final AtomixCluster atomixCluster;
   private final BrokerClient brokerClient;
   private final ConcurrencyControl concurrencyControl;
   private static final Logger LOGGER = GatewayLoggers.GATEWAY_LOGGER;
 
   public EmbeddedGatewayService(
       final GatewayCfg gatewayCfg,
+      final GatewayJobHub jobHub,
+      final GatewayTopologyManagerImpl gatewayTopologyManager,
       final ActorSchedulingService actorScheduler,
       final ConcurrencyControl concurrencyControl,
       final BrokerClient brokerClient,
@@ -53,6 +60,8 @@ public final class EmbeddedGatewayService implements AutoCloseable {
       final ClusterTopologyService topologyManager) {
     this.concurrencyControl = concurrencyControl;
     this.brokerClient = brokerClient;
+    this.gatewayCfg = gatewayCfg;
+    this.atomixCluster = atomixCluster;
     gateway =
         new Gateway(
             actorScheduler,
@@ -61,12 +70,14 @@ public final class EmbeddedGatewayService implements AutoCloseable {
             meterRegistry,
             leaderService,
             brokerClient,
-            topologyManager);
+            topologyManager,
+            gatewayTopologyManager,
+            jobHub);
   }
 
   @Override
   public void close() {
-    // brokerClient 由 broker 引导链持有并关闭，这里只关自己创建的网关
+    // brokerClient/jobHub/拓扑视图由装配层持有并关闭，这里只关自己创建的网关
     CloseHelper.closeAll(
         error -> LOGGER.warn("Error occurred while shutting down embedded gateway", error),
         gateway);
@@ -77,6 +88,11 @@ public final class EmbeddedGatewayService implements AutoCloseable {
   }
 
   public ActorFuture<Gateway> start() {
+    // 网关发现通告: client 接入地址写入本成员属性（独立网关形态由装配侧通告，此处链内完成）
+    GatewayInfo.advertise(
+        atomixCluster.getMembershipService().getLocalMember().properties(),
+        gatewayCfg.getNetwork().getGrpcHost(),
+        gatewayCfg.getNetwork().getGrpcPort());
     return gateway.start();
   }
 }

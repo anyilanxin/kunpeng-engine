@@ -18,6 +18,7 @@ package com.anyilanxin.kunpeng.modules.gateway.health;
 
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 /**
@@ -27,6 +28,7 @@ import org.springframework.stereotype.Component;
  * @since 2026.9.0
  */
 @Component
+@Profile(value = {"gateway"})
 public final class GatewayStatusHealthIndicator implements HealthIndicator {
 
   private static final Health HEALTHY = Health.up().build();

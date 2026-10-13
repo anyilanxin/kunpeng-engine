@@ -35,7 +35,8 @@ import com.anyilanxin.kunpeng.cluster.dispatch.api.ClusterDispatchClient;
 import com.anyilanxin.kunpeng.cluster.dispatch.scheduling.TimerClock;
 import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
 import com.anyilanxin.kunpeng.configuration.cluster.ClusterCfg;
-import com.anyilanxin.kunpeng.configuration.gateway.GatewayCfg;
+import com.anyilanxin.kunpeng.gateway.grpc.gatewaydiscover.GatewayTopologyManagerImpl;
+import com.anyilanxin.kunpeng.gateway.job.GatewayJobHub;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
 import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
 import com.anyilanxin.kunpeng.sink.config.SinksConfig;
@@ -51,7 +52,8 @@ import org.springframework.beans.factory.BeanFactory;
 public final class BrokerStartupContextImpl implements BrokerStartupContext {
   private final BrokerCfg brokerCfg;
   private final ClusterCfg clusterCfg;
-  private final GatewayCfg gatewayCfg;
+  private final GatewayJobHub gatewayJobHub;
+  private final GatewayTopologyManagerImpl gatewayTopologyManager;
   private final ActorSchedulingService schedulingService;
   private final AtomixCluster atomixCluster;
   private final ConcurrencyControl concurrencyControl;
@@ -78,7 +80,8 @@ public final class BrokerStartupContextImpl implements BrokerStartupContext {
       final BrokerClient brokerClient,
       final BrokerCfg brokerCfg,
       final ClusterCfg clusterCfg,
-      final GatewayCfg gatewayCfg,
+      final GatewayJobHub gatewayJobHub,
+      final GatewayTopologyManagerImpl gatewayTopologyManager,
       final ActorSchedulingService schedulingService,
       final AtomixCluster atomixCluster,
       final ConcurrencyControl concurrencyControl,
@@ -90,7 +93,8 @@ public final class BrokerStartupContextImpl implements BrokerStartupContext {
     this.sinksConfig = sinksConfig;
     this.beanFactory = beanFactory;
     this.clusterCfg = clusterCfg;
-    this.gatewayCfg = gatewayCfg;
+    this.gatewayJobHub = gatewayJobHub;
+    this.gatewayTopologyManager = gatewayTopologyManager;
     this.meterRegistry = meterRegistry;
     this.brokerCfg = brokerCfg;
     this.schedulingService = schedulingService;
@@ -110,8 +114,13 @@ public final class BrokerStartupContextImpl implements BrokerStartupContext {
   }
 
   @Override
-  public GatewayCfg getGatewayCfg() {
-    return gatewayCfg;
+  public GatewayJobHub getGatewayJobHub() {
+    return gatewayJobHub;
+  }
+
+  @Override
+  public GatewayTopologyManagerImpl getGatewayTopologyManager() {
+    return gatewayTopologyManager;
   }
 
   @Override

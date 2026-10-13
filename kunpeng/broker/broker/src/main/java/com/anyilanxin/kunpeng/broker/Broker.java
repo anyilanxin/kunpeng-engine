@@ -23,7 +23,7 @@ import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
 import com.anyilanxin.kunpeng.configuration.cluster.ClusterCfg;
-import com.anyilanxin.kunpeng.configuration.gateway.GatewayCfg;
+import com.anyilanxin.kunpeng.gateway.grpc.gatewaydiscover.GatewayTopologyManagerImpl;
 import com.anyilanxin.kunpeng.gateway.job.GatewayJobHub;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
 import com.anyilanxin.kunpeng.sink.config.SinksConfig;
@@ -56,14 +56,14 @@ public final class Broker implements AutoCloseable {
   private final BrokerStartupActor brokerStartupActor;
   private final String brokerId;
   private final BrokerContext brokerContext;
-  private final BrokerClient brokerClient;
 
   public Broker(
       final BeanFactory beanFactory,
       final ActorSchedulingService schedulingService,
       final ClusterCfg clusterCfg,
       final BrokerCfg brokerCfg,
-      final GatewayCfg gatewayCfg,
+      final GatewayJobHub gatewayJobHub,
+      final GatewayTopologyManagerImpl gatewayTopologyManager,
       final AtomixCluster atomixCluster,
       final BrokerClient brokerClient,
       final MeterRegistry meterRegistry,
@@ -72,14 +72,14 @@ public final class Broker implements AutoCloseable {
     final SinksConfig sinksConfig = buildSinksConfig(brokerCfg);
     final String brokerId = String.format("Broker-%s", clusterCfg.getNodeId());
     diagnosticContext = Collections.singletonMap(BROKER_ID_LOG_PROPERTY, brokerId);
-    this.brokerClient = brokerClient;
     brokerContext =
         new BrokerContextImpl(
             brokerClient,
             atomixCluster,
             brokerCfg,
             clusterCfg,
-            gatewayCfg,
+            gatewayJobHub,
+            gatewayTopologyManager,
             schedulingService,
             meterRegistry,
             beanFactory,
@@ -140,16 +140,6 @@ public final class Broker implements AutoCloseable {
   /** broker 侧 job 流派发器（观测用；job 流启动步骤尚未执行时为空） */
   public Optional<JobStreamDispatcher> getJobStreamDispatcher() {
     return brokerStartupActor.getJobStreamDispatcher();
-  }
-
-  /** 内嵌网关订阅中心（观测用；未启用内嵌网关时为空） */
-  public Optional<GatewayJobHub> getEmbeddedGatewayJobHub() {
-    return brokerStartupActor.getEmbeddedGatewayJobHub();
-  }
-
-  /** 内嵌网关实例（装配用；未启用内嵌网关时为空；生命周期归 broker 关闭链） */
-  public Optional<com.anyilanxin.kunpeng.gateway.Gateway> getEmbeddedGateway() {
-    return brokerStartupActor.getEmbeddedGateway();
   }
 
   @Override

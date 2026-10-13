@@ -20,7 +20,6 @@ import com.anyilanxin.kunpeng.cluster.cluster.ClusterConfig;
 import com.anyilanxin.kunpeng.cluster.config.BrokerTopologyManager;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.configuration.cluster.ClusterConfigFactory;
-import com.anyilanxin.kunpeng.gateway.SpringGatewayBridge;
 import com.anyilanxin.kunpeng.modules.common.actor.ActorSchedulerConfiguration;
 import com.anyilanxin.kunpeng.modules.common.configuration.ClusterPropertiesConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +34,7 @@ import org.springframework.context.annotation.Profile;
  * @since 2026.9.0
  */
 @Configuration(proxyBeanMethods = false)
-@Profile(value = {"gateway", "restore"})
+@Profile(value = {"gateway"})
 public class GatewayBaseConfiguration {
   private final GatewayPropertiesConfiguration.GatewayProperties gatewayProperties;
   private final ClusterPropertiesConfiguration.ClusterProperties clusterProperties;
@@ -64,11 +63,6 @@ public class GatewayBaseConfiguration {
   @Bean
   public BrokerTopologyManager topologyManager(final ClusterTopologyService topologyService) {
     return new BrokerTopologyManager(topologyService);
-  }
-
-  @Bean
-  public SpringGatewayBridge springGatewayBridge() {
-    return new SpringGatewayBridge();
   }
 
   @Bean

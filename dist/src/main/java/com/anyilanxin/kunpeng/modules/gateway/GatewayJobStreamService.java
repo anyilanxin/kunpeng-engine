@@ -16,7 +16,7 @@
 package com.anyilanxin.kunpeng.modules.gateway;
 
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
-import com.anyilanxin.kunpeng.gateway.SpringGatewayBridge;
+import com.anyilanxin.kunpeng.gateway.job.GatewayJobHub;
 import com.anyilanxin.kunpeng.modules.common.endpoints.JobStreamEndpoint;
 import com.anyilanxin.kunpeng.modules.common.endpoints.JobStreamEndpoint.GatewayView;
 import com.anyilanxin.kunpeng.modules.common.endpoints.JobStreamEndpoint.SubscriptionType;
@@ -32,21 +32,17 @@ import org.springframework.stereotype.Component;
  */
 @Component
 final class GatewayJobStreamService implements JobStreamEndpoint.Service {
-  private final SpringGatewayBridge gatewayBridge;
+  private final GatewayJobHub jobHub;
   private final AtomixCluster atomixCluster;
 
-  GatewayJobStreamService(
-      final SpringGatewayBridge gatewayBridge, final AtomixCluster atomixCluster) {
-    this.gatewayBridge = gatewayBridge;
+  GatewayJobStreamService(final GatewayJobHub jobHub, final AtomixCluster atomixCluster) {
+    this.jobHub = jobHub;
     this.atomixCluster = atomixCluster;
   }
 
   @Override
   public GatewayView gateway() {
-    return gatewayBridge
-        .getJobHub()
-        .map(hub -> JobStreamEndpoint.gatewayOf(atomixCluster, hub))
-        .orElse(null);
+    return JobStreamEndpoint.gatewayOf(atomixCluster, jobHub);
   }
 
   @Override

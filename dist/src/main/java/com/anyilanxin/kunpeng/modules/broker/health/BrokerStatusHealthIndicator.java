@@ -20,6 +20,7 @@ import static com.anyilanxin.kunpeng.modules.broker.health.BrokerHealthConfigura
 
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 /**
@@ -29,6 +30,7 @@ import org.springframework.stereotype.Component;
  * @since 2026.9.0
  */
 @Component(value = INDICATOR_BROKER_STATUS)
+@Profile(value = {"broker", "restore"})
 public final class BrokerStatusHealthIndicator implements HealthIndicator {
 
   private static final Health HEALTHY = Health.up().build();

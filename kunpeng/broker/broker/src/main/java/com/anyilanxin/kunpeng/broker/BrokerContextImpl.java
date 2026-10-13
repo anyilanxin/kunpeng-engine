@@ -23,7 +23,8 @@ import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
 import com.anyilanxin.kunpeng.configuration.cluster.ClusterCfg;
-import com.anyilanxin.kunpeng.configuration.gateway.GatewayCfg;
+import com.anyilanxin.kunpeng.gateway.grpc.gatewaydiscover.GatewayTopologyManagerImpl;
+import com.anyilanxin.kunpeng.gateway.job.GatewayJobHub;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
 import com.anyilanxin.kunpeng.sink.config.SinksConfig;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -40,7 +41,9 @@ final class BrokerContextImpl implements BrokerContext {
   private final AtomixCluster atomixCluster;
   private final BrokerCfg brokerCfg;
   private final ClusterCfg clusterCfg;
-  private final GatewayCfg gatewayCfg;
+  // 网关面共享件可空：装配层仅在启用内嵌网关时提供对应 bean
+  private final GatewayJobHub gatewayJobHub;
+  private final GatewayTopologyManagerImpl gatewayTopologyManager;
   private final ActorSchedulingService schedulingService;
   private final MeterRegistry meterRegistry;
   private final BeanFactory beanFactory;
@@ -53,7 +56,8 @@ final class BrokerContextImpl implements BrokerContext {
       final AtomixCluster atomixCluster,
       final BrokerCfg brokerCfg,
       final ClusterCfg clusterCfg,
-      final GatewayCfg gatewayCfg,
+      final GatewayJobHub gatewayJobHub,
+      final GatewayTopologyManagerImpl gatewayTopologyManager,
       final ActorSchedulingService schedulingService,
       final MeterRegistry meterRegistry,
       final BeanFactory beanFactory,
@@ -63,7 +67,8 @@ final class BrokerContextImpl implements BrokerContext {
     this.atomixCluster = requireNonNull(atomixCluster);
     this.brokerCfg = requireNonNull(brokerCfg);
     this.clusterCfg = requireNonNull(clusterCfg);
-    this.gatewayCfg = requireNonNull(gatewayCfg);
+    this.gatewayJobHub = gatewayJobHub;
+    this.gatewayTopologyManager = gatewayTopologyManager;
     this.schedulingService = requireNonNull(schedulingService);
     this.meterRegistry = meterRegistry;
     this.beanFactory = beanFactory;
@@ -92,8 +97,13 @@ final class BrokerContextImpl implements BrokerContext {
   }
 
   @Override
-  public GatewayCfg getGatewayCfg() {
-    return gatewayCfg;
+  public GatewayJobHub getGatewayJobHub() {
+    return gatewayJobHub;
+  }
+
+  @Override
+  public GatewayTopologyManagerImpl getGatewayTopologyManager() {
+    return gatewayTopologyManager;
   }
 
   @Override

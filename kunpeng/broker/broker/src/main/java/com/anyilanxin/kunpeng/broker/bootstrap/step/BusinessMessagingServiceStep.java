@@ -30,6 +30,8 @@ import com.anyilanxin.kunpeng.configuration.cluster.ClusterConfigFactory;
 import com.anyilanxin.kunpeng.protocol.common.member.CommPortType;
 import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 业务面消息服务的 broker 启动步骤：构建并启动独立端口的业务消息实例（命令接收与集群面 Raft 流量隔离）， 并把端口写入本进程唯一的 broker
@@ -41,6 +43,8 @@ import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
  * @since 2026.9.0
  */
 public final class BusinessMessagingServiceStep extends AbstractBrokerStartupStep {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(BusinessMessagingServiceStep.class);
 
   @Override
   public String getName() {
@@ -62,6 +66,8 @@ public final class BusinessMessagingServiceStep extends AbstractBrokerStartupSte
                         brokerStartupContext.getBrokerConfiguration(),
                         brokerStartupContext.getClusterCft());
                 service.start().join();
+                LOGGER.info(
+                    "Business messaging started on port {} (aeron-udp)", service.address().port());
                 // 端口写入唯一传播实体并经管理服务发布（成员属性的唯一写入者）
                 final TopologyManager topologyManager =
                     brokerStartupContext.getClusterPartitionTopology();

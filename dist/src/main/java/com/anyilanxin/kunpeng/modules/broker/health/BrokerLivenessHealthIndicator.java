@@ -23,6 +23,7 @@ import org.springframework.boot.availability.ApplicationAvailability;
 import org.springframework.boot.availability.AvailabilityState;
 import org.springframework.boot.availability.LivenessState;
 import org.springframework.boot.health.application.LivenessStateHealthIndicator;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 /**
@@ -32,6 +33,7 @@ import org.springframework.stereotype.Component;
  * @since 2026.9.0
  */
 @Component(value = INDICATOR_BROKER_LIVENESS)
+@Profile(value = {"broker", "restore"})
 public final class BrokerLivenessHealthIndicator extends LivenessStateHealthIndicator {
 
   @Autowired

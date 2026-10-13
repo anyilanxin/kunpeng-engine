@@ -17,6 +17,8 @@
 package com.anyilanxin.kunpeng.modules.common.brokerclient;
 
 import com.anyilanxin.kunpeng.broker.client.business.BusinessBrokerPlane;
+import com.anyilanxin.kunpeng.broker.client.business.client.BusinessCommandClient;
+import com.anyilanxin.kunpeng.broker.client.business.client.impl.DefaultBusinessCommandClient;
 import com.anyilanxin.kunpeng.broker.client.core.BrokerClient;
 import com.anyilanxin.kunpeng.broker.client.core.impl.BrokerClientImpl;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
@@ -53,5 +55,11 @@ public final class BrokerClientConfiguration {
             topologyManager);
     scheduler.submitActor(brokerClient);
     return brokerClient;
+  }
+
+  /** 业务命令面客户端（按域拆分、泛型完全确定），REST service 层统一经此下发命令 */
+  @Bean
+  public BusinessCommandClient businessCommandClient(final BrokerClient brokerClient) {
+    return new DefaultBusinessCommandClient(brokerClient);
   }
 }

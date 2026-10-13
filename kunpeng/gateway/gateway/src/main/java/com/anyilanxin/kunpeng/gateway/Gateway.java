@@ -38,7 +38,6 @@ import java.net.URI;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * gateway：无状态接入层。终结 client 的 gRPC 连接，聚合本地 worker 注册广播到 broker 全节点， 维护挂起的 long-poll 表并转发 push
@@ -55,14 +54,12 @@ public class Gateway implements CloseableSilently {
   private final GatewayCfg gatewayCfg;
   private final AtomixCluster atomixCluster;
   private final MeterRegistry meterRegistry;
-  private final GatewayInfo localGateway;
   private final BrokerClient brokerClient;
   private final GatewayGrpcService gatewayGrpcService;
   private final ClusterTopologyService topologyManager;
   private final GatewayTopologyManagerImpl gatewayTopologyManager;
   private final GatewayJobHub jobHub;
   private final GatewayJobStreamClient jobStreamClient;
-  private final ScheduledExecutorService jobHubScheduler;
 
   public Gateway(
       final ActorSchedulingService schedulingService,
@@ -71,39 +68,26 @@ public class Gateway implements CloseableSilently {
       final MeterRegistry meterRegistry,
       final ClusterLeaderFoundService leaderService,
       final BrokerClient brokerClient,
-      final ClusterTopologyService topologyManager) {
+      final ClusterTopologyService topologyManager,
+      final GatewayTopologyManagerImpl gatewayTopologyManager,
+      final GatewayJobHub jobHub) {
     this.schedulingService = schedulingService;
     this.gatewayCfg = gatewayCfg;
     this.atomixCluster = atomixCluster;
-    localGateway = createGatewayInfo(gatewayCfg);
     this.meterRegistry = meterRegistry;
     this.topologyManager = topologyManager;
     this.brokerClient = brokerClient;
-    gatewayTopologyManager =
-        new GatewayTopologyManagerImpl(
-            atomixCluster.getMembershipService(),
-            atomixCluster.getCommunicationService(),
-            localGateway);
-    jobHubScheduler = newDaemonScheduler("gateway-job-hub");
-    // 长轮询默认挂起时长走配置（kunpeng.gateway.long-polling.timeout，毫秒），不再硬编码
-    jobHub = new GatewayJobHub(jobHubScheduler, gatewayCfg.getLongPolling().getTimeout());
-    jobHub.setBrokerClient(brokerClient);
+    this.gatewayTopologyManager = gatewayTopologyManager;
+    this.jobHub = jobHub;
     jobStreamClient =
         new GatewayJobStreamClient(
             atomixCluster.getCommunicationService(), atomixCluster.getMembershipService(), jobHub);
     gatewayGrpcService = buildGrpcService();
   }
 
-  private static ScheduledExecutorService newDaemonScheduler(final String name) {
-    return java.util.concurrent.Executors.newSingleThreadScheduledExecutor(
-        r -> {
-          final Thread thread = new Thread(r, name);
-          thread.setDaemon(true);
-          return thread;
-        });
-  }
-
-  private GatewayInfo createGatewayInfo(final GatewayCfg gatewayCfg) {
+  /** 本网关接入描述（成员 ID + grpc 接入地址 + 发现开关），供装配层构建拓扑视图与接入通告 */
+  public static GatewayInfo localGatewayInfo(
+      final GatewayCfg gatewayCfg, final AtomixCluster atomixCluster) {
     final GatewayGrpcNetworkCfg network = gatewayCfg.getNetwork();
     String grpcHost = network.getHost();
     if (network.userCustomGrpcHost()) {
@@ -137,15 +121,6 @@ public class Gateway implements CloseableSilently {
         gatewayTopologyManager,
         jobHub,
         atomixCluster);
-  }
-
-  public GatewayJobHub jobHub() {
-    return jobHub;
-  }
-
-  /** grpc 面网关拓扑视图（在线网关列表与负载查询），REST 集群查询域复用同一实例 */
-  public GatewayTopologyManager gatewayTopologyManager() {
-    return gatewayTopologyManager;
   }
 
   private CompletionStage<GatewayTopologyManager> startGatewayTopology() {
@@ -201,6 +176,5 @@ public class Gateway implements CloseableSilently {
   public void close() {
     jobStreamClient.close();
     gatewayGrpcService.close();
-    jobHubScheduler.shutdownNow();
   }
 }

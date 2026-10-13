@@ -20,6 +20,7 @@ import org.springframework.boot.availability.ApplicationAvailability;
 import org.springframework.boot.availability.AvailabilityState;
 import org.springframework.boot.health.application.LivenessStateHealthIndicator;
 import org.springframework.boot.health.contributor.Health;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 /**
@@ -29,6 +30,7 @@ import org.springframework.stereotype.Component;
  * @since 2026.9.0
  */
 @Component
+@Profile(value = {"gateway"})
 public final class GatewayLivenessHealthIndicator extends LivenessStateHealthIndicator {
   private static final Health STARTED = Health.up().build();
   private static final Health NOT_STARTED = Health.down().build();

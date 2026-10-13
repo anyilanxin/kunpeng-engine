@@ -16,18 +16,14 @@
  */
 package com.anyilanxin.kunpeng.modules.gateway;
 
-import com.anyilanxin.kunpeng.broker.client.business.client.BusinessCommandClient;
-import com.anyilanxin.kunpeng.broker.client.business.client.impl.DefaultBusinessCommandClient;
 import com.anyilanxin.kunpeng.broker.client.core.BrokerClient;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
 import com.anyilanxin.kunpeng.cluster.cluster.leaderfound.ClusterLeaderFoundService;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.configuration.gateway.GatewayCfg;
 import com.anyilanxin.kunpeng.gateway.Gateway;
-import com.anyilanxin.kunpeng.gateway.SpringGatewayBridge;
-import com.anyilanxin.kunpeng.gateway.grpc.gatewaydiscover.GatewayTopologyManager;
+import com.anyilanxin.kunpeng.gateway.grpc.gatewaydiscover.GatewayTopologyManagerImpl;
 import com.anyilanxin.kunpeng.gateway.job.GatewayJobHub;
-import com.anyilanxin.kunpeng.gateway.topology.GatewayDiscoverTopologyManager;
 import com.anyilanxin.kunpeng.modules.gateway.configuration.GatewayPropertiesConfiguration;
 import com.anyilanxin.kunpeng.protocol.common.encoding.GatewayInfo;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
@@ -41,7 +37,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 /**
- * 网关模块装配配置。
+ * 网关模块装配配置。job 中枢与拓扑视图来自 modules/common 的 GatewayFaceConfiguration（共享 bean 注入）。
  *
  * @author zxuanhong
  * @since 2026.9.0
@@ -64,7 +60,6 @@ public class GatewayModuleConfiguration {
   private final BrokerClient brokerClient;
   private final MeterRegistry meterRegistry;
   private final ClusterTopologyService topologyManager;
-  private final SpringGatewayBridge gatewayBridge;
 
   @Autowired
   public GatewayModuleConfiguration(
@@ -74,8 +69,7 @@ public class GatewayModuleConfiguration {
       final ClusterLeaderFoundService leaderService,
       final BrokerClient brokerClient,
       final MeterRegistry meterRegistry,
-      final ClusterTopologyService topologyManager,
-      final SpringGatewayBridge gatewayBridge) {
+      final ClusterTopologyService topologyManager) {
     this.schedulingService = schedulingService;
     this.gatewayCfg = gatewayCfg;
     this.atomixCluster = atomixCluster;
@@ -83,11 +77,11 @@ public class GatewayModuleConfiguration {
     this.brokerClient = brokerClient;
     this.meterRegistry = meterRegistry;
     this.topologyManager = topologyManager;
-    this.gatewayBridge = gatewayBridge;
   }
 
   @Bean(destroyMethod = "close")
-  public Gateway gateway() {
+  public Gateway gateway(
+      final GatewayJobHub jobHub, final GatewayTopologyManagerImpl gatewayTopologyManager) {
     atomixCluster.start();
     // 网关发现管理: client 接入地址写入 GatewayInfo 实体属性(未显式通告主机时空串回落成员主机, 收集侧解析)
     GatewayInfo.advertise(
@@ -102,36 +96,10 @@ public class GatewayModuleConfiguration {
             meterRegistry,
             leaderService,
             brokerClient,
-            topologyManager);
+            topologyManager,
+            gatewayTopologyManager,
+            jobHub);
     gateway.start().join(30, TimeUnit.SECONDS);
-    gatewayBridge.registerJobHub(gateway::jobHub);
     return gateway;
-  }
-
-  /** gateway 地址发现收集服务(gateway 单边): 解析各网关成员的 GatewayInfo 实体汇总 client 接入地址, 供 client 集群网关发现 */
-  @Bean(destroyMethod = "close")
-  public GatewayDiscoverTopologyManager gatewayTopologyManager() {
-    final GatewayDiscoverTopologyManager manager =
-        new GatewayDiscoverTopologyManager(atomixCluster.getMembershipService());
-    schedulingService.submitActor(manager);
-    return manager;
-  }
-
-  /** REST 面(SSE 流订阅/长轮询)复用的 job 消费枢纽，与 gRPC 面同一实例 */
-  @Bean
-  public GatewayJobHub gatewayJobHub(final Gateway gateway) {
-    return gateway.jobHub();
-  }
-
-  /** grpc 面网关拓扑视图透出（REST 集群查询域复用同一实例；生命周期归 Gateway 关闭链，不托管销毁） */
-  @Bean(destroyMethod = "")
-  public GatewayTopologyManager grpcGatewayTopologyManager(final Gateway gateway) {
-    return gateway.gatewayTopologyManager();
-  }
-
-  /** 业务命令面客户端（按域拆分、泛型完全确定），REST service 层统一经此下发命令 */
-  @Bean
-  public BusinessCommandClient businessCommandClient(final BrokerClient brokerClient) {
-    return new DefaultBusinessCommandClient(brokerClient);
   }
 }

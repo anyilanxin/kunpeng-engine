@@ -19,6 +19,7 @@ package com.anyilanxin.kunpeng.modules.gateway.health;
 import org.springframework.boot.availability.ApplicationAvailability;
 import org.springframework.boot.availability.AvailabilityState;
 import org.springframework.boot.health.application.ReadinessStateHealthIndicator;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 /**
@@ -28,6 +29,7 @@ import org.springframework.stereotype.Component;
  * @since 2026.9.0
  */
 @Component
+@Profile(value = {"gateway"})
 public final class GatewayReadinessHealthIndicator extends ReadinessStateHealthIndicator {
 
   public GatewayReadinessHealthIndicator(final ApplicationAvailability availability) {

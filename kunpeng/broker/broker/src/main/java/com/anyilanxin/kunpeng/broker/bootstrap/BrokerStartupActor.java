@@ -17,10 +17,7 @@
 package com.anyilanxin.kunpeng.broker.bootstrap;
 
 import com.anyilanxin.kunpeng.broker.BrokerContext;
-import com.anyilanxin.kunpeng.broker.gateway.EmbeddedGatewayService;
 import com.anyilanxin.kunpeng.broker.jobstream.JobStreamDispatcher;
-import com.anyilanxin.kunpeng.gateway.Gateway;
-import com.anyilanxin.kunpeng.gateway.job.GatewayJobHub;
 import com.anyilanxin.kunpeng.scheduler.Actor;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 import java.util.Optional;
@@ -49,7 +46,8 @@ public class BrokerStartupActor extends Actor {
         brokerContext.getBrokerClient(),
         brokerContext.getBrokerCfg(),
         brokerContext.getClusterCfg(),
-        brokerContext.getGatewayCfg(),
+        brokerContext.getGatewayJobHub(),
+        brokerContext.getGatewayTopologyManager(),
         brokerContext.getActorSchedulingService(),
         brokerContext.getAtomixCluster(),
         this,
@@ -62,18 +60,6 @@ public class BrokerStartupActor extends Actor {
   /** broker 侧 job 流派发器（观测用；对应启动步骤尚未执行时为空） */
   public Optional<JobStreamDispatcher> getJobStreamDispatcher() {
     return Optional.ofNullable(brokerStartup.getJobStreamDispatcher());
-  }
-
-  /** 内嵌网关订阅中心（观测用；未启用内嵌网关时为空） */
-  public Optional<GatewayJobHub> getEmbeddedGatewayJobHub() {
-    return Optional.ofNullable(brokerStartup.getEmbeddedGatewayService())
-        .map(service -> service.get().jobHub());
-  }
-
-  /** 内嵌网关实例（装配用；未启用内嵌网关时为空） */
-  public Optional<Gateway> getEmbeddedGateway() {
-    return Optional.ofNullable(brokerStartup.getEmbeddedGatewayService())
-        .map(EmbeddedGatewayService::get);
   }
 
   @Override

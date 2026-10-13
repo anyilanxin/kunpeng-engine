@@ -16,17 +16,24 @@
  */
 package com.anyilanxin.kunpeng.configuration.broker;
 
+import com.anyilanxin.kunpeng.configuration.gateway.GatewayCfg;
 import lombok.Getter;
 import lombok.Setter;
 
 /**
- * 内嵌网关开关配置。内嵌网关的网络与运行参数统一复用 {@code kunpeng.gateway.*} 配置（与独立网关同一份）。
+ * 内嵌网关配置，在 broker 内启用并配置嵌入式 gateway。整套网关参数绑定于 {@code kunpeng.broker.gateway.*}，与独立网关的 {@code
+ * kunpeng.gateway.*} 互不影响（同机双形态部署不会配置冲突）。
  *
  * @author zxuanhong
  * @since 2026.9.0
  */
 @Getter
 @Setter
-public final class EmbeddedGatewayCfg {
+public final class EmbeddedGatewayCfg extends GatewayCfg implements ConfigurationEntry {
   private boolean enable = true;
+
+  @Override
+  public void init(final BrokerCfg globalConfig, final String brokerBase) {
+    super.init(brokerBase);
+  }
 }

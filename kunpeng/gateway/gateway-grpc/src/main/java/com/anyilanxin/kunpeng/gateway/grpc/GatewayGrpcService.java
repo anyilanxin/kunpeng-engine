@@ -109,6 +109,7 @@ public class GatewayGrpcService extends Actor {
     } catch (final IOException e) {
       throw new UncheckedIOException(e);
     }
+    LOG.info("gRPC server started on port {} (grpc-tcp)", grpcServer.getPort());
   }
 
   @Override

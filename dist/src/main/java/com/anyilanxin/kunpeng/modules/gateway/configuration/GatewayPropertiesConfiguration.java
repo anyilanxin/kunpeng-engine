@@ -19,6 +19,7 @@ package com.anyilanxin.kunpeng.modules.gateway.configuration;
 import com.anyilanxin.kunpeng.configuration.gateway.GatewayCfg;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 /**
@@ -29,6 +30,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @EnableConfigurationProperties(GatewayPropertiesConfiguration.GatewayProperties.class)
+@Profile(value = {"gateway"})
 public class GatewayPropertiesConfiguration {
 
   @ConfigurationProperties("kunpeng.gateway")
