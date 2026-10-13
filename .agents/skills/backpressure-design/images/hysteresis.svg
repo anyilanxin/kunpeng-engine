@@ -70,5 +70,5 @@
   <rect x="738" y="452" width="202" height="30" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
   <text x="839" y="471" text-anchor="middle" font-size="12" font-weight="700" fill="#166534">放行（重开）</text>
 
-  <text x="500" y="522" text-anchor="middle" font-size="12" fill="#64748b">默认值 rejectBacklog = 50,000 · resumeBacklog = 40,000（flowControl.sinkBackpressure 可配可启停）</text>
+  <text x="500" y="522" text-anchor="middle" font-size="12" fill="#64748b">默认值 rejectBacklog = 50,000 · resumeBacklog = 40,000（flowControl.sink 可配可启停）</text>
 </svg>

@@ -1,7 +1,7 @@
 # sink 滞后闸门（SinkBackpressureGate）详细设计
 
 > 配图：[sink-backpressure-flow.svg](images/sink-backpressure-flow.svg)（业务面闭环）· [hysteresis.svg](images/hysteresis.svg)（双阈值迟滞）
-> 状态：设计定稿，未实施。管理面不设此闸门，范围仅业务面。
+> 状态：**已实施**（9 点位全部落地，闸门单测 6 例、四模块测试与整库构建全绿；实施期两处设计修正见文末）。管理面不设此闸门，范围仅业务面。
 
 ## 动机：两个不同的问题
 
@@ -29,7 +29,7 @@ lag = lastWrittenPosition − lowestSinkPosition
 | 拒绝 | `lag ≥ rejectBacklog`（默认 50,000） | 业务面 USER_COMMAND 全部回 `code=2` 失败应答 |
 | 恢复放行 | 拒绝状态下 `lag ≤ resumeBacklog`（默认 40,000） | 两阈值之间**维持原状态**，防边界抖动 |
 
-约束：`resumeBacklog < rejectBacklog`，装配时校验。`enabled=false`（配置）= 闸门不存在。
+约束：`resumeBacklog < rejectBacklog`，装配时校验。`enabled` 默认 false（与 request/write 统一 opt-in），`false` 或未配置 = 闸门不存在。
 
 ## 行为细节
 
@@ -46,7 +46,7 @@ lag = lastWrittenPosition − lowestSinkPosition
 | 2 | 准入检查 | `CommandApiHandleImpl.java:160`（磁盘检查同款位置） | 超阈值即 `errorResponse(2, ...)` |
 | 3 | 错误码集中 | broker-client core，如 `BrokerResponseCodes` | 收拢 `APPEND_REJECTED=1`（现两处局部常量），新增 `SINK_BACKPRESSURE=2` |
 | 4 | 装配 | `CommandApiServiceTransitionStep.java:40`（registerHandlers 处） | 传入两个 `LongSupplier`（written 位来自 `EventLog.getFlowControl()`；sink 最低位与 `PositionSupplierTransitionStep` 同源）+ 闸门配置 |
-| 5 | 配置 | `FlowControlCfg`（kunpeng/configuration）加 `sinkBackpressure` 字段；新增 `broker/backpressure/SinkBackpressureCfg.java`（enabled / rejectBacklog / resumeBacklog） | 用户自行启停与调参 |
+| 5 | 配置 | `FlowControlCfg`（kunpeng/configuration）加 `sink` 字段（与 request/write 同风格单字命名）；新增 `broker/backpressure/SinkBackpressureCfg.java`（enabled / rejectBacklog / resumeBacklog） | 用户自行启停与调参 |
 | 6 | gRPC 映射 | `GrpcErrorHandle.java:56` | code=2 → `RESOURCE_EXHAUSTED`；顺带把 code=1 纠正为 `RESOURCE_EXHAUSTED`（它本就是流控拒绝） |
 | 7 | REST 映射 | 遵守 HTTP 200 + `Result.fail(code)` | `BrokerCall`/`GlobalRestExceptionHandler` code 透传，无需结构改动 |
 | 8 | 客户端 SDK（可选后置） | client-java 错误映射 | code=2 → 专用可重试异常 |
@@ -64,6 +64,11 @@ sink 稳态 2,000 events/s、写入 5,000 events/s → 积压每秒 +3,000；`re
 - 装配单测：supplier 注入、`resumeBacklog ≥ rejectBacklog` 拒绝启动。
 - 拒绝应答路径：code=2 立即回包、请求登记清理（不悬挂）。
 - 回归：AIMD 窗口行为不受影响（两者独立）。
+
+## 实施记录（两处与初稿的偏差及原因）
+
+1. **检查点后移到请求登记之后**：`handleRequest` 里 `requestMap.put(requestId, ...)` 之后再判闸门、`errorResponse(2, ...)` 返回。初稿写的是「磁盘水位检查同款位置」（登记之前），但 `errorResponse` 走 `sendResponse` 统一路径——登记前调用会因查不到请求而丢弃应答，future 悬挂到超时。磁盘检查用 `completeExceptionally`（传输层异常）不走此路径，二者不能同位。
+2. **sink 位置 supplier 晚绑定**：`CommandApiServiceTransitionStep`（第 3 步）先于 `RocksdbPartitionTransitionStep`（第 5 步）执行，装配闸门时 repository 还不存在。闸门创建时 supplier 留空（恒放行），由 `PositionSupplierTransitionStep`（第 9 步、与快照压缩门槛同源）在 repository 就绪后调用 `bindSinkPositionSupplier` 绑定。首领切换会按序重跑两步，绑定幂等。
 
 ## 配套但独立的后续项
 

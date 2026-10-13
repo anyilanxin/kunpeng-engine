@@ -21,9 +21,14 @@ import com.anyilanxin.kunpeng.broker.client.business.commandapi.CommandApiServic
 import com.anyilanxin.kunpeng.broker.monitoring.DiskSpaceUsageListener;
 import com.anyilanxin.kunpeng.cluster.business.step.RaftPartitionSource;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
+import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
+import com.anyilanxin.kunpeng.configuration.broker.FlowControlCfg;
+import com.anyilanxin.kunpeng.configuration.broker.backpressure.SinkBackpressureCfg;
 import com.anyilanxin.kunpeng.eventlog.EventLog;
 import com.anyilanxin.kunpeng.scheduler.Actor;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
+import io.micrometer.core.instrument.MeterRegistry;
+import java.util.function.LongSupplier;
 import org.agrona.concurrent.IdGenerator;
 
 /**
@@ -35,10 +40,17 @@ import org.agrona.concurrent.IdGenerator;
 public class CommandApiServiceImpl extends Actor
     implements CommandApiService, DiskSpaceUsageListener {
   private final CommandApiHandleImpl handle;
+  private final BrokerCfg brokerCfg;
+  private final MeterRegistry meterRegistry;
 
   public CommandApiServiceImpl(
-      final MessagingService messagingService, final IdGenerator idGenerator) {
+      final MessagingService messagingService,
+      final IdGenerator idGenerator,
+      final BrokerCfg brokerCfg,
+      final MeterRegistry meterRegistry) {
     handle = new CommandApiHandleImpl(messagingService, idGenerator, actor);
+    this.brokerCfg = brokerCfg;
+    this.meterRegistry = meterRegistry;
   }
 
   @Override
@@ -75,10 +87,36 @@ public class CommandApiServiceImpl extends Actor
     actor.run(
         () -> {
           final var logStreamWriter = logStream.newWriter();
-          handle.registerHandlers(partitionSource, logStreamWriter);
+          handle.registerHandlers(
+              partitionSource, logStreamWriter, buildBackpressureGate(partitionSource, logStream));
           future.complete(null);
         });
     return future;
+  }
+
+  @Override
+  public void bindSinkPositionSupplier(
+      final int partitionId, final LongSupplier lowestSinkPosition) {
+    actor.run(() -> handle.bindSinkPositionSupplier(partitionId, lowestSinkPosition));
+  }
+
+  /**
+   * sink 滞后背压闸门（每分区一个）：配置禁用或缺失时不创建（闸门不存在）；写入位 supplier 取本分区事件日志流控， sink 最低确认位 supplier 由后续
+   * transition 步骤晚绑定（commandapi 步骤先于 repository 步骤执行）。
+   */
+  private SinkBackpressureGate buildBackpressureGate(
+      final RaftPartitionSource partitionSource, final EventLog logStream) {
+    final FlowControlCfg flowControlCfg = brokerCfg == null ? null : brokerCfg.getFlowControl();
+    final SinkBackpressureCfg sinkCfg = flowControlCfg == null ? null : flowControlCfg.getSink();
+    if (sinkCfg == null || !sinkCfg.isEnabled()) {
+      return null;
+    }
+    return new SinkBackpressureGate(
+        partitionSource.getPartitionId().id(),
+        logStream.getFlowControl()::lastWrittenPosition,
+        sinkCfg.getRejectBacklog(),
+        sinkCfg.getResumeBacklog(),
+        meterRegistry);
   }
 
   @Override

@@ -20,13 +20,13 @@ kunpeng 业务面写路径的准入控制体系。设计立场：下游（磁盘
 | # | 闸门 | 信号 | 拒绝条件 | 配置（均可启停） | 状态 |
 |---|---|---|---|---|---|
 | ① | 磁盘水位 | 剩余空闲空间（周期监测） | 低于 freeSpace 阈值 | `disk.enableMonitoring` + `disk.freeSpace.*` | 现有 |
-| ② | sink 滞后 | `lag = lastWrittenPosition − lowestSinkPosition` | `lag ≥ rejectBacklog`（迟滞恢复） | `flowControl.sinkBackpressure.*` | 设计定稿，未实施 |
+| ② | sink 滞后 | `lag = lastWrittenPosition − lowestSinkPosition` | `lag ≥ rejectBacklog`（迟滞恢复） | `flowControl.sink.*` | 已实施 |
 | ③ | AIMD 在途窗口 | 在途 USER_COMMAND 数 + 处理 RTT | 窗口耗尽 | `flowControl.request.enabled` + `aimd.*` | 现有 |
 
 ## 硬语义（不可违背）
 
 1. **无 sink 接入 → sink 侧背压不存在**：`SinkRepository.getLowestPosition()` 返回 −1（未配置任何 sink）时闸门常开。这是**运行时判定**，不是配置开关；与日志压缩门槛「−1 = 无约束」同语义。
-2. **全部阈值可配、每项可启停**：三道闸门的阈值与 `enabled` 都在 `kunpeng/configuration` 模块（`DiskCfg` / `FlowControlCfg.request` / `FlowControlCfg.sinkBackpressure`）。禁用的语义是"该闸门不存在"，不是"放宽"。
+2. **全部阈值可配、每项可启停、默认全关**：各闸门的阈值与 `enabled` 都在 `kunpeng/configuration` 模块（`DiskCfg` / `FlowControlCfg.request` / `FlowControlCfg.sink`，FlowControlCfg 字段单字命名）。`enabled` 统一默认 `false`（opt-in，逐项显式开启）。禁用或未配置的语义都是"该闸门不存在"，不是"放宽"。上游 `FlowControlCfg.write`（写侧速率限流）已删除不留预留：自研 eventlog 无此机制，导出滞后限写的职能由 sink 闸门承接。
 3. **只拦业务面 USER_COMMAND 入口**：引擎 INTERNAL 写入、raft 复制、sink 排空永不受限——下游消化不停，闭环必然收敛。管理面不设 sink 闸门。
 4. **拒绝 = 快速失败可重试**：统一 `errorResponse(code)` 立即应答；gateway 映射 gRPC `RESOURCE_EXHAUSTED` / REST `Result.fail(code)`，客户端退避重试。
 5. **双阈值迟滞**：`resumeBacklog < rejectBacklog`，两阈值之间维持当前状态，防边界抖动。

@@ -34,11 +34,11 @@
 | 约束范围 | 仅 `WriteContext.USER_COMMAND`；引擎 `INTERNAL`、跨分区、调度写入直接放行 |
 | 窗口释放 | 由**处理进度**驱动：`EngineProcessService` / `DispatchProcessService` 处理完调用 `onProcessed(position)` 采样 RTT 并释放占位——与 sink 进度无关 |
 | 拒绝行为 | `AppendResult.Rejected(REQUEST_WINDOW_EXHAUSTED)` → broker 应答 `ERROR_CODE_APPEND_REJECTED = 1`（局部常量，`CommandApiHandleImpl.java:65`） |
-| 配置 | `FlowControlCfg.request`（`LimitCfg`，`kunpeng/configuration/.../broker/backpressure/LimitCfg.java`）：`enabled`（默认 true，**false → 窗口退化 Integer.MAX_VALUE**）、`algorithm`（AIMD/FIXED）、`aimd.{initialLimit, minLimit, maxLimit}` |
+| 配置 | `FlowControlCfg.request`（`LimitCfg`，`kunpeng/configuration/.../broker/backpressure/LimitCfg.java`）：`enabled`（默认 false，与各控制点统一 opt-in；**true 开启，false → 窗口退化 Integer.MAX_VALUE**）、`algorithm`（AIMD/FIXED）、`aimd.{initialLimit, minLimit, maxLimit}` |
 | 装配映射 | `BusinessLogStreamPartitionTransitionStep.toParams`（`:123-146`）→ eventlog `FlowControlParams` |
-| 注意 | `FlowControlCfg.write`（`RateLimitCfg`）配置面存在但 eventlog **未消费**，是预留项，不算生效闸门；eventlog 设计文档中的 `BacklogThrottle`/`TokenBucket` 仅存在于文档，代码未实现 |
+| 注意 | 上游 `FlowControlCfg.write`（写侧速率限流）**已删除不留预留**：自研 eventlog 无此机制，其"导出滞后限写"职能由控制点②承接；eventlog 设计文档中的 `BacklogThrottle`/`TokenBucket` 仅存在于文档，代码未实现 |
 
-## 控制点 ②：sink 滞后闸门（设计定稿，未实施）
+## 控制点 ②：sink 滞后闸门（已实施）
 
 → 完整设计见 [02-sink-backpressure.md](./02-sink-backpressure.md)。要点：信号 `lag = lastWrittenPosition − lowestSinkPosition`，双阈值迟滞（reject 50k / resume 40k，均可配），无 sink（−1）时闸门不存在。
 
@@ -49,15 +49,14 @@ kunpeng:
   broker:
     flowControl:
       request:                      # 控制点③ AIMD 在途窗口（LimitCfg）
-        enabled: true               # false → 窗口退化（Integer.MAX_VALUE），闸门不存在
+        enabled: false              # 各控制点统一默认 false，显式开启；false → 窗口退化（Integer.MAX_VALUE）
         algorithm: AIMD             # AIMD / FIXED
         aimd:
           initialLimit: 100
           minLimit: 10
           maxLimit: 1000
-      # write: ...                  # 预留（RateLimitCfg，eventlog 未消费）
-      sinkBackpressure:             # 控制点② sink 滞后闸门（新增 SinkBackpressureCfg）
-        enabled: true               # false → 闸门不存在
+      sink:                         # 控制点② sink 滞后闸门（SinkBackpressureCfg）
+        enabled: false              # 默认 false，显式开启；false → 闸门不存在
         rejectBacklog: 50000        # lag ≥ 此值 → 拒绝（进入拒绝态）
         resumeBacklog: 40000        # lag ≤ 此值 → 恢复放行（须 < rejectBacklog）
     disk:                           # 控制点① 磁盘水位（DiskCfg）
@@ -72,17 +71,16 @@ kunpeng:
 |---|---|---|
 | `disk.*` | `broker/DiskCfg.java`（含 `FreeSpaceCfg`） | `BrokerCfg.disk` |
 | `flowControl.request` | `broker/backpressure/LimitCfg.java`（含 AIMDCfg 等） | `BrokerCfg.flowControl.request` |
-| `flowControl.sinkBackpressure`（新增） | `broker/backpressure/SinkBackpressureCfg.java`（新增，落 backpressure 子包） | `BrokerCfg.flowControl.sinkBackpressure`（FlowControlCfg 加字段） |
+| `flowControl.sink` | `broker/backpressure/SinkBackpressureCfg.java` | `BrokerCfg.flowControl.sink` |
 
-配置注入约束：新增 `sinkBackpressure` 后，装配侧（`CommandApiServiceTransitionStep` 注册时经 `BusinessTransitionContent`）负责把配置连同两个位置 supplier 传给闸门；`toParams` 映射保持 eventlog 参数与 sink 闸门参数**各自独立**，不塞进同一个 `FlowControlParams`。
+配置注入约束：`sink` 的装配在 `CommandApiServiceImpl.buildBackpressureGate`（注册 handler 时按配置建每分区闸门），sink 位置 supplier 由 `PositionSupplierTransitionStep` 晚绑定（repository 就绪后，与压缩门槛同源）；`toParams` 映射保持 eventlog 参数与 sink 闸门参数**各自独立**，不塞进同一个 `FlowControlParams`。
 
 ## 错误码与网关映射
 
 - broker 传输级错误码是 `BrokerResponse.code`（int），**不是** `RejectionType`（那是记录级业务拒绝枚举，两套体系不要混用）：
-  - `1 = APPEND_REJECTED`：现为实现里的局部常量，收拢到 broker-client 共享常量类（gateway/broker 都要读）
-  - `2 = SINK_BACKPRESSURE`：新增
+  - `1 = APPEND_REJECTED`、`2 = SINK_BACKPRESSURE`：已收拢到 broker-client 共享常量类 `BrokerResponseCodes`
 - wire 层零改动：错误码走现有 int 通道，不碰 SBE、不碰协议编号池。
-- gRPC：`GrpcErrorHandle.error(StreamObserver, BrokerResponse)`（`gateway-grpc/.../GrpcErrorHandle.java:56`）现状一律 `FAILED_PRECONDITION`；目标行为：code 1/2 → `RESOURCE_EXHAUSTED`（标准可重试语义）。
+- gRPC：`GrpcErrorHandle.error(StreamObserver, BrokerResponse)` 已将 code 1/2 映射 `RESOURCE_EXHAUSTED`（标准可重试语义），其余业务拒绝仍为 `FAILED_PRECONDITION`。
 - REST：遵守现有约定 HTTP 200 + `Result.fail(code)`（`GlobalRestExceptionHandler` / `BrokerCall` 透传 code），业务侧按 code 识别可重试。
 - 客户端 SDK（可选后置）：code=2 / `RESOURCE_EXHAUSTED` → 专用可重试异常类型。
 

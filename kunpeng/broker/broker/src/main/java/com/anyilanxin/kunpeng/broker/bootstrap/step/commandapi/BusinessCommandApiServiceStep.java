@@ -45,7 +45,10 @@ public final class BusinessCommandApiServiceStep extends AbstractBrokerStartupSt
     final MessagingService apiMessagingService = brokerStartupContext.getBusinessMessagingService();
     final CommandApiServiceImpl service =
         new CommandApiServiceImpl(
-            apiMessagingService, brokerStartupContext.getRequestIdGenerator()::nextId);
+            apiMessagingService,
+            brokerStartupContext.getRequestIdGenerator()::nextId,
+            brokerStartupContext.getBrokerConfiguration(),
+            brokerStartupContext.getMeterRegistry());
     concurrencyControl.runOnCompletion(
         brokerStartupContext.getActorSchedulingService().submitActor(service),
         proceed(

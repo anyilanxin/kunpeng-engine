@@ -22,6 +22,7 @@ import com.anyilanxin.kunpeng.broker.client.business.commandapi.CommandApiHandle
 import com.anyilanxin.kunpeng.broker.client.core.ApiRequestReader;
 import com.anyilanxin.kunpeng.broker.client.core.ApiRequestReaderImpl;
 import com.anyilanxin.kunpeng.broker.client.core.ApiResponseWriterImpl;
+import com.anyilanxin.kunpeng.broker.client.core.BrokerResponseCodes;
 import com.anyilanxin.kunpeng.broker.client.core.BrokerResponseWriter;
 import com.anyilanxin.kunpeng.cluster.business.step.RaftPartitionSource;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
@@ -43,6 +44,7 @@ import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
 import com.anyilanxin.kunpeng.utils.CloseableSilently;
 import com.anyilanxin.kunpeng.utils.VersionUtil;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.LongSupplier;
 import org.agrona.MutableDirectBuffer;
 import org.agrona.collections.Hashing;
 import org.agrona.collections.Int2ObjectHashMap;
@@ -61,13 +63,13 @@ public class CommandApiHandleImpl implements CommandApiHandle, CloseableSilently
   private static final String ERROR_MSG_MISSING_PARTITON_MAP =
       "Node already unsubscribed from partition %d, this can only happen when atomix does not cleanly remove its handlers.";
 
-  /** 日志写入被拒（流控窗口耗尽/事件日志拒绝追加）的错误码 */
-  private static final int ERROR_CODE_APPEND_REJECTED = 1;
-
   private final MessagingService messagingService;
   private boolean isDiskSpaceAvailable = true;
   private final ConcurrencyControl actor;
   private final Int2ObjectHashMap<Long2ObjectHashMap<PartitionRequest>> partitionsRequestMap;
+  // sink 滞后背压闸门（每分区一个；配置禁用或未创建时无条目=闸门不存在）
+  private final Int2ObjectHashMap<SinkBackpressureGate> backpressureGates =
+      new Int2ObjectHashMap<>();
   private final IdGenerator idGenerator;
   private static final Logger LOG = BrokerLoggers.CLUSTER_BUSINESS;
   private final RecordValueMapper valueMapper;
@@ -117,6 +119,7 @@ public class CommandApiHandleImpl implements CommandApiHandle, CloseableSilently
 
   private void removePartition(final int partitionId) {
     removeRequestHandlers(partitionId);
+    backpressureGates.remove(partitionId);
     final var requestMap = partitionsRequestMap.remove(partitionId);
     if (requestMap != null) {
       requestMap.clear();
@@ -141,12 +144,30 @@ public class CommandApiHandleImpl implements CommandApiHandle, CloseableSilently
   }
 
   void registerHandlers(
-      final RaftPartitionSource partitionSource, final EventLogWriter logStreamWriter) {
+      final RaftPartitionSource partitionSource,
+      final EventLogWriter logStreamWriter,
+      final SinkBackpressureGate backpressureGate) {
     actor.run(
         () -> {
           partitionsRequestMap.computeIfAbsent(
               partitionSource.getPartitionId().id(), _ -> new Long2ObjectHashMap<>());
+          if (backpressureGate == null) {
+            backpressureGates.remove(partitionSource.getPartitionId().id());
+          } else {
+            backpressureGates.put(partitionSource.getPartitionId().id(), backpressureGate);
+          }
           addRequestHandlers(partitionSource, logStreamWriter);
+        });
+  }
+
+  /** 绑定分区 sink 最低确认位 supplier（背压闸门信号源，repository 就绪后由 transition 装配） */
+  void bindSinkPositionSupplier(final int partitionId, final LongSupplier lowestSinkPosition) {
+    actor.run(
+        () -> {
+          final var gate = backpressureGates.get(partitionId);
+          if (gate != null) {
+            gate.bindSinkPositionSupplier(lowestSinkPosition);
+          }
         });
   }
 
@@ -183,6 +204,18 @@ public class CommandApiHandleImpl implements CommandApiHandle, CloseableSilently
               requestId,
               new PartitionRequest(
                   completableFuture, requestReader.requestType(), requestReader.valueType()));
+
+          // sink 滞后背压闸门：只拦业务面 USER_COMMAND 入口（本方法即唯一入口），超限立即回 code=2 失败应答
+          final var backpressureGate = backpressureGates.get(partitionSource.getPartitionId().id());
+          if (backpressureGate != null && !backpressureGate.tryAdmit()) {
+            errorResponse(
+                BrokerResponseCodes.SINK_BACKPRESSURE,
+                "Rejected by sink backpressure gate: sink export backlog reached the configured"
+                    + " threshold, retry after the backlog drains",
+                partitionSource,
+                requestId);
+            return;
+          }
 
           // 数据写入日志中
           writeCommand(partitionSource, requestId, logStreamWriter, requestReader);
@@ -223,14 +256,14 @@ public class CommandApiHandleImpl implements CommandApiHandle, CloseableSilently
       final AppendResult result = logStreamWriter.tryAppend(WriteContext.USER_COMMAND, appendEntry);
       if (result instanceof AppendResult.Rejected) {
         errorResponse(
-            ERROR_CODE_APPEND_REJECTED,
+            BrokerResponseCodes.APPEND_REJECTED,
             "Append of command to the event log was rejected by the log writer",
             partitionSource,
             requestId);
       }
     } else {
       errorResponse(
-          ERROR_CODE_APPEND_REJECTED,
+          BrokerResponseCodes.APPEND_REJECTED,
           "Cannot append command to the event log: in-flight window is exhausted",
           partitionSource,
           requestId);

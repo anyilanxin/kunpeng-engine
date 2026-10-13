@@ -17,6 +17,7 @@
 package com.anyilanxin.kunpeng.broker.business.raft.step.transition.positionsupier;
 
 import com.anyilanxin.kunpeng.broker.business.raft.step.transition.BusinessTransitionContent;
+import com.anyilanxin.kunpeng.broker.commandapi.CommandApiServiceImpl;
 import com.anyilanxin.kunpeng.cluster.business.step.transition.TransitionStep;
 import com.anyilanxin.kunpeng.repository.business.BusinessRepository;
 import com.anyilanxin.kunpeng.repository.business.modules.position.ImmutableProcessedPositionRepository;
@@ -77,6 +78,12 @@ public final class PositionSupplierTransitionStep
               .setProcessPositionSupplier(
                   positionRepository::getLastSuccessfulProcessedRecordPosition);
           context.getSnapshotProvider().setSinkPositionSupplier(sinkRepository::getLowestPosition);
+          // sink 滞后背压闸门信号源同源晚绑定（commandapi 闸门在本步骤之前创建，repository 此刻才就绪）
+          final CommandApiServiceImpl commandApiService = context.getCommandApiService();
+          if (commandApiService != null) {
+            commandApiService.bindSinkPositionSupplier(
+                context.getRaftPartitionId().id(), sinkRepository::getLowestPosition);
+          }
           future.complete(null);
         });
     return future;

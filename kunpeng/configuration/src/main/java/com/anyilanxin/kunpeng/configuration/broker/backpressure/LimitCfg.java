@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit;
  */
 public final class LimitCfg implements ConfigurationEntry {
 
-  private boolean enabled = true;
+  private boolean enabled = false;
 
   @JsonProperty(value = "useWindowed")
   private boolean useWindowed = true;

@@ -17,7 +17,7 @@
 package com.anyilanxin.kunpeng.configuration.broker;
 
 import com.anyilanxin.kunpeng.configuration.broker.backpressure.LimitCfg;
-import com.anyilanxin.kunpeng.configuration.broker.backpressure.RateLimitCfg;
+import com.anyilanxin.kunpeng.configuration.broker.backpressure.SinkBackpressureCfg;
 import java.util.Objects;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
@@ -32,8 +32,10 @@ import tools.jackson.databind.json.JsonMapper;
 public class FlowControlCfg implements ConfigurationEntry {
 
   private static final ObjectMapper MAPPER = JsonMapper.builder().build();
-  private LimitCfg request = null;
-  private RateLimitCfg write = null;
+  // 两个控制点统一语义：均有 enabled 开关且默认 false（未配置即全关，逐项显式开启）。
+  // 上游 FlowControlCfg.write（写侧速率限流）已删除：自研 eventlog 无此机制，导出滞后限写的职能由 sink 闸门承接。
+  private LimitCfg request = new LimitCfg();
+  private SinkBackpressureCfg sink = new SinkBackpressureCfg();
 
   public FlowControlCfg() {}
 
@@ -45,17 +47,17 @@ public class FlowControlCfg implements ConfigurationEntry {
     this.request = request;
   }
 
-  public RateLimitCfg getWrite() {
-    return write;
+  public SinkBackpressureCfg getSink() {
+    return sink;
   }
 
-  public void setWrite(final RateLimitCfg write) {
-    this.write = write;
+  public void setSink(final SinkBackpressureCfg sink) {
+    this.sink = sink;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(request, write);
+    return Objects.hash(request, sink);
   }
 
   @Override
@@ -66,7 +68,7 @@ public class FlowControlCfg implements ConfigurationEntry {
     if (!(o instanceof final FlowControlCfg that)) {
       return false;
     }
-    return Objects.equals(request, that.request) && Objects.equals(write, that.write);
+    return Objects.equals(request, that.request) && Objects.equals(sink, that.sink);
   }
 
   public static FlowControlCfg deserialize(final String serialized) throws JacksonException {

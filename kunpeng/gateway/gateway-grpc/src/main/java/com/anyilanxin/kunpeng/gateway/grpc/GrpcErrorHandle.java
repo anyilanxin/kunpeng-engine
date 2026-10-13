@@ -17,6 +17,7 @@
 package com.anyilanxin.kunpeng.gateway.grpc;
 
 import com.anyilanxin.kunpeng.broker.client.core.BrokerResponse;
+import com.anyilanxin.kunpeng.broker.client.core.BrokerResponseCodes;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
@@ -55,6 +56,13 @@ public class GrpcErrorHandle {
 
   public <T> StatusRuntimeException error(
       final StreamObserver<T> streamObserver, final BrokerResponse brokerResponse) {
+    // 流控/背压类拒绝（在途窗口耗尽、sink 滞后闸门）是资源不足而非业务/参数错误，映射 RESOURCE_EXHAUSTED 供调用方重试退避
+    final int code = brokerResponse.code();
+    if (code == BrokerResponseCodes.APPEND_REJECTED
+        || code == BrokerResponseCodes.SINK_BACKPRESSURE) {
+      return new StatusRuntimeException(
+          Status.RESOURCE_EXHAUSTED.withDescription(brokerResponse.message()));
+    }
     // broker 业务拒绝（定义不存在/状态机不符等）不是参数格式问题
     return new StatusRuntimeException(
         Status.FAILED_PRECONDITION.withDescription(brokerResponse.message()));

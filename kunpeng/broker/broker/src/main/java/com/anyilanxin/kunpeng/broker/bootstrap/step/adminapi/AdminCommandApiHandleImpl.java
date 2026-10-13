@@ -25,6 +25,7 @@ import com.anyilanxin.kunpeng.broker.client.admin.commandapi.AdminCommandApiHand
 import com.anyilanxin.kunpeng.broker.client.core.ApiRequestReader;
 import com.anyilanxin.kunpeng.broker.client.core.ApiRequestReaderImpl;
 import com.anyilanxin.kunpeng.broker.client.core.ApiResponseWriterImpl;
+import com.anyilanxin.kunpeng.broker.client.core.BrokerResponseCodes;
 import com.anyilanxin.kunpeng.broker.client.core.BrokerResponseWriter;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
 import com.anyilanxin.kunpeng.eventlog.AppendEntry;
@@ -58,9 +59,6 @@ import org.slf4j.Logger;
  * @since 2026.9.0
  */
 public class AdminCommandApiHandleImpl implements AdminCommandApiHandle, CloseableSilently {
-  /** 日志写入被拒（流控窗口耗尽/事件日志拒绝追加）的错误码 */
-  private static final int ERROR_CODE_APPEND_REJECTED = 1;
-
   private final MessagingService messagingService;
   private final boolean isDiskSpaceAvailable = true;
   private final ConcurrencyControl actor;
@@ -184,13 +182,13 @@ public class AdminCommandApiHandleImpl implements AdminCommandApiHandle, Closeab
       final AppendResult result = logStreamWriter.tryAppend(WriteContext.USER_COMMAND, appendEntry);
       if (result instanceof AppendResult.Rejected) {
         errorResponse(
-            ERROR_CODE_APPEND_REJECTED,
+            BrokerResponseCodes.APPEND_REJECTED,
             "Append of command to the event log was rejected by the log writer",
             requestId);
       }
     } else {
       errorResponse(
-          ERROR_CODE_APPEND_REJECTED,
+          BrokerResponseCodes.APPEND_REJECTED,
           "Cannot append command to the event log: in-flight window is exhausted",
           requestId);
     }

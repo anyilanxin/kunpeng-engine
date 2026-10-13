@@ -3381,6 +3381,135 @@
             }
         },
         {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "sink 滞后背压闸门信号：最后写入位 − sink 最低确认位，越过 rejectBacklog 即拒绝业务面准入",
+            "id": 93,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "sink 滞后量（背压闸门信号）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{partition}} {{job}}",
+                "expr": "max by (job, partition) (commandapi_backpressure_lag{job=~\"$job\", partition=~\"$partition\"})",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 0,
+                "y": 24
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "sink 背压闸门状态：0=放行 1=拒绝中（双阈值迟滞，回落 resumeBacklog 才重开）",
+            "id": 94,
+            "fieldConfig": {
+                "defaults": {
+                    "mappings": [{
+                        "options": {
+                            "0": {"text": "放行"},
+                            "1": {"text": "拒绝中"}
+                        },
+                        "type": "value"
+                    }],
+                    "unit": "short"
+                },
+                "overrides": []
+            },
+            "title": "sink 背压闸门状态",
+            "type": "state-timeline",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{partition}} {{job}}",
+                "expr": "max by (job, partition) (commandapi_backpressure_rejecting{job=~\"$job\", partition=~\"$partition\"})",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 8,
+                "y": 24
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "被 sink 背压闸门拒绝的业务命令速率，持续非零说明外部写入超载",
+            "id": 95,
+            "fieldConfig": {
+                "defaults": {"unit": "ops"},
+                "overrides": []
+            },
+            "title": "背压拒绝的命令速率",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{partition}} {{job}}",
+                "expr": "sum by (job, partition) (rate(commandapi_backpressure_rejected_total{job=~\"$job\", partition=~\"$partition\"}[5m]))",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 16,
+                "y": 24
+            }
+        },
+        {
             "collapsed": false,
             "panels": [],
             "datasource": {

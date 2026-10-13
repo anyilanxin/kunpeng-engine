@@ -19,6 +19,7 @@ package com.anyilanxin.kunpeng.broker.client.business.commandapi;
 import com.anyilanxin.kunpeng.cluster.business.step.RaftPartitionSource;
 import com.anyilanxin.kunpeng.eventlog.EventLog;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
+import java.util.function.LongSupplier;
 
 /**
  * Supports sending arbitrary commands to another partition. Sending may be unreliable and fail
@@ -41,6 +42,12 @@ public interface CommandApiService {
       final RaftPartitionSource partitionSource, final EventLog logStream);
 
   ActorFuture<Void> unregisterHandlers(final RaftPartitionSource partitionSource);
+
+  /**
+   * 绑定分区 sink 最低确认位 supplier（sink 滞后背压闸门信号源，与日志压缩门槛同源）：repository 就绪后由 transition 步骤装配， 未绑定/无
+   * sink（返回 −1）时闸门恒放行。
+   */
+  void bindSinkPositionSupplier(final int partitionId, final LongSupplier lowestSinkPosition);
 
   CommandApiHandle gettCommandApiHandle();
 }
