@@ -61,13 +61,6 @@ public class AeronMessagingConfig implements Config {
   /** 是否内嵌启动 Media Driver（同一 JVM 内多个节点必须各自使用独立的 aeronDir）。 */
   private boolean embeddedDriver = true;
 
-  /**
-   * 内嵌驱动是否为进程级共享（引用计数）：集群面/业务面等多个传输实例复用同一驱动，省去每实例一套驱动线程与 CnC 共享内存。
-   *
-   * <p>默认 false（每实例独占驱动）——同 JVM 多节点场景（测试、基准）保持线程并行度不受损；生产装配（集群面+业务面双实例）显式开启。
-   */
-  private boolean sharedDriver = false;
-
   /** Aeron 目录；null 表示自动生成临时目录（内嵌模式）或使用默认目录（外部驱动模式）。 */
   private File aeronDir;
 
@@ -136,6 +129,15 @@ public class AeronMessagingConfig implements Config {
 
   /** 发送方标识（用于按发送方派生 AES 密钥）；null 时由 AtomixCluster 自动填充成员 ID， 仍未设置则回退为绑定地址。 */
   private @Nullable String cryptoSenderId;
+
+  /**
+   * 本机自寻址消息（目的地=本节点绑定地址）是否短路走 {@code aeron:ipc} 共享内存通道。
+   *
+   * <p>单进程/单节点形态下跨分区命令、job 推送回本机网关等自环流量原路走 UDP 内核回环（两次网络栈穿越）； 开启后同帧直拷共享内存（µs
+   * 级），帧格式/加密/收发管线完全不变，上层无感知。仅同一传输实例内生效（驱动每实例独占，跨实例——如业务面——不触发）； 绑定地址与目的地主机串不一致（如 messaging
+   * interfaces 覆盖）时不命中、维持 UDP——miss 只损失优化不损语义； MDC 广播的自送达不走该短路。
+   */
+  private boolean localIpcEnabled = true;
 
   public int getStreamId() {
     return streamId;
@@ -215,15 +217,6 @@ public class AeronMessagingConfig implements Config {
 
   public AeronMessagingConfig setEmbeddedDriver(final boolean embeddedDriver) {
     this.embeddedDriver = embeddedDriver;
-    return this;
-  }
-
-  public boolean isSharedDriver() {
-    return sharedDriver;
-  }
-
-  public AeronMessagingConfig setSharedDriver(final boolean sharedDriver) {
-    this.sharedDriver = sharedDriver;
     return this;
   }
 
@@ -320,6 +313,15 @@ public class AeronMessagingConfig implements Config {
 
   public AeronMessagingConfig setCryptoSenderId(final String cryptoSenderId) {
     this.cryptoSenderId = cryptoSenderId;
+    return this;
+  }
+
+  public boolean isLocalIpcEnabled() {
+    return localIpcEnabled;
+  }
+
+  public AeronMessagingConfig setLocalIpcEnabled(final boolean localIpcEnabled) {
+    this.localIpcEnabled = localIpcEnabled;
     return this;
   }
 }

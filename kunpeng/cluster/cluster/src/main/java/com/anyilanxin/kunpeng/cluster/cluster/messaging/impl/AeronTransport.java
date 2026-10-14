@@ -58,7 +58,8 @@ import org.slf4j.LoggerFactory;
  * Aeron 传输底座：由 {@link AeronMessagingService} 与 {@link AeronUnicastService} 引用计数共享。
  *
  * <p>职责：内嵌/外部 Media Driver 与 Aeron 客户端生命周期、两条接收流（RPC 与单播）的订阅、单代理线程上的
- * 发送队列（有界入队、背压重试与投递截止）、发布通道缓存，以及超时扫描回调。
+ * 发送队列（有界入队、背压重试与投递截止）、发布通道缓存，以及超时扫描回调。 开启 {@code localIpc} 后自寻址消息（目的地=本节点绑定地址）短路走 {@code
+ * aeron:ipc} 共享内存通道，帧格式与收发管线不变。
  *
  * <p>替代原 Netty 方案中的：连接池（ChannelPool）、TCP 心跳（HeartbeatHandler，Aeron 驱动的状态报文天然保活）、 协议版本协商（帧内版本字节）。
  *
@@ -72,6 +73,7 @@ public final class AeronTransport {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(AeronTransport.class);
   private static final int FRAGMENT_LIMIT = 10;
+  private static final String IPC_CHANNEL = "aeron:ipc";
 
   /** MDC 广播目的地空闲淘汰阈值：超过该时长未被任何广播指向的目的地自动移除（成员退出后回收）。 */
   private static final long BROADCAST_DESTINATION_TTL_NS = TimeUnit.SECONDS.toNanos(60);
@@ -85,6 +87,7 @@ public final class AeronTransport {
 
   private final MessagingConfig messagingConfig;
   private final AeronMessagingConfig config;
+  private final Address bindAddress;
   private final String bindChannel;
   private final String bindEndpoint;
   private final ReentrantLock lifecycleLock = new ReentrantLock();
@@ -96,6 +99,8 @@ public final class AeronTransport {
   private Aeron aeron;
   private Subscription messagingSubscription;
   private Subscription unicastSubscription;
+  private Subscription ipcMessagingSubscription;
+  private Subscription ipcUnicastSubscription;
   private AgentRunner agentRunner;
 
   /**
@@ -125,6 +130,7 @@ public final class AeronTransport {
       final AeronMessagingConfig config) {
     this.messagingConfig = messagingConfig;
     this.config = config;
+    this.bindAddress = bindAddress;
     this.bindEndpoint = endpoint(bindAddress);
     this.bindChannel = "aeron:udp?endpoint=" + bindEndpoint + tuningParams();
     this.sendQueue = new ManyToOneConcurrentArrayQueue<>(config.getSendQueueCapacity());
@@ -333,14 +339,11 @@ public final class AeronTransport {
   }
 
   private void startLocked() {
-    // 内嵌驱动默认每实例独占(同 JVM 多节点保持线程并行度); sharedDriver 开启时多个传输实例
-    // (集群面/业务面)复用进程级共享驱动, 各自保留独立的端口、订阅、发布通道与代理线程
+    // 每传输实例独占驱动：同进程双实例（集群面/业务面）网络收发不共线程，快照复制风暴不影响业务命令路径；
+    // 同 JVM 多节点（测试、基准）同样各自驱动互不干扰
     final String dir;
     if (config.isEmbeddedDriver()) {
-      processDriver =
-          config.isSharedDriver()
-              ? AeronProcessDriverHolder.retain(messagingConfig, config)
-              : AeronProcessDriverHolder.exclusive(messagingConfig, config);
+      processDriver = AeronProcessDriverHolder.exclusive(messagingConfig, config);
       dir = processDriver.aeronDir();
     } else {
       processDriver = null;
@@ -354,6 +357,11 @@ public final class AeronTransport {
     aeron = Aeron.connect(clientContext);
     messagingSubscription = aeron.addSubscription(bindChannel, config.getStreamId());
     unicastSubscription = aeron.addSubscription(bindChannel, config.getUnicastStreamId());
+    if (config.isLocalIpcEnabled()) {
+      // 自寻址短路接收侧：与 UDP 入订同一代理线程轮询，帧经同一解密/解帧/分发管线
+      ipcMessagingSubscription = aeron.addSubscription(IPC_CHANNEL, config.getStreamId());
+      ipcUnicastSubscription = aeron.addSubscription(IPC_CHANNEL, config.getUnicastStreamId());
+    }
 
     crypto = null;
     if (config.isCryptoEnabled()) {
@@ -371,11 +379,12 @@ public final class AeronTransport {
     agentRunner = new AgentRunner(idleStrategy(config), AeronTransport::onAgentError, null, agent);
     AgentRunner.startOnThread(agentRunner);
     LOGGER.info(
-        "Aeron transport started: dir={}, bindChannel={}, stream={}/{}",
+        "Aeron transport started: dir={}, bindChannel={}, stream={}/{}, localIpc={}",
         dir,
         bindChannel,
         config.getStreamId(),
-        config.getUnicastStreamId());
+        config.getUnicastStreamId(),
+        config.isLocalIpcEnabled());
   }
 
   private void stopLockedQuietly() {
@@ -392,6 +401,14 @@ public final class AeronTransport {
     if (unicastSubscription != null) {
       unicastSubscription.close();
       unicastSubscription = null;
+    }
+    if (ipcMessagingSubscription != null) {
+      ipcMessagingSubscription.close();
+      ipcMessagingSubscription = null;
+    }
+    if (ipcUnicastSubscription != null) {
+      ipcUnicastSubscription.close();
+      ipcUnicastSubscription = null;
     }
     if (aeron != null) {
       aeron.close();
@@ -463,11 +480,21 @@ public final class AeronTransport {
         .computeIfAbsent(
             termBufferLength,
             ignored ->
-                "aeron:udp?endpoint="
-                    + endpoint(destination)
-                    + "|term-length="
-                    + termBufferLength
-                    + tuningParams());
+                isSelfIpc(destination)
+                    ? IPC_CHANNEL + "?term-length=" + termBufferLength
+                    : "aeron:udp?endpoint="
+                        + endpoint(destination)
+                        + "|term-length="
+                        + termBufferLength
+                        + tuningParams());
+  }
+
+  /**
+   * 本机自寻址判定（目的地=本节点绑定地址）：命中且开启 {@code localIpc} 时短路走共享内存通道， 省去 UDP 内核回环两次网络栈穿越；ipc 通道不携带 mtu/so-buf
+   * 等 UDP socket 参数。 绑定地址与目的地主机串不一致时不命中、维持 UDP——miss 只损失优化不损语义。
+   */
+  private boolean isSelfIpc(final Address destination) {
+    return config.isLocalIpcEnabled() && bindAddress.equals(destination);
   }
 
   private static String endpoint(final Address address) {
@@ -537,6 +564,17 @@ public final class AeronTransport {
             (buffer, offset, length, header) ->
                 dispatchFrame(unicastListener, buffer, offset, length));
 
+    // IPC 入流必须各持独立重组器：FragmentAssembler 的重组缓冲按 sessionId 键控，
+    // UDP 与 IPC 两条入流的会话号空间独立，共享实例在会话号撞车且分片在途时会串包
+    private final FragmentAssembler ipcMessagingAssembler =
+        new FragmentAssembler(
+            (buffer, offset, length, header) ->
+                dispatchFrame(messagingListener, buffer, offset, length));
+    private final FragmentAssembler ipcUnicastAssembler =
+        new FragmentAssembler(
+            (buffer, offset, length, header) ->
+                dispatchFrame(unicastListener, buffer, offset, length));
+
     @Override
     public String roleName() {
       return "kunpeng-aeron-transport";
@@ -547,16 +585,10 @@ public final class AeronTransport {
       int work = 0;
       work += drainSendQueue();
       work += drainBroadcasts();
-      try {
-        work += messagingSubscription.poll(messagingAssembler, FRAGMENT_LIMIT);
-      } catch (final Exception error) {
-        LOGGER.error("RPC 流接收失败", error);
-      }
-      try {
-        work += unicastSubscription.poll(unicastAssembler, FRAGMENT_LIMIT);
-      } catch (final Exception error) {
-        LOGGER.error("单播流接收失败", error);
-      }
+      work += pollInbound(messagingSubscription, messagingAssembler, "RPC 流");
+      work += pollInbound(unicastSubscription, unicastAssembler, "单播流");
+      work += pollInbound(ipcMessagingSubscription, ipcMessagingAssembler, "RPC IPC 流");
+      work += pollInbound(ipcUnicastSubscription, ipcUnicastAssembler, "单播 IPC 流");
       sweepIdleBroadcastDestinations(System.nanoTime());
       sweepIdlePublications(System.nanoTime());
       final long nowNs = System.nanoTime();
@@ -568,6 +600,20 @@ public final class AeronTransport {
         }
       }
       return work;
+    }
+
+    /** 单条入流轮询（订阅可为 null=本机 IPC 未启用）；单流异常只损失该轮该流，不允许杀死代理线程。 */
+    private int pollInbound(
+        final Subscription subscription, final FragmentAssembler assembler, final String stream) {
+      if (subscription == null) {
+        return 0;
+      }
+      try {
+        return subscription.poll(assembler, FRAGMENT_LIMIT);
+      } catch (final Exception error) {
+        LOGGER.error("{}接收失败", stream, error);
+        return 0;
+      }
     }
 
     @Override

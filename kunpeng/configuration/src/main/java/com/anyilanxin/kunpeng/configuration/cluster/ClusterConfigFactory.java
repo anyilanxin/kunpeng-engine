@@ -20,6 +20,7 @@ import com.anyilanxin.kunpeng.cluster.cluster.ClusterConfig;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberConfig;
 import com.anyilanxin.kunpeng.cluster.cluster.NodeConfig;
 import com.anyilanxin.kunpeng.cluster.cluster.discovery.BootstrapDiscoveryConfig;
+import com.anyilanxin.kunpeng.cluster.cluster.messaging.AeronMessagingConfig;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingConfig;
 import com.anyilanxin.kunpeng.cluster.cluster.protocol.SwimMembershipProtocolConfig;
 import com.anyilanxin.kunpeng.cluster.utils.net.Address;
@@ -65,10 +66,14 @@ public final class ClusterConfigFactory {
     final var member = memberConfig(network, cluster.getNodeId(), broker);
     final MessagingConfig messagingConfig = memberMessagingConfig(network);
 
+    // Aeron 传输面仅开放自寻址 IPC 短路开关（同实例自发自收，业务面单边接收不参与），其余参数维持内置默认；驱动每实例独占
+    final var aeronConfig =
+        new AeronMessagingConfig().setLocalIpcEnabled(cluster.isLocalIpcEnabled());
     return new ClusterConfig()
         .setClusterId(name)
         .setNodeConfig(member)
         .setMessagingConfig(messagingConfig)
+        .setAeronConfig(aeronConfig)
         .setDiscoveryConfig(discovery)
         .setProtocolConfig(membership);
   }

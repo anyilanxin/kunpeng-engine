@@ -41,6 +41,7 @@ final class AeronUnicastServiceTest {
 
   private static final Address NODE1 = Address.from("127.0.0.1", 29151);
   private static final Address NODE2 = Address.from("127.0.0.1", 29152);
+  private static final Address SELF = Address.from("127.0.0.1", 29153);
 
   private AeronUnicastService node1;
   private AeronUnicastService node2;
@@ -85,6 +86,46 @@ final class AeronUnicastServiceTest {
     node2.unicast(NODE1, "reverse", new byte[] {9});
 
     assertTrue(deliveredToNode1.await(10, TimeUnit.SECONDS), "反向单播消息应当被消费");
+  }
+
+  @Test
+  void unicastToSelfTakesIpcShortcut(@TempDir final File tempDir) throws Exception {
+    // 自寻址短路: 目的地=本节点绑定地址且开启 localIpc 时, 发布通道应为 aeron:ipc 且消息经共享内存送达本机监听器
+    final var aeronConfig =
+        new AeronMessagingConfig()
+            .setAeronDir(new File(tempDir, "self"))
+            .setTermBufferLength(1024 * 1024)
+            .setDriverThreadingMode("SHARED")
+            .setIdleStrategy("sleeping")
+            .setLocalIpcEnabled(true);
+    final var transport =
+        new AeronTransport(SELF, new MessagingConfig().setPort(SELF.port()), aeronConfig);
+    final var self = new AeronUnicastService(SELF, aeronConfig, transport);
+    try {
+      self.start().get(10, TimeUnit.SECONDS);
+      assertTrue(
+          transport
+              .publicationChannel(SELF, aeronConfig.getUnicastTermBufferLength())
+              .startsWith("aeron:ipc"),
+          "自寻址发布通道应当短路为 aeron:ipc");
+
+      final CountDownLatch delivered = new CountDownLatch(1);
+      final AtomicReference<byte[]> received = new AtomicReference<>();
+      self.addListener(
+          "self-topic",
+          (sender, payload) -> {
+            received.set(payload);
+            delivered.countDown();
+          },
+          Runnable::run);
+      final byte[] payload = "ipc-body".getBytes();
+      self.unicast(SELF, "self-topic", payload);
+
+      assertTrue(delivered.await(10, TimeUnit.SECONDS), "自寻址单播应当经 IPC 通道送达本机监听器");
+      assertArrayEquals(payload, received.get());
+    } finally {
+      stopQuietly(self);
+    }
   }
 
   private AeronUnicastService start(final File aeronDir, final Address address) throws Exception {

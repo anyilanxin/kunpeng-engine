@@ -28,13 +28,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 内嵌 Media Driver 持有者：支持进程级共享（引用计数）与独占两种模式。
+ * 内嵌 Media Driver 持有者：每个传输实例独占一个驱动（专属 aeron 目录与驱动线程）。
  *
- * <p><b>共享模式</b>（{@link AeronMessagingConfig#isSharedDriver()}）：同进程的多个 {@link AeronTransport}
- * 实例（集群面/业务面各自独立端口与代理线程）复用同一个驱动与 aeron 目录，避免每实例重复一套驱动线程与 CnC 共享内存。驱动级参数（线程模式、流控窗口、socket 缓冲）以
- * <b>首个启动</b> 的实例配置为准——通常为集群面实例。进程内最后一个使用方释放时关闭驱动。
- *
- * <p><b>独占模式</b>（默认）：每个传输实例各自启动/关闭驱动——同 JVM 多节点（测试、基准）保持线程并行度，不受彼此影响。
+ * <p>刻意不做进程级共享：同进程双实例（集群面/业务面）若共享驱动，两面的网络收发系统调用会耦合进同一条 Sender/Receiver
+ * 线程——快照复制风暴期业务命令路径尾部劣化，恰好破坏双面拆分要隔离的争用对（基准实测共享线程族 在大报文下吞吐塌陷）。同 JVM 多节点（测试、基准）同样各自驱动互不干扰。
  *
  * <p>外置驱动模式不经过本类。
  *
@@ -44,60 +41,21 @@ import org.slf4j.LoggerFactory;
 final class AeronProcessDriverHolder {
   private static final Logger LOGGER = LoggerFactory.getLogger(AeronProcessDriverHolder.class);
 
-  /** 共享模式的进程内单例；类锁守护（各传输实例自身的 lifecycleLock 互不相同）。 */
-  private static AeronProcessDriverHolder instance;
-
-  private final boolean shared;
   private MediaDriver driver;
   private String aeronDir;
-  private int refCount;
 
-  private AeronProcessDriverHolder(final boolean shared) {
-    this.shared = shared;
-  }
-
-  /** 共享模式：引用计数复用进程级单例驱动。 */
-  static synchronized AeronProcessDriverHolder retain(
-      final MessagingConfig messagingConfig, final AeronMessagingConfig config) {
-    if (instance == null) {
-      instance = new AeronProcessDriverHolder(true);
-      instance.launch(messagingConfig, config);
-      LOGGER.info(
-          "进程级共享 Aeron 驱动已启动: dir={}, 线程模式={}", instance.aeronDir, config.getDriverThreadingMode());
-    }
-    instance.refCount++;
-    return instance;
-  }
-
-  /** 独占模式：为本传输实例启动专属驱动。 */
+  /** 为本传输实例启动专属驱动。 */
   static AeronProcessDriverHolder exclusive(
       final MessagingConfig messagingConfig, final AeronMessagingConfig config) {
-    final AeronProcessDriverHolder holder = new AeronProcessDriverHolder(false);
+    final AeronProcessDriverHolder holder = new AeronProcessDriverHolder();
     holder.launch(messagingConfig, config);
     return holder;
   }
 
-  /** 释放：共享模式减引用（归零关驱动，与 retain 同类锁），独占模式直接关闭自己的驱动。 */
+  /** 释放：关闭本实例的驱动。 */
   void release() {
-    if (shared) {
-      releaseShared(this);
-      return;
-    }
     driver.close();
     LOGGER.info("Aeron 驱动已关闭: dir={}", aeronDir);
-  }
-
-  private static synchronized void releaseShared(final AeronProcessDriverHolder holder) {
-    if (holder != instance || holder.refCount <= 0) {
-      return;
-    }
-    holder.refCount--;
-    if (holder.refCount > 0) {
-      return;
-    }
-    holder.driver.close();
-    instance = null;
-    LOGGER.info("进程级共享 Aeron 驱动已关闭(最后一个使用方释放): dir={}", holder.aeronDir);
   }
 
   String aeronDir() {

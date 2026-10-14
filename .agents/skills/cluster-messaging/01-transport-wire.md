@@ -9,7 +9,8 @@
 - **广播用 MDC**（`control-mode=manual`）：组帧/加密一次、驱动扇出到全部目的地；内存从「目的地数 × term」降为单条 term
 - **空闲淘汰**：单播发布通道与 MDC 广播目的地均 60s 未使用自动回收（成员下线后释放独占 term 缓冲）
 - **同端口双逻辑流**：`streamId`（1001，RPC/事件）与 `unicastStreamId`（1002，不可靠单向）
-- **驱动持有**（`AeronProcessDriverHolder`）：`sharedDriver=true` 进程级单例（引用计数，最后一个使用方释放时关驱动，驱动参数以首个启动实例为准——通常集群面）；默认独占模式每传输实例各自驱动
+- **自寻址 IPC 短路**（`localIpcEnabled`，默认开）：目的地=本节点绑定地址时发布通道短路为 `aeron:ipc?term-length=...`（共享内存直拷，免 UDP 内核回环两次网络栈穿越）；接收侧为同一代理线程上的独立 IPC 订阅 + **独立 FragmentAssembler**（IPC 与 UDP 会话号空间独立，共享重组缓冲会串包）；帧格式/加密/分发管线不变，miss（地址不一致）只损失优化不损语义；MDC 广播自送达不走该短路
+- **驱动持有**（`AeronProcessDriverHolder`）：每传输实例独占驱动（专属 aeron 目录与驱动线程）；刻意不做进程级共享——共享会把双实例的网络收发系统调用耦合进同一条 Sender/Receiver 线程，快照复制风暴期业务命令路径尾部劣化，破坏双面拆分要隔离的争用对
 
 ## 帧布局（AeronFrameCodec，小端）
 
@@ -53,7 +54,6 @@ mtu / so-sndbuf / so-rcvbuf 由 `AeronMessagingConfig` 注入，0 值项跳过�
 | `unicastTermBufferLength` | 4MiB | 单向流 term 缓冲 |
 | `initialWindowLength` | -1 | ≤0 时自动取 `min(term/8, 16MiB)`，再被 so-rcvbuf 钳制 |
 | `embeddedDriver` | true | 内嵌 Media Driver；false = 外置驱动（目录用 Aeron 默认目录，显式配置优先） |
-| `sharedDriver` | false | 进程级共享驱动（生产 broker 双面实例开启） |
 | `driverThreadingMode` | DEDICATED | 驱动线程模式 |
 | `driverTimeoutMs` | 10_000 | 驱动心跳超时；调试器暂停进程超过即驱动自杀 |
 | `connectTimeout` | 5s | 连接超时 |
@@ -63,6 +63,7 @@ mtu / so-sndbuf / so-rcvbuf 由 `AeronMessagingConfig` 注入，0 值项跳过�
 | `socketSendBufferBytes` | 0 | 通道 so-sndbuf（0=内核默认） |
 | `aeronDir` | null | null 时每驱动独占 `aeron-kunpeng-*` 临时目录（dirDeleteOnStart/OnShutdown 均开、term 稀疏文件） |
 | `cryptoEnabled` / `cryptoKeys` / `sendCryptoKeyId` / `cryptoSenderId` | false / - / - / 节点 ID | 帧加密（见下） |
+| `localIpcEnabled` | true | 自寻址消息短路走 `aeron:ipc`（见传输底座；配置面 `kunpeng.cluster.local-ipc-enabled`，仅同实例自发自收生效，业务面显式关闭） |
 
 业务面派生配置（`BusinessMessagingServiceStep.aeronConfigOf`）：继承流 id、队列容量与加密设置，term 钳制 32MiB（业务面无快照大块，与 `kunpeng.broker.network` 的 maxMessageSize 默认对齐）。
 

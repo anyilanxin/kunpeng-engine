@@ -25,6 +25,8 @@ kunpeng:
     start-port: 2035
     # 端口偏移量（broker 业务端口 = start-port + port-offset）
     port-offset: 1
+    # 自寻址消息（目的地=本节点）走 aeron:ipc 共享内存短路，免 UDP 内核回环（默认开启）
+    local-ipc-enabled: true
     # 集群面 TLS（默认关闭；membership 与 broker 业务面共享此默认，各平面 network.security 可覆盖）
     security:
       enabled: false
@@ -170,11 +172,11 @@ kunpeng:
         enable-foreign-key-checks: false     # 外键校验
       # column-family-options:               # RocksDB 原生列族选项透传（键用下划线形式）
       #   write_buffer_size: 8388608
-    # 写入流控
+    # 流控（请求并发准入 + sink 滞后闸门；未配置即全关，逐项显式开启）
     flow-control:
       # 请求并发限制（入口命令准入）
       request:
-        enabled: true
+        enabled: false
         use-windowed: true                   # 窗口化平滑限流
         algorithm: AIMD                      # AIMD | FIXED | VEGAS | GRADIENT | GRADIENT2 | LEGACY_VEGAS
         aimd:                                # 各算法参数块（仅 algorithm 选中的生效）
@@ -188,16 +190,11 @@ kunpeng:
         gradient: { min-limit: 10, initial-limit: 20, rtt-tolerance: 2.0 }
         gradient2: { min-limit: 10, initial-limit: 20, rtt-tolerance: 2.0, long-window: 600 }
         legacy-vegas: { initial-limit: 1024, max-concurrency: 32768, alpha-limit: 0.7, beta-limit: 0.95 }
-      # 写入速率限制（默认关闭）
-      write:
+      # sink 滞后闸门（双阈值迟滞；未接 sink 时闸门不存在——lag 无值视为常开）
+      sink:
         enabled: false
-        # limit: 100                         # 启用后必填：速率上限
-        ramp-up: 0s                          # 限速爬坡时长
-        throttling:
-          enabled: false                     # 背压节流
-          acceptable-backlog: 100000         # 可接受积压量
-          minimum-limit: 100                 # 节流下限
-          resolution: 15s                    # 节流判定粒度
+        reject-backlog: 50000            # lag ≥ 该值拒绝业务命令（RESOURCE_EXHAUSTED）
+        resume-backlog: 40000            # 拒绝后 lag ≤ 该值才恢复放行（须小于 reject-backlog）
     # BPMN 引擎
     engine:
       max-batch: 200                   # 单批 follow-up 命令/状态上限（越大吞吐越高、单批内存与延迟越高）

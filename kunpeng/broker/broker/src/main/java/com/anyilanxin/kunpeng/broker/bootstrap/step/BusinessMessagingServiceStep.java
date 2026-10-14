@@ -113,7 +113,7 @@ public final class BusinessMessagingServiceStep extends AbstractBrokerStartupSte
             });
   }
 
-  /** 构建业务面消息服务实例：独立端口的传输底座（与集群面各自的代理线程/队列/socket，内嵌驱动为进程级共享）。 */
+  /** 构建业务面消息服务实例：独立端口的传输底座（与集群面各自的代理线程/队列/socket/内嵌驱动，驱动刻意不共享）。 */
   private static AeronMessagingService buildService(
       final BrokerCfg brokerCfg, final ClusterCfg clusterCfg) {
     final MessagingConfig messagingConfig =
@@ -126,8 +126,11 @@ public final class BusinessMessagingServiceStep extends AbstractBrokerStartupSte
             ? Address.defaultAdvertisedHost().getHostAddress()
             : messagingConfig.getInterfaces().get(0);
     final Address bindAddress = Address.from(host, messagingConfig.getPort());
-    // 模板取集群面默认 Aeron 配置（Aeron 参数未开放用户配置，与集群面实例恒等）；加密发送方按节点 ID 派生，与 AtomixCluster 的集群面行为一致
+    // 模板取内置默认 Aeron 配置（Aeron 参数不对业务面开放：单边接收端、无自环流量，IPC 短路显式关闭——驱动每实例独占下业务面 ipc 订阅收不到任何帧）；加密发送方按节点
+    // ID 派生，与
+    // AtomixCluster 的集群面行为一致
     final AeronMessagingConfig template = new AeronMessagingConfig();
+    template.setLocalIpcEnabled(false);
     if (template.getCryptoSenderId() == null) {
       template.setCryptoSenderId(clusterCfg.getNodeId());
     }
@@ -159,8 +162,8 @@ public final class BusinessMessagingServiceStep extends AbstractBrokerStartupSte
         .setMtuLength(clusterConfig.getMtuLength())
         .setSocketSendBufferBytes(clusterConfig.getSocketSendBufferBytes())
         .setSocketReceiveBufferBytes(clusterConfig.getSocketReceiveBufferBytes())
-        // 集群面与业务面双实例共存于同一进程, 共享同一内嵌驱动(集群面开启 sharedDriver 时)
-        .setSharedDriver(clusterConfig.isSharedDriver())
+        // 业务面单边接收无自环流量，IPC 短路经模板显式关闭并随派生链传递
+        .setLocalIpcEnabled(clusterConfig.isLocalIpcEnabled())
         .setCryptoEnabled(clusterConfig.isCryptoEnabled())
         .setCryptoKeys(clusterConfig.getCryptoKeys())
         .setSendCryptoKeyId(clusterConfig.getSendCryptoKeyId())

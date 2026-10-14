@@ -25,6 +25,8 @@ kunpeng:
     start-port: 2085
     # 端口偏移量（保持默认即可；网关无 broker 业务端口，不占用该偏移）
     port-offset: 1
+    # 自寻址消息（目的地=本节点）走 aeron:ipc 共享内存短路（默认开启；网关侧自环流量少）
+    local-ipc-enabled: true
     # 集群面 TLS（默认关闭；membership 面与各 broker 业务面共享此默认，各平面 network.security 可覆盖）
     security:
       enabled: false

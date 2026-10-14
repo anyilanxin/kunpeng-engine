@@ -21,7 +21,7 @@ description: kunpeng engine inter-node communication skill. Documents the three 
 
 - **节点间一切消息都是 UDP**（Aeron）。集群内没有节点间 TCP 连接；"可靠" = Aeron 流控重传，"不可靠" = `UnicastService` 裸 UDP 语义。`ClusterCommunicationService` javadoc 里的 "TCP/UDP" 是语义标注，不是实际传输协议。
 - **业务面只收不发**：只有 broker 启动业务面接收端（命令接收与集群面 Raft 流量隔离）；发送方（gateway 或 broker 的 `BrokerClient`）复用**集群面** Atomix 通信组件，直接向"目标成员主机 + 业务端口"寻址。
-- **同进程双实例共享底座**：broker 进程内集群面与业务面共享 `AeronTransport`（内嵌 Media Driver、代理线程），refcount 管理生命周期；`sharedDriver=true` 时共享驱动（首实例参数为准），默认独占模式每实例各自驱动（同 JVM 多节点测试互不影响）。
+- **同进程双实例各自独立底座**：broker 进程内集群面与业务面各持一个 `AeronTransport`（独立代理线程/队列/socket/内嵌驱动）——驱动刻意不共享，避免快照复制风暴与业务命令路径争用同一条驱动网络线程（共享也是跨实例 ipc 的前提，该路线已定性放弃）；refcount 管理各自生命周期，同 JVM 多节点测试互不影响。
 
 ## 寻址模型
 

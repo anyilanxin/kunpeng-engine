@@ -231,6 +231,44 @@ final class AeronMessagingServiceTest {
     }
   }
 
+  @Test
+  void selfRequestReplyRoundsOverIpcChannel(@TempDir final File tempDir) throws Exception {
+    // 自寻址短路: 请求与回包的目的地均为本节点, 全程 aeron:ipc 共享内存, 关联/分发语义与 UDP 路径一致
+    final Address selfAddress = Address.from("127.0.0.1", 29115);
+    final MessagingConfig messagingConfig = new MessagingConfig().setPort(selfAddress.port());
+    final AeronMessagingConfig aeronConfig =
+        new AeronMessagingConfig()
+            .setAeronDir(new File(tempDir, "selfrpc"))
+            .setTermBufferLength(1024 * 1024)
+            .setDriverThreadingMode("SHARED")
+            .setIdleStrategy("sleeping")
+            .setLocalIpcEnabled(true);
+    final AeronTransport transport =
+        new AeronTransport(selfAddress, messagingConfig, aeronConfig);
+    final AeronMessagingService self =
+        new AeronMessagingService(selfAddress, messagingConfig, aeronConfig, transport);
+    try {
+      self.start().get(10, TimeUnit.SECONDS);
+      assertTrue(
+          transport
+              .publicationChannel(selfAddress, aeronConfig.getTermBufferLength())
+              .startsWith("aeron:ipc"),
+          "自寻址发布通道应当短路为 aeron:ipc");
+      self.registerHandler(
+          "self-echo",
+          (BiFunction<Address, byte[], CompletableFuture<byte[]>>)
+              (sender, payload) -> CompletableFuture.completedFuture(payload));
+
+      final byte[] payload = "self-roundtrip".getBytes();
+      final byte[] response =
+          self.sendAndReceive(selfAddress, "self-echo", payload).get(10, TimeUnit.SECONDS);
+
+      assertArrayEquals(payload, response);
+    } finally {
+      stopQuietly(self);
+    }
+  }
+
   private AeronMessagingService startService(
       final File aeronDir, final Address address, final int termLength) throws Exception {
     final AeronMessagingService service = service(aeronDir, address, termLength);
