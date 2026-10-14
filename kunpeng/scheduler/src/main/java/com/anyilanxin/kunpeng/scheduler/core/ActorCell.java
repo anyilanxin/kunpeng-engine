@@ -466,17 +466,29 @@ public final class ActorCell {
 
   /**
    * 收尾协议: 先休眠后复查——复查见新工作则自行重新入队（提交者与 owner 只有一个能 CAS 成功, 不会双入队; 提交者在 RUNNING 期间 CAS 失败依赖本复查不丢唤醒）。
+   *
+   * <p>复查只能依赖票差与队列非空: trySleep 之后门已放开, 并发唤醒可让其他 runner 接管并排空本 cell（增删订阅槽）, 无门扫描订阅列表会以 CME 杀死
+   * actor。订阅到期路径必然 wakeSignal 记票（fire 与记票间的纳秒级空隙由在途票兜住）, 票差已覆盖; 队列非空覆盖相位推进信封（advancePhase 的
+   * offerInternal 不记票）。
    */
   void finishDrain(final int ticketsAtStart) {
     gate.trySleep();
-    final boolean newWake = wakeTickets.get() != ticketsAtStart;
-    if ((newWake || hasPendingWork()) && gate.tryWakeup()) {
+    if ((wakeTickets.get() != ticketsAtStart || hasQueuedEnvelopes()) && gate.tryWakeup()) {
       routeSelf();
     }
   }
 
+  /** 复查专用队列非空判断: fastLane/submitted 并发读不抛异常, 漏读路径必然伴随唤醒票（如 closeAsync 外部投递）。 */
+  private boolean hasQueuedEnvelopes() {
+    return !fastLane.isEmpty() || !submitted.isEmpty();
+  }
+
+  /**
+   * 是否有待处理工作。仅限持门状态调用（drain 主循环的预算让位检查）: 订阅列表扫描必须在 RUNNING 保护下, 门放开后其他 runner 可并发接管排空并增删订阅槽, 增强 for
+   * 会抛 CME。
+   */
   private boolean hasPendingWork() {
-    if (!fastLane.isEmpty() || !submitted.isEmpty()) {
+    if (hasQueuedEnvelopes()) {
       return true;
     }
     for (final SubscriptionSlot slot : subscriptions) {
