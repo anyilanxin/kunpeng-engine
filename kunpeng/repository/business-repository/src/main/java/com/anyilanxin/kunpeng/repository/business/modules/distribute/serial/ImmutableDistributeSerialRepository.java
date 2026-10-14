@@ -18,6 +18,7 @@ package com.anyilanxin.kunpeng.repository.business.modules.distribute.serial;
 
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.distribute.serial.DistributeSerialRecord;
 import com.anyilanxin.kunpeng.repository.business.ResourceDataSplit;
+import java.util.List;
 
 /**
  * 串行分发域只读仓储接口。
@@ -30,6 +31,9 @@ public interface ImmutableDistributeSerialRepository extends ResourceDataSplit {
   DistributeSerialRecord getDistribute(long key);
 
   boolean haveDistributeAck(final long key);
+
+  /** 索引列族中该分发尚未确认（未 ACK、未判死）的目标分区集合；无条目时为空列表 */
+  List<Integer> getDistributeRemainIndex(long key);
 
   void foreachRetriableDistribution(WaitDistributionVisitor visitor);
 

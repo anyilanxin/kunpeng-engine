@@ -23,11 +23,16 @@ import com.anyilanxin.kunpeng.engine.bpmn.command.distribute.serial.AbstractDist
 import com.anyilanxin.kunpeng.protocol.business.impl.eventlog.BusinessLogRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.distribute.serial.DistributeSerialRecord;
 import com.anyilanxin.kunpeng.protocol.business.record.command.distribute.serial.DistributeSerialLifeCycle;
+import com.anyilanxin.kunpeng.repository.business.ImmutableBusinessRepository;
+import com.anyilanxin.kunpeng.repository.business.modules.distribute.serial.ImmutableDistributeSerialRepository;
+import java.util.List;
+import org.agrona.collections.IntHashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 串行分发启动命令处理器。
+ * 串行分发启动命令处理器：向索引列族剩余的首个存活目标投递，ACK 摘除后由 Ack 处理器续发下一个（一次一个）。 目标已随缩容摘除的按已送达摘除后继续尝试下一个；剩余摘空则完成。首次投递与
+ * checker 超时重投走同一逻辑， 天然幂等。
  *
  * @author zxuanhong
  * @since 2026.9.0
@@ -37,11 +42,14 @@ public class DistributeSerialDistributeStartProcessor extends AbstractDistribute
       LoggerFactory.getLogger(DistributeSerialDistributeStartProcessor.class);
   final LogEventWriter writer;
   private final DistributeSerialBehavior distributeSerialBehavior;
+  private final ImmutableDistributeSerialRepository distribute;
 
   public DistributeSerialDistributeStartProcessor(final LogEventWriter writer) {
     this.writer = writer;
     final Behavior behavior = writer.behavior();
     distributeSerialBehavior = behavior.distributeSerialBehavior();
+    final ImmutableBusinessRepository repository = writer.getRepository();
+    distribute = repository.distributeSerialRepository();
   }
 
   @Override
@@ -50,25 +58,31 @@ public class DistributeSerialDistributeStartProcessor extends AbstractDistribute
         "Distributing data to other partitions for distribute {}",
         record.getValue().getDistributeId());
     final DistributeSerialRecord value = record.getValue();
-    // 单趟遍历：找到第一个大于 currentIndex 的下标并判断其后是否还有其他，避免
-    // 构建中间列表（原 stream().filter().toList() 会分配一个）。
-    final int currentIndex = value.getCurrentDistributeSourceId();
-    Integer first = null;
-    for (final Integer sourceId : value.getDistributeSourceId()) {
-      if (sourceId > currentIndex) {
-        first = sourceId;
-        break;
+    final List<Integer> remainIndex = distribute.getDistributeRemainIndex(value.getDistributeId());
+    final IntHashSet activityPartitionIds = writer.getActivityPartitionIds();
+    for (final Integer partitionId : remainIndex) {
+      value.setCurrentDistributeSourceId(partitionId);
+      if (!activityPartitionIds.contains(partitionId)) {
+        // 死目标（分区已随缩容摘除）无处送达：按已送达摘除。接盘其 resource 的幸存分区本就在
+        // 目标集内，数据不缺
+        writer.addEvent(
+            value.getDistributeId(),
+            DistributeSerialLifeCycle.DISTRIBUTE_ACKED,
+            record.getRequestId(),
+            value);
+        continue;
       }
-    }
-    if (first != null) {
-      value.setCurrentDistributeSourceId(first);
-      distributeSerialBehavior.distributeSerial(value, first);
+      distributeSerialBehavior.distributeSerial(value, partitionId);
       writer.addEvent(
           value.getDistributeId(),
           DistributeSerialLifeCycle.DISTRIBUTE_CONTINUED,
           record.getRequestId(),
           value);
-    } else {
+      // 串行：一次只投一个，等 ACK 摘除后续发下一个
+      return;
+    }
+    // 剩余目标全为死目标（或已摘空）：完成分发
+    if (!distribute.haveDistributeAck(value.getDistributeId())) {
       writer.addCommand(
           value.getDistributeId(),
           DistributeSerialLifeCycle.DISTRIBUTE_COMPLETE,

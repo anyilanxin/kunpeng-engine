@@ -83,7 +83,9 @@ public class DistributeParallelBehavior {
     distributeRecord.setDistributeRecordValueType(record.getValueType());
     distributeRecord.setDistributeRecordId(record.getKey());
     distributeRecord.setDistributeId(record.getOperationReferenceKey());
-    distributeRecord.setCurrentDistributeIndex(writer.getSourceId());
+    // 摘除编号与索引列族的计账体系一致：目标列表存分区 id，ACK 必须回填分区 id（ getSourceId 是
+    // source 编号，两个体系错位会让 ackDistribute 永远摘不掉目标）
+    distributeRecord.setCurrentDistributeIndex(writer.getPartitionId());
     commandSender.sendCommand(
         resourceId,
         DistributeParallelLifeCycle.DISTRIBUTE_ACK,
@@ -99,7 +101,8 @@ public class DistributeParallelBehavior {
     distributeRecord.setDistributeRecordValueType(record.getValueType());
     distributeRecord.setDistributeRecordId(record.getKey());
     distributeRecord.setDistributeId(record.getOperationReferenceKey());
-    distributeRecord.setCurrentDistributeIndex(writer.getSourceId());
+    // 同 distributeParallelAck：摘除编号与计账体系（分区 id）保持一致
+    distributeRecord.setCurrentDistributeIndex(writer.getPartitionId());
     commandSender.sendCommand(
         resourceId,
         DistributeParallelLifeCycle.DISTRIBUTE_AFTER_ACK,

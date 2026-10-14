@@ -144,10 +144,23 @@ public class DistributeSerialRepository
   }
 
   @Override
+  public List<Integer> getDistributeRemainIndex(final long key) {
+    distributeIdDbKey.wrapLong(key);
+    // 实体复用安全：拷贝出列表，调用方持有期间不受后续实体复位影响
+    return Optional.ofNullable(distributeIndexColumnFamily.get(distributeIdDbKey))
+        .map(entity -> List.copyOf(entity.getDistributeIndex()))
+        .orElseGet(List::of);
+  }
+
+  @Override
   public void foreachRetriableDistribution(final WaitDistributionVisitor visitor) {
     distributeIndexColumnFamily.forEach(
         distributeIndexRecordEntity -> {
           final List<Integer> distributeIndex = distributeIndexRecordEntity.getDistributeIndex();
+          // 空目标集合的分发（单分区集群）没有可重投对象，跳过以免 getFirst 越界
+          if (distributeIndex.isEmpty()) {
+            return;
+          }
           final Integer first = distributeIndex.getFirst();
           distributeIdDbKey.wrapLong(distributeIndexRecordEntity.getDistributeId());
           distributeRecordEntityDbValue.reset();
