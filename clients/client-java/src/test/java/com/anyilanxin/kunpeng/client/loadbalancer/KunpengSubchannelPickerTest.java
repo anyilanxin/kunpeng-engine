@@ -50,7 +50,7 @@ class KunpengSubchannelPickerTest {
   @Test
   void singleReadyAlwaysPicked() {
     final StubSubchannel sub = new StubSubchannel();
-    final TrackedSubchannel tracked = new TrackedSubchannel(sub, new GatewayMetrics(), "host1:2024");
+    final TrackedSubchannel tracked = new TrackedSubchannel(sub, new GatewayMetrics(), "host1:24108");
     final KunpengSubchannelPicker picker = new KunpengSubchannelPicker(List.of(tracked));
     for (int i = 0; i < 50; i++) {
       final PickResult r = picker.pickSubchannel(args());
@@ -69,8 +69,8 @@ class KunpengSubchannelPickerTest {
     heavyMetrics.setActiveConnections(20);
     final List<TrackedSubchannel> ready =
         List.of(
-            new TrackedSubchannel(light, lightMetrics, "light:2024"),
-            new TrackedSubchannel(heavy, heavyMetrics, "heavy:2024"));
+            new TrackedSubchannel(light, lightMetrics, "light:24108"),
+            new TrackedSubchannel(heavy, heavyMetrics, "heavy:24108"));
 
     final KunpengSubchannelPicker picker = new KunpengSubchannelPicker(ready);
     final Map<Subchannel, Integer> counts = new HashMap<>();
@@ -95,8 +95,8 @@ class KunpengSubchannelPickerTest {
     }
     final List<TrackedSubchannel> ready =
         List.of(
-            new TrackedSubchannel(fast, fastMetrics, "fast:2024"),
-            new TrackedSubchannel(slow, slowMetrics, "slow:2024"));
+            new TrackedSubchannel(fast, fastMetrics, "fast:24108"),
+            new TrackedSubchannel(slow, slowMetrics, "slow:24108"));
 
     final KunpengSubchannelPicker picker = new KunpengSubchannelPicker(ready);
     final Map<Subchannel, Integer> counts = new HashMap<>();

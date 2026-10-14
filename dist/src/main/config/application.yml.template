@@ -20,7 +20,7 @@ spring:
       org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchClientAutoConfiguration
 
 server:
-  port: 8080          # HTTP 端口（REST / OpenAPI）
+  port: 2024          # HTTP 端口（REST / OpenAPI）
   shutdown: graceful  # 优雅停机：先停止接收新请求，等待处理中的请求完成再退出
 
 management:

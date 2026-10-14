@@ -42,7 +42,7 @@ public class ClusterCfg {
 
   public static final String DEFAULT_CLUSTER_NAME = "kunpeng-cluster";
 
-  private static final int DEFAULT_START_PORT = 2025;
+  private static final int DEFAULT_START_PORT = 24109;
   private static final int DEFAULT_PORT_OFFSET = 1;
   private static final String DEFAULT_ADVERTISED_HOST =
       Address.defaultAdvertisedHost().getHostAddress();
@@ -77,6 +77,13 @@ public class ClusterCfg {
   /** 集群（membership）网络配置 */
   @NestedConfigurationProperty private MembershipNetworkCfg network = new MembershipNetworkCfg();
 
+  /**
+   * 自寻址消息是否走 aeron:ipc 共享内存短路（目的地=本节点的消息不经 UDP 内核回环）。
+   *
+   * <p>单进程/单节点形态下收益最大：跨分区命令、job 推送回本机网关等自环流量从内核回环两次网络栈穿越 降为共享内存直拷（µs 级）。默认开启。
+   */
+  private boolean localIpcEnabled = true;
+
   public void init(final String base) {
     if (StringUtils.isBlank(advanceHost)) {
       advanceHost = DEFAULT_ADVERTISED_HOST;
@@ -90,6 +97,10 @@ public class ClusterCfg {
     security.init(base);
     if (startPort <= 0 || (startPort + portOffset) >= 65535) {
       throw new IllegalArgumentException("(startPort + portOffset) must be less than 65535");
+    }
+    if ((startPort - portOffset) <= 0) {
+      throw new IllegalArgumentException(
+          "(startPort - portOffset) must be greater than 0: gateway gRPC port derives from it");
     }
     network.init(this, base);
   }

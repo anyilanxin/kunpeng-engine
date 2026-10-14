@@ -69,12 +69,12 @@ class DynamicDiscoveryProviderTest {
 
   @Test
   void discoversNodeWithExplicitPort() throws Exception {
-    // when：以 127.0.0.1:26500 作为初始地址加入（localhost 在双栈机器上解析出多个 IP，节点数不定）
-    final var provider = joinWith("127.0.0.1:26500");
+    // when：以 127.0.0.1:24108 作为初始地址加入（localhost 在双栈机器上解析出多个 IP，节点数不定）
+    final var provider = joinWith("127.0.0.1:24108");
 
-    // then：解析出一个端口为 26500 的节点
+    // then：解析出一个端口为 24108 的节点
     Awaitility.await().untilAsserted(() -> assertThat(provider.getNodes()).hasSize(1));
-    assertThat(provider.getNodes()).allMatch(n -> n.address().port() == 26500);
+    assertThat(provider.getNodes()).allMatch(n -> n.address().port() == 24108);
   }
 
   @Test
@@ -82,16 +82,16 @@ class DynamicDiscoveryProviderTest {
     // when：地址不带端口
     final var provider = joinWith("localhost");
 
-    // then：节点端口落到默认端口 26502
+    // then：节点端口落到默认端口 24109
     Awaitility.await()
         .untilAsserted(() -> assertThat(provider.getNodes()).isNotEmpty());
-    assertThat(provider.getNodes()).allMatch(n -> n.address().port() == 26502);
+    assertThat(provider.getNodes()).allMatch(n -> n.address().port() == 24109);
   }
 
   @Test
   void discoversEachProvidedAddress() throws Exception {
     // when：提供两个地址
-    final var provider = joinWith("localhost:26500", "127.0.0.1:26501");
+    final var provider = joinWith("localhost:24108", "127.0.0.1:24110");
 
     // then：两个地址各自产生节点
     Awaitility.await()
@@ -120,13 +120,13 @@ class DynamicDiscoveryProviderTest {
   @Test
   void derivesNodeIdFromAddress() throws Exception {
     // when
-    final var provider = joinWith("127.0.0.1:26500");
+    final var provider = joinWith("127.0.0.1:24108");
 
     // then：节点 id 就是地址原文
     Awaitility.await()
         .untilAsserted(() -> assertThat(provider.getNodes()).hasSize(1));
     final Set<Node> discovered = provider.getNodes();
-    assertThat(discovered).first().extracting(Node::id).isEqualTo(NodeId.from("127.0.0.1:26500"));
+    assertThat(discovered).first().extracting(Node::id).isEqualTo(NodeId.from("127.0.0.1:24108"));
   }
 
   @Test
@@ -134,7 +134,7 @@ class DynamicDiscoveryProviderTest {
     // given：先挂监听器再触发扫描——初始扫描在调度线程异步执行, 若监听器注册晚于扫描完成,
     // JOIN 事件已发完, 下一轮要等整个 refreshInterval(30s), 6s 等待必然超时(竞态闪断)
     final var provider =
-        new DynamicDiscoveryProvider(configOf(new String[] {"localhost:26500"}, Duration.ofSeconds(30)));
+        new DynamicDiscoveryProvider(configOf(new String[] {"localhost:24108"}, Duration.ofSeconds(30)));
     active.add(provider);
     final List<NodeDiscoveryEvent> seen = new CopyOnWriteArrayList<>();
     provider.addListener(seen::add);
@@ -221,26 +221,26 @@ class DynamicDiscoveryProviderTest {
     // then：坏地址被跳过，正常地址仍被发现
     Awaitility.await()
         .untilAsserted(() -> assertThat(provider.getNodes()).hasSize(1));
-    assertThat(provider.getNodes()).allMatch(n -> n.address().port() == 26502);
+    assertThat(provider.getNodes()).allMatch(n -> n.address().port() == 24109);
   }
 
   @Test
   void retainsConfiguredValuesOnConfigObject() {
     // given / when：构造带自定义刷新周期的配置
     final Duration refresh = Duration.ofMinutes(3);
-    final var config = configOf(new String[] {"localhost:26500"}, refresh);
+    final var config = configOf(new String[] {"localhost:24108"}, refresh);
     final var provider = new DynamicDiscoveryProvider(config);
     active.add(provider);
 
     // then：配置原样保留
-    assertThat(config.getAddresses()).containsExactly("localhost:26500");
+    assertThat(config.getAddresses()).containsExactly("localhost:24108");
     assertThat(config.getRefreshInterval()).isEqualTo(refresh);
   }
 
   @Test
   void createsProviderViaTypeFactory() {
     // given
-    final var config = configOf(new String[] {"localhost:26500"}, Duration.ofSeconds(30));
+    final var config = configOf(new String[] {"localhost:24108"}, Duration.ofSeconds(30));
 
     // when：通过 TYPE 工厂创建
     final NodeDiscoveryProvider created = DynamicDiscoveryProvider.TYPE.newProvider(config);

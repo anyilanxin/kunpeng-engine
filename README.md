@@ -31,6 +31,14 @@ Clients spread load dynamically across stateless gateways, which route each requ
 * Export process data for monitoring and analysis
 * Engage with an active community
 
+## Helpful Links
+
+* [Documentation Home](./docs)
+* [Getting Started: startup forms & port model](./docs/user-guide/getting-started.md)
+* [Distribution & Deployment](./dist/README.md)
+* [Java Client SDK](./clients/client-java)
+* [Cluster Messaging Benchmarks](./docs/cluster-messaging-benchmark.md)
+
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=anyilanxin/kunpeng-engine&type=Date)](https://star-history.com/#anyilanxin/kunpeng-engine&Date)

@@ -45,7 +45,7 @@ class GatewayDiscoveryNameResolverTest {
   void discoverAddsNewGatewaysAndQueriesLoadImmediately() {
     final FakeAdapter adapter =
         new FakeAdapter(
-            List.of(URI.create("grpc://gw1:26500"), URI.create("grpc://gw2:26500")),
+            List.of(URI.create("grpc://gw1:24108"), URI.create("grpc://gw2:24108")),
             uri -> Integer.parseInt(uri.getHost().substring(2)));
     final GatewayDiscoveryNameResolver resolver = newResolver(adapter);
     final CapturingListener listener = new CapturingListener();
@@ -67,14 +67,14 @@ class GatewayDiscoveryNameResolverTest {
   void discoverRemovesStaleGateways() {
     final FakeAdapter adapter =
         new FakeAdapter(
-            List.of(URI.create("grpc://gw1:26500"), URI.create("grpc://gw2:26500")),
+            List.of(URI.create("grpc://gw1:24108"), URI.create("grpc://gw2:24108")),
             uri -> 0);
     final GatewayDiscoveryNameResolver resolver = newResolver(adapter);
     final CapturingListener listener = new CapturingListener();
     resolver.listener = listener;
 
     resolver.discover();
-    adapter.setGateways(List.of(URI.create("grpc://gw1:26500")));
+    adapter.setGateways(List.of(URI.create("grpc://gw1:24108")));
     resolver.discover();
 
     final List<EquivalentAddressGroup> groups =
@@ -86,7 +86,7 @@ class GatewayDiscoveryNameResolverTest {
   void loadQueryMarksGatewayOfflineOnFailure() {
     final FakeAdapter adapter =
         new FakeAdapter(
-            List.of(URI.create("grpc://good:26500"), URI.create("grpc://bad:26500")),
+            List.of(URI.create("grpc://good:24108"), URI.create("grpc://bad:24108")),
             uri -> {
               if (uri.getHost().equals("bad")) {
                 throw new RuntimeException("gateway down");
@@ -138,7 +138,7 @@ class GatewayDiscoveryNameResolverTest {
 
   private static final class FakeAdapter implements GatewayServiceDiscoverAdapter {
     private volatile List<URI> gateways;
-    private volatile java.util.function.Function<URI, Integer> loadFn;
+    private final java.util.function.Function<URI, Integer> loadFn;
     final List<URI> queried = new CopyOnWriteArrayList<>();
 
     FakeAdapter(

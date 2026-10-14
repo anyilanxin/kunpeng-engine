@@ -32,7 +32,7 @@ public class DynamicDiscoveryConfig extends NodeDiscoveryConfig {
   private static final Duration DEFAULT_REFRESH_INTERVAL = Duration.ofSeconds(60);
 
   /** 地址未显式携带端口时使用的缺省端口。 */
-  private static final int DEFAULT_PORT = 26502;
+  private static final int DEFAULT_PORT = 24109;
 
   private int fallbackPort = DEFAULT_PORT;
   private Duration rescanPeriod = DEFAULT_REFRESH_INTERVAL;

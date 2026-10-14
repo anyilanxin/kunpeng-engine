@@ -18,6 +18,7 @@ package com.anyilanxin.kunpeng.configuration.gateway;
 
 import com.anyilanxin.kunpeng.cluster.utils.net.Address;
 import com.anyilanxin.kunpeng.configuration.NetworkInfo;
+import com.anyilanxin.kunpeng.configuration.cluster.ClusterCfg;
 import java.time.Duration;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -37,14 +38,13 @@ import org.springframework.util.unit.DataSize;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class GatewayGrpcNetworkCfg extends NetworkInfo {
-  private static final int DEFAULT_PORT = 2024;
   private static final String DEFAULT_ADVERTISED_HOST =
       Address.defaultAdvertisedHost().getHostAddress();
   private static final String DEFAULT_HOST = "0.0.0.0";
   private Duration minKeepAliveInterval = Duration.ofSeconds(30);
   private DataSize maxMessageSize = DataSize.ofMegabytes(4);
   private String grpcHost;
-  private int grpcPort = DEFAULT_PORT;
+  private int grpcPort;
   private boolean customGrpcPort = false;
   private boolean customGrpcHost = false;
 
@@ -89,10 +89,14 @@ public final class GatewayGrpcNetworkCfg extends NetworkInfo {
     customGrpcPort = true;
   }
 
-  @Override
-  public void init(final String basePath) {
+  /** 端口缺省推导：gRPC = cluster.start-port − port-offset（与业务端口的 +offset 对称）；显式配置优先，未显式指定才推导。 */
+  public void init(final ClusterCfg clusterCfg, final String basePath) {
+    final int derivedPort = clusterCfg.getStartPort() - clusterCfg.getPortOffset();
     if (getPort() <= 0) {
-      setPort(DEFAULT_PORT);
+      setPort(derivedPort);
+    }
+    if (!customGrpcPort) {
+      grpcPort = derivedPort;
     }
     if (StringUtils.isBlank(getHost())) {
       setHost(DEFAULT_ADVERTISED_HOST);

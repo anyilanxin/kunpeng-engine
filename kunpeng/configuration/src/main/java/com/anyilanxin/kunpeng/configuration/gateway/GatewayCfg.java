@@ -17,6 +17,7 @@
 package com.anyilanxin.kunpeng.configuration.gateway;
 
 import com.anyilanxin.kunpeng.configuration.SecurityCfg;
+import com.anyilanxin.kunpeng.configuration.cluster.ClusterCfg;
 import java.time.Duration;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -47,10 +48,10 @@ public class GatewayCfg {
 
   @NestedConfigurationProperty private LongPollingCfg longPolling = new LongPollingCfg();
 
-  public void init(final String basePath) {
+  public void init(final String basePath, final ClusterCfg clusterCfg) {
     if (network.getSecurity() == null) {
       network.setSecurity(new SecurityCfg());
     }
-    network.init(basePath);
+    network.init(clusterCfg, basePath);
   }
 }

@@ -32,7 +32,7 @@ import org.junit.jupiter.api.Test;
  */
 final class MemberTest {
 
-  private static final Address ADDRESS = Address.from("localhost", 26502);
+  private static final Address ADDRESS = Address.from("localhost", 24109);
 
   @Test
   void shouldPropagateZoneFromMemberIdWhenBuildingZonedMemberViaFactory() {

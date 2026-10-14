@@ -16,6 +16,7 @@
  */
 package com.anyilanxin.kunpeng.configuration.broker;
 
+import com.anyilanxin.kunpeng.configuration.cluster.ClusterCfg;
 import com.anyilanxin.kunpeng.configuration.gateway.GatewayCfg;
 import lombok.Getter;
 import lombok.Setter;
@@ -32,8 +33,9 @@ import lombok.Setter;
 public final class EmbeddedGatewayCfg extends GatewayCfg implements ConfigurationEntry {
   private boolean enable = true;
 
-  @Override
-  public void init(final BrokerCfg globalConfig, final String brokerBase) {
-    super.init(brokerBase);
+  /** 三参 init：gRPC 端口缺省按 cluster start-port − offset 推导，需集群配置参与。 */
+  public void init(
+      final BrokerCfg globalConfig, final String brokerBase, final ClusterCfg clusterCfg) {
+    super.init(brokerBase, clusterCfg);
   }
 }

@@ -35,7 +35,7 @@ import java.util.concurrent.ScheduledExecutorService;
 public final class KunpengClientBuilderImpl
     implements KunpengClientBuilder, KunpengClientConfiguration {
 
-  public static final String DEFAULT_GATEWAY_ADDRESS = "0.0.0.0:2024";
+  public static final String DEFAULT_GATEWAY_ADDRESS = "0.0.0.0:24108";
   public static final URI DEFAULT_GRPC_ADDRESS = URI.create("https://" + DEFAULT_GATEWAY_ADDRESS);
   public static final String DEFAULT_JOB_WORKER_NAME_VAR = "default";
   public static final boolean DEFAULT_PREFER_REST_OVER_GRPC = false;

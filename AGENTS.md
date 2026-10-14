@@ -161,6 +161,13 @@ kunpeng-engine/
 | 文档 | 用途 |
 |------|------|
 | [README.zh-CN.md](./README.zh-CN.md) | 项目简介与许可说明 |
+| [docs/user-guide/getting-started.zh-CN.md](./docs/user-guide/getting-started.zh-CN.md) | 用户启动指南（启动形态/端口模型/多节点 demo，中英双版：`getting-started.md`） |
 | [.agents/skills/SKILL.md](./.agents/skills/SKILL.md) | 技能总览索引（kunpeng-skills） |
 | [buildSrc/common-config.gradle](./buildSrc/common-config.gradle) | 私仓/仓库与公共构建配置 |
 | [dist/README.md](./dist/README.md) | 发行版装配说明 |
+
+### 用户文档维护指引
+
+- `docs/user-guide/getting-started.md` 与 `getting-started.zh-CN.md` 为中英同源双版，**必须成对同步修改**（结构章节一一对应，勿只改一版）。
+- 改动默认端口、端口推导规则（`start-port`/`port-offset` 锚点模型）、启动形态或 demo 命令时，需同步：① user-guide 双版的端口表与命令；② `dist/README.md` 端口表与示例；③ `dist/src/main/config/*.template` 与 `dist/src/main/resources/*.yml` 中的端口值。
+- 两份 README 的 Helpful Links / 相关链接章节互为镜像，增删链接两版一起动。

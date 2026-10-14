@@ -44,6 +44,11 @@ public class ManageRaftCfg extends RaftCfg {
   @Override
   public void init(final BrokerCfg globalConfig, final String brokerBase) {
     super.init(globalConfig, brokerBase);
+    if (replicationFactor < 1) {
+      throw new IllegalArgumentException(
+          String.format(
+              "Manage raft replication factor %s needs to be larger than zero", replicationFactor));
+    }
     if (StringUtils.isBlank(initBrokerId)) {
       throw new RuntimeException("init broker id is empty");
     }

@@ -50,7 +50,7 @@ public interface KunpengClientBuilder {
   /**
    * @param grpcAddress the gRPC address of a gateway that the client can connect to. The address
    *     must be an absolute URL, including the scheme.
-   *     <p>The default value is {@code https://0.0.0.0:2024}.
+   *     <p>The default value is {@code https://0.0.0.0:24108}.
    */
   KunpengClientBuilder grpcAddress(URI grpcAddress);
 

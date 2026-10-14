@@ -31,6 +31,14 @@ Kunpeng 为跨微服务的业务流程提供可视化与控制能力。
 * 导出流程数据用于监控与分析
 * 参与活跃的社区
 
+## 相关链接
+
+* [文档首页](./docs)
+* [快速上手：启动形态与端口模型](./docs/user-guide/getting-started.zh-CN.md)
+* [发行版装配与部署](./dist/README.md)
+* [Java 客户端 SDK](./clients/client-java)
+* [集群消息层基准结论](./docs/cluster-messaging-benchmark.md)
+
 ## Star 趋势
 
 [![Star History Chart](https://api.star-history.com/svg?repos=anyilanxin/kunpeng-engine&type=Date)](https://star-history.com/#anyilanxin/kunpeng-engine&Date)

@@ -78,7 +78,7 @@ public class BrokerCfg {
     rocksdb.init(this, brokerBase);
     data.init(this, brokerBase);
     network.init(clusterCfg, brokerBase);
-    gateway.init(this, brokerBase);
+    gateway.init(this, brokerBase, clusterCfg);
     raft.init(this, brokerBase);
     manage.init(this, brokerBase);
   }

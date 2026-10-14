@@ -26,6 +26,6 @@ server:
 
 kunpeng:
   client:
-    grpc-address: http://127.0.0.1:2024
+    grpc-address: http://127.0.0.1:24108
     enabled: true
     plaintext: true
