@@ -114,7 +114,9 @@ public class KunpengClientJobWorkerProperties {
       maxJobsActive = DEFAULT_MAX_JOBS_ACTIVE;
       pollInterval = DEFAULT_JOB_POLL_INTERVAL;
       name = DEFAULT_JOB_WORKER_NAME_VAR;
-      streamEnabled = DEFAULT_STREAM_ENABLED;
+      // streamEnabled 刻意不预填: 预填成非空默认值会被定制器无条件覆盖注解上的显式声明
+      // （@JobWorker(streamEnabled=true) 被静默打回 false）。保持 null = 未配置, 注解值放行;
+      // 显式配置 kunpeng.client.worker.defaults.stream-enabled 仍正常覆盖（全局开流）。
     }
   }
 

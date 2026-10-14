@@ -183,7 +183,9 @@ public class SpringKunpengClientConfiguration implements KunpengClientConfigurat
 
   @Override
   public boolean getDefaultJobWorkerStreamEnabled() {
-    return kunpengClientProperties.getWorker().getDefaults().getStreamEnabled();
+    // 三态解析: 属性未配置时 defaults 保持 null（注解显式声明放行不被覆盖）, 此处回落客户端级默认
+    final Boolean configured = kunpengClientProperties.getWorker().getDefaults().getStreamEnabled();
+    return configured != null ? configured : KunpengClientBuilderImpl.DEFAULT_STREAM_ENABLED;
   }
 
   @Override

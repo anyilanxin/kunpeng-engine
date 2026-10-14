@@ -54,6 +54,9 @@ class PropertyBasedJobWorkerValueCustomizerTest {
 
     @JobWorker(type = "", fetchAllVariables = true)
     public void fetchAll() {}
+
+    @JobWorker(type = "", streamEnabled = true)
+    public void streaming() {}
   }
 
   @SuppressWarnings("unused")
@@ -106,6 +109,26 @@ class PropertyBasedJobWorkerValueCustomizerTest {
 
     assertThat(value.getName()).isEqualTo("my-worker");
     assertThat(value.getType()).isEqualTo("default-type");
+  }
+
+  @Test
+  void shouldKeepAnnotationStreamEnabledWhenPropertyUnset() throws Exception {
+    // 属性未配置 streamEnabled 时注解显式声明必须存活（曾被 defaults 预填的非空默认值静默打回 false）
+    final var value = jobWorkerValueOf("streaming");
+
+    customizer.customize(value);
+
+    assertThat(value.getStreamEnabled()).isTrue();
+  }
+
+  @Test
+  void shouldOverrideStreamEnabledFromConfiguredDefault() throws Exception {
+    properties.getWorker().getDefaults().setStreamEnabled(false);
+    final var value = jobWorkerValueOf("streaming");
+
+    customizer.customize(value);
+
+    assertThat(value.getStreamEnabled()).isFalse();
   }
 
   @Test
