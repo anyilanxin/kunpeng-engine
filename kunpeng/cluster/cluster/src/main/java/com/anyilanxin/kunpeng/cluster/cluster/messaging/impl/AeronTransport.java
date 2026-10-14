@@ -858,7 +858,8 @@ public final class AeronTransport {
           it.remove();
           publicationLastUseNs.remove(entry.getKey());
           entry.getValue().close();
-          LOGGER.info("空闲单播发布通道已驱逐: {}", entry.getKey());
+          // 常态资源治理（空闲 TTL 回收 term buffer 内存, 任务到来按需重建）, 不刷 INFO
+          LOGGER.debug("空闲单播发布通道已驱逐: {}", entry.getKey());
         }
       }
     }
