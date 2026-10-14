@@ -57,7 +57,6 @@ public class JobBatchActivateProcessor extends JobBatchAbstractProcessor {
     final JobBatchRecord jobBatchRecord = logRecord.getValue();
     final int maxJobsActivate = jobBatchRecord.getMaxJobsActivate();
     response.reset();
-
     final AtomicBoolean haveJob = new AtomicBoolean(false);
     job.processJobBatch(
         jobBatchRecord.getJobTypeBuffer(),
@@ -74,10 +73,11 @@ public class JobBatchActivateProcessor extends JobBatchAbstractProcessor {
           // 匹配激活
           jobBatchRecord.jobKeys().add().setValue(jobKey);
           if (response.getJobKeys().size() >= maxJobsActivate) {
+            // visitor 契约: true=继续扫描, false=停止; 达批量上限即停（truncated 告知拉取方仍有剩余）
             response.setTruncated(true);
-            return true;
+            return false;
           }
-          return false;
+          return true;
         });
     if (haveJob.get()) {
       writer.addEvent(

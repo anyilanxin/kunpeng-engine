@@ -76,7 +76,6 @@ final class JobTimeoutCheckerTask implements TimerJob {
     if (cutoffMillis == -1) {
       cutoffMillis = clock.millis();
     }
-
     final int[] appended = {0};
     final DeadlineIndex truncatedAt =
         jobRepository.forEachTimedOutEntry(
