@@ -20,7 +20,7 @@ package com.anyilanxin.kunpeng.eventlog;
  * 写入上下文：标识条目来源，决定流控行为。
  *
  * <ul>
- *   <li>{@link #USER_COMMAND}：客户端命令——受 AIMD 在途窗口与写入速率限制约束，超限可被拒
+ *   <li>{@link #USER_COMMAND}：客户端命令——受 AIMD 在途窗口约束，超限可被拒（sink 滞后闸门在命令准入层另行拦截）
  *   <li>{@link #PROCESSING_RESULT}：引擎处理结果——不受流控（引擎自身背压由处理循环天然约束）
  *   <li>{@link #INTER_PARTITION}：跨分区命令转发——不受流控
  *   <li>{@link #SCHEDULED}：定时任务触发——不受流控
