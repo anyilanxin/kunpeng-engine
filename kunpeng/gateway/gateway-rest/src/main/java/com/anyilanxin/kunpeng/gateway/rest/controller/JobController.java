@@ -120,6 +120,7 @@ public class JobController {
       @RequestParam @NotBlank(message = "消费类型不能为空") final String jobType,
       @RequestParam(defaultValue = "") final String worker,
       @RequestParam(defaultValue = "0") final int capacity,
+      @RequestParam @Min(value = 1000, message = "timeoutMs 至少 1000ms") final long timeoutMs,
       @RequestParam(required = false) final List<String> tenantIds,
       @RequestParam(required = false) final List<String> fetchVariables,
       @RequestParam(defaultValue = "30000") @Min(value = 1000, message = "heartbeatMs 至少 1000ms") final long heartbeatMs) {
@@ -127,6 +128,7 @@ public class JobController {
         jobType,
         worker,
         capacity,
+        timeoutMs,
         tenantIds == null ? List.of() : tenantIds,
         fetchVariables == null ? List.of() : fetchVariables,
         heartbeatMs);

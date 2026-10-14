@@ -42,6 +42,9 @@ public interface JobDeliveryPort {
     /** 选定目标的 worker（引擎据此落 lockOwner——记住谁消费的；重试/审计的归属依据） */
     String worker();
 
+    /** 注册声明的处理超时（ms）：推送路径的激活租期来源，超时未完成由到期扫描回 READY */
+    long timeoutMillis();
+
     /**
      * 投递单条已激活 job（非阻塞发送，实现内部合流出站）。
      *

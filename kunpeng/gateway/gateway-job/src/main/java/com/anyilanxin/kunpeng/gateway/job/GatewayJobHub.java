@@ -110,6 +110,7 @@ public final class GatewayJobHub {
       final String jobType,
       final String worker,
       final int capacity,
+      final long timeoutMillis,
       final List<String> tenantIds,
       final List<String> fetchVariables,
       final StreamObserver<JobDelivery> observer) {
@@ -117,7 +118,14 @@ public final class GatewayJobHub {
     final String workerName = (worker == null || worker.isEmpty()) ? "stream-" + streamId : worker;
     final DeliveryStream handle =
         new DeliveryStream(
-            streamId, jobType, workerName, capacity, tenantIds, fetchVariables, observer);
+            streamId,
+            jobType,
+            workerName,
+            capacity,
+            timeoutMillis,
+            tenantIds,
+            fetchVariables,
+            observer);
     streams.put(streamId, handle);
     streamsByType.computeIfAbsent(jobType, key -> new ConcurrentHashMap<>()).put(streamId, handle);
     generation.incrementAndGet();
@@ -137,18 +145,20 @@ public final class GatewayJobHub {
                     stream.streamId(),
                     stream.worker(),
                     stream.capacity(),
+                    stream.timeoutMillis(),
                     stream.tenantIds(),
                     stream.fetchVariables()))
         .sorted(Comparator.comparingLong(StreamInfo::streamId))
         .toList();
   }
 
-  /** 一条流注册的完整明细（观测视图；wire 快照只携带 sessionId/worker，容量与偏好仅网关本地可得） */
+  /** 一条流注册的完整明细（观测视图；wire 快照只携带 sessionId/worker/timeout，容量与偏好仅网关本地可得） */
   public record StreamInfo(
       String jobType,
       long streamId,
       String worker,
       int capacity,
+      long timeoutMillis,
       List<String> tenantIds,
       List<String> fetchVariables) {}
 
@@ -186,7 +196,9 @@ public final class GatewayJobHub {
           final List<SubscriptionSnapshot.Session> members = new ArrayList<>(sessions.size());
           sessions.forEach(
               (sessionId, handle) ->
-                  members.add(new SubscriptionSnapshot.Session(sessionId, handle.worker())));
+                  members.add(
+                      new SubscriptionSnapshot.Session(
+                          sessionId, handle.worker(), handle.timeoutMillis())));
           aggregates.add(new SubscriptionSnapshot.Aggregate(jobType, members));
         });
     return new SubscriptionSnapshot(generation.get(), aggregates);

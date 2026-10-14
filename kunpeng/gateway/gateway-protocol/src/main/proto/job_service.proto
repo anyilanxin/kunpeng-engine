@@ -239,6 +239,8 @@ message StreamRegister {
   repeated string tenantIds = 4;
   // 期望接收的变量名（当前用于注册观测展示；推送仍直传全量变量）
   repeated string fetchVariables = 5;
+  // 单条 job 处理超时（ms）：推送路径的激活租期来源，超时未完成由到期扫描回 READY 重派
+  int64 timeout = 6;
 }
 
 // 推送给 worker 的 job 载荷

@@ -27,6 +27,7 @@ import com.anyilanxin.kunpeng.gateway.grpc.service.JobServiceGrpc;
 import com.anyilanxin.kunpeng.gateway.grpc.service.JobServiceOuterClass;
 import com.anyilanxin.kunpeng.gateway.job.GatewayJobHub;
 import com.anyilanxin.kunpeng.protocol.gateway.GatewayLoggers;
+import io.grpc.Status;
 import io.grpc.stub.ServerCallStreamObserver;
 import io.grpc.stub.StreamObserver;
 import java.util.concurrent.atomic.AtomicLong;
@@ -146,11 +147,20 @@ public class GrpcJobServiceImpl extends JobServiceGrpc.JobServiceImplBase implem
               LOG.warn("Duplicate stream register ignored [stream: {}]", streamId.get());
               return;
             }
+            if (message.getRegister().getTimeout() < 1) {
+              // 超时是推送路径的激活租期来源，缺省即无界租期（丢失推送永不回收），注册即拒
+              responseObserver.onError(
+                  Status.INVALID_ARGUMENT
+                      .withDescription("job 流注册必须携带处理超时 timeout(ms)")
+                      .asException());
+              return;
+            }
             final long id =
                 jobHub.registerStream(
                     message.getRegister().getType(),
                     message.getRegister().getWorker(),
                     message.getRegister().getCapacity(),
+                    message.getRegister().getTimeout(),
                     message.getRegister().getTenantIdsList(),
                     message.getRegister().getFetchVariablesList(),
                     responseObserver);

@@ -45,7 +45,9 @@ public final class JobStreamSnapshotProperty {
       final JobSubscriptionInfo.Aggregate target = new JobSubscriptionInfo.Aggregate();
       target.jobType = aggregate.jobType();
       for (final SubscriptionSnapshot.Session session : aggregate.sessions()) {
-        target.sessions.add(new JobSubscriptionInfo.Session(session.sessionId(), session.worker()));
+        target.sessions.add(
+            new JobSubscriptionInfo.Session(
+                session.sessionId(), session.worker(), session.timeoutMillis()));
       }
       info.addAggregate(target);
     }
@@ -64,7 +66,9 @@ public final class JobStreamSnapshotProperty {
       final List<SubscriptionSnapshot.Session> sessions =
           new ArrayList<>(aggregate.sessions.size());
       for (final JobSubscriptionInfo.Session session : aggregate.sessions) {
-        sessions.add(new SubscriptionSnapshot.Session(session.sessionId, session.worker));
+        sessions.add(
+            new SubscriptionSnapshot.Session(
+                session.sessionId, session.worker, session.timeoutMillis));
       }
       aggregates.add(new SubscriptionSnapshot.Aggregate(aggregate.jobType, sessions));
     }

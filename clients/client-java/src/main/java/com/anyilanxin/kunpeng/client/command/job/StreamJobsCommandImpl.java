@@ -127,6 +127,7 @@ public final class StreamJobsCommandImpl
   @Override
   public StreamJobsCommandStep1.StreamJobsCommandStep3 timeout(final Duration timeout) {
     Objects.requireNonNull(timeout, "必须指定 job 超时");
+    builder.setTimeout(timeout.toMillis());
     return this;
   }
 

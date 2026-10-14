@@ -61,16 +61,18 @@ public final class JobSubscriptionInfo implements BufferReader, BufferWriter {
     public final List<Session> sessions = new ArrayList<>();
   }
 
-  /** 单条流会话：稳定会话 ID + 归属 worker。 */
+  /** 单条流会话：稳定会话 ID + 归属 worker + 处理超时。 */
   public static final class Session {
     public long sessionId;
     public String worker = "";
+    public long timeoutMillis;
 
     public Session() {}
 
-    public Session(final long sessionId, final String worker) {
+    public Session(final long sessionId, final String worker, final long timeoutMillis) {
       this.sessionId = sessionId;
       this.worker = worker == null ? "" : worker;
+      this.timeoutMillis = timeoutMillis;
     }
   }
 
@@ -135,7 +137,11 @@ public final class JobSubscriptionInfo implements BufferReader, BufferWriter {
           aggregatesDecoder.sessions();
       while (sessionsDecoder.hasNext()) {
         sessionsDecoder.next();
-        aggregate.sessions.add(new Session(sessionsDecoder.sessionId(), sessionsDecoder.worker()));
+        aggregate.sessions.add(
+            new Session(
+                sessionsDecoder.sessionId(),
+                sessionsDecoder.worker(),
+                sessionsDecoder.timeoutMillis()));
       }
       aggregate.jobType = aggregatesDecoder.jobType();
       aggregates.add(aggregate);
@@ -164,7 +170,11 @@ public final class JobSubscriptionInfo implements BufferReader, BufferWriter {
       final JobSubscriptionInfoEncoder.AggregatesEncoder.SessionsEncoder sessionsEncoder =
           aggregatesEncoder.sessionsCount(aggregate.sessions.size());
       for (final Session session : aggregate.sessions) {
-        sessionsEncoder.next().sessionId(session.sessionId).worker(session.worker);
+        sessionsEncoder
+            .next()
+            .sessionId(session.sessionId)
+            .timeoutMillis(session.timeoutMillis)
+            .worker(session.worker);
       }
       aggregatesEncoder.jobType(aggregate.jobType);
       aggregatesEncoder.next();

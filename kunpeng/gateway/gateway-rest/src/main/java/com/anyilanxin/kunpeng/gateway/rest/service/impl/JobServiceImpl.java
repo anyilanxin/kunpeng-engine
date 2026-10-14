@@ -151,6 +151,7 @@ public class JobServiceImpl implements JobService {
       final String jobType,
       final String worker,
       final int capacity,
+      final long timeoutMs,
       final List<String> tenantIds,
       final List<String> fetchVariables,
       final long heartbeatMs) {
@@ -158,7 +159,8 @@ public class JobServiceImpl implements JobService {
         sink -> {
           final SseDeliveryObserver observer = new SseDeliveryObserver(sink);
           final long streamId =
-              jobHub.registerStream(jobType, worker, capacity, tenantIds, fetchVariables, observer);
+              jobHub.registerStream(
+                  jobType, worker, capacity, timeoutMs, tenantIds, fetchVariables, observer);
           final ScheduledFuture<?> heartbeat =
               heartbeatScheduler.scheduleAtFixedRate(
                   () -> sink.next(keepAlive()), heartbeatMs, heartbeatMs, TimeUnit.MILLISECONDS);

@@ -41,8 +41,8 @@ public final class JobStreamMessages {
      */
     public record Aggregate(String jobType, List<Session> sessions) {}
 
-    /** 单条流会话：稳定 ID + 归属 worker */
-    public record Session(long sessionId, String worker) {}
+    /** 单条流会话：稳定 ID + 归属 worker + 处理超时 */
+    public record Session(long sessionId, String worker, long timeoutMillis) {}
   }
 
   /**

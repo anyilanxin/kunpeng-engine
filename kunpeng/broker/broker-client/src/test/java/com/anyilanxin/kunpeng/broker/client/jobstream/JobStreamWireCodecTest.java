@@ -91,8 +91,8 @@ class JobStreamWireCodecTest {
                 new SubscriptionSnapshot.Aggregate(
                     "order-process",
                     List.of(
-                        new SubscriptionSnapshot.Session(11, "sdk-worker-1"),
-                        new SubscriptionSnapshot.Session(12, "other-worker"))),
+                        new SubscriptionSnapshot.Session(11, "sdk-worker-1", 300_000),
+                        new SubscriptionSnapshot.Session(12, "other-worker", 60_000))),
                 new SubscriptionSnapshot.Aggregate("payment", List.of())));
 
     // 快照编解码已收编为 protocol 层 JobSubscriptionInfo 实体，经成员属性对称读写验证
@@ -103,7 +103,8 @@ class JobStreamWireCodecTest {
       target.jobType = aggregate.jobType();
       for (final SubscriptionSnapshot.Session session : aggregate.sessions()) {
         target.sessions.add(
-            new JobSubscriptionInfo.Session(session.sessionId(), session.worker()));
+            new JobSubscriptionInfo.Session(
+                session.sessionId(), session.worker(), session.timeoutMillis()));
       }
       entity.addAggregate(target);
     }
@@ -116,8 +117,8 @@ class JobStreamWireCodecTest {
         .containsExactly("order-process", "payment");
     assertThat(decoded.aggregates().getFirst().sessions())
         .containsExactly(
-            new SubscriptionSnapshot.Session(11, "sdk-worker-1"),
-            new SubscriptionSnapshot.Session(12, "other-worker"));
+            new SubscriptionSnapshot.Session(11, "sdk-worker-1", 300_000),
+            new SubscriptionSnapshot.Session(12, "other-worker", 60_000));
   }
 
   private static Member memberOf(final Properties properties) {

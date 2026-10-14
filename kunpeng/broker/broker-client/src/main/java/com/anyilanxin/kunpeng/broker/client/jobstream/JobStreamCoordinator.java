@@ -142,7 +142,9 @@ public final class JobStreamCoordinator extends Actor {
                 final List<PushPoint> points =
                     merged.computeIfAbsent(jobType, key -> new ArrayList<>(sessions.size()));
                 for (final Session session : sessions) {
-                  points.add(new PushPoint(gateway, session.sessionId(), session.worker()));
+                  points.add(
+                      new PushPoint(
+                          gateway, session.sessionId(), session.worker(), session.timeoutMillis()));
                 }
               });
     }
@@ -222,8 +224,9 @@ public final class JobStreamCoordinator extends Actor {
     failureHandler.accept(pending.push(), failure);
   }
 
-  /** 推送点（也是 byType 扁平索引的条目形态）：目标网关 + 稳定会话 ID + worker（引擎落 lockOwner 的归属） */
-  public record PushPoint(String gatewayMemberId, long sessionId, String worker) {}
+  /** 推送点（也是 byType 扁平索引的条目形态）：目标网关 + 稳定会话 ID + worker（引擎落 lockOwner 的归属）+ 处理超时（激活租期来源） */
+  public record PushPoint(
+      String gatewayMemberId, long sessionId, String worker, long timeoutMillis) {}
 
   /** 单条在途推送（目标网关 + 原始载荷） */
   private record PendingPush(String gatewayMemberId, StreamPush push) {}

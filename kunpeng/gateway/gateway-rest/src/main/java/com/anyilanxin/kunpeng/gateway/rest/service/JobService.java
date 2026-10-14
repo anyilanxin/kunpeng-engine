@@ -67,6 +67,7 @@ public interface JobService {
    * @param jobType 消费类型
    * @param worker worker 名称
    * @param capacity 容量（轻量背压）
+   * @param timeoutMs 单条 job 处理超时（ms）——推送路径的激活租期来源
    * @param tenantIds 租户范围
    * @param fetchVariables 期望接收的变量名
    * @param heartbeatMs 保活间隔（ms）
@@ -75,6 +76,7 @@ public interface JobService {
       String jobType,
       String worker,
       int capacity,
+      long timeoutMs,
       List<String> tenantIds,
       List<String> fetchVariables,
       long heartbeatMs);

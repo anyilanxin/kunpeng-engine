@@ -39,6 +39,7 @@ public final class DeliveryStream {
   private final String jobType;
   private final String worker;
   private final int capacity;
+  private final long timeoutMillis;
   private final List<String> tenantIds;
   private final List<String> fetchVariables;
   private final StreamObserver<JobDelivery> observer;
@@ -49,6 +50,7 @@ public final class DeliveryStream {
       final String jobType,
       final String worker,
       final int capacity,
+      final long timeoutMillis,
       final List<String> tenantIds,
       final List<String> fetchVariables,
       final StreamObserver<JobDelivery> observer) {
@@ -56,6 +58,7 @@ public final class DeliveryStream {
     this.jobType = jobType;
     this.worker = worker;
     this.capacity = capacity;
+    this.timeoutMillis = timeoutMillis;
     this.tenantIds = tenantIds == null ? List.of() : List.copyOf(tenantIds);
     this.fetchVariables = fetchVariables == null ? List.of() : List.copyOf(fetchVariables);
     this.observer = observer;
@@ -75,6 +78,11 @@ public final class DeliveryStream {
 
   public int capacity() {
     return capacity;
+  }
+
+  /** 注册声明的处理超时（ms）：随订阅快照下发，broker 推送路径以此作为激活租期 */
+  public long timeoutMillis() {
+    return timeoutMillis;
   }
 
   public List<String> tenantIds() {

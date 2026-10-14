@@ -48,8 +48,6 @@ import org.agrona.DirectBuffer;
  * @since 2026.9.0
  */
 public class BpmnJobDeliveryBehavior {
-  private static final long DEFAULT_DEADLINE_MILLIS = 60_000;
-
   private final LogEventWriter writer;
   private final InstantSource clock;
   private final VariableBehavior variableBehavior;
@@ -78,7 +76,8 @@ public class BpmnJobDeliveryBehavior {
           });
       return;
     }
-    final long deadline = deadlineOf(jobRecord);
+    // 激活租期来源=流注册声明的处理超时（与上游语义一致）：丢失推送最迟在该租期内被到期扫描回收回 READY
+    final long deadline = clock.millis() + stream.get().timeoutMillis();
     final JobBatchRecord jobBatchRecord = new JobBatchRecord();
     jobBatchRecord.setBatchJobId(writer.nextCurrentSourceKey(jobKey));
     jobBatchRecord.setJobType(jobType);
@@ -97,13 +96,6 @@ public class BpmnJobDeliveryBehavior {
           stream.get().push(jobKey, partitionId, deadline, jobRecord);
           return true;
         });
-  }
-
-  /** 到期时间：记录的锁定时长（秒）优先，缺省 60s */
-  private long deadlineOf(final JobRecord record) {
-    final long lockExpireMillis = record.getLockExpireTime() * 1000L;
-    final var now = clock.millis();
-    return lockExpireMillis > 0 ? now + lockExpireMillis : now + DEFAULT_DEADLINE_MILLIS;
   }
 
   public void collectVariable(final ValueArray<StringValue> variables, final JobInfoRecord record) {

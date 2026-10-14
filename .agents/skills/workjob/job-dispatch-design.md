@@ -60,12 +60,13 @@
 ```java
 // —— 订阅（稳定会话映射：每 (gateway, jobType) 一条聚合）——
 record Aggregate(String jobType, List<Session> sessions) {}
-record Session(long sessionId, String worker) {}
+record Session(long sessionId, String worker, long timeoutMillis) {}
 //   会话 ID 由网关分配（自增 long，稳定不复用）；流下线只删自身项——其他会话寻址不受影响
+//   timeoutMillis 为注册声明的处理超时（ms），随会话快照下发——推送路径的激活租期来源
 //   map.size() 即活跃流数（事实描述，非独立数据；背压落地时再显式化）
 
 // —— 协调器选点（单游标轮转的产物，一次选定即绑定归属）——
-record PushPoint(String gatewayMemberId, long sessionId, String worker) {}
+record PushPoint(String gatewayMemberId, long sessionId, String worker, long timeoutMillis) {}
 
 // —— 单条推送载荷（完整 JobRecord 随行）——
 record StreamPush(long sessionId, String worker, long jobKey,
@@ -77,6 +78,7 @@ interface JobDeliveryPort {
   Optional<DeliveryChannel> pickStream(String jobType);     // 单游标轮转选点
   interface JobStream {
     String worker();                                 // 选定归属（落 lockOwner）
+    long timeoutMillis();                            // 注册声明的处理超时（激活租期来源）
     void push(long jobKey, int partitionId, long deadline, JobRecord record);
   }
 }
@@ -159,7 +161,7 @@ client 直接调 `CompleteJob` / `FailJob` 命令 rpc → commandapi → `COMPLE
 
 - **归属闭环**：引擎按 `workers[targetIndex]` 落 lockOwner（ACTIVATED 事件，raft 复制）→ 网关三规则分发保证实际处理者与 lockOwner 一致 → 完成事件销账。排查"谁消费了"直接查存储。
 - **worker 名来源**（三层）：①client 注解 `@JobWorker(name=...)` 显式指定；②starter 空 name 时生成方法指纹 **`beanName#methodName`**（跨重启稳定，同方法多实例天然同名、合入同一会话聚合——对齐 Camunda 官方 `GeneratedFromMethodInfo` 规则）；③网关空名兜底 `stream-{streamId}`（防御裸 gRPC/非 Java client，lockOwner 永不为空）。
-- **deadline**：`JobBatchActivateApiProcessor` 按 `now + request timeout` 落批事件（推送路径用 `lockExpireTime` 秒数或缺省 60s）；存储 applier 写 `(deadline, jobKey)` 复合键到 `JOB_DEADLINE` 列族；`JobTimeoutChecker` 断点扫描到期索引发 TIME_OUT 命令回 READY。
+- **deadline**：`JobBatchActivateApiProcessor` 按 `now + request timeout` 落批事件（推送路径用流注册声明的处理超时 `timeoutMillis`——注册缺省 timeout 即被网关拒绝，杜绝无界租期）；存储 applier 写 `(deadline, jobKey)` 复合键到 `JOB_DEADLINE` 列族；`JobTimeoutChecker` 断点扫描到期索引发 TIME_OUT 命令回 READY。
 - **重试与 worker 的关系**：重试是 retries 计数 + 回 READY 重派（任何消费者可再取），**不依赖 worker**；lockOwner 是归属记录（审计/排查），不是重试依据。
 
 ---
@@ -185,7 +187,7 @@ client 直接调 `CompleteJob` / `FailJob` 命令 rpc → commandapi → `COMPLE
 
 | rpc | 语义 |
 |---|---|
-| `OpenJobStream`（双向流） | 首请求携带 register(type, worker, capacity)；完成不经流，无需其他信号 |
+| `OpenJobStream`（双向流） | 首请求携带 register(type, worker, capacity, timeout)——timeout(ms) 必填，缺省注册即拒；完成不经流，无需其他信号 |
 | `PullJobs` | 长轮询：立即全分区探测，全空挂起，超时空批 |
 | `CompleteJob` / `FailJob` / `UpdateJobRetries` / `UpdateJobTimeout` / `ThrowError` | 业务命令面（标准命令通道） |
 
@@ -195,7 +197,7 @@ client 直接调 `CompleteJob` / `FailJob` 命令 rpc → commandapi → `COMPLE
 
 | message | 字段 |
 |---|---|
-| `subscriptionSnapshot` | generation + 嵌套 group（aggregates × sessions{sessionId int64, worker varData}） |
+| `subscriptionSnapshot` | generation + 嵌套 group（aggregates × sessions{sessionId int64, timeoutMillis int64, worker varData}） |
 | `streamPush` | sessionId + jobKey + partitionId + deadline + worker(varData) + record(**blob：structpack JobRecord 帧**) |
 | `pushResult` | delivered + reason |
 

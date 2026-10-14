@@ -63,6 +63,11 @@ public final class CoordinatorJobStreamer implements JobDeliveryPort {
     }
 
     @Override
+    public long timeoutMillis() {
+      return point.timeoutMillis();
+    }
+
+    @Override
     public void push(
         final long jobKey, final int partitionId, final long deadline, final JobRecord record) {
       coordinator.enqueue(

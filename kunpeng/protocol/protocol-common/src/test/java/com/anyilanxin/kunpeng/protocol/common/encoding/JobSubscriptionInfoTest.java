@@ -37,8 +37,8 @@ class JobSubscriptionInfoTest {
     final JobSubscriptionInfo info = new JobSubscriptionInfo().setGeneration(3);
     final JobSubscriptionInfo.Aggregate orders = new JobSubscriptionInfo.Aggregate();
     orders.jobType = "order-process";
-    orders.sessions.add(new JobSubscriptionInfo.Session(11, "sdk-worker-1"));
-    orders.sessions.add(new JobSubscriptionInfo.Session(12, "other-worker"));
+    orders.sessions.add(new JobSubscriptionInfo.Session(11, "sdk-worker-1", 300_000));
+    orders.sessions.add(new JobSubscriptionInfo.Session(12, "other-worker", 60_000));
     info.addAggregate(orders);
     final JobSubscriptionInfo.Aggregate payment = new JobSubscriptionInfo.Aggregate();
     payment.jobType = "payment";
@@ -66,6 +66,7 @@ class JobSubscriptionInfoTest {
     assertEquals(2, decoded.getAggregates().get(0).sessions.size());
     assertEquals(11, decoded.getAggregates().get(0).sessions.get(0).sessionId);
     assertEquals("sdk-worker-1", decoded.getAggregates().get(0).sessions.get(0).worker);
+    assertEquals(300_000, decoded.getAggregates().get(0).sessions.get(0).timeoutMillis);
     assertEquals("payment", decoded.getAggregates().get(1).jobType);
     assertEquals(0, decoded.getAggregates().get(1).sessions.size());
   }
