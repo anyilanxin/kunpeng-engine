@@ -89,10 +89,7 @@ public class Gateway implements CloseableSilently {
   public static GatewayInfo localGatewayInfo(
       final GatewayCfg gatewayCfg, final AtomixCluster atomixCluster) {
     final GatewayGrpcNetworkCfg network = gatewayCfg.getNetwork();
-    String grpcHost = network.getHost();
-    if (network.userCustomGrpcHost()) {
-      grpcHost = network.getGrpcHost();
-    }
+    final String grpcHost = network.advertisedGrpcHost();
     if (grpcHost == null || grpcHost.isBlank()) {
       throw new IllegalStateException("Gateway gRPC host must not be empty");
     }

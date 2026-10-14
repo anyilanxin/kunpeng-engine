@@ -83,10 +83,10 @@ public class GatewayModuleConfiguration {
   public Gateway gateway(
       final GatewayJobHub jobHub, final GatewayTopologyManagerImpl gatewayTopologyManager) {
     atomixCluster.start();
-    // 网关发现管理: client 接入地址写入 GatewayInfo 实体属性(未显式通告主机时空串回落成员主机, 收集侧解析)
+    // 网关发现管理: client 接入地址写入 GatewayInfo 实体属性（advertisedGrpcHost 解析: 显式 grpc-host > 具体绑定地址 > 自动发现网卡）
     GatewayInfo.advertise(
         atomixCluster.getMembershipService().getLocalMember().properties(),
-        gatewayCfg.getNetwork().getGrpcHost(),
+        gatewayCfg.getNetwork().advertisedGrpcHost(),
         gatewayCfg.getNetwork().getGrpcPort());
     final Gateway gateway =
         new Gateway(

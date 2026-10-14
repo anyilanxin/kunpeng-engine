@@ -91,7 +91,7 @@ public final class EmbeddedGatewayService implements AutoCloseable {
     // 网关发现通告: client 接入地址写入本成员属性（独立网关形态由装配侧通告，此处链内完成）
     GatewayInfo.advertise(
         atomixCluster.getMembershipService().getLocalMember().properties(),
-        gatewayCfg.getNetwork().getGrpcHost(),
+        gatewayCfg.getNetwork().advertisedGrpcHost(),
         gatewayCfg.getNetwork().getGrpcPort());
     return gateway.start();
   }

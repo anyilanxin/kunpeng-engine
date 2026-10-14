@@ -41,6 +41,7 @@ public final class GatewayGrpcNetworkCfg extends NetworkInfo {
   private static final String DEFAULT_ADVERTISED_HOST =
       Address.defaultAdvertisedHost().getHostAddress();
   private static final String DEFAULT_HOST = "0.0.0.0";
+  private static final String WILDCARD_V6 = "::";
   private Duration minKeepAliveInterval = Duration.ofSeconds(30);
   private DataSize maxMessageSize = DataSize.ofMegabytes(4);
   private String grpcHost;
@@ -99,11 +100,26 @@ public final class GatewayGrpcNetworkCfg extends NetworkInfo {
       grpcPort = derivedPort;
     }
     if (StringUtils.isBlank(getHost())) {
-      setHost(DEFAULT_ADVERTISED_HOST);
-    }
-    if (StringUtils.isBlank(getHost())) {
+      // 绑定缺省用通配: 单个 server 只能绑一个地址, 绑具体网卡会漏掉回环（本地客户端 127.0.0.1 直拒）
       setHost(DEFAULT_HOST);
     }
     super.init(basePath);
+  }
+
+  /**
+   * 客户端通告地址解析（与绑定地址分离）：显式配置的 grpc-host 优先；否则绑定地址为具体 IP 时用绑定地址； 通配/未设时回落自动发现的网卡地址。通告通配地址或 null
+   * 都会让客户端无从接入。
+   */
+  public String advertisedGrpcHost() {
+    if (customGrpcHost) {
+      return grpcHost;
+    }
+    final String bindHost = getHost();
+    if (StringUtils.isNotBlank(bindHost)
+        && !DEFAULT_HOST.equals(bindHost)
+        && !WILDCARD_V6.equals(bindHost)) {
+      return bindHost;
+    }
+    return DEFAULT_ADVERTISED_HOST;
   }
 }
