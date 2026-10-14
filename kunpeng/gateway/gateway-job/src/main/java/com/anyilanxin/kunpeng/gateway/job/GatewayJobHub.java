@@ -324,6 +324,10 @@ public final class GatewayJobHub {
               sendRequest(activate)
           .whenComplete(
               (response, error) -> {
+                if (error != null || response == null || !response.isSuccess()) {
+                  // 探测失败与空批不可混同: 分区拒绝/背压/超时若被静默吞掉, 拉取方会误判"无任务"而无限退避
+                  warnProbeFailThrottled(request.getType(), partitionId.id(), error);
+                }
                 final List<JobInfoRecordValue> jobs =
                     (error == null && response != null && response.isSuccess())
                         ? response.getValue().getJobs()
@@ -343,6 +347,12 @@ public final class GatewayJobHub {
     }
   }
 
+  /** 探测结果落选告警的节流留痕时间戳（10s 窗口一次）：多分区扇出竞争下每轮拉取必有落选，属设计内结果，不节流会刷爆 WARN */
+  private final AtomicLong lastProbeDropWarnNs = new AtomicLong();
+
+  /** 探测失败告警的节流留痕时间戳（10s 窗口一次） */
+  private final AtomicLong lastProbeFailWarnNs = new AtomicLong();
+
   /** 首个非空响应胜出；请求已超时则直接丢弃（不跨请求转交——jobs 已按 source 请求的 worker 落 lockOwner， 交给其他请求会错归属），分区到期自愈。 */
   private void deliverProbeResult(
       final String jobType,
@@ -353,10 +363,35 @@ public final class GatewayJobHub {
       respond(source, deliveries(jobs, jobKeys));
       return;
     }
+    warnProbeDropThrottled(jobType, jobs.size());
+  }
+
+  /** 落选告警节流（10s 窗口一次）：竞争/截止/断连三种触发均为设计内竞态，任务由到期扫描回 READY，非故障。 */
+  private void warnProbeDropThrottled(final String jobType, final int jobs) {
+    final long nowNs = System.nanoTime();
+    if (nowNs - lastProbeDropWarnNs.get() < TimeUnit.SECONDS.toNanos(10)) {
+      return;
+    }
+    lastProbeDropWarnNs.set(nowNs);
     LOG.warn(
         "Probe result arrived with no waiting request, jobs await deadline disposal [type: {}, jobs: {}]",
         jobType,
-        jobs.size());
+        jobs);
+  }
+
+  /** 探测失败告警节流（10s 窗口一次）：失败被当空批处理会让拉取方误判无任务, 必须留痕定位（分区拒绝/背压/超时）。 */
+  private void warnProbeFailThrottled(
+      final String jobType, final int partitionId, final Throwable error) {
+    final long nowNs = System.nanoTime();
+    if (nowNs - lastProbeFailWarnNs.get() < TimeUnit.SECONDS.toNanos(10)) {
+      return;
+    }
+    lastProbeFailWarnNs.set(nowNs);
+    LOG.warn(
+        "Job activate probe failed, treated as empty batch [type: {}, partition: {}, error: {}]",
+        jobType,
+        partitionId,
+        error != null ? error.toString() : "response rejected");
   }
 
   /** 挂回队列（保持 QUEUED 状态，等待唤醒/超时）；状态已被取走则丢弃 */
