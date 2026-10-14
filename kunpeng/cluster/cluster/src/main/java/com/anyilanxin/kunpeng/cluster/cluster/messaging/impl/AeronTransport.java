@@ -703,7 +703,8 @@ public final class AeronTransport {
         publication.close();
       }
       publication = aeron.addExclusivePublication(task.channelUri, task.streamId);
-      LOGGER.info(
+      // 按需重建与空闲驱逐同属常态循环, 不刷 INFO
+      LOGGER.debug(
           "发布通道已创建: {} termLength={} maxMessageLength={}",
           task.channelUri,
           publication.termBufferLength(),
