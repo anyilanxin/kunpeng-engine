@@ -162,6 +162,7 @@ kunpeng-engine/
 |------|------|
 | [README.zh-CN.md](./README.zh-CN.md) | 项目简介与许可说明 |
 | [docs/user-guide/getting-started.zh-CN.md](./docs/user-guide/getting-started.zh-CN.md) | 用户启动指南（启动形态/端口模型/多节点 demo，中英双版：`getting-started.md`） |
+| [docs/sink-integration.md](./docs/sink-integration.md) | Sink 对接指南（SPI 生命周期、uber jar 打包与 compileOnly 清单、分区本地查询引擎） |
 | [.agents/skills/SKILL.md](./.agents/skills/SKILL.md) | 技能总览索引（kunpeng-skills） |
 | [buildSrc/common-config.gradle](./buildSrc/common-config.gradle) | 私仓/仓库与公共构建配置 |
 | [dist/README.md](./dist/README.md) | 发行版装配说明 |

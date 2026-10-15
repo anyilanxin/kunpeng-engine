@@ -38,6 +38,7 @@ Clients spread load dynamically across stateless gateways, which route each requ
 * [Distribution & Deployment](./dist/README.md)
 * [Java Client SDK](./clients/client-java)
 * [Cluster Messaging Benchmarks](./docs/cluster-messaging-benchmark.md)
+* [Sink Integration Guide (build your own exporter)](./docs/sink-integration.md)
 
 ## Star History
 

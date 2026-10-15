@@ -38,6 +38,7 @@ Kunpeng 为跨微服务的业务流程提供可视化与控制能力。
 * [发行版装配与部署](./dist/README.md)
 * [Java 客户端 SDK](./clients/client-java)
 * [集群消息层基准结论](./docs/cluster-messaging-benchmark.md)
+* [Sink 对接指南（自研日志外发）](./docs/sink-integration.md)
 
 ## Star 趋势
 
