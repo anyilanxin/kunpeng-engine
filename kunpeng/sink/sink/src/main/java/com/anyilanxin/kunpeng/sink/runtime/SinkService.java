@@ -458,8 +458,8 @@ public final class SinkService extends Actor implements HealthMonitorable, Recor
                 slot.startSink();
                 return true;
               } catch (final Exception e) {
-                LOG.warn("Failed to start sink '{}'; retrying", slot.getId());
-                LOG.debug("Start failure of sink '{}'", slot.getId(), e);
+                LOG.error("Failed to start sink '{}'; retrying", slot.getId());
+                LOG.error("Start failure of sink '{}'", slot.getId(), e);
                 return false;
               }
             },
