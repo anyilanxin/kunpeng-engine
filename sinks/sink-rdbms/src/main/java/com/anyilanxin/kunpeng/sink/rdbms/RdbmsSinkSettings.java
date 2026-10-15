@@ -42,7 +42,7 @@ public class RdbmsSinkSettings {
   /** 表名前缀，与逻辑名拼接成完整物理名注入 {@code ${table.x}} 变量。 */
   private String tablePrefix = "KP_";
 
-  /** 逻辑表名/索引名的大小写渲染（UPPER/LOWER），与前缀配合保证标识符风格统一；默认大写。 */
+  /** 完整物理表名/索引名（含前缀）的大小写渲染（UPPER/LOWER），保证整条标识符风格统一；默认大写。 */
   private String tableNameCase = "UPPER";
 
   /** Liquibase 元数据对象名比较是否区分大小写（透传 {@code AbstractJdbcDatabase#setCaseSensitive}）。 */

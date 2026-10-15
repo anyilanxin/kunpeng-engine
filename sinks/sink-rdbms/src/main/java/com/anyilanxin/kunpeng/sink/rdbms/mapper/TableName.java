@@ -21,8 +21,8 @@ import java.util.function.BiConsumer;
 
 /**
  * 数据库标识符登记枚举：每个常量声明 {@code 变量 key + 表名}（含 changelog 索引名与 Liquibase 簿记表）， 由 {@link
- * #registerAll(BiConsumer, String, TableNameCase)} 统一算出完整物理名（前缀 + 大小写渲染）后注入 MyBatis / Liquibase
- * 变量—— XML 里的标识符一律只写 {@code ${<变量key>}}，一个变量即完整表名，不存在前缀拼装。
+ * #registerAll(BiConsumer, String, TableNameCase)} 统一算出完整物理名（前缀与逻辑名整条按大小写策略渲染）后注入 MyBatis /
+ * Liquibase 变量—— XML 里的标识符一律只写 {@code ${<变量key>}}，一个变量即完整表名，不存在前缀拼装。
  *
  * <p>新增表或索引时在此追加常量即可，变量注册零改动。
  *
@@ -84,16 +84,12 @@ public enum TableName {
     return logicalName;
   }
 
-  /** 物理名 = 前缀 + 按大小写策略渲染的逻辑名 */
+  /** 物理名 = 「前缀 + 逻辑名」整条按大小写策略统一渲染，保证标识符风格一致 */
   public String physicalName(final String prefix, final TableNameCase nameCase) {
-    return prefix + rendered(nameCase);
-  }
-
-  /** 按大小写策略渲染的逻辑名 */
-  public String rendered(final TableNameCase nameCase) {
+    final String name = prefix + logicalName;
     return switch (nameCase) {
-      case UPPER -> logicalName.toUpperCase(Locale.ROOT);
-      case LOWER -> logicalName.toLowerCase(Locale.ROOT);
+      case UPPER -> name.toUpperCase(Locale.ROOT);
+      case LOWER -> name.toLowerCase(Locale.ROOT);
     };
   }
 

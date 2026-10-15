@@ -49,6 +49,13 @@ class TableNameTest {
   }
 
   @Test
+  void physicalNameRendersWholeIdentifierIncludingPrefix() {
+    // 前缀与策略大小写不一致时整条统一渲染，不出现半大写半小写的标识符
+    assertEquals("KP_USER_TASK", TableName.USER_TASK.physicalName("kp_", TableNameCase.UPPER));
+    assertEquals("kp_user_task", TableName.USER_TASK.physicalName("KP_", TableNameCase.LOWER));
+  }
+
+  @Test
   void registerAllInjectsFullPhysicalNames() {
     final var variables = new Properties();
     TableName.registerAll(variables::setProperty, "KP_", TableNameCase.UPPER);
