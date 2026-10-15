@@ -20,13 +20,24 @@ kunpeng:
       cpu-thread-count: 2
       io-thread-count: 2
     sinks:
-      dbms:
-        className: com.anyilanxin.kunpeng.sink.rdbms.RdbmsSink
+      #      dbms:
+      #        className: com.anyilanxin.kunpeng.sink.rdbms.RdbmsSink
+      #        args:
+      #          url: jdbc:mysql://localhost:3306/kunpeng_process?allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=utf8&useSSL=false&rewriteBatchedStatement=true&serverTimezone=Asia/Shanghai
+      #          #          url: jdbc:postgresql://localhost:5432/kunpeng_process
+      #          password: root
+      #          userName: root
+      #          tablePrefix: ANYI_
+      #          caseSensitive: true
+      #          autoDdl: true
+      anyistandlone:
+        className: com.anyilanxin.platform.coreprocess.sink.rdbms.AnyiRdbmsSink
+        jarPath: /Users/zxuanhong/Projects/ay/anyi-platform/backend/core-process/process-sink/build/libs/process-sink-2.0.0-alpha4-all.jar
         args:
-          url: jdbc:mysql://localhost:3306/kunpeng_process?allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=utf8&useSSL=false&rewriteBatchedStatement=true&serverTimezone=Asia/Shanghai
-          #          url: jdbc:postgresql://localhost:5432/kunpeng_process
+          url: jdbc:mysql://localhost:3306/anyi_standalone?allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=utf8&useSSL=false&rewriteBatchedStatement=true&serverTimezone=Asia/Shanghai&allowMultiQueries=true
           password: root
           userName: root
-          tablePrefix: ANYI_
-          caseSensitive: true
+          tablePrefix: process_sink_
+          caseSensitive: false
+          tableNameCase: LOWER
           autoDdl: true
