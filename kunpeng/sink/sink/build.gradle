@@ -39,6 +39,7 @@ dependencies {
     implementation project(':kunpeng:scheduler')
     implementation project(':kunpeng:structpack')
     implementation project(':kunpeng:utils')
+    implementation 'com.github.ben-manes.caffeine:caffeine'
 
     implementation 'tools.jackson.core:jackson-databind'
     implementation 'tools.jackson.core:jackson-core'

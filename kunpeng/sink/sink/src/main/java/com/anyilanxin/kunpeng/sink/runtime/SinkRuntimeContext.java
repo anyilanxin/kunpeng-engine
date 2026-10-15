@@ -21,6 +21,7 @@ import com.anyilanxin.kunpeng.protocol.business.record.RecordType;
 import com.anyilanxin.kunpeng.sink.api.context.RecordMatcher;
 import com.anyilanxin.kunpeng.sink.api.context.SinkConfiguration;
 import com.anyilanxin.kunpeng.sink.api.context.SinkContext;
+import com.anyilanxin.kunpeng.sink.query.SinkQueryService;
 import com.anyilanxin.kunpeng.utils.micrometer.Micrometers;
 import com.anyilanxin.kunpeng.utils.micrometer.PartitionKeyNames;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -55,6 +56,7 @@ public final class SinkRuntimeContext implements SinkContext, AutoCloseable {
   private final int partitionId;
   private final InstantSource clock;
   private final CompositeMeterRegistry meterRegistry;
+  private final SinkQueryService queryRepository;
   private volatile RecordMatcher matcher = MATCH_ALL;
 
   public SinkRuntimeContext(
@@ -62,11 +64,13 @@ public final class SinkRuntimeContext implements SinkContext, AutoCloseable {
       final SinkConfiguration configuration,
       final int partitionId,
       final MeterRegistry parentRegistry,
-      final InstantSource clock) {
+      final InstantSource clock,
+      final SinkQueryService queryRepository) {
     this.logger = logger;
     this.configuration = configuration;
     this.partitionId = partitionId;
     this.clock = clock;
+    this.queryRepository = queryRepository;
     meterRegistry =
         Micrometers.wrap(
             parentRegistry,
@@ -97,6 +101,11 @@ public final class SinkRuntimeContext implements SinkContext, AutoCloseable {
   @Override
   public int getPartitionId() {
     return partitionId;
+  }
+
+  @Override
+  public SinkQueryService getQueryRepository() {
+    return queryRepository;
   }
 
   RecordMatcher getMatcher() {

@@ -25,6 +25,7 @@ import com.anyilanxin.kunpeng.sink.api.RecordSink;
 import com.anyilanxin.kunpeng.sink.api.context.CancellableTask;
 import com.anyilanxin.kunpeng.sink.api.context.SinkController;
 import com.anyilanxin.kunpeng.sink.metrics.SinkMetrics;
+import com.anyilanxin.kunpeng.sink.query.SinkQueryService;
 import com.anyilanxin.kunpeng.sink.registry.SinkDescriptor;
 import com.anyilanxin.kunpeng.structpack.util.BufferUtil;
 import com.anyilanxin.kunpeng.utils.jar.ThreadContextUtil;
@@ -73,7 +74,8 @@ public final class SinkSlot implements SinkController {
       final int partitionId,
       final SinkInitInfo initInfo,
       final MeterRegistry meterRegistry,
-      final InstantSource clock) {
+      final InstantSource clock,
+      final SinkQueryService queryRepository) {
     this.initInfo = initInfo;
     context =
         new SinkRuntimeContext(
@@ -81,7 +83,8 @@ public final class SinkSlot implements SinkController {
             descriptor.getConfig(),
             partitionId,
             meterRegistry,
-            clock);
+            clock,
+            queryRepository);
     sink = descriptor.newInstance();
   }
 

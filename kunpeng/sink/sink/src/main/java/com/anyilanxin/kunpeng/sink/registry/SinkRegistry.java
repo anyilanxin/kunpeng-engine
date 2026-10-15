@@ -136,7 +136,9 @@ public final class SinkRegistry {
               descriptor.getConfig(),
               SinkContext.PARTITION_ID_UNSET,
               new SimpleMeterRegistry(),
-              InstantSource.system());
+              InstantSource.system(),
+              // 校验阶段未绑定分区，无分区存储可查
+              null);
       ThreadContextUtil.runCheckedWithClassLoader(
           () -> instance.initialize(validationContext), instance.getClass().getClassLoader());
     } catch (final Exception e) {

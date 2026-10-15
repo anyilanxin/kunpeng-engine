@@ -89,6 +89,10 @@ public final class SinkService extends Actor implements HealthMonitorable, Recor
   private final RecordDispatcher dispatcher;
   private final List<SinkSlot> slots;
   private final MutableSinkRepository state;
+
+  /** 分区本地只读查询入口，随槽位上下文交给各 Sink */
+  private final DefaultSinkQueryService queryRepository;
+
   private final SinkRole role;
   private final Duration broadcastInterval;
   private final EntryFilter positionsToSkip;
@@ -126,12 +130,19 @@ public final class SinkService extends Actor implements HealthMonitorable, Recor
     messaging = context.getMessaging();
     positionTopic = POSITION_TOPIC_PREFIX + partitionId;
 
+    // 分区本地只读查询：复用本服务专享的仓储聚合（sink 回调与服务同 actor 线程，串行安全）
+    queryRepository = new DefaultSinkQueryService(context.getRepository());
     slots =
         context.getSinks().entrySet().stream()
             .map(
                 entry ->
                     new SinkSlot(
-                        entry.getKey(), partitionId, entry.getValue(), meterRegistry, clock))
+                        entry.getKey(),
+                        partitionId,
+                        entry.getValue(),
+                        meterRegistry,
+                        clock,
+                        queryRepository))
             .collect(Collectors.toCollection(ArrayList::new));
     metrics = new SinkMetrics(meterRegistry);
     metrics.initializePhase(initialPhase);
@@ -640,7 +651,8 @@ public final class SinkService extends Actor implements HealthMonitorable, Recor
       return;
     }
 
-    final var slot = new SinkSlot(descriptor, partitionId, initInfo, meterRegistry, clock);
+    final var slot =
+        new SinkSlot(descriptor, partitionId, initInfo, meterRegistry, clock, queryRepository);
     slot.init(actor, metrics, state, phase);
     try {
       slot.initializeSink();

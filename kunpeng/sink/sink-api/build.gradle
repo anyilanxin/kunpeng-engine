@@ -23,6 +23,7 @@ configure(jarInfo) {
 
 dependencies {
     api project(':kunpeng:protocol:protocol-business')
+    api project(':kunpeng:sink:sink-query-repository')
     api 'io.micrometer:micrometer-core'
     api 'io.micrometer:micrometer-commons'
 }

@@ -12,6 +12,7 @@
  */
 package com.anyilanxin.kunpeng.sink.api.context;
 
+import com.anyilanxin.kunpeng.sink.query.SinkQueryService;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.time.InstantSource;
 import org.slf4j.Logger;
@@ -42,6 +43,13 @@ public interface SinkContext {
 
   /** 配置校验阶段（尚未绑定分区）使用的分区 id。 */
   int PARTITION_ID_UNSET = Integer.MIN_VALUE;
+
+  /**
+   * 本 Sink 绑定分区的只读查询入口：直查本分区存储，不产生日志记录。线程安全，任意线程可调用。
+   *
+   * @return 分区本地查询仓储；配置校验阶段（分区未绑定，无分区存储）返回 {@code null}
+   */
+  SinkQueryService getQueryRepository();
 
   /**
    * 限制哪些记录能到达 {@code RecordSink#sink}；被匹配器拒绝的记录由引擎直接确认，不再投递。

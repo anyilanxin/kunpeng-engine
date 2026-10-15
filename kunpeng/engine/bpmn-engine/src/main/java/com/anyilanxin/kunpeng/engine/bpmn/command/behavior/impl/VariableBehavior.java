@@ -93,7 +93,7 @@ public class VariableBehavior {
     final Map<String, Object> variableMap = new HashMap<>(scopeVariables(activityInstanceId));
 
     long currentActivityInstanceId = activityInstanceId;
-    long currentParentActivityInstanceId = -1;
+    long currentParentActivityInstanceId;
     do {
       final ActivityInstanceRecord record = activityInstance.getRecord(currentActivityInstanceId);
       if (record != null) {
