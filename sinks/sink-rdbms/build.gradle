@@ -44,6 +44,16 @@ dependencies {
     testImplementation project(':kunpeng:bpm-model:bpm-common')
 }
 
-shadowJar {
 
+// 根 build 的 processResources 全局只包含 yml/META-INF/i18n;本模块还需打包 mapper xml 与 Liquibase changelog
+processResources {
+    include('mapper/**', 'db/**')
+}
+
+shadowJar {
+    zip64 = true
+    exclude 'io/micrometer/**'
+    exclude 'tools/jackson/**'
+    exclude 'org/slf4j/**'
+    exclude 'com/anyilanxin/kunpeng/**'
 }
