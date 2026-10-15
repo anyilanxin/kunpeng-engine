@@ -22,18 +22,16 @@ configure(jarInfo) {
 }
 
 dependencies {
-    implementation project(':kunpeng:sink:sink-api')
-
-    // 主代码 ActivityInstanceRecordHandler 引用 BpmnElementType（nameOf 映射），编译期传递需要
-    implementation project(':kunpeng:bpm-model:model-parse')
-    implementation project(':kunpeng:protocol:protocol-business')
-    implementation project(':kunpeng:protocol:protocol-common')
+    compileOnly project(':kunpeng:sink:sink-api')
+    compileOnly project(':kunpeng:bpm-model:bpm-common')
+    compileOnly project(':kunpeng:protocol:protocol-business')
+    compileOnly project(':kunpeng:protocol:protocol-common')
+    compileOnly 'tools.jackson.core:jackson-databind'
+    compileOnly 'io.micrometer:micrometer-core'
 
     implementation 'com.alibaba:druid'
     implementation 'org.mybatis:mybatis'
     implementation 'org.liquibase:liquibase-core'
-    implementation 'tools.jackson.core:jackson-databind'
-    implementation 'io.micrometer:micrometer-core'
 
     implementation 'org.postgresql:postgresql'
     implementation 'com.mysql:mysql-connector-j'
@@ -41,7 +39,11 @@ dependencies {
 
     // 配置绑定测试走生产同款 MapSinkConfig（broker 运行期传入的 SinkConfiguration 实现）
     testImplementation project(':kunpeng:sink:sink')
+
+    // compileOnly 不进测试源集类路径，测试构造元素类型需要引擎提供的枚举
+    testImplementation project(':kunpeng:bpm-model:bpm-common')
 }
 
 shadowJar {
+
 }

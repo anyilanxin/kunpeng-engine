@@ -20,7 +20,7 @@ import com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance.
 import com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance.ActivityInstanceListenerType;
 import com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance.ActivityInstanceRecordValue;
 import com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance.ActivityInstanceState;
-import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnElementType;
+import com.anyilanxin.kunpeng.bpm.common.BpmnElementType;
 import com.anyilanxin.kunpeng.protocol.business.record.command.deployment.ProcessDefinitionRecordValue;
 import com.anyilanxin.kunpeng.protocol.business.record.command.deployment.StarterEventRecordValue;
 import com.anyilanxin.kunpeng.protocol.business.record.command.historycleanup.HistoryCleanupRecordValue;
@@ -52,6 +52,7 @@ import com.anyilanxin.kunpeng.sink.api.context.RecordMatcher;
 import com.anyilanxin.kunpeng.sink.api.context.SinkConfiguration;
 import com.anyilanxin.kunpeng.sink.api.context.SinkContext;
 import com.anyilanxin.kunpeng.sink.api.context.SinkController;
+import com.anyilanxin.kunpeng.sink.query.SinkQueryService;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.time.Duration;
@@ -98,6 +99,11 @@ final class Fakes {
       @Override
       public int getPartitionId() {
         return 1;
+      }
+
+      @Override
+      public SinkQueryService getQueryRepository() {
+        return null;
       }
 
       @Override
@@ -340,6 +346,11 @@ final class Fakes {
     @Override
     public List<StarterEventRecordValue> getStarterEvents() {
       return List.of();
+    }
+
+    @Override
+    public Map<String, Object> getExtendedData() {
+      return Map.of();
     }
 
     @Override

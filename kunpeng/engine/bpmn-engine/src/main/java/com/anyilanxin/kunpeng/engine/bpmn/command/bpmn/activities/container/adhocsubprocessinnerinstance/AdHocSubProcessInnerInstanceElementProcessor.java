@@ -16,8 +16,8 @@
  */
 package com.anyilanxin.kunpeng.engine.bpmn.command.bpmn.activities.container.adhocsubprocessinnerinstance;
 
+import com.anyilanxin.kunpeng.bpm.common.BpmnElementType;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnContainer;
-import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnElementType;
 import com.anyilanxin.kunpeng.engine.bpmn.LogEventWriter;
 import com.anyilanxin.kunpeng.engine.bpmn.command.behavior.Behavior;
 import com.anyilanxin.kunpeng.engine.bpmn.command.behavior.impl.CatchEventBehavior;

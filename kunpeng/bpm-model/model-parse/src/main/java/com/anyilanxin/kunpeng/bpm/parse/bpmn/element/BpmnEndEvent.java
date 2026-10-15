@@ -16,6 +16,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.parse.bpmn.element;
 
+import com.anyilanxin.kunpeng.bpm.common.BpmnEventType;
+
 /**
  * 结束事件的运行时模型：可为普通结束、终止结束（terminateEndEvent）或补偿结束；声明任务定义时也可作为任务型元素抛出消息。
  *

@@ -16,6 +16,7 @@
  */
 package com.anyilanxin.kunpeng.bpm.parse.bpmn.element;
 
+import com.anyilanxin.kunpeng.bpm.common.BpmnEventType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

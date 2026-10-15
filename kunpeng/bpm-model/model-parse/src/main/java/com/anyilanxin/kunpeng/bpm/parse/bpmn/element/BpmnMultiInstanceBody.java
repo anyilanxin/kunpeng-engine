@@ -16,6 +16,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.parse.bpmn.element;
 
+import com.anyilanxin.kunpeng.bpm.common.BpmnElementType;
+
 /**
  * 多实例活动体的运行时模型：包裹内部活动并承载循环特征，与内部活动共用同一元素 id。
  *

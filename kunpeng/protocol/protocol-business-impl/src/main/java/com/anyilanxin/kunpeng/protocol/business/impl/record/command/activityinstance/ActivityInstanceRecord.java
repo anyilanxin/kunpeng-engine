@@ -21,7 +21,7 @@ import static com.anyilanxin.kunpeng.structpack.util.BufferUtil.*;
 import static com.anyilanxin.kunpeng.structpack.util.DocumentUtil.convertToMap;
 import static com.anyilanxin.kunpeng.structpack.util.DocumentUtil.convertToMsgPack;
 
-import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnElementType;
+import com.anyilanxin.kunpeng.bpm.common.BpmnElementType;
 import com.anyilanxin.kunpeng.protocol.business.impl.BusinessRecordConstant;
 import com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance.ActivityInstanceLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance.ActivityInstanceListenerType;

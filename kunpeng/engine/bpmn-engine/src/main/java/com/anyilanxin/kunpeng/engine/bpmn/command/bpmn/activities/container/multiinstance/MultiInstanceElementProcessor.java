@@ -18,8 +18,8 @@ package com.anyilanxin.kunpeng.engine.bpmn.command.bpmn.activities.container.mul
 
 import static com.anyilanxin.kunpeng.engine.bpmn.command.bpmn.activities.container.multiinstance.MultiInstanceConstant.*;
 
+import com.anyilanxin.kunpeng.bpm.common.BpmnElementType;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnActivity;
-import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnElementType;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnLoopCharacteristics;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnMultiInstanceBody;
 import com.anyilanxin.kunpeng.engine.bpmn.LogEventWriter;

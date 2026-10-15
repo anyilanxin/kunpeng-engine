@@ -16,7 +16,7 @@
  */
 package com.anyilanxin.kunpeng.engine.bpmn.command.bpmn.activities;
 
-import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnElementType;
+import com.anyilanxin.kunpeng.bpm.common.BpmnElementType;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.activityinstance.ActivityInstanceRecord;
 import org.agrona.DirectBuffer;
 

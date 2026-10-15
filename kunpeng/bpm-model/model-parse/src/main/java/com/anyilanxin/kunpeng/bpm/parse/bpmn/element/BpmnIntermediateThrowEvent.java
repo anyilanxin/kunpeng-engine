@@ -16,6 +16,7 @@
  */
 package com.anyilanxin.kunpeng.bpm.parse.bpmn.element;
 
+import com.anyilanxin.kunpeng.bpm.common.BpmnEventType;
 import com.anyilanxin.kunpeng.engine.script.ScriptExpression;
 
 /**

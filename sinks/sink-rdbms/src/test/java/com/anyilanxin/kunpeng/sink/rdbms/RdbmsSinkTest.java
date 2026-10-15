@@ -14,7 +14,7 @@ package com.anyilanxin.kunpeng.sink.rdbms;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnElementType;
+import com.anyilanxin.kunpeng.bpm.common.BpmnElementType;
 import com.anyilanxin.kunpeng.protocol.business.ValueLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.ValueType;
 import com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance.ActivityInstanceLifeCycle;

@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.anyilanxin.kunpeng.bpm.parse.bpmn.element;
+package com.anyilanxin.kunpeng.bpm.common;
 
 /**
  * 事件相关流程元素的事件语义类型（消息、定时、错误等）。

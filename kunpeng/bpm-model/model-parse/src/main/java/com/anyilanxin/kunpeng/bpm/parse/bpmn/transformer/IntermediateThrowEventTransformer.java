@@ -16,6 +16,7 @@
  */
 package com.anyilanxin.kunpeng.bpm.parse.bpmn.transformer;
 
+import com.anyilanxin.kunpeng.bpm.common.BpmnEventType;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Activity;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.CompensateEventDefinition;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.EscalationEventDefinition;
@@ -28,7 +29,6 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengPublishMess
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengTaskDefinition;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnActivity;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnCompensation;
-import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnEventType;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnIntermediateThrowEvent;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnJobProperties;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnMessage;

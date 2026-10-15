@@ -23,6 +23,7 @@ configure(jarInfo) {
 
 
 dependencies {
+    api project(':kunpeng:bpm-model:bpm-common')
     api project(':kunpeng:bpm-model:dmn-model')
     api project(':kunpeng:bpm-model:bpmn-model')
 

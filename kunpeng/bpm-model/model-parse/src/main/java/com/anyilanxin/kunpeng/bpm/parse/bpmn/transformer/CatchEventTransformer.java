@@ -16,6 +16,7 @@
  */
 package com.anyilanxin.kunpeng.bpm.parse.bpmn.transformer;
 
+import com.anyilanxin.kunpeng.bpm.common.BpmnEventType;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Association;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.CatchEvent;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.CompensateEventDefinition;
@@ -31,7 +32,6 @@ import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnCatchEventElement;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnCompensation;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnError;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnEscalation;
-import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnEventType;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnLink;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnProcess;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.BpmnTransformContext;

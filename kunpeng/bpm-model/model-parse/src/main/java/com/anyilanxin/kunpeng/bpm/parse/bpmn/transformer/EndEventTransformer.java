@@ -16,12 +16,12 @@
  */
 package com.anyilanxin.kunpeng.bpm.parse.bpmn.transformer;
 
+import com.anyilanxin.kunpeng.bpm.common.BpmnEventType;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.EndEvent;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.EventDefinition;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.MessageEventDefinition;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.TerminateEventDefinition;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnEndEvent;
-import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnEventType;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.BpmnTransformContext;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.ElementTransformer;
 import java.util.Collection;

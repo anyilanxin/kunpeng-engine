@@ -16,7 +16,7 @@
  */
 package com.anyilanxin.kunpeng.engine.bpmn.command.bpmn.process.processor;
 
-import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnElementType;
+import com.anyilanxin.kunpeng.bpm.common.BpmnElementType;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnFlowNode;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnProcess;
 import com.anyilanxin.kunpeng.engine.bpmn.LogEventWriter;

@@ -16,10 +16,10 @@
  */
 package com.anyilanxin.kunpeng.bpm.parse.bpmn.transformer;
 
+import com.anyilanxin.kunpeng.bpm.common.BpmnEventType;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BoundaryEvent;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnActivity;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnBoundaryEvent;
-import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnEventType;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnProcess;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.BpmnTransformContext;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.ElementTransformer;

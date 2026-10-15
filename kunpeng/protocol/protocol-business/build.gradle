@@ -27,7 +27,8 @@ dependencies {
     api project(':kunpeng:structpack')
     api project(':kunpeng:protocol:protocol-common')
 
-    implementation project(':kunpeng:bpm-model:model-parse')
+    // ActivityInstanceRecordValue 签名引用 BpmnElementType，公共枚举下沉在 bpm-common
+    implementation project(':kunpeng:bpm-model:bpm-common')
     implementation project(':kunpeng:utils')
     implementation 'org.agrona:agrona'
     implementation 'com.github.spotbugs:spotbugs-annotations'

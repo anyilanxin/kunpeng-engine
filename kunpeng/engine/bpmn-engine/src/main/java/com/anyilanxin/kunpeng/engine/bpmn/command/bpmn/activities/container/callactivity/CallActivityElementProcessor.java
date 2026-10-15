@@ -16,9 +16,9 @@
  */
 package com.anyilanxin.kunpeng.engine.bpmn.command.bpmn.activities.container.callactivity;
 
+import com.anyilanxin.kunpeng.bpm.common.BpmnElementType;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengBindingType;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnCallActivity;
-import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnElementType;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnProcess;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnStartEvent;
 import com.anyilanxin.kunpeng.engine.bpmn.LogEventWriter;

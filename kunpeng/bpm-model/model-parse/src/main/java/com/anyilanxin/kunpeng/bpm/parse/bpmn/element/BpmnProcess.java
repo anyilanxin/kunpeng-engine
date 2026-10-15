@@ -16,6 +16,7 @@
  */
 package com.anyilanxin.kunpeng.bpm.parse.bpmn.element;
 
+import com.anyilanxin.kunpeng.bpm.common.BpmnElementType;
 import com.anyilanxin.kunpeng.bpm.parse.exception.BpmnParseException;
 import com.anyilanxin.kunpeng.engine.script.ScriptExpression;
 import java.util.Collection;

@@ -16,6 +16,7 @@
  */
 package com.anyilanxin.kunpeng.bpm.parse.bpmn.transformer;
 
+import com.anyilanxin.kunpeng.bpm.common.BpmnElementType;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.Activity;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.AdHocSubProcess;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BoundaryEvent;
@@ -55,7 +56,6 @@ import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnBusinessRuleTask;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnCallActivity;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnCatchEventElement;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnContainer;
-import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnElementType;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnEndEvent;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnEventBasedGateway;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnFlowElement;

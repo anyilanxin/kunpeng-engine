@@ -12,7 +12,7 @@
  */
 package com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance;
 
-import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnElementType;
+import com.anyilanxin.kunpeng.bpm.common.BpmnElementType;
 import com.anyilanxin.kunpeng.protocol.business.*;
 import com.anyilanxin.kunpeng.protocol.common.RecordValueWithVariables;
 import com.anyilanxin.kunpeng.protocol.common.TenantOwned;
