@@ -12,6 +12,7 @@
  */
 plugins {
     id 'kunpeng.build-publish'
+    id 'com.gradleup.shadow'
 }
 
 description = "Kunpeng Sink RDBMS"
@@ -40,4 +41,7 @@ dependencies {
 
     // 配置绑定测试走生产同款 MapSinkConfig（broker 运行期传入的 SinkConfiguration 实现）
     testImplementation project(':kunpeng:sink:sink')
+}
+
+shadowJar {
 }
