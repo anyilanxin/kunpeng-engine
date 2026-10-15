@@ -20,6 +20,7 @@ import javax.tools.JavaCompiler;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -84,6 +85,18 @@ final class TestJars {
     try (final JarOutputStream output = new JarOutputStream(Files.newOutputStream(jarFile))) {
       output.putNextEntry(new JarEntry(entryName));
       output.write(Files.readAllBytes(dir.resolve(entryName)));
+      output.closeEntry();
+    }
+    return jarFile;
+  }
+
+  /** 打包仅含单个资源条目的 jar,返回 jar 路径 */
+  static Path buildResourceJar(final Path dir, final String entryName, final String content)
+      throws IOException {
+    final Path jarFile = dir.resolve("res-" + entryName.replace('/', '_') + ".jar");
+    try (final JarOutputStream output = new JarOutputStream(Files.newOutputStream(jarFile))) {
+      output.putNextEntry(new JarEntry(entryName));
+      output.write(content.getBytes(StandardCharsets.UTF_8));
       output.closeEntry();
     }
     return jarFile;

@@ -21,13 +21,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Method;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Enumeration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -148,5 +151,50 @@ class ExternalJarClassLoaderTest {
 
     assertDoesNotThrow(() -> loader.close(false));
     assertTrue(loader.isClosed());
+  }
+
+  @Test
+  void readsResourceEntriesFromJar() throws Exception {
+    final String entry = "anyi-sink/mapper/SinkPositionMapper.xml";
+    final Path jarFile = TestJars.buildResourceJar(tempDir, entry, "<mapper/>");
+    final ExternalJarClassLoader loader = ExternalJarClassLoader.ofPath(jarFile);
+
+    try (final var stream = loader.getResourceAsStream(entry)) {
+      assertNotNull(stream, "getResourceAsStream 应命中 jar 内条目");
+      assertEquals("<mapper/>", new String(stream.readAllBytes()));
+    }
+    final URL url = loader.getResource(entry);
+    assertNotNull(url, "getResource 应命中 jar 内条目");
+    try (final var stream = url.openStream()) {
+      assertEquals("<mapper/>", new String(stream.readAllBytes()));
+    }
+    assertTrue(loader.getResources(entry).hasMoreElements(), "getResources 应包含 jar 内条目");
+  }
+
+  @Test
+  void returnsNullForResourcesAbsentEverywhere() throws Exception {
+    final Path jarFile = TestJars.buildFixtureJar(tempDir);
+    final ExternalJarClassLoader loader = ExternalJarClassLoader.ofPath(jarFile);
+
+    assertNull(loader.getResource("not/exists.xml"));
+    assertNull(loader.getResourceAsStream("not/exists.xml"));
+    assertTrue(!loader.getResources("not/exists.xml").hasMoreElements());
+  }
+
+  @Test
+  void jarResourceShadowsSameNamedParentEntry() throws Exception {
+    // 父加载器（本测试 classpath）上有同名条目 shared/precedence.txt，jar 内条目应优先
+    final String entry = "shared/precedence.txt";
+    final Path jarFile = TestJars.buildResourceJar(tempDir, entry, "jar-version");
+    final ExternalJarClassLoader loader = ExternalJarClassLoader.ofPath(jarFile);
+
+    try (final var stream = loader.getResourceAsStream(entry)) {
+      assertEquals("jar-version", new String(stream.readAllBytes()));
+    }
+    final Enumeration<URL> all = loader.getResources(entry);
+    assertTrue(all.hasMoreElements());
+    try (final var stream = all.nextElement().openStream()) {
+      assertEquals("jar-version", new String(stream.readAllBytes()), "枚举顺序 jar 在前");
+    }
   }
 }

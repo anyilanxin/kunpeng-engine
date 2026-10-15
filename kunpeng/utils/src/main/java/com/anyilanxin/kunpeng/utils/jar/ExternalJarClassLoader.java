@@ -20,7 +20,14 @@ import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URL;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Objects;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import org.slf4j.Logger;
@@ -29,6 +36,10 @@ import org.slf4j.LoggerFactory;
 /**
  * 外部 jar 隔离加载器：直接以 {@link JarFile} 读取字节并 {@link ClassLoader#defineClass} 装载， jar
  * 内类优先（子优先），找不到再回退父加载器——外部导出器依赖版本与本进程互不干扰，同时 保证引擎自身类使用运行时版本。
+ *
+ * <p>资源查找（{@code getResource*}）同款子优先：jar 内条目优先于父加载器——外部 sink（MyBatis {@code Resources}/Liquibase
+ * {@code ClassLoaderResourceAccessor} 等）读自带 mapper/changelog 时， 即使与引擎 classpath 同名同路径也稳定命中 jar
+ * 内自己的那份。
  *
  * <p>持有 jar 内容的 SHA-256 校验和（同内容 jar 在仓库层共享同一加载器实例）。
  *
@@ -157,5 +168,59 @@ public final class ExternalJarClassLoader extends ClassLoader implements AutoClo
   private static String packageNameOf(final String className) {
     final int lastDot = className.lastIndexOf(PACKAGE_SEPARATOR);
     return lastDot < 0 ? null : className.substring(0, lastDot);
+  }
+
+  /** 子优先资源查找：jar 内条目优先（与 {@link #loadClass} 语义一致），未命中回退父加载器。 */
+  @Override
+  public URL getResource(final String name) {
+    Objects.requireNonNull(name, "name");
+    final URL own = findResource(name);
+    return own != null ? own : getParent().getResource(name);
+  }
+
+  /** jar 内条目直出流，避免经 URL 连接；未命中走基类（父加载器）。 */
+  @Override
+  public InputStream getResourceAsStream(final String name) {
+    Objects.requireNonNull(name, "name");
+    if (!closed) {
+      final JarEntry entry = jarFile.getJarEntry(name);
+      if (entry != null) {
+        try {
+          return jarFile.getInputStream(entry);
+        } catch (final IOException e) {
+          LOGGER.trace("读取 jar {} 资源 {} 失败", jarPath, name, e);
+        }
+      }
+    }
+    return super.getResourceAsStream(name);
+  }
+
+  @Override
+  protected URL findResource(final String name) {
+    if (closed || jarFile.getJarEntry(name) == null) {
+      return null;
+    }
+    try {
+      return URI.create("jar:" + jarPath.toUri() + "!/" + name).toURL();
+    } catch (final java.net.MalformedURLException | IllegalArgumentException e) {
+      LOGGER.trace("构造 jar {} 资源 {} 的 URL 失败", jarPath, name, e);
+      return null;
+    }
+  }
+
+  /** 枚举顺序与 {@link #getResource} 一致：jar 内命中在前，父加载器结果在后。 */
+  @Override
+  public Enumeration<URL> getResources(final String name) throws IOException {
+    Objects.requireNonNull(name, "name");
+    final List<URL> urls = new ArrayList<>(2);
+    final URL own = findResource(name);
+    if (own != null) {
+      urls.add(own);
+    }
+    final Enumeration<URL> fromParent = getParent().getResources(name);
+    while (fromParent.hasMoreElements()) {
+      urls.add(fromParent.nextElement());
+    }
+    return Collections.enumeration(urls);
   }
 }
