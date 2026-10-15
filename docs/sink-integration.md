@@ -35,6 +35,17 @@ shadowJar {
 }
 ```
 
+**警惕传递依赖渗入**：`compileOnly` 只约束本模块声明的依赖；引擎共享包若经传递依赖（其他 `implementation`/`api` 依赖引入）或**根构建给子模块统一注入**进入 `runtimeClasspath`，仍会被 shadow 打进 uber jar。运行在独立类加载器里的 Sink 一旦自带了引擎共享包（micrometer、jackson 等），与引擎传入的对象（如 `MeterRegistry`）交互时会直接 `LinkageError: loader constraint violation`。防御性写法——在 `shadowJar` 里显式剥掉引擎共享包，无论它们从哪条路渗进来：
+
+```groovy
+shadowJar {
+    exclude 'io/micrometer/**'            // 引擎已提供（指标）
+    exclude 'tools/jackson/**'            // 引擎已提供（序列化）
+    exclude 'org/slf4j/**'                // 进程单版本，剥掉后 Sink 日志并入引擎 logback
+    exclude 'com/anyilanxin/kunpeng/**'   // 引擎自身类
+}
+```
+
 独立仓库（不在本 monorepo 内）实现时，把 `compileOnly project(...)` 换成对应 Maven 坐标（group `com.anyilanxin.kunpeng`，如 `kunpeng-sink-api`、`kunpeng-protocol-business` 等）。
 
 构建命令：
@@ -95,7 +106,7 @@ public final class MySink implements RecordSink {
 
 ### 生命周期硬约束
 
-- **必须提供公有无参构造器**；除回调外不要依赖构造器做事。
+- **无参构造器是唯一的实例化入口**：引擎经反射调用公有无参构造器（`getDeclaredConstructor().newInstance()`，不做 setAccessible），实现类必须 public 且保有公有无参构造器。**带参构造器永远不会被调用**——构造注入不可用；若只声明了带参构造器而无无参构造器，注册校验即失败（`SinkLoadException`）。除回调外不要依赖构造器做事。
 - **`initialize` 会被调用两次、在不同实例上**：第一次在注册校验时（抛弃型实例，`context.getPartitionId()` 为 `PARTITION_ID_UNSET`，校验完即 close），第二次在真实实例参与外发前。抛异常 = 拒绝注册。因此 initialize 里**不要分配重型资源**。
 - **`sink` 失败即重试**：正常返回 = 成功；抛异常 = 同一条记录按退避重试直到成功或服务关闭。引擎**绝不丢数据**——代价是持续失败会拖住日志压缩。
 - **`pause`/`resume` 只由硬暂停触发**（软暂停对 Sink 不可见）。
@@ -144,7 +155,7 @@ sinks:
       flushInterval: 5s
 ```
 
-- `sinks.<id>` 的 key 即 Sink id；`args` 是原始参数，经 `context.getConfiguration().createSettings(MySettings.class)` 宽松绑定（属性名/枚举值大小写不敏感、单引号可用、未知属性忽略、数字键 Map 自动转 List）。
+- `sinks.<id>` 的 key 即 Sink id；`args` 是原始参数，经 `context.getConfiguration().createSettings(MySettings.class)` 宽松绑定（属性名/枚举值大小写不敏感、单引号可用、未知属性忽略、数字键 Map 自动转 List）。settings 类同样要有公有无参构造器（`args` 为空时直接反射实例化；非空时 Jackson 绑定走无参构造 + setter，或直接用 record）。
 - 配置在 broker 运行期变更（增/删/改 args）会被感知：新 Sink 走注册校验后启用，被移除的 Sink 优雅关闭。
 
 ## 5. 常见错误
@@ -157,3 +168,5 @@ sinks:
 | 位置确认回退或从不确认 | 只前进；无法处理时抛异常走重试，别静默吞 |
 | 校验阶段调用 `getQueryRepository()` | 该阶段为 null，查询放 `start`/`sink` 之后 |
 | 构造器里读配置/起线程 | 公有无参构造器保持干净，一切从 `initialize` 开始 |
+| 想用带参构造器注入依赖/传配置 | 无参构造器是唯一实例化入口，带参构造器永不调用；配置走 `args` + `createSettings` |
+| 运行期 `LinkageError: loader constraint violation`（micrometer 等） | uber jar 混入了引擎共享包——多为传递依赖或根构建统一注入渗入；`shadowJar` 里 `exclude 'io/micrometer/**'` 等剥干净（见第 1 节） |
