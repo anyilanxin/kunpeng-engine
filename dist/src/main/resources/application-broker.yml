@@ -7,7 +7,7 @@ kunpeng:
   cluster:
     node-id: node01
     seed-nodes:
-      - 127.0.0.1:2025
+      - 127.0.0.1:24109
   broker:
     raft:
       partitioning:
