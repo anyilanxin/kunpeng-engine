@@ -24,7 +24,7 @@
   <!-- 2026.9.0 基线：10 张业务表 + 索引。标识符统一 ${table.x}（变量值=完整物理名：前缀+大小写策略运行期注入，索引逻辑名须同步登记到 Tables.INDEXES）；列定义必须与 Tables.java 保持一致。 -->
 
   <changeSet id="2026.9.0-create-process-definition" author="anyilanxin">
-    <createTable tableName="${table.process_definition}">
+    <createTable tableName="${table.process_definition}" remarks="流程定义">
       <column name="process_definition_id" type="BIGINT">
         <constraints primaryKey="true" nullable="false"/>
       </column>
@@ -54,7 +54,7 @@
   </changeSet>
 
   <changeSet id="2026.9.0-create-process-instance" author="anyilanxin">
-    <createTable tableName="${table.process_instance}">
+    <createTable tableName="${table.process_instance}" remarks="流程实例">
       <column name="process_instance_id" type="BIGINT">
         <constraints primaryKey="true" nullable="false"/>
       </column>
@@ -89,7 +89,7 @@
   </changeSet>
 
   <changeSet id="2026.9.0-create-activity-instance" author="anyilanxin">
-    <createTable tableName="${table.activity_instance}">
+    <createTable tableName="${table.activity_instance}" remarks="活动实例">
       <column name="activity_instance_id" type="BIGINT">
         <constraints primaryKey="true" nullable="false"/>
       </column>
@@ -130,7 +130,7 @@
   </changeSet>
 
   <changeSet id="2026.9.0-create-variable" author="anyilanxin">
-    <createTable tableName="${table.variable}">
+    <createTable tableName="${table.variable}" remarks="流程变量">
       <column name="scope_id" type="BIGINT">
         <constraints primaryKey="true" nullable="false"/>
       </column>
@@ -154,7 +154,7 @@
   </changeSet>
 
   <changeSet id="2026.9.0-create-user-task" author="anyilanxin">
-    <createTable tableName="${table.user_task}">
+    <createTable tableName="${table.user_task}" remarks="用户任务">
       <column name="task_id" type="BIGINT">
         <constraints primaryKey="true" nullable="false"/>
       </column>
@@ -196,7 +196,7 @@
   </changeSet>
 
   <changeSet id="2026.9.0-create-job" author="anyilanxin">
-    <createTable tableName="${table.job}">
+    <createTable tableName="${table.job}" remarks="Job 任务">
       <column name="job_id" type="BIGINT">
         <constraints primaryKey="true" nullable="false"/>
       </column>
@@ -237,7 +237,7 @@
   </changeSet>
 
   <changeSet id="2026.9.0-create-incident" author="anyilanxin">
-    <createTable tableName="${table.incident}">
+    <createTable tableName="${table.incident}" remarks="异常事件">
       <column name="incident_id" type="BIGINT">
         <constraints primaryKey="true" nullable="false"/>
       </column>
@@ -267,7 +267,7 @@
   </changeSet>
 
   <changeSet id="2026.9.0-create-timer" author="anyilanxin">
-    <createTable tableName="${table.timer}">
+    <createTable tableName="${table.timer}" remarks="定时器">
       <column name="timer_id" type="BIGINT">
         <constraints primaryKey="true" nullable="false"/>
       </column>
@@ -294,7 +294,7 @@
   </changeSet>
 
   <changeSet id="2026.9.0-create-message-subscription" author="anyilanxin">
-    <createTable tableName="${table.message_subscription}">
+    <createTable tableName="${table.message_subscription}" remarks="消息订阅">
       <column name="message_subscription_id" type="BIGINT">
         <constraints primaryKey="true" nullable="false"/>
       </column>
@@ -323,7 +323,7 @@
   </changeSet>
 
   <changeSet id="2026.9.0-create-signal-subscription" author="anyilanxin">
-    <createTable tableName="${table.signal_subscription}">
+    <createTable tableName="${table.signal_subscription}" remarks="信号订阅">
       <column name="signal_subscription_id" type="BIGINT">
         <constraints primaryKey="true" nullable="false"/>
       </column>
@@ -357,7 +357,7 @@
 
   <!-- sink 自身的导出位置：与数据同事务提交，是业务端权威续传锚点（引擎侧位置只作压缩门槛与投递游标） -->
   <changeSet id="2026.9.0-create-sink-position" author="anyilanxin">
-    <createTable tableName="${table.sink_position}">
+    <createTable tableName="${table.sink_position}" remarks="sink 导出位置（业务端权威续传锚点）">
       <column name="partition_id" type="INT">
         <constraints primaryKey="true" nullable="false"/>
       </column>

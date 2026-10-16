@@ -30,7 +30,10 @@ import com.anyilanxin.kunpeng.protocol.business.record.command.timer.TimerLifeCy
 import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.UserTaskLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.record.command.variable.VariableLifeCycle;
 import com.anyilanxin.kunpeng.protocol.common.RecordValue;
+import com.anyilanxin.kunpeng.sink.rdbms.mapper.TableName;
+import java.sql.DriverManager;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
@@ -325,6 +328,36 @@ class RdbmsSinkTest {
       final var mapper = session.getMapper(VerificationMapper.class);
       assertThat(mapper.totalRows()).isZero();
       assertThat(mapper.sinkPositionRow()).isEqualTo(-1L);
+    }
+  }
+
+  @Test
+  void shouldCreateTablesWithRemarks() throws Exception {
+    // 自动建表带表注释：setTableRemarks changeset 对全部 sink 管理表落 REMARKS（前缀与大小写策略取配置默认值）
+    final var settings = new RdbmsSinkSettings();
+    final var tables =
+        List.of(
+            TableName.PROCESS_DEFINITION,
+            TableName.PROCESS_INSTANCE,
+            TableName.ACTIVITY_INSTANCE,
+            TableName.VARIABLE,
+            TableName.USER_TASK,
+            TableName.JOB,
+            TableName.INCIDENT,
+            TableName.TIMER,
+            TableName.MESSAGE_SUBSCRIPTION,
+            TableName.SIGNAL_SUBSCRIPTION,
+            TableName.SINK_POSITION);
+    try (final var connection = DriverManager.getConnection(jdbcUrl, "sa", "")) {
+      final var metadata = connection.getMetaData();
+      for (final var table : tables) {
+        final var physicalName =
+            table.physicalName(settings.getTablePrefix(), settings.resolvedTableNameCase());
+        try (final var rows = metadata.getTables(null, null, physicalName, new String[] {"TABLE"})) {
+          assertThat(rows.next()).as("table %s exists", physicalName).isTrue();
+          assertThat(rows.getString("REMARKS")).as("remarks of %s", physicalName).isNotBlank();
+        }
+      }
     }
   }
 
