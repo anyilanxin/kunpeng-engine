@@ -28,17 +28,17 @@ import com.anyilanxin.kunpeng.protocol.admin.record.CommandValueLifeCycle;
 public enum BusinessClusterMetaLifeCycle implements CommandValueLifeCycle {
   NULL_VAL((short) -1, NOT_PROCESS_INDEX),
 
-  CREATING((short) 1, PROCESS_INDEX_42),
+  CREATING((short) 1, PROCESS_INDEX_43),
 
-  CREATED((short) 2, PROCESS_INDEX_43),
+  CREATED((short) 2, PROCESS_INDEX_44),
 
-  UPDATING((short) 3, PROCESS_INDEX_44),
+  UPDATING((short) 3, PROCESS_INDEX_45),
 
-  UPDATED((short) 4, PROCESS_INDEX_45),
+  UPDATED((short) 4, PROCESS_INDEX_46),
 
-  DELETING((short) 5, PROCESS_INDEX_46),
+  DELETING((short) 5, PROCESS_INDEX_47),
 
-  DELETED((short) 6, PROCESS_INDEX_47);
+  DELETED((short) 6, PROCESS_INDEX_48);
 
   private final short value;
   private final short processIndex;

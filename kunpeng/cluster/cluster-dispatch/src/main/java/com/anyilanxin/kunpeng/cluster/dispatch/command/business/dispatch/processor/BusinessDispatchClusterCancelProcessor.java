@@ -25,6 +25,7 @@ import com.anyilanxin.kunpeng.cluster.dispatch.command.delayed.DelayedDelayCheck
 import com.anyilanxin.kunpeng.configuration.broker.BusinessRaftCfg;
 import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanRecord;
+import com.anyilanxin.kunpeng.protocol.admin.record.command.DispatchPlanState;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.business.BusinessDispatchPlanLifeCycle;
 import com.anyilanxin.kunpeng.repository.admin.AdminImmutableRepository;
 import com.anyilanxin.kunpeng.repository.admin.modules.business.ImmutableBusinessRepository;
@@ -57,7 +58,22 @@ public class BusinessDispatchClusterCancelProcessor extends AbstractBusinessDisp
   }
 
   @Override
-  public void processRecord(final AdminLogRecord<BusinessDispatchPlanRecord> record) {}
+  public void processRecord(final AdminLogRecord<BusinessDispatchPlanRecord> record) {
+    final BusinessDispatchPlanRecord value = record.getValue();
+    LOGGER.info("\n\n------->调度计划取消，补偿数据手术后终结<-------\n{}\n", value);
+    // 终结前先补发 RESUME/re-JOIN：已冻结分区与已摘除 follower 绝不允许静默遗留（03 号文档 §9）
+    final BusinessDispatchPlanRecord dispatchPlan =
+        repositoryBusiness.getDispatchPlan(value.getDispatchPlanId());
+    if (dispatchPlan != null) {
+      SurgeryCompensator.compensate(writer, dispatchPlan);
+    }
+    value.setDispatchState(DispatchPlanState.CANCELED);
+    writer.addEvent(
+        value.getDispatchPlanId(),
+        BusinessDispatchPlanLifeCycle.CANCELED,
+        record.getRequestId(),
+        value);
+  }
 
   @Override
   public BusinessDispatchPlanLifeCycle valueLifeCycle() {

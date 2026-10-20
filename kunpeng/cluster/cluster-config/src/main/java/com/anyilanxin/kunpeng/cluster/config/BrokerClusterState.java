@@ -19,6 +19,7 @@ package com.anyilanxin.kunpeng.cluster.config;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
 import com.anyilanxin.kunpeng.cluster.config.topology.PartitionMemberInfo;
+import com.anyilanxin.kunpeng.cluster.config.topology.PartitionRole;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +49,25 @@ public final class BrokerClusterState {
     memberPartitions
         .values()
         .forEach(infos -> infos.forEach(info -> partitions.add(info.getPartitionId())));
+    return partitions;
+  }
+
+  /**
+   * 未冻结分区集合（数据手术通告，建议层）：Leader 条目被标记冻结的分区被剔除，探测与路由应规避。 漏判（通告未收敛）由分区 writer 级冻结拒绝兜正确性；无 Leader
+   * 条目的分区视为手术中剔除。
+   */
+  public Set<PartitionId> getActivePartitions() {
+    final var partitions = new HashSet<PartitionId>();
+    memberPartitions
+        .values()
+        .forEach(
+            infos ->
+                infos.forEach(
+                    info -> {
+                      if (info.getRole() == PartitionRole.LEADER && !info.isFrozen()) {
+                        partitions.add(info.getPartitionId());
+                      }
+                    }));
     return partitions;
   }
 

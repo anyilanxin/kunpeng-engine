@@ -40,6 +40,19 @@ public interface EventLogWriter extends AutoCloseable {
   /** 是否可再写（流控余量探测，不做真写入） */
   boolean canAppend(int entryCount, int batchSizeBytes);
 
+  /**
+   * 冻结写入（数据手术窗口）：冻结后 {@link WriteContext#USER_COMMAND} 与 {@link WriteContext#INTER_PARTITION} 的追加以
+   * {@link AppendResult.Rejected}(FROZEN) 拒绝，仅放行 {@link WriteContext#PROCESSING_RESULT}
+   * （引擎跑干在途命令链的写入）；读者不受影响。幂等。
+   */
+  void freeze();
+
+  /** 解除冻结，恢复全部写入。幂等。 */
+  void unfreeze();
+
+  /** 当前是否处于冻结态 */
+  boolean isFrozen();
+
   @Override
   void close();
 }

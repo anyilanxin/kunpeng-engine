@@ -28,15 +28,15 @@ import com.anyilanxin.kunpeng.protocol.admin.record.CommandValueLifeCycle;
 public enum PartitionSourceLifeCycle implements CommandValueLifeCycle {
   NULL_VAL((short) -1, NOT_PROCESS_INDEX),
 
-  APPLYING((short) 1, PROCESS_INDEX_66),
+  APPLYING((short) 1, PROCESS_INDEX_67),
 
-  APPLIED((short) 2, PROCESS_INDEX_67),
+  APPLIED((short) 2, PROCESS_INDEX_68),
 
-  TRANSFERRED_REMOVE((short) 5, PROCESS_INDEX_70),
+  TRANSFERRED_REMOVE((short) 5, PROCESS_INDEX_71),
 
-  TRANSFERRING_ADD((short) 3, PROCESS_INDEX_68),
+  TRANSFERRING_ADD((short) 3, PROCESS_INDEX_69),
 
-  TRANSFERRED_ADD((short) 4, PROCESS_INDEX_69);
+  TRANSFERRED_ADD((short) 4, PROCESS_INDEX_70);
 
   private final short value;
   private final short processIndex;

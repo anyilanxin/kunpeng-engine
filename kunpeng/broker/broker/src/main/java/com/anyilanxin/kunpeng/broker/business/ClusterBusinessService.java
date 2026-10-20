@@ -24,11 +24,13 @@ import com.anyilanxin.kunpeng.broker.BrokerLoggers;
 import com.anyilanxin.kunpeng.broker.business.raft.BusinessPartitionService;
 import com.anyilanxin.kunpeng.broker.business.raft.BusinessPartitionStartupContext;
 import com.anyilanxin.kunpeng.broker.business.raft.BusinessRaftSnapshotProvider;
+import com.anyilanxin.kunpeng.broker.business.raft.step.transition.BusinessTransitionContent;
 import com.anyilanxin.kunpeng.broker.commandapi.CommandApiServiceImpl;
 import com.anyilanxin.kunpeng.broker.jobstream.JobStreamDispatcher;
 import com.anyilanxin.kunpeng.broker.topology.TopologyManager;
 import com.anyilanxin.kunpeng.cluster.business.PartitionService;
 import com.anyilanxin.kunpeng.cluster.business.RaftPartitionFactory;
+import com.anyilanxin.kunpeng.cluster.business.step.transition.PartitionTransition;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
@@ -42,13 +44,17 @@ import com.anyilanxin.kunpeng.cluster.config.DispatchMeta;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.cluster.dispatch.api.ClusterDispatchClient;
 import com.anyilanxin.kunpeng.cluster.dispatch.scheduling.TimerClock;
+import com.anyilanxin.kunpeng.cluster.raft.RaftServer;
 import com.anyilanxin.kunpeng.cluster.raft.partition.PartitionManagementService;
 import com.anyilanxin.kunpeng.cluster.raft.partition.PartitionMetadata;
 import com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartition;
 import com.anyilanxin.kunpeng.cluster.raft.partition.impl.DefaultPartitionManagementService;
 import com.anyilanxin.kunpeng.cluster.utils.net.Address;
 import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
+import com.anyilanxin.kunpeng.engine.bpmn.EngineProcessService;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.common.*;
+import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.common.PartitionFreezeRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.common.PartitionResumeRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionExecutionRecordValue;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionExecutionType;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionType;
@@ -61,7 +67,10 @@ import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import org.agrona.collections.Int2ObjectHashMap;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.BeanFactory;
@@ -101,6 +110,10 @@ public class ClusterBusinessService extends Actor
 
   /** 已执行的 ack 重试次数 */
   private int ackRetryAttempts;
+
+  /** 数据转移（合并/拆分）在飞守卫：明细执行 id → 在途 future，看门狗重发不重入、回 IN_PROGRESS 续期 */
+  private final Map<Long, CompletableFuture<Void>> inFlightDataTransfers =
+      new ConcurrentHashMap<>();
 
   public ClusterBusinessService(
       final TimerClock timerClock,
@@ -317,6 +330,10 @@ public class ClusterBusinessService extends Actor
         getTopic(PartitionType.BUSINESS, PartitionExecutionType.BOOTSTRAP_SOURCE_DATA_TRANSFER),
         this::handleBootstrapDataSourceTransfer,
         actor);
+    messagingService.registerHandler(
+        getTopic(PartitionType.BUSINESS, PartitionExecutionType.FREEZE), this::handleFreeze, actor);
+    messagingService.registerHandler(
+        getTopic(PartitionType.BUSINESS, PartitionExecutionType.RESUME), this::handleResume, actor);
   }
 
   private void unregister() {
@@ -339,6 +356,10 @@ public class ClusterBusinessService extends Actor
         getTopic(PartitionType.BUSINESS, PartitionExecutionType.BOOTSTRAP_SOURCE_DATA_TRANSFER));
     messagingService.unregisterHandler(
         getTopic(PartitionType.BUSINESS, PartitionExecutionType.BOOTSTRAP_SOURCE_TRANSFER));
+    messagingService.unregisterHandler(
+        getTopic(PartitionType.BUSINESS, PartitionExecutionType.FREEZE));
+    messagingService.unregisterHandler(
+        getTopic(PartitionType.BUSINESS, PartitionExecutionType.RESUME));
   }
 
   /** 分区引导调度 */
@@ -518,8 +539,24 @@ public class ClusterBusinessService extends Actor
         () -> {
           final BusinessPartitionService businessPartitionService =
               raftPartitionMap.get(record.getPartitionId());
-          removeAgentSourceIds(
-              Set.of(record.getSourceId()), businessPartitionService.raftPartition());
+          final RaftPartition raftPartition = businessPartitionService.raftPartition();
+          // 拆分安装已确认（明细序保证 DATA_TRANSFER 先于本明细）：删除 donor 被移走数据（幂等），再移除来源台账
+          final PartitionTransition<BusinessTransitionContent> transition =
+              businessPartitionService.context().getPartitionTransition();
+          if (transition == null || transition.content() == null) {
+            dispatchFailed(
+                new IllegalStateException(
+                    "partition "
+                        + record.getPartitionId()
+                        + " has no transition content to remove split resource data"));
+            return;
+          }
+          transition
+              .content()
+              .getRepositoryFactory()
+              .create()
+              .removeResourceData(record.getSourceId());
+          removeAgentSourceIds(Set.of(record.getSourceId()), raftPartition);
           final ClusterRaftConfiguration raftConfiguration =
               clusterMetaStore.getRaftConfiguration();
           raftConfiguration.setVersion(raftConfiguration.getVersion() + 1);
@@ -528,13 +565,63 @@ public class ClusterBusinessService extends Actor
         });
   }
 
+  /**
+   * 扩容资源拆分数据转移（拉模式）：新分区按资源 id 从捐赠分区拉取拆分镜像并合并安装（donor 侧拍摄按 resourceId 过滤，见
+   * BusinessRaftSnapshotProvider#takeMergeSnapshot）；在飞守卫防看门狗重发重入。
+   */
   private void handleBootstrapDataSourceTransfer(final Address address, final byte[] bytes) {
     final PartitionBootstrapSourceDataTransferRecord record =
         decodeBytes(bytes, PartitionExecutionType.BOOTSTRAP_SOURCE_DATA_TRANSFER);
     actor.submit(
         () -> {
-          // TODO: 暂时空处理，具体逻辑需要后期实现
-          dispatchComplete();
+          final BusinessPartitionService businessPartitionService =
+              raftPartitionMap.get(record.getPartitionId());
+          if (businessPartitionService == null) {
+            dispatchFailed(
+                new IllegalStateException(
+                    "partition " + record.getPartitionId() + " is not started on this member"));
+            return;
+          }
+          final long executionId = record.getDispatchPlanExecutionId();
+          if (inFlightDataTransfers.putIfAbsent(executionId, new CompletableFuture<Void>())
+              != null) {
+            // 看门狗重试探：拆分拉取仍在途，回 IN_PROGRESS 进度 ack 续期
+            ackInProgress(record, 0);
+            return;
+          }
+          final PartitionId sourcePartitionId =
+              PartitionId.from(record.getSourcePartitionGroup(), record.getSourcePartitionId());
+          final MemberId sourceMember = topologyService.getPartitionLeader(sourcePartitionId);
+          if (sourceMember == null) {
+            inFlightDataTransfers.remove(executionId);
+            dispatchFailed(
+                new IllegalStateException(
+                    "source partition " + sourcePartitionId + " has no leader"));
+            return;
+          }
+          businessPartitionService
+              .raftPartition()
+              .pullDataMerge(
+                  sourcePartitionId,
+                  sourceMember,
+                  Map.of(
+                      BusinessRaftSnapshotProvider.RESOURCE_ID_PARAMETER,
+                      String.valueOf(record.getSourceId())))
+              .whenComplete(
+                  (unused, error) ->
+                      actor.submit(
+                          () -> {
+                            inFlightDataTransfers.remove(executionId);
+                            if (error != null) {
+                              LOG.error(
+                                  "Bootstrap source data transfer of partition {} failed",
+                                  record.getPartitionId(),
+                                  error);
+                              dispatchFailed(error);
+                            } else {
+                              dispatchComplete();
+                            }
+                          }));
         });
   }
 
@@ -556,7 +643,109 @@ public class ClusterBusinessService extends Actor
         });
   }
 
-  /** 数据合并调度 */
+  /** 分区冻结调度（数据手术前置）：冻结写入+停内部触发，引擎跑干（drain=true 再排干全部 sink）后 ack */
+  private void handleFreeze(final Address address, final byte[] bytes) {
+    final PartitionFreezeRecord record = decodeBytes(bytes, PartitionExecutionType.FREEZE);
+    actor.submit(
+        () -> {
+          final BusinessPartitionService businessPartitionService =
+              raftPartitionMap.get(record.getPartitionId());
+          if (businessPartitionService == null) {
+            // 分区不在本节点时冻结视为已满足，完成调度并 ack，避免挂起记录每次重启重放
+            LOG.info(
+                "Business partition {} is not started, complete freeze dispatch directly",
+                record.getPartitionId());
+            dispatchComplete();
+            return;
+          }
+          if (businessPartitionService.raftPartition().getRole() != RaftServer.Role.LEADER) {
+            // 计划拓扑视图时滞防护：冻结只对 Leader 有意义，非 Leader 显式失败走既有重试链
+            dispatchFailed(
+                new IllegalStateException(
+                    "partition " + record.getPartitionId() + " is not led by this member"));
+            return;
+          }
+          final EngineProcessService engineProcessService = engineOf(businessPartitionService);
+          if (engineProcessService == null) {
+            dispatchFailed(
+                new IllegalStateException(
+                    "partition " + record.getPartitionId() + " has no engine process service"));
+            return;
+          }
+          if (engineProcessService.isFrozen()) {
+            // 看门狗重试探：回 IN_PROGRESS 进度 ack（调度侧不落日志不置终态，观测续期）
+            ackInProgress(record, engineProcessService.freezeRemaining());
+            return;
+          }
+          // freezeAndDrain 幂等：看门狗重发复用在途 future，ack 只在两段排水全清后发出
+          clusterPartitionTopology.markPartitionFrozen(
+              PartitionId.from(record.getPartitionGroup(), record.getPartitionId()), true);
+          engineProcessService
+              .freezeAndDrain(record.isDrain())
+              .onComplete(
+                  (ignored, error) ->
+                      // 完成回调跑在完成方线程（引擎 actor/排水车道），ack 落回本服务 actor
+                      actor.submit(
+                          () -> {
+                            if (error != null) {
+                              LOG.error(
+                                  "Freeze partition {} failed", record.getPartitionId(), error);
+                              dispatchFailed(error);
+                            } else {
+                              dispatchComplete();
+                            }
+                          }));
+        });
+  }
+
+  /** 分区恢复调度（数据手术收尾）：恢复内部触发与全部写入后 ack */
+  private void handleResume(final Address address, final byte[] bytes) {
+    final PartitionResumeRecord record = decodeBytes(bytes, PartitionExecutionType.RESUME);
+    actor.submit(
+        () -> {
+          final BusinessPartitionService businessPartitionService =
+              raftPartitionMap.get(record.getPartitionId());
+          if (businessPartitionService == null) {
+            LOG.info(
+                "Business partition {} is not started, complete resume dispatch directly",
+                record.getPartitionId());
+            dispatchComplete();
+            return;
+          }
+          final EngineProcessService engineProcessService = engineOf(businessPartitionService);
+          if (engineProcessService == null) {
+            dispatchFailed(
+                new IllegalStateException(
+                    "partition " + record.getPartitionId() + " has no engine process service"));
+            return;
+          }
+          clusterPartitionTopology.markPartitionFrozen(
+              PartitionId.from(record.getPartitionGroup(), record.getPartitionId()), false);
+          engineProcessService
+              .resumeFromFreeze()
+              .onComplete(
+                  (ignored, error) ->
+                      actor.submit(
+                          () -> {
+                            if (error != null) {
+                              LOG.error(
+                                  "Resume partition {} failed", record.getPartitionId(), error);
+                              dispatchFailed(error);
+                            } else {
+                              dispatchComplete();
+                            }
+                          }));
+        });
+  }
+
+  /** 取分区的引擎处理服务（经启动上下文持有的分区转换对象透出） */
+  private EngineProcessService engineOf(final BusinessPartitionService service) {
+    final PartitionTransition<BusinessTransitionContent> transition =
+        service.context().getPartitionTransition();
+    return transition == null ? null : transition.content().getEngineProcessService();
+  }
+
+  /** 数据合并调度（在飞守卫：看门狗重发不重入，回 IN_PROGRESS 续期） */
   private void handleLeaveDataSourceTransfer(final Address address, final byte[] bytes) {
     final PartitionLeaveSourceDataTransferRecord record =
         decodeBytes(bytes, PartitionExecutionType.LEAVE_SOURCE_DATA_TRANSFER);
@@ -566,26 +755,51 @@ public class ClusterBusinessService extends Actor
           final BusinessPartitionService businessPartitionService =
               raftPartitionMap.get(partitionId);
           if (businessPartitionService != null) {
+            final long executionId = record.getDispatchPlanExecutionId();
+            if (inFlightDataTransfers.putIfAbsent(executionId, new CompletableFuture<Void>())
+                != null) {
+              ackInProgress(record, 0);
+              return;
+            }
             final PartitionId targetPartitionId =
                 PartitionId.from(record.getTargetPartitionGroup(), record.getTargetPartitionId());
             final MemberId partitionLeader = topologyService.getPartitionLeader(targetPartitionId);
             businessPartitionService
                 .pushDataMerge(targetPartitionId, partitionLeader)
                 .onComplete(
-                    (unused, throwable) -> {
-                      if (throwable != null) {
-                        LOG.error("Data Merge Admin Raft Execution Service", throwable);
-                        dispatchFailed(throwable);
-                      } else {
-                        dispatchComplete();
-                      }
-                    });
+                    (unused, throwable) ->
+                        // 完成回调跑在完成方线程（分区 actor），ack 落回本服务 actor
+                        actor.submit(
+                            () -> {
+                              inFlightDataTransfers.remove(executionId);
+                              if (throwable != null) {
+                                LOG.error("Data Merge Admin Raft Execution Service", throwable);
+                                dispatchFailed(throwable);
+                              } else {
+                                dispatchComplete();
+                              }
+                            }));
           } else {
             // 分区不在本节点时无数据可合并，完成调度并 ack，避免挂起记录每次重启重放
             LOG.info("Business partition {} is not started, skip data merge dispatch", partitionId);
             dispatchComplete();
           }
         });
+  }
+
+  /** 看门狗重试探回执：IN_PROGRESS 进度 ack（调度侧不落日志不置终态，观测续期） */
+  private void ackInProgress(final PartitionExecutionRecordValue record, final long remaining) {
+    final PartitionExecutionAckRecord progressAck = new PartitionExecutionAckRecord();
+    progressAck
+        .setDispatchPlanId(record.getDispatchPlanId())
+        .setDispatchPlanExecutionId(record.getDispatchPlanExecutionId())
+        .setExecutionType(record.getExecutionType())
+        .setPartitionType(record.getPartitionType())
+        .setExecutionMemberId(record.executionMemberId())
+        .setSuccess(false)
+        .setInProgress(true)
+        .setRemaining(remaining);
+    dispatchClient.ack(progressAck);
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
@@ -671,8 +885,10 @@ public class ClusterBusinessService extends Actor
           case CONFIG_CHANGE -> handleConfigChange(null, bytes);
           case LEAVE_SOURCE_TRANSFER -> handleLeaveSourceTransfer(null, bytes);
           case LEAVE_SOURCE_DATA_TRANSFER -> handleLeaveDataSourceTransfer(null, bytes);
-          case BOOTSTRAP_SOURCE_TRANSFER -> handleBootstrapDataSourceTransfer(null, bytes);
+          case BOOTSTRAP_SOURCE_TRANSFER -> handleBootstrapSourceTransfer(null, bytes);
           case BOOTSTRAP_SOURCE_DATA_TRANSFER -> handleBootstrapDataSourceTransfer(null, bytes);
+          case FREEZE -> handleFreeze(null, bytes);
+          case RESUME -> handleResume(null, bytes);
         }
       }
     }

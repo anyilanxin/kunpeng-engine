@@ -57,13 +57,17 @@ import com.anyilanxin.kunpeng.repository.business.modules.signal.MutableSignalEv
 import com.anyilanxin.kunpeng.repository.business.modules.signal.SignalEventRepository;
 import com.anyilanxin.kunpeng.repository.business.modules.sink.MutableSinkRepository;
 import com.anyilanxin.kunpeng.repository.business.modules.sink.SinkRepository;
+import com.anyilanxin.kunpeng.repository.business.modules.state.FrozenStateRepository;
 import com.anyilanxin.kunpeng.repository.business.modules.timer.MutableTimerEventRepository;
 import com.anyilanxin.kunpeng.repository.business.modules.timer.TimerEventRepository;
 import com.anyilanxin.kunpeng.repository.business.modules.usertask.MutableUserTaskRepository;
 import com.anyilanxin.kunpeng.repository.business.modules.usertask.UserTaskRepository;
 import com.anyilanxin.kunpeng.repository.business.modules.variable.MutableVariableRepository;
 import com.anyilanxin.kunpeng.repository.business.modules.variable.VariableRepository;
+import com.anyilanxin.kunpeng.rocksdb.RocksdbTransactionDb;
+import com.anyilanxin.kunpeng.rocksdb.SplitPayloadWriter;
 import io.micrometer.core.instrument.MeterRegistry;
+import java.nio.file.Path;
 import java.util.List;
 import org.springframework.beans.factory.BeanFactory;
 
@@ -77,6 +81,7 @@ final class RocksdbBusinessRepository implements BusinessRepository {
   private final TransactionContext transaction;
   private final BusinessRepositoryAppliers appliers;
   private final DataSplitRegister splitRegister;
+  private final KvStore<BusinessRepositoryColumnFamilies> db;
   private final ActivityInstanceRepository instanceRepository;
   private final AsyncRepository asyncRepository;
   private final BatchRepository batchRepository;
@@ -99,6 +104,7 @@ final class RocksdbBusinessRepository implements BusinessRepository {
   private final TimerEventRepository timerEventRepository;
   private final UserTaskRepository userTaskRepository;
   private final VariableRepository variableRepository;
+  private final FrozenStateRepository frozenStateRepository;
   private final RaftPartitionSource partitionSource;
 
   public RocksdbBusinessRepository(
@@ -117,7 +123,9 @@ final class RocksdbBusinessRepository implements BusinessRepository {
       final MeterRegistry meterRegistry) {
     this.partitionSource = partitionSource;
     this.transaction = transaction;
+    this.db = db;
     splitRegister = new DataSplitRegister();
+    frozenStateRepository = new FrozenStateRepository(db, transaction, splitRegister);
     instanceRepository = new ActivityInstanceRepository(db, transaction, splitRegister);
     asyncRepository = new AsyncRepository(db, transaction, splitRegister);
     batchRepository = new BatchRepository(db, transaction, splitRegister);
@@ -147,8 +155,39 @@ final class RocksdbBusinessRepository implements BusinessRepository {
   }
 
   @Override
+  public void writeResourceData(final int resourceId, final Path snapshotDirectory) {
+    try (final SplitPayloadWriter<BusinessRepositoryColumnFamilies> writer =
+        new SplitPayloadWriter<>(snapshotDirectory, BusinessRepositoryColumnFamilies.KEY)) {
+      for (final ResourceDataSplit dataSplit : splitRegister.getDataSplits()) {
+        dataSplit.splitLocalFamilyData(
+            resourceId,
+            (key, value) -> {
+              writer.write(key, value);
+              return true;
+            });
+      }
+    }
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public void removeResourceData(final int resourceId) {
+    final RocksdbTransactionDb<BusinessRepositoryColumnFamilies> rocksdbDb =
+        (RocksdbTransactionDb<BusinessRepositoryColumnFamilies>) db;
+    for (final ResourceDataSplit dataSplit : splitRegister.getDataSplits()) {
+      dataSplit.removeLocalFamilyData(
+          resourceId, key -> rocksdbDb.deleteRaw(key, BusinessRepositoryColumnFamilies.KEY));
+    }
+  }
+
+  @Override
   public TransactionContext getContext() {
     return transaction;
+  }
+
+  @Override
+  public FrozenStateRepository frozenStateRepository() {
+    return frozenStateRepository;
   }
 
   @Override

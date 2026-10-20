@@ -59,6 +59,11 @@ public class BusinessDispatchChangeReplicationProcessor extends AbstractBusiness
 
   @Override
   public void processRecord(final AdminLogRecord<BusinessDispatchPlanRecord> record) {
+    // 计划单槽闸门（业务面与管理面分开算）：执行中计划拒绝新调度；未应用计划（延迟等待/已生成未执行）
+    // 取消覆盖，由新计划接管单槽（见 cluster-dispatch-design 03 号文档 §9）
+    if (!rejectOrReplaceInFlightPlan(record.getRequestId())) {
+      return;
+    }
     final BusinessDispatchPlanRecord value = record.getValue();
     value.setDispatchPlanId(writer.nextKey());
     final BusinessClusterMetaRecord oldClusterMeta = repositoryBusiness.getClusterMeta();

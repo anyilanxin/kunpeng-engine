@@ -29,6 +29,7 @@ import com.anyilanxin.kunpeng.configuration.broker.rocksdb.RocksdbConfiguration;
 import com.anyilanxin.kunpeng.kvstore.ColumnCopyType;
 import com.anyilanxin.kunpeng.kvstore.KvStore;
 import com.anyilanxin.kunpeng.kvstore.exception.KvStoreException;
+import com.anyilanxin.kunpeng.repository.business.BusinessRepository;
 import com.anyilanxin.kunpeng.repository.business.BusinessRepositoryColumnFamilies;
 import com.anyilanxin.kunpeng.rocksdb.DefaultRocksdbFactory;
 import com.anyilanxin.kunpeng.rocksdb.RocksdbFactory;
@@ -39,6 +40,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
@@ -69,6 +71,16 @@ public class BusinessRaftSnapshotProvider
 
   /** 在途 recover（分区 transition 链打开业务库的 future）：合并镜像早于库打开到达时等待其完成。 */
   private volatile ActorFuture<KvStore<BusinessRepositoryColumnFamilies>> pendingRecover;
+
+  /** 拆分镜像拍摄参数键：值为资源 id，由拉取方随拍摄命令带给本端（扩容资源拆分，见 cluster-dispatch-design 技能 03 号文档 §5）。 */
+  public static final String RESOURCE_ID_PARAMETER = "resourceId";
+
+  /** 业务仓库晚绑定（库由 transition 链 recover 后经工厂创建）：拆分镜像拍摄遍历运行库（冻结窗口内静止）。 */
+  private volatile Supplier<BusinessRepository> businessRepositorySupplier;
+
+  public void setBusinessRepositorySupplier(final Supplier<BusinessRepository> supplier) {
+    this.businessRepositorySupplier = supplier;
+  }
 
   public BusinessRaftSnapshotProvider(
       final ConcurrencyControl concurrencyControl,
@@ -270,8 +282,8 @@ public class BusinessRaftSnapshotProvider
     final Path checksumPath = received.getPath();
     rocksdbDb.merge(
         checksumPath,
-        Set.of(BusinessRepositoryColumnFamilies.PROCESS_POSITION),
-        ColumnCopyType.FAMILY);
+        BusinessRepositoryColumnFamilies.migrationFamilies(),
+        ColumnCopyType.VIRTUAL_FAMILY);
     partition
         .triggerFollowerSnapshotInstall()
         .whenComplete(
@@ -322,6 +334,14 @@ public class BusinessRaftSnapshotProvider
   @Override
   public Map<String, Object> takeMergeSnapshot(
       final Path snapshotDirectory, final Map<String, String> parameters) {
+    final String resourceIdText = parameters.get(RESOURCE_ID_PARAMETER);
+    if (resourceIdText != null) {
+      // 拆分镜像：仅写指定资源的数据（访问器遍历运行库；调用点在分区冻结窗口内，库静止——见 03 号文档 §5）
+      Objects.requireNonNull(businessRepositorySupplier, "business repository supplier not wired")
+          .get()
+          .writeResourceData(Integer.parseInt(resourceIdText), snapshotDirectory);
+      return Map.of();
+    }
     snapshotStore
         .getLatestSnapshot()
         .ifPresent(
@@ -329,8 +349,8 @@ public class BusinessRaftSnapshotProvider
               rocksdbDb.createCopy(
                   snapshot.getPath(),
                   snapshotDirectory,
-                  Set.of(BusinessRepositoryColumnFamilies.PROCESS_POSITION),
-                  ColumnCopyType.FAMILY);
+                  BusinessRepositoryColumnFamilies.migrationFamilies(),
+                  ColumnCopyType.VIRTUAL_FAMILY);
             });
     return Map.of();
   }

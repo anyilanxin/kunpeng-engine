@@ -38,7 +38,10 @@ public enum BusinessDispatchPlanExecutionLifeCycle implements CommandValueLifeCy
 
   SUCCEED((short) 5, PROCESS_INDEX_40),
 
-  FAILED((short) 6, PROCESS_INDEX_41);
+  FAILED((short) 6, PROCESS_INDEX_41),
+
+  /** 长时明细（冻结排干/数据传输）的进度续期事件：不置终态、不推进状态机，仅附着进度到明细记录 */
+  PROGRESSING((short) 7, PROCESS_INDEX_42);
 
   private final short value;
   private final short processIndex;
@@ -60,6 +63,7 @@ public enum BusinessDispatchPlanExecutionLifeCycle implements CommandValueLifeCy
       case 4 -> ACKNOWLEDGE_TIMED_OUT;
       case 5 -> SUCCEED;
       case 6 -> FAILED;
+      case 7 -> PROGRESSING;
       default -> UNKNOWN;
     };
   }
@@ -72,6 +76,7 @@ public enum BusinessDispatchPlanExecutionLifeCycle implements CommandValueLifeCy
       case 4 -> ACKNOWLEDGE_TIMED_OUT;
       case 5 -> SUCCEED;
       case 6 -> FAILED;
+      case 7 -> PROGRESSING;
       default -> NULL_VAL;
     };
   }
@@ -85,7 +90,7 @@ public enum BusinessDispatchPlanExecutionLifeCycle implements CommandValueLifeCy
   public boolean isState() {
     return switch (this) {
       case NULL_VAL, EXECUTING, ACKNOWLEDGE, ACKNOWLEDGE_TIMED_OUT -> false;
-      case EXECUTED, SUCCEED, FAILED -> true;
+      case EXECUTED, SUCCEED, FAILED, PROGRESSING -> true;
     };
   }
 

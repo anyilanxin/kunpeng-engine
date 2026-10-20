@@ -42,10 +42,10 @@ import java.util.*;
  * <ul>
  *   <li>oldMeta 为空：全量初始化计划（与 isInitialize 无关），分区 ID 从 1 起生成整个集群分区， 引导不携带快照镜像（集群无既有数据）；
  *   <li>期望值大于历史值：在现有最大分区 ID 上递增扩容，新增分区按 round-robin 分配成员， 引导携带快照镜像（从既有分区引导数据）；
- *   <li>期望值小于历史值：保留分区 ID 最小的期望数量个分区，保留分区全程保持完整副本、不生成任何执行明细； 被缩容分区的非 Leader 成员先经正常 leave
- *       协议离开（成员仍在配置中，分区随之收敛为 Leader 单副本）， Leader 将数据轮询合并至保留分区后停止销毁分区（最后一个成员无法走 leave
- *       协议），最后将分区来源标识转移至保留分区 Leader；已是 Leader 单副本的分区（如单副本分区）无非 Leader 离开步骤，仅数据合并、来源标识转移后由 Leader
- *       停止销毁；
+ *   <li>期望值小于历史值：保留分区 ID 最小的期望数量个分区；双侧（被缩分区与接收分区）非 Leader 成员先经正常 leave
+ *       协议离开收敛单副本，接收分区冻结（存活侧仅引擎静止）后逐对"冻结被缩分区（销毁侧引擎+sink 两段排水）→ 数据合并"， 被缩分区 Leader 停止销毁、来源标识转移至保留分区
+ *       Leader，计划末尾接收分区统一 RESUME 并 re-JOIN 恢复期望副本（完整序列见 cluster-dispatch-design 技能 03 号文档）；已是
+ *       Leader 单副本的分区（如单副本分区） 无非 Leader 离开步骤，仅冻结、合并、销毁与转移；
  *   <li>期望值等于历史值：生成空计划。
  * </ul>
  *
@@ -135,9 +135,18 @@ public class ChangePartitionDispatchPlanGenerator extends AbstractDispatchPlanGe
   }
 
   /**
-   * 缩容计划：保留分区 ID 最小的期望数量个分区，保留分区全程保持完整副本、不生成任何执行明细。 被缩容分区的非 Leader 成员先经正常 leave
-   * 协议离开（成员仍在配置中，分区随之收敛为 Leader 单副本）， Leader 将数据轮询合并至保留分区后停止销毁分区（最后一个成员无法走 leave
-   * 协议），最后将分区来源标识转移至保留分区 Leader（源分区销毁后再转移，避免来源标识双归属）。
+   * 缩容计划：保留分区 ID 最小的期望数量个分区。完整序列（见 cluster-dispatch-design 技能 03 号文档 §4）：
+   *
+   * <ol>
+   *   <li>双侧收敛单副本——被缩分区与接收分区的非 Leader 成员全部 leave（合并直接写接收分区 Leader RocksDB、绕过 raft
+   *       日志，多副本下手术窗口内任何选举都会让手术效果丢失/分歧）；
+   *   <li>逐对手术（串行交错冻结）——接收分区首次合并前冻结一次（drain=false，存活侧仅引擎静止）， 每个被缩分区冻结（drain=true，销毁侧 引擎+sink
+   *       两段排水，销毁前日志完整外发）后合并；交错序使未冻结的被缩分区此间继续服务；
+   *   <li>被缩分区 Leader 本地停止销毁（最后一个成员无法走 leave 协议）；
+   *   <li>来源标识转移至保留分区 Leader（源分区销毁后再转移，避免来源标识双归属）；
+   *   <li>计划末尾统一恢复——接收分区 RESUME 解冻并 re-JOIN 恢复期望副本：接收 N 份来源只在最终 状态上做一次 follower 快照安装，follower
+   *       永远看不到手术中间态。
+   * </ol>
    */
   private BusinessDispatchPlanRecord createScaleDownPlan(
       final BusinessDispatchPlanRecord plan,
@@ -152,26 +161,50 @@ public class ChangePartitionDispatchPlanGenerator extends AbstractDispatchPlanGe
     final BusinessDispatchPlanRecord dispatchPlan =
         newPlan(plan).setExpectPartitionsCount(expectPartitionsCount);
     final long dispatchPlanId = plan.getDispatchPlanId();
-    // 第一阶段：被缩容分区非 Leader 成员离开（成员仍在配置中，走正常 leave 协议），分区收敛为 Leader 单副本
-    for (final PartitionInfoMetaRecord partition : removedPartitions) {
-      for (final MemberId member : nonLeadersOf(partition)) {
-        addExecution(
-            dispatchPlan,
-            ExecutionRecordFactory.leave(
-                dispatchPlanId, nextExecutionId(), member.id(), partitionIdOf(partition)),
-            member.id());
+    // 接收分区 = 合并映射实际命中的保留分区（removedCount < keptCount 时仅前若干个命中，
+    // 未命中者不参与手术——无谓的收敛/恢复只徒增停服窗口与副本折腾）
+    final List<PartitionInfoMetaRecord> receivingTargets =
+        new ArrayList<>(Math.min(removedPartitions.size(), keptPartitions.size()));
+    final Set<Integer> receivingTargetIds = new HashSet<>();
+    for (int i = 0; i < removedPartitions.size(); i++) {
+      final PartitionInfoMetaRecord target = keptPartitions.get(i % keptPartitions.size());
+      if (receivingTargetIds.add(target.getPartitionId())) {
+        receivingTargets.add(target);
       }
     }
-    // 第二阶段：被缩容分区 Leader 将数据依次轮询合并至保留分区；来源标识转移明细一并预构造，待源分区销毁后（第四阶段）再下发
+    // 第一阶段：双侧收敛单副本（被缩分区 + 接收分区，非 Leader 成员走正常 leave 协议离开）
+    for (final PartitionInfoMetaRecord partition : removedPartitions) {
+      addNonLeaderLeaves(dispatchPlan, dispatchPlanId, partition);
+    }
+    for (final PartitionInfoMetaRecord partition : receivingTargets) {
+      addNonLeaderLeaves(dispatchPlan, dispatchPlanId, partition);
+    }
+    // 第二阶段：逐对手术（串行交错冻结）；来源标识转移明细一并预构造，待源分区销毁后（第四阶段）再下发
     final List<PartitionLeaveSourceTransferRecord> sourceTransfers =
         new ArrayList<>(removedPartitions.size());
     final List<String> sourceTransferMembers = new ArrayList<>(removedPartitions.size());
+    final Set<Integer> frozenTargets = new HashSet<>();
     for (int i = 0; i < removedPartitions.size(); i++) {
       final PartitionInfoMetaRecord source = removedPartitions.get(i);
       final PartitionInfoMetaRecord target = keptPartitions.get(i % keptPartitions.size());
       final MemberId sourceLeader = requireLeader(source);
       final MemberId targetLeader = requireLeader(target);
-      // 来源标识随数据一并转移：按计划期快照读取被缩容分区的来源信息填充到合并与转移明细， 自身 sourceId 降格为代理资源并入集合（尚未分配来源时保持空集合）
+      // 接收分区首次接收前冻结一次，之后保持单副本+冻结承接多份来源，无收敛/恢复折腾
+      if (frozenTargets.add(target.getPartitionId())) {
+        addExecution(
+            dispatchPlan,
+            ExecutionRecordFactory.freeze(
+                dispatchPlanId, nextExecutionId(), targetLeader.id(), partitionIdOf(target), false),
+            targetLeader.id());
+      }
+      // 销毁侧冻结：drain=true 两段排水，被缩分区日志在销毁前完整送达外部 sink
+      addExecution(
+          dispatchPlan,
+          ExecutionRecordFactory.freeze(
+              dispatchPlanId, nextExecutionId(), sourceLeader.id(), partitionIdOf(source), true),
+          sourceLeader.id());
+      // 来源标识随数据一并转移：按计划期快照读取被缩分区的来源信息填充到合并与转移明细， 自身 sourceId
+      // 降格为代理资源并入集合（尚未分配来源时保持空集合）
       final PartitionSourceRecord partitionSource =
           repositorySource.getPartitionSource(source.getPartitionGroup(), source.getPartitionId());
       final PartitionLeaveSourceDataTransferRecord dataMerge =
@@ -200,7 +233,7 @@ public class ChangePartitionDispatchPlanGenerator extends AbstractDispatchPlanGe
       sourceTransfers.add(sourceTransfer);
       sourceTransferMembers.add(targetLeader.id());
     }
-    // 第三阶段：被缩容分区 Leader 停止分区并销毁（最后一个成员无法走 leave 协议，本地停止）
+    // 第三阶段：被缩分区 Leader 停止分区并销毁（排水已完成，日志删除对外部无损）
     for (final PartitionInfoMetaRecord partition : removedPartitions) {
       final MemberId leader = requireLeader(partition);
       addExecution(
@@ -213,9 +246,38 @@ public class ChangePartitionDispatchPlanGenerator extends AbstractDispatchPlanGe
     for (int i = 0; i < sourceTransfers.size(); i++) {
       addExecution(dispatchPlan, sourceTransfers.get(i), sourceTransferMembers.get(i));
     }
-    // 最终拓扑：保留分区维持原拓扑，被缩容分区移除
+    // 第五阶段：计划末尾统一恢复——接收分区解冻 + re-JOIN 恢复期望副本（未命中合并映射的保留分区全程不动）
+    for (final PartitionInfoMetaRecord target : receivingTargets) {
+      final MemberId targetLeader = requireLeader(target);
+      addExecution(
+          dispatchPlan,
+          ExecutionRecordFactory.resume(
+              dispatchPlanId, nextExecutionId(), targetLeader.id(), partitionIdOf(target)),
+          targetLeader.id());
+      for (final MemberId member : nonLeadersOf(target)) {
+        addExecution(
+            dispatchPlan,
+            ExecutionRecordFactory.join(dispatchPlanId, nextExecutionId(), member.id(), target),
+            member.id());
+      }
+    }
+    // 最终拓扑：保留分区维持原拓扑，被缩分区移除
     dispatchPlan.setMeta(new ArrayList<>(keptPartitions));
     return dispatchPlan;
+  }
+
+  /** 分区非 Leader 成员逐个生成 leave 明细（成员仍在配置中，走正常 leave 协议，分区收敛为 Leader 单副本） */
+  private void addNonLeaderLeaves(
+      final BusinessDispatchPlanRecord dispatchPlan,
+      final long dispatchPlanId,
+      final PartitionInfoMetaRecord partition) {
+    for (final MemberId member : nonLeadersOf(partition)) {
+      addExecution(
+          dispatchPlan,
+          ExecutionRecordFactory.leave(
+              dispatchPlanId, nextExecutionId(), member.id(), partitionIdOf(partition)),
+          member.id());
+    }
   }
 
   /** 分区中非 Leader 的成员列表（按成员 ID 升序） */

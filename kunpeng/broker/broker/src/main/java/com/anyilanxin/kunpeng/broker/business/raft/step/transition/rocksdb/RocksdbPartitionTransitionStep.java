@@ -86,12 +86,17 @@ public final class RocksdbPartitionTransitionStep
                   new IllegalStateException("recover failed: " + error.getMessage()));
             } else {
               context.setRocksdb(db);
-              context.setRepositoryFactory(
+              final RocksdbBusinessRepositoryFactory repositoryFactory =
                   new RocksdbBusinessRepositoryFactory(
                       db,
                       context.getRaftPartitionSource(),
                       context.getBeanFactory(),
-                      context.getMeterRegistry()));
+                      context.getMeterRegistry());
+              context.setRepositoryFactory(repositoryFactory);
+              // 拆分镜像拍摄要遍历业务仓库（数据手术窗口内库静止），provider 晚绑定仓库供应
+              context
+                  .getSnapshotProvider()
+                  .setBusinessRepositorySupplier(repositoryFactory::create);
               transitionFuture.complete(null);
             }
           });

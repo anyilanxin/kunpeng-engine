@@ -26,6 +26,7 @@ import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.Busine
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.delayed.DelayedRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.DispatchExecutionState;
+import com.anyilanxin.kunpeng.protocol.admin.record.command.DispatchPlanState;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.admin.AdminDispatchPlanExecutionLifeCycle;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.admin.AdminDispatchPlanLifeCycle;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.business.BusinessDispatchPlanExecutionLifeCycle;
@@ -82,6 +83,15 @@ public class DelayedTriggerProcessor extends AbstractDelayedProcessor {
       LOGGER.warn("延迟任务触发时管理面调度计划不存在或已过期，跳过。plan id:{}", record.getDispatchPlanId());
       return;
     }
+    if (dispatchPlan.getDispatchState() == DispatchPlanState.SUCCEED
+        || dispatchPlan.getDispatchState() == DispatchPlanState.FAILED
+        || dispatchPlan.getDispatchState() == DispatchPlanState.CANCELED) {
+      LOGGER.info(
+          "延迟任务触发时管理面调度计划已终态（被覆盖或已完结），跳过。plan id:{}，state:{}",
+          dispatchPlan.getDispatchPlanId(),
+          dispatchPlan.getDispatchState());
+      return;
+    }
     writer.addCommand(
         dispatchPlan.getDispatchPlanId(),
         AdminDispatchPlanLifeCycle.PLAN_CREATING,
@@ -125,6 +135,20 @@ public class DelayedTriggerProcessor extends AbstractDelayedProcessor {
     final long dispatchPlanId = record.getDispatchPlanId();
     final BusinessDispatchPlanRecord dispatchPlan =
         repositoryBusiness.getDispatchPlan(dispatchPlanId);
+    // 计划已不存在（清理/误删）时延迟任务过期，跳过重入避免空指针
+    if (dispatchPlan == null) {
+      LOGGER.warn("延迟任务触发时业务面调度计划不存在，跳过。plan id:{}", dispatchPlanId);
+      return;
+    }
+    if (dispatchPlan.getDispatchState() == DispatchPlanState.SUCCEED
+        || dispatchPlan.getDispatchState() == DispatchPlanState.FAILED
+        || dispatchPlan.getDispatchState() == DispatchPlanState.CANCELED) {
+      LOGGER.info(
+          "延迟任务触发时业务面调度计划已终态（被覆盖或已完结），跳过。plan id:{}，state:{}",
+          dispatchPlan.getDispatchPlanId(),
+          dispatchPlan.getDispatchState());
+      return;
+    }
     writer.addCommand(
         dispatchPlan.getDispatchPlanId(),
         BusinessDispatchPlanLifeCycle.PLAN_CREATING,

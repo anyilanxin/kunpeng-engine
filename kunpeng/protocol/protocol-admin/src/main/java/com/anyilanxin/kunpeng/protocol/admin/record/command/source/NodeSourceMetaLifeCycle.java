@@ -28,13 +28,13 @@ import com.anyilanxin.kunpeng.protocol.admin.record.CommandValueLifeCycle;
 public enum NodeSourceMetaLifeCycle implements CommandValueLifeCycle {
   NULL_VAL((short) -1, NOT_PROCESS_INDEX),
 
-  CREATING((short) 1, PROCESS_INDEX_62),
+  CREATING((short) 1, PROCESS_INDEX_63),
 
-  CREATED((short) 2, PROCESS_INDEX_63),
+  CREATED((short) 2, PROCESS_INDEX_64),
 
-  UPDATING((short) 3, PROCESS_INDEX_64),
+  UPDATING((short) 3, PROCESS_INDEX_65),
 
-  UPDATED((short) 4, PROCESS_INDEX_65);
+  UPDATED((short) 4, PROCESS_INDEX_66);
 
   private final short value;
   private final short processIndex;

@@ -95,6 +95,21 @@ public final class TypedEventLogWriter implements EventLogWriter {
   }
 
   @Override
+  public void freeze() {
+    delegate.freeze();
+  }
+
+  @Override
+  public void unfreeze() {
+    delegate.unfreeze();
+  }
+
+  @Override
+  public boolean isFrozen() {
+    return delegate.isFrozen();
+  }
+
+  @Override
   public void close() {
     delegate.close();
   }

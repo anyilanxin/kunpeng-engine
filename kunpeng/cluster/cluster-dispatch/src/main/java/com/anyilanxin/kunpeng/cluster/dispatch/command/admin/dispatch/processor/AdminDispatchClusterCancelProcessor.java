@@ -25,6 +25,7 @@ import com.anyilanxin.kunpeng.cluster.dispatch.command.delayed.DelayedDelayCheck
 import com.anyilanxin.kunpeng.configuration.broker.ManageRaftCfg;
 import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminDispatchPlanRecord;
+import com.anyilanxin.kunpeng.protocol.admin.record.command.DispatchPlanState;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.admin.AdminDispatchPlanLifeCycle;
 import com.anyilanxin.kunpeng.repository.admin.AdminImmutableRepository;
 import com.anyilanxin.kunpeng.repository.admin.modules.admin.ImmutableAdminRepository;
@@ -57,7 +58,17 @@ public class AdminDispatchClusterCancelProcessor extends AbstractAdminDispatchPr
   }
 
   @Override
-  public void processRecord(final AdminLogRecord<AdminDispatchPlanRecord> record) {}
+  public void processRecord(final AdminLogRecord<AdminDispatchPlanRecord> record) {
+    final AdminDispatchPlanRecord value = record.getValue();
+    LOGGER.info("\n\n------->管理面调度计划取消，停止推进<-------\n{}\n", value);
+    // 管理面无数据手术（冻结/合并拆分只作用于业务面），取消即终结；未执行明细保持 WAIT 等待人工重试
+    value.setDispatchState(DispatchPlanState.CANCELED);
+    writer.addEvent(
+        value.getDispatchPlanId(),
+        AdminDispatchPlanLifeCycle.CANCELED,
+        record.getRequestId(),
+        value);
+  }
 
   @Override
   public AdminDispatchPlanLifeCycle valueLifeCycle() {

@@ -66,6 +66,9 @@ public final class TopologyManagerImpl extends Actor implements TopologyManager 
   private final Map<PartitionId, PartitionSourceMeta> partitionSourceMetas =
       new ConcurrentHashMap<>();
 
+  /** 冻结起始时刻（数据手术时长 gauge 的事实源）：标记时写入、恢复时移除；gauge 轮询并发读 */
+  private final ConcurrentHashMap<PartitionId, Long> frozenSinceMillis = new ConcurrentHashMap<>();
+
   public TopologyManagerImpl(
       final ClusterMembershipService membershipService,
       final MeterRegistry meterRegistry,
@@ -113,6 +116,21 @@ public final class TopologyManagerImpl extends Actor implements TopologyManager 
         });
   }
 
+  @Override
+  public void markPartitionFrozen(final PartitionId partitionId, final boolean frozen) {
+    actor.submit(
+        () -> {
+          final PartitionMemberInfo info = localPartitionInfo(partitionId);
+          info.setFrozen(frozen);
+          if (frozen) {
+            frozenSinceMillis.put(partitionId, System.currentTimeMillis());
+          } else {
+            frozenSinceMillis.remove(partitionId);
+          }
+          publishBroadcastInternal();
+        });
+  }
+
   /** 获取本成员分区在视图模型中的条目，首次出现时创建，角色与健康由 PartitionMemberInfo 默认 UNKNOWN 兜底。 */
   private PartitionMemberInfo localPartitionInfo(final PartitionId partitionId) {
     final PartitionMemberInfo existing = swimPartitionMemberInfo.getInfoMap().get(partitionId);
@@ -127,9 +145,28 @@ public final class TopologyManagerImpl extends Actor implements TopologyManager 
     return created;
   }
 
-  /** 分区首次出现时注册健康 gauge：gauge 持条目引用，后续角色/健康更新自动反映 */
+  /** 分区首次出现时注册健康与冻结 gauge：gauge 持条目/视图引用，后续状态更新自动反映 */
   private void registerHealthGauge(final PartitionId partitionId, final PartitionMemberInfo info) {
     Gauge.builder(PARTITION_HEALTH_METRIC, info, memberInfo -> memberInfo.getHealth().getValue())
+        .tag("group", partitionId.group())
+        .tag("partition", String.valueOf(partitionId.id()))
+        .tag("member", localMember.id().id())
+        .register(meterRegistry);
+    Gauge.builder(
+            TopologyMetricsDoc.PARTITION_FROZEN.getName(),
+            info,
+            memberInfo -> memberInfo.isFrozen() ? 1 : 0)
+        .tag("group", partitionId.group())
+        .tag("partition", String.valueOf(partitionId.id()))
+        .tag("member", localMember.id().id())
+        .register(meterRegistry);
+    Gauge.builder(
+            TopologyMetricsDoc.PARTITION_FREEZE_DURATION.getName(),
+            partitionId,
+            pid -> {
+              final Long since = frozenSinceMillis.get(pid);
+              return since == null ? 0 : System.currentTimeMillis() - since;
+            })
         .tag("group", partitionId.group())
         .tag("partition", String.valueOf(partitionId.id()))
         .tag("member", localMember.id().id())
@@ -160,6 +197,7 @@ public final class TopologyManagerImpl extends Actor implements TopologyManager 
     entry.health = healthToWire(info.getHealth());
     entry.term = info.getTerm();
     entry.sourceId = info.getSourceId();
+    entry.frozen = info.isFrozen();
     entry.agentSourceIds =
         List.copyOf(info.getAgentSourceIds() == null ? List.of() : info.getAgentSourceIds());
     return entry;

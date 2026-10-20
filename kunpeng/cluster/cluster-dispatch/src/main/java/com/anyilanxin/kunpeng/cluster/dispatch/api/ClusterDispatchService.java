@@ -115,6 +115,22 @@ public class ClusterDispatchService {
 
   private void handleDispatchAck(final Address address, final byte[] bytes) {
     final PartitionExecutionAckRecord ackRecord = decodePartitionExecutionAck(bytes);
+    if (ackRecord.isInProgress()) {
+      if (ackRecord.getPartitionType() == PartitionType.ADMIN) {
+        // 管理面无长时明细（冻结排干/数据传输只在业务面），进度续期仅观测
+        LOGGER.debug(
+            "Dispatch execution {} still in progress, remaining {}",
+            ackRecord.getDispatchPlanExecutionId(),
+            ackRecord.getRemaining());
+        return;
+      }
+      // 长时明细（冻结排干/数据传输）的进度续期：不置终态，经 ACKNOWLEDGE 命令由处理器附着进度到明细记录
+      final AppendResult progressResult = writeProgressCommand(ackRecord);
+      if (progressResult instanceof final AppendResult.Rejected rejected) {
+        logWriteFailure(ackRecord, rejected);
+      }
+      return;
+    }
     final AppendResult result = writeCommand(ackRecord);
     if (result instanceof final AppendResult.Rejected rejected) {
       logWriteFailure(ackRecord, rejected);
@@ -208,11 +224,43 @@ public class ClusterDispatchService {
         execution.setDispatchExecutionState(
             record.isSuccess() ? DispatchExecutionState.SUCCEED : DispatchExecutionState.FAILED);
         execution.setDispatchMessage(record.getErrorMessage());
+        // 终态清空进度标记：remaining >= 0 是进度续期命令的语义标记，不能沿用存储值
+        execution.setDispatchRemaining(-1);
       }
     }
     if (recordValue == null) {
       return new AppendResult.Rejected(AppendResult.RejectionReason.INVALID_ARGUMENT);
     }
+    final AppendEntry appendEntry =
+        RecordAppendEntryFactory.of(
+            record.getDispatchPlanExecutionId(), recordMetadata, recordValue);
+    return logStreamWriter.tryAppend(WriteContext.INTER_PARTITION, appendEntry);
+  }
+
+  /** 长时明细进度续期命令：业务面专用（冻结排干/数据传输），只附着剩余量，不动执行状态 */
+  private AppendResult writeProgressCommand(final PartitionExecutionAckRecord record) {
+    final UnifiedRecordValue recordValue =
+        repositoryBusiness.getDispatchPlanExecution(
+            record.getDispatchPlanId(), record.getDispatchPlanExecutionId());
+    if (recordValue == null) {
+      // 计划已完结后迟到的进度 ack 属正常竞态（传输完成 → 计划完结 → 尾随探测的续期到达），不告警
+      LOGGER.info(
+          "Progress ack arrived after dispatch execution gone, skip. plan id:{}，execution id:{}",
+          record.getDispatchPlanId(),
+          record.getDispatchPlanExecutionId());
+      return new AppendResult.Rejected(AppendResult.RejectionReason.INVALID_ARGUMENT);
+    }
+    if (recordValue instanceof final BusinessDispatchPlanExecutionRecord execution) {
+      // 剩余量 >= 0 即进度语义标记，AcknowledgeProcessor 据此走进度分支（不置终态、不推进状态机）
+      execution.setDispatchRemaining(record.getRemaining());
+    }
+    final AdminRecordMetadata recordMetadata =
+        new AdminRecordMetadata()
+            .recordType(RecordType.COMMAND)
+            .recordVersion(1)
+            .brokerVersion(BROKER_VERSION)
+            .valueLifeCycle(BusinessDispatchPlanExecutionLifeCycle.ACKNOWLEDGE)
+            .valueType(AdminValueType.BUSINESS_DISPATCH_EXECUTION);
     final AppendEntry appendEntry =
         RecordAppendEntryFactory.of(
             record.getDispatchPlanExecutionId(), recordMetadata, recordValue);

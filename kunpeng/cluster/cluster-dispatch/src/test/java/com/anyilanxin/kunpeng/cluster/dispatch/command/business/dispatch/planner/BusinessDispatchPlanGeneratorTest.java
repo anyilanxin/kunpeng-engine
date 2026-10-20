@@ -214,7 +214,8 @@ class BusinessDispatchPlanGeneratorTest {
 
   @Test
   void scaleDownShouldLeaveNonLeadersThenMergeThenStopLeaderThenTransferSource() {
-    // 缩容新流程：非 Leader LEAVE（正常协议）→ 数据转移 → Leader STOP → 标识符转移；保留分区不动
+    // 缩容序列（03 号文档 §4）：双侧收敛单副本 → 接收侧冻结（drain=false）→ 销毁侧冻结（drain=true）→
+    // 合并 → STOP → 来源转移 → 计划末尾统一 RESUME + re-JOIN 恢复期望副本
     final BusinessDispatchPlanRecord planRecord =
         planRecord(BusinessDispatchType.CHANGE_PARTITION, 30L).setExpectPartitionsCount(2);
     partition(planRecord, 1, "member-0", "member-0", "member-1", "member-2");
@@ -225,42 +226,32 @@ class BusinessDispatchPlanGeneratorTest {
         changePartitionGenerator(topologyWithLeaders("member-0", "member-1", "member-2"))
             .createPlan(planRecord, Set.of(M0, M1, M2));
 
-    assertOrderAndIds(plan, 5);
+    assertOrderAndIds(plan, 12);
 
-    // 阶段一：被缩容分区 p3 非 Leader 成员（ID 升序）经正常 leave 协议离开
-    final PartitionLeaveRecord leaveM0 = payload(plan, 0, PartitionExecutionType.LEAVE);
-    assertThat(leaveM0.toPartitionId()).isEqualTo(PartitionId.from(GROUP, 3));
-    assertThat(leaveM0.executionMemberId()).isEqualTo("member-0");
-    assertThat(executionEntry(plan, 0).getDispatchMemberId()).isEqualTo("member-0");
-    final PartitionLeaveRecord leaveM1 = payload(plan, 1, PartitionExecutionType.LEAVE);
-    assertThat(leaveM1.toPartitionId()).isEqualTo(PartitionId.from(GROUP, 3));
-    assertThat(leaveM1.executionMemberId()).isEqualTo("member-1");
+    // 阶段一：双侧非 Leader 离开——被缩分区 p3 [m0,m1]、接收分区 p1 [m1,m2]（按 ID 升序）；
+    // p2 未命中合并映射，全程不动
+    assertLeave(plan, 0, 3, "member-0");
+    assertLeave(plan, 1, 3, "member-1");
+    assertLeave(plan, 2, 1, "member-1");
+    assertLeave(plan, 3, 1, "member-2");
 
-    // 阶段二：p3 Leader 将数据合并至保留分区 p1（目标按序轮询）
-    final PartitionLeaveSourceDataTransferRecord dataMerge =
-        payload(plan, 2, PartitionExecutionType.LEAVE_SOURCE_DATA_TRANSFER);
-    assertThat(dataMerge.getPartitionId()).isEqualTo(3);
-    assertThat(dataMerge.getTargetPartitionGroup()).isEqualTo(GROUP);
-    assertThat(dataMerge.getTargetPartitionId()).isEqualTo(1);
-    assertThat(dataMerge.executionMemberId()).isEqualTo("member-2");
-    assertThat(dataMerge.getAgentSourceIds()).isEmpty();
+    // 阶段二：接收分区 p1 冻结（存活侧仅引擎静止）→ 被缩分区 p3 冻结（销毁侧两段排水）→ 数据合并至 p1
+    assertFreeze(plan, 4, 1, "member-0", false);
+    assertFreeze(plan, 5, 3, "member-2", true);
+    assertDataTransfer(plan, 6, 3, 1, "member-2");
 
-    // 阶段三：p3 Leader 停止分区并销毁（最后一个成员不走 leave 协议）
-    final PartitionStopRecord stop = payload(plan, 3, PartitionExecutionType.STOP);
-    assertThat(stop.toPartitionId()).isEqualTo(PartitionId.from(GROUP, 3));
-    assertThat(stop.executionMemberId()).isEqualTo("member-2");
-    assertThat(stop.getExecutionType()).isEqualTo(PartitionExecutionType.STOP);
-    assertThat(executionEntry(plan, 3).getDispatchMemberId()).isEqualTo("member-2");
+    // 阶段三：p3 Leader 停止分区并销毁（最后一个成员不走 leave 协议，排水已完成删除无损）
+    assertStop(plan, 7, 3, "member-2");
 
     // 阶段四：来源标识转移至保留分区 p1 Leader（源分区销毁后再转移）
-    final PartitionLeaveSourceTransferRecord sourceTransfer =
-        payload(plan, 4, PartitionExecutionType.LEAVE_SOURCE_TRANSFER);
-    assertThat(sourceTransfer.getPartitionId()).isEqualTo(1);
-    assertThat(sourceTransfer.getSourcePartitionId()).isEqualTo(3);
-    assertThat(sourceTransfer.executionMemberId()).isEqualTo("member-0");
-    assertThat(executionEntry(plan, 4).getDispatchMemberId()).isEqualTo("member-0");
+    assertSourceTransfer(plan, 8, 1, 3, "member-0");
 
-    // 最终拓扑：保留分区维持完整副本，被缩容分区移除
+    // 阶段五：计划末尾统一恢复——仅接收分区 p1 RESUME + re-JOIN（保留分区原成员，ID 升序）
+    assertResume(plan, 9, 1, "member-0");
+    assertJoin(plan, 10, 1, "member-1");
+    assertJoin(plan, 11, 1, "member-2");
+
+    // 最终拓扑：保留分区维持完整副本，被缩分区移除
     final List<PartitionInfoMetaRecord> finalMeta = metaOf(plan);
     assertThat(finalMeta).hasSize(2);
     assertThat(finalMeta.get(0).getPartitionId()).isEqualTo(1);
@@ -271,7 +262,7 @@ class BusinessDispatchPlanGeneratorTest {
 
   @Test
   void scaleDownShouldRoundRobinTargetsWhenRemovingMultiplePartitions() {
-    // 多分区缩容：全局分阶段编排（所有非 Leader 离开 → 所有数据转移 → 所有 Leader 离开 → 所有标识符转移）
+    // 多分区缩容：多来源逐对交错"冻结→合并"，接收分区只冻结一次；STOP 与来源转移按序批量；末尾统一恢复
     final BusinessDispatchPlanRecord planRecord =
         planRecord(BusinessDispatchType.CHANGE_PARTITION, 31L).setExpectPartitionsCount(1);
     partition(planRecord, 1, "member-0", "member-0", "member-1", "member-2");
@@ -282,25 +273,35 @@ class BusinessDispatchPlanGeneratorTest {
         changePartitionGenerator(topologyWithLeaders("member-0", "member-1", "member-2"))
             .createPlan(planRecord, Set.of(M0, M1, M2));
 
-    assertOrderAndIds(plan, 10);
+    assertOrderAndIds(plan, 18);
 
-    // 阶段一：p2 非 Leader [m0, m2]、p3 非 Leader [m0, m1] 依次离开
+    // 阶段一：双侧非 Leader 离开——p2 [m0,m2]、p3 [m0,m1]、接收分区 p1 [m1,m2]
     assertLeave(plan, 0, 2, "member-0");
     assertLeave(plan, 1, 2, "member-2");
     assertLeave(plan, 2, 3, "member-0");
     assertLeave(plan, 3, 3, "member-1");
+    assertLeave(plan, 4, 1, "member-1");
+    assertLeave(plan, 5, 1, "member-2");
 
-    // 阶段二：p2、p3 数据依次合并至保留分区 p1
-    assertDataTransfer(plan, 4, 2, 1, "member-1");
-    assertDataTransfer(plan, 5, 3, 1, "member-2");
+    // 阶段二：p1 冻结一次 → 逐对"销毁侧冻结→合并"（p2、p3 依次合并至 p1，接收侧不重复折腾）
+    assertFreeze(plan, 6, 1, "member-0", false);
+    assertFreeze(plan, 7, 2, "member-1", true);
+    assertDataTransfer(plan, 8, 2, 1, "member-1");
+    assertFreeze(plan, 9, 3, "member-2", true);
+    assertDataTransfer(plan, 10, 3, 1, "member-2");
 
     // 阶段三：p2、p3 Leader 停止分区并销毁
-    assertStop(plan, 6, 2, "member-1");
-    assertStop(plan, 7, 3, "member-2");
+    assertStop(plan, 11, 2, "member-1");
+    assertStop(plan, 12, 3, "member-2");
 
     // 阶段四：来源标识依次转移至 p1 Leader
-    assertSourceTransfer(plan, 8, 1, 2, "member-0");
-    assertSourceTransfer(plan, 9, 1, 3, "member-0");
+    assertSourceTransfer(plan, 13, 1, 2, "member-0");
+    assertSourceTransfer(plan, 14, 1, 3, "member-0");
+
+    // 阶段五：p1 统一恢复
+    assertResume(plan, 15, 1, "member-0");
+    assertJoin(plan, 16, 1, "member-1");
+    assertJoin(plan, 17, 1, "member-2");
 
     final List<PartitionInfoMetaRecord> finalMeta = metaOf(plan);
     assertThat(finalMeta).hasSize(1);
@@ -327,12 +328,13 @@ class BusinessDispatchPlanGeneratorTest {
                 repositorySource)
             .createPlan(planRecord, Set.of(M0, M1, M2));
 
-    assertOrderAndIds(plan, 5);
+    // 双侧 LEAVE×4 → FREEZE(p1)→FREEZE(p3)→MERGE(idx6) → STOP(idx7) → TRANSFER(idx8) → RESUME+JOIN×2
+    assertOrderAndIds(plan, 12);
     final PartitionLeaveSourceDataTransferRecord dataMerge =
-        payload(plan, 2, PartitionExecutionType.LEAVE_SOURCE_DATA_TRANSFER);
+        payload(plan, 6, PartitionExecutionType.LEAVE_SOURCE_DATA_TRANSFER);
     assertThat(dataMerge.getAgentSourceIds()).containsExactlyInAnyOrder(7, 8, 9);
     final PartitionLeaveSourceTransferRecord sourceTransfer =
-        payload(plan, 4, PartitionExecutionType.LEAVE_SOURCE_TRANSFER);
+        payload(plan, 8, PartitionExecutionType.LEAVE_SOURCE_TRANSFER);
     assertThat(sourceTransfer.getAgentSourceIds()).containsExactlyInAnyOrder(7, 8, 9);
   }
 
@@ -505,6 +507,47 @@ class BusinessDispatchPlanGeneratorTest {
     final PartitionStopRecord stop = payload(plan, order, PartitionExecutionType.STOP);
     assertThat(stop.toPartitionId()).isEqualTo(PartitionId.from(GROUP, partitionId));
     assertThat(stop.executionMemberId()).isEqualTo(executionMemberId);
+    assertThat(executionEntry(plan, order).getDispatchMemberId()).isEqualTo(executionMemberId);
+  }
+
+  /** 断言冻结明细：目标分区、执行成员与 drain 类别（true=销毁侧两段排水，false=存活侧仅引擎静止） */
+  private static void assertFreeze(
+      final BusinessDispatchPlanRecord plan,
+      final int order,
+      final int partitionId,
+      final String executionMemberId,
+      final boolean drain) {
+    final PartitionFreezeRecord freeze = payload(plan, order, PartitionExecutionType.FREEZE);
+    assertThat(freeze.toPartitionId()).isEqualTo(PartitionId.from(GROUP, partitionId));
+    assertThat(freeze.executionMemberId()).isEqualTo(executionMemberId);
+    assertThat(freeze.isDrain()).isEqualTo(drain);
+    assertThat(freeze.getExecutionType()).isEqualTo(PartitionExecutionType.FREEZE);
+    assertThat(executionEntry(plan, order).getDispatchMemberId()).isEqualTo(executionMemberId);
+  }
+
+  /** 断言恢复明细：目标分区与执行成员（数据手术收尾，计划末尾统一下发） */
+  private static void assertResume(
+      final BusinessDispatchPlanRecord plan,
+      final int order,
+      final int partitionId,
+      final String executionMemberId) {
+    final PartitionResumeRecord resume = payload(plan, order, PartitionExecutionType.RESUME);
+    assertThat(resume.toPartitionId()).isEqualTo(PartitionId.from(GROUP, partitionId));
+    assertThat(resume.executionMemberId()).isEqualTo(executionMemberId);
+    assertThat(resume.getExecutionType()).isEqualTo(PartitionExecutionType.RESUME);
+    assertThat(executionEntry(plan, order).getDispatchMemberId()).isEqualTo(executionMemberId);
+  }
+
+  /** 断言重加入明细：恢复期望副本（JOIN 负载携带分区完整拓扑，分区号取自 meta） */
+  private static void assertJoin(
+      final BusinessDispatchPlanRecord plan,
+      final int order,
+      final int partitionId,
+      final String executionMemberId) {
+    final PartitionJoinRecord join = payload(plan, order, PartitionExecutionType.JOIN);
+    assertThat(join.getPartitionMeta().getPartitionId()).isEqualTo(partitionId);
+    assertThat(join.getPartitionMeta().getPartitionGroup()).isEqualTo(GROUP);
+    assertThat(join.executionMemberId()).isEqualTo(executionMemberId);
     assertThat(executionEntry(plan, order).getDispatchMemberId()).isEqualTo(executionMemberId);
   }
 

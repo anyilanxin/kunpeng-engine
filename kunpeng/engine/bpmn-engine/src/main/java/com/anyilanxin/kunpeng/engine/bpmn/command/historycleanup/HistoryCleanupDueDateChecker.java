@@ -38,6 +38,9 @@ public class HistoryCleanupDueDateChecker implements SchedulerCheckerAware {
   /** 已启动的清理扫描任务；关闭/失败时停排 */
   private HistoryCleanupCheckerTask timeToLiveChecker;
 
+  /** 冻结恢复用：onRecovered 时留存的调度上下文 */
+  private volatile SchedulerContext schedulerContext;
+
   public HistoryCleanupDueDateChecker(
       final ImmutableHistoryCleanupRepository historyCleanup, final InstantSource clock) {
     this.historyCleanup = historyCleanup;
@@ -46,6 +49,7 @@ public class HistoryCleanupDueDateChecker implements SchedulerCheckerAware {
 
   @Override
   public void onRecovered(final SchedulerContext context) {
+    schedulerContext = context;
     scheduleMessageTtlChecker(context);
   }
 
@@ -57,6 +61,19 @@ public class HistoryCleanupDueDateChecker implements SchedulerCheckerAware {
   @Override
   public void onFailed() {
     stop();
+  }
+
+  @Override
+  public void onPaused() {
+    stop();
+  }
+
+  @Override
+  public void onResumed() {
+    final SchedulerContext context = schedulerContext;
+    if (context != null) {
+      scheduleMessageTtlChecker(context);
+    }
   }
 
   private void stop() {

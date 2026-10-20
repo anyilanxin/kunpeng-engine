@@ -46,6 +46,11 @@ public class PartitionTransition<CONTENT extends TransitionContent> extends Acto
     transitionService.setConcurrencyControl(actor);
   }
 
+  /** 转换期内容（引擎服务/事件日志/仓储工厂等运行时句柄的持有处） */
+  public CONTENT content() {
+    return transitionContent;
+  }
+
   public ActorFuture<Void> start() {
     final ActorFuture<Void> future = actor.createFuture();
     actor.submit(

@@ -26,8 +26,28 @@ public interface ResourceDataSplit {
 
   void splitLocalFamilyData(int resourceId, DataVisitor visitor);
 
+  /**
+   * 删除变体：移除本域中归属于指定资源的全部数据。默认实现按拆分访问器产出的物理 key 逐个删除—— 与拆分载荷同一迭代、同一过滤，保证删的正是拆走的。
+   *
+   * @param resourceId 资源 id
+   * @param remover 物理删除执行器（key 为 {@code writeKey} 产出的带虚拟列族前缀完整 key）
+   */
+  default void removeLocalFamilyData(final int resourceId, final DataRemover remover) {
+    splitLocalFamilyData(
+        resourceId,
+        (key, value) -> {
+          remover.remove(key);
+          return true;
+        });
+  }
+
   @FunctionalInterface
   interface DataVisitor {
     boolean visit(final byte[] key, final byte[] value);
+  }
+
+  @FunctionalInterface
+  interface DataRemover {
+    void remove(final byte[] key);
   }
 }

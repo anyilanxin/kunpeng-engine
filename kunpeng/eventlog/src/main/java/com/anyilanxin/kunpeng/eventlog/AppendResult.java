@@ -37,6 +37,8 @@ public sealed interface AppendResult {
     /** 参数非法（空批/超限长度等） */
     INVALID_ARGUMENT,
     /** 在途窗口耗尽（仅 USER_COMMAND） */
-    REQUEST_WINDOW_EXHAUSTED
+    REQUEST_WINDOW_EXHAUSTED,
+    /** 分区冻结中（数据手术窗口：停一切写者、保一切读者，仅放行引擎处理结果） */
+    FROZEN
   }
 }

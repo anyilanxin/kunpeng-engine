@@ -70,6 +70,14 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
   private EventLogWriter logStreamWriter;
   private boolean processing = false;
   private long processPosition = -1;
+
+  /** 冻结排干在途 future（数据手术窗口；null=未冻结） */
+  private volatile CompletableActorFuture<Void> freezeFuture;
+
+  private volatile boolean drainAfterQuiesce;
+  private volatile TimerScheduler.TimerHandle drainPollHandle;
+  private final Object freezeLock = new Object();
+  private static final long FREEZE_DRAIN_POLL_MS = 500;
   private MutableProcessedPositionRepository mutableProcessedPosition;
   private final CommandApiHandle commandApiHandle;
   private final RecordMetadata metadata = new RecordMetadata();
@@ -258,12 +266,26 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
                       if (error != null) {
                         return;
                       }
+                      recoverFrozenMarker();
                       logStreamReader.seekToNextEntry(processPosition);
                       processing();
                     },
                     actor);
           }
         });
+  }
+
+  /**
+   * 冻结标记恢复：broker 手术中重启后内存冻结态丢失，凭 PARTITION_STATE 标记重入冻结窗口（含两段排水重走）—— 手术的后续明细 （合并/拆分/删除）经
+   * restartExecution 重放到达时分区已重新静止，窗口不破防（03 号文档 §3.2）。
+   */
+  private void recoverFrozenMarker() {
+    final Boolean frozenDrain = repository.frozenStateRepository().frozenMarker();
+    if (frozenDrain != null) {
+      LOGGER.info(
+          "Partition {} recovering frozen state from marker (drain={})", partitionId, frozenDrain);
+      freezeAndDrain(frozenDrain);
+    }
   }
 
   private void recover(final ActorFuture<Void> future) {
@@ -384,6 +406,131 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
     return drained;
   }
 
+  /**
+   * 冻结并排干（数据手术前置，幂等）：冻结写入（仅放行引擎处理写入与内部补写）→ 暂停全部内部触发（checker 家族）→ 等处理追平日志已定序水位（final 确定）→ {@code
+   * drain=true} 时等全部 sink 确认位追平 final。
+   *
+   * <p>幂等契约：冻结期间重复调用（看门狗重发）返回同一在途 future。完成回调运行于完成方线程（引擎 actor 或 排水轮询车道），调用方如需回写自身 actor 状态须自行提交回目标
+   * actor。
+   */
+  public ActorFuture<Void> freezeAndDrain(final boolean drain) {
+    synchronized (freezeLock) {
+      final CompletableActorFuture<Void> existing = freezeFuture;
+      if (existing != null) {
+        return existing;
+      }
+      final CompletableActorFuture<Void> future = new CompletableActorFuture<>();
+      actor.run(
+          () -> {
+            if (logStreamReader == null) {
+              freezeFuture = null;
+              future.completeExceptionally(
+                  new IllegalStateException(
+                      "partition " + partitionId + " is not started; cannot freeze"));
+              return;
+            }
+            freezeFuture = future;
+            drainAfterQuiesce = drain;
+            logStreamWriter.freeze();
+            repository.frozenStateRepository().markFrozen(drain);
+            logEventWriter.schedulerCheckerAwares().forEach(SchedulerCheckerAware::onPaused);
+            LOGGER.info("Partition {} frozen, waiting quiesce (drain={})", partitionId, drain);
+            checkQuiesced();
+          });
+      return future;
+    }
+  }
+
+  /** 解除冻结（数据手术收尾，幂等）：取消排干轮询、恢复内部触发、恢复全部写入； 未排干即解冻按失败完成冻结 future（调用方据此走失败 ack 重试）。 */
+  public ActorFuture<Void> resumeFromFreeze() {
+    final CompletableActorFuture<Void> future = new CompletableActorFuture<>();
+    actor.run(
+        () -> {
+          cancelDrainPoll();
+          // 先清标记再开闸：中途崩溃重启会凭残留标记重新冻结——保守方向无害（未冻当已冻只多等一次排干）
+          repository.frozenStateRepository().clearFrozen();
+          final CompletableActorFuture<Void> freezing = freezeFuture;
+          freezeFuture = null;
+          if (freezing != null && !freezing.isDone()) {
+            freezing.completeExceptionally(
+                new IllegalStateException("partition " + partitionId + " resumed before drained"));
+          }
+          logEventWriter.schedulerCheckerAwares().forEach(SchedulerCheckerAware::onResumed);
+          logStreamWriter.unfreeze();
+          LOGGER.info("Partition {} resumed from freeze", partitionId);
+          future.complete(null);
+        });
+    return future;
+  }
+
+  /** 当前是否处于冻结窗口（含排干等待中） */
+  public boolean isFrozen() {
+    return freezeFuture != null;
+  }
+
+  /** 冻结排干剩余量（final − 全部 sink 最低确认位）；未冻结或不排干返回 -1，已静止待排干为非负 */
+  public long freezeRemaining() {
+    if (freezeFuture == null || !drainAfterQuiesce) {
+      return -1;
+    }
+    final long lastWritten =
+        Math.max(logStream.getLastWrittenPosition(), logStream.getLastCommittedPosition());
+    return lastWritten < 1 ? 0 : lastWritten - sinkLowestPosition();
+  }
+
+  private void cancelDrainPoll() {
+    final TimerScheduler.TimerHandle handle = drainPollHandle;
+    drainPollHandle = null;
+    if (handle != null) {
+      handle.cancel();
+    }
+  }
+
+  /** 引擎静止判定（引擎 actor 上调用）：无在途处理、无待消费条目、处理位追平已定序水位（自写未提交的尾巴由 lastWritten 挡住，不会误判静止）。 */
+  private void checkQuiesced() {
+    final CompletableActorFuture<Void> future = freezeFuture;
+    if (future == null || future.isDone()) {
+      return;
+    }
+    if (processing || logStreamReader == null || logStreamReader.hasNext()) {
+      return;
+    }
+    final long lastWritten =
+        Math.max(logStream.getLastWrittenPosition(), logStream.getLastCommittedPosition());
+    if (lastWritten > 0 && processPosition < lastWritten) {
+      return;
+    }
+    if (!drainAfterQuiesce) {
+      future.complete(null);
+      return;
+    }
+    // 第二段排水：等全部 sink 确认位追平 final（final<1 即空日志或无 sink 状态，视为已排干）
+    if (lastWritten < 1 || sinkLowestPosition() >= lastWritten) {
+      future.complete(null);
+      return;
+    }
+    if (drainPollHandle == null) {
+      drainPollHandle =
+          primaryScheduler.scheduleEvery(
+              java.time.Duration.ofMillis(FREEZE_DRAIN_POLL_MS),
+              output -> {
+                if (sinkLowestPosition() >= lastWritten) {
+                  cancelDrainPoll();
+                  final CompletableActorFuture<Void> draining = freezeFuture;
+                  if (draining != null) {
+                    draining.complete(null);
+                  }
+                }
+                return output.build();
+              });
+    }
+  }
+
+  /** 全部 sink 最低确认位（repository 直读；未装配 sink 为 -1） */
+  private long sinkLowestPosition() {
+    return repository.sinkRepository().getLowestPosition();
+  }
+
   void processNextEvent() {
     if (processing || !logStreamReader.hasNext()) {
       return;
@@ -408,6 +555,7 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
       }
     } finally {
       processing = false;
+      checkQuiesced();
       actor.submit(this::processNextEvent);
     }
   }

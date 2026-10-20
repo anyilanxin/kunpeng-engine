@@ -36,8 +36,6 @@ public interface MutableBusinessRepository extends ImmutableBusinessRepository {
 
   void saveDispatchPlan(final BusinessDispatchPlanRecord dispatchPlan);
 
-  void dispatchPlanDelete(final BusinessDispatchPlanRecord dispatchPlan);
-
   void updateDispatchPlan(final BusinessDispatchPlanRecord dispatchPlan);
 
   void dispatchPlanComplete(final long dispatchPlanId);
@@ -48,5 +46,9 @@ public interface MutableBusinessRepository extends ImmutableBusinessRepository {
       final long key, final BusinessDispatchPlanExecutionRecord dispatchPlanExecution);
 
   void dispatchPlanExecutionSuccess(
+      final long key, final BusinessDispatchPlanExecutionRecord dispatchPlanExecution);
+
+  /** 长时明细进度续期：仅更新明细记录的进度字段，不置终态、不动 ORDER 索引 */
+  void dispatchPlanExecutionProgress(
       final long key, final BusinessDispatchPlanExecutionRecord dispatchPlanExecution);
 }

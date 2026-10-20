@@ -63,6 +63,11 @@ public class GrpcErrorHandle {
       return new StatusRuntimeException(
           Status.RESOURCE_EXHAUSTED.withDescription(brokerResponse.message()));
     }
+    // 分区冻结（数据手术窗口）：暂时性不可用，计划 RESUME 后自动恢复——映射 UNAVAILABLE 供调用方重试退避
+    if (code == BrokerResponseCodes.PARTITION_FROZEN) {
+      return new StatusRuntimeException(
+          Status.UNAVAILABLE.withDescription(brokerResponse.message()));
+    }
     // broker 业务拒绝（定义不存在/状态机不符等）不是参数格式问题
     return new StatusRuntimeException(
         Status.FAILED_PRECONDITION.withDescription(brokerResponse.message()));

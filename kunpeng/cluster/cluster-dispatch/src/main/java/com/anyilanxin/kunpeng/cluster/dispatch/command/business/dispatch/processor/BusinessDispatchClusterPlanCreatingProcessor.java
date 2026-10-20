@@ -17,6 +17,7 @@
 package com.anyilanxin.kunpeng.cluster.dispatch.command.business.dispatch.processor;
 
 import static com.anyilanxin.kunpeng.protocol.admin.AdminConstant.DISPATCH_PLAN_TIME;
+import static com.anyilanxin.kunpeng.structpack.util.BufferUtil.copyInto;
 
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
@@ -27,12 +28,17 @@ import com.anyilanxin.kunpeng.cluster.dispatch.command.business.dispatch.planner
 import com.anyilanxin.kunpeng.cluster.dispatch.command.delayed.DelayedDelayChecker;
 import com.anyilanxin.kunpeng.configuration.ZoneType;
 import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessClusterMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.delayed.DelayedRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.business.dispatch.BusinessChangeResponseRecord;
+import com.anyilanxin.kunpeng.protocol.admin.record.command.DispatchPlanState;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionType;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.business.BusinessDispatchPlanLifeCycle;
+import com.anyilanxin.kunpeng.protocol.admin.record.command.business.BusinessDispatchType;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.delayed.DelayedLifeCycle;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.delayed.DelayedType;
+import com.anyilanxin.kunpeng.protocol.admin.record.commandapi.business.BusinessDispatchApiValueLifeCycle;
 import java.util.Set;
 import org.slf4j.Logger;
 
@@ -82,21 +88,26 @@ public class BusinessDispatchClusterPlanCreatingProcessor
           record.getRequestId(),
           delayedRecord);
 
+      value.setDispatchState(DispatchPlanState.PLAN_DELAYED);
       writer.addEvent(
           value.getDispatchPlanId(),
           BusinessDispatchPlanLifeCycle.PLAN_DELAYED,
           record.getRequestId(),
           value);
       delayChecker.schedule(delayedRecord.getDueDate());
+      writer.adErrorResponse(record.getRequestId(), -1, "集群成员不足，调度进入延迟等待，成员满足后自动生成计划");
       return;
     }
     // 满足条件，进行计划制定（结果直接补全到 value 的 meta 与 executionPlan）
     planGenerator.createPlan(value, memberIds);
+    value.setDispatchState(DispatchPlanState.PLAN_SUCCEED);
     writer.addEvent(
         value.getDispatchPlanId(),
         BusinessDispatchPlanLifeCycle.PLAN_CREATED,
         record.getRequestId(),
         value);
+    // 计划生成即响应：请求方拿到生成的计划与集群元数据，不再挂到客户端超时
+    respondPlanCreated(record.getRequestId(), value);
     if (value.isApplyPlan()) {
       writer.addCommand(
           value.getDispatchPlanId(),
@@ -104,6 +115,27 @@ public class BusinessDispatchClusterPlanCreatingProcessor
           record.getRequestId(),
           value);
     }
+  }
+
+  /** 计划生成即响应：按计划类型映射响应生命周期，携带生成的计划与集群元数据 */
+  void respondPlanCreated(final long requestId, final BusinessDispatchPlanRecord value) {
+    final BusinessChangeResponseRecord response = new BusinessChangeResponseRecord();
+    copyInto(value, response.getDispatchPlan());
+    final BusinessClusterMetaRecord clusterMeta =
+        writer.getRepository().businessRepository().getClusterMeta();
+    if (clusterMeta != null) {
+      copyInto(clusterMeta, response.getClusterMeta());
+    }
+    writer.adResponse(responseLifeCycle(value.getDispatchPlanType()), requestId, response);
+  }
+
+  private static BusinessDispatchApiValueLifeCycle responseLifeCycle(
+      final BusinessDispatchType dispatchPlanType) {
+    return switch (dispatchPlanType) {
+      case CLUSTER_BALANCE -> BusinessDispatchApiValueLifeCycle.CLUSTER_BALANCE_RESPONSE;
+      case CHANGE_PARTITION -> BusinessDispatchApiValueLifeCycle.CHANGE_PARTITION_RESPONSE;
+      case CHANGE_REPLICATION -> BusinessDispatchApiValueLifeCycle.CHANGE_REPLICATION_RESPONSE;
+    };
   }
 
   @Override

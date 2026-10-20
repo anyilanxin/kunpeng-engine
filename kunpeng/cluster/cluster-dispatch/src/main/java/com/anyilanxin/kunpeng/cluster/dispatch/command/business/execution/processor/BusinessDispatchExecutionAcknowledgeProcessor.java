@@ -80,6 +80,20 @@ public class BusinessDispatchExecutionAcknowledgeProcessor
           stored.getDispatchExecutionState());
       return;
     }
+    if (value.getDispatchRemaining() >= 0) {
+      // 长时明细（冻结排干/数据传输）进度续期：不置终态、不推进状态机，进度附着明细记录（可查询）
+      LOGGER.info(
+          "\n\n----->收到进度续期<-----\nplan id:{}，execution id:{}，remaining:{}\n",
+          value.getDispatchPlanId(),
+          value.getDispatchPlanExecutionId(),
+          value.getDispatchRemaining());
+      writer.addEvent(
+          value.getDispatchPlanExecutionId(),
+          BusinessDispatchPlanExecutionLifeCycle.PROGRESSING,
+          record.getRequestId(),
+          value);
+      return;
+    }
     value.setDispatchEndTime(writer.millis());
     if (value.getDispatchExecutionState() == DispatchExecutionState.FAILED) {
       // 成员执行失败不终止计划：注册延迟重试任务，到期由 DelayedTriggerProcessor 重新下发

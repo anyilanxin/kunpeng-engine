@@ -24,6 +24,7 @@ import com.anyilanxin.kunpeng.repository.admin.modules.business.applier.clusterm
 import com.anyilanxin.kunpeng.repository.admin.modules.business.applier.dispatchplan.impl.*;
 import com.anyilanxin.kunpeng.repository.admin.modules.business.applier.execution.impl.BusinessDispatchPlanExecutionExecutedApplierImpl;
 import com.anyilanxin.kunpeng.repository.admin.modules.business.applier.execution.impl.BusinessDispatchPlanExecutionFailedApplierImpl;
+import com.anyilanxin.kunpeng.repository.admin.modules.business.applier.execution.impl.BusinessDispatchPlanExecutionProgressingApplierImpl;
 import com.anyilanxin.kunpeng.repository.admin.modules.business.applier.execution.impl.BusinessDispatchPlanExecutionSucceedApplierImpl;
 
 /**
@@ -47,6 +48,7 @@ public class RepositoryBusinessApplierRegister {
         .register(new BusinessDispatchPlanDelayedApplierImpl(repository))
         .register(new BusinessDispatchPlanExecutionExecutedApplierImpl(repository))
         .register(new BusinessDispatchPlanExecutionFailedApplierImpl(repository))
+        .register(new BusinessDispatchPlanExecutionProgressingApplierImpl(repository))
         .register(new BusinessDispatchPlanExecutionSucceedApplierImpl(repository))
         .register(new BusinessDispatchPlanFailedApplierImpl(repository));
   }

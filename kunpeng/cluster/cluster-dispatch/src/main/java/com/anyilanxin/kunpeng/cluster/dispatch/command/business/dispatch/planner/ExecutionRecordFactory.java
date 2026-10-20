@@ -190,4 +190,39 @@ public final class ExecutionRecordFactory {
         .setDispatchPlanExecutionId(dispatchPlanExecutionId)
         .setExecutionMemberId(executionMemberId);
   }
+
+  /**
+   * 分区冻结记录（数据手术前置）：冻结 = 停一切写者、保一切读者——关外部/跨分区命令入口、 停内部触发 checker 家族、在途命令跑干至 EL
+   * 静止；drain=true（销毁侧）额外等待全部 sink 确认位追平 EL 末位。 见 cluster-dispatch-design 技能 03 号文档 §3。
+   */
+  public static PartitionFreezeRecord freeze(
+      final long dispatchPlanId,
+      final long dispatchPlanExecutionId,
+      final String executionMemberId,
+      final PartitionId partitionId,
+      final boolean drain) {
+    return new PartitionFreezeRecord()
+        .fromPartitionId(partitionId)
+        .setExecutionType(PartitionExecutionType.FREEZE)
+        .setPartitionType(PartitionType.BUSINESS)
+        .setDispatchPlanId(dispatchPlanId)
+        .setDispatchPlanExecutionId(dispatchPlanExecutionId)
+        .setExecutionMemberId(executionMemberId)
+        .setDrain(drain);
+  }
+
+  /** 分区恢复记录（数据手术收尾）：checker 家族重扫补触发、开写入入口、清除不可用通告 */
+  public static PartitionResumeRecord resume(
+      final long dispatchPlanId,
+      final long dispatchPlanExecutionId,
+      final String executionMemberId,
+      final PartitionId partitionId) {
+    return new PartitionResumeRecord()
+        .fromPartitionId(partitionId)
+        .setExecutionType(PartitionExecutionType.RESUME)
+        .setPartitionType(PartitionType.BUSINESS)
+        .setDispatchPlanId(dispatchPlanId)
+        .setDispatchPlanExecutionId(dispatchPlanExecutionId)
+        .setExecutionMemberId(executionMemberId);
+  }
 }

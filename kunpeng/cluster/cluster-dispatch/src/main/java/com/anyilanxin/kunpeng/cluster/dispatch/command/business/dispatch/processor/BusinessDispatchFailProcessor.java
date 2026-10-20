@@ -21,6 +21,7 @@ import com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter;
 import com.anyilanxin.kunpeng.cluster.dispatch.command.business.dispatch.AbstractBusinessDispatchProcessor;
 import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanRecord;
+import com.anyilanxin.kunpeng.protocol.admin.record.command.DispatchPlanState;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.business.BusinessDispatchPlanLifeCycle;
 import org.slf4j.Logger;
 
@@ -42,8 +43,15 @@ public class BusinessDispatchFailProcessor extends AbstractBusinessDispatchProce
   @Override
   public void processRecord(final AdminLogRecord<BusinessDispatchPlanRecord> record) {
     final BusinessDispatchPlanRecord value = record.getValue();
-    LOGGER.info("\n\n------->调度计划失败，停止推进<-------\n{}\n", value);
-    // 计划标记失败并清理（applier 复用 dispatchPlanComplete）；未执行明细保持 WAIT，等待后续人工重试
+    LOGGER.info("\n\n------->调度计划失败，补偿数据手术后停止推进<-------\n{}\n", value);
+    // 失败即解冻：补发 RESUME/re-JOIN 恢复已冻结分区与已摘除 follower（03 号文档 §9）；
+    // 未执行明细保持 WAIT，等待后续人工重试（重试重新冻结即可）
+    final BusinessDispatchPlanRecord dispatchPlan =
+        writer.getRepository().businessRepository().getDispatchPlan(value.getDispatchPlanId());
+    if (dispatchPlan != null) {
+      SurgeryCompensator.compensate(writer, dispatchPlan);
+    }
+    value.setDispatchState(DispatchPlanState.FAILED);
     writer.addEvent(
         value.getDispatchPlanId(),
         BusinessDispatchPlanLifeCycle.FAILED,

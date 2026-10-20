@@ -45,12 +45,16 @@ public class DistributeSerialChecker implements SchedulerCheckerAware {
 
   private volatile TimerScheduler.TimerHandle retryAfterCycle;
 
+  /** 冻结恢复用：onRecovered 时留存的调度上下文 */
+  private volatile SchedulerContext schedulerContext;
+
   public DistributeSerialChecker(final ImmutableDistributeSerialRepository distribute) {
     this.distribute = distribute;
   }
 
   @Override
   public void onRecovered(final SchedulerContext context) {
+    schedulerContext = context;
     running = true;
     retryCycle =
         context.scheduler().scheduleEvery(COMMAND_REDISTRIBUTION_INTERVAL, new RetryDistribution());
@@ -68,6 +72,19 @@ public class DistributeSerialChecker implements SchedulerCheckerAware {
   @Override
   public void onFailed() {
     stop();
+  }
+
+  @Override
+  public void onPaused() {
+    stop();
+  }
+
+  @Override
+  public void onResumed() {
+    final SchedulerContext context = schedulerContext;
+    if (context != null) {
+      onRecovered(context);
+    }
   }
 
   private void stop() {

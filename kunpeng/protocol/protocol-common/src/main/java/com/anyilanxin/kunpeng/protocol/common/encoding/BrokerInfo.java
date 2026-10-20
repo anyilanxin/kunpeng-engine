@@ -57,7 +57,7 @@ public final class BrokerInfo implements BufferReader, BufferWriter {
   private final Map<CommPortType, Integer> ports = new LinkedHashMap<>();
   private final List<PartitionEntry> partitions = new ArrayList<>();
 
-  /** 分区条目：分区身份 + 角色/健康/任期 + source 元数据。 */
+  /** 分区条目：分区身份 + 角色/健康/任期 + source 元数据 + 冻结通告。 */
   public static final class PartitionEntry {
     public int partitionId;
     public String groupName = "";
@@ -65,6 +65,10 @@ public final class BrokerInfo implements BufferReader, BufferWriter {
     public PartitionHealth health = PartitionHealth.UNKNOWN;
     public long term;
     public int sourceId = -1;
+
+    /** 数据手术冻结通告（建议层）：true=冻结中，权威判定在分区 writer 级拒绝 */
+    public boolean frozen;
+
     public List<Integer> agentSourceIds = new ArrayList<>();
   }
 
@@ -137,6 +141,7 @@ public final class BrokerInfo implements BufferReader, BufferWriter {
       entry.health = partitionsDecoder.health();
       entry.term = partitionsDecoder.term();
       entry.sourceId = partitionsDecoder.sourceId();
+      entry.frozen = partitionsDecoder.frozen() != 0;
       final BrokerInfoDecoder.PartitionsDecoder.AgentSourceIdsDecoder agentDecoder =
           partitionsDecoder.agentSourceIds();
       while (agentDecoder.hasNext()) {
@@ -192,7 +197,8 @@ public final class BrokerInfo implements BufferReader, BufferWriter {
           .role(entry.role)
           .health(entry.health)
           .term(entry.term)
-          .sourceId(entry.sourceId);
+          .sourceId(entry.sourceId)
+          .frozen(entry.frozen ? (short) 1 : (short) 0);
       final BrokerInfoEncoder.PartitionsEncoder.AgentSourceIdsEncoder agentEncoder =
           next.agentSourceIdsCount(entry.agentSourceIds.size());
       for (final Integer agentSourceId : entry.agentSourceIds) {

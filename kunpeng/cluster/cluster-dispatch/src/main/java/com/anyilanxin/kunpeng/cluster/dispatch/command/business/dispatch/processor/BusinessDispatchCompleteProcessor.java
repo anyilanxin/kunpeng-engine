@@ -22,6 +22,7 @@ import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessClusterMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.common.PartitionInfoMetaRecord;
+import com.anyilanxin.kunpeng.protocol.admin.record.command.DispatchPlanState;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.business.BusinessClusterMetaLifeCycle;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.business.BusinessDispatchPlanLifeCycle;
 import com.anyilanxin.kunpeng.repository.admin.AdminImmutableRepository;
@@ -76,6 +77,7 @@ public class BusinessDispatchCompleteProcessor extends AbstractBusinessDispatchP
       metaLifeCycle = BusinessClusterMetaLifeCycle.UPDATING;
     }
     writer.addCommand(-1, metaLifeCycle, record.getRequestId(), clusterMeta);
+    value.setDispatchState(DispatchPlanState.SUCCEED);
     writer.addEvent(
         record.getKey(), BusinessDispatchPlanLifeCycle.COMPLETED, record.getRequestId(), value);
   }

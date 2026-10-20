@@ -158,9 +158,6 @@ public class BusinessRepository implements MutableBusinessRepository {
   }
 
   @Override
-  public void dispatchPlanDelete(final BusinessDispatchPlanRecord dispatchPlan) {}
-
-  @Override
   public void updateDispatchPlan(final BusinessDispatchPlanRecord dispatchPlan) {
     dispatchPlanIdDbKey.wrapLong(dispatchPlan.getDispatchPlanId());
     dispatchPlanValueType.wrap(dispatchPlan);
@@ -202,7 +199,13 @@ public class BusinessRepository implements MutableBusinessRepository {
     saveFinishedDispatchPlanExecution(dispatchPlanExecution);
   }
 
-  /** 终态明细只更新执行明细列族，不回写 ORDER 索引，避免 getNextDispatchPlanExecution 重复取到 */
+  @Override
+  public void dispatchPlanExecutionProgress(
+      final long key, final BusinessDispatchPlanExecutionRecord dispatchPlanExecution) {
+    saveFinishedDispatchPlanExecution(dispatchPlanExecution);
+  }
+
+  /** 只更新执行明细列族，不回写 ORDER 索引，避免 getNextDispatchPlanExecution 重复取到 */
   private void saveFinishedDispatchPlanExecution(
       final BusinessDispatchPlanExecutionRecord dispatchPlanExecution) {
     dispatchPlanIdDbKey.wrapLong(dispatchPlanExecution.getDispatchPlanId());
@@ -277,6 +280,18 @@ public class BusinessRepository implements MutableBusinessRepository {
       }
     }
     return null;
+  }
+
+  @Override
+  public List<BusinessDispatchPlanRecord> getDispatchPlans() {
+    final List<BusinessDispatchPlanRecord> plans = new ArrayList<>();
+    dispatchPlanColumnFamily.forEach(
+        (_, _) -> {
+          final BusinessDispatchPlanRecord record = new BusinessDispatchPlanRecord();
+          BufferUtil.copyInto(dispatchPlanValueType.unwrap(dispatchPlanBuffer), record);
+          plans.add(record);
+        });
+    return plans;
   }
 
   @Override

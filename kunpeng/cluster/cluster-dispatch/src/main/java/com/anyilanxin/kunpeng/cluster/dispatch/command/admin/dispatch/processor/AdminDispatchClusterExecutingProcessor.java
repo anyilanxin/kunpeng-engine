@@ -22,6 +22,7 @@ import com.anyilanxin.kunpeng.cluster.dispatch.command.admin.dispatch.AbstractAd
 import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminDispatchPlanExecutionRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminDispatchPlanRecord;
+import com.anyilanxin.kunpeng.protocol.admin.record.command.DispatchPlanState;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.admin.AdminDispatchPlanExecutionLifeCycle;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.admin.AdminDispatchPlanLifeCycle;
 import com.anyilanxin.kunpeng.repository.admin.AdminImmutableRepository;
@@ -55,6 +56,7 @@ public class AdminDispatchClusterExecutingProcessor extends AbstractAdminDispatc
     }
     if (dispatchPlan.executionPlan().isEmpty()) {
       LOGGER.info("\n\n------->管理面调度计划执行内容为空，直接完成<-------\n");
+      dispatchPlan.setDispatchState(DispatchPlanState.SUCCEED);
       writer.addEvent(
           dispatchPlan.getDispatchPlanId(),
           AdminDispatchPlanLifeCycle.COMPLETED,
@@ -62,6 +64,7 @@ public class AdminDispatchClusterExecutingProcessor extends AbstractAdminDispatc
           dispatchPlan);
     } else {
       LOGGER.info("\n\n------->管理面调度计划生成成功<-------\n{}\n", dispatchPlan);
+      dispatchPlan.setDispatchState(DispatchPlanState.EXECUTED);
       writer.addEvent(
           dispatchPlan.getDispatchPlanId(),
           AdminDispatchPlanLifeCycle.EXECUTED,

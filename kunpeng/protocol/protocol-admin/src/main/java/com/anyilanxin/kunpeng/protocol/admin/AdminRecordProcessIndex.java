@@ -95,8 +95,9 @@ public interface AdminRecordProcessIndex {
   short PROCESS_INDEX_72 = 72;
   short PROCESS_INDEX_73 = 73;
   short PROCESS_INDEX_74 = 74;
+  short PROCESS_INDEX_75 = 75;
 
   static short size() {
-    return PROCESS_INDEX_74 + 1;
+    return PROCESS_INDEX_75 + 1;
   }
 }

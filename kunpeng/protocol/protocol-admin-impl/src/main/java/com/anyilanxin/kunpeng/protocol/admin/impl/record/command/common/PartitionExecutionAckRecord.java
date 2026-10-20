@@ -52,9 +52,11 @@ public class PartitionExecutionAckRecord extends UnifiedRecordValue<PartitionExe
   private final LongProperty dispatchPlanIdProp = new LongProperty(6, "DISPATCH_PLAN_ID", -1);
   private final LongProperty dispatchPlanExecutionIdProp =
       new LongProperty(7, "DISPATCH_PLAN_EXECUTION_ID", -1);
+  private final BooleanProperty inProgressProp = new BooleanProperty(8, "IN_PROGRESS", false);
+  private final LongProperty remainingProp = new LongProperty(9, "REMAINING", -1);
 
   public PartitionExecutionAckRecord() {
-    super(7);
+    super(9);
     // formatting:off
     declareProperty(partitionTypeProp)
       .declareProperty(executionTypeProp)
@@ -62,7 +64,9 @@ public class PartitionExecutionAckRecord extends UnifiedRecordValue<PartitionExe
       .declareProperty(successProp)
       .declareProperty(errorMessageProp)
       .declareProperty(dispatchPlanIdProp)
-      .declareProperty(dispatchPlanExecutionIdProp);
+      .declareProperty(dispatchPlanExecutionIdProp)
+      .declareProperty(inProgressProp)
+      .declareProperty(remainingProp);
     // formatting:on
   }
 
@@ -136,6 +140,26 @@ public class PartitionExecutionAckRecord extends UnifiedRecordValue<PartitionExe
   @Override
   public boolean isSuccess() {
     return successProp.getValue();
+  }
+
+  /** 长时明细进行中标志（看门狗重试探的进度回应，不落日志不置终态） */
+  public boolean isInProgress() {
+    return inProgressProp.getValue();
+  }
+
+  public PartitionExecutionAckRecord setInProgress(final boolean inProgress) {
+    inProgressProp.setValue(inProgress);
+    return this;
+  }
+
+  /** 长时明细剩余工作量（如排干待导出记录数；-1 未知） */
+  public long getRemaining() {
+    return remainingProp.getValue();
+  }
+
+  public PartitionExecutionAckRecord setRemaining(final long remaining) {
+    remainingProp.setValue(remaining);
+    return this;
   }
 
   public PartitionExecutionAckRecord setSuccess(final boolean success) {

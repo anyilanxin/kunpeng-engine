@@ -699,6 +699,100 @@
             }
         },
         {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "reduceOptions": {
+                    "values": false,
+                    "fields": "",
+                    "calcs": ["lastNotNull"]
+                }
+            },
+            "description": "数据手术通告层：当前处于冻结中的分区数（>0 即有分区在手术窗口内，配合冻结时长面板监控手术上限）",
+            "id": 96,
+            "fieldConfig": {
+                "defaults": {
+                    "unit": "short",
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 1
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            },
+            "title": "冻结分区数（数据手术）",
+            "type": "stat",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "frozen partitions",
+                "expr": "sum(kunpeng_engine_partition_frozen{job=~\"$job\"})",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 4,
+                "x": 8,
+                "y": 36
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "数据手术窗口时长：分区自 FREEZE 起的持续毫秒数（未冻结为 0）；持续走高 = 排水/传输慢或挂起，超限交人工处置不自动中断",
+            "id": 97,
+            "fieldConfig": {
+                "defaults": {"unit": "short"},
+                "overrides": []
+            },
+            "title": "分区冻结时长（ms，数据手术）",
+            "type": "timeseries",
+            "targets": [{
+                "datasource": {
+                    "uid": "${DS_PROMETHEUS}",
+                    "type": "prometheus"
+                },
+                "legendFormat": "{{partition}}",
+                "expr": "max by (partition) (kunpeng_engine_partition_freeze_duration{job=~\"$job\"})",
+                "refId": "A"
+            }],
+            "gridPos": {
+                "w": 8,
+                "h": 8,
+                "x": 16,
+                "y": 36
+            }
+        },
+        {
             "collapsed": false,
             "panels": [],
             "datasource": {

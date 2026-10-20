@@ -28,13 +28,13 @@ import com.anyilanxin.kunpeng.protocol.admin.record.CommandValueLifeCycle;
 public enum DelayedLifeCycle implements CommandValueLifeCycle {
   NULL_VAL((short) -1, NOT_PROCESS_INDEX),
 
-  CREATED((short) 1, PROCESS_INDEX_56),
+  CREATED((short) 1, PROCESS_INDEX_57),
 
-  TRIGGER((short) 2, PROCESS_INDEX_57),
+  TRIGGER((short) 2, PROCESS_INDEX_58),
 
-  TRIGGERED((short) 3, PROCESS_INDEX_58),
+  TRIGGERED((short) 3, PROCESS_INDEX_59),
 
-  CANCELED((short) 4, PROCESS_INDEX_59);
+  CANCELED((short) 4, PROCESS_INDEX_60);
 
   private final short value;
   private final short processIndex;

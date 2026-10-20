@@ -47,6 +47,9 @@ public interface EventLog extends AutoCloseable {
   /** 最后提交 position（未提交过返回 0） */
   long getLastCommittedPosition();
 
+  /** 已定序水位（含已定序未提交的尾巴）；空日志为 0。静止判定/排干终点的严格上界 */
+  long getLastWrittenPosition();
+
   void registerRecordAvailableListener(RecordAvailableListener listener);
 
   void removeRecordAvailableListener(RecordAvailableListener listener);

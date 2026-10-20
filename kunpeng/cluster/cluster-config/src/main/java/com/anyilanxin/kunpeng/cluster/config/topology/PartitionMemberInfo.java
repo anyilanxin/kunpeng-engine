@@ -44,6 +44,9 @@ public class PartitionMemberInfo implements Serializable {
   private int sourceId;
   private Set<Integer> agentSourceIds;
 
+  /** 数据手术冻结通告（建议层）：true=分区冻结中，命令路由与探测应规避；权威判定在分区 writer 级拒绝 */
+  private boolean frozen;
+
   /** 与 Raft 任期保持一致的 long 类型 */
   private long term;
 

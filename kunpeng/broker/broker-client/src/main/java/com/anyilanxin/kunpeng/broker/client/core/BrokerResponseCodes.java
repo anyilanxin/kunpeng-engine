@@ -31,5 +31,11 @@ public final class BrokerResponseCodes {
   /** sink 滞后背压闸门拒绝（导出积压越过配置阈值，落库排空后自动恢复） */
   public static final int SINK_BACKPRESSURE = 2;
 
+  /**
+   * 分区冻结拒绝（数据手术窗口，writer 级权威拒绝）：手术计划 RESUME 后自动恢复，调用方可重试退避。 与 SWIM
+   * 拓扑冻结通告（建议层）同义——通告让调用方根本不发，本码接住漏网的。
+   */
+  public static final int PARTITION_FROZEN = 3;
+
   private BrokerResponseCodes() {}
 }

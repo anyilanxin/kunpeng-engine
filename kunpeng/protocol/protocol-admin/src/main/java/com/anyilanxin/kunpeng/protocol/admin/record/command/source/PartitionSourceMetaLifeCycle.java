@@ -28,13 +28,13 @@ import com.anyilanxin.kunpeng.protocol.admin.record.CommandValueLifeCycle;
 public enum PartitionSourceMetaLifeCycle implements CommandValueLifeCycle {
   NULL_VAL((short) -1, NOT_PROCESS_INDEX),
 
-  CREATING((short) 1, PROCESS_INDEX_71),
+  CREATING((short) 1, PROCESS_INDEX_72),
 
-  CREATED((short) 2, PROCESS_INDEX_72),
+  CREATED((short) 2, PROCESS_INDEX_73),
 
-  UPDATING((short) 3, PROCESS_INDEX_73),
+  UPDATING((short) 3, PROCESS_INDEX_74),
 
-  UPDATED((short) 4, PROCESS_INDEX_74),
+  UPDATED((short) 4, PROCESS_INDEX_75),
   ;
 
   private final short value;

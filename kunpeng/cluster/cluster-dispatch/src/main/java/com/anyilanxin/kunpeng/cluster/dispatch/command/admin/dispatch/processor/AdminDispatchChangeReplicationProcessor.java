@@ -26,6 +26,7 @@ import com.anyilanxin.kunpeng.configuration.broker.ManageRaftCfg;
 import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminClusterMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminDispatchPlanRecord;
+import com.anyilanxin.kunpeng.protocol.admin.record.command.DispatchPlanState;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.admin.AdminDispatchPlanLifeCycle;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.admin.AdminDispatchType;
 import com.anyilanxin.kunpeng.repository.admin.AdminImmutableRepository;
@@ -61,6 +62,27 @@ public class AdminDispatchChangeReplicationProcessor extends AbstractAdminDispat
   @Override
   public void processRecord(final AdminLogRecord<AdminDispatchPlanRecord> record) {
     final AdminDispatchPlanRecord value = record.getValue();
+    // 管理面计划单槽闸门（与业务面分开算）：执行中拒绝；未应用（延迟等待/已生成未执行）取消覆盖
+    final AdminDispatchPlanRecord existing = repositoryAdmin.getDispatchPlan();
+    if (existing != null
+        && existing.getDispatchState() != DispatchPlanState.SUCCEED
+        && existing.getDispatchState() != DispatchPlanState.FAILED
+        && existing.getDispatchState() != DispatchPlanState.CANCELED) {
+      if (existing.getDispatchState() != DispatchPlanState.PLAN_DELAYED
+          && existing.getDispatchState() != DispatchPlanState.PLAN_SUCCEED) {
+        writer.adErrorResponse(record.getRequestId(), -1, "管理面调度计划执行中，待执行完成后才能发起新调度（单槽互斥）");
+        return;
+      }
+      LOGGER.info(
+          "未应用管理面调度计划被新调度覆盖，取消旧计划接管单槽。old plan id:{}，state:{}",
+          existing.getDispatchPlanId(),
+          existing.getDispatchState());
+      writer.addCommand(
+          existing.getDispatchPlanId(),
+          AdminDispatchPlanLifeCycle.CANCELING,
+          record.getRequestId(),
+          existing);
+    }
     final AdminClusterMetaRecord clusterMeta = repositoryAdmin.getClusterMeta();
     LOGGER.info("\n---->管理端初始化<-----\n{}", value);
     value.setApplyPlan(true);

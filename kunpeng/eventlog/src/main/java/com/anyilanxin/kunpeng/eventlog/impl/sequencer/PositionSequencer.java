@@ -65,6 +65,7 @@ public final class PositionSequencer implements EventLogWriter {
 
   private long nextWritePosition; // 临界区独占; 提交点前失败不消耗
   private volatile boolean closed;
+  private volatile boolean frozen;
 
   public PositionSequencer(
       final EventStore store,
@@ -79,6 +80,26 @@ public final class PositionSequencer implements EventLogWriter {
     this.maxBatchSize = maxBatchSize;
     this.wallClock = wallClock;
     this.nextWritePosition = initialPosition;
+  }
+
+  @Override
+  public void freeze() {
+    frozen = true;
+  }
+
+  @Override
+  public void unfreeze() {
+    frozen = false;
+  }
+
+  @Override
+  public boolean isFrozen() {
+    return frozen;
+  }
+
+  public long getLastWrittenPosition() {
+    // 已定序水位（含已定序未提交的尾巴）：调用方须与写入同线程或接受水位的轻微时滞
+    return nextWritePosition - 1;
   }
 
   @Override
@@ -97,6 +118,11 @@ public final class PositionSequencer implements EventLogWriter {
     if (closed) {
       metrics.incRejected(context, RejectionReason.CLOSED);
       return new Rejected(RejectionReason.CLOSED);
+    }
+    if (frozen && context != WriteContext.PROCESSING_RESULT && context != WriteContext.INTERNAL) {
+      // 数据手术冻结：停一切外部与定时写者，仅放行引擎处理写入（跑干在途命令链）与内部补写
+      metrics.incRejected(context, RejectionReason.FROZEN);
+      return new Rejected(RejectionReason.FROZEN);
     }
     if (entries == null || entries.isEmpty()) {
       metrics.incRejectedInvalid();

@@ -239,6 +239,18 @@ public final class RocksdbTransactionDb<ColumnFamilyType extends ColumnFamilies>
     RocksdbUtil.merge(fromPath, this, familyTypes, type);
   }
 
+  /**
+   * 数据手术·删除变体执行面：按完整物理 key（含虚拟列族前缀，与拆分载荷 {@code writeKey} 产出同构）直接删除。
+   * 供分区冻结窗口内的被移走数据清理调用——窗口内无并发写者，不走事务；幂等，重删无副作用。
+   */
+  public void deleteRaw(final byte[] key, final ColumnFamilyType columnFamilies) {
+    try {
+      rocksDB.delete(columnFamilyHandle(columnFamilies), key);
+    } catch (final RocksDBException e) {
+      throw new RuntimeException("Failed to delete raw key from " + dbPath, e);
+    }
+  }
+
   /** 获取数据库所有存活文件的校验和信息 */
   @Override
   public Map<String, SnapshotFileInfo> getChecksums() {

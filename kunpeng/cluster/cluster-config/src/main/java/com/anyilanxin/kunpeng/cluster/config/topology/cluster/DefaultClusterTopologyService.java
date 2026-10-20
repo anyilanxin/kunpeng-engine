@@ -165,6 +165,7 @@ public class DefaultClusterTopologyService extends Actor
       info.setHealth(healthFromWire(entry.health));
       info.setTerm(entry.term);
       info.setSourceId(entry.sourceId);
+      info.setFrozen(entry.frozen);
       info.setAgentSourceIds(Set.copyOf(entry.agentSourceIds));
       views.add(info);
     }
@@ -332,5 +333,12 @@ public class DefaultClusterTopologyService extends Actor
       throw new IllegalStateException("No leader known for partition " + partitionId);
     }
     return leader.getSourceId();
+  }
+
+  @Override
+  public boolean isPartitionFrozen(final PartitionId partitionId) {
+    final PartitionMemberInfo leader = views.partitionLeaders().get(partitionId);
+    // 无 leader 视为未冻结：通告层只做 fail-fast，未知拓扑交给权威层（分区 writer 拒绝）兜正确性
+    return leader != null && leader.isFrozen();
   }
 }

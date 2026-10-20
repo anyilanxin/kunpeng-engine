@@ -28,6 +28,7 @@ import com.anyilanxin.kunpeng.cluster.business.step.RaftPartitionSource;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
 import com.anyilanxin.kunpeng.eventlog.AppendEntry;
 import com.anyilanxin.kunpeng.eventlog.AppendResult;
+import com.anyilanxin.kunpeng.eventlog.AppendResult.RejectionReason;
 import com.anyilanxin.kunpeng.eventlog.EventLogWriter;
 import com.anyilanxin.kunpeng.eventlog.WriteContext;
 import com.anyilanxin.kunpeng.protocol.business.ValueLifeCycle;
@@ -254,12 +255,21 @@ public class CommandApiHandleImpl implements CommandApiHandle, CloseableSilently
     }
     if (logStreamWriter.canAppend(1, appendEntry.getLength())) {
       final AppendResult result = logStreamWriter.tryAppend(WriteContext.USER_COMMAND, appendEntry);
-      if (result instanceof AppendResult.Rejected) {
-        errorResponse(
-            BrokerResponseCodes.APPEND_REJECTED,
-            "Append of command to the event log was rejected by the log writer",
-            partitionSource,
-            requestId);
+      if (result instanceof final AppendResult.Rejected rejected) {
+        if (rejected.reason() == RejectionReason.FROZEN) {
+          // 分区冻结（数据手术窗口）：可重试——RESUME 后自动恢复，与背压拒绝同类的暂时性失败
+          errorResponse(
+              BrokerResponseCodes.PARTITION_FROZEN,
+              "Partition is frozen for data surgery; retry after the plan resumes the partition",
+              partitionSource,
+              requestId);
+        } else {
+          errorResponse(
+              BrokerResponseCodes.APPEND_REJECTED,
+              "Append of command to the event log was rejected by the log writer",
+              partitionSource,
+              requestId);
+        }
       }
     } else {
       errorResponse(

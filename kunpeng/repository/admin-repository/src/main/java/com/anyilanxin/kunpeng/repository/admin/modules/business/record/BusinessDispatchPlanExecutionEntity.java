@@ -63,9 +63,10 @@ public class BusinessDispatchPlanExecutionEntity extends UnpackedObject implemen
   private final LongProperty dispatchPlanIdProp = new LongProperty(13, "DISPATCH_PLAN_ID", -1);
   private final EnumProperty<DispatchPlanType> dispatchPlanTypeProp =
       new EnumProperty<>(14, "DISPATCH_PLAN_TYPE", DispatchPlanType.class, DispatchPlanType.EVENT);
+  private final LongProperty dispatchRemainingProp = new LongProperty(15, "DISPATCH_REMAINING", -1);
 
   public BusinessDispatchPlanExecutionEntity() {
-    super(14);
+    super(15);
     // formatting:off
     declareProperty(dispatchPlanExecutionIdProp)
       .declareProperty(executionOrderProp)
@@ -80,7 +81,8 @@ public class BusinessDispatchPlanExecutionEntity extends UnpackedObject implemen
       .declareProperty(executionTypeProp)
       .declareProperty(executionMemberIdProp)
       .declareProperty(dispatchPlanIdProp)
-      .declareProperty(dispatchPlanTypeProp);
+      .declareProperty(dispatchPlanTypeProp)
+      .declareProperty(dispatchRemainingProp);
     // formatting:on
   }
 
@@ -99,7 +101,8 @@ public class BusinessDispatchPlanExecutionEntity extends UnpackedObject implemen
         .setExecutionType(record.getExecutionType())
         .setExecutionMemberId(record.executionMemberId())
         .setDispatchPlanId(record.getDispatchPlanId())
-        .setDispatchPlanType(record.getDispatchPlanType());
+        .setDispatchPlanType(record.getDispatchPlanType())
+        .setDispatchRemaining(record.getDispatchRemaining());
   }
 
   public BusinessDispatchPlanExecutionRecord unwrap(
@@ -119,7 +122,8 @@ public class BusinessDispatchPlanExecutionEntity extends UnpackedObject implemen
         .setExecutionType(getExecutionType())
         .setExecutionMemberId(getExecutionMemberId())
         .setDispatchPlanId(getDispatchPlanId())
-        .setDispatchPlanType(getDispatchPlanType());
+        .setDispatchPlanType(getDispatchPlanType())
+        .setDispatchRemaining(getDispatchRemaining());
   }
 
   public long getDispatchPlanExecutionId() {
@@ -311,6 +315,16 @@ public class BusinessDispatchPlanExecutionEntity extends UnpackedObject implemen
   public BusinessDispatchPlanExecutionEntity setDispatchPlanType(
       final DispatchPlanType dispatchPlanType) {
     dispatchPlanTypeProp.setValue(dispatchPlanType);
+    return this;
+  }
+
+  /** 长时明细（冻结排干/数据传输）最近一次进度续期上报的剩余量，无进度信息时为 -1 */
+  public long getDispatchRemaining() {
+    return dispatchRemainingProp.getValue();
+  }
+
+  public BusinessDispatchPlanExecutionEntity setDispatchRemaining(final long dispatchRemaining) {
+    dispatchRemainingProp.setValue(dispatchRemaining);
     return this;
   }
 }

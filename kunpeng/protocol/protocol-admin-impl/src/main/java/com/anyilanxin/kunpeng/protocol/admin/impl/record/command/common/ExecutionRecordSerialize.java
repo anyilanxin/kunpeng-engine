@@ -53,6 +53,8 @@ public class ExecutionRecordSerialize {
         PartitionSourceDataTransferRecord::new;
     recordValues[PartitionExecutionType.SOURCE_TRANSFER.getValue()] =
         PartitionSourceTransferRecord::new;
+    recordValues[PartitionExecutionType.FREEZE.getValue()] = PartitionFreezeRecord::new;
+    recordValues[PartitionExecutionType.RESUME.getValue()] = PartitionResumeRecord::new;
   }
 
   /** 解码 */

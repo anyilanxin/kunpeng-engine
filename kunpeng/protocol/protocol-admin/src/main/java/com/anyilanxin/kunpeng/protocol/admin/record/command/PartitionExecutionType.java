@@ -41,6 +41,10 @@ public enum PartitionExecutionType {
   SOURCE_DATA_TRANSFER(9),
   /** 分区资源标识转移 */
   SOURCE_TRANSFER(10),
+  /** 临时冻结分区（数据手术前置：关写入入口、停内部触发、两段位点排水，见 cluster-dispatch-design 03 号文档） */
+  FREEZE(11),
+  /** 解冻分区（数据手术收尾：重扫补触发、开写入入口、清除不可用通告） */
+  RESUME(12),
   ;
 
   /** 全部成员中最大的 value，类加载时计算并缓存 */

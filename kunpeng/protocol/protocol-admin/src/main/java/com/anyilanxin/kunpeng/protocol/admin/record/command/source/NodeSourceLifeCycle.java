@@ -28,9 +28,9 @@ import com.anyilanxin.kunpeng.protocol.admin.record.CommandValueLifeCycle;
 public enum NodeSourceLifeCycle implements CommandValueLifeCycle {
   NULL_VAL((short) -1, NOT_PROCESS_INDEX),
 
-  APPLYING((short) 1, PROCESS_INDEX_60),
+  APPLYING((short) 1, PROCESS_INDEX_61),
 
-  APPLIED((short) 2, PROCESS_INDEX_61);
+  APPLIED((short) 2, PROCESS_INDEX_62);
 
   private final short value;
   private final short processIndex;

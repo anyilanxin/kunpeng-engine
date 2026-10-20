@@ -20,8 +20,10 @@ import java.util.Properties;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * {@link BrokerInfo} 实体 SBE + Base64 属性载体往返与读-改-写端口帮助方法测试。
@@ -43,6 +45,7 @@ class BrokerInfoTest {
     leader.health = PartitionHealth.HEALTHY;
     leader.term = 3L;
     leader.sourceId = 7;
+    leader.frozen = true;
     leader.agentSourceIds.add(11);
     leader.agentSourceIds.add(12);
     info.addPartition(leader);
@@ -72,11 +75,13 @@ class BrokerInfoTest {
     assertEquals(PartitionHealth.HEALTHY, decodedLeader.health);
     assertEquals(3L, decodedLeader.term);
     assertEquals(7, decodedLeader.sourceId);
+    assertTrue(decodedLeader.frozen, "冻结通告（数据手术）应随实体往返保留");
     assertEquals(2, decodedLeader.agentSourceIds.size());
 
     final BrokerInfo.PartitionEntry decodedFollower = decoded.getPartitions().get(1);
     assertEquals(PartitionRole.FOLLOWER, decodedFollower.role);
     assertEquals(PartitionHealth.UNHEALTHY, decodedFollower.health);
+    assertFalse(decodedFollower.frozen, "未显式置位的冻结通告默认为活跃");
   }
 
   @Test

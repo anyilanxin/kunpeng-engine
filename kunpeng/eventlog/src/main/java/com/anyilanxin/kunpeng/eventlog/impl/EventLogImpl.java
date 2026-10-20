@@ -115,6 +115,11 @@ public final class EventLogImpl implements EventLog {
   }
 
   @Override
+  public long getLastWrittenPosition() {
+    return sequencer.getLastWrittenPosition();
+  }
+
+  @Override
   public void registerRecordAvailableListener(final RecordAvailableListener listener) {
     listeners.add(listener);
   }

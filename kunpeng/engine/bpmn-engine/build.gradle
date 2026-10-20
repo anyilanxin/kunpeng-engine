@@ -55,4 +55,9 @@ dependencies {
     testImplementation 'org.openjdk.jmh:jmh-core'
     testAnnotationProcessor platform(project(':bom:dependency-bom'))
     testAnnotationProcessor 'org.openjdk.jmh:jmh-generator-annprocess'
+    // 引擎冻结恢复测试需要直接开真实 RocksDB 仓储（rocksdb/配置模块对 main 不可见）
+    testImplementation project(':kunpeng:repository:rocksdb')
+    testImplementation project(':kunpeng:configuration')
+    // 引擎测试需要可见调度器/引擎的 error 日志（actor 内异常否则被 NOP logger 吞掉）
+    testRuntimeOnly 'org.slf4j:slf4j-simple'
 }

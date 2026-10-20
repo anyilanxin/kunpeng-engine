@@ -38,6 +38,9 @@ public interface ImmutableBusinessRepository {
 
   BusinessDispatchPlanRecord getDispatchPlan(final long dispatchPlanId);
 
+  /** 全部调度计划（轻量列举：只解计划本体，不展开执行明细） */
+  List<BusinessDispatchPlanRecord> getDispatchPlans();
+
   BusinessDispatchPlanExecutionRecord getDispatchPlanExecution(
       final long dispatchPlanId, final long dispatchPlanExecutionId);
 

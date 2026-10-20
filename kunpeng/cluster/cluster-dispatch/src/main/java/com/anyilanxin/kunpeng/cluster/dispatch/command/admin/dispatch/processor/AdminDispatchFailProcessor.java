@@ -21,6 +21,7 @@ import com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter;
 import com.anyilanxin.kunpeng.cluster.dispatch.command.admin.dispatch.AbstractAdminDispatchProcessor;
 import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminDispatchPlanRecord;
+import com.anyilanxin.kunpeng.protocol.admin.record.command.DispatchPlanState;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.admin.AdminDispatchPlanLifeCycle;
 import org.slf4j.Logger;
 
@@ -44,6 +45,7 @@ public class AdminDispatchFailProcessor extends AbstractAdminDispatchProcessor {
     final AdminDispatchPlanRecord value = record.getValue();
     LOGGER.info("\n\n------->管理面调度计划失败，停止推进<-------\n{}\n", value);
     // 计划标记失败并清理（applier 复用 updateDispatchPlan）；未执行明细保持 WAIT，等待后续人工重试
+    value.setDispatchState(DispatchPlanState.FAILED);
     writer.addEvent(
         value.getDispatchPlanId(), AdminDispatchPlanLifeCycle.FAILED, record.getRequestId(), value);
   }

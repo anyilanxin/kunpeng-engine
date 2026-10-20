@@ -22,6 +22,7 @@ import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminClusterMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminDispatchPlanRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.common.PartitionInfoMetaRecord;
+import com.anyilanxin.kunpeng.protocol.admin.record.command.DispatchPlanState;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.admin.AdminClusterMetaLifeCycle;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.admin.AdminDispatchPlanLifeCycle;
 import com.anyilanxin.kunpeng.repository.admin.AdminImmutableRepository;
@@ -62,6 +63,7 @@ public class AdminDispatchCompleteProcessor extends AbstractAdminDispatchProcess
     // 更新元数据
     writer.addCommand(AdminClusterMetaLifeCycle.UPDATING, record.getRequestId(), clusterMeta);
     // 计划标记完成（applier 复用 updateDispatchPlan 持久化）
+    value.setDispatchState(DispatchPlanState.SUCCEED);
     writer.addEvent(
         value.getDispatchPlanId(),
         AdminDispatchPlanLifeCycle.COMPLETED,

@@ -22,18 +22,22 @@ import static com.anyilanxin.kunpeng.structpack.util.BufferUtil.copyInto;
 
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
+import com.anyilanxin.kunpeng.cluster.config.topology.PartitionMemberInfo;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.cluster.dispatch.ClusterDispatchLoggers;
 import com.anyilanxin.kunpeng.cluster.dispatch.LogEventWriter;
 import com.anyilanxin.kunpeng.cluster.dispatch.command.business.dispatch.AbstractBusinessDispatchProcessor;
+import com.anyilanxin.kunpeng.cluster.dispatch.command.business.dispatch.planner.ExecutionRecordFactory;
 import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanExecutionRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.common.*;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.source.PartitionSourceMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.source.PartitionSourceRecord;
+import com.anyilanxin.kunpeng.protocol.admin.record.command.DispatchPlanState;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionExecutionRecordValue;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionExecutionType;
+import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionInfoMetaRecordValue;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionType;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.business.BusinessDispatchPlanExecutionLifeCycle;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.business.BusinessDispatchPlanLifeCycle;
@@ -84,6 +88,7 @@ public class BusinessDispatchClusterExecutingProcessor extends AbstractBusinessD
     }
     if (dispatchPlan.executionPlan().isEmpty()) {
       LOGGER.info("\n\n------->调度计划执行内容为空，直接完成<-------\n");
+      dispatchPlan.setDispatchState(DispatchPlanState.SUCCEED);
       writer.addEvent(
           dispatchPlan.getDispatchPlanId(),
           BusinessDispatchPlanLifeCycle.COMPLETED,
@@ -109,6 +114,7 @@ public class BusinessDispatchClusterExecutingProcessor extends AbstractBusinessD
       }
       stringBuffer.append("\n");
       LOGGER.info("\n------->完整执行信息<-------\n{}", stringBuffer);
+      dispatchPlan.setDispatchState(DispatchPlanState.EXECUTED);
       writer.addEvent(
           dispatchPlan.getDispatchPlanId(),
           BusinessDispatchPlanLifeCycle.EXECUTED,
@@ -126,9 +132,9 @@ public class BusinessDispatchClusterExecutingProcessor extends AbstractBusinessD
 
   /**
    * 引导分区来源处理：遍历原始执行计划重建新数组，遇到引导明细即查询可迁移的代理资源（事件同步应用， 上一条引导发出的转移移除已生效，本次查询不会再包含已迁移资源），迁移资源升格为分区自身
-   * sourceId， 来源指向捐赠分区，无资源可迁移时自动申请新 source； 接受迁移的引导明细后追加一条 BOOTSTRAP_SOURCE_DATA_TRANSFER （在引导分区执行、
-   * 从捐赠分区拉取迁移资源数据） 与一条 BOOTSTRAP_SOURCE_TRANSFER（捐赠分区 leader，标记资源已迁出； busimeta 经 raft 自动同步其余副本）。
-   * 若一条转移明细都未插入，原明细上的变更 （sourceId 回填、planData 重编码）已直接生效，无需替换数组。
+   * sourceId， 来源指向捐赠分区，无资源可迁移时自动申请新 source； 接受迁移的引导明细后追加捐赠分区数据手术序列 （收敛单副本 → 冻结 → 拆分拉取 → 删除被移走数据 →
+   * 恢复 → re-JOIN，见 {@link #appendTransferExecutions}）。 若一条转移明细都未插入，原明细上的变更 （sourceId 回填、planData
+   * 重编码）已直接生效，无需替换数组。
    */
   private void handleBootstrapExecutionSource(
       final BusinessDispatchPlanRecord dispatchPlan, final long requestId) {
@@ -172,6 +178,7 @@ public class BusinessDispatchClusterExecutingProcessor extends AbstractBusinessD
                 executionRecord.getDispatchPlanId(),
                 bootstrapRecord,
                 transferPartitionSource,
+                dispatchPlan.getMeta(),
                 rebuilt);
           } else {
             final PartitionSourceRecord partitionSource = applyNewSource(targetMeta, requestId);
@@ -251,30 +258,16 @@ public class BusinessDispatchClusterExecutingProcessor extends AbstractBusinessD
   }
 
   /**
-   * 引导明细后追加来源数据转移与来源转移执行明细： 数据转移在引导分区成员执行（从捐赠分区拉取迁移资源数据）； 来源转移仅发捐赠分区 leader 一条（资源标识已融合进 raft
-   * 业务元数据，leader 变更经 raft 自动同步其余副本，无需逐成员标记）。
+   * 引导明细后追加捐赠分区数据手术序列（见 cluster-dispatch-design 技能 03 号文档 §5）： donor 收敛单副本（LEAVE followers）→
+   * 冻结（drain=false 存活侧）→ 拆分数据转移（引导分区成员按资源 id 拉取镜像并安装）→ 删除被移走数据并移除来源台账（donor leader）→ 恢复 → re-JOIN
+   * 恢复期望副本。 RESUME 先于 re-JOIN 保证领导确定性（JOIN 发给 follower 本人，不依赖 Leader 身份）。
    */
   private void appendTransferExecutions(
       final long dispatchPlanId,
       final PartitionBootstrapRecord bootstrapRecord,
       final PartitionSourceRecord transferPartitionSource,
+      final List<PartitionInfoMetaRecordValue> planMeta,
       final List<BusinessDispatchPlanExecutionRecord> rebuilt) {
-    // 引导节点从捐赠分区，也就是 sourcePartition 拉取指定资源的数据，需要在新引导分区执行拉取资源
-    final PartitionInfoMetaRecord partitionMeta = bootstrapRecord.getPartitionMeta();
-    final PartitionBootstrapSourceDataTransferRecord dataTransfer =
-        new PartitionBootstrapSourceDataTransferRecord()
-            .setPartitionType(PartitionType.BUSINESS)
-            .setExecutionType(PartitionExecutionType.BOOTSTRAP_SOURCE_DATA_TRANSFER)
-            .setExecutionMemberId(bootstrapRecord.executionMemberId())
-            .setPartitionGroup(partitionMeta.getPartitionGroup())
-            .setPartitionId(partitionMeta.getPartitionId())
-            .setSourcePartitionGroup(transferPartitionSource.getSourcePartitionGroup())
-            .setSourcePartitionId(transferPartitionSource.getSourcePartitionId())
-            .setDispatchPlanId(dispatchPlanId)
-            .setDispatchPlanExecutionId(repositoryKey.nextKey())
-            .setSourceId(transferPartitionSource.getSourceId());
-    appendExecution(rebuilt, dataTransfer);
-    // 标记捐赠分区该代理资源已被迁出：仅需捐赠分区 leader 执行，busimeta 变更经 raft 同步副本
     final PartitionId sourcePartitionId =
         PartitionId.from(
             transferPartitionSource.getSourcePartitionGroup(),
@@ -285,6 +278,42 @@ public class BusinessDispatchClusterExecutingProcessor extends AbstractBusinessD
           "捐赠分区 %s-%d 暂无 Leader，无法制定来源转移明细"
               .formatted(sourcePartitionId.group(), sourcePartitionId.id()));
     }
+    final PartitionInfoMetaRecord donorMeta = findDonorMeta(planMeta, sourcePartitionId);
+    // donor 收敛单副本：逐 follower LEAVE（发给 follower 本人）
+    final List<PartitionMemberInfo> donorMembers =
+        clusterTopologyService.getPartitionMemberInfo(sourcePartitionId);
+    for (final PartitionMemberInfo donorMember : donorMembers) {
+      if (!sourceLeader.equals(donorMember.getMemberId())) {
+        appendExecution(
+            rebuilt,
+            ExecutionRecordFactory.leave(
+                dispatchPlanId,
+                repositoryKey.nextKey(),
+                donorMember.getMemberId().id(),
+                sourcePartitionId));
+      }
+    }
+    // donor 冻结（存活侧 drain=false：只需引擎静止，不等 sink 排干）
+    appendExecution(
+        rebuilt,
+        ExecutionRecordFactory.freeze(
+            dispatchPlanId, repositoryKey.nextKey(), sourceLeader.id(), sourcePartitionId, false));
+    // 拆分数据转移：引导节点从捐赠分区（sourcePartition）按资源 id 拉取拆分镜像，在引导分区成员执行
+    final PartitionInfoMetaRecord partitionMeta = bootstrapRecord.getPartitionMeta();
+    final PartitionBootstrapSourceDataTransferRecord dataTransfer =
+        new PartitionBootstrapSourceDataTransferRecord()
+            .setPartitionType(PartitionType.BUSINESS)
+            .setExecutionType(PartitionExecutionType.BOOTSTRAP_SOURCE_DATA_TRANSFER)
+            .setExecutionMemberId(bootstrapRecord.executionMemberId())
+            .setPartitionGroup(partitionMeta.getPartitionGroup())
+            .setPartitionId(partitionMeta.getPartitionId())
+            .setSourcePartitionGroup(transferPartitionSource.getSourcePartitionGroup())
+            .setSourceId(transferPartitionSource.getSourceId())
+            .setSourcePartitionId(transferPartitionSource.getSourcePartitionId())
+            .setDispatchPlanId(dispatchPlanId)
+            .setDispatchPlanExecutionId(repositoryKey.nextKey());
+    appendExecution(rebuilt, dataTransfer);
+    // 删除 donor 被移走数据并标记来源已迁出：仅需捐赠分区 leader 执行（数据删除幂等），busimeta 变更经 raft 同步副本
     final PartitionBootstrapSourceTransferRecord sourceTransfer =
         new PartitionBootstrapSourceTransferRecord()
             .setPartitionType(PartitionType.BUSINESS)
@@ -296,6 +325,36 @@ public class BusinessDispatchClusterExecutingProcessor extends AbstractBusinessD
             .setDispatchPlanExecutionId(repositoryKey.nextKey())
             .setSourceId(transferPartitionSource.getSourceId());
     appendExecution(rebuilt, sourceTransfer);
+    // donor 恢复（仍在单副本时执行，Leader 与计划指定一致），随后 re-JOIN 恢复期望副本
+    appendExecution(
+        rebuilt,
+        ExecutionRecordFactory.resume(
+            dispatchPlanId, repositoryKey.nextKey(), sourceLeader.id(), sourcePartitionId));
+    for (final PartitionMemberInfo donorMember : donorMembers) {
+      if (!sourceLeader.equals(donorMember.getMemberId())) {
+        appendExecution(
+            rebuilt,
+            ExecutionRecordFactory.join(
+                dispatchPlanId,
+                repositoryKey.nextKey(),
+                donorMember.getMemberId().id(),
+                donorMeta));
+      }
+    }
+  }
+
+  /** 从计划目标拓扑中取捐赠分区条目（re-JOIN 明细的分区元数据来源）；缺失即编排前置不满足，直接抛出 */
+  private PartitionInfoMetaRecord findDonorMeta(
+      final List<PartitionInfoMetaRecordValue> planMeta, final PartitionId sourcePartitionId) {
+    for (final PartitionInfoMetaRecordValue partitionMeta : planMeta) {
+      if (partitionMeta.getPartitionId() == sourcePartitionId.id()
+          && partitionMeta.getPartitionGroup().equals(sourcePartitionId.group())) {
+        return (PartitionInfoMetaRecord) partitionMeta;
+      }
+    }
+    throw new IllegalArgumentException(
+        "计划目标拓扑中不存在捐赠分区 %s-%d，无法制定 re-JOIN 明细"
+            .formatted(sourcePartitionId.group(), sourcePartitionId.id()));
   }
 
   /** 向重建数组追加一条执行明细并填充公共字段（id、负载、目标成员），字段与计划制定侧 addExecution 保持一致 */

@@ -50,4 +50,6 @@ dependencies {
     implementation 'io.micrometer:micrometer-core'
 
     testImplementation 'net.jqwik:jqwik-api'
+    // 数据手术存储原语测试需直建 RocksDB（RocksdbConfiguration 经此可见）
+    testImplementation project(':kunpeng:configuration')
 }

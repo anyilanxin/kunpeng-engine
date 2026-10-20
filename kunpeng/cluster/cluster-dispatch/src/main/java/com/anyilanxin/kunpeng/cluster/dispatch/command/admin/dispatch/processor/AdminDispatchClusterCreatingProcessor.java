@@ -17,6 +17,7 @@
 package com.anyilanxin.kunpeng.cluster.dispatch.command.admin.dispatch.processor;
 
 import static com.anyilanxin.kunpeng.protocol.admin.AdminConstant.DISPATCH_PLAN_TIME;
+import static com.anyilanxin.kunpeng.structpack.util.BufferUtil.copyInto;
 
 import com.anyilanxin.kunpeng.cluster.cluster.ClusterMembershipService;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
@@ -27,12 +28,16 @@ import com.anyilanxin.kunpeng.cluster.dispatch.command.admin.dispatch.planner.Ad
 import com.anyilanxin.kunpeng.cluster.dispatch.command.delayed.DelayedDelayChecker;
 import com.anyilanxin.kunpeng.configuration.ZoneType;
 import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminClusterMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminDispatchPlanRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.delayed.DelayedRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.admin.dispatch.AdminChangeResponseRecord;
+import com.anyilanxin.kunpeng.protocol.admin.record.command.DispatchPlanState;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionType;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.admin.AdminDispatchPlanLifeCycle;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.delayed.DelayedLifeCycle;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.delayed.DelayedType;
+import com.anyilanxin.kunpeng.protocol.admin.record.commandapi.admin.AdminDispatchApiValueLifeCycle;
 import java.util.Set;
 import org.slf4j.Logger;
 
@@ -81,21 +86,36 @@ public class AdminDispatchClusterCreatingProcessor extends AbstractAdminDispatch
           record.getRequestId(),
           delayedRecord);
 
+      value.setDispatchState(DispatchPlanState.PLAN_DELAYED);
       writer.addEvent(
           value.getDispatchPlanId(),
           AdminDispatchPlanLifeCycle.PLAN_DELAYED,
           record.getRequestId(),
           value);
       delayChecker.schedule(delayedRecord.getDueDate());
+      writer.adErrorResponse(record.getRequestId(), -1, "集群成员不足，管理面调度进入延迟等待，成员满足后自动生成计划");
       return;
     }
     // 满足条件，进行计划制定
     final AdminDispatchPlanRecord plan = planMaker.createPlan(value, memberIds);
+    plan.setDispatchState(DispatchPlanState.PLAN_SUCCEED);
     writer.addEvent(
         plan.getDispatchPlanId(),
         AdminDispatchPlanLifeCycle.PLAN_CREATED,
         record.getRequestId(),
         plan);
+    // 计划生成即响应：请求方拿到生成的计划与集群元数据，不再挂到客户端超时
+    final AdminChangeResponseRecord response = new AdminChangeResponseRecord();
+    copyInto(plan, response.getDispatchPlan());
+    final AdminClusterMetaRecord adminClusterMeta =
+        writer.getRepository().adminRepository().getClusterMeta();
+    if (adminClusterMeta != null) {
+      copyInto(adminClusterMeta, response.getClusterMeta());
+    }
+    writer.adResponse(
+        AdminDispatchApiValueLifeCycle.CHANGE_REPLICATION_RESPONSE,
+        record.getRequestId(),
+        response);
     if (value.isApplyPlan()) {
       writer.addCommand(
           plan.getDispatchPlanId(),

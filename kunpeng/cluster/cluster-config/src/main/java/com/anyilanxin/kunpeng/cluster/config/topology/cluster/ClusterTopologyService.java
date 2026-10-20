@@ -58,4 +58,10 @@ public interface ClusterTopologyService {
   PartitionId getPartitionBySourceId(final int sourceId);
 
   int getPartitionSource(PartitionId partitionId);
+
+  /**
+   * 分区冻结通告（建议层）：以分区 Leader 条目的冻结标记为准（FREEZE/RESUME 明细在 Leader 上执行并标记广播）。 仅供路由规避与 fail-fast；正确性由分区
+   * writer 级冻结拒绝保证，错过收敛窗口无害。
+   */
+  boolean isPartitionFrozen(PartitionId partitionId);
 }

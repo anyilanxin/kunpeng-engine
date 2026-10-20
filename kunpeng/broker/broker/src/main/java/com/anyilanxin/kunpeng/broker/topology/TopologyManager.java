@@ -36,6 +36,12 @@ public interface TopologyManager extends PartitionTopologyListener, RaftBusiness
   /** 节点离开分区分组后移除其分区条目并重写实体（分区不存在时无副作用）。 */
   void removePartition(PartitionId partitionId);
 
+  /**
+   * 数据手术冻结通告：标记本成员该分区冻结/恢复并广播（建议层，搭车 SWIM 传播）。 FREEZE 执行时置 true、RESUME 置
+   * false；分区销毁随条目移除自然消失。幂等，重复标记只重写实体。
+   */
+  void markPartitionFrozen(PartitionId partitionId, boolean frozen);
+
   /** 触发一次实体重写（外部线程安全入口，投递到 actor 线程执行）。 */
   void publishBroadcast();
 }

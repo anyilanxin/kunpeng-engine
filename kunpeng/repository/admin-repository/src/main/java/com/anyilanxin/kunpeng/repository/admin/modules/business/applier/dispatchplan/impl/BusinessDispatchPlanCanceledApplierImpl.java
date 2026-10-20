@@ -37,7 +37,7 @@ public class BusinessDispatchPlanCanceledApplierImpl implements BusinessDispatch
 
   @Override
   public void applyState(final long key, final BusinessDispatchPlanRecord recordValue) {
-    repositoryBusiness.dispatchPlanDelete(recordValue);
+    repositoryBusiness.updateDispatchPlan(recordValue);
   }
 
   @Override

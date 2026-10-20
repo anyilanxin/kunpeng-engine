@@ -32,6 +32,9 @@ public interface BusinessDispatchPlanExecutionRecordValue extends PartitionExecu
 
   long getDispatchEndTime();
 
+  /** 长时明细（冻结排干/数据传输）最近一次进度续期上报的剩余量，无进度信息时为 -1 */
+  long getDispatchRemaining();
+
   DispatchExecutionState getDispatchExecutionState();
 
   String getDispatchMessage();

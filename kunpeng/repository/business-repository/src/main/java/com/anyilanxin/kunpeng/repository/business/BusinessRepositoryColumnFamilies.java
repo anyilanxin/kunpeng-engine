@@ -20,6 +20,9 @@ import static com.anyilanxin.kunpeng.kvstore.PredefinedColumnFamily.*;
 
 import com.anyilanxin.kunpeng.kvstore.ColumnFamilies;
 import com.anyilanxin.kunpeng.kvstore.PredefinedColumnFamily;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 数据列族
@@ -37,6 +40,7 @@ public enum BusinessRepositoryColumnFamilies implements ColumnFamilies {
   BUSINESS_VALUE_ROUTE_SIGN_CORRELATION(DEFAULT_COLUMN_FAMILY, 5),
   BUSINESS_VALUE_ROUTE_LOCK(DEFAULT_COLUMN_FAMILY, 6),
   SINK(DEFAULT_COLUMN_FAMILY, 7),
+  PARTITION_STATE(DEFAULT_COLUMN_FAMILY, 8),
 
   // 全局数据，引导新分区时迁移(全局分区存在)
   RESOURCE_DEFINITION(GLOBAL_COLUMN_FAMILY, 40),
@@ -130,5 +134,20 @@ public enum BusinessRepositoryColumnFamilies implements ColumnFamilies {
   @Override
   public PredefinedColumnFamily[] allFamily() {
     return PredefinedColumnFamily.values();
+  }
+
+  /**
+   * 数据手术（合并/拆分）迁移列族集合：全部本地业务列族，唯 {@link #PROCESS_POSITION} 除外——它是分区级单行处理水位，
+   * 属主是本分区事件日志，被合并方的数值对接收方无意义，覆盖反而损坏接收方自身的水位。
+   *
+   * <p>KEY 列族（key 生成器）按资源 id 整型直接做 key，donor 与接收方行天然不相交，纯拷贝即完成接收方生成器越过被合并方
+   * 已用最大值；RESOURCE_MAX/RESOURCE/RESOURCE_ALL 为预留列族（当前无读写方），空拷贝无害。
+   */
+  public static Set<BusinessRepositoryColumnFamilies> migrationFamilies() {
+    return Arrays.stream(values())
+        .filter(
+            columnFamily ->
+                columnFamily.family == LOCAL_COLUMN_FAMILY && columnFamily != PROCESS_POSITION)
+        .collect(Collectors.toUnmodifiableSet());
   }
 }

@@ -293,10 +293,11 @@ public final class GatewayJobHub {
       return;
     }
     final var topology = client.getTopologyManager().getTopology();
+    // 数据手术通告（建议层）：冻结分区不参与探测——漏判由分区 writer 级冻结拒绝兜正确性
     final var partitions =
         topology == null
             ? List.<com.anyilanxin.kunpeng.cluster.cluster.PartitionId>of()
-            : List.copyOf(topology.getPartitions());
+            : List.copyOf(topology.getActivePartitions());
     if (partitions.isEmpty()) {
       repark(pending);
       return;

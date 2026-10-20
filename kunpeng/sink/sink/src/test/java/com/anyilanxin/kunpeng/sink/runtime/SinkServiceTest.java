@@ -471,6 +471,12 @@ class SinkServiceTest {
     }
 
     @Override
+    public boolean isPartitionFrozen(final PartitionId partitionId) {
+      // 桩拓扑恒不冻结：通告层只做 fail-fast，不影响 broadcast 主路径
+      return false;
+    }
+
+    @Override
     public MemberId getPartitionLeader(final PartitionId partitionId) {
       throw new UnsupportedOperationException();
     }
