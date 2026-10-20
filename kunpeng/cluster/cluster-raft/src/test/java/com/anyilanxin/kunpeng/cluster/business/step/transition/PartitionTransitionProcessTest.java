@@ -73,7 +73,7 @@ final class PartitionTransitionProcessTest {
     assertThat(order).containsExactly("storage", "repository", "engine");
   }
 
-  private static List<TransitionStep<TransitionContent<Void>>> steps(final List<String> order) {
+  private static List<TransitionStep<TransitionContent>> steps(final List<String> order) {
     return List.of(
         new RecordingStep("storage", order),
         new RecordingStep("repository", order),
@@ -82,7 +82,7 @@ final class PartitionTransitionProcessTest {
 
   /** 记录自身执行顺序并立即成功完成的步骤桩。 */
   private record RecordingStep(String name, List<String> executionOrder)
-      implements TransitionStep<TransitionContent<Void>> {
+      implements TransitionStep<TransitionContent> {
 
     @Override
     public String getName() {
@@ -91,19 +91,19 @@ final class PartitionTransitionProcessTest {
 
     @Override
     public ActorFuture<Void> onLeader(
-        final TransitionContent<Void> context, final long currentTerm) {
+        final TransitionContent context, final long currentTerm) {
       return done();
     }
 
     @Override
     public ActorFuture<Void> onFollower(
-        final TransitionContent<Void> context, final long currentTerm) {
+        final TransitionContent context, final long currentTerm) {
       return done();
     }
 
     @Override
     public ActorFuture<Void> onInactive(
-        final TransitionContent<Void> context, final long currentTerm) {
+        final TransitionContent context, final long currentTerm) {
       return done();
     }
 
@@ -114,7 +114,7 @@ final class PartitionTransitionProcessTest {
   }
 
   /** 切换上下文桩：仅承载 term/角色，切换过程本身不读取其中的并发控制。 */
-  private static final class StubContent implements TransitionContent<Void> {
+  private static final class StubContent implements TransitionContent {
     private ConcurrencyControl concurrencyControl;
     private long currentTerm;
     private Role currentRole;
