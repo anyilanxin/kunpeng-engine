@@ -27,6 +27,8 @@
 **/.mimosa/
 /data
 /logs
+/dist/data
+/dist/logs
 **/build/
 *.iml
 *.ipr
