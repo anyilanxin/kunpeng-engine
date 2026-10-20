@@ -1,0 +1,91 @@
+<!--
+  Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU Affero General Public License for more details.
+
+  You should have received a copy of the GNU Affero General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 560" font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+  <defs>
+    <marker id="aGray" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L10,4 L0,8 Z" fill="#475569"/></marker>
+    <marker id="aBlue" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L10,4 L0,8 Z" fill="#1d4ed8"/></marker>
+  </defs>
+
+  <rect x="0" y="0" width="1000" height="560" fill="#ffffff"/>
+  <text x="500" y="40" text-anchor="middle" font-size="22" font-weight="700" fill="#0f172a">FREEZE 冻结语义：停一切写者，保一切读者</text>
+  <text x="500" y="64" text-anchor="middle" font-size="12.5" fill="#64748b">两段串行排水：引擎在前（钉死 final）、sink 在后（追平 final），顺序不可反</text>
+
+  <!-- 上：瞬时关闭的写者 -->
+  <rect x="90" y="92" width="820" height="96" fill="#fef2f2" rx="6"/>
+  <text x="106" y="116" font-size="12.5" font-weight="700" fill="#b91c1c">T0 瞬时关闭的无界写者（产生新工作）</text>
+  <g font-size="12" fill="#7f1d1d">
+    <rect x="110" y="130" width="238" height="42" rx="5" fill="#ffffff" stroke="#fca5a5"/>
+    <text x="229" y="148" text-anchor="middle" font-weight="700">外部用户命令</text>
+    <text x="229" y="165" text-anchor="middle">CommandApiHandle · USER_COMMAND</text>
+
+    <rect x="362" y="130" width="238" height="42" rx="5" fill="#ffffff" stroke="#fca5a5"/>
+    <text x="481" y="148" text-anchor="middle" font-weight="700">跨分区命令</text>
+    <text x="481" y="165" text-anchor="middle">InterPartitionReceiver · INTER_PARTITION</text>
+
+    <rect x="614" y="130" width="276" height="42" rx="5" fill="#ffffff" stroke="#fca5a5"/>
+    <text x="752" y="148" text-anchor="middle" font-weight="700">内部触发 checker 家族</text>
+    <text x="752" y="165" text-anchor="middle">Timer / JobTimeout / 分发 / 清理 onPaused</text>
+  </g>
+
+  <line x1="500" y1="188" x2="500" y2="216" stroke="#475569" stroke-width="2" marker-end="url(#aGray)"/>
+
+  <!-- 中：两段排水流水线 -->
+  <g font-size="12">
+    <rect x="70" y="220" width="180" height="108" rx="6" fill="#eff6ff" stroke="#93c5fd"/>
+    <text x="160" y="244" text-anchor="middle" font-weight="700" fill="#1e40af">T0→T1 引擎跑干</text>
+    <text x="160" y="266" text-anchor="middle" fill="#1e40af">消费在途命令链</text>
+    <text x="160" y="284" text-anchor="middle" fill="#1e40af">（含自驱后续 COMMAND）</text>
+    <text x="160" y="308" text-anchor="middle" fill="#1e40af">processedPosition 追平 EL 末位</text>
+
+    <line x1="250" y1="274" x2="286" y2="274" stroke="#475569" stroke-width="2" marker-end="url(#aGray)"/>
+
+    <rect x="290" y="220" width="150" height="108" rx="6" fill="#fffbeb" stroke="#fcd34d"/>
+    <text x="365" y="250" text-anchor="middle" font-weight="700" fill="#b45309">T1 静止</text>
+    <text x="365" y="274" text-anchor="middle" fill="#b45309">EL 无未处理</text>
+    <text x="365" y="292" text-anchor="middle" fill="#b45309">COMMAND 且无新触发</text>
+    <text x="365" y="314" text-anchor="middle" font-weight="700" fill="#b45309">final 钉死</text>
+
+    <line x1="440" y1="274" x2="476" y2="274" stroke="#475569" stroke-width="2" marker-end="url(#aGray)"/>
+
+    <rect x="480" y="220" width="190" height="108" rx="6" fill="#eff6ff" stroke="#93c5fd"/>
+    <text x="575" y="244" text-anchor="middle" font-weight="700" fill="#1e40af">T1→T2 sink 排水</text>
+    <text x="575" y="266" text-anchor="middle" fill="#1e40af">min(所有 sink 确认位)</text>
+    <text x="575" y="284" text-anchor="middle" fill="#1e40af">== final</text>
+    <text x="575" y="308" text-anchor="middle" fill="#1e40af">与压缩门槛同源 supplier</text>
+
+    <line x1="670" y1="274" x2="706" y2="274" stroke="#475569" stroke-width="2" marker-end="url(#aGray)"/>
+
+    <rect x="710" y="220" width="180" height="108" rx="6" fill="#f0fdf4" stroke="#86efac"/>
+    <text x="800" y="250" text-anchor="middle" font-weight="700" fill="#15803d">T2 ack 调度</text>
+    <text x="800" y="274" text-anchor="middle" fill="#15803d">后续 MERGE / SPLIT / STOP</text>
+    <text x="800" y="298" text-anchor="middle" fill="#15803d">在确定性窗口内执行</text>
+  </g>
+
+  <!-- drain 分支 -->
+  <path d="M 365,328 L 365,368 L 800,368 L 800,332" fill="none" stroke="#1d4ed8" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#aBlue)"/>
+  <rect x="470" y="352" width="226" height="30" rx="5" fill="#dbeafe"/>
+  <text x="583" y="372" text-anchor="middle" font-size="12" font-weight="700" fill="#1e40af">drain=false（存活侧）跳过第二段直接 ack</text>
+
+  <!-- 下：保留的读者 -->
+  <rect x="90" y="408" width="820" height="66" fill="#f0fdf4" rx="6"/>
+  <text x="106" y="432" font-size="12.5" font-weight="700" fill="#15803d">冻结期间保留的读者</text>
+  <text x="500" y="456" text-anchor="middle" font-size="12" fill="#15803d">sink 导出全程运行（第二段排水的执行者）　·　处理循环运行至第一段跑干　·　定时器等业务本体留存仓库列族，RESUME 后重扫补触发</text>
+
+  <!-- 要点 -->
+  <text x="106" y="508" font-size="12" fill="#475569">要点：① "停引擎"不是动作，是入口关闭后跑干的必然结果　② final 钉死前 sink 没有静止靶子　③ 位点基础设施现成：processPosition / sinkPositionSupplier</text>
+  <text x="106" y="530" font-size="12" fill="#475569">④ FREEZE 为首个长时明细：幂等状态机 + 冻结标志持久化 + restartExecution 重放续跑 + IN_PROGRESS ack 续期（见 03 号文档 §8）</text>
+</svg>

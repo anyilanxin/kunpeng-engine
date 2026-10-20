@@ -1,0 +1,129 @@
+<!--
+  Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU Affero General Public License for more details.
+
+  You should have received a copy of the GNU Affero General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 640" font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+  <defs>
+    <marker id="aGray" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L10,4 L0,8 Z" fill="#475569"/></marker>
+  </defs>
+
+  <rect x="0" y="0" width="1000" height="640" fill="#ffffff"/>
+  <text x="500" y="38" text-anchor="middle" font-size="22" font-weight="700" fill="#0f172a">缩容完整计划阶段图（8 → 3 示例）</text>
+  <text x="500" y="62" text-anchor="middle" font-size="12.5" fill="#64748b">双侧收敛单副本（防选举）→ 交错冻结手术（防并发写 + 发送侧排干）→ 计划末尾统一恢复副本与服务</text>
+
+  <!-- 阶段列头 -->
+  <g font-size="13" font-weight="700" text-anchor="middle">
+    <rect x="38"  y="84" width="168" height="30" rx="5" fill="#0f172a"/><text x="122" y="104" fill="#ffffff">阶段1 · 双侧收敛单副本</text>
+    <rect x="226" y="84" width="360" height="30" rx="5" fill="#0f172a"/><text x="406" y="104" fill="#ffffff">阶段2 · 逐对手术（串行，交错冻结）</text>
+    <rect x="606" y="84" width="112" height="30" rx="5" fill="#0f172a"/><text x="662" y="104" fill="#ffffff">阶段3 · 销毁</text>
+    <rect x="734" y="84" width="112" height="30" rx="5" fill="#0f172a"/><text x="790" y="104" fill="#ffffff">阶段4 · 来源转移</text>
+    <rect x="862" y="84" width="102" height="30" rx="5" fill="#0f172a"/><text x="913" y="104" fill="#ffffff">阶段5 · 统一恢复</text>
+  </g>
+
+  <!-- 阶段1 -->
+  <g font-size="11.5">
+    <rect x="46" y="128" width="152" height="76" rx="5" fill="#fef2f2" stroke="#fca5a5"/>
+    <text x="122" y="150" text-anchor="middle" font-weight="700" fill="#b91c1c">LEAVE × 销毁侧</text>
+    <text x="122" y="170" text-anchor="middle" fill="#b91c1c">D4..D8 的 followers</text>
+    <text x="122" y="188" text-anchor="middle" fill="#b91c1c">各自收敛单副本</text>
+
+    <rect x="46" y="216" width="152" height="76" rx="5" fill="#fef2f2" stroke="#fca5a5"/>
+    <text x="122" y="238" text-anchor="middle" font-weight="700" fill="#b91c1c">LEAVE × 接收侧</text>
+    <text x="122" y="258" text-anchor="middle" fill="#b91c1c">T1,T2,T3 的 followers</text>
+    <text x="122" y="276" text-anchor="middle" fill="#b91c1c">手术期无选举可能</text>
+  </g>
+
+  <line x1="198" y1="200" x2="222" y2="200" stroke="#475569" stroke-width="2" marker-end="url(#aGray)"/>
+
+  <!-- 阶段2 手术序列（串行时间线，向下） -->
+  <g font-size="11.5">
+    <rect x="234" y="128" width="344" height="36" rx="5" fill="#eff6ff" stroke="#93c5fd"/>
+    <text x="406" y="151" text-anchor="middle" fill="#1e40af">FREEZE(T1, drain=false) → FREEZE(D4, drain=true) → MERGE(D4→T1)</text>
+
+    <rect x="234" y="172" width="344" height="36" rx="5" fill="#eff6ff" stroke="#93c5fd"/>
+    <text x="406" y="195" text-anchor="middle" fill="#1e40af">FREEZE(T2, drain=false) → FREEZE(D5, drain=true) → MERGE(D5→T2)</text>
+
+    <rect x="234" y="216" width="344" height="36" rx="5" fill="#eff6ff" stroke="#93c5fd"/>
+    <text x="406" y="239" text-anchor="middle" fill="#1e40af">FREEZE(T3, drain=false) → FREEZE(D6, drain=true) → MERGE(D6→T3)</text>
+
+    <rect x="234" y="260" width="344" height="36" rx="5" fill="#fffbeb" stroke="#fcd34d"/>
+    <text x="406" y="277" text-anchor="middle" font-weight="700" fill="#b45309">FREEZE(D7, drain=true) → MERGE(D7→T1)</text>
+    <text x="406" y="292" text-anchor="middle" fill="#b45309">T1 第二次接收：保持单副本+冻结，无副本折腾</text>
+
+    <rect x="234" y="304" width="344" height="36" rx="5" fill="#fffbeb" stroke="#fcd34d"/>
+    <text x="406" y="321" text-anchor="middle" font-weight="700" fill="#b45309">FREEZE(D8, drain=true) → MERGE(D8→T2)</text>
+    <text x="406" y="336" text-anchor="middle" fill="#b45309">交错冻结：未冻结的销毁分区此间继续服务</text>
+  </g>
+
+  <line x1="578" y1="248" x2="602" y2="248" stroke="#475569" stroke-width="2" marker-end="url(#aGray)"/>
+
+  <!-- 阶段3 -->
+  <g font-size="11.5">
+    <rect x="614" y="216" width="96" height="124" rx="5" fill="#fef2f2" stroke="#fca5a5"/>
+    <text x="662" y="242" text-anchor="middle" font-weight="700" fill="#b91c1c">STOP</text>
+    <text x="662" y="262" text-anchor="middle" fill="#b91c1c">D4..D8</text>
+    <text x="662" y="284" text-anchor="middle" fill="#b91c1c">排水已完成</text>
+    <text x="662" y="302" text-anchor="middle" fill="#b91c1c">删除日志</text>
+    <text x="662" y="320" text-anchor="middle" fill="#b91c1c">对外部无损</text>
+  </g>
+
+  <line x1="710" y1="278" x2="730" y2="278" stroke="#475569" stroke-width="2" marker-end="url(#aGray)"/>
+
+  <!-- 阶段4 -->
+  <g font-size="11.5">
+    <rect x="742" y="216" width="96" height="124" rx="5" fill="#eff6ff" stroke="#93c5fd"/>
+    <text x="790" y="242" text-anchor="middle" font-weight="700" fill="#1e40af">SOURCE_</text>
+    <text x="790" y="260" text-anchor="middle" font-weight="700" fill="#1e40af">TRANSFER ×5</text>
+    <text x="790" y="284" text-anchor="middle" fill="#1e40af">来源标识</text>
+    <text x="790" y="302" text-anchor="middle" fill="#1e40af">转至保留分区</text>
+  </g>
+
+  <line x1="838" y1="278" x2="858" y2="278" stroke="#475569" stroke-width="2" marker-end="url(#aGray)"/>
+
+  <!-- 阶段5 -->
+  <g font-size="11.5">
+    <rect x="870" y="216" width="86" height="124" rx="5" fill="#f0fdf4" stroke="#86efac"/>
+    <text x="913" y="240" text-anchor="middle" font-weight="700" fill="#15803d">RESUME</text>
+    <text x="913" y="260" text-anchor="middle" fill="#15803d">T1,T2,T3</text>
+    <text x="913" y="282" text-anchor="middle" fill="#15803d">+ re-JOIN</text>
+    <text x="913" y="300" text-anchor="middle" fill="#15803d">恢复期望副本</text>
+    <text x="913" y="318" text-anchor="middle" fill="#15803d">SWIM 恢复通告</text>
+  </g>
+
+  <!-- 底部注解 -->
+  <rect x="38" y="368" width="930" height="120" rx="6" fill="#f8fafc" stroke="#e2e8f0"/>
+  <text x="54" y="392" font-size="12.5" font-weight="700" fill="#0f172a">关键规则</text>
+  <g font-size="12" fill="#475569">
+    <text x="54" y="416">· 判据：凡绕过 raft 日志直接改写分区状态的操作（合并装入 / 资源摘除），两侧分区均须先收敛单副本；bootstrap 只读豁免</text>
+    <text x="54" y="438">· drain 标志：销毁侧 FREEZE 两段排水（引擎→sink）；存活侧（接收分区 / 拆分 donor）只需引擎静止，日志不销毁不等 sink</text>
+    <text x="54" y="460">· 末尾统一恢复：接收 N 份来源只做一次 follower 快照安装，follower 永远只在最终状态上加入；多来源 key 撞号/生成器推进在同一冻结窗口确定性完成</text>
+    <text x="54" y="482">· 失败/取消：从计划明细反推已冻结分区补发 RESUME + re-JOIN，清除 SWIM 通告——冻结分区绝不静默遗留；中断唯一入口是人工取消</text>
+  </g>
+
+  <!-- 不变式链 -->
+  <rect x="38" y="508" width="930" height="104" rx="6" fill="#0f172a"/>
+  <text x="54" y="536" font-size="12.5" font-weight="700" fill="#ffffff">统一不变式链（缩容合并与扩容拆分同构）</text>
+  <g font-size="12.5" font-weight="700" text-anchor="middle">
+    <rect x="54"  y="552" width="150" height="34" rx="5" fill="#1e3a5f"/><text x="129" y="574" fill="#e0e7ff">双侧单副本·防选举</text>
+    <rect x="216" y="552" width="150" height="34" rx="5" fill="#1e3a5f"/><text x="291" y="574" fill="#e0e7ff">双侧冻结·防并发写</text>
+    <rect x="378" y="552" width="168" height="34" rx="5" fill="#1e3a5f"/><text x="462" y="574" fill="#e0e7ff">发送侧排干·防外发缺失</text>
+    <rect x="558" y="552" width="150" height="34" rx="5" fill="#1e3a5f"/><text x="633" y="574" fill="#e0e7ff">幂等状态手术</text>
+    <rect x="720" y="552" width="232" height="34" rx="5" fill="#14532d"/><text x="836" y="574" fill="#dcfce7">销毁 / 末尾统一恢复副本与服务</text>
+  </g>
+  <g stroke="#94a3b8" stroke-width="1.5">
+    <line x1="204" y1="569" x2="214" y2="569"/><line x1="366" y1="569" x2="376" y2="569"/>
+    <line x1="546" y1="569" x2="556" y2="569"/><line x1="708" y1="569" x2="718" y2="569"/>
+  </g>
+</svg>
