@@ -11,7 +11,7 @@ description: Use as the top-level entry to discover kunpeng project's coding/gen
 
 | 模块目录 | 主题 | 何时用 | 入口 |
 |----------|------|--------|------|
-| `iteration/` | 全链路迭代开发专家：跨模块/跨层既有功能改动的一次性编排（影响排查→计划确认→固定顺序执行→契约自检），大改动分流（广而浅→总控派发 / 深而窄→设计先行），协议兼容变更先评估 | 改动跨 protocol/repository/engine/clients 多层的字段、校验、bug、枚举、状态机；"改一下XX/加个字段/迭代一下" | [iteration/SKILL.md](./iteration/SKILL.md) |
+| `iteration/` | 全链路迭代开发专家：跨模块/跨层既有功能改动的一次性编排（影响排查→计划确认→固定顺序执行→契约自检），大改动分流（广而浅→总控派发 / 深而窄→设计先行），协议兼容变更先评估，客户端 SDK 发布与下游联调纪律（publishToMavenLocal 联调先行、版本不可变、bom 对齐） | 改动跨 protocol/repository/engine/clients 多层的字段、校验、bug、枚举、状态机；涉 SDK 契约的发布与下游联调；"改一下XX/加个字段/迭代一下" | [iteration/SKILL.md](./iteration/SKILL.md) |
 | `engine-chain/` | 引擎侧全链路开发规范：client→gateway→broker→引擎→存储 六层职责、新增命令/API 的 11 项注册点清单、直答型 vs 持久化型两种命令模式、表达式求值链活样例 | 引擎侧新增业务功能（新命令、新 gRPC API、新 Value 域）时；想理解一条请求从 SDK 到 RocksDB 的完整链路时 | [engine-chain/SKILL.md](./engine-chain/SKILL.md) |
 | `record-standards/` | 协议 Record 类（`*Record extends UnifiedRecordValue`）编写规范：类骨架、字段类型、key、getter/setter、集合与 addXxx、wrap/unwrap、嵌套对象 setter | 给 `*RecordValue` 接口实现 `*Record` 类；新增字段、修改 setter、加 addXxx 方法 | [record-standards/SKILL.md](./record-standards/SKILL.md) |
 | `enum-standards/` | LifeCycle/State 枚举规范：`CommandValueLifeCycle` vs `CommandApiValueLifeCycle` 契约、`PROCESS_INDEX_*`/`RECORD_INDEX_*` 编号池分配 | 新建/修改 LifeCycle 枚举、增删状态、申请索引编号 | [enum-standards/SKILL.md](./enum-standards/SKILL.md) |

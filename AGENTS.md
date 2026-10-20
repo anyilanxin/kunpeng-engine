@@ -87,7 +87,7 @@ kunpeng-engine/
 
 | 技能 | 主题 | 何时用 |
 |------|------|--------|
-| `iteration` | 全链路迭代开发专家：跨模块/跨层既有功能改动的一次性编排（影响排查→计划确认→固定顺序执行→契约自检），大改动分流（广而浅→总控派发 / 深而窄→设计先行），协议兼容变更先评估不直接改 | 日常迭代改动跨 protocol/repository/engine/clients 多层（字段、校验、bug、枚举、状态机）；"改一下XX / 加个字段 / 迭代一下" |
+| `iteration` | 全链路迭代开发专家：跨模块/跨层既有功能改动的一次性编排（影响排查→计划确认→固定顺序执行→契约自检），大改动分流（广而浅→总控派发 / 深而窄→设计先行），协议兼容变更先评估不直接改；客户端 SDK 发布纪律（publishToMavenLocal 联调先行、版本不可变、bom 对齐） | 日常迭代改动跨 protocol/repository/engine/clients 多层（字段、校验、bug、枚举、状态机）；涉 SDK 契约的发布与下游联调；"改一下XX / 加个字段 / 迭代一下" |
 | `engine-chain` | 引擎侧全链路开发规范：client→gateway→broker→引擎→存储六层职责与实现逻辑、新增命令/API 的 11 项注册点清单、直答型 vs 持久化型两种命令模式、表达式求值链活样例 | 引擎侧新增业务功能（新命令、新 gRPC API、新 Value 域）开发时；理解一条请求从 SDK 到 RocksDB 的完整链路时 |
 | `record-standards` | 协议 Record 类（`*Record extends UnifiedRecordValue`）编写规范：类骨架、Property 字段类型、key 常量、getter/setter/addXxx、wrap/unwrap、嵌套对象 | 给 `*RecordValue` 实现具体 Record 类、增改字段/集合方法 |
 | `enum-standards` | LifeCycle/State 枚举规范：`CommandValueLifeCycle` vs `CommandApiValueLifeCycle` 两种 archetype 契约、`PROCESS_INDEX_*`/`RECORD_INDEX_*` 编号池 | 新建/修改枚举、增删状态、申请或重排索引编号 |

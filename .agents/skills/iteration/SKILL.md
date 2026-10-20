@@ -1,6 +1,6 @@
 ---
 name: iteration
-description: Full-chain iteration orchestrator for everyday changes to existing functionality. Use when a change spans multiple engine layers (protocol Record / LifeCycle enum / repository Entity / engine / broker / gateway / client SDK) and should land in one pass — field adjustments, validation or state machine tweaks, bug fixes, enum value additions, interface parameter changes. Trigger phrases like "改一下XX / XX加个字段 / XX调一下 / 改个功能 / 迭代一下". Broad-but-shallow large changes go orchestrator-dispatch mode; single-module deep work is done in place following the module's standards skills; new subsystems or serialization-format work use a design-first flow instead.
+description: Full-chain iteration orchestrator for everyday changes to existing functionality. Use when a change spans multiple engine layers (protocol Record / LifeCycle enum / repository Entity / engine / broker / gateway / client SDK) and should land in one pass — field adjustments, validation or state machine tweaks, bug fixes, enum value additions, interface parameter changes. Also use when the change affects the client SDK consumed downstream: release discipline is local-integration-first (publishToMavenLocal), published versions are immutable, and bom alignment is part of the checklist. Trigger phrases like "改一下XX / XX加个字段 / XX调一下 / 改个功能 / 迭代一下". Broad-but-shallow large changes go orchestrator-dispatch mode; single-module deep work is done in place following the module's standards skills; new subsystems or serialization-format work use a design-first flow instead.
 ---
 
 # 全链路迭代开发专家（iteration）
@@ -56,6 +56,10 @@ kunpeng 的跨层契约是：协议 Record 字段 ↔ Entity 持久化字段 ↔
 
 > 加 Record 字段（新 key）、加枚举状态（顺延编号池）、加 Entity 字段属于**低风险**（向后兼容），iteration 可正常处理。判断不清时按破坏性对待（先评估）。
 
+### 5. SDK 先联调验证，再定版发布
+
+客户端 SDK 是对外契约：版本一经私仓（阿里云 packages）发布不可变，修正只能推进版本序列。涉 SDK 契约的改动，先在引擎侧跑相关模块 `publishToMavenLocal`，由下游（其构建已配置 `com.anyilanxin.*` 组 mavenLocal 优先于私仓）本地联调验证通过后，再定版发布——不发布未经下游验证的"顺手改动"。下游解析不到新版本时先确认版本确已发布（私仓有传播滞后），不靠重发解决；破坏性协议变更必须连带给出下游升级路径（bom 对齐点、迁移说明），交评估后才执行。
+
 ## 改动分级
 
 | 等级 | 特征 | 处理 |
@@ -83,6 +87,7 @@ kunpeng 的跨层契约是：协议 Record 字段 ↔ Entity 持久化字段 ↔
 | `kunpeng/engine/` `broker/` `gateway/` `cluster/` | 业务逻辑、状态机分支、命令处理是否涉及 |
 | `kunpeng/scheduler/` `eventlog/` | 是否触及调度契约 / 事件日志格式（先读对应知识库技能） |
 | `clients/` | 契约变化是否需要暴露到 client-java / spring-boot-starter-client |
+| 下游消费方 | 经 `kunpeng-client-sdk-bom` 组装 SDK 的下游系统：契约变化是否破坏其升级路径（需联动评估；破坏性变更按铁律 4 先出方案） |
 | 测试 | 对应模块测试是否需要同步（JUnit5/jqwik） |
 | 技能文档 | 改动触及 scheduler/eventlog/cluster-dispatch/structpack 的设计事实 → 对应知识库技能文档要同步更新 |
 
@@ -98,7 +103,7 @@ kunpeng 的跨层契约是：协议 Record 字段 ↔ Entity 持久化字段 ↔
 1. protocol（Record / LifeCycle / 编号池）→ 编译验证 :kunpeng:protocol:*:compileJava
 2. repository（Entity + wrap/unwrap）→ 编译验证
 3. engine / broker / gateway / cluster 逻辑 → 编译验证
-4. clients SDK（如涉及）
+4. clients SDK（如涉及；契约有变化时先 `publishToMavenLocal` 供下游 mavenLocal 联调）
 5. 测试同步
 6. 技能/设计文档同步
 ```
@@ -116,6 +121,7 @@ kunpeng 的跨层契约是：协议 Record 字段 ↔ Entity 持久化字段 ↔
 | **编译验证** | 每层改完跑模块 `compileJava`；全链路完跑 `./gradlew buildSkipTest` |
 | **测试覆盖** | 改动逻辑有对应测试；现有测试没被改挂 |
 | **文档同步** | 触及知识库技能设计事实的已更新 |
+| **SDK/下游** | 涉 clients 的改动已评估 bom 与下游升级路径；publishToMavenLocal 联调已做或列入待验证 |
 | **格式化** | 提交前根目录整库 `./gradlew spotlessApply`（commit-standards） |
 
 ### 步骤6：汇报完成
