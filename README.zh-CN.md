@@ -14,8 +14,8 @@ Kunpeng 为跨微服务的业务流程提供可视化与控制能力。
 ## 工作原理
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/kunpeng-hero-dark.svg">
-  <img src="docs/kunpeng-hero-light.svg" alt="Kunpeng 工作原理">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/kunpeng-overview-dark.svg">
+  <img src="docs/kunpeng-overview-light.svg" alt="Kunpeng 工作原理">
 </picture>
 
 客户端在无状态网关的多副本之间动态分摊负载，网关将每个请求路由到 Raft 组的主分区；BPMN 2.0 引擎在分区内执行流程，每一步都追加写入分区事件日志；同一份日志再经多个 sink 扇出到多个外部存储——支持断点续传，且完全不在执行路径上。客户端侧的连接器运行时以 job worker 方式承载各类集成：开箱即用 REST 与脚本连接器，并可通过 SDK 扩展 Kafka、RocketMQ、邮件等。
@@ -35,9 +35,9 @@ Kunpeng 为跨微服务的业务流程提供可视化与控制能力。
 
 * [文档首页](./docs)
 * [快速上手：启动形态与端口模型](./docs/user-guide/getting-started.zh-CN.md)
+* [更新日志](./CHANGELOG.zh-CN.md)
 * [发行版装配与部署](./dist/README.md)
 * [Java 客户端 SDK](./clients/client-java)
-* [集群消息层基准结论](./docs/cluster-messaging-benchmark.md)
 * [Sink 对接指南（自研日志外发）](./docs/sink-integration.md)
 
 ## Star 趋势

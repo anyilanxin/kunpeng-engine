@@ -9,8 +9,7 @@ Kunpeng 引擎的本地监控观测栈：Prometheus 采集 + Grafana 面板，�
 ```
 monitor/
 ├── docker-compose.yml                  # Prometheus + Grafana 容器编排
-├── Makefile                            # up / down / restart / clean / logs / open
-├── .env                                # Grafana 地址与账号（compose 与 Makefile 共用）
+├── .env                                # Grafana 地址与账号
 ├── prometheus/
 │   └── prometheus.yml                  # 抓取配置（engine 节点列表在此维护）
 └── grafana/
@@ -25,13 +24,12 @@ monitor/
 
 ```bash
 cd monitor
-make up          # 拉起 Prometheus(9090) + Grafana(3000)
-make open        # 打开 Grafana（默认账号 admin / kunpeng，见 .env）
-make down        # 停止（保留数据卷）
-make clean       # 停止并清空数据卷
+docker compose up -d        # 拉起 Prometheus(9090) + Grafana(3000)
+docker compose down         # 停止（保留数据卷）
+docker compose down -v      # 停止并清空数据卷
 ```
 
-面板放在 Grafana 的 **Kunpeng** 目录下，随 provisioning 自动加载，修改 JSON 文件后约 30s 自动热更新。
+打开 http://localhost:3000（默认账号 admin / kunpeng，见 `.env`）。面板放在 Grafana 的 **Kunpeng** 目录下，随 provisioning 自动加载，修改 JSON 文件后约 30s 自动热更新。
 
 ## 接入引擎节点
 
@@ -66,11 +64,3 @@ make clean       # 停止并清空数据卷
 - Counter 导出带 `_total` 后缀（如 `eventlog_append_count_total`）；
 - Raft 角色 gauge 数值映射：0=INACTIVE 1=PASSIVE 2=PROMOTABLE 3=FOLLOWER 4=CANDIDATE 5=LEADER；
 - Sink 相位 gauge：0=running 1=paused 2=soft paused 3=closed。
-
-**加指标的标准**：新增/修改引擎指标必须连带补对应面板（有指标就有面板），收口跑覆盖检查：
-
-```bash
-python3 .agents/skills/monitor-dashboards/check-panels.py   # 退出码 0 = 指标/面板全对齐
-```
-
-面板撰写规范见技能 `.agents/skills/monitor-dashboards/`。

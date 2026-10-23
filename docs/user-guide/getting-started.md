@@ -229,6 +229,4 @@ Configuration can be set via `config/application-*.yml`, `-D` system properties,
 ## Related Links
 
 - [Distribution & assembly details](../../dist/README.md)
-- [System architecture diagram](../system-architecture.svg)
 - [Java client SDK](../../clients/client-java)
-- [Cluster messaging benchmarks](../cluster-messaging-benchmark.md)

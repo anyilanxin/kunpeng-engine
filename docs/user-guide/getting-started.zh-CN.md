@@ -229,6 +229,4 @@ KunpengClient client =
 ## 相关链接
 
 - [发行版装配与构建细节](../../dist/README.md)
-- [系统架构图](../system-architecture.svg)
 - [Java 客户端 SDK](../../clients/client-java)
-- [集群消息层基准结论](../cluster-messaging-benchmark.md)

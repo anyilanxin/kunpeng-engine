@@ -14,6 +14,7 @@
   You should have received a copy of the GNU Affero General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
+<!-- English edition of kunpeng-overview-dark.svg — same layout and colors, translated annotations only. Keep in sync with the Chinese original. -->
 <svg xmlns="http://www.w3.org/2000/svg" width="1150" height="650" viewBox="0 0 1150 650" font-family="-apple-system, 'Helvetica Neue', 'Segoe UI', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif">
   <defs>
     <linearGradient id="focal" x1="0" y1="0" x2="0" y2="1">
@@ -57,8 +58,8 @@
   <!-- ============ 左下：连接器生态（经客户端 SDK 接入） ============ -->
   <line x1="278" y1="282" x2="278" y2="340" stroke="#3B82F6" stroke-width="2" marker-start="url(#arrowBlue)" marker-end="url(#arrowBlue)"/>
   <rect x="192" y="346" width="172" height="64" rx="16" fill="#121C30" stroke="#3B82F6" stroke-width="2.5"/>
-  <text x="278" y="374" text-anchor="middle" fill="#F5F8FF" font-size="18" font-weight="600">连接器</text>
-  <text x="278" y="396" text-anchor="middle" fill="#93B4E8" font-size="12.5">Connectors</text>
+  <text x="278" y="374" text-anchor="middle" fill="#F5F8FF" font-size="18" font-weight="600">Connectors</text>
+  <text x="278" y="396" text-anchor="middle" fill="#93B4E8" font-size="12.5">job integrations</text>
   <line x1="278" y1="410" x2="177" y2="462" stroke="#3B82F6" stroke-width="2" marker-end="url(#arrowBlue)"/>
   <line x1="278" y1="410" x2="259" y2="462" stroke="#3B82F6" stroke-width="2" marker-end="url(#arrowBlue)"/>
   <line x1="278" y1="410" x2="341" y2="462" stroke="#3B82F6" stroke-width="2" marker-end="url(#arrowBlue)"/>
@@ -67,7 +68,7 @@
   <rect x="222" y="466" width="74" height="40" rx="10" fill="#121C30" stroke="#3B82F6" stroke-width="2"/>
   <text x="259" y="491" text-anchor="middle" fill="#F5F8FF" font-size="13" font-weight="600">RocketMQ</text>
   <rect x="304" y="466" width="74" height="40" rx="10" fill="#121C30" stroke="#3B82F6" stroke-width="2"/>
-  <text x="341" y="491" text-anchor="middle" fill="#F5F8FF" font-size="13" font-weight="600">邮件</text>
+  <text x="341" y="491" text-anchor="middle" fill="#F5F8FF" font-size="13" font-weight="600">Email</text>
   <rect x="386" y="466" width="34" height="40" rx="10" fill="none" stroke="#3B82F6" stroke-width="2" stroke-dasharray="5 4"/>
   <g fill="#7DA7E8">
     <circle cx="393" cy="486" r="2"/>
@@ -78,8 +79,8 @@
   <!-- ============ 主链（中层） ============ -->
   <!-- 客户端 -->
   <rect x="192" y="202" width="172" height="76" rx="16" fill="#121C30" stroke="#3B82F6" stroke-width="2.5"/>
-  <text x="278" y="236" text-anchor="middle" fill="#F5F8FF" font-size="19" font-weight="600">客户端</text>
-  <text x="278" y="260" text-anchor="middle" fill="#93B4E8" font-size="12.5">Client SDK</text>
+  <text x="278" y="236" text-anchor="middle" fill="#F5F8FF" font-size="19" font-weight="600">Client SDK</text>
+  <text x="278" y="260" text-anchor="middle" fill="#93B4E8" font-size="12.5">discovery · client LB</text>
 
   <!-- 客户端 -> 网关 -->
   <line x1="364" y1="240" x2="424" y2="240" stroke="#3B82F6" stroke-width="2" marker-end="url(#arrowBlue)"/>
@@ -89,23 +90,23 @@
   <rect x="430" y="184" width="172" height="76" rx="16" fill="#121C30" stroke="#3B82F6" stroke-width="2.5" opacity="0.5"/>
   <rect x="430" y="193" width="172" height="76" rx="16" fill="#121C30" stroke="#3B82F6" stroke-width="2.5" opacity="0.8"/>
   <rect x="430" y="202" width="172" height="76" rx="16" fill="#121C30" stroke="#3B82F6" stroke-width="2.5"/>
-  <text x="516" y="236" text-anchor="middle" fill="#F5F8FF" font-size="19" font-weight="600">网关</text>
-  <text x="516" y="260" text-anchor="middle" fill="#93B4E8" font-size="12.5">多副本 · 动态负载</text>
+  <text x="516" y="236" text-anchor="middle" fill="#F5F8FF" font-size="19" font-weight="600">Gateway</text>
+  <text x="516" y="260" text-anchor="middle" fill="#93B4E8" font-size="12.5">stateless replicas</text>
 
   <!-- 网关 -> Broker -->
   <line x1="602" y1="240" x2="656" y2="240" stroke="#3B82F6" stroke-width="2" marker-end="url(#arrowBlue)"/>
 
   <!-- ============ 顶部：集群管理（管理面，虚线） ============ -->
   <rect x="794" y="52" width="172" height="64" rx="16" fill="#121C30" stroke="#93B4E8" stroke-width="2.5"/>
-  <text x="880" y="80" text-anchor="middle" fill="#F5F8FF" font-size="18" font-weight="600">集群管理</text>
-  <text x="880" y="102" text-anchor="middle" fill="#93B4E8" font-size="12.5">Cluster Admin</text>
+  <text x="880" y="80" text-anchor="middle" fill="#F5F8FF" font-size="18" font-weight="600">Cluster Admin</text>
+  <text x="880" y="102" text-anchor="middle" fill="#93B4E8" font-size="12.5">control plane</text>
   <line x1="880" y1="116" x2="880" y2="164" stroke="#93B4E8" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#arrowAdmin)"/>
-  <text x="896" y="145" fill="#93B4E8" font-size="11.5">动态扩缩容</text>
+  <text x="896" y="145" fill="#93B4E8" font-size="11.5">cluster control</text>
 
   <!-- ============ Broker 集群（焦点面板：多节点 + 扩容位 + 能力芯片） ============ -->
   <rect x="662" y="170" width="436" height="140" rx="18" fill="url(#focal)" filter="url(#glow)"/>
-  <text x="880" y="192" text-anchor="middle" fill="#F5F8FF" font-size="17" font-weight="600">Broker 集群</text>
-  <text x="880" y="212" text-anchor="middle" fill="#BFDBFE" font-size="11.5">Raft 复制</text>
+  <text x="880" y="192" text-anchor="middle" fill="#F5F8FF" font-size="17" font-weight="600">Broker cluster</text>
+  <text x="880" y="212" text-anchor="middle" fill="#BFDBFE" font-size="11.5">Raft replication</text>
   <g font-size="12.5" fill="#DBEAFE">
     <rect x="695" y="222" width="96" height="40" rx="9" fill="#0B1730" fill-opacity="0.45"/>
     <text x="743" y="241" text-anchor="middle">Broker 1</text>
@@ -131,18 +132,18 @@
   <!-- 能力芯片 -->
   <g font-size="11.5" fill="#DBEAFE">
     <rect x="700" y="272" width="112" height="26" rx="7" fill="#0B1730" fill-opacity="0.4"/>
-    <text x="756" y="289" text-anchor="middle">分区事件日志</text>
+    <text x="756" y="289" text-anchor="middle">Event log</text>
     <rect x="824" y="272" width="112" height="26" rx="7" fill="#0B1730" fill-opacity="0.4"/>
-    <text x="880" y="289" text-anchor="middle">流程引擎</text>
+    <text x="880" y="289" text-anchor="middle">Process engine</text>
     <rect x="948" y="272" width="112" height="26" rx="7" fill="#0B1730" fill-opacity="0.4"/>
-    <text x="1004" y="289" text-anchor="middle">RocksDB 存储</text>
+    <text x="1004" y="289" text-anchor="middle">RocksDB storage</text>
   </g>
 
   <!-- ============ 底部右侧：Sink 扇出 ============ -->
   <line x1="880" y1="310" x2="880" y2="358" stroke="#F59E0B" stroke-width="2" marker-end="url(#arrowOrange)"/>
 
   <rect x="780" y="364" width="200" height="64" rx="16" fill="#1A1710" stroke="#F59E0B" stroke-width="2.5"/>
-  <text x="880" y="392" text-anchor="middle" fill="#F5F8FF" font-size="18" font-weight="600">Sink 导出</text>
+  <text x="880" y="392" text-anchor="middle" fill="#F5F8FF" font-size="18" font-weight="600">Sink export</text>
   <text x="880" y="415" text-anchor="middle" fill="#93B4E8" font-size="12.5">Record Exporters</text>
 
   <!-- 扇出箭头 -->
@@ -161,10 +162,10 @@
   </g>
   <g text-anchor="middle">
     <text x="720" y="560" fill="#F5F8FF" font-size="14.5" font-weight="600">RDBMS</text>
-    <text x="720" y="578" fill="#93B4E8" font-size="11.5">关系数据库</text>
+    <text x="720" y="578" fill="#93B4E8" font-size="11.5">relational database</text>
     <text x="880" y="560" fill="#F5F8FF" font-size="14.5" font-weight="600">Elasticsearch</text>
-    <text x="880" y="578" fill="#93B4E8" font-size="11.5">搜索索引</text>
-    <text x="1040" y="560" fill="#F5F8FF" font-size="14.5" font-weight="600">自定义</text>
-    <text x="1040" y="578" fill="#93B4E8" font-size="11.5">Custom Sink</text>
+    <text x="880" y="578" fill="#93B4E8" font-size="11.5">search index</text>
+    <text x="1040" y="560" fill="#F5F8FF" font-size="14.5" font-weight="600">Custom</text>
+    <text x="1040" y="578" fill="#93B4E8" font-size="11.5">any RecordSink</text>
   </g>
 </svg>
