@@ -166,6 +166,31 @@ jib {
 }
 
 
+// 离线镜像 tar 构建（jibBuildLocalTar）：基础镜像取自 -PbaseImageTar 传入的本地 docker save tar，构建全程不访问镜像仓库、不依赖 docker
+// 用法：./gradlew :dist:jibBuildLocalTar -PbaseImageTar=<路径>（先 docker save <基础镜像> -o base-jre.tar 导出；基础镜像见 buildSrc/common-config.gradle）
+// 产物：build/jib-image.tar，docker load -i 导入为 kunpeng:<version>
+def baseImageTarProperty = providers.gradleProperty('baseImageTar')
+if (gradle.startParameter.taskNames.any { it.endsWith('jibBuildLocalTar') } && !baseImageTarProperty.present) {
+    throw new GradleException('jibBuildLocalTar 需要外部传入基础镜像 tar：./gradlew :dist:jibBuildLocalTar -PbaseImageTar=<docker save 导出的 tar 路径>')
+}
+def baseImageTarFile = baseImageTarProperty.present ? new File(baseImageTarProperty.get()).absoluteFile : null
+if (baseImageTarFile != null) {
+    jib.from.image = "tar://${baseImageTarFile.absolutePath}"
+    tasks.named('jibBuildTar') {
+        doFirst {
+            if (!baseImageTarFile.isFile()) {
+                throw new GradleException("baseImageTar 指向的文件不存在: ${baseImageTarFile.absolutePath}")
+            }
+        }
+    }
+}
+tasks.register('jibBuildLocalTar') {
+    group = 'jib'
+    description = "离线构建镜像 tar：-PbaseImageTar=<docker save 导出的基础镜像 tar>，产物 build/jib-image.tar（docker load -i 加载）"
+    dependsOn tasks.named('jibBuildTar')
+}
+
+
 jar {
     archiveClassifier = ''
     archiveBaseName = 'kunpeng-dist'

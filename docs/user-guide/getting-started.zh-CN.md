@@ -21,6 +21,11 @@
 
 # Docker 镜像（jib，本地镜像 kunpeng:<version>）
 ./gradlew :dist:jibDockerBuild
+
+# Docker 镜像 tar 离线构建（基础镜像取自本地 tar，构建过程不访问镜像仓库、也不需要 docker）
+#   先导出基础镜像：docker save <基础镜像> -o base-jre.tar（基础镜像见 buildSrc/common-config.gradle）
+./gradlew :dist:jibBuildLocalTar -PbaseImageTar=/path/to/base-jre.tar
+#   产物 dist/build/jib-image.tar，导入：docker load -i dist/build/jib-image.tar
 ```
 
 ## 3. 必需 JVM 参数

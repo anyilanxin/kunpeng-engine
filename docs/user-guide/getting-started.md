@@ -21,6 +21,12 @@ English | [简体中文](getting-started.zh-CN.md)
 
 # Docker image (jib, local image kunpeng:<version>)
 ./gradlew :dist:jibDockerBuild
+
+# Docker image tar without registry access (base image from a local tar; the build itself
+# needs neither registry connectivity nor docker)
+#   export the base image first: docker save <base-image> -o base-jre.tar (see buildSrc/common-config.gradle)
+./gradlew :dist:jibBuildLocalTar -PbaseImageTar=/path/to/base-jre.tar
+#   result: dist/build/jib-image.tar, import with: docker load -i dist/build/jib-image.tar
 ```
 
 ## 3. Mandatory JVM Arguments
