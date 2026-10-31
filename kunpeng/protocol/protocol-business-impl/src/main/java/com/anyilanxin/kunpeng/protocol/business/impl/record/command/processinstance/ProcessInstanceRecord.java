@@ -86,9 +86,11 @@ public class ProcessInstanceRecord extends UnifiedRecordValue<ProcessInstanceRec
   private final IntegerProperty listenerIndexProp = new IntegerProperty(23, LISTENER_INDEX, -1);
   private final StringProperty tenantIdProp =
       new StringProperty(24, TENANT_ID, TenantOwned.DEFAULT_TENANT_IDENTIFIER);
+  private final DocumentProperty extensionMetadataProperty =
+      new DocumentProperty(25, EXTENSION_METADATA);
 
   public ProcessInstanceRecord() {
-    super(24);
+    super(25);
     declareProperty(processInstanceIdProp)
         .declareProperty(parentProcessInstanceIdProp)
         .declareProperty(rootProcessInstanceIdProp)
@@ -112,7 +114,8 @@ public class ProcessInstanceRecord extends UnifiedRecordValue<ProcessInstanceRec
         .declareProperty(lifeCycleProp)
         .declareProperty(listenerTypeProp)
         .declareProperty(listenerIndexProp)
-        .declareProperty(tenantIdProp);
+        .declareProperty(tenantIdProp)
+        .declareProperty(extensionMetadataProperty);
   }
 
   @Override
@@ -187,6 +190,26 @@ public class ProcessInstanceRecord extends UnifiedRecordValue<ProcessInstanceRec
     if (businessKey != null) {
       businessKeyProp.setValue(businessKey);
     }
+    return this;
+  }
+
+  @Override
+  public Map<String, Object> getExtensionMetadata() {
+    return convertToMap(extensionMetadataProperty.getValue());
+  }
+
+  @JsonIgnore
+  public DirectBuffer getExtensionMetadataBuffer() {
+    return extensionMetadataProperty.getValue();
+  }
+
+  public ProcessInstanceRecord setExtensionMetadata(final DirectBuffer extensionMetadata) {
+    extensionMetadataProperty.setValue(extensionMetadata);
+    return this;
+  }
+
+  public ProcessInstanceRecord setExtensionMetadata(final Map<String, Object> extensionMetadata) {
+    extensionMetadataProperty.setValue(wrapArray(convertToMsgPack(extensionMetadata)));
     return this;
   }
 

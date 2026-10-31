@@ -83,9 +83,11 @@ public class ProcessInstanceRecordEntity extends UnpackedObject implements Store
   private final IntegerProperty listenerIndexProp = new IntegerProperty(22, LISTENER_INDEX, -1);
   private final StringProperty tenantIdProp =
       new StringProperty(23, TENANT_ID, TenantOwned.DEFAULT_TENANT_IDENTIFIER);
+  private final DocumentProperty extensionMetadataProperty =
+      new DocumentProperty(24, EXTENSION_METADATA);
 
   public ProcessInstanceRecordEntity() {
-    super(23);
+    super(24);
     declareProperty(processInstanceIdProp)
         .declareProperty(parentProcessInstanceIdProp)
         .declareProperty(rootProcessInstanceIdProp)
@@ -108,7 +110,8 @@ public class ProcessInstanceRecordEntity extends UnpackedObject implements Store
         .declareProperty(lifeCycleProp)
         .declareProperty(listenerTypeProp)
         .declareProperty(listenerIndexProp)
-        .declareProperty(tenantIdProp);
+        .declareProperty(tenantIdProp)
+        .declareProperty(extensionMetadataProperty);
   }
 
   public void wrap(final ProcessInstanceRecord record) {
@@ -131,6 +134,7 @@ public class ProcessInstanceRecordEntity extends UnpackedObject implements Store
         .setEndTime(record.getEndTime())
         .setDuration(record.getDuration())
         .setAdditions(record.getAdditionsBuffer())
+        .setExtensionMetadata(record.getExtensionMetadataBuffer())
         .setLifeCycle(record.getLifeCycle())
         .setListenerType(record.getListenerType())
         .setListenerIndex(record.getListenerIndex())
@@ -158,6 +162,7 @@ public class ProcessInstanceRecordEntity extends UnpackedObject implements Store
         .setEndTime(getEndTime())
         .setDuration(getDuration())
         .setAdditions(getAdditionsBuffer())
+        .setExtensionMetadata(getExtensionMetadataBuffer())
         .setLifeCycle(getLifeCycle())
         .setListenerType(getListenerType())
         .setListenerIndex(getListenerIndex())
@@ -512,6 +517,25 @@ public class ProcessInstanceRecordEntity extends UnpackedObject implements Store
 
   public ProcessInstanceRecordEntity setAdditions(final Map<String, Object> additions) {
     additionsProperty.setValue(wrapArray(convertToMsgPack(additions)));
+    return this;
+  }
+
+  public Map<String, Object> getExtensionMetadata() {
+    return convertToMap(extensionMetadataProperty.getValue());
+  }
+
+  public DirectBuffer getExtensionMetadataBuffer() {
+    return extensionMetadataProperty.getValue();
+  }
+
+  public ProcessInstanceRecordEntity setExtensionMetadata(final DirectBuffer extensionMetadata) {
+    extensionMetadataProperty.setValue(extensionMetadata);
+    return this;
+  }
+
+  public ProcessInstanceRecordEntity setExtensionMetadata(
+      final Map<String, Object> extensionMetadata) {
+    extensionMetadataProperty.setValue(wrapArray(convertToMsgPack(extensionMetadata)));
     return this;
   }
 

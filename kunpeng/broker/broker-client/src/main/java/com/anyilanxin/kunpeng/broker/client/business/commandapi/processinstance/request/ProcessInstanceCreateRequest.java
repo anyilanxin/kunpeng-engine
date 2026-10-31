@@ -62,4 +62,15 @@ public class ProcessInstanceCreateRequest
     getValue().setVariables(variables);
     return this;
   }
+
+  public ProcessInstanceCreateRequest setExtensionMetadata(
+      final Map<String, Object> extensionMetadata) {
+    getValue().setExtensionMetadata(extensionMetadata);
+    return this;
+  }
+
+  public ProcessInstanceCreateRequest setExtensionMetadata(final DirectBuffer extensionMetadata) {
+    getValue().setExtensionMetadata(extensionMetadata);
+    return this;
+  }
 }

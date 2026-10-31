@@ -16,6 +16,7 @@ import com.anyilanxin.kunpeng.protocol.business.AdditionsRecodeValue;
 import com.anyilanxin.kunpeng.protocol.common.RecordValueWithVariables;
 import com.anyilanxin.kunpeng.protocol.common.TenantOwned;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author zxuanhong
@@ -40,6 +41,8 @@ public interface UserTaskRecordValue
   long getProcessDefinitionId();
 
   String getBusinessKey();
+
+  Map<String, Object> getExtensionMetadata();
 
   String getTaskDefinitionKey();
 

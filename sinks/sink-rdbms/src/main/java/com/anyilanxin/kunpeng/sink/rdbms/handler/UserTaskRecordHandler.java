@@ -67,6 +67,7 @@ public final class UserTaskRecordHandler implements RecordModelHandler {
       model.setActivityInstanceId(value.getActivityInstanceId());
       model.setProcessInstanceId(value.getProcessInstanceId());
       model.setBusinessKey(value.getBusinessKey());
+      model.setExtensionMetadata(JsonValues.toJson(value.getExtensionMetadata()));
       model.setProcessDefinitionId(value.getProcessDefinitionId());
       model.setDefinitionKey(value.getProcessDefinitionKey());
       model.setTaskDefinitionKey(value.getTaskDefinitionKey());

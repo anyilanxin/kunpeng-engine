@@ -16,6 +16,7 @@ import com.anyilanxin.kunpeng.protocol.business.*;
 import com.anyilanxin.kunpeng.protocol.common.DurationValue;
 import com.anyilanxin.kunpeng.protocol.common.RecordValueWithVariables;
 import com.anyilanxin.kunpeng.protocol.common.TenantOwned;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -40,6 +41,9 @@ public interface ProcessInstanceRecordValue
 
   /** 业务 id */
   String getBusinessKey();
+
+  /** 扩展元数据 */
+  Map<String, Object> getExtensionMetadata();
 
   /** 流程定义 key */
   String getProcessDefinitionKey();

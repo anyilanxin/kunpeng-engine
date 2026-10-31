@@ -89,6 +89,9 @@ public interface BusinessRecordConstant {
   /** 业务 key */
   String BUSINESS_KEY = "BUSINESS_KEY";
 
+  /** 扩展元数据 */
+  String EXTENSION_METADATA = "EXTENSION_METADATA";
+
   /** 流程实例 id */
   String PROCESS_INSTANCE_ID = "PROCESS_INSTANCE_ID";
 

@@ -42,4 +42,10 @@ public interface ProcessInstanceCreateRequestRecordValue
   ProcessInstanceCreateRequestRecordValue setVariables(final DirectBuffer variables);
 
   ProcessInstanceCreateRequestRecordValue setBusinessKey(final String businessKey);
+
+  ProcessInstanceCreateRequestRecordValue setExtensionMetadata(
+      final Map<String, Object> extensionMetadata);
+
+  ProcessInstanceCreateRequestRecordValue setExtensionMetadata(
+      final DirectBuffer extensionMetadata);
 }

@@ -61,6 +61,7 @@
       <column name="parent_process_instance_id" type="BIGINT"/>
       <column name="root_process_instance_id" type="BIGINT"/>
       <column name="business_key" type="VARCHAR(255)"/>
+      <column name="extension_metadata" type="${text.type}"/>
       <column name="process_definition_id" type="BIGINT">
         <constraints nullable="false"/>
       </column>
@@ -163,6 +164,7 @@
         <constraints nullable="false"/>
       </column>
       <column name="business_key" type="VARCHAR(255)"/>
+      <column name="extension_metadata" type="${text.type}"/>
       <column name="process_definition_id" type="BIGINT">
         <constraints nullable="false"/>
       </column>

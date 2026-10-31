@@ -122,6 +122,28 @@ public interface CreateProcessInstanceCommand {
     CreateProcessInstanceCommandStep3 variable(String key, Object value);
 
     /**
+     * Set the extension metadata of the process instance. The metadata is attached to the created
+     * instance (propagated like the business key, e.g. to call activities) and takes precedence
+     * over same-named variables in expression evaluation. It is read-only for the process.
+     *
+     * @param extensionMetadata the extension metadata document as map
+     * @return the builder for this command. Call {@link #send()} to complete the command and send
+     *     it to the broker.
+     */
+    CreateProcessInstanceCommandStep3 extensionMetadata(Map<String, Object> extensionMetadata);
+
+    /**
+     * Set the extension metadata of the process instance. The metadata is attached to the created
+     * instance (propagated like the business key, e.g. to call activities) and takes precedence
+     * over same-named variables in expression evaluation. It is read-only for the process.
+     *
+     * @param extensionMetadata the extension metadata JSON document as String
+     * @return the builder for this command. Call {@link #send()} to complete the command and send
+     *     it to the broker.
+     */
+    CreateProcessInstanceCommandStep3 extensionMetadata(String extensionMetadata);
+
+    /**
      * Overrides the default start position of the process. Calling this method will make the
      * process start at the given {@code elementId}, if possible. This method can be called more
      * than once to simultaneously start at different elements in different branches of the process.

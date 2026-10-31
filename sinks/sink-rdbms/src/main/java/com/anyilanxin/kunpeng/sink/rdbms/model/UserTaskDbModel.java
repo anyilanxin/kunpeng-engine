@@ -25,6 +25,7 @@ public class UserTaskDbModel {
   private Long activityInstanceId;
   private long processInstanceId;
   private String businessKey;
+  private String extensionMetadata;
   private long processDefinitionId;
   private String definitionKey;
   private String taskDefinitionKey;

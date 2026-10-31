@@ -88,6 +88,7 @@ public class ProcessInstanceCreateProcessor
             .setRootProcessInstanceId(processInstanceId)
             .setLifeCycle(ProcessInstanceLifeCycle.ACTIVATING)
             .setBusinessKey(request.getBusinessKey())
+            .setExtensionMetadata(request.getExtensionMetadataBuffer())
             .setStartUserId("")
             .setVariables(request.getVariablesBuffer())
             .setStartActivityDefinitionKey(noneStartEvent.getId())

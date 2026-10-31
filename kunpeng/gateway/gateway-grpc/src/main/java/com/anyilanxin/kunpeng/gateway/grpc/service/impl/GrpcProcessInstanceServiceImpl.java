@@ -74,6 +74,7 @@ public class GrpcProcessInstanceServiceImpl
     }
     brokerRequest
         .setVariable(ensureJsonSet(request.getVariable()))
+        .setExtensionMetadata(ensureJsonSet(request.getExtensionMetadata()))
         .setTenantId(request.getTenantId());
     commands
         .createProcessInstance(brokerRequest)

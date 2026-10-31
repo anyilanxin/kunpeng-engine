@@ -25,6 +25,7 @@ public class ProcessInstanceDbModel {
   private Long parentProcessInstanceId;
   private Long rootProcessInstanceId;
   private String businessKey;
+  private String extensionMetadata;
   private long processDefinitionId;
   private String definitionKey;
   private String definitionName;

@@ -21,6 +21,7 @@ import com.anyilanxin.kunpeng.protocol.business.record.command.processinstance.P
 import com.anyilanxin.kunpeng.protocol.business.record.command.processinstance.ProcessInstanceRecordValue;
 import com.anyilanxin.kunpeng.sink.rdbms.model.ProcessInstanceDbModel;
 import com.anyilanxin.kunpeng.sink.rdbms.write.ChangeBuffer;
+import com.anyilanxin.kunpeng.sink.rdbms.write.JsonValues;
 import com.anyilanxin.kunpeng.sink.rdbms.write.RowChange;
 import java.util.List;
 import java.util.Set;
@@ -75,6 +76,7 @@ public final class ProcessInstanceRecordHandler implements RecordModelHandler {
       model.setParentProcessInstanceId(positive(value.getParentProcessInstanceId()));
       model.setRootProcessInstanceId(positive(value.getRootProcessInstanceId()));
       model.setBusinessKey(value.getBusinessKey());
+      model.setExtensionMetadata(JsonValues.toJson(value.getExtensionMetadata()));
       model.setProcessDefinitionId(value.getProcessDefinitionId());
       model.setDefinitionKey(value.getProcessDefinitionKey());
       model.setDefinitionName(value.getProcessDefinitionName());

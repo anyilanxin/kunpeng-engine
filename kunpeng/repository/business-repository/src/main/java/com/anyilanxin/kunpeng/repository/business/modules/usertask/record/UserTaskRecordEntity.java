@@ -85,9 +85,11 @@ public class UserTaskRecordEntity extends UnpackedObject implements StoreValue {
   private final LongProperty durationProp = new LongProperty(25, DURATION, -1);
   private final StringProperty tenantIdProp =
       new StringProperty(26, TENANT_ID, TenantOwned.DEFAULT_TENANT_IDENTIFIER);
+  private final DocumentProperty extensionMetadataProperty =
+      new DocumentProperty(27, EXTENSION_METADATA);
 
   public UserTaskRecordEntity() {
-    super(26);
+    super(27);
     declareProperty(taskIdProp)
         .declareProperty(parentTaskIdProp)
         .declareProperty(revProp)
@@ -113,7 +115,8 @@ public class UserTaskRecordEntity extends UnpackedObject implements StoreValue {
         .declareProperty(startTimeProp)
         .declareProperty(endTimeProp)
         .declareProperty(durationProp)
-        .declareProperty(tenantIdProp);
+        .declareProperty(tenantIdProp)
+        .declareProperty(extensionMetadataProperty);
   }
 
   public void wrap(final UserTaskRecord record) {
@@ -139,6 +142,7 @@ public class UserTaskRecordEntity extends UnpackedObject implements StoreValue {
         .setListenerType(record.getListenerType())
         .setListenerIndex(record.getListenerIndex())
         .setAdditions(record.getAdditionsBuffer())
+        .setExtensionMetadata(record.getExtensionMetadataBuffer())
         .setStartTime(record.getStartTime())
         .setEndTime(record.getEndTime())
         .setDuration(record.getDuration())
@@ -170,6 +174,7 @@ public class UserTaskRecordEntity extends UnpackedObject implements StoreValue {
         .setListenerType(getListenerType())
         .setListenerIndex(getListenerIndex())
         .setAdditions(getAdditionsBuffer())
+        .setExtensionMetadata(getExtensionMetadataBuffer())
         .setStartTime(getStartTime())
         .setEndTime(getEndTime())
         .setDuration(getDuration())
@@ -483,6 +488,24 @@ public class UserTaskRecordEntity extends UnpackedObject implements StoreValue {
 
   public UserTaskRecordEntity setAdditions(final Map<String, Object> additions) {
     additionsProperty.setValue(BufferUtil.wrapArray(convertToMsgPack(additions)));
+    return this;
+  }
+
+  public Map<String, Object> getExtensionMetadata() {
+    return convertToMap(extensionMetadataProperty.getValue());
+  }
+
+  public DirectBuffer getExtensionMetadataBuffer() {
+    return extensionMetadataProperty.getValue();
+  }
+
+  public UserTaskRecordEntity setExtensionMetadata(final DirectBuffer extensionMetadata) {
+    extensionMetadataProperty.setValue(extensionMetadata);
+    return this;
+  }
+
+  public UserTaskRecordEntity setExtensionMetadata(final Map<String, Object> extensionMetadata) {
+    extensionMetadataProperty.setValue(BufferUtil.wrapArray(convertToMsgPack(extensionMetadata)));
     return this;
   }
 

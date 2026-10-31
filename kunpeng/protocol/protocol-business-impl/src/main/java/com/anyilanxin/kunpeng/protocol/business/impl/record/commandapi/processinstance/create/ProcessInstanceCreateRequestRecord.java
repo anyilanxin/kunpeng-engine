@@ -53,16 +53,19 @@ public class ProcessInstanceCreateRequestRecord
   private final StringProperty tenantIdProp =
       new StringProperty(6, TENANT_ID, TenantOwned.DEFAULT_TENANT_IDENTIFIER);
   private final StringProperty businessKeyProp = new StringProperty(7, BUSINESS_KEY, "");
+  private final DocumentProperty extensionMetadataProperty =
+      new DocumentProperty(8, EXTENSION_METADATA);
 
   public ProcessInstanceCreateRequestRecord() {
-    super(7);
+    super(8);
     declareProperty(processDefinitionKeyProp)
         .declareProperty(processDefinitionVersionProp)
         .declareProperty(processDefinitionIdProp)
         .declareProperty(variablesProperty)
         .declareProperty(activityDefinitionKeysProp)
         .declareProperty(tenantIdProp)
-        .declareProperty(businessKeyProp);
+        .declareProperty(businessKeyProp)
+        .declareProperty(extensionMetadataProperty);
   }
 
   @Override
@@ -163,5 +166,28 @@ public class ProcessInstanceCreateRequestRecord
   @JsonIgnore
   public DirectBuffer getBusinessKeyBuffer() {
     return businessKeyProp.getValue();
+  }
+
+  @Override
+  public ProcessInstanceCreateRequestRecord setExtensionMetadata(
+      final Map<String, Object> extensionMetadata) {
+    extensionMetadataProperty.setValue(wrapArray(convertToMsgPack(extensionMetadata)));
+    return this;
+  }
+
+  @Override
+  public ProcessInstanceCreateRequestRecordValue setExtensionMetadata(
+      final DirectBuffer extensionMetadata) {
+    extensionMetadataProperty.setValue(extensionMetadata);
+    return this;
+  }
+
+  public Map<String, Object> getExtensionMetadata() {
+    return convertToMap(extensionMetadataProperty.getValue());
+  }
+
+  @JsonIgnore
+  public DirectBuffer getExtensionMetadataBuffer() {
+    return extensionMetadataProperty.getValue();
   }
 }

@@ -22,6 +22,7 @@ import com.anyilanxin.kunpeng.gateway.grpc.service.ProcessInstanceServiceOuterCl
 import io.grpc.stub.StreamObserver;
 import java.time.Duration;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
@@ -107,6 +108,23 @@ public final class CreateProcessInstanceCommandImpl
   @Override
   protected CreateProcessInstanceCommandImpl setVariablesInternal(final String variables) {
     requestBuilder.setVariable(variables);
+    return this;
+  }
+
+  @Override
+  public CreateProcessInstanceCommand.CreateProcessInstanceCommandStep3 extensionMetadata(
+      final Map<String, Object> extensionMetadata) {
+    ArgumentUtil.ensureNotNull("extensionMetadata", extensionMetadata);
+    requestBuilder.setExtensionMetadata(objectMapper.toJson(extensionMetadata));
+    return this;
+  }
+
+  @Override
+  public CreateProcessInstanceCommand.CreateProcessInstanceCommandStep3 extensionMetadata(
+      final String extensionMetadata) {
+    ArgumentUtil.ensureNotNull("extensionMetadata", extensionMetadata);
+    requestBuilder.setExtensionMetadata(
+        objectMapper.validateJson("extensionMetadata", extensionMetadata));
     return this;
   }
 

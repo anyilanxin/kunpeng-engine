@@ -89,9 +89,11 @@ public class UserTaskRecord extends UnifiedRecordValue<UserTaskRecord>
   private final LongProperty durationProp = new LongProperty(26, DURATION, -1);
   private final StringProperty tenantIdProp =
       new StringProperty(27, TENANT_ID, TenantOwned.DEFAULT_TENANT_IDENTIFIER);
+  private final DocumentProperty extensionMetadataProperty =
+      new DocumentProperty(28, EXTENSION_METADATA);
 
   public UserTaskRecord() {
-    super(27);
+    super(28);
     declareProperty(taskIdProp)
         .declareProperty(parentTaskIdProp)
         .declareProperty(revProp)
@@ -118,7 +120,8 @@ public class UserTaskRecord extends UnifiedRecordValue<UserTaskRecord>
         .declareProperty(startTimeProp)
         .declareProperty(endTimeProp)
         .declareProperty(durationProp)
-        .declareProperty(tenantIdProp);
+        .declareProperty(tenantIdProp)
+        .declareProperty(extensionMetadataProperty);
   }
 
   public void wrap(final ActivityInstanceRecord instanceRecord) {
@@ -488,6 +491,26 @@ public class UserTaskRecord extends UnifiedRecordValue<UserTaskRecord>
 
   public UserTaskRecord setAdditions(final Map<String, Object> additions) {
     additionsProperty.setValue(BufferUtil.wrapArray(convertToMsgPack(additions)));
+    return this;
+  }
+
+  @Override
+  public Map<String, Object> getExtensionMetadata() {
+    return convertToMap(extensionMetadataProperty.getValue());
+  }
+
+  @JsonIgnore
+  public DirectBuffer getExtensionMetadataBuffer() {
+    return extensionMetadataProperty.getValue();
+  }
+
+  public UserTaskRecord setExtensionMetadata(final DirectBuffer extensionMetadata) {
+    extensionMetadataProperty.setValue(extensionMetadata);
+    return this;
+  }
+
+  public UserTaskRecord setExtensionMetadata(final Map<String, Object> extensionMetadata) {
+    extensionMetadataProperty.setValue(wrapArray(convertToMsgPack(extensionMetadata)));
     return this;
   }
 

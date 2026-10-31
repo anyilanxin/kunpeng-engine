@@ -31,6 +31,9 @@ message CreateProcessInstanceRequest {
   int64 processDefinitionId = 5;
   repeated string activateActivityDefinitionKey = 6;
   repeated string terminateActivityDefinitionKey = 7;
+  // JSON document: extension metadata attached to the process instance, propagated like
+  // business key and evaluated with the highest priority in expressions
+  string extensionMetadata = 8;
 }
 
 message CreateProcessInstanceResponse {

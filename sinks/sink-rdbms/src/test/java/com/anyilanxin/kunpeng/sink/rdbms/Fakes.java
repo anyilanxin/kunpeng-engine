@@ -375,6 +375,7 @@ final class Fakes {
     long rootProcessInstanceId;
     int rev = 1;
     String businessKey = "bk-1";
+    Map<String, Object> extensionMetadata = Map.of("channel", "app");
     String processDefinitionKey = "order-process";
     String processDefinitionName = "Order Process";
     long processDefinitionId = 1001;
@@ -409,6 +410,11 @@ final class Fakes {
     @Override
     public String getBusinessKey() {
       return businessKey;
+    }
+
+    @Override
+    public Map<String, Object> getExtensionMetadata() {
+      return extensionMetadata;
     }
 
     @Override
@@ -746,6 +752,11 @@ final class Fakes {
     @Override
     public String getBusinessKey() {
       return "bk-1";
+    }
+
+    @Override
+    public Map<String, Object> getExtensionMetadata() {
+      return Map.of();
     }
 
     @Override

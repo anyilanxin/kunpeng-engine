@@ -28,6 +28,7 @@ import com.anyilanxin.kunpeng.protocol.business.impl.record.command.variable.Var
 import com.anyilanxin.kunpeng.protocol.business.record.command.variable.VariableLifeCycle;
 import com.anyilanxin.kunpeng.repository.business.ImmutableBusinessRepository;
 import com.anyilanxin.kunpeng.repository.business.modules.activityinstance.ImmutableActivityInstanceRepository;
+import com.anyilanxin.kunpeng.repository.business.modules.processinstance.ImmutableProcessInstanceRepository;
 import com.anyilanxin.kunpeng.repository.business.modules.variable.ImmutableVariableRepository;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,6 +45,7 @@ public class VariableBehavior {
   private final LogEventWriter writer;
   private final ImmutableVariableRepository variable;
   private final ImmutableActivityInstanceRepository activityInstance;
+  private final ImmutableProcessInstanceRepository processInstance;
 
   /**
    * 命令批次内变量快照缓存：scopeId → 变量集。 首次触碰从仓储加载，本行为内的更新写后回填；其他写入方经 {@link LogEventWriter#addEvent}
@@ -56,6 +58,7 @@ public class VariableBehavior {
     final ImmutableBusinessRepository repository = writer.getRepository();
     variable = repository.variableRepository();
     activityInstance = repository.instanceRepository();
+    processInstance = repository.processInstanceRepository();
   }
 
   /** 批次开始清空缓存：跨批次仓储可能有本批次之外的变更，不复用旧快照 */
@@ -106,6 +109,11 @@ public class VariableBehavior {
         break;
       }
     } while (processInstanceId != currentParentActivityInstanceId);
+    // 扩展元数据优先级最高：实例级只读元数据覆盖作用域链同名键
+    final ProcessInstanceRecord instanceRecord = processInstance.getRecord(processInstanceId);
+    if (instanceRecord != null) {
+      variableMap.putAll(instanceRecord.getExtensionMetadata());
+    }
     return variableMap;
   }
 
