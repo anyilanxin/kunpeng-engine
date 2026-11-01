@@ -19,6 +19,7 @@ package com.anyilanxin.kunpeng.engine.bpmn;
 import com.anyilanxin.kunpeng.cluster.business.step.RaftPartitionSource;
 import com.anyilanxin.kunpeng.engine.bpmn.command.CommandProcessorRegister;
 import com.anyilanxin.kunpeng.engine.bpmn.commandapi.ApiCommandProcessorRegister;
+import com.anyilanxin.kunpeng.protocol.business.impl.RecordMetadata;
 import com.anyilanxin.kunpeng.protocol.business.impl.eventlog.BusinessLogRecord;
 import com.anyilanxin.kunpeng.repository.business.BusinessRepository;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -77,6 +78,13 @@ public class BpmnEngine {
       final BusinessLogRecord record, final BatchProcessingCollect processingCollect) {
     final LogEventProcessor<?> processor = processors.getProcessor(record);
     collectSupplier.setCollect(processingCollect);
+    // 信封授权元数据 → 处理上下文：本命令链生成的记录自动携带（a→b 同步继承；每条记录边界重置）
+    final RecordMetadata recordMetadata = record.getMetadata();
+    if (recordMetadata != null && recordMetadata.getAuthorizationMetadataBuffer().capacity() > 0) {
+      writer.authorizationMetadata(recordMetadata.getAuthorizationMetadataBuffer());
+    } else {
+      writer.authorizationMetadata(null);
+    }
     if (processor == null) {
       writer.adErrorResponse(
           record.getRequestId(),

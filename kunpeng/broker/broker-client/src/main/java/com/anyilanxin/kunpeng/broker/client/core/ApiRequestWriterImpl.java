@@ -23,6 +23,7 @@ import com.anyilanxin.kunpeng.broker.client.core.protocol.RecordType;
 import com.anyilanxin.kunpeng.protocol.common.Protocol;
 import org.agrona.DirectBuffer;
 import org.agrona.MutableDirectBuffer;
+import org.agrona.concurrent.UnsafeBuffer;
 
 /**
  * 统一传输请求写入器默认实现。
@@ -31,6 +32,9 @@ import org.agrona.MutableDirectBuffer;
  * @since 2026.9.0
  */
 public class ApiRequestWriterImpl implements ApiRequestWriter {
+  /** 空 varData 组占位（多 varData 组必须全部按声明顺序编码，长度可为 0） */
+  private static final DirectBuffer EMPTY = new UnsafeBuffer(new byte[0]);
+
   private final ApiRequestEncoder encoder = new ApiRequestEncoder();
   private final MessageHeaderEncoder header = new MessageHeaderEncoder();
   private long key = -1;
@@ -39,6 +43,7 @@ public class ApiRequestWriterImpl implements ApiRequestWriter {
   private int lifeCycle = -1;
   private DirectBuffer data = null;
   private boolean hasData = false;
+  private DirectBuffer authorizationMetadata = null;
 
   /** 重置瞬态状态，使池化实例可以在多轮写入之间安全复用。 */
   public ApiRequestWriterImpl reset() {
@@ -48,6 +53,7 @@ public class ApiRequestWriterImpl implements ApiRequestWriter {
     lifeCycle = -1;
     data = null;
     hasData = false;
+    authorizationMetadata = null;
     return this;
   }
 
@@ -83,11 +89,19 @@ public class ApiRequestWriterImpl implements ApiRequestWriter {
   }
 
   @Override
+  public ApiRequestWriter authorizationMetadata(final DirectBuffer authorizationMetadata) {
+    this.authorizationMetadata = authorizationMetadata;
+    return this;
+  }
+
+  @Override
   public int getLength() {
     return MessageHeaderEncoder.ENCODED_LENGTH
         + ApiRequestEncoder.BLOCK_LENGTH
         + ApiRequestEncoder.dataHeaderLength()
-        + (hasData ? data.capacity() : 0);
+        + (hasData ? data.capacity() : 0)
+        + ApiRequestEncoder.authorizationMetadataHeaderLength()
+        + (authorizationMetadata != null ? authorizationMetadata.capacity() : 0);
   }
 
   @Override
@@ -103,6 +117,13 @@ public class ApiRequestWriterImpl implements ApiRequestWriter {
         .hasData(to(hasData));
     if (hasData) {
       encoder.putData(data, 0, data.capacity());
+    } else {
+      encoder.putData(EMPTY, 0, 0);
+    }
+    if (authorizationMetadata != null) {
+      encoder.putAuthorizationMetadata(authorizationMetadata, 0, authorizationMetadata.capacity());
+    } else {
+      encoder.putAuthorizationMetadata(EMPTY, 0, 0);
     }
   }
 

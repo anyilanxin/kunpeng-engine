@@ -16,6 +16,7 @@
  */
 package com.anyilanxin.kunpeng.modules.broker.configuration;
 
+import com.anyilanxin.kunpeng.configuration.authorization.AuthorizationCfg;
 import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -23,16 +24,23 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 /**
- * broker 配置属性装配：将配置文件绑定并构建 broker 启动配置。
+ * broker 配置属性装配：将配置文件绑定并构建 broker 启动配置（授权校验为独立实体，单独注册便于后续扩展）。
  *
  * @author zxuanhong
  * @since 2026.9.0
  */
 @Component
-@EnableConfigurationProperties(BrokerPropertiesConfiguration.BrokerProperties.class)
+@EnableConfigurationProperties({
+  BrokerPropertiesConfiguration.BrokerProperties.class,
+  BrokerPropertiesConfiguration.AuthorizationProperties.class
+})
 @Profile(value = {"broker", "restore"})
 public class BrokerPropertiesConfiguration {
 
   @ConfigurationProperties("kunpeng.broker")
   public static class BrokerProperties extends BrokerCfg {}
+
+  /** 授权校验独立配置实体（默认关；yaml 键 kunpeng.broker.authorization.*） */
+  @ConfigurationProperties("kunpeng.broker.authorization")
+  public static class AuthorizationProperties extends AuthorizationCfg {}
 }

@@ -122,6 +122,30 @@ public interface CreateProcessInstanceCommand {
     CreateProcessInstanceCommandStep3 variable(String key, Object value);
 
     /**
+     * Set the OAuth2 bearer token of the command. The token is carried in the standard {@code
+     * Authorization} header; the gateway converts its claims into the authorization metadata
+     * ({@code sub} → {@code userId}, {@code groups}) stamped into the process instance.
+     *
+     * @param token the OAuth2 bearer token of the user who initiates the process instance
+     * @return the builder for this command. Call {@link #send()} to complete the command and send
+     *     it to the broker.
+     */
+    CreateProcessInstanceCommandStep3 authorization(String token);
+
+    /**
+     * Set the authorization metadata of the command directly (non-OAuth2 path). The map is carried
+     * in the {@code x-authorization-metadata} header; standard keys are {@code userId} and {@code
+     * groups}, other entries pass through for audit. Takes precedence over {@link
+     * #authorization(String)} at the gateway.
+     *
+     * @param authorizationMetadata the authorization metadata of the initiating user
+     * @return the builder for this command. Call {@link #send()} to complete the command and send
+     *     it to the broker.
+     */
+    CreateProcessInstanceCommandStep3 authorizationMetadata(
+        Map<String, Object> authorizationMetadata);
+
+    /**
      * Overrides the default start position of the process. Calling this method will make the
      * process start at the given {@code elementId}, if possible. This method can be called more
      * than once to simultaneously start at different elements in different branches of the process.

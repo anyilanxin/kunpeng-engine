@@ -16,6 +16,9 @@
  */
 package com.anyilanxin.kunpeng.engine.bpmn.commandapi.processinstance.processor;
 
+import static com.anyilanxin.kunpeng.structpack.util.DocumentUtil.convertToMap;
+import static com.anyilanxin.kunpeng.structpack.util.DocumentUtil.convertToMsgPack;
+
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnProcess;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnStartEvent;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.BpmnTransformer;
@@ -23,6 +26,7 @@ import com.anyilanxin.kunpeng.engine.bpmn.LogEventWriter;
 import com.anyilanxin.kunpeng.engine.bpmn.command.behavior.impl.VariableBehavior;
 import com.anyilanxin.kunpeng.engine.bpmn.commandapi.processinstance.ProcessInstanceApiAbstractProcessor;
 import com.anyilanxin.kunpeng.protocol.business.ValueType;
+import com.anyilanxin.kunpeng.protocol.business.impl.BusinessRecordConstant;
 import com.anyilanxin.kunpeng.protocol.business.impl.eventlog.BusinessLogRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.async.AsyncRequestRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.deployment.ProcessDefinitionRecord;
@@ -34,6 +38,8 @@ import com.anyilanxin.kunpeng.protocol.business.record.commandapi.record.process
 import com.anyilanxin.kunpeng.repository.business.modules.async.ImmutableAsyncRepository;
 import com.anyilanxin.kunpeng.repository.business.modules.deployment.bpmnresource.record.ProcessDefinitionRuntime;
 import com.anyilanxin.kunpeng.repository.business.modules.key.ImmutableKeyGeneratorRepository;
+import java.util.Map;
+import org.agrona.concurrent.UnsafeBuffer;
 
 /**
  * 流程实例创建 API 处理器。
@@ -88,7 +94,7 @@ public class ProcessInstanceCreateProcessor
             .setRootProcessInstanceId(processInstanceId)
             .setLifeCycle(ProcessInstanceLifeCycle.ACTIVATING)
             .setBusinessKey(request.getBusinessKey())
-            .setStartUserId("")
+            .setStartUserId(startUserId())
             .setVariables(request.getVariablesBuffer())
             .setStartActivityDefinitionKey(noneStartEvent.getId())
             .setProcessDefinitionId(processDefinition.getProcessDefinitionId())
@@ -111,6 +117,20 @@ public class ProcessInstanceCreateProcessor
   @Override
   public CommandApiProcessInstanceValueLifeCycle valueLifeCycle() {
     return CommandApiProcessInstanceValueLifeCycle.CREATE_REQUEST;
+  }
+
+  /** 从信封授权元数据提取发起人：无元数据为空串（未认证/系统）；携带元数据但缺 userId 标准键直接失败 */
+  private String startUserId() {
+    final String json = writer.currentAuthorizationMetadata();
+    if (json.isEmpty()) {
+      return "";
+    }
+    final Map<String, Object> metadata = convertToMap(new UnsafeBuffer(convertToMsgPack(json)));
+    final Object userId = metadata.get(BusinessRecordConstant.AUTHORIZATION_USER_ID);
+    if (userId == null) {
+      throw new IllegalArgumentException("授权元数据缺少标准键 userId，无法确定流程发起人");
+    }
+    return userId.toString();
   }
 
   private ProcessDefinitionRuntime getExecutableProcess(

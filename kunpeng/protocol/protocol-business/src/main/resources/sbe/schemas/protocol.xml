@@ -95,6 +95,8 @@
     <data name="rejectionType" id="12" type="varDataEncoding"/>
     <!-- populated when RecordType is COMMAND_REJECTION, UTF-8-encoded String -->
     <data name="rejectionReason" id="13" type="varDataEncoding"/>
+    <!-- 统一授权元数据（JSON，UTF-8）：信封级身份上下文，随日志流转不落库，导出可见；空串=未携带 -->
+    <data name="authorizationMetadata" id="14" type="varDataEncoding" sinceVersion="7"/>
     <!-- populated when RecordType is COMMAND -->
   </sbe:message>
 

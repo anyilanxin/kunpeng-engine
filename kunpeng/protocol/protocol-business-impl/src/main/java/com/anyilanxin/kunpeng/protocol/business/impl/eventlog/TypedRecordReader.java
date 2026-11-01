@@ -102,6 +102,11 @@ public final class TypedRecordReader implements BusinessLogRecord {
   }
 
   @Override
+  public String getAuthorizationMetadata() {
+    return metadata.getAuthorizationMetadata();
+  }
+
+  @Override
   public String getBrokerVersion() {
     return metadata.getBrokerVersion().toString();
   }

@@ -118,6 +118,11 @@ public class UnwrittenRecord implements BusinessLogRecord {
   }
 
   @Override
+  public String getAuthorizationMetadata() {
+    return metadata.getAuthorizationMetadata();
+  }
+
+  @Override
   public String getBrokerVersion() {
     return metadata.getBrokerVersion().toString();
   }

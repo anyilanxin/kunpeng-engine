@@ -150,7 +150,7 @@ public class CallActivityElementProcessor
               .setReferenceActivityInstanceId(activityContext.getActivityInstanceId())
               .setLifeCycle(ProcessInstanceLifeCycle.ACTIVATING)
               .setBusinessKey(processInstanceRecord.getBusinessKey())
-              .setStartUserId("")
+              .setStartUserId(processInstanceRecord.getStartUserId())
               .setStartActivityDefinitionKey(noneStartEvent.getId())
               .setProcessDefinitionId(processDefinitionRecord.getProcessDefinitionId())
               .setProcessDefinitionKey(processDefinitionRecord.getProcessDefinitionKey());

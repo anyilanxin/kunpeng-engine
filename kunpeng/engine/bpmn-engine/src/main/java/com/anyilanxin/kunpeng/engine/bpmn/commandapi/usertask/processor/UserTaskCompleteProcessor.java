@@ -18,6 +18,8 @@ package com.anyilanxin.kunpeng.engine.bpmn.commandapi.usertask.processor;
 
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.BpmnTransformer;
 import com.anyilanxin.kunpeng.engine.bpmn.LogEventWriter;
+import com.anyilanxin.kunpeng.engine.bpmn.authorization.AuthorizationDeniedException;
+import com.anyilanxin.kunpeng.engine.bpmn.authorization.AuthorizationHandler;
 import com.anyilanxin.kunpeng.engine.bpmn.command.behavior.impl.VariableBehavior;
 import com.anyilanxin.kunpeng.engine.bpmn.commandapi.usertask.UserTaskApiAbstractProcessor;
 import com.anyilanxin.kunpeng.protocol.business.impl.eventlog.BusinessLogRecord;
@@ -46,6 +48,7 @@ public class UserTaskCompleteProcessor
   private final VariableBehavior variableBehavior;
   private final ImmutableActivityInstanceRepository activityInstance;
   private final ImmutableUserTaskRepository userTask;
+  private final AuthorizationHandler authorization;
 
   public UserTaskCompleteProcessor(final LogEventWriter writer) {
     super(writer, writer.getRepository().userTaskRepository());
@@ -56,6 +59,7 @@ public class UserTaskCompleteProcessor
     bpmnTransformer = writer.getBpmnTransformer();
     sourceId = writer.getSourceId();
     variableBehavior = writer.behavior().variableBehavior();
+    authorization = new AuthorizationHandler(writer);
   }
 
   @Override
@@ -66,6 +70,13 @@ public class UserTaskCompleteProcessor
     if (userTask.getLifeCycle() != UserTaskLifeCycle.CREATED) {
       writer.adErrorResponse(
           record.getRequestId(), 0, "当前任务状态不允许此操作:" + userTask.getState().name());
+      return;
+    }
+    try {
+      authorization.checkCompleteTask(userTask);
+    } catch (final AuthorizationDeniedException e) {
+      writer.adErrorResponse(
+          record.getRequestId(), AuthorizationDeniedException.CODE, e.getMessage());
       return;
     }
 

@@ -228,7 +228,7 @@ public class SignalSubscriptionCorrelateProcessor
               .setRootProcessInstanceId(processInstanceId)
               .setLifeCycle(ProcessInstanceLifeCycle.ACTIVATING)
               .setBusinessKey("")
-              .setStartUserId("")
+              .setStartUserId("SYSTEM")
               .setVariables(value.getVariablesBuffer())
               .setStartActivityDefinitionKey(value.getActivityDefinitionKey())
               .setProcessDefinitionId(value.getProcessDefinitionId())

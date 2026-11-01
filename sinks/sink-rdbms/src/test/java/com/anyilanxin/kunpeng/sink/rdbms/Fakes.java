@@ -255,6 +255,11 @@ final class Fakes {
     }
 
     @Override
+    public String getAuthorizationMetadata() {
+      return "";
+    }
+
+    @Override
     public String getBrokerVersion() {
       return "test";
     }

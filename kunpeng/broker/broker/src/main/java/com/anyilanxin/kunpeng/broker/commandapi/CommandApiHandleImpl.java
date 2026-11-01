@@ -244,6 +244,10 @@ public class CommandApiHandleImpl implements CommandApiHandle, CloseableSilently
     metadata.valueLifeCycle(lifeCycle);
     metadata.recordType(RecordType.get((short) requestReader.requestType()));
     metadata.brokerVersion(brokerVersion);
+    // 传输帧信封 → 日志信封：统一授权元数据转写，任何命令零改动携带
+    if (requestReader.authorizationMetadata() != null) {
+      metadata.authorizationMetadata(requestReader.authorizationMetadata());
+    }
     final long key = requestReader.key();
 
     final UnifiedRecordValue recordValue = valueMapper.getValue(metadata.getLifeCycle());

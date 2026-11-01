@@ -19,9 +19,12 @@ import com.anyilanxin.kunpeng.client.KunpengClientConfiguration;
 import com.anyilanxin.kunpeng.client.command.*;
 import com.anyilanxin.kunpeng.gateway.grpc.service.ProcessInstanceServiceGrpc;
 import com.anyilanxin.kunpeng.gateway.grpc.service.ProcessInstanceServiceOuterClass;
+import io.grpc.Metadata;
+import io.grpc.stub.MetadataUtils;
 import io.grpc.stub.StreamObserver;
 import java.time.Duration;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
@@ -33,6 +36,15 @@ public final class CreateProcessInstanceCommandImpl
         CreateProcessInstanceCommand.CreateProcessInstanceCommandStep3 {
 
   private static final Duration DEADLINE_OFFSET = Duration.ofSeconds(10);
+
+  /** 标准 OAuth2 授权头，与网关 AuthorizationMetadataContext 同名契约 */
+  private static final Metadata.Key<String> AUTHORIZATION_HEADER =
+      Metadata.Key.of("authorization", Metadata.ASCII_STRING_MARSHALLER);
+
+  /** 授权元数据 JSON 头，与网关 AuthorizationMetadataContext 同名契约 */
+  private static final Metadata.Key<String> AUTHORIZATION_METADATA_HEADER =
+      Metadata.Key.of("x-authorization-metadata", Metadata.ASCII_STRING_MARSHALLER);
+
   private final ProcessInstanceServiceGrpc.ProcessInstanceServiceStub asyncStub;
   private final JsonMapper jsonMapper;
   private final Predicate<CredentialsProvider.StatusCode> retryPredicate;
@@ -42,6 +54,8 @@ public final class CreateProcessInstanceCommandImpl
   private Duration requestTimeout;
   private final Set<String> defaultTenantIds;
   private final Set<String> customTenantIds;
+  private String authorizationToken;
+  private Map<String, Object> authorizationMetadata;
 
   public CreateProcessInstanceCommandImpl(
       final ProcessInstanceServiceGrpc.ProcessInstanceServiceStub asyncStub,
@@ -92,9 +106,24 @@ public final class CreateProcessInstanceCommandImpl
       final ProcessInstanceServiceOuterClass.CreateProcessInstanceRequest request,
       final StreamObserver<ProcessInstanceServiceOuterClass.CreateProcessInstanceResponse>
           streamObserver) {
-    asyncStub
+    authStub()
         .withDeadlineAfter(requestTimeout.toMillis(), TimeUnit.MILLISECONDS)
         .createProcessInstance(request, streamObserver);
+  }
+
+  /** 命令携带身份时附着标准授权头/授权元数据头，未设置时用裸 stub */
+  private ProcessInstanceServiceGrpc.ProcessInstanceServiceStub authStub() {
+    if (authorizationToken == null && authorizationMetadata == null) {
+      return asyncStub;
+    }
+    final Metadata headers = new Metadata();
+    if (authorizationMetadata != null) {
+      headers.put(AUTHORIZATION_METADATA_HEADER, objectMapper.toJson(authorizationMetadata));
+    }
+    if (authorizationToken != null) {
+      headers.put(AUTHORIZATION_HEADER, "Bearer " + authorizationToken);
+    }
+    return asyncStub.withInterceptors(MetadataUtils.newAttachHeadersInterceptor(headers));
   }
 
   @Override
@@ -107,6 +136,22 @@ public final class CreateProcessInstanceCommandImpl
   @Override
   protected CreateProcessInstanceCommandImpl setVariablesInternal(final String variables) {
     requestBuilder.setVariable(variables);
+    return this;
+  }
+
+  @Override
+  public CreateProcessInstanceCommand.CreateProcessInstanceCommandStep3 authorization(
+      final String token) {
+    ArgumentUtil.ensureNotNull("token", token);
+    this.authorizationToken = token;
+    return this;
+  }
+
+  @Override
+  public CreateProcessInstanceCommand.CreateProcessInstanceCommandStep3 authorizationMetadata(
+      final Map<String, Object> authorizationMetadata) {
+    ArgumentUtil.ensureNotNull("authorizationMetadata", authorizationMetadata);
+    this.authorizationMetadata = authorizationMetadata;
     return this;
   }
 

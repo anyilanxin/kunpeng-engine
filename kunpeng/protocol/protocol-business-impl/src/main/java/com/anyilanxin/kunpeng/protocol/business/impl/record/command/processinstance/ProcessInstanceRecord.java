@@ -87,6 +87,8 @@ public class ProcessInstanceRecord extends UnifiedRecordValue<ProcessInstanceRec
   private final StringProperty tenantIdProp =
       new StringProperty(24, TENANT_ID, TenantOwned.DEFAULT_TENANT_IDENTIFIER);
 
+  // 授权元数据只驻命令层（非落库流转，见 design-docs/authorization-identity-design.md v3），实例侧仅存 startUserId 提取物
+
   public ProcessInstanceRecord() {
     super(24);
     declareProperty(processInstanceIdProp)
