@@ -12,13 +12,14 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 package com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.job.fail;
 
 import com.anyilanxin.kunpeng.protocol.business.record.commandapi.record.job.fail.JobFailResponseRecordValue;
 import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 import com.anyilanxin.kunpeng.structpack.AutoDeclareProperties;
+import com.anyilanxin.kunpeng.structpack.property.LongProperty;
 
 /**
  * job 失败响应 Record。
@@ -29,7 +30,19 @@ import com.anyilanxin.kunpeng.structpack.AutoDeclareProperties;
 @AutoDeclareProperties
 public class JobFailResponseRecord extends UnifiedRecordValue<JobFailResponseRecord>
     implements JobFailResponseRecordValue {
+  private final LongProperty jobIdProp = new LongProperty(1, "JOB_ID", -1);
+
   public JobFailResponseRecord() {
     super(1);
+    declareProperty(jobIdProp);
+  }
+
+  public long getJobId() {
+    return jobIdProp.getValue();
+  }
+
+  public JobFailResponseRecord setJobId(final long jobId) {
+    jobIdProp.setValue(jobId);
+    return this;
   }
 }

@@ -152,7 +152,6 @@ public class ServiceTaskElementProcessor
       final BpmnJobWorkerTask element, final ActivityContent activityContext) {
     activityInstanceBehavior.onTerminating(activityContext);
     catchEventBehavior.unsubscribeEvent(activityContext);
-    jobBehavior.cancelJob(activityContext);
     activityInstanceBehavior.toTerminated(activityContext);
   }
 

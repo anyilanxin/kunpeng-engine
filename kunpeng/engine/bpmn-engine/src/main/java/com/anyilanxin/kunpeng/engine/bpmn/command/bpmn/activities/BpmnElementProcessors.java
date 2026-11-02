@@ -17,6 +17,8 @@
 package com.anyilanxin.kunpeng.engine.bpmn.command.bpmn.activities;
 
 import com.anyilanxin.kunpeng.bpm.common.BpmnElementType;
+import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnAdHocSubProcess;
+import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnContainer;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnFlowElement;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnProcess;
 import com.anyilanxin.kunpeng.engine.bpmn.LogEventWriter;
@@ -51,20 +53,27 @@ public final class BpmnElementProcessors {
   @SuppressWarnings({"rawtypes"})
   private final BpmnActivityElementProcessor[] elementProcessors;
 
+  /** 临时子流程外层处理器（数组槽位持有者，内部实例经 definitionKey 后缀路由到专用处理器） */
+  private final BpmnActivityElementProcessor<BpmnAdHocSubProcess> adHocSubProcessProcessor;
+
+  /** 临时子流程内部实例处理器（与外层共用 AD_HOC_SUB_PROCESS 元素类型，不入数组槽位） */
+  private final BpmnActivityElementProcessor<BpmnContainer> adHocInnerInstanceProcessor;
+
   private final ImmutableBpmnResourceRepository bpmnResource;
 
   public BpmnElementProcessors(final LogEventWriter writer) {
     this.writer = writer;
     elementProcessors =
         new BpmnActivityElementProcessor[BpmnElementType.class.getEnumConstants().length];
+    this.adHocSubProcessProcessor = new AdHocSubProcessElementProcessor(writer);
+    this.adHocInnerInstanceProcessor = new AdHocSubProcessInnerInstanceElementProcessor(writer);
     init();
     final ImmutableBusinessRepository repository = writer.getRepository();
     bpmnResource = repository.bpmnResourceRepository();
   }
 
   private void init() {
-    register(new AdHocSubProcessElementProcessor(writer))
-        .register(new AdHocSubProcessInnerInstanceElementProcessor(writer))
+    register(adHocSubProcessProcessor)
         .register(new CallActivityElementProcessor(writer))
         .register(new EventSubProcessElementProcessor(writer))
         .register(new MultiInstanceElementProcessor(writer))
@@ -115,8 +124,15 @@ public final class BpmnElementProcessors {
       final BusinessLogRecord<ActivityInstanceRecord> record) {
     final ActivityInstanceRecord value = record.getValue();
     final BpmnElementType elementType = value.getActivityDefinitionType();
-    final BpmnActivityElementProcessor<BpmnFlowElement> elementProcessor =
-        elementProcessors[elementType.ordinal()];
+    BpmnActivityElementProcessor<BpmnFlowElement> elementProcessor =
+        (BpmnActivityElementProcessor<BpmnFlowElement>) elementProcessors[elementType.ordinal()];
+    if (elementType == BpmnElementType.AD_HOC_SUB_PROCESS
+        && BpmnAdHocSubProcess.isInnerInstanceId(value.getActivityDefinitionKey())) {
+      // 临时子流程内部实例与外层共用元素类型，按 definitionKey 后缀路由
+      elementProcessor =
+          (BpmnActivityElementProcessor<BpmnFlowElement>)
+              (BpmnActivityElementProcessor<?>) adHocInnerInstanceProcessor;
+    }
     if (elementProcessor == null) {
       writer.adErrorResponse(record.getRequestId(), 0, "未找到当前元素的处理方法:" + elementType.name());
       return null;

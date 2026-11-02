@@ -53,6 +53,7 @@ public class BpmnProcessElementTerminatingProcessor extends BpmnProcessElementAb
   public void process(
       final BpmnProcess element, final BusinessLogRecord<ProcessInstanceRecord> logRecord) {
     final ProcessInstanceRecord value = logRecord.getValue();
+    writer.behavior().jobBehavior().cancelProcessJobs(value, logRecord.getRequestId());
     value.setState(ProcessInstanceState.TERMINATING);
     value.setEndTime(writer.millis());
     writer.addEvent(

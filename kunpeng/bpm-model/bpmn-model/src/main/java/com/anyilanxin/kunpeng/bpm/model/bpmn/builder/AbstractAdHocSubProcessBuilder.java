@@ -24,6 +24,7 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.FlowNode;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.bpmndi.BpmnShape;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.dc.Bounds;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengAdHoc;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengAdHocImplementationType;
 
 public class AbstractAdHocSubProcessBuilder<B extends AbstractAdHocSubProcessBuilder<B>>
     extends AbstractSubProcessBuilder<B> {
@@ -46,6 +47,18 @@ public class AbstractAdHocSubProcessBuilder<B extends AbstractAdHocSubProcessBui
   public B kunpengActiveElementsCollectionExpression(final String expression) {
     final KunpengAdHoc adHoc = getCreateSingleExtensionElement(KunpengAdHoc.class);
     adHoc.setActiveElementsCollection(asKunpengExpression(expression));
+    return myself;
+  }
+
+  /**
+   * Sets the implementation type that controls the ad-hoc sub-process.
+   *
+   * @param implementationType the implementation type
+   * @return the builder object
+   */
+  public B kunpengImplementationType(final KunpengAdHocImplementationType implementationType) {
+    final KunpengAdHoc adHoc = getCreateSingleExtensionElement(KunpengAdHoc.class);
+    adHoc.setImplementationType(implementationType);
     return myself;
   }
 

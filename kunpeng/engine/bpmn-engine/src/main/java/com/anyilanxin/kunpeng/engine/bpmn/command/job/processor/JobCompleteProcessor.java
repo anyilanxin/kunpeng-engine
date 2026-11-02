@@ -35,6 +35,8 @@ import java.util.Map;
 /**
  * job 完成命令处理器。
  *
+ * <p>存在性门户检查在命令 API 面（JobApiAbstractProcessor）完成：逐记录级联排干的串行执行模型下，API 检查通过即不存在行被并发删除的窗口。
+ *
  * @author zxuanhong
  * @since 2026.9.0
  */

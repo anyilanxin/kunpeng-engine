@@ -14,9 +14,21 @@ package com.anyilanxin.kunpeng.protocol.business.record.commandapi.record.job.fa
 
 import com.anyilanxin.kunpeng.protocol.business.record.commandapi.RequestRecordValue;
 import com.anyilanxin.kunpeng.structpack.JsonSerializable;
+import org.agrona.DirectBuffer;
 
 /**
  * @author zxuanhong
  * @since 2026.9.0
  */
-public interface JobFailRequestRecordValue extends RequestRecordValue, JsonSerializable {}
+public interface JobFailRequestRecordValue extends RequestRecordValue, JsonSerializable {
+
+  JobFailRequestRecordValue setJobId(final long jobId);
+
+  JobFailRequestRecordValue setRetries(final int retries);
+
+  JobFailRequestRecordValue setRetryBackOff(final int retryBackOff);
+
+  JobFailRequestRecordValue setDeniedReason(final String deniedReason);
+
+  JobFailRequestRecordValue setDeniedReason(final DirectBuffer deniedReason);
+}

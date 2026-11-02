@@ -32,6 +32,11 @@ public final class BpmnAdHocSubProcess extends BpmnContainer {
   /** 内部实例 id 的固定后缀 */
   private static final String INNER_INSTANCE_ID_POSTFIX = "-inner";
 
+  /** 判断给定 definitionKey 是否为临时子流程内部实例 id（以 -inner 结尾）。 */
+  public static boolean isInnerInstanceId(final String key) {
+    return key != null && key.endsWith(INNER_INSTANCE_ID_POSTFIX);
+  }
+
   /** 内部实例 id（流程执行时临时子流程以内部实例形态展开） */
   private final String innerInstanceId;
 

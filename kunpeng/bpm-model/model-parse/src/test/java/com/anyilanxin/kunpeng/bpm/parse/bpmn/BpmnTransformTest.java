@@ -25,7 +25,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.Bpmn;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.BpmnModelInstance;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengAdHocImplementationType;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengExecutionListenerEventType;
+import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnAdHocSubProcess;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnBoundaryEvent;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnBranchingGateway;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnCallActivity;
@@ -197,6 +199,9 @@ class BpmnTransformTest {
         "URGENT-1", escalationStart.getEscalation().getEscalationCodeExpression().getSourceText());
   }
 
+  /** 临时子流程：完成条件、剩余取消标记、激活集合、实现类型与内部活动登记（含多实例体覆盖）。 */
+  private static final String ADHOC_BPMN = "bpmn/adhoc.bpmn";
+
   @Test
   void shouldReuseExpressionForIdenticalSources() {
     // 相同源文本（两个任务的 retries=3）经表达式缓存去重，仅解析一次并复用同一实例
@@ -207,6 +212,32 @@ class BpmnTransformTest {
     final BpmnJobWorkerTask ship =
         process.getElementById("Task_ship", BpmnJobWorkerTask.class);
     assertSame(payment.getJobProperties().getRetries(), ship.getJobProperties().getRetries());
+  }
+
+  @Test
+  void shouldTransformAdHocSubProcess() {
+    final BpmnProcess process = transformFirst(ADHOC_BPMN);
+
+    // 专用字段均已装配：完成条件、取消标记、激活集合与实现类型
+    final BpmnAdHocSubProcess adHoc =
+        process.getElementById("Sub_adhoc", BpmnAdHocSubProcess.class);
+    assertEquals(BpmnElementType.AD_HOC_SUB_PROCESS, adHoc.getElementType());
+    assertEquals("Sub_adhoc-inner", adHoc.getInnerInstanceId());
+    assertNotNull(adHoc.getCompletionCondition());
+    assertFalse(adHoc.isCancelRemainingInstances());
+    assertNotNull(adHoc.getActiveElementsCollection());
+    assertEquals(KunpengAdHocImplementationType.BPMN, adHoc.getImplementationType());
+
+    // 全部直接子活动已登记；多实例子活动以活动体覆盖登记（同 id 覆盖）
+    assertEquals(4, adHoc.getAdHocActivities().size());
+    final BpmnUserTask review = process.getElementById("Task_review", BpmnUserTask.class);
+    assertTrue(adHoc.getAdHocActivities().containsValue(review));
+    assertTrue(
+        adHoc.getAdHocActivities()
+            .containsValue(process.getElementById("Task_notify", BpmnFlowNode.class)));
+    final BpmnMultiInstanceBody shipBody =
+        process.getElementById("Task_ship_adhoc", BpmnMultiInstanceBody.class);
+    assertTrue(adHoc.getAdHocActivities().containsValue(shipBody));
   }
 
   @Test

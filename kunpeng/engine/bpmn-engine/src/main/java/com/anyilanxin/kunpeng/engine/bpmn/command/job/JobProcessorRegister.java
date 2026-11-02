@@ -34,6 +34,7 @@ public final class JobProcessorRegister {
     processors
         .onCommand(new JobCompleteProcessor(writer))
         .onCommand(new JobCreatedProcessor(writer))
+        .onCommand(new JobCancelingProcessor(writer))
         .onCommand(new JobBatchActivateProcessor(writer))
         .onCommand(new JobUpdateProcessor(writer))
         .onCommand(new JobRefuseProcessor(writer))

@@ -35,6 +35,8 @@ public enum JobLifeCycle implements ValueLifeCycle {
   WITHDRAW((short) 10, PROCESS_INDEX_149),
   TIME_OUT((short) 11, PROCESS_INDEX_150),
   TIMED_OUT((short) 12, PROCESS_INDEX_151),
+  CANCELING((short) 13, PROCESS_INDEX_152),
+  CANCELED((short) 14, PROCESS_INDEX_153),
   ;
 
   private final short value;
@@ -58,6 +60,8 @@ public enum JobLifeCycle implements ValueLifeCycle {
       case 10 -> WITHDRAW;
       case 11 -> TIME_OUT;
       case 12 -> TIMED_OUT;
+      case 13 -> CANCELING;
+      case 14 -> CANCELED;
       default -> UNKNOWN;
     };
   }
@@ -75,6 +79,8 @@ public enum JobLifeCycle implements ValueLifeCycle {
       case 10 -> WITHDRAW;
       case 11 -> TIME_OUT;
       case 12 -> TIMED_OUT;
+      case 13 -> CANCELING;
+      case 14 -> CANCELED;
       default -> NULL_VAL;
     };
   }

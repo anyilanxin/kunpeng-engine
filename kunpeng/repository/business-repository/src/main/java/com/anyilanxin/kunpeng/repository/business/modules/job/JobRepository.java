@@ -20,11 +20,9 @@ import com.anyilanxin.kunpeng.kvstore.ColumnFamily;
 import com.anyilanxin.kunpeng.kvstore.KeyValuePairVisitor;
 import com.anyilanxin.kunpeng.kvstore.KvStore;
 import com.anyilanxin.kunpeng.kvstore.TransactionContext;
-import com.anyilanxin.kunpeng.kvstore.types.CompositeKeyType;
-import com.anyilanxin.kunpeng.kvstore.types.LongType;
-import com.anyilanxin.kunpeng.kvstore.types.NilType;
-import com.anyilanxin.kunpeng.kvstore.types.StringType;
+import com.anyilanxin.kunpeng.kvstore.types.*;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.job.JobRecord;
+import com.anyilanxin.kunpeng.protocol.business.record.command.job.JobKindType;
 import com.anyilanxin.kunpeng.repository.business.BusinessRepositoryColumnFamilies;
 import com.anyilanxin.kunpeng.repository.business.DataSplitRegister;
 import com.anyilanxin.kunpeng.repository.business.RockResourceDataSplit;
@@ -37,6 +35,7 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import org.agrona.DirectBuffer;
+import org.agrona.collections.MutableReference;
 
 /**
  * job 域仓储实现：job 与 deadline 索引的读写。
@@ -49,6 +48,16 @@ public class JobRepository implements MutableJobRepository, RockResourceDataSpli
   private final ColumnFamily<LongType, JobEntity> jobColumnFamily;
   private final JobEntity entityDbValue;
   private final JobRecord recordBuffer;
+
+  private final LongType correlationIdDbKey;
+  private final EnumType<JobKindType> JobKindTypeDbKey;
+  private final CompositeKeyType<EnumType<JobKindType>, LongType> jobKindCorrelationIdDbKey;
+  private final CompositeKeyType<CompositeKeyType<EnumType<JobKindType>, LongType>, LongType>
+      jobKindCorrelationIdJobIdDbKey;
+  private final ColumnFamily<
+          CompositeKeyType<CompositeKeyType<EnumType<JobKindType>, LongType>, LongType>, NilType>
+      correlationColumnFamily;
+
   // 激活的 job
   // 未激活的 job
   private final StringType jobTypeDbKey;
@@ -74,6 +83,18 @@ public class JobRepository implements MutableJobRepository, RockResourceDataSpli
     jobColumnFamily =
         db.createColumnFamily(
             BusinessRepositoryColumnFamilies.JOB, transaction, jobIdDbKey, entityDbValue);
+
+    JobKindTypeDbKey = new EnumType<>(JobKindType.class);
+    correlationIdDbKey = new LongType();
+    jobKindCorrelationIdDbKey = new CompositeKeyType<>(JobKindTypeDbKey, correlationIdDbKey);
+    jobKindCorrelationIdJobIdDbKey = new CompositeKeyType<>(jobKindCorrelationIdDbKey, jobIdDbKey);
+    correlationColumnFamily =
+        db.createColumnFamily(
+            BusinessRepositoryColumnFamilies.JOB_CORRELATION,
+            transaction,
+            jobKindCorrelationIdJobIdDbKey,
+            NilType.INSTANCE);
+
     jobTypeDbKey = new StringType();
     tenantIdDbValue = new StringType();
     jobTypeJobIdDbCompositeKey = new CompositeKeyType<>(jobTypeDbKey, jobIdDbKey);
@@ -112,6 +133,10 @@ public class JobRepository implements MutableJobRepository, RockResourceDataSpli
       jobColumnFamily.delete(jobIdDbKey);
       activatableColumnFamily.delete(jobIdDbKey);
       unActivatableColumnFamily.delete(jobTypeJobIdDbCompositeKey);
+
+      JobKindTypeDbKey.setValue(entityDbValue.getJobKind());
+      correlationIdDbKey.wrapLong(getCorrelationId(entityDbValue));
+      correlationColumnFamily.delete(jobKindCorrelationIdJobIdDbKey);
     }
   }
 
@@ -121,6 +146,33 @@ public class JobRepository implements MutableJobRepository, RockResourceDataSpli
     entityDbValue.wrap(record);
     jobColumnFamily.put(jobIdDbKey, entityDbValue);
     unActivityJob(record);
+    saveCorrelation(record);
+  }
+
+  private void saveCorrelation(final JobRecord record) {
+    JobKindTypeDbKey.setValue(record.getJobKind());
+    correlationIdDbKey.wrapLong(getCorrelationId(record));
+    correlationColumnFamily.put(jobKindCorrelationIdJobIdDbKey, NilType.INSTANCE);
+  }
+
+  private long getCorrelationId(final JobRecord record) {
+    final JobKindType jobKind = record.getJobKind();
+    return switch (jobKind) {
+      case ACTIVITY, ACTIVITY_LISTENER -> record.getActivityInstanceId();
+      case PROCESS_LISTENER -> record.getProcessInstanceId();
+      case USER_TASK_LISTENER -> record.getTaskId();
+      case UNKNOWN_ENUM_VALUE -> throw new RuntimeException("未知的类型");
+    };
+  }
+
+  private long getCorrelationId(final JobEntity record) {
+    final JobKindType jobKind = record.getJobKind();
+    return switch (jobKind) {
+      case ACTIVITY, ACTIVITY_LISTENER -> record.getActivityInstanceId();
+      case PROCESS_LISTENER -> record.getProcessInstanceId();
+      case USER_TASK_LISTENER -> record.getTaskId();
+      case UNKNOWN_ENUM_VALUE -> throw new RuntimeException("未知的类型");
+    };
   }
 
   @Override
@@ -153,6 +205,14 @@ public class JobRepository implements MutableJobRepository, RockResourceDataSpli
                       jobTypeJobIdDbCompositeKey, BusinessRepositoryColumnFamilies.JOB_UNACTIVITY),
                   writeValue(tenantIdDbValue));
             }
+
+            JobKindTypeDbKey.setValue(entityDbValue.getJobKind());
+            correlationIdDbKey.wrapLong(getCorrelationId(entityDbValue));
+            visitor.visit(
+                writeKey(
+                    jobKindCorrelationIdJobIdDbKey,
+                    BusinessRepositoryColumnFamilies.JOB_CORRELATION),
+                writeValue(NilType.INSTANCE));
           }
         });
   }
@@ -212,6 +272,24 @@ public class JobRepository implements MutableJobRepository, RockResourceDataSpli
       return entityDbValue.unwrap(recordBuffer);
     }
     return null;
+  }
+
+  @Override
+  public JobRecord getRecord(final JobKindType kindType, final long correlationId) {
+    JobKindTypeDbKey.setValue(kindType);
+    correlationIdDbKey.wrapLong(correlationId);
+    final var correlationJobRecord = new MutableReference<JobRecord>(null);
+    correlationColumnFamily.whileEqualPrefix(
+        jobKindCorrelationIdDbKey,
+        (_, _) -> {
+          entityDbValue.reset();
+          if (jobColumnFamily.get(jobIdDbKey) != null) {
+            correlationJobRecord.set(entityDbValue.unwrap(recordBuffer));
+            return false;
+          }
+          return true;
+        });
+    return correlationJobRecord.get();
   }
 
   @Override
@@ -277,7 +355,7 @@ public class JobRepository implements MutableJobRepository, RockResourceDataSpli
       }
       final long jobKey = key.getSecond().getValue();
       lastVisited[0] = new DeadlineIndex(deadline, jobKey);
-      return visitJob(jobKey, (k, record) -> visitor.apply(k, record));
+      return visitJob(jobKey, visitor::apply);
     };
   }
 }
