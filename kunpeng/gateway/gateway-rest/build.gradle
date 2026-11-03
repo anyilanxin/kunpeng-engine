@@ -45,7 +45,7 @@ dependencies {
     implementation 'io.grpc:grpc-stub'
     implementation 'com.google.protobuf:protobuf-java'
     implementation 'org.agrona:agrona'
-    implementation 'io.swagger.core.v3:swagger-annotations-jakarta'
+    implementation 'io.swagger.core.v3:swagger-annotations'
 
     implementation 'io.micrometer:micrometer-core'
     implementation 'io.micrometer:micrometer-commons'

@@ -42,7 +42,7 @@ dependencies {
     implementation 'org.agrona:agrona'
     implementation 'io.netty:netty-transport-native-unix-common'
     implementation 'io.netty:netty-buffer'
-    implementation 'io.swagger.core.v3:swagger-annotations-jakarta'
+    implementation 'io.swagger.core.v3:swagger-annotations'
     implementation 'org.apache.logging.log4j:log4j-core'
     implementation 'org.apache.logging.log4j:log4j-api'
     implementation 'org.apache.logging.log4j:log4j-slf4j2-impl'
