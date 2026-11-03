@@ -230,6 +230,12 @@ public class RocksdbOptionsUtil {
         // https://github.com/facebook/rocksdb/blob/fd0d35d390e212b617e90d7567102d3e5fd1c706/include/rocksdb/advanced_options.h#L417-L429
         .setTargetFileSizeBase(targetFileSizeBase)
         .setTargetFileSizeMultiplier(2)
+        // 删除密集列族的读放大治理（默认 8/0.01 已启用，可经 broker.rocksdb.* 配置调整）：
+        // 连续点墓碑合并为范围墓碑（job/deadline 索引前缀扫描可整段跳过）、热文件读触发 compaction
+        .setMinTombstonesForRangeConversion(
+            rocksDbConfiguration.getMinTombstonesForRangeConversion())
+        .setReadTriggeredCompactionThreshold(
+            rocksDbConfiguration.getReadTriggeredCompactionThreshold())
         // 其他
         .setTableFormatConfig(tableConfig);
   }
@@ -285,6 +291,16 @@ public class RocksdbOptionsUtil {
     final var props = new Properties();
     props.put("file_checksum_gen_factory", "FileChecksumGenCrc32cFactory");
     //    启用全量文件校验和
+    // 开库提速（依赖 rocksdbjni >= 11.3）：开库复用现有 MANIFEST 追加，避免首个写前全量序列化数据库状态
+    props.put("reuse_manifest_on_open", "true");
+    // 开库提速（依赖 rocksdbjni >= 11.3）：干净关机后重开时减少恢复工作，缩短分区库重开耗时
+    props.put("optimize_manifest_for_recovery", "true");
+    if (rocksDbConfiguration.getReadIoExecutorThreads() > 0) {
+      // 开库后台异步读的并行度上限（rocksdbjni >= 11.8.1，无类型化 setter，经属性字符串通道传递）
+      props.put(
+          "read_io_executor_threads",
+          String.valueOf(rocksDbConfiguration.getReadIoExecutorThreads()));
+    }
 
     final var dbOptions =
         DBOptions.getDBOptionsFromProps(props)
@@ -295,6 +311,13 @@ public class RocksdbOptionsUtil {
             // 默认按 CPU 自适应，除非用户通过 broker.rocksdb.max-background-jobs 覆盖
             // （0 为哨兵值 → max(4, cores/2)）
             .setMaxBackgroundJobs(rocksDbConfiguration.getMaxBackgroundJobs())
+            // 以下两项默认开启（引擎最优值），可经 broker.rocksdb.* 配置关闭：
+            // 文件删除后台化（抹平单线程分区 actor 的前台删除卡顿）与 SST 校验挪开库后台
+            .setAvoidUnnecessaryBlockingIO(rocksDbConfiguration.isAvoidUnnecessaryBlockingIo())
+            .setOpenFilesAsync(rocksDbConfiguration.isOpenFilesAsync())
+            // 开库提速：跳过开库时的统计更新。open_files_async 的硬性前置（RocksDB 开库约束
+            // "open_files_async requires skip_stats_update_on_db_open = true"），统计开启时也不受影响（随后台收敛）
+            .setSkipStatsUpdateOnDbOpen(true)
             // 只使用默认列族
             .setCreateMissingColumnFamilies(true)
             // WAL 禁用时可能不必要，但仍建议开启，以避免产生大量小 SST 文件
@@ -325,8 +348,6 @@ public class RocksdbOptionsUtil {
       statistics.setStatsLevel(StatsLevel.ALL);
       dbOptions
           .setStatistics(statistics)
-          // 加快数据库打开速度
-          .setSkipStatsUpdateOnDbOpen(true)
           // 不做性能分析时可关闭
           .setStatsDumpPeriodSec(20);
     }

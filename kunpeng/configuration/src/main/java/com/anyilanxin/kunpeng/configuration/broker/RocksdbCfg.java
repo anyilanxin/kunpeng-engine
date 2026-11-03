@@ -74,6 +74,36 @@ public final class RocksdbCfg implements ConfigurationEntry {
    */
   private double blockCacheMemoryRatio = RocksdbConfiguration.DEFAULT_BLOCK_CACHE_MEMORY_RATIO;
 
+  /** 开启后 RocksDB 在迭代器/列族句柄销毁、开库清理过期文件等处不做前台同步删除，改为后台调度，抹平单线程分区 actor 的 偶发磁盘 IO 卡顿。默认开启（引擎最优值）。 */
+  private boolean avoidUnnecessaryBlockingIo =
+      RocksdbConfiguration.DEFAULT_AVOID_UNNECESSARY_BLOCKING_IO;
+
+  /**
+   * 开启后 SST 基础校验挪到开库后台执行，大库开库耗时可显著缩短；代价是校验错误以后台错误（kAsyncFileOpen）而非开库失败暴露。 与 {@link
+   * #readIoExecutorThreads} 搭配。默认开启（引擎最优值）。
+   */
+  private boolean openFilesAsync = RocksdbConfiguration.DEFAULT_OPEN_FILES_ASYNC;
+
+  /**
+   * 共享文件系统读 I/O 执行器线程数上限（开库期间异步读并行度，进程级只增不减）。0（默认）= 自适应，取与后台任务数同量级的 CPU 自适应值；正值显式覆盖。RocksDB 11.8.1
+   * 起可用，Linux io_uring 承载收益最大。
+   */
+  private int readIoExecutorThreads = RocksdbConfiguration.ADAPTIVE_READ_IO_EXECUTOR_THREADS;
+
+  /**
+   * memtable 连续 N 个点墓碑合并为范围墓碑的阈值，删除密集列族（job/deadline 索引）的前缀扫描可整段跳过墓碑串。 默认 8（启用条件已核对：前缀读经
+   * prefixSameAsStart 界定落在官方启用区、事务模式不在排除清单）。
+   */
+  private int minTombstonesForRangeConversion =
+      RocksdbConfiguration.DEFAULT_MIN_TOMBSTONES_FOR_RANGE_CONVERSION;
+
+  /**
+   * 读触发 compaction 阈值：热 SST 文件（读频次超过阈值）标记待合并，降读放大。默认 0.01（RocksDB 官方推荐起点，按本引擎 32KB block 的
+   * break-even 推导处于保守侧）。
+   */
+  private double readTriggeredCompactionThreshold =
+      RocksdbConfiguration.DEFAULT_READ_TRIGGERED_COMPACTION_THRESHOLD;
+
   @Override
   public void init(final BrokerCfg globalConfig, final String brokerBase) {
     if (columnFamilyOptions == null) {
@@ -108,7 +138,12 @@ public final class RocksdbCfg implements ConfigurationEntry {
         .setSstPartitioningEnabled(enableSstPartitioning)
         .setMaxBackgroundJobs(maxBackgroundJobs)
         .setBlockCacheShardBits(blockCacheShardBits)
-        .setBlockCacheMemoryRatio(blockCacheMemoryRatio);
+        .setBlockCacheMemoryRatio(blockCacheMemoryRatio)
+        .setAvoidUnnecessaryBlockingIo(avoidUnnecessaryBlockingIo)
+        .setOpenFilesAsync(openFilesAsync)
+        .setReadIoExecutorThreads(readIoExecutorThreads)
+        .setMinTombstonesForRangeConversion(minTombstonesForRangeConversion)
+        .setReadTriggeredCompactionThreshold(readTriggeredCompactionThreshold);
   }
 
   private static final class RocksDBColumnFamilyOption {

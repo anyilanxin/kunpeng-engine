@@ -76,6 +76,51 @@ public final class RocksdbConfiguration {
   /** LRU block cache 的分片位数。缓存拆分为 2^bits 个分片以降低锁竞争。默认 8（256 个分片）在 2GB 以内缓存下适用；缓存非常大或并发读很高时调大。 */
   public static final int DEFAULT_BLOCK_CACHE_SHARD_BITS = 8;
 
+  /**
+   * 默认开启（引擎最优值，RocksDB 默认为 false）。开启后 RocksDB 在销毁迭代器/列族句柄、开库清理过期 OPTIONS 文件等处不做前台同步文件删除，
+   * 改为后台调度——分区处理是单线程 actor，前台删除的磁盘 IO 卡顿会直接卡住整个分区。
+   *
+   * <p>与 checkpoint/backup 的历史冲突已在 RocksDB 6.13（2020）修复。RocksDB 11.8.1 起，开启后开库发现的过期 OPTIONS-*
+   * 文件也改为后台清理。
+   */
+  public static final boolean DEFAULT_AVOID_UNNECESSARY_BLOCKING_IO = true;
+
+  /**
+   * 默认开启（引擎最优值，RocksDB 默认为 false）。SST 文件的基础校验从开库线程挪到后台执行，大库（本引擎 max-open-files=-1
+   * 全量常开）的开库耗时可显著缩短；代价是校验错误不再使开库失败，而是以后台错误 （kAsyncFileOpen）形式暴露。
+   *
+   * <p>与 {@link #readIoExecutorThreads}（后台开库读并行度）搭配生效。
+   */
+  public static final boolean DEFAULT_OPEN_FILES_ASYNC = true;
+
+  /**
+   * {@link #readIoExecutorThreads} 的哨兵值，表示"自适应"：取 {@link #adaptiveMaxBackgroundJobs()} 同款 CPU
+   * 自适应结果（后台开库读并行度与后台任务数同量级）。取到该值时由 getter 惰性计算，显式正值可覆盖。
+   *
+   * <p>该选项为共享文件系统读 I/O 执行器线程数上限（进程级只增不减，多次开库取历史最大值）；RocksDB 11.8.1 新增，无类型化 setter（经属性字符串通道传递），Linux
+   * 上由 io_uring 事件循环承载收益最大。
+   */
+  public static final int ADAPTIVE_READ_IO_EXECUTOR_THREADS = 0;
+
+  /**
+   * memtable 中连续 N 个及以上点墓碑自动合并为范围墓碑的阈值（列族级）。默认 8（启用，典型区间 8~16 的保守端）。
+   *
+   * <p>本引擎删除密集的列族（job 行删除、deadline 索引清理、订阅删除）开启后，前缀扫描可整段跳过墓碑串， 对 job 派发游标扫描直接利好。启用条件已核对：本引擎前缀读经
+   * {@code prefixSameAsStart=true} 界定（落在官方启用区内）、 不用 table_filter、事务为悲观/乐观两模式均非
+   * WritePrepared/WriteUnprepared（不在官方排除清单）。
+   */
+  public static final int DEFAULT_MIN_TOMBSTONES_FOR_RANGE_CONVERSION = 8;
+
+  /**
+   * 读触发 compaction 阈值（列族级，double）：SST 文件读频次（采样读数/文件大小）超过该值时标记待合并，降低热文件读放大。 默认 0.01 = RocksDB
+   * 官方推荐起点（break-even 推导 r = 2(1+F)/((1-h)·B)；本引擎 32KB block、F=10、缓存命中 90% 时 break-even≈0.0067，0.01
+   * 处于保守侧——不触发亏本 compaction，又能响应浪费读明显的文件）。
+   *
+   * <p>适合热索引文件反复扫描的场景（job byType 索引、deadline 索引）；写活跃库即时生效，静默库依赖
+   * max_compaction_trigger_wakeup_seconds 周期重评（默认 12h 非零已满足）。
+   */
+  public static final double DEFAULT_READ_TRIGGERED_COMPACTION_THRESHOLD = 0.01;
+
   private Properties columnFamilyOptions = new Properties();
   private boolean statisticsEnabled = DEFAULT_STATISTICS_ENABLED;
   private long memoryLimit = DEFAULT_MEMORY_LIMIT;
@@ -106,6 +151,16 @@ public final class RocksdbConfiguration {
   private double blockCacheMemoryRatio = DEFAULT_BLOCK_CACHE_MEMORY_RATIO;
 
   private int blockCacheShardBits = DEFAULT_BLOCK_CACHE_SHARD_BITS;
+
+  private boolean avoidUnnecessaryBlockingIo = DEFAULT_AVOID_UNNECESSARY_BLOCKING_IO;
+
+  private boolean openFilesAsync = DEFAULT_OPEN_FILES_ASYNC;
+
+  private int readIoExecutorThreads = ADAPTIVE_READ_IO_EXECUTOR_THREADS;
+
+  private int minTombstonesForRangeConversion = DEFAULT_MIN_TOMBSTONES_FOR_RANGE_CONVERSION;
+
+  private double readTriggeredCompactionThreshold = DEFAULT_READ_TRIGGERED_COMPACTION_THRESHOLD;
 
   public RocksdbConfiguration() {}
 
@@ -219,6 +274,58 @@ public final class RocksdbConfiguration {
 
   public RocksdbConfiguration setBlockCacheShardBits(final int blockCacheShardBits) {
     this.blockCacheShardBits = blockCacheShardBits;
+    return this;
+  }
+
+  public boolean isAvoidUnnecessaryBlockingIo() {
+    return avoidUnnecessaryBlockingIo;
+  }
+
+  public RocksdbConfiguration setAvoidUnnecessaryBlockingIo(
+      final boolean avoidUnnecessaryBlockingIo) {
+    this.avoidUnnecessaryBlockingIo = avoidUnnecessaryBlockingIo;
+    return this;
+  }
+
+  public boolean isOpenFilesAsync() {
+    return openFilesAsync;
+  }
+
+  public RocksdbConfiguration setOpenFilesAsync(final boolean openFilesAsync) {
+    this.openFilesAsync = openFilesAsync;
+    return this;
+  }
+
+  /**
+   * 返回共享读 I/O 执行器线程数上限；若仍为 {@link #ADAPTIVE_READ_IO_EXECUTOR_THREADS} 哨兵值，则返回与 {@link
+   * #getMaxBackgroundJobs()} 同量级的 CPU 自适应结果。
+   */
+  public int getReadIoExecutorThreads() {
+    return readIoExecutorThreads > 0 ? readIoExecutorThreads : adaptiveMaxBackgroundJobs();
+  }
+
+  public RocksdbConfiguration setReadIoExecutorThreads(final int readIoExecutorThreads) {
+    this.readIoExecutorThreads = readIoExecutorThreads;
+    return this;
+  }
+
+  public int getMinTombstonesForRangeConversion() {
+    return minTombstonesForRangeConversion;
+  }
+
+  public RocksdbConfiguration setMinTombstonesForRangeConversion(
+      final int minTombstonesForRangeConversion) {
+    this.minTombstonesForRangeConversion = minTombstonesForRangeConversion;
+    return this;
+  }
+
+  public double getReadTriggeredCompactionThreshold() {
+    return readTriggeredCompactionThreshold;
+  }
+
+  public RocksdbConfiguration setReadTriggeredCompactionThreshold(
+      final double readTriggeredCompactionThreshold) {
+    this.readTriggeredCompactionThreshold = readTriggeredCompactionThreshold;
     return this;
   }
 }
