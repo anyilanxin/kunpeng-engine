@@ -55,7 +55,6 @@ public final class ActorCell {
   private final ArrayDeque<ActorEnvelope> fastLane = new ArrayDeque<>();
   private final ManyToOneConcurrentLinkedQueue<ActorEnvelope> submitted =
       new ManyToOneConcurrentLinkedQueue<>();
-  private final AtomicInteger submittedCount = new AtomicInteger();
   // 唤醒票: 每个唤醒源在 tryWakeup 前自增; owner 以 drain 起点快照对比检测
   // "offer 对休眠中 owner 不可见" 的 JMM 竞态（volatile 全序封死）
   private final AtomicInteger wakeTickets = new AtomicInteger();
@@ -183,7 +182,6 @@ public final class ActorCell {
     } else {
       envelope.wrap(kind, action, future);
     }
-    submittedCount.incrementAndGet();
     jobSubmitted();
     submitted.offer(envelope);
     wakeSignal();
@@ -223,7 +221,6 @@ public final class ActorCell {
     }
     final ActorEnvelope envelope = new ActorEnvelope();
     envelope.wrap(ActorEnvelope.Kind.RUN, action, null);
-    submittedCount.incrementAndGet();
     jobSubmitted();
     submitted.offer(envelope);
     wakeSignal();
@@ -351,21 +348,37 @@ public final class ActorCell {
 
   // ===== 关闭 / 失败 =====
 
+  /**
+   * 关闭入口（任意线程）。closeFuture 双检锁保证并发关闭只初始化一次、只投递一次关闭请求； 非 owner 线程经 submitted 队列转交（fastLane 是 owner
+   * 线程专属 ArrayDeque，外部直写会与 drain 竞争）， owner 线程保持 fastLane 低延迟。CREATED
+   * 相位未调度无处执行，由唯一赢家线程直接终态并清理早期入队任务。
+   */
   public ActorFuture<Void> closeAsync() {
     if (closeFuture == null) {
-      closeFuture = new CompletableActorFuture<>();
-      final Phases current = phase;
-      if (current == Phases.CREATED) {
-        // 从未提交调度: 直接终态; 早期入队的 job 无处执行, 逐个 fail 释放 future
-        phase = Phases.CLOSED;
+      boolean closeUnscheduled = false;
+      synchronized (this) {
+        if (closeFuture == null) {
+          closeFuture = new CompletableActorFuture<>();
+          if (phase == Phases.CREATED) {
+            phase = Phases.CLOSED;
+            closeUnscheduled = true;
+          } else if (isOnOwnerThread()) {
+            offerInternal(ActorEnvelope.Kind.CLOSE_REQUEST, this::requestClose, null);
+          } else {
+            final ActorEnvelope envelope = new ActorEnvelope();
+            envelope.wrap(ActorEnvelope.Kind.CLOSE_REQUEST, this::requestClose, null);
+            submitted.offer(envelope);
+          }
+        }
+      }
+      if (closeUnscheduled) {
+        // 从未提交调度: 早期入队的 job 无处执行, 逐个 fail 释放 future（锁外执行, 完成回调不进临界区）
         ActorEnvelope queued;
         while ((queued = submitted.poll()) != null) {
-          submittedCount.decrementAndGet();
           failEnvelope(queued, new IllegalStateException("Actor 已关闭"));
         }
         closeFuture.complete(null);
       } else {
-        offerInternal(ActorEnvelope.Kind.CLOSE_REQUEST, this::requestClose, null);
         wakeSignal();
       }
     }
@@ -400,7 +413,6 @@ public final class ActorCell {
               }
             },
             null);
-        submittedCount.incrementAndGet();
         submitted.offer(envelope);
         wakeSignal();
         return;
@@ -434,9 +446,6 @@ public final class ActorCell {
       ActorEnvelope envelope = fastLane.poll();
       if (envelope == null) {
         envelope = submitted.poll();
-        if (envelope != null) {
-          submittedCount.decrementAndGet();
-        }
       }
       if (envelope != null) {
         if (!execute(envelope)) {
@@ -446,6 +455,8 @@ public final class ActorCell {
           return;
         }
         jobExecuted(envelope);
+        // 主路径回池：fastLane 借出的信封执行完归还 selfPool（REPEAT/CLOSE_REQUEST 由方法内排除）
+        releaseIfDisposable(envelope);
         if (++executed >= DRAIN_BUDGET && hasPendingWork()) {
           // 预算让位：仍有工作时休眠复查会自行重排，让出载体线程一轮
           break;
@@ -571,7 +582,6 @@ public final class ActorCell {
       failEnvelope(envelope, error);
     }
     while ((envelope = submitted.poll()) != null) {
-      submittedCount.decrementAndGet();
       failEnvelope(envelope, error);
     }
     if (startingFuture != null && !startingFuture.isDone()) {
@@ -661,7 +671,6 @@ public final class ActorCell {
       failAndClearSubscriptions("Actor '" + getName() + "' 已关闭");
       ActorEnvelope envelope;
       while ((envelope = submitted.poll()) != null) {
-        submittedCount.decrementAndGet();
         failEnvelope(envelope, new IllegalStateException("Actor 已关闭"));
       }
       if (closeFuture != null && !closeFuture.isDone()) {
