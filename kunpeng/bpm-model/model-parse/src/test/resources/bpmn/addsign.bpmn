@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:kunpeng="http://anyilanxin.com/schema/kunpeng/1.0"
+                  id="Definitions_addsign"
+                  targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:process id="Process_addsign" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_start_allowed</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_start_allowed" sourceRef="StartEvent_1" targetRef="Task_allowed" />
+    <bpmn:userTask id="Task_allowed">
+      <bpmn:extensionElements>
+        <kunpeng:userTask />
+        <kunpeng:addSign />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_start_allowed</bpmn:incoming>
+      <bpmn:outgoing>Flow_allowed_denied</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_allowed_denied" sourceRef="Task_allowed" targetRef="Task_denied" />
+    <bpmn:userTask id="Task_denied">
+      <bpmn:extensionElements>
+        <kunpeng:userTask />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_allowed_denied</bpmn:incoming>
+      <bpmn:outgoing>Flow_denied_end</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_denied_end" sourceRef="Task_denied" targetRef="EndEvent_1" />
+    <bpmn:endEvent id="EndEvent_1">
+      <bpmn:incoming>Flow_denied_end</bpmn:incoming>
+    </bpmn:endEvent>
+  </bpmn:process>
+</bpmn:definitions>

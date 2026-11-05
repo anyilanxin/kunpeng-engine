@@ -180,6 +180,19 @@ public class UserTaskElementProcessor implements BpmnActivityElementProcessor<Bp
         activityContext.getOperationReferenceKey(),
         activityContext.getBatchOperationReference(),
         record);
+    // 加签整组级联终止：冻结/AWAITING 不拦终止，名下在途加签任务连同原任务一并终止（首期一层）
+    for (final UserTaskRecord addSignTask :
+        userTask.getAddSignTasks(activityContext.getActivityInstanceId())) {
+      if (addSignTask.getLifeCycle() == UserTaskLifeCycle.CREATED) {
+        writer.addCommand(
+            addSignTask.getTaskId(),
+            UserTaskLifeCycle.TERMINATING,
+            activityContext.getRequestId(),
+            activityContext.getOperationReferenceKey(),
+            activityContext.getBatchOperationReference(),
+            addSignTask);
+      }
+    }
   }
 
   @Override

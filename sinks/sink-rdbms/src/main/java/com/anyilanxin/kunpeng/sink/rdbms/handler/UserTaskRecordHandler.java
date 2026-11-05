@@ -84,6 +84,7 @@ public final class UserTaskRecordHandler implements RecordModelHandler {
       model.setDuration(value.getDuration() > 0 ? value.getDuration() : null);
       model.setRevision(value.getRev());
       model.setResourceId(record.getResourceId());
+      fillAddSign(model, value);
       buffer.offer(RowChange.insert(USER_TASK, List.of(value.getTaskId()), model));
       return;
     }
@@ -100,7 +101,20 @@ public final class UserTaskRecordHandler implements RecordModelHandler {
     model.setEndTime(RecordModelHandler.at(value.getEndTime()));
     model.setDuration(value.getDuration() > 0 ? value.getDuration() : null);
     model.setRevision(value.getRev());
+    fillAddSign(model, value);
     buffer.offer(RowChange.update(USER_TASK, List.of(value.getTaskId()), model));
+  }
+
+  /** 加签字段：主从引用/计数/名单（列表列 JSON），随创建与后续 UPDATING 事件同步 */
+  private static void fillAddSign(final UserTaskDbModel model, final UserTaskRecordValue value) {
+    model.setAddSignRole(nameOf(value.getAddSignRole()));
+    model.setOriginActivityInstanceId(
+        value.getOriginActivityInstanceId() > 0 ? value.getOriginActivityInstanceId() : null);
+    model.setAddSignPhase(nameOf(value.getAddSignPhase()));
+    model.setAddSignMode(nameOf(value.getAddSignMode()));
+    model.setAddSignCount(value.getAddSignCount());
+    model.setRemainingAssignees(JsonValues.toJson(value.getRemainingAssignees()));
+    model.setAfterSignAssignees(JsonValues.toJson(value.getAfterSignAssignees()));
   }
 
   private static String nameOf(final Enum<?> state) {

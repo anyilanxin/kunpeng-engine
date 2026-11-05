@@ -119,6 +119,10 @@ public class ActivityInstanceEntity implements Serializable {
   @TableField(value = "REVISION")
   private Integer rev;
 
+  /** 加签状态（NONE/FROZEN/AWAITING） */
+  @TableField(value = "ADD_SIGN_STATE")
+  private String addSignState;
+
   /** 资源 id */
   @TableField(value = "RESOURCE_ID")
   private Integer resourceId;

@@ -127,4 +127,32 @@ public class UserTaskEntity extends BaseEntity {
   /** 资源 id */
   @TableField(value = "RESOURCE_ID")
   private Integer resourceId;
+
+  /** 加签角色（NONE=原任务，ADD_SIGN=加签任务） */
+  @TableField(value = "ADD_SIGN_ROLE")
+  private String addSignRole;
+
+  /** 加签任务指向的原活动实例 id */
+  @TableField(value = "ORIGIN_ACTIVITY_INSTANCE_ID")
+  private Long originActivityInstanceId;
+
+  /** 加签阶段（前/后加签） */
+  @TableField(value = "ADD_SIGN_PHASE")
+  private String addSignPhase;
+
+  /** 加签模式（并行/串行） */
+  @TableField(value = "ADD_SIGN_MODE")
+  private String addSignMode;
+
+  /** 本任务名下在途加签任务数 */
+  @TableField(value = "ADD_SIGN_COUNT")
+  private Integer addSignCount;
+
+  /** 串行加签链剩余名单（JSON 数组文本） */
+  @TableField(value = "REMAINING_ASSIGNEES")
+  private String remainingAssignees;
+
+  /** 后加签预登记名单（JSON 数组文本） */
+  @TableField(value = "AFTER_SIGN_ASSIGNEES")
+  private String afterSignAssignees;
 }

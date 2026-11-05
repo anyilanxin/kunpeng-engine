@@ -70,4 +70,28 @@ public interface UserTaskRecordValue
   long getEndTime();
 
   long getDuration();
+
+  /** 加签角色（NONE=原任务，ADD_SIGN=加签任务） */
+  AddSignRole getAddSignRole();
+
+  /** 加签任务指向的原活动实例 id；原任务为 -1 */
+  long getOriginActivityInstanceId();
+
+  /** 加签阶段（前/后加签） */
+  AddSignPhase getAddSignPhase();
+
+  /** 加签模式（并行/串行） */
+  AddSignMode getAddSignMode();
+
+  /** 本任务名下在途加签任务数（创建父+1、结束父−1） */
+  int getAddSignCount();
+
+  /** 串行加签链剩余名单，链上当前任务持有、完成时传下一位；无剩余为空列表 */
+  List<String> getRemainingAssignees();
+
+  /** 后加签预登记名单：完成前登记/追加，原任务完成时消费创建加签任务 */
+  List<String> getAfterSignAssignees();
+
+  /** 后加签预登记模式 */
+  AddSignMode getAfterSignMode();
 }

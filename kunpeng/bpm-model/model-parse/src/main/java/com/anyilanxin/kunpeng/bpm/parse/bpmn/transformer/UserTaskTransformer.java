@@ -17,6 +17,7 @@
 package com.anyilanxin.kunpeng.bpm.parse.bpmn.transformer;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.UserTask;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengAddSign;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengAssignmentDefinition;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnUserTask;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.BpmnTransformContext;
@@ -44,13 +45,22 @@ public final class UserTaskTransformer implements ElementTransformer<UserTask> {
    */
   @Override
   public void transform(final UserTask element, final BpmnTransformContext context) {
+    final BpmnUserTask userTask =
+        context.getCurrentProcess().getElementById(element.getId(), BpmnUserTask.class);
+    // 加签许可：声明 kunpeng:addSign 即在解析期派生加签虚拟节点（id + "-addsign"），
+    // 运行时定义因此是部署产物的确定函数（重启/重放一致），引擎按 definitionKey 必能读到
+    if (element.getSingleExtensionElement(KunpengAddSign.class) != null) {
+      userTask.setAddSignEnabled(true);
+      final BpmnUserTask addSignVirtual =
+          new BpmnUserTask(element.getId() + BpmnUserTask.ADD_SIGN_DEFINITION_SUFFIX);
+      addSignVirtual.setAddSignVirtual(true);
+      context.getCurrentProcess().addFlowElement(addSignVirtual);
+    }
     final KunpengAssignmentDefinition assignmentDefinition =
         element.getSingleExtensionElement(KunpengAssignmentDefinition.class);
     if (assignmentDefinition == null) {
       return;
     }
-    final BpmnUserTask userTask =
-        context.getCurrentProcess().getElementById(element.getId(), BpmnUserTask.class);
     final String assignee = assignmentDefinition.getAssignee();
     if (assignee != null && !assignee.isBlank()) {
       userTask.setAssignee(context.parseExpression(assignee));

@@ -48,6 +48,8 @@ public interface Behavior {
 
   UserTaskBehavior userTaskBehavior();
 
+  AddSignBehavior addSignBehavior();
+
   JobBehavior jobBehavior();
 
   BatchBehavior batchBehavior();

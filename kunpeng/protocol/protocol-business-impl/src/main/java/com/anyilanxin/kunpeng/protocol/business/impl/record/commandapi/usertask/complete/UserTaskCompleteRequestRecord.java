@@ -21,15 +21,23 @@ import static com.anyilanxin.kunpeng.structpack.util.BufferUtil.*;
 import static com.anyilanxin.kunpeng.structpack.util.DocumentUtil.convertToMap;
 import static com.anyilanxin.kunpeng.structpack.util.DocumentUtil.convertToMsgPack;
 
+import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.AddSignMode;
 import com.anyilanxin.kunpeng.protocol.business.record.commandapi.record.usertask.complete.UserTaskCompleteRequestRecordValue;
 import com.anyilanxin.kunpeng.protocol.common.TenantOwned;
 import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 import com.anyilanxin.kunpeng.structpack.AutoDeclareProperties;
+import com.anyilanxin.kunpeng.structpack.property.ArrayProperty;
 import com.anyilanxin.kunpeng.structpack.property.DocumentProperty;
+import com.anyilanxin.kunpeng.structpack.property.EnumProperty;
 import com.anyilanxin.kunpeng.structpack.property.LongProperty;
 import com.anyilanxin.kunpeng.structpack.property.StringProperty;
+import com.anyilanxin.kunpeng.structpack.util.BufferUtil;
+import com.anyilanxin.kunpeng.structpack.value.StringValue;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 import org.agrona.DirectBuffer;
 
 /**
@@ -48,12 +56,21 @@ public class UserTaskCompleteRequestRecord extends UnifiedRecordValue<UserTaskCo
   private final StringProperty tenantIdProp =
       new StringProperty(4, TENANT_ID, TenantOwned.DEFAULT_TENANT_IDENTIFIER);
 
+  /** 完成时携带的后加签名单（空列表 = 不加签，仅按既有预登记处理） */
+  private final ArrayProperty<StringValue> addSignAssigneesProp =
+      new ArrayProperty<>(5, "ADD_SIGN_ASSIGNEES", StringValue::new);
+
+  private final EnumProperty<AddSignMode> addSignModeProp =
+      new EnumProperty<>(6, "ADD_SIGN_MODE", AddSignMode.class, AddSignMode.NONE);
+
   public UserTaskCompleteRequestRecord() {
-    super(4);
+    super(6);
     declareProperty(taskIdProp)
         .declareProperty(variablesProperty)
         .declareProperty(localVariablesProperty)
-        .declareProperty(tenantIdProp);
+        .declareProperty(tenantIdProp)
+        .declareProperty(addSignAssigneesProp)
+        .declareProperty(addSignModeProp);
   }
 
   public long getTaskId() {
@@ -120,6 +137,30 @@ public class UserTaskCompleteRequestRecord extends UnifiedRecordValue<UserTaskCo
 
   public UserTaskCompleteRequestRecord setTenantId(final String tenantId) {
     tenantIdProp.setValue(wrapString(tenantId));
+    return this;
+  }
+
+  @Override
+  public List<String> getAddSignAssignees() {
+    return StreamSupport.stream(addSignAssigneesProp.spliterator(), false)
+        .map(StringValue::getValue)
+        .map(BufferUtil::bufferAsString)
+        .collect(Collectors.toList());
+  }
+
+  public UserTaskCompleteRequestRecord setAddSignAssignees(final List<String> addSignAssignees) {
+    addSignAssigneesProp.reset();
+    addSignAssignees.forEach(assignee -> addSignAssigneesProp.add().wrap(wrapString(assignee)));
+    return this;
+  }
+
+  @Override
+  public AddSignMode getAddSignMode() {
+    return addSignModeProp.getValue();
+  }
+
+  public UserTaskCompleteRequestRecord setAddSignMode(final AddSignMode addSignMode) {
+    addSignModeProp.setValue(addSignMode);
     return this;
   }
 

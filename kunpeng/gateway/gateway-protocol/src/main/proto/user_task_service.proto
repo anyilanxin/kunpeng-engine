@@ -20,11 +20,21 @@ option java_multiple_files = false;
 option java_package = "com.anyilanxin.kunpeng.gateway.grpc.service";
 option go_package = "./;pb";
 
+// 加签模式：并行=全量同开；串行=按名单顺序一次一个
+enum AddSignMode {
+  ADD_SIGN_MODE_NONE = 0;
+  ADD_SIGN_MODE_PARALLEL = 1;
+  ADD_SIGN_MODE_SEQUENTIAL = 2;
+}
+
 message CompleteUserTaskRequest {
   int64 userTaskId = 1;
   string tenantId = 2;
   string localVariable = 3;
   string variable = 4;
+  // 完成时携带后加签名单（空 = 不加签）；非空时 addSignMode 必填
+  repeated string addSignAssignees = 5;
+  AddSignMode addSignMode = 6;
 }
 
 
@@ -40,6 +50,26 @@ message CancelUserTaskRequest {
 
 
 message CancelUserTaskResponse {
+}
+
+message AddSignBeforeUserTaskRequest {
+  int64 userTaskId = 1;
+  string tenantId = 2;
+  repeated string assignees = 3;
+  AddSignMode addSignMode = 4;
+}
+
+message AddSignBeforeUserTaskResponse {
+}
+
+message AddSignAfterUserTaskRequest {
+  int64 userTaskId = 1;
+  string tenantId = 2;
+  repeated string assignees = 3;
+  AddSignMode addSignMode = 4;
+}
+
+message AddSignAfterUserTaskResponse {
 }
 
 
@@ -71,5 +101,15 @@ service UserTaskService {
      - maxJobsToActivate is less than 1
   */
   rpc CancelUserTask (CancelUserTaskRequest) returns (stream CancelUserTaskResponse) {
+  }
+
+
+  // 前加签：原任务冻结、加签归零解冻；要求任务已签收且建模声明 kunpeng:addSign
+  rpc AddSignBeforeUserTask (AddSignBeforeUserTaskRequest) returns (stream AddSignBeforeUserTaskResponse) {
+  }
+
+
+  // 后加签预登记：完成前登记/追加名单，原任务完成时按登记创建加签任务
+  rpc AddSignAfterUserTask (AddSignAfterUserTaskRequest) returns (stream AddSignAfterUserTaskResponse) {
   }
 }

@@ -120,6 +120,8 @@ public interface KunpengConstants {
 
   String ELEMENT_AD_HOC = "adHoc";
 
+  String ELEMENT_ADD_SIGN = "addSign";
+
   String ELEMENT_LINKED_RESOURCE = "linkedResource";
   String ELEMENT_LINKED_RESOURCES = "linkedResources";
 

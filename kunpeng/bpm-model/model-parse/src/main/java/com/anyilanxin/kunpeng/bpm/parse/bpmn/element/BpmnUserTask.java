@@ -25,6 +25,9 @@ import com.anyilanxin.kunpeng.engine.script.ScriptExpression;
  * @since 2026.9.0
  */
 public final class BpmnUserTask extends BpmnActivity {
+  /** 加签虚拟活动定义 key 后缀：原定义 key + 后缀（解析期合成、引擎建加签任务时对齐） */
+  public static final String ADD_SIGN_DEFINITION_SUFFIX = "-addsign";
+
   /** 受理人表达式，未声明为 null */
   private ScriptExpression assignee;
 
@@ -33,6 +36,12 @@ public final class BpmnUserTask extends BpmnActivity {
 
   /** 候选人表达式，未声明为 null */
   private ScriptExpression candidateUsers;
+
+  /** 是否允许加签（模型期 kunpeng:addSign 声明；仅原任务有意义），缺省 false */
+  private boolean addSignEnabled;
+
+  /** 是否为加签虚拟节点（解析期由原任务派生的合成元素），缺省 false */
+  private boolean addSignVirtual;
 
   /**
    * 以元素 id 构造用户任务。
@@ -83,5 +92,23 @@ public final class BpmnUserTask extends BpmnActivity {
    */
   public void setCandidateUsers(final ScriptExpression candidateUsers) {
     this.candidateUsers = candidateUsers;
+  }
+
+  /** 是否允许加签（模型期 kunpeng:addSign 声明；仅原任务有意义）。 */
+  public boolean isAddSignEnabled() {
+    return addSignEnabled;
+  }
+
+  public void setAddSignEnabled(final boolean addSignEnabled) {
+    this.addSignEnabled = addSignEnabled;
+  }
+
+  /** 是否为加签虚拟节点（解析期由原任务派生的 `id + "-addsign"` 合成元素）。 */
+  public boolean isAddSignVirtual() {
+    return addSignVirtual;
+  }
+
+  public void setAddSignVirtual(final boolean addSignVirtual) {
+    this.addSignVirtual = addSignVirtual;
   }
 }

@@ -23,6 +23,7 @@ import com.anyilanxin.kunpeng.protocol.business.impl.eventlog.BusinessLogRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.activityinstance.ActivityInstanceRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.usertask.UserTaskRecord;
 import com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance.ActivityInstanceLifeCycle;
+import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.AddSignRole;
 import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.UserTaskLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.UserTaskState;
 
@@ -53,7 +54,22 @@ public class BpmnUserTaskCompletedProcessor extends BpmnUserTaskElementAbstractP
     writer.addEvent(
         value.getTaskId(), UserTaskLifeCycle.COMPLETED, logRecord.getRequestId(), value);
 
+    // 加签任务完成：只做父任务计数与放行判定，不推进活动（任务完成≠活动结束）
+    if (value.getAddSignRole() == AddSignRole.ADD_SIGN) {
+      writer.behavior().addSignBehavior().onAddSignTaskEnded(value, logRecord.getRequestId());
+      return;
+    }
+
     final ActivityInstanceRecord record = activityInstance.getRecord(value.getActivityInstanceId());
+
+    // 后加签预登记在途：消费登记创建加签任务、活动置 AWAITING 压下结束与出边
+    if (!value.getAfterSignAssignees().isEmpty()) {
+      writer
+          .behavior()
+          .addSignBehavior()
+          .onOriginCompletedWithAfterSigns(value, record, logRecord.getRequestId());
+      return;
+    }
 
     writer.addCommand(
         record.getActivityInstanceId(),

@@ -23,6 +23,7 @@ import com.anyilanxin.kunpeng.protocol.business.impl.eventlog.BusinessLogRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.activityinstance.ActivityInstanceRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.usertask.UserTaskRecord;
 import com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance.ActivityInstanceLifeCycle;
+import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.AddSignRole;
 import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.UserTaskLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.UserTaskState;
 
@@ -52,6 +53,11 @@ public class BpmnUserTaskTerminatedProcessor extends BpmnUserTaskElementAbstract
     record.setEndTime(writer.millis());
     writer.addEvent(
         record.getTaskId(), UserTaskLifeCycle.TERMINATED, logRecord.getRequestId(), record);
+    // 加签任务终止：只做父任务计数与放行判定，不推进活动终止（父任务仍在活动上）
+    if (record.getAddSignRole() == AddSignRole.ADD_SIGN) {
+      writer.behavior().addSignBehavior().onAddSignTaskEnded(record, logRecord.getRequestId());
+      return;
+    }
     if (record.getParentTaskId() == -1) {
       final ActivityInstanceRecord instanceRecord =
           activityInstance.getRecord(record.getActivityInstanceId());

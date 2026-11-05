@@ -466,6 +466,7 @@ public class Bpmn {
     KunpengPriorityDefinitionImpl.registerType(bpmnModelBuilder);
     KunpengVersionTagImpl.registerType(bpmnModelBuilder);
     KunpengAdHocImpl.registerType(bpmnModelBuilder);
+    KunpengAddSignImpl.registerType(bpmnModelBuilder);
     KunpengLinkedResourceImpl.registerType(bpmnModelBuilder);
     KunpengLinkedResourcesImpl.registerType(bpmnModelBuilder);
   }

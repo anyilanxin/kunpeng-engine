@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.Bpmn;
@@ -38,6 +39,7 @@ import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnIntermediateThrowEvent;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnJobWorkerTask;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnMultiInstanceBody;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnProcess;
+import com.anyilanxin.kunpeng.bpm.parse.exception.BpmnParseException;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnScriptTask;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnSequenceFlow;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnStartEvent;
@@ -59,6 +61,9 @@ class BpmnTransformTest {
 
   /** 进阶流程：边界事件（定时/错误）、多实例、信号捕获、消息抛出、调用活动与事件子流程。 */
   private static final String ADVANCED_BPMN = "bpmn/advanced.bpmn";
+
+  /** 加签流程：一个声明 kunpeng:addSign 的用户任务 + 一个未声明的用户任务。 */
+  private static final String ADD_SIGN_BPMN = "bpmn/addsign.bpmn";
 
   @Test
   void shouldTransformSimpleProcess() {
@@ -220,6 +225,25 @@ class BpmnTransformTest {
       throw new IllegalStateException("Validation failed: " + SIMPLE_BPMN, e);
     }
     assertNull(result, "Expected no validation errors: " + result);
+  }
+
+  @Test
+  void shouldSynthesizeAddSignVirtualElementOnlyForAllowedUserTask() {
+    final BpmnProcess process = transformFirst(ADD_SIGN_BPMN);
+    // 声明 kunpeng:addSign 的任务：标记允许且解析期派生 id + "-addsign" 虚拟用户任务
+    final BpmnUserTask allowed = process.getElementById("Task_allowed", BpmnUserTask.class);
+    assertTrue(allowed.isAddSignEnabled());
+    final BpmnUserTask virtual =
+        process.getElementById("Task_allowed-addsign", BpmnUserTask.class);
+    assertTrue(virtual.isAddSignVirtual());
+    assertFalse(virtual.isAddSignEnabled());
+    // 未声明的任务：不允许加签、无虚拟节点（按类型取应抛不存在）
+    final BpmnUserTask denied = process.getElementById("Task_denied", BpmnUserTask.class);
+    assertFalse(denied.isAddSignEnabled());
+    assertFalse(denied.isAddSignVirtual());
+    assertThrows(
+        BpmnParseException.class,
+        () -> process.getElementById("Task_denied-addsign", BpmnUserTask.class));
   }
 
   private BpmnProcess transformFirst(final String resource) {

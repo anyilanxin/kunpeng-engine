@@ -23,6 +23,9 @@ import static com.anyilanxin.kunpeng.structpack.util.DocumentUtil.convertToMsgPa
 
 import com.anyilanxin.kunpeng.protocol.business.impl.BusinessRecordConstant;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.activityinstance.ActivityInstanceRecord;
+import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.AddSignMode;
+import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.AddSignPhase;
+import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.AddSignRole;
 import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.UserTaskLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.UserTaskListenerType;
 import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.UserTaskRecordValue;
@@ -89,9 +92,27 @@ public class UserTaskRecord extends UnifiedRecordValue<UserTaskRecord>
   private final LongProperty durationProp = new LongProperty(26, DURATION, -1);
   private final StringProperty tenantIdProp =
       new StringProperty(27, TENANT_ID, TenantOwned.DEFAULT_TENANT_IDENTIFIER);
+  private final EnumProperty<AddSignRole> addSignRoleProp =
+      new EnumProperty<>(28, "ADD_SIGN_ROLE", AddSignRole.class, AddSignRole.NONE);
+  private final LongProperty originActivityInstanceIdProp =
+      new LongProperty(29, "ORIGIN_ACTIVITY_INSTANCE_ID", -1);
+  private final EnumProperty<AddSignPhase> addSignPhaseProp =
+      new EnumProperty<>(30, "ADD_SIGN_PHASE", AddSignPhase.class, AddSignPhase.NONE);
+  private final EnumProperty<AddSignMode> addSignModeProp =
+      new EnumProperty<>(31, "ADD_SIGN_MODE", AddSignMode.class, AddSignMode.NONE);
+  private final IntegerProperty addSignCountProp = new IntegerProperty(32, "ADD_SIGN_COUNT", 0);
+  private final ArrayProperty<StringValue> remainingAssigneesProp =
+      new ArrayProperty<>(33, "REMAINING_ASSIGNEES", StringValue::new);
+
+  /** 后加签预登记名单：完成前登记/追加，原任务完成时消费创建加签任务 */
+  private final ArrayProperty<StringValue> afterSignAssigneesProp =
+      new ArrayProperty<>(34, "AFTER_SIGN_ASSIGNEES", StringValue::new);
+
+  private final EnumProperty<AddSignMode> afterSignModeProp =
+      new EnumProperty<>(35, "AFTER_SIGN_MODE", AddSignMode.class, AddSignMode.NONE);
 
   public UserTaskRecord() {
-    super(27);
+    super(35);
     declareProperty(taskIdProp)
         .declareProperty(parentTaskIdProp)
         .declareProperty(revProp)
@@ -118,7 +139,15 @@ public class UserTaskRecord extends UnifiedRecordValue<UserTaskRecord>
         .declareProperty(startTimeProp)
         .declareProperty(endTimeProp)
         .declareProperty(durationProp)
-        .declareProperty(tenantIdProp);
+        .declareProperty(tenantIdProp)
+        .declareProperty(addSignRoleProp)
+        .declareProperty(originActivityInstanceIdProp)
+        .declareProperty(addSignPhaseProp)
+        .declareProperty(addSignModeProp)
+        .declareProperty(addSignCountProp)
+        .declareProperty(remainingAssigneesProp)
+        .declareProperty(afterSignAssigneesProp)
+        .declareProperty(afterSignModeProp);
   }
 
   public void wrap(final ActivityInstanceRecord instanceRecord) {
@@ -508,6 +537,94 @@ public class UserTaskRecord extends UnifiedRecordValue<UserTaskRecord>
 
   public UserTaskRecord setTenantId(final String tenantId) {
     tenantIdProp.setValue(wrapString(tenantId));
+    return this;
+  }
+
+  @Override
+  public AddSignRole getAddSignRole() {
+    return addSignRoleProp.getValue();
+  }
+
+  public UserTaskRecord setAddSignRole(final AddSignRole addSignRole) {
+    addSignRoleProp.setValue(addSignRole);
+    return this;
+  }
+
+  @Override
+  public long getOriginActivityInstanceId() {
+    return originActivityInstanceIdProp.getValue();
+  }
+
+  public UserTaskRecord setOriginActivityInstanceId(final long originActivityInstanceId) {
+    originActivityInstanceIdProp.setValue(originActivityInstanceId);
+    return this;
+  }
+
+  @Override
+  public AddSignPhase getAddSignPhase() {
+    return addSignPhaseProp.getValue();
+  }
+
+  public UserTaskRecord setAddSignPhase(final AddSignPhase addSignPhase) {
+    addSignPhaseProp.setValue(addSignPhase);
+    return this;
+  }
+
+  @Override
+  public AddSignMode getAddSignMode() {
+    return addSignModeProp.getValue();
+  }
+
+  public UserTaskRecord setAddSignMode(final AddSignMode addSignMode) {
+    addSignModeProp.setValue(addSignMode);
+    return this;
+  }
+
+  @Override
+  public int getAddSignCount() {
+    return addSignCountProp.getValue();
+  }
+
+  public UserTaskRecord setAddSignCount(final int addSignCount) {
+    addSignCountProp.setValue(addSignCount);
+    return this;
+  }
+
+  @Override
+  public List<String> getRemainingAssignees() {
+    return StreamSupport.stream(remainingAssigneesProp.spliterator(), false)
+        .map(StringValue::getValue)
+        .map(BufferUtil::bufferAsString)
+        .collect(Collectors.toList());
+  }
+
+  public UserTaskRecord setRemainingAssignees(final List<String> remainingAssignees) {
+    remainingAssigneesProp.reset();
+    remainingAssignees.forEach(assignee -> remainingAssigneesProp.add().wrap(wrapString(assignee)));
+    return this;
+  }
+
+  @Override
+  public List<String> getAfterSignAssignees() {
+    return StreamSupport.stream(afterSignAssigneesProp.spliterator(), false)
+        .map(StringValue::getValue)
+        .map(BufferUtil::bufferAsString)
+        .collect(Collectors.toList());
+  }
+
+  public UserTaskRecord setAfterSignAssignees(final List<String> afterSignAssignees) {
+    afterSignAssigneesProp.reset();
+    afterSignAssignees.forEach(assignee -> afterSignAssigneesProp.add().wrap(wrapString(assignee)));
+    return this;
+  }
+
+  @Override
+  public AddSignMode getAfterSignMode() {
+    return afterSignModeProp.getValue();
+  }
+
+  public UserTaskRecord setAfterSignMode(final AddSignMode afterSignMode) {
+    afterSignModeProp.setValue(afterSignMode);
     return this;
   }
 

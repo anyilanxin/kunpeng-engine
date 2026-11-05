@@ -27,6 +27,7 @@ import com.anyilanxin.kunpeng.protocol.business.impl.record.command.activityinst
 import com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance.ActivityInstanceLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance.ActivityInstanceListenerType;
 import com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance.ActivityInstanceState;
+import com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance.AddSignState;
 import com.anyilanxin.kunpeng.protocol.common.TenantOwned;
 import com.anyilanxin.kunpeng.structpack.AutoDeclareProperties;
 import com.anyilanxin.kunpeng.structpack.UnpackedObject;
@@ -90,9 +91,11 @@ public class ActivityInstanceRecordEntity extends UnpackedObject implements Stor
   private final IntegerProperty listenerIndexProp = new IntegerProperty(26, LISTENER_INDEX, -1);
   private final StringProperty tenantIdProp =
       new StringProperty(27, TENANT_ID, TenantOwned.DEFAULT_TENANT_IDENTIFIER);
+  private final EnumProperty<AddSignState> addSignStateProp =
+      new EnumProperty<>(28, "ADD_SIGN_STATE", AddSignState.class, AddSignState.NONE);
 
   public ActivityInstanceRecordEntity() {
-    super(27);
+    super(28);
     // formatting:off
     declareProperty(activityInstanceIdProp)
       .declareProperty(parentActivityInstanceIdProp)
@@ -120,7 +123,8 @@ public class ActivityInstanceRecordEntity extends UnpackedObject implements Stor
       .declareProperty(additionsProperty)
       .declareProperty(listenerTypeProp)
       .declareProperty(listenerIndexProp)
-      .declareProperty(tenantIdProp);
+      .declareProperty(tenantIdProp)
+      .declareProperty(addSignStateProp);
     // formatting:on
   }
 
@@ -151,7 +155,8 @@ public class ActivityInstanceRecordEntity extends UnpackedObject implements Stor
         .setAdditions(record.getAdditions())
         .setListenerType(record.getListenerType())
         .setListenerIndex(record.getListenerIndex())
-        .setTenantId(record.getTenantIdBuffer());
+        .setTenantId(record.getTenantIdBuffer())
+        .setAddSignState(record.getAddSignState());
   }
 
   public ActivityInstanceRecord unwrap(final ActivityInstanceRecord instanceRecord) {
@@ -183,7 +188,8 @@ public class ActivityInstanceRecordEntity extends UnpackedObject implements Stor
         .setAdditions(getAdditions())
         .setListenerType(getListenerType())
         .setListenerIndex(getListenerIndex())
-        .setTenantId(getTenantIdBuffer());
+        .setTenantId(getTenantIdBuffer())
+        .setAddSignState(getAddSignState());
   }
 
   public long getActivityInstanceId() {
@@ -524,6 +530,15 @@ public class ActivityInstanceRecordEntity extends UnpackedObject implements Stor
 
   public ActivityInstanceRecordEntity setTenantId(final DirectBuffer tenantId) {
     tenantIdProp.setValue(tenantId);
+    return this;
+  }
+
+  public AddSignState getAddSignState() {
+    return addSignStateProp.getValue();
+  }
+
+  public ActivityInstanceRecordEntity setAddSignState(final AddSignState addSignState) {
+    addSignStateProp.setValue(addSignState);
     return this;
   }
 }

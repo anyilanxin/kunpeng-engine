@@ -30,6 +30,10 @@ import static com.anyilanxin.kunpeng.protocol.business.RecordMappingIndex.RECORD
 import static com.anyilanxin.kunpeng.protocol.business.RecordMappingIndex.RECORD_INDEX_47;
 import static com.anyilanxin.kunpeng.protocol.business.RecordMappingIndex.RECORD_INDEX_48;
 import static com.anyilanxin.kunpeng.protocol.business.RecordMappingIndex.RECORD_INDEX_49;
+import static com.anyilanxin.kunpeng.protocol.business.RecordMappingIndex.RECORD_INDEX_87;
+import static com.anyilanxin.kunpeng.protocol.business.RecordMappingIndex.RECORD_INDEX_88;
+import static com.anyilanxin.kunpeng.protocol.business.RecordMappingIndex.RECORD_INDEX_89;
+import static com.anyilanxin.kunpeng.protocol.business.RecordMappingIndex.RECORD_INDEX_90;
 import static com.anyilanxin.kunpeng.protocol.business.RecordProcessIndex.*;
 
 import com.anyilanxin.kunpeng.protocol.business.ValueType;
@@ -57,7 +61,11 @@ public enum CommandApiUserTaskValueLifeCycle implements CommandApiValueLifeCycle
   OWN_REQUEST((short) 14, PROCESS_INDEX_108, RECORD_INDEX_46),
   OWN_RESPONSE((short) 15, NOT_PROCESS_INDEX, RECORD_INDEX_47),
   UPDATE_REQUEST((short) 16, PROCESS_INDEX_109, RECORD_INDEX_48),
-  UPDATE_RESPONSE((short) 17, NOT_PROCESS_INDEX, RECORD_INDEX_49);
+  UPDATE_RESPONSE((short) 17, NOT_PROCESS_INDEX, RECORD_INDEX_49),
+  ADD_SIGN_BEFORE_REQUEST((short) 18, PROCESS_INDEX_228, RECORD_INDEX_87),
+  ADD_SIGN_BEFORE_RESPONSE((short) 19, NOT_PROCESS_INDEX, RECORD_INDEX_88),
+  ADD_SIGN_AFTER_REQUEST((short) 20, PROCESS_INDEX_229, RECORD_INDEX_89),
+  ADD_SIGN_AFTER_RESPONSE((short) 21, NOT_PROCESS_INDEX, RECORD_INDEX_90);
 
   private final short value;
   private final short processIndex;
@@ -94,6 +102,10 @@ public enum CommandApiUserTaskValueLifeCycle implements CommandApiValueLifeCycle
       case 15 -> OWN_RESPONSE;
       case 16 -> UPDATE_REQUEST;
       case 17 -> UPDATE_RESPONSE;
+      case 18 -> ADD_SIGN_BEFORE_REQUEST;
+      case 19 -> ADD_SIGN_BEFORE_RESPONSE;
+      case 20 -> ADD_SIGN_AFTER_REQUEST;
+      case 21 -> ADD_SIGN_AFTER_RESPONSE;
       default -> throw new IllegalStateException("Unexpected value: " + value);
     };
   }

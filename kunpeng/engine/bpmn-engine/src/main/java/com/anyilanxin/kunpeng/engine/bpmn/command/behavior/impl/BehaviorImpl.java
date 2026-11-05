@@ -35,6 +35,7 @@ public class BehaviorImpl implements Behavior {
   private final DelayBehavior delayBehavior;
   private final IncidentBehavior incidentBehavior;
   private final UserTaskBehavior userTaskBehavior;
+  private final AddSignBehavior addSignBehavior;
   private final JobBehavior jobBehavior;
   private final BatchBehavior batchBehavior;
   private final ProcessDefinitionBehavior processDefinitionBehavior;
@@ -65,6 +66,7 @@ public class BehaviorImpl implements Behavior {
     sequenceFlowBehavior =
         new SequenceFlowBehavior(writer, activityInstanceBehavior, variableBehavior);
     userTaskBehavior = new UserTaskBehavior(writer, variableBehavior);
+    addSignBehavior = new AddSignBehavior(writer);
     batchBehavior = new BatchBehavior(writer);
     processDefinitionBehavior = new ProcessDefinitionBehavior(writer, catchEventBehavior);
     delayBehavior = new DelayBehavior(writer);
@@ -127,6 +129,11 @@ public class BehaviorImpl implements Behavior {
   @Override
   public UserTaskBehavior userTaskBehavior() {
     return userTaskBehavior;
+  }
+
+  @Override
+  public AddSignBehavior addSignBehavior() {
+    return addSignBehavior;
   }
 
   @Override

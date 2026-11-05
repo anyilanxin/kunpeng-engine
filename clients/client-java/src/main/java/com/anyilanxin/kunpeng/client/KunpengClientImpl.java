@@ -536,6 +536,22 @@ public class KunpengClientImpl implements KunpengClient {
   }
 
   @Override
+  public com.anyilanxin.kunpeng.client.command.usertask.addsign.AddSignBeforeUserTaskCommand
+      newAddSignBeforeUserTaskCommand() {
+    return new com.anyilanxin.kunpeng.client.command.usertask.addsign
+        .AddSignBeforeUserTaskCommandImpl(
+        userTaskService, configuration, jsonMapper, retryPredicate);
+  }
+
+  @Override
+  public com.anyilanxin.kunpeng.client.command.usertask.addsign.AddSignAfterUserTaskCommand
+      newAddSignAfterUserTaskCommand() {
+    return new com.anyilanxin.kunpeng.client.command.usertask.addsign
+        .AddSignAfterUserTaskCommandImpl(
+        userTaskService, configuration, jsonMapper, retryPredicate);
+  }
+
+  @Override
   public MessageCorrelationCommand newMessageCorrelationCommand() {
     return new MessageCorrelationCommandImpl(
         messageService, configuration, jsonMapper, retryPredicate);
