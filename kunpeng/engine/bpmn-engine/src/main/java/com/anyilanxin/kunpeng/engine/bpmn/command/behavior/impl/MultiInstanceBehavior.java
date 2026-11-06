@@ -52,11 +52,12 @@ public class MultiInstanceBehavior {
       return new MultiInstanceVariable(0, 0, 0, 0, -1);
     }
     return new MultiInstanceVariable(
-        (Integer) directVariable.getOrDefault(NR_OF_ACTIVE_INSTANCES, 0),
-        (Integer) directVariable.getOrDefault(NR_OF_INSTANCES, 0),
-        (Integer) directVariable.getOrDefault(NR_OF_COMPLETED_INSTANCES, 0),
-        (Integer) directVariable.getOrDefault(NR_OF_TERMINATED_INSTANCES, 0),
-        (Integer) directVariable.getOrDefault(LOOP_COUNTER, -1));
+        // DocumentCodec 契约：文档数值读侧一律回读为 Long，整型必须经 Number 取值
+        ((Number) directVariable.getOrDefault(NR_OF_ACTIVE_INSTANCES, 0)).intValue(),
+        ((Number) directVariable.getOrDefault(NR_OF_INSTANCES, 0)).intValue(),
+        ((Number) directVariable.getOrDefault(NR_OF_COMPLETED_INSTANCES, 0)).intValue(),
+        ((Number) directVariable.getOrDefault(NR_OF_TERMINATED_INSTANCES, 0)).intValue(),
+        ((Number) directVariable.getOrDefault(LOOP_COUNTER, -1)).intValue());
   }
 
   /** MI 计数器写回（body 作用域变量） */

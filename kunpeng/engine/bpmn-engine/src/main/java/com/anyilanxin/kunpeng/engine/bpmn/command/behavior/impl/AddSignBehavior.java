@@ -367,7 +367,7 @@ public class AddSignBehavior {
     payload.phase = AddSignPhase.valueOf((String) raw.get(PAYLOAD_PHASE));
     payload.taskKey = (String) raw.get(PAYLOAD_TASK_KEY);
     payload.taskName = (String) raw.get(PAYLOAD_TASK_NAME);
-    payload.depth = (Integer) raw.getOrDefault(PAYLOAD_DEPTH, 1);
+    payload.depth = ((Number) raw.getOrDefault(PAYLOAD_DEPTH, 1)).intValue();
     return payload;
   }
 
@@ -383,11 +383,12 @@ public class AddSignBehavior {
     if (raw == null) {
       return counters;
     }
-    counters.total = (Integer) raw.getOrDefault(COUNTERS_TOTAL, 0);
-    counters.created = (Integer) raw.getOrDefault(COUNTERS_CREATED, 0);
-    counters.completed = (Integer) raw.getOrDefault(COUNTERS_COMPLETED, 0);
-    counters.terminated = (Integer) raw.getOrDefault(COUNTERS_TERMINATED, 0);
-    counters.cursor = (Integer) raw.getOrDefault(COUNTERS_CURSOR, -1);
+    // DocumentCodec 契约：文档数值读侧一律回读为 Long（写侧 Number 统一 longValue），整型必须经 Number 取值
+    counters.total = ((Number) raw.getOrDefault(COUNTERS_TOTAL, 0)).intValue();
+    counters.created = ((Number) raw.getOrDefault(COUNTERS_CREATED, 0)).intValue();
+    counters.completed = ((Number) raw.getOrDefault(COUNTERS_COMPLETED, 0)).intValue();
+    counters.terminated = ((Number) raw.getOrDefault(COUNTERS_TERMINATED, 0)).intValue();
+    counters.cursor = ((Number) raw.getOrDefault(COUNTERS_CURSOR, -1)).intValue();
     return counters;
   }
 

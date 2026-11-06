@@ -211,6 +211,33 @@ class AddSignElementProcessorTest {
   }
 
   @Test
+  void completingWithDocumentDecodedLongCounters() {
+    // DocumentCodec 契约（2026-11-07 线上事故回归锁）：文档数值读侧一律回读为 Long，
+    // 跨批读计数器拿到的是 Long 形态——Integer 直转会 ClassCastException 回滚整批
+    final Map<String, Object> direct = new HashMap<>();
+    direct.put(
+        AddSignBehavior.ADD_SIGN_PAYLOAD,
+        Map.of(
+            "assignees", List.of("bob"),
+            "mode", AddSignMode.PARALLEL.name(),
+            "phase", AddSignPhase.BEFORE.name(),
+            "taskKey", "task1",
+            "taskName", "审批",
+            "depth", 1L));
+    direct.put(
+        AddSignBehavior.ADD_SIGN_COUNTERS,
+        Map.of(
+            "total", 1L, "created", 1L, "completed", 1L,
+            "terminated", 0L, "cursor", 0L));
+    when(variableBehavior.getDirectVariable(any())).thenReturn(direct);
+    processor.onCompleting(new BpmnAddSignUserTask(VIRTUAL_KEY), content());
+
+    verify(behavior.activityInstanceBehavior())
+        .onCompleting(any(BpmnAddSignUserTask.class), any(ActivityContent.class));
+    assertEquals(0, anchorTask.getAddSignCount());
+  }
+
+  @Test
   void completingNotAllAdvancesSequentialChain() {
     stubGroupVariables(AddSignMode.SEQUENTIAL, AddSignPhase.BEFORE, 3, 1, 0, 0, 0);
     processor.onCompleting(new BpmnAddSignUserTask(VIRTUAL_KEY), content());
