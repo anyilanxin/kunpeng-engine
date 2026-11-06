@@ -138,7 +138,7 @@ class BatchTaskTerminateExecutorProcessorTest {
         .setProcessInstanceId(PROCESS_INSTANCE_ID)
         .setProcessDefinitionId(PROCESS_DEFINITION_ID)
         .setTaskDefinitionKey(VIRTUAL_KEY)
-        .setOriginActivityInstanceId(INSTANCE_ID)
+        .setRootActivityInstanceId(INSTANCE_ID)
         .setAddSignRole(AddSignRole.ADD_SIGN)
         .setAddSignPhase(AddSignPhase.BEFORE)
         .setAddSignMode(AddSignMode.PARALLEL);

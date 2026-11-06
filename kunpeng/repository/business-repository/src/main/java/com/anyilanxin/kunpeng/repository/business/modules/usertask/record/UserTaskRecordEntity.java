@@ -90,8 +90,8 @@ public class UserTaskRecordEntity extends UnpackedObject implements StoreValue {
       new StringProperty(26, TENANT_ID, TenantOwned.DEFAULT_TENANT_IDENTIFIER);
   private final EnumProperty<AddSignRole> addSignRoleProp =
       new EnumProperty<>(27, "ADD_SIGN_ROLE", AddSignRole.class, AddSignRole.NONE);
-  private final LongProperty originActivityInstanceIdProp =
-      new LongProperty(28, "ORIGIN_ACTIVITY_INSTANCE_ID", -1);
+  private final LongProperty rootActivityInstanceIdProp =
+      new LongProperty(28, "ROOT_ACTIVITY_INSTANCE_ID", -1);
   private final EnumProperty<AddSignPhase> addSignPhaseProp =
       new EnumProperty<>(29, "ADD_SIGN_PHASE", AddSignPhase.class, AddSignPhase.NONE);
   private final EnumProperty<AddSignMode> addSignModeProp =
@@ -135,7 +135,7 @@ public class UserTaskRecordEntity extends UnpackedObject implements StoreValue {
         .declareProperty(durationProp)
         .declareProperty(tenantIdProp)
         .declareProperty(addSignRoleProp)
-        .declareProperty(originActivityInstanceIdProp)
+        .declareProperty(rootActivityInstanceIdProp)
         .declareProperty(addSignPhaseProp)
         .declareProperty(addSignModeProp)
         .declareProperty(addSignCountProp)
@@ -173,7 +173,7 @@ public class UserTaskRecordEntity extends UnpackedObject implements StoreValue {
         .setDuration(record.getDuration())
         .setTenantId(record.getTenantIdBuffer())
         .setAddSignRole(record.getAddSignRole())
-        .setOriginActivityInstanceId(record.getOriginActivityInstanceId())
+        .setRootActivityInstanceId(record.getRootActivityInstanceId())
         .setAddSignPhase(record.getAddSignPhase())
         .setAddSignMode(record.getAddSignMode())
         .setAddSignCount(record.getAddSignCount())
@@ -213,7 +213,7 @@ public class UserTaskRecordEntity extends UnpackedObject implements StoreValue {
         .setDuration(getDuration())
         .setTenantId(getTenantIdBuffer())
         .setAddSignRole(getAddSignRole())
-        .setOriginActivityInstanceId(getOriginActivityInstanceId())
+        .setRootActivityInstanceId(getRootActivityInstanceId())
         .setAddSignPhase(getAddSignPhase())
         .setAddSignMode(getAddSignMode())
         .setAddSignCount(getAddSignCount())
@@ -561,12 +561,12 @@ public class UserTaskRecordEntity extends UnpackedObject implements StoreValue {
     return this;
   }
 
-  public long getOriginActivityInstanceId() {
-    return originActivityInstanceIdProp.getValue();
+  public long getRootActivityInstanceId() {
+    return rootActivityInstanceIdProp.getValue();
   }
 
-  public UserTaskRecordEntity setOriginActivityInstanceId(final long originActivityInstanceId) {
-    originActivityInstanceIdProp.setValue(originActivityInstanceId);
+  public UserTaskRecordEntity setRootActivityInstanceId(final long originActivityInstanceId) {
+    rootActivityInstanceIdProp.setValue(originActivityInstanceId);
     return this;
   }
 

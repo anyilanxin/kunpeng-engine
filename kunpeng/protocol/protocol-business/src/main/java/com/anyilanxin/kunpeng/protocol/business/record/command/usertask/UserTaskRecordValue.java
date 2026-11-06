@@ -74,8 +74,8 @@ public interface UserTaskRecordValue
   /** 加签角色（NONE=原任务，ADD_SIGN=加签任务） */
   AddSignRole getAddSignRole();
 
-  /** 加签任务指向的原活动实例 id；原任务为 -1 */
-  long getOriginActivityInstanceId();
+  /** 加签根活动实例 id（=E0，全层级级联共用同一根，整棵加签树一查即得）；原任务为 -1 */
+  long getRootActivityInstanceId();
 
   /** 加签阶段（前/后加签） */
   AddSignPhase getAddSignPhase();

@@ -139,7 +139,7 @@ class BpmnUserTaskAddSignCompletedTest {
             .setTaskDefinitionKey(VIRTUAL_KEY)
             .setAddSignRole(AddSignRole.ADD_SIGN)
             .setParentTaskId(TASK_ID)
-            .setOriginActivityInstanceId(INSTANCE_ID)
+            .setRootActivityInstanceId(INSTANCE_ID)
             .setAddSignPhase(AddSignPhase.BEFORE)
             .setAddSignMode(AddSignMode.PARALLEL);
     when(repository.userTaskRepository().getRecord(TASK_ID)).thenReturn(originTask);

@@ -43,7 +43,7 @@ public class UserTaskDbModel {
   private Integer revision;
   private Integer resourceId;
   private String addSignRole;
-  private Long originActivityInstanceId;
+  private Long rootActivityInstanceId;
   private String addSignPhase;
   private String addSignMode;
   private Integer addSignCount;

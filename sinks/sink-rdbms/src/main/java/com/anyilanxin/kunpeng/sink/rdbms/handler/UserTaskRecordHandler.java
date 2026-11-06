@@ -109,8 +109,8 @@ public final class UserTaskRecordHandler implements RecordModelHandler {
   /** 加签字段：主从引用/计数/名单（列表列 JSON），随创建与后续 UPDATING 事件同步 */
   private static void fillAddSign(final UserTaskDbModel model, final UserTaskRecordValue value) {
     model.setAddSignRole(nameOf(value.getAddSignRole()));
-    model.setOriginActivityInstanceId(
-        value.getOriginActivityInstanceId() > 0 ? value.getOriginActivityInstanceId() : null);
+    model.setRootActivityInstanceId(
+        value.getRootActivityInstanceId() > 0 ? value.getRootActivityInstanceId() : null);
     model.setAddSignPhase(nameOf(value.getAddSignPhase()));
     model.setAddSignMode(nameOf(value.getAddSignMode()));
     model.setAddSignCount(value.getAddSignCount());

@@ -94,8 +94,8 @@ public class UserTaskRecord extends UnifiedRecordValue<UserTaskRecord>
       new StringProperty(27, TENANT_ID, TenantOwned.DEFAULT_TENANT_IDENTIFIER);
   private final EnumProperty<AddSignRole> addSignRoleProp =
       new EnumProperty<>(28, "ADD_SIGN_ROLE", AddSignRole.class, AddSignRole.NONE);
-  private final LongProperty originActivityInstanceIdProp =
-      new LongProperty(29, "ORIGIN_ACTIVITY_INSTANCE_ID", -1);
+  private final LongProperty rootActivityInstanceIdProp =
+      new LongProperty(29, "ROOT_ACTIVITY_INSTANCE_ID", -1);
   private final EnumProperty<AddSignPhase> addSignPhaseProp =
       new EnumProperty<>(30, "ADD_SIGN_PHASE", AddSignPhase.class, AddSignPhase.NONE);
   private final EnumProperty<AddSignMode> addSignModeProp =
@@ -144,7 +144,7 @@ public class UserTaskRecord extends UnifiedRecordValue<UserTaskRecord>
         .declareProperty(durationProp)
         .declareProperty(tenantIdProp)
         .declareProperty(addSignRoleProp)
-        .declareProperty(originActivityInstanceIdProp)
+        .declareProperty(rootActivityInstanceIdProp)
         .declareProperty(addSignPhaseProp)
         .declareProperty(addSignModeProp)
         .declareProperty(addSignCountProp)
@@ -555,12 +555,12 @@ public class UserTaskRecord extends UnifiedRecordValue<UserTaskRecord>
   }
 
   @Override
-  public long getOriginActivityInstanceId() {
-    return originActivityInstanceIdProp.getValue();
+  public long getRootActivityInstanceId() {
+    return rootActivityInstanceIdProp.getValue();
   }
 
-  public UserTaskRecord setOriginActivityInstanceId(final long originActivityInstanceId) {
-    originActivityInstanceIdProp.setValue(originActivityInstanceId);
+  public UserTaskRecord setRootActivityInstanceId(final long originActivityInstanceId) {
+    rootActivityInstanceIdProp.setValue(originActivityInstanceId);
     return this;
   }
 

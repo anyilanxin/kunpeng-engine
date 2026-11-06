@@ -266,7 +266,7 @@ public class AddSignBehavior {
         .setLifeCycle(UserTaskLifeCycle.CREATING)
         .setAddSignRole(AddSignRole.ADD_SIGN)
         .setParentTaskId(group.getTaskId())
-        .setOriginActivityInstanceId(rootOriginActivityId(group))
+        .setRootActivityInstanceId(rootActivityInstanceId(group))
         .setAddSignPhase(payload.phase)
         .setAddSignMode(payload.mode)
         .setRemainingAssignees(
@@ -444,8 +444,8 @@ public class AddSignBehavior {
     writer.addEvent(anchor.getTaskId(), UserTaskLifeCycle.UPDATING, requestId, anchor);
   }
 
-  /** G 的根原活动实例 id（沿 parent 链上溯到首个非容器实例；组已拆则 0） */
-  public long rootOriginActivityId(final ActivityInstanceRecord group) {
+  /** G 的根活动实例 id=E0（沿 parent 链上溯到首个非容器实例；组已拆则 0），全层级加签任务共用同一根 */
+  public long rootActivityInstanceId(final ActivityInstanceRecord group) {
     ActivityInstanceRecord current = group;
     while (current != null
         && current.getActivityDefinitionType() == BpmnElementType.ADD_SIGN_USER_TASK) {

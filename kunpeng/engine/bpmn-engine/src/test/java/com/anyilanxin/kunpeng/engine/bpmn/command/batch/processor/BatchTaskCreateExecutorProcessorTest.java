@@ -161,7 +161,7 @@ class BatchTaskCreateExecutorProcessorTest {
     assertEquals("审批", first.getTaskDefinitionName());
     assertEquals(GROUP_ID, first.getActivityInstanceId());
     assertEquals(TASK_ID, first.getParentTaskId());
-    assertEquals(INSTANCE_ID, first.getOriginActivityInstanceId());
+    assertEquals(INSTANCE_ID, first.getRootActivityInstanceId());
     assertEquals(AddSignRole.ADD_SIGN, first.getAddSignRole());
     assertEquals(AddSignPhase.BEFORE, first.getAddSignPhase());
     assertEquals(AddSignMode.PARALLEL, first.getAddSignMode());

@@ -713,7 +713,7 @@ final class Fakes {
     UserTaskState state = UserTaskState.ACTIVE;
     long startTime = 1_000;
     AddSignRole addSignRole = AddSignRole.NONE;
-    long originActivityInstanceId = -1;
+    long rootActivityInstanceId = -1;
     AddSignPhase addSignPhase = AddSignPhase.NONE;
     AddSignMode addSignMode = AddSignMode.NONE;
     int addSignCount;
@@ -863,8 +863,8 @@ final class Fakes {
     }
 
     @Override
-    public long getOriginActivityInstanceId() {
-      return originActivityInstanceId;
+    public long getRootActivityInstanceId() {
+      return rootActivityInstanceId;
     }
 
     @Override

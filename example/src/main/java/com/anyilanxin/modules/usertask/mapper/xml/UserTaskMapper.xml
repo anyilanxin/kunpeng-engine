@@ -40,7 +40,7 @@
        <result property="rev" column="REVISION" jdbcType="INTEGER"/>
        <result property="resourceId" column="RESOURCE_ID" jdbcType="INTEGER"/>
        <result property="addSignRole" column="ADD_SIGN_ROLE" jdbcType="VARCHAR"/>
-       <result property="originActivityInstanceId" column="ORIGIN_ACTIVITY_INSTANCE_ID" jdbcType="BIGINT"/>
+       <result property="rootActivityInstanceId" column="ORIGIN_ACTIVITY_INSTANCE_ID" jdbcType="BIGINT"/>
        <result property="addSignPhase" column="ADD_SIGN_PHASE" jdbcType="VARCHAR"/>
        <result property="addSignMode" column="ADD_SIGN_MODE" jdbcType="VARCHAR"/>
        <result property="addSignCount" column="ADD_SIGN_COUNT" jdbcType="INTEGER"/>

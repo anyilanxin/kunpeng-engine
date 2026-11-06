@@ -192,7 +192,7 @@ class AddSignElementProcessorTest {
     assertEquals("bob", first.getAssignee());
     assertEquals(VIRTUAL_KEY, first.getTaskDefinitionKey());
     assertEquals(TASK_ID, first.getParentTaskId());
-    assertEquals(INSTANCE_ID, first.getOriginActivityInstanceId());
+    assertEquals(INSTANCE_ID, first.getRootActivityInstanceId());
     assertEquals(2, first.getAddSignDepth());
     assertEquals(List.of("carol", "dave"), first.getRemainingAssignees());
   }

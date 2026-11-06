@@ -134,7 +134,7 @@ public class UserTaskEntity extends BaseEntity {
 
   /** 加签任务指向的原活动实例 id */
   @TableField(value = "ORIGIN_ACTIVITY_INSTANCE_ID")
-  private Long originActivityInstanceId;
+  private Long rootActivityInstanceId;
 
   /** 加签阶段（前/后加签） */
   @TableField(value = "ADD_SIGN_PHASE")

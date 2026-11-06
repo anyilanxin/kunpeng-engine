@@ -432,4 +432,9 @@
     </addColumn>
   </changeSet>
 
+  <!-- 加签：origin 改名 root（语义=加签根活动实例 E0，全层级共用；列语义不变只改名），追加式 rename -->
+  <changeSet id="2026.9.0-add-sign-root-rename" author="anyilanxin">
+    <renameColumn tableName="${table.user_task}" oldColumnName="origin_activity_instance_id" newColumnName="root_activity_instance_id" columnDataType="BIGINT"/>
+  </changeSet>
+
 </databaseChangeLog>
