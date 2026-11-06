@@ -15,5 +15,8 @@ package com.anyilanxin.kunpeng.protocol.business.record.command.processinstance;
 public enum BatchBusinessType {
   PROCESS_INSTANCE,
   ACTIVITY_INSTANCE,
-  USER_TASK;
+  USER_TASK,
+
+  /** 无业务类型的哨兵（创建类批无 batchAfter 回调时的缺省；ordinal 上 wire 只能尾追） */
+  UNKNOW;
 }
