@@ -111,8 +111,11 @@ public class UserTaskRecord extends UnifiedRecordValue<UserTaskRecord>
   private final EnumProperty<AddSignMode> afterSignModeProp =
       new EnumProperty<>(35, "AFTER_SIGN_MODE", AddSignMode.class, AddSignMode.NONE);
 
+  /** 加签层级：原任务/普通任务=0，第 N 级加签任务=N（创建时随组载荷写入，门户按其+1 与建模 maxDepth 比较） */
+  private final IntegerProperty addSignDepthProp = new IntegerProperty(36, "ADD_SIGN_DEPTH", 0);
+
   public UserTaskRecord() {
-    super(35);
+    super(36);
     declareProperty(taskIdProp)
         .declareProperty(parentTaskIdProp)
         .declareProperty(revProp)
@@ -147,7 +150,8 @@ public class UserTaskRecord extends UnifiedRecordValue<UserTaskRecord>
         .declareProperty(addSignCountProp)
         .declareProperty(remainingAssigneesProp)
         .declareProperty(afterSignAssigneesProp)
-        .declareProperty(afterSignModeProp);
+        .declareProperty(afterSignModeProp)
+        .declareProperty(addSignDepthProp);
   }
 
   public void wrap(final ActivityInstanceRecord instanceRecord) {
@@ -587,6 +591,16 @@ public class UserTaskRecord extends UnifiedRecordValue<UserTaskRecord>
 
   public UserTaskRecord setAddSignCount(final int addSignCount) {
     addSignCountProp.setValue(addSignCount);
+    return this;
+  }
+
+  @Override
+  public int getAddSignDepth() {
+    return addSignDepthProp.getValue();
+  }
+
+  public UserTaskRecord setAddSignDepth(final int addSignDepth) {
+    addSignDepthProp.setValue(addSignDepth);
     return this;
   }
 

@@ -26,7 +26,6 @@ import com.anyilanxin.kunpeng.protocol.business.impl.eventlog.BusinessLogRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.activityinstance.ActivityInstanceRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.usertask.UserTaskRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.complete.UserTaskCompleteRequestRecord;
-import com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance.AddSignState;
 import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.AddSignMode;
 import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.UserTaskLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.record.commandapi.record.usertask.CommandApiUserTaskValueLifeCycle;
@@ -94,12 +93,25 @@ public class UserTaskCompleteProcessor
       writer.adErrorResponse(record.getRequestId(), 0, "流程定义不存在，无法携带后加签");
       return false;
     }
+    // 许可看原任务定义（级联锚任务剥后缀回原元素），与前/后加签门户同一口径
+    final String originKey =
+        userTask.getTaskDefinitionKey().endsWith(BpmnUserTask.ADD_SIGN_DEFINITION_SUFFIX)
+            ? userTask
+                .getTaskDefinitionKey()
+                .substring(
+                    0,
+                    userTask.getTaskDefinitionKey().length()
+                        - BpmnUserTask.ADD_SIGN_DEFINITION_SUFFIX.length())
+            : userTask.getTaskDefinitionKey();
     final BpmnUserTask element =
-        runtime
-            .executableProcess()
-            .getElementById(userTask.getTaskDefinitionKey(), BpmnUserTask.class);
+        runtime.executableProcess().getElementById(originKey, BpmnUserTask.class);
     if (!element.isAddSignEnabled()) {
       writer.adErrorResponse(record.getRequestId(), 0, "任务定义未允许加签（建模需声明 kunpeng:addSign）");
+      return false;
+    }
+    final String cascadeReject = addSignBehavior.cascadeRejectReason(userTask, element);
+    if (cascadeReject != null) {
+      writer.adErrorResponse(record.getRequestId(), 0, cascadeReject);
       return false;
     }
     if (!addSignBehavior.mergeAfterSignRegistration(
@@ -120,15 +132,16 @@ public class UserTaskCompleteProcessor
           record.getRequestId(), 0, "当前任务状态不允许此操作:" + userTask.getState().name());
       return;
     }
+    if (userTask.getAddSignCount() > 0) {
+      // 冻结门控按任务粒度（任意层级）：名下加签组在途即冻结，组归零解冻
+      writer.adErrorResponse(record.getRequestId(), 0, "当前任务存在进行中的加签组，已冻结，不允许完成");
+      return;
+    }
 
     final ActivityInstanceRecord instanceRecord =
         activityInstance.getRecord(userTask.getActivityInstanceId());
     if (instanceRecord != null) {
-      if (instanceRecord.getAddSignState() == AddSignState.FROZEN) {
-        writer.adErrorResponse(record.getRequestId(), 0, "当前活动前加签进行中，任务已冻结，不允许完成");
-        return;
-      }
-      // 完成携带后加签：先校验并合并进预登记（完成与加签创建同命令级联原子）
+      // 完成携带后加签：先校验并合并进预登记（完成与加签派生同命令级联原子）
       final List<String> carriedAssignees = value.getAddSignAssignees();
       if (!carriedAssignees.isEmpty() && !mergeCarriedAfterSign(record, userTask, instanceRecord)) {
         return;

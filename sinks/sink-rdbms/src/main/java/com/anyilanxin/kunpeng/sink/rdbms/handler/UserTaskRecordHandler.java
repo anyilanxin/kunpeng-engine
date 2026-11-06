@@ -38,6 +38,7 @@ public final class UserTaskRecordHandler implements RecordModelHandler {
       Set.of(
           UserTaskLifeCycle.CREATED,
           UserTaskLifeCycle.UPDATED,
+          UserTaskLifeCycle.UPDATING,
           UserTaskLifeCycle.ASSIGNEE,
           UserTaskLifeCycle.CLAIM,
           UserTaskLifeCycle.OWN,
@@ -113,6 +114,7 @@ public final class UserTaskRecordHandler implements RecordModelHandler {
     model.setAddSignPhase(nameOf(value.getAddSignPhase()));
     model.setAddSignMode(nameOf(value.getAddSignMode()));
     model.setAddSignCount(value.getAddSignCount());
+    model.setAddSignDepth(value.getAddSignDepth() > 0 ? value.getAddSignDepth() : null);
     model.setRemainingAssignees(JsonValues.toJson(value.getRemainingAssignees()));
     model.setAfterSignAssignees(JsonValues.toJson(value.getAfterSignAssignees()));
   }

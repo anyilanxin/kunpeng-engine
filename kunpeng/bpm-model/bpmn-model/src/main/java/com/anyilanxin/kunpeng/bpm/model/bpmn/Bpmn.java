@@ -458,7 +458,6 @@ public class Bpmn {
     KunpengPropertiesImpl.registerType(bpmnModelBuilder);
     KunpengScriptImpl.registerType(bpmnModelBuilder);
     KunpengPublishMessageImpl.registerType(bpmnModelBuilder);
-    KunpengUserTaskImpl.registerType(bpmnModelBuilder);
     KunpengExecutionListenersImpl.registerType(bpmnModelBuilder);
     KunpengExecutionListenerImpl.registerType(bpmnModelBuilder);
     KunpengTaskListenersImpl.registerType(bpmnModelBuilder);

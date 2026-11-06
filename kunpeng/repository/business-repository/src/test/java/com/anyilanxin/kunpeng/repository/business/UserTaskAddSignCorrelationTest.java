@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * 加签关联列族测试：加签任务按原活动实例前缀收录、删除即摘除、跨库重开保留；
+ * 加签组员关联列族测试：加签任务按自身活动实例（组实例）前缀收录、删除即摘除、跨库重开保留；
  * 非加签任务不入关联；列表每条独立实例（不共享 recordBuffer 坍缩）。
  *
  * @author zxuanhong
@@ -47,23 +47,23 @@ class UserTaskAddSignCorrelationTest {
     var repository = repository();
     // 原任务（非加签）不应入关联
     repository.userTaskRepository().save(1, new UserTaskRecord().setTaskId(1));
-    // 原活动实例 100 名下两个加签任务
+    // 组活动实例 100 名下两个加签任务（键=任务自身活动实例）
     repository
         .userTaskRepository()
         .save(
             11,
             new UserTaskRecord()
                 .setTaskId(11)
-                .setAddSignRole(AddSignRole.ADD_SIGN)
-                .setOriginActivityInstanceId(100));
+                .setActivityInstanceId(100)
+                .setAddSignRole(AddSignRole.ADD_SIGN));
     repository
         .userTaskRepository()
         .save(
             12,
             new UserTaskRecord()
                 .setTaskId(12)
-                .setAddSignRole(AddSignRole.ADD_SIGN)
-                .setOriginActivityInstanceId(100));
+                .setActivityInstanceId(100)
+                .setAddSignRole(AddSignRole.ADD_SIGN));
 
     final List<UserTaskRecord> tasks = repository.userTaskRepository().getAddSignTasks(100);
     assertEquals(2, tasks.size());

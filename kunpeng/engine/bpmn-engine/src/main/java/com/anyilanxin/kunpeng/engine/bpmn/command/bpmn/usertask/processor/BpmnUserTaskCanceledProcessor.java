@@ -53,9 +53,9 @@ public class BpmnUserTaskCanceledProcessor extends BpmnUserTaskElementAbstractPr
     record.setEndTime(writer.millis());
     writer.addEvent(
         record.getTaskId(), UserTaskLifeCycle.CANCELED, logRecord.getRequestId(), record);
-    // 加签任务取消：只做父任务计数与放行判定，不推进活动取消（父任务仍在活动上）
+    // 加签任务取消：反馈组实例终止单位计数，不推进活动取消（组完结判定归容器处理器）
     if (record.getAddSignRole() == AddSignRole.ADD_SIGN) {
-      writer.behavior().addSignBehavior().onAddSignTaskEnded(record, logRecord.getRequestId());
+      writer.behavior().addSignBehavior().onSignTaskEnded(record, logRecord.getRequestId(), true);
       return;
     }
     if (record.getParentTaskId() == -1) {

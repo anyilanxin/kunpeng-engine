@@ -36,6 +36,9 @@ public final class BatchProcessorRegister {
         .onCommand(new BatchTerminateExecutorProcessor(writer))
         .onCommand(new BatchTerminateExecutorProcessProcessor(writer))
         .onCommand(new BatchDirectTerminateExecutorProcessor(writer))
-        .onCommand(new BatchCompletedProcessor(writer));
+        .onCommand(new BatchCompletedProcessor(writer))
+        .onCommand(new BatchMiCreateExecutorProcessor(writer))
+        .onCommand(new BatchTaskCreateExecutorProcessor(writer))
+        .onCommand(new BatchTaskTerminateExecutorProcessor(writer));
   }
 }

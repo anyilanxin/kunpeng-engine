@@ -53,21 +53,29 @@ public class BpmnUserTaskTerminatedProcessor extends BpmnUserTaskElementAbstract
     record.setEndTime(writer.millis());
     writer.addEvent(
         record.getTaskId(), UserTaskLifeCycle.TERMINATED, logRecord.getRequestId(), record);
-    // 加签任务终止：只做父任务计数与放行判定，不推进活动终止（父任务仍在活动上）
+    // 加签任务终止：反馈组实例终止单位计数，不推进活动终止（组完结判定归容器处理器）
     if (record.getAddSignRole() == AddSignRole.ADD_SIGN) {
-      writer.behavior().addSignBehavior().onAddSignTaskEnded(record, logRecord.getRequestId());
+      writer.behavior().addSignBehavior().onSignTaskEnded(record, logRecord.getRequestId(), true);
       return;
     }
     if (record.getParentTaskId() == -1) {
+      // 与 onTerminating 的终止分发互为镜像：无在途加签组时任务链推进活动终止（MI 子任务/常态终止），
+      // 有在途加签组（或活动行已随终止批收尾删除）时由活动树终止批 batchAfter 统一推进，不重复发
       final ActivityInstanceRecord instanceRecord =
           activityInstance.getRecord(record.getActivityInstanceId());
-      writer.addCommand(
-          instanceRecord.getActivityInstanceId(),
-          ActivityInstanceLifeCycle.TERMINATED,
-          logRecord.getRequestId(),
-          logRecord.getOperationReferenceKey(),
-          logRecord.getBatchOperationReferenceKey(),
-          instanceRecord);
+      if (instanceRecord != null
+          && !writer
+              .behavior()
+              .addSignBehavior()
+              .hasInFlightChildGroup(record.getActivityInstanceId())) {
+        writer.addCommand(
+            instanceRecord.getActivityInstanceId(),
+            ActivityInstanceLifeCycle.TERMINATED,
+            logRecord.getRequestId(),
+            logRecord.getOperationReferenceKey(),
+            logRecord.getBatchOperationReferenceKey(),
+            instanceRecord);
+      }
     }
   }
 }

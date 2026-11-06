@@ -12,6 +12,8 @@
  */
 package com.anyilanxin.kunpeng.client.command.usertask.addsign;
 
+import com.anyilanxin.kunpeng.client.command.CommandWithTenantStep;
+import com.anyilanxin.kunpeng.client.command.FinalCommandStep;
 import com.anyilanxin.kunpeng.client.command.usertask.AddSignMode;
 import java.util.List;
 
@@ -21,7 +23,9 @@ import java.util.List;
  * @author zxuanhong
  * @since 2026.9.0
  */
-public interface AddSignAfterUserTaskCommand {
+public interface AddSignAfterUserTaskCommand
+    extends CommandWithTenantStep<AddSignAfterUserTaskCommand>,
+        FinalCommandStep<AddSignAfterUserTaskCommandResponse> {
   /**
    * 指定登记的原任务。
    *

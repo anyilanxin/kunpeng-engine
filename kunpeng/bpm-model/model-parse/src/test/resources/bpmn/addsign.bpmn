@@ -10,7 +10,6 @@
     <bpmn:sequenceFlow id="Flow_start_allowed" sourceRef="StartEvent_1" targetRef="Task_allowed" />
     <bpmn:userTask id="Task_allowed">
       <bpmn:extensionElements>
-        <kunpeng:userTask />
         <kunpeng:addSign />
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_start_allowed</bpmn:incoming>
@@ -19,7 +18,6 @@
     <bpmn:sequenceFlow id="Flow_allowed_denied" sourceRef="Task_allowed" targetRef="Task_denied" />
     <bpmn:userTask id="Task_denied">
       <bpmn:extensionElements>
-        <kunpeng:userTask />
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_allowed_denied</bpmn:incoming>
       <bpmn:outgoing>Flow_denied_end</bpmn:outgoing>

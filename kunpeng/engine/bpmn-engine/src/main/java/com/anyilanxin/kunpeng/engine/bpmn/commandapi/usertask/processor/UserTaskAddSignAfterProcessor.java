@@ -25,9 +25,7 @@ import com.anyilanxin.kunpeng.protocol.business.impl.record.command.activityinst
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.usertask.UserTaskRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.addsign.AddSignAfterRequestRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.addsign.AddSignAfterResponseRecord;
-import com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance.AddSignState;
 import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.AddSignMode;
-import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.AddSignRole;
 import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.UserTaskLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.record.commandapi.record.usertask.CommandApiUserTaskValueLifeCycle;
 import com.anyilanxin.kunpeng.repository.business.modules.activityinstance.ImmutableActivityInstanceRepository;
@@ -63,10 +61,6 @@ public class UserTaskAddSignAfterProcessor
       writer.adErrorResponse(requestId, 0, "当前任务状态不允许登记后加签:" + userTask.getState().name());
       return;
     }
-    if (userTask.getAddSignRole() == AddSignRole.ADD_SIGN) {
-      writer.adErrorResponse(requestId, 0, "加签任务不允许再加签（首期禁止级联加签）");
-      return;
-    }
     final List<String> assignees = value.getAssignees();
     if (assignees.isEmpty()) {
       writer.adErrorResponse(requestId, 0, "后加签名单不能为空");
@@ -74,7 +68,7 @@ public class UserTaskAddSignAfterProcessor
     }
     if (StringUtils.isNotBlank(userTask.getAssignee())
         && assignees.contains(userTask.getAssignee())) {
-      writer.adErrorResponse(requestId, 0, "不允许加签给原任务审批人本人");
+      writer.adErrorResponse(requestId, 0, "不允许加签给当前任务办理人本人");
       return;
     }
     final AddSignMode mode = value.getAddSignMode();
@@ -85,11 +79,7 @@ public class UserTaskAddSignAfterProcessor
     final ActivityInstanceRecord instanceRecord =
         activityInstance.getRecord(userTask.getActivityInstanceId());
     if (instanceRecord == null) {
-      writer.adErrorResponse(requestId, 0, "当前用户活动实例不存在，无法登记后加签");
-      return;
-    }
-    if (instanceRecord.getAddSignState() != AddSignState.NONE) {
-      writer.adErrorResponse(requestId, 0, "当前活动存在进行中的加签，不允许登记后加签");
+      writer.adErrorResponse(requestId, 0, "当前任务所属活动实例不存在，无法登记后加签");
       return;
     }
     final ProcessDefinitionRuntime runtime =
@@ -98,13 +88,26 @@ public class UserTaskAddSignAfterProcessor
       writer.adErrorResponse(requestId, 0, "流程定义不存在，无法登记后加签");
       return;
     }
-    // 原任务定义必在运行时定义中（任务由其创建）；未声明 kunpeng:addSign 即拒绝
+    // 许可看原任务定义（级联锚任务剥后缀回原元素）；未声明 kunpeng:addSign 即拒绝。
+    // 前加签组在途不拦后加签登记：登记落行，完结时才消费派生（两相位不抢同一个组）
+    final String originKey =
+        userTask.getTaskDefinitionKey().endsWith(BpmnUserTask.ADD_SIGN_DEFINITION_SUFFIX)
+            ? userTask
+                .getTaskDefinitionKey()
+                .substring(
+                    0,
+                    userTask.getTaskDefinitionKey().length()
+                        - BpmnUserTask.ADD_SIGN_DEFINITION_SUFFIX.length())
+            : userTask.getTaskDefinitionKey();
     final BpmnUserTask element =
-        runtime
-            .executableProcess()
-            .getElementById(userTask.getTaskDefinitionKey(), BpmnUserTask.class);
+        runtime.executableProcess().getElementById(originKey, BpmnUserTask.class);
     if (!element.isAddSignEnabled()) {
       writer.adErrorResponse(requestId, 0, "任务定义未允许加签（建模需声明 kunpeng:addSign）");
+      return;
+    }
+    final String cascadeReject = addSignBehavior.cascadeRejectReason(userTask, element);
+    if (cascadeReject != null) {
+      writer.adErrorResponse(requestId, 0, cascadeReject);
       return;
     }
 

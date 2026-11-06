@@ -86,6 +86,9 @@ public interface UserTaskRecordValue
   /** 本任务名下在途加签任务数（创建父+1、结束父−1） */
   int getAddSignCount();
 
+  /** 加签层级：原任务/普通任务=0，第 N 级加签任务=N */
+  int getAddSignDepth();
+
   /** 串行加签链剩余名单，链上当前任务持有、完成时传下一位；无剩余为空列表 */
   List<String> getRemainingAssignees();
 

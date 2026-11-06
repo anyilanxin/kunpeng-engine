@@ -50,6 +50,8 @@ public interface Behavior {
 
   AddSignBehavior addSignBehavior();
 
+  MultiInstanceBehavior multiInstanceBehavior();
+
   JobBehavior jobBehavior();
 
   BatchBehavior batchBehavior();

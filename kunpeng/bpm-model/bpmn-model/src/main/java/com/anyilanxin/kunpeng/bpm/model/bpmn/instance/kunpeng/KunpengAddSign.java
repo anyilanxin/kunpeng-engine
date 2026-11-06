@@ -16,6 +16,17 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BpmnModelElementInstance;
 
 /**
  * 加签许可扩展（仅用户任务）：在 userTask 的 extensionElements 中声明 kunpeng:addSign 即允许该节点运行时加签；未声明 =
- * 禁止。首期无子属性（级联等配置属二期）。
+ * 禁止。cascade=是否允许级联加签（缺省 false，加签任务不可再加签）；maxDepth=级联深度上限（缺省 1，cascade 开启时生效）。
  */
-public interface KunpengAddSign extends BpmnModelElementInstance {}
+public interface KunpengAddSign extends BpmnModelElementInstance {
+
+  /** 是否允许级联加签：false=加签任务不可再加签（缺省），true=允许，受 maxDepth 限深 */
+  Boolean getCascade();
+
+  void setCascade(Boolean cascade);
+
+  /** 级联层数上限：仅 cascade 开启时有意义，必须 >=1（解析期校验）；1=一级级联（缺省） */
+  Integer getMaxDepth();
+
+  void setMaxDepth(Integer maxDepth);
+}

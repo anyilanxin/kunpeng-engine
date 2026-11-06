@@ -18,6 +18,7 @@ package com.anyilanxin.kunpeng.engine.bpmn.command.bpmn.usertask.processor;
 
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnUserTask;
 import com.anyilanxin.kunpeng.engine.bpmn.LogEventWriter;
+import com.anyilanxin.kunpeng.engine.bpmn.command.behavior.impl.AddSignBehavior;
 import com.anyilanxin.kunpeng.engine.bpmn.command.bpmn.usertask.BpmnUserTaskElementAbstractProcessor;
 import com.anyilanxin.kunpeng.protocol.business.impl.eventlog.BusinessLogRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.activityinstance.ActivityInstanceRecord;
@@ -54,20 +55,29 @@ public class BpmnUserTaskCompletedProcessor extends BpmnUserTaskElementAbstractP
     writer.addEvent(
         value.getTaskId(), UserTaskLifeCycle.COMPLETED, logRecord.getRequestId(), value);
 
-    // 加签任务完成：只做父任务计数与放行判定，不推进活动（任务完成≠活动结束）
+    // 加签任务完成：只反馈组实例计数（结构保证永不触达活动）；带后加签登记则延迟传播——派生子组，锚任务完结计数延迟到子组完结
     if (value.getAddSignRole() == AddSignRole.ADD_SIGN) {
-      writer.behavior().addSignBehavior().onAddSignTaskEnded(value, logRecord.getRequestId());
+      final AddSignBehavior addSignBehavior = writer.behavior().addSignBehavior();
+      if (!value.getAfterSignAssignees().isEmpty()) {
+        final ActivityInstanceRecord group =
+            activityInstance.getRecord(value.getActivityInstanceId());
+        if (group != null) {
+          addSignBehavior.onTaskCompletedWithAfterSigns(value, group, logRecord.getRequestId());
+        }
+        return;
+      }
+      addSignBehavior.onSignTaskEnded(value, logRecord.getRequestId(), false);
       return;
     }
 
     final ActivityInstanceRecord record = activityInstance.getRecord(value.getActivityInstanceId());
 
-    // 后加签预登记在途：消费登记创建加签任务、活动置 AWAITING 压下结束与出边
+    // 后加签预登记在途：消费登记派生 AFTER 组（顶级时活动置 AWAITING 扣出边），组完结才放行 E0
     if (!value.getAfterSignAssignees().isEmpty()) {
       writer
           .behavior()
           .addSignBehavior()
-          .onOriginCompletedWithAfterSigns(value, record, logRecord.getRequestId());
+          .onTaskCompletedWithAfterSigns(value, record, logRecord.getRequestId());
       return;
     }
 

@@ -17,6 +17,7 @@
 package com.anyilanxin.kunpeng.bpm.parse.bpmn;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -64,6 +65,18 @@ class BpmnTransformTest {
 
   /** 加签流程：一个声明 kunpeng:addSign 的用户任务 + 一个未声明的用户任务。 */
   private static final String ADD_SIGN_BPMN = "bpmn/addsign.bpmn";
+
+  /** 加签级联流程：cascade=true + maxDepth=2 的合法建模。 */
+  private static final String ADD_SIGN_CASCADE_BPMN = "bpmn/addsign-cascade.bpmn";
+
+  /** 非法加签建模：maxDepth=0（必须 >=1）。 */
+  private static final String ADD_SIGN_INVALID_DEPTH_BPMN = "bpmn/addsign-invalid-depth.bpmn";
+
+  /** 矛盾加签建模：未开启 cascade 却声明 maxDepth=3。 */
+
+  /** 存量兼容：老 XML 残留 kunpeng:userTask 标记元素（模型已拔除）。 */
+  private static final String ADD_SIGN_LEGACY_MARKER_BPMN = "bpmn/addsign-legacy-marker.bpmn";
+  private static final String ADD_SIGN_CONFLICT_BPMN = "bpmn/addsign-conflict.bpmn";
 
   @Test
   void shouldTransformSimpleProcess() {
@@ -244,6 +257,44 @@ class BpmnTransformTest {
     assertThrows(
         BpmnParseException.class,
         () -> process.getElementById("Task_denied-addsign", BpmnUserTask.class));
+  }
+
+  @Test
+  void shouldTolerateLegacyUserTaskMarkerElement() {
+    // kunpeng:userTask 标记元素已从模型拔除（引擎只有一种用户任务）：存量 XML 残留该元素解析不报错、不产生任何运行时语义
+    final BpmnProcess process = transformFirst(ADD_SIGN_LEGACY_MARKER_BPMN);
+    final BpmnUserTask task = process.getElementById("Task_allowed", BpmnUserTask.class);
+    assertTrue(task.isAddSignEnabled());
+    assertFalse(task.isAddSignCascade());
+    assertEquals(1, task.getAddSignMaxDepth());
+  }
+
+  @Test
+  void shouldReadCascadeAddSignAttributes() {
+    // cascade=true + maxDepth=2：合法建模，级联开关与层数上限都落到运行时元素
+    final BpmnProcess process = transformFirst(ADD_SIGN_CASCADE_BPMN);
+    final BpmnUserTask task = process.getElementById("Task_1", BpmnUserTask.class);
+    assertTrue(task.isAddSignEnabled());
+    assertTrue(task.isAddSignCascade());
+    assertEquals(2, task.getAddSignMaxDepth());
+  }
+
+  @Test
+  void shouldRejectAddSignDepthBelowOne() {
+    // 解析期校验：maxDepth=0 非法（必须 >=1）
+    final IllegalStateException ex =
+        assertThrows(IllegalStateException.class, () -> transformFirst(ADD_SIGN_INVALID_DEPTH_BPMN));
+    assertInstanceOf(BpmnParseException.class, ex.getCause());
+    assertTrue(ex.getCause().getMessage().contains("maxDepth must be >= 1"));
+  }
+
+  @Test
+  void shouldRejectAddSignDepthWithoutCascade() {
+    // 解析期校验：未开启 cascade 时 maxDepth 只能为 1（不允许级联即只能一级加签）
+    final IllegalStateException ex =
+        assertThrows(IllegalStateException.class, () -> transformFirst(ADD_SIGN_CONFLICT_BPMN));
+    assertInstanceOf(BpmnParseException.class, ex.getCause());
+    assertTrue(ex.getCause().getMessage().contains("cascade is disabled"));
   }
 
   private BpmnProcess transformFirst(final String resource) {

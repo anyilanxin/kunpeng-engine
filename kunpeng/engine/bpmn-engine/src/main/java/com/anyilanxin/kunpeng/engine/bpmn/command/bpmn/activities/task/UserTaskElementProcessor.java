@@ -173,26 +173,37 @@ public class UserTaskElementProcessor implements BpmnActivityElementProcessor<Bp
     catchEventBehavior.unsubscribeEvent(activityContext);
 
     final UserTaskRecord record = userTask.getRecord(activityContext.getValue().getTaskId());
-    writer.addCommand(
-        record.getTaskId(),
-        UserTaskLifeCycle.TERMINATING,
-        activityContext.getRequestId(),
-        activityContext.getOperationReferenceKey(),
-        activityContext.getBatchOperationReference(),
-        record);
-    // 加签整组级联终止：冻结/AWAITING 不拦终止，名下在途加签任务连同原任务一并终止（首期一层）
-    for (final UserTaskRecord addSignTask :
-        userTask.getAddSignTasks(activityContext.getActivityInstanceId())) {
-      if (addSignTask.getLifeCycle() == UserTaskLifeCycle.CREATED) {
+    final boolean hasGroup =
+        behavior.addSignBehavior().hasInFlightChildGroup(activityContext.getActivityInstanceId());
+    if (record != null && !hasGroup) {
+      // 无加签组在途：直接终止原任务，活动终止链由任务终止链推进（与既有行为一致）
+      writer.addCommand(
+          record.getTaskId(),
+          UserTaskLifeCycle.TERMINATING,
+          activityContext.getRequestId(),
+          activityContext.getOperationReferenceKey(),
+          activityContext.getBatchOperationReference(),
+          record);
+      return;
+    }
+    if (hasGroup) {
+      // 加签组在途：先发原任务终止（行在时，其终止链见组在途不推进活动），加签组转活动树终止批递归
+      // （组内任务由组 onTerminating 批终止、级联子组随树递归），batchAfter 回活动 TERMINATED 续终止链
+      if (record != null) {
         writer.addCommand(
-            addSignTask.getTaskId(),
+            record.getTaskId(),
             UserTaskLifeCycle.TERMINATING,
             activityContext.getRequestId(),
             activityContext.getOperationReferenceKey(),
             activityContext.getBatchOperationReference(),
-            addSignTask);
+            record);
       }
+      batchBehavior.createActivityTerminatedBatch(
+          activityContext, ActivityInstanceLifeCycle.TERMINATED);
+      return;
     }
+    // 原任务行不在（后加签 AWAITING 已完删行）且无在途组：无待清理工作项，直接转终止完成
+    activityInstanceBehavior.toTerminated(activityContext);
   }
 
   @Override

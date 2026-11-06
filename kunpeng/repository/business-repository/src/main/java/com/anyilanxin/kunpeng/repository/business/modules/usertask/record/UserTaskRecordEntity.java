@@ -104,8 +104,10 @@ public class UserTaskRecordEntity extends UnpackedObject implements StoreValue {
   private final EnumProperty<AddSignMode> afterSignModeProp =
       new EnumProperty<>(34, "AFTER_SIGN_MODE", AddSignMode.class, AddSignMode.NONE);
 
+  private final IntegerProperty addSignDepthProp = new IntegerProperty(35, "ADD_SIGN_DEPTH", 0);
+
   public UserTaskRecordEntity() {
-    super(34);
+    super(35);
     declareProperty(taskIdProp)
         .declareProperty(parentTaskIdProp)
         .declareProperty(revProp)
@@ -139,7 +141,8 @@ public class UserTaskRecordEntity extends UnpackedObject implements StoreValue {
         .declareProperty(addSignCountProp)
         .declareProperty(remainingAssigneesProp)
         .declareProperty(afterSignAssigneesProp)
-        .declareProperty(afterSignModeProp);
+        .declareProperty(afterSignModeProp)
+        .declareProperty(addSignDepthProp);
   }
 
   public void wrap(final UserTaskRecord record) {
@@ -176,7 +179,8 @@ public class UserTaskRecordEntity extends UnpackedObject implements StoreValue {
         .setAddSignCount(record.getAddSignCount())
         .setRemainingAssignees(record.getRemainingAssignees())
         .setAfterSignAssignees(record.getAfterSignAssignees())
-        .setAfterSignMode(record.getAfterSignMode());
+        .setAfterSignMode(record.getAfterSignMode())
+        .setAddSignDepth(record.getAddSignDepth());
   }
 
   public UserTaskRecord unwrap(final UserTaskRecord taskRecord) {
@@ -215,7 +219,8 @@ public class UserTaskRecordEntity extends UnpackedObject implements StoreValue {
         .setAddSignCount(getAddSignCount())
         .setRemainingAssignees(getRemainingAssignees())
         .setAfterSignAssignees(getAfterSignAssignees())
-        .setAfterSignMode(getAfterSignMode());
+        .setAfterSignMode(getAfterSignMode())
+        .setAddSignDepth(getAddSignDepth());
   }
 
   public long getTaskId() {
@@ -589,6 +594,15 @@ public class UserTaskRecordEntity extends UnpackedObject implements StoreValue {
 
   public UserTaskRecordEntity setAddSignCount(final int addSignCount) {
     addSignCountProp.setValue(addSignCount);
+    return this;
+  }
+
+  public int getAddSignDepth() {
+    return addSignDepthProp.getValue();
+  }
+
+  public UserTaskRecordEntity setAddSignDepth(final int addSignDepth) {
+    addSignDepthProp.setValue(addSignDepth);
     return this;
   }
 

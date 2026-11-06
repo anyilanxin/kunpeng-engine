@@ -25,6 +25,7 @@ import com.anyilanxin.kunpeng.repository.business.ImmutableBusinessRepository;
 import com.anyilanxin.kunpeng.repository.business.modules.activityinstance.ImmutableActivityInstanceRepository;
 import com.anyilanxin.kunpeng.repository.business.modules.processinstance.ImmutableProcessInstanceRepository;
 import com.anyilanxin.kunpeng.repository.business.modules.usertask.ImmutableUserTaskRepository;
+import com.anyilanxin.kunpeng.repository.business.modules.variable.ImmutableVariableRepository;
 
 /**
  * 变量 API 处理器抽象基类。
@@ -38,6 +39,7 @@ public abstract class VariableApiAbstractProcessor<T extends UnifiedRecordValue>
   protected final ImmutableProcessInstanceRepository processInstance;
   protected final ImmutableActivityInstanceRepository activityInstance;
   protected final ImmutableUserTaskRepository userTask;
+  protected final ImmutableVariableRepository variable;
 
   public VariableApiAbstractProcessor(final LogEventWriter writer) {
     this.writer = writer;
@@ -45,6 +47,7 @@ public abstract class VariableApiAbstractProcessor<T extends UnifiedRecordValue>
     processInstance = writer.getRepository().processInstanceRepository();
     activityInstance = writer.getRepository().instanceRepository();
     userTask = repository.userTaskRepository();
+    variable = repository.variableRepository();
   }
 
   @Override

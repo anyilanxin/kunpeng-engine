@@ -17,6 +17,7 @@
 package com.anyilanxin.kunpeng.engine.bpmn.commandapi.variable.processor;
 
 import com.anyilanxin.kunpeng.engine.bpmn.LogEventWriter;
+import com.anyilanxin.kunpeng.engine.bpmn.command.behavior.impl.VariableBehavior;
 import com.anyilanxin.kunpeng.engine.bpmn.commandapi.variable.VariableApiAbstractProcessor;
 import com.anyilanxin.kunpeng.protocol.business.impl.eventlog.BusinessLogRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.usertask.UserTaskRecord;
@@ -60,10 +61,38 @@ public class VariableRemoveApiProcessor
       variableRecord.setScopId(value.getProcessInstanceId());
     }
     if (value.isRemoveAll()) {
+      // 整删作用域含引擎保留变量（MI 集合快照/加签展开载荷）时拒绝：删掉快照会打断批处理/串行链取元素
+      final boolean hasReserved =
+          variable
+              .getRecord(variableRecord.getScopId())
+              .map(
+                  existing ->
+                      existing.getVariables().keySet().stream()
+                          .anyMatch(VariableBehavior::isReservedName))
+              .orElse(false);
+      if (hasReserved) {
+        writer.adErrorResponse(
+            record.getRequestId(),
+            -1,
+            "作用域存在引擎保留变量，不允许整删（变量名前缀 " + VariableBehavior.ENGINE_RESERVED_PREFIX + "）");
+        return;
+      }
       variableRecord.setVariables(new HashMap<>());
     } else {
       if (value.getRemoveVariable().isEmpty()) {
         writer.adErrorResponse(record.getRequestId(), -1, "缺少需要删除的变量 key");
+        return;
+      }
+      final String reserved =
+          value.getRemoveVariable().stream()
+              .filter(VariableBehavior::isReservedName)
+              .findFirst()
+              .orElse(null);
+      if (reserved != null) {
+        writer.adErrorResponse(
+            record.getRequestId(),
+            -1,
+            "变量名不允许使用引擎保留前缀 " + VariableBehavior.ENGINE_RESERVED_PREFIX + ": " + reserved);
         return;
       }
       final Map<String, Object> variables = new HashMap<>();

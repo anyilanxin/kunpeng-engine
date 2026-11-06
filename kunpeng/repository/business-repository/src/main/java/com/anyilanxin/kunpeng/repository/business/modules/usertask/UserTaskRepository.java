@@ -43,8 +43,8 @@ public class UserTaskRepository implements MutableUserTaskRepository, RockResour
   private final UserTaskRecord recordBuffer;
   private final ColumnFamily<LongType, UserTaskRecordEntity> userTaskColumnFamily;
 
-  /** 加签关联：原活动实例 id → 加签任务 id（前缀扫描收集名下加签任务） */
-  private final LongType originActivityInstanceIdDbKey;
+  /** 加签组员关联：组活动实例 id → 加签任务 id（前缀扫描收集组名下加签任务） */
+  private final LongType groupActivityInstanceIdDbKey;
 
   private final CompositeKeyType<LongType, LongType> addSignCorrelationDbCompositeKey;
   private final ColumnFamily<CompositeKeyType<LongType, LongType>, NilType>
@@ -61,9 +61,9 @@ public class UserTaskRepository implements MutableUserTaskRepository, RockResour
     userTaskColumnFamily =
         db.createColumnFamily(
             BusinessRepositoryColumnFamilies.USER_TASK, transaction, taskIdDbKey, entityDbValue);
-    originActivityInstanceIdDbKey = new LongType();
+    groupActivityInstanceIdDbKey = new LongType();
     addSignCorrelationDbCompositeKey =
-        new CompositeKeyType<>(originActivityInstanceIdDbKey, taskIdDbKey);
+        new CompositeKeyType<>(groupActivityInstanceIdDbKey, taskIdDbKey);
     addSignCorrelationColumnFamily =
         db.createColumnFamily(
             BusinessRepositoryColumnFamilies.ADD_SIGN_CORRELATION,
@@ -78,7 +78,7 @@ public class UserTaskRepository implements MutableUserTaskRepository, RockResour
     entityDbValue.reset();
     if (userTaskColumnFamily.get(taskIdDbKey) != null
         && entityDbValue.getAddSignRole() == AddSignRole.ADD_SIGN) {
-      originActivityInstanceIdDbKey.wrapLong(entityDbValue.getOriginActivityInstanceId());
+      groupActivityInstanceIdDbKey.wrapLong(entityDbValue.getActivityInstanceId());
       addSignCorrelationColumnFamily.delete(addSignCorrelationDbCompositeKey);
     }
     userTaskColumnFamily.delete(taskIdDbKey);
@@ -93,21 +93,20 @@ public class UserTaskRepository implements MutableUserTaskRepository, RockResour
     saveAddSignCorrelation(record);
   }
 
-  /** 加签任务落关联（原活动实例 id>0 且角色为加签任务时） */
+  /** 加签任务落组员关联（组活动实例 id>0 且角色为加签任务时，键=任务自身活动实例即组实例） */
   private void saveAddSignCorrelation(final UserTaskRecord record) {
-    if (record.getAddSignRole() == AddSignRole.ADD_SIGN
-        && record.getOriginActivityInstanceId() > 0) {
-      originActivityInstanceIdDbKey.wrapLong(record.getOriginActivityInstanceId());
+    if (record.getAddSignRole() == AddSignRole.ADD_SIGN && record.getActivityInstanceId() > 0) {
+      groupActivityInstanceIdDbKey.wrapLong(record.getActivityInstanceId());
       addSignCorrelationColumnFamily.put(addSignCorrelationDbCompositeKey, NilType.INSTANCE);
     }
   }
 
   @Override
-  public List<UserTaskRecord> getAddSignTasks(final long originActivityInstanceId) {
-    originActivityInstanceIdDbKey.wrapLong(originActivityInstanceId);
+  public List<UserTaskRecord> getAddSignTasks(final long groupActivityInstanceId) {
+    groupActivityInstanceIdDbKey.wrapLong(groupActivityInstanceId);
     final List<UserTaskRecord> tasks = new ArrayList<>();
     addSignCorrelationColumnFamily.whileEqualPrefix(
-        originActivityInstanceIdDbKey,
+        groupActivityInstanceIdDbKey,
         (_, _) -> {
           entityDbValue.reset();
           if (userTaskColumnFamily.get(taskIdDbKey) != null) {
@@ -127,10 +126,10 @@ public class UserTaskRepository implements MutableUserTaskRepository, RockResour
             visitor.visit(
                 writeKey(taskIdDbKey, BusinessRepositoryColumnFamilies.USER_TASK),
                 writeValue(entityDbValue));
-            // 加签任务同步发射关联条目（与 save/delete 对称）
+            // 加签任务同步发射组员关联条目（与 save/delete 对称）
             if (entityDbValue.getAddSignRole() == AddSignRole.ADD_SIGN
-                && entityDbValue.getOriginActivityInstanceId() > 0) {
-              originActivityInstanceIdDbKey.wrapLong(entityDbValue.getOriginActivityInstanceId());
+                && entityDbValue.getActivityInstanceId() > 0) {
+              groupActivityInstanceIdDbKey.wrapLong(entityDbValue.getActivityInstanceId());
               visitor.visit(
                   writeKey(
                       addSignCorrelationDbCompositeKey,

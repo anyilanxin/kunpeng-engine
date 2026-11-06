@@ -14,5 +14,6 @@ package com.anyilanxin.kunpeng.protocol.business.record.command.processinstance;
 
 public enum BatchBusinessType {
   PROCESS_INSTANCE,
-  ACTIVITY_INSTANCE;
+  ACTIVITY_INSTANCE,
+  USER_TASK;
 }
