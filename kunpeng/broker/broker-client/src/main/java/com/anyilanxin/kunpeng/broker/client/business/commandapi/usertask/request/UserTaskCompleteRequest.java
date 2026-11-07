@@ -18,7 +18,9 @@ package com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.reques
 
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.UserTaskAbstractRequest;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.complete.UserTaskCompleteRequestRecord;
+import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.AddSignMode;
 import com.anyilanxin.kunpeng.protocol.business.record.commandapi.record.usertask.CommandApiUserTaskValueLifeCycle;
+import java.util.List;
 import java.util.Map;
 import org.agrona.DirectBuffer;
 
@@ -44,6 +46,17 @@ public class UserTaskCompleteRequest
 
   public UserTaskCompleteRequest setVariable(final DirectBuffer variables) {
     getValue().setVariables(variables);
+    return this;
+  }
+
+  /** 完成时携带后加签（与完成同命令级联原子，登记后于完成时创建） */
+  public UserTaskCompleteRequest setAddSignAssignees(final List<String> addSignAssignees) {
+    getValue().setAddSignAssignees(addSignAssignees);
+    return this;
+  }
+
+  public UserTaskCompleteRequest setAddSignMode(final AddSignMode addSignMode) {
+    getValue().setAddSignMode(addSignMode);
     return this;
   }
 }

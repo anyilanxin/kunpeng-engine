@@ -166,6 +166,11 @@ kunpeng:
       max-background-jobs: 0                 # 后台任务数（flush+compaction；0=按 CPU 自适应且至少 4）
       io-rate-bytes-per-second: 0            # IO 速率限制（0 不限制）
       enable-statistics: false               # RocksDB 统计
+      avoid-unnecessary-blocking-io: true     # 文件删除后台化，抹平分区 actor 前台删除卡顿（11.8.1 起开库过期文件也后台清理）
+      open-files-async: true                  # SST 校验挪开库后台（大库重开提速；错误以后台错误暴露）
+      read-io-executor-threads: 0             # 开库后台读并行度（0=自适应，与后台任务数同量级；正值覆盖，11.8.1+）
+      min-tombstones-for-range-conversion: 8  # 连续点墓碑合并为范围墓碑阈值（8=启用；删除密集索引扫描提速）
+      read-triggered-compaction-threshold: 0.01  # 热文件读触发 compaction 阈值（官方推荐起点；降热扫描读放大）
       access-metrics: NONE                   # 访问指标采集：NONE | FINE
       consistency-checks:
         enable-preconditions: false          # 前置条件校验

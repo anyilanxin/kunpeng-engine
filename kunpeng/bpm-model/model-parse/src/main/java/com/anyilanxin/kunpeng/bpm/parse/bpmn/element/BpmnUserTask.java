@@ -21,10 +21,16 @@ import com.anyilanxin.kunpeng.engine.script.ScriptExpression;
 /**
  * 用户任务的运行时模型：受理人、候选组与候选人均以表达式承载（扁平字段而非嵌套属性对象，减少一层对象开销）。
  *
+ * <p>可继承：加签容器元素 {@link BpmnAddSignUserTask} 以子类形态复用用户任务元素面（按定义 key 查找时对 BpmnUserTask
+ * 可赋值，加签任务全链沿用用户任务处理器）。
+ *
  * @author zxuanhong
  * @since 2026.9.0
  */
-public final class BpmnUserTask extends BpmnActivity {
+public class BpmnUserTask extends BpmnActivity {
+  /** 加签虚拟活动定义 key 后缀：原定义 key + 后缀（解析期合成、引擎建加签任务时对齐） */
+  public static final String ADD_SIGN_DEFINITION_SUFFIX = "-addsign";
+
   /** 受理人表达式，未声明为 null */
   private ScriptExpression assignee;
 
@@ -33,6 +39,18 @@ public final class BpmnUserTask extends BpmnActivity {
 
   /** 候选人表达式，未声明为 null */
   private ScriptExpression candidateUsers;
+
+  /** 是否允许加签（模型期 kunpeng:addSign 声明；仅原任务有意义），缺省 false */
+  private boolean addSignEnabled;
+
+  /** 级联层数上限（kunpeng:addSign@maxDepth，仅 cascade 开启时有意义；未开启时有效为 1=只能一级加签），缺省 1 */
+  private int addSignMaxDepth = 1;
+
+  /** 是否允许级联加签（kunpeng:addSign@cascade；false=加签任务不可再加签），缺省 false */
+  private boolean addSignCascade;
+
+  /** 是否为加签虚拟节点（解析期由原任务派生的合成元素），缺省 false */
+  private boolean addSignVirtual;
 
   /**
    * 以元素 id 构造用户任务。
@@ -83,5 +101,41 @@ public final class BpmnUserTask extends BpmnActivity {
    */
   public void setCandidateUsers(final ScriptExpression candidateUsers) {
     this.candidateUsers = candidateUsers;
+  }
+
+  /** 是否允许加签（模型期 kunpeng:addSign 声明；仅原任务有意义）。 */
+  public boolean isAddSignEnabled() {
+    return addSignEnabled;
+  }
+
+  public void setAddSignEnabled(final boolean addSignEnabled) {
+    this.addSignEnabled = addSignEnabled;
+  }
+
+  /** 级联层数上限（kunpeng:addSign@maxDepth，仅 cascade 开启时有意义）。 */
+  public int getAddSignMaxDepth() {
+    return addSignMaxDepth;
+  }
+
+  public void setAddSignMaxDepth(final int addSignMaxDepth) {
+    this.addSignMaxDepth = addSignMaxDepth;
+  }
+
+  /** 是否允许级联加签（kunpeng:addSign@cascade；false=加签任务不可再加签）。 */
+  public boolean isAddSignCascade() {
+    return addSignCascade;
+  }
+
+  public void setAddSignCascade(final boolean addSignCascade) {
+    this.addSignCascade = addSignCascade;
+  }
+
+  /** 是否为加签虚拟节点（解析期由原任务派生的 `id + "-addsign"` 合成元素）。 */
+  public boolean isAddSignVirtual() {
+    return addSignVirtual;
+  }
+
+  public void setAddSignVirtual(final boolean addSignVirtual) {
+    this.addSignVirtual = addSignVirtual;
   }
 }

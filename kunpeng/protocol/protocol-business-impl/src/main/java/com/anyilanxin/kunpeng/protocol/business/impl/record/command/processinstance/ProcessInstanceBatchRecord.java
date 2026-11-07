@@ -51,14 +51,19 @@ public class ProcessInstanceBatchRecord extends UnifiedRecordValue<ProcessInstan
       new EnumProperty<>(6, "BATCH_TYPE", BatchBusinessType.class);
   private final LongProperty currentExecutionIdProp =
       new LongProperty(7, "CURRENT_EXECUTION_ID", -1);
+  // batchAfter 四件缺省=无完成回调（创建类批 MI/加签任务创建不设 batchAfter，耗尽即终态）；终止类批显式覆盖。
+  // valueType 缺省必须是可解码的 PROCESS_BATCH_INSTANCE：配 -1 经 ProcessInstanceBatchState.from 的 default 分支
+  // 返回全局 UNKNOWN（未设置语义）；UNKNOW 编码可行但 fromProtocolValue 直接拒绝，
+  // sink 侧 Jackson 读 getBatchAfterLifeCycle 会抛 IllegalStateException
   private final EnumProperty<ValueType> batchAfterValueTypeProp =
-      new EnumProperty<>(8, "BATCH_AFTER_VALUE_TYPE", ValueType.class);
+      new EnumProperty<>(
+          8, "BATCH_AFTER_VALUE_TYPE", ValueType.class, ValueType.PROCESS_BATCH_INSTANCE);
   private final ShortProperty batchAfterLifeCycleProp =
-      new ShortProperty(9, "BATCH_AFTER_LIFE_CYCLE");
+      new ShortProperty(9, "BATCH_AFTER_LIFE_CYCLE", (short) -1);
   private final LongProperty batchAfterBusinessIdProp =
-      new LongProperty(10, "BATCH_AFTER_BUSINESS_ID");
+      new LongProperty(10, "BATCH_AFTER_BUSINESS_ID", -1);
   private final EnumProperty<BatchBusinessType> batchAfterTypeProp =
-      new EnumProperty<>(11, "BATCH_AFTER_TYPE", BatchBusinessType.class);
+      new EnumProperty<>(11, "BATCH_AFTER_TYPE", BatchBusinessType.class, BatchBusinessType.UNKNOW);
   private final LongProperty batchAfterOperationReferenceProp =
       new LongProperty(12, "BATCH_AFTER_OPERATION_REFERENCE", -1);
   private final LongProperty batchAfterBatchOperationReferenceProp =

@@ -17,10 +17,13 @@
 package com.anyilanxin.kunpeng.bpm.parse.bpmn.transformer;
 
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.UserTask;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengAddSign;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengAssignmentDefinition;
+import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnAddSignUserTask;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnUserTask;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.BpmnTransformContext;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.ElementTransformer;
+import com.anyilanxin.kunpeng.bpm.parse.exception.BpmnParseException;
 
 /**
  * 用户任务转换器：装配分配定义扩展（受理人、候选组、候选人，均为表达式）。
@@ -44,13 +47,41 @@ public final class UserTaskTransformer implements ElementTransformer<UserTask> {
    */
   @Override
   public void transform(final UserTask element, final BpmnTransformContext context) {
+    final BpmnUserTask userTask =
+        context.getCurrentProcess().getElementById(element.getId(), BpmnUserTask.class);
+    // 加签许可：声明 kunpeng:addSign 即在解析期派生加签容器元素（id + "-addsign"，ADD_SIGN_USER_TASK 类型），
+    // 运行时定义因此是部署产物的确定函数（重启/重放一致），引擎按 definitionKey 必能读到
+    final KunpengAddSign addSign = element.getSingleExtensionElement(KunpengAddSign.class);
+    if (addSign != null) {
+      userTask.setAddSignEnabled(true);
+      final Boolean cascade = addSign.getCascade();
+      final boolean cascadeEnabled = cascade != null && cascade;
+      userTask.setAddSignCascade(cascadeEnabled);
+      final Integer maxDepth = addSign.getMaxDepth();
+      if (maxDepth != null) {
+        // 解析期校验：maxDepth=级联层数上限，必须 >=1；未开启级联时只能为 1（不允许级联即只能一级加签）
+        if (maxDepth < 1) {
+          throw new BpmnParseException(
+              "kunpeng:addSign@maxDepth must be >= 1 (element " + element.getId() + ")");
+        }
+        if (!cascadeEnabled && maxDepth != 1) {
+          throw new BpmnParseException(
+              "kunpeng:addSign@maxDepth must be 1 when cascade is disabled (element "
+                  + element.getId()
+                  + "), no cascade means single-level add sign only");
+        }
+        userTask.setAddSignMaxDepth(maxDepth);
+      }
+      context
+          .getCurrentProcess()
+          .addFlowElement(
+              new BpmnAddSignUserTask(element.getId() + BpmnUserTask.ADD_SIGN_DEFINITION_SUFFIX));
+    }
     final KunpengAssignmentDefinition assignmentDefinition =
         element.getSingleExtensionElement(KunpengAssignmentDefinition.class);
     if (assignmentDefinition == null) {
       return;
     }
-    final BpmnUserTask userTask =
-        context.getCurrentProcess().getElementById(element.getId(), BpmnUserTask.class);
     final String assignee = assignmentDefinition.getAssignee();
     if (assignee != null && !assignee.isBlank()) {
       userTask.setAssignee(context.parseExpression(assignee));

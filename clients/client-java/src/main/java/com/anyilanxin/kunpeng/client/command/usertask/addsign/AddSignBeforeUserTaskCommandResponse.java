@@ -10,11 +10,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng;
+package com.anyilanxin.kunpeng.client.command.usertask.addsign;
 
-import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.BpmnModelElementInstance;
-
-public interface KunpengUserTask extends BpmnModelElementInstance {
-
-  // just a marker interface at this point, will provide access to task listeners later
-}
+/** 前加签命令响应。 */
+public interface AddSignBeforeUserTaskCommandResponse {}

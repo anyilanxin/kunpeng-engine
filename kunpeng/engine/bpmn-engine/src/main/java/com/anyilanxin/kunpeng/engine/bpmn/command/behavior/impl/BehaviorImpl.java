@@ -35,6 +35,8 @@ public class BehaviorImpl implements Behavior {
   private final DelayBehavior delayBehavior;
   private final IncidentBehavior incidentBehavior;
   private final UserTaskBehavior userTaskBehavior;
+  private final AddSignBehavior addSignBehavior;
+  private final MultiInstanceBehavior multiInstanceBehavior;
   private final JobBehavior jobBehavior;
   private final BatchBehavior batchBehavior;
   private final ProcessDefinitionBehavior processDefinitionBehavior;
@@ -54,6 +56,7 @@ public class BehaviorImpl implements Behavior {
     distributeParallelBehavior = new DistributeParallelBehavior(writer);
     distributeSerialBehavior = new DistributeSerialBehavior(writer);
     variableBehavior = new VariableBehavior(writer);
+    multiInstanceBehavior = new MultiInstanceBehavior(writer, variableBehavior);
     this.timerChecker = timerChecker;
     this.interPartitionCommandSender = interPartitionCommandSender;
     activationBehavior = new BpmnJobDeliveryBehavior(writer, variableBehavior);
@@ -65,6 +68,7 @@ public class BehaviorImpl implements Behavior {
     sequenceFlowBehavior =
         new SequenceFlowBehavior(writer, activityInstanceBehavior, variableBehavior);
     userTaskBehavior = new UserTaskBehavior(writer, variableBehavior);
+    addSignBehavior = new AddSignBehavior(writer, variableBehavior);
     batchBehavior = new BatchBehavior(writer);
     processDefinitionBehavior = new ProcessDefinitionBehavior(writer, catchEventBehavior);
     delayBehavior = new DelayBehavior(writer);
@@ -127,6 +131,16 @@ public class BehaviorImpl implements Behavior {
   @Override
   public UserTaskBehavior userTaskBehavior() {
     return userTaskBehavior;
+  }
+
+  @Override
+  public AddSignBehavior addSignBehavior() {
+    return addSignBehavior;
+  }
+
+  @Override
+  public MultiInstanceBehavior multiInstanceBehavior() {
+    return multiInstanceBehavior;
   }
 
   @Override

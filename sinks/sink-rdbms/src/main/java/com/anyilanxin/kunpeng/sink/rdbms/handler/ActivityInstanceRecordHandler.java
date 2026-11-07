@@ -55,7 +55,8 @@ public final class ActivityInstanceRecordHandler implements RecordModelHandler {
           ActivityInstanceLifeCycle.COMPLETED,
           ActivityInstanceLifeCycle.TERMINATING,
           ActivityInstanceLifeCycle.TERMINATING_AFTER,
-          ActivityInstanceLifeCycle.TERMINATED);
+          ActivityInstanceLifeCycle.TERMINATED,
+          ActivityInstanceLifeCycle.UPDATING);
 
   @Override
   public ValueType valueType() {
@@ -85,6 +86,7 @@ public final class ActivityInstanceRecordHandler implements RecordModelHandler {
     model.setEndTime(RecordModelHandler.at(value.getEndTime()));
     model.setDuration(positive(value.getDuration()));
     model.setRevision(value.getRev());
+    model.setAddSignState(nameOf(value.getAddSignState()));
     buffer.offer(
         RowChange.update(ACTIVITY_INSTANCE, List.of(value.getActivityInstanceId()), model));
   }
@@ -113,6 +115,7 @@ public final class ActivityInstanceRecordHandler implements RecordModelHandler {
     model.setEndTime(RecordModelHandler.at(value.getEndTime()));
     model.setDuration(positive(value.getDuration()));
     model.setRevision(value.getRev());
+    model.setAddSignState(nameOf(value.getAddSignState()));
     model.setResourceId(record.getResourceId());
     return model;
   }

@@ -154,7 +154,6 @@ public abstract class AbstractUserTaskBuilder<B extends AbstractUserTaskBuilder<
 
   @Override
   public B kunpengUserTask() {
-    getCreateSingleExtensionElement(KunpengUserTask.class);
     getCreateSingleExtensionElement(KunpengPriorityDefinition.class);
     return myself;
   }

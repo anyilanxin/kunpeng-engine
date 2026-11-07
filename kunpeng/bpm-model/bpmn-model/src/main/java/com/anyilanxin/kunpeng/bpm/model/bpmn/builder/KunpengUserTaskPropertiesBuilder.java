@@ -147,7 +147,7 @@ public interface KunpengUserTaskPropertiesBuilder<B extends KunpengUserTaskPrope
   B kunpengFormId(String formId);
 
   /**
-   * Marks the user task as native Kunpeng user task.
+   * Applies the default priority definition to the user task.
    *
    * @return the builder object
    */

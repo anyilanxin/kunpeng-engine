@@ -20,6 +20,7 @@ import com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance.
 import com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance.ActivityInstanceListenerType;
 import com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance.ActivityInstanceRecordValue;
 import com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance.ActivityInstanceState;
+import com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance.AddSignState;
 import com.anyilanxin.kunpeng.bpm.common.BpmnElementType;
 import com.anyilanxin.kunpeng.protocol.business.record.command.deployment.ProcessDefinitionRecordValue;
 import com.anyilanxin.kunpeng.protocol.business.record.command.deployment.StarterEventRecordValue;
@@ -41,6 +42,9 @@ import com.anyilanxin.kunpeng.protocol.business.record.command.signal.SignalSubs
 import com.anyilanxin.kunpeng.protocol.business.record.command.timer.TimerElementType;
 import com.anyilanxin.kunpeng.protocol.business.record.command.timer.TimerEventRecordValue;
 import com.anyilanxin.kunpeng.protocol.business.record.command.timer.TimerState;
+import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.AddSignMode;
+import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.AddSignPhase;
+import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.AddSignRole;
 import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.UserTaskLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.UserTaskListenerType;
 import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.UserTaskRecordValue;
@@ -518,6 +522,7 @@ final class Fakes {
     long startTime = 1_000;
     long endTime;
     long duration;
+    AddSignState addSignState = AddSignState.NONE;
 
     @Override
     public long getActivityInstanceId() {
@@ -597,6 +602,11 @@ final class Fakes {
     @Override
     public ActivityInstanceState getState() {
       return ActivityInstanceState.ACTIVE;
+    }
+
+    @Override
+    public AddSignState getAddSignState() {
+      return addSignState;
     }
 
     @Override
@@ -707,6 +717,16 @@ final class Fakes {
     String assignee = "bob";
     UserTaskState state = UserTaskState.ACTIVE;
     long startTime = 1_000;
+    AddSignRole addSignRole = AddSignRole.NONE;
+    long rootActivityInstanceId = -1;
+    AddSignPhase addSignPhase = AddSignPhase.NONE;
+    AddSignMode addSignMode = AddSignMode.NONE;
+    int addSignCount;
+    int addSignDepth;
+    boolean addSignAllowed;
+    List<String> remainingAssignees = List.of();
+    List<String> afterSignAssignees = List.of();
+    AddSignMode afterSignMode = AddSignMode.NONE;
 
     @Override
     public long getTaskId() {
@@ -841,6 +861,56 @@ final class Fakes {
     @Override
     public Map<String, Object> getVariables() {
       return Map.of();
+    }
+
+    @Override
+    public AddSignRole getAddSignRole() {
+      return addSignRole;
+    }
+
+    @Override
+    public long getRootActivityInstanceId() {
+      return rootActivityInstanceId;
+    }
+
+    @Override
+    public AddSignPhase getAddSignPhase() {
+      return addSignPhase;
+    }
+
+    @Override
+    public AddSignMode getAddSignMode() {
+      return addSignMode;
+    }
+
+    @Override
+    public int getAddSignCount() {
+      return addSignCount;
+    }
+
+    @Override
+    public int getAddSignDepth() {
+      return addSignDepth;
+    }
+
+    @Override
+    public boolean isAddSignAllowed() {
+      return addSignAllowed;
+    }
+
+    @Override
+    public List<String> getRemainingAssignees() {
+      return remainingAssignees;
+    }
+
+    @Override
+    public List<String> getAfterSignAssignees() {
+      return afterSignAssignees;
+    }
+
+    @Override
+    public AddSignMode getAfterSignMode() {
+      return afterSignMode;
     }
   }
 

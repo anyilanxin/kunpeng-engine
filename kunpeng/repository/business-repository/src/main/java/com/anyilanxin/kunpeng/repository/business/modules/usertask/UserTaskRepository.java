@@ -19,12 +19,17 @@ package com.anyilanxin.kunpeng.repository.business.modules.usertask;
 import com.anyilanxin.kunpeng.kvstore.ColumnFamily;
 import com.anyilanxin.kunpeng.kvstore.KvStore;
 import com.anyilanxin.kunpeng.kvstore.TransactionContext;
+import com.anyilanxin.kunpeng.kvstore.types.CompositeKeyType;
 import com.anyilanxin.kunpeng.kvstore.types.LongType;
+import com.anyilanxin.kunpeng.kvstore.types.NilType;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.usertask.UserTaskRecord;
+import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.AddSignRole;
 import com.anyilanxin.kunpeng.repository.business.BusinessRepositoryColumnFamilies;
 import com.anyilanxin.kunpeng.repository.business.DataSplitRegister;
 import com.anyilanxin.kunpeng.repository.business.RockResourceDataSplit;
 import com.anyilanxin.kunpeng.repository.business.modules.usertask.record.UserTaskRecordEntity;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 用户任务域仓储实现。
@@ -38,6 +43,13 @@ public class UserTaskRepository implements MutableUserTaskRepository, RockResour
   private final UserTaskRecord recordBuffer;
   private final ColumnFamily<LongType, UserTaskRecordEntity> userTaskColumnFamily;
 
+  /** 加签组员关联：组活动实例 id → 加签任务 id（前缀扫描收集组名下加签任务） */
+  private final LongType groupActivityInstanceIdDbKey;
+
+  private final CompositeKeyType<LongType, LongType> addSignCorrelationDbCompositeKey;
+  private final ColumnFamily<CompositeKeyType<LongType, LongType>, NilType>
+      addSignCorrelationColumnFamily;
+
   public UserTaskRepository(
       final KvStore<BusinessRepositoryColumnFamilies> db,
       final TransactionContext transaction,
@@ -49,11 +61,26 @@ public class UserTaskRepository implements MutableUserTaskRepository, RockResour
     userTaskColumnFamily =
         db.createColumnFamily(
             BusinessRepositoryColumnFamilies.USER_TASK, transaction, taskIdDbKey, entityDbValue);
+    groupActivityInstanceIdDbKey = new LongType();
+    addSignCorrelationDbCompositeKey =
+        new CompositeKeyType<>(groupActivityInstanceIdDbKey, taskIdDbKey);
+    addSignCorrelationColumnFamily =
+        db.createColumnFamily(
+            BusinessRepositoryColumnFamilies.ADD_SIGN_CORRELATION,
+            transaction,
+            addSignCorrelationDbCompositeKey,
+            NilType.INSTANCE);
   }
 
   @Override
   public void delete(final long taskId) {
     taskIdDbKey.wrapLong(taskId);
+    entityDbValue.reset();
+    if (userTaskColumnFamily.get(taskIdDbKey) != null
+        && entityDbValue.getAddSignRole() == AddSignRole.ADD_SIGN) {
+      groupActivityInstanceIdDbKey.wrapLong(entityDbValue.getActivityInstanceId());
+      addSignCorrelationColumnFamily.delete(addSignCorrelationDbCompositeKey);
+    }
     userTaskColumnFamily.delete(taskIdDbKey);
   }
 
@@ -63,6 +90,32 @@ public class UserTaskRepository implements MutableUserTaskRepository, RockResour
     entityDbValue.reset();
     entityDbValue.wrap(record);
     userTaskColumnFamily.put(taskIdDbKey, entityDbValue);
+    saveAddSignCorrelation(record);
+  }
+
+  /** 加签任务落组员关联（组活动实例 id>0 且角色为加签任务时，键=任务自身活动实例即组实例） */
+  private void saveAddSignCorrelation(final UserTaskRecord record) {
+    if (record.getAddSignRole() == AddSignRole.ADD_SIGN && record.getActivityInstanceId() > 0) {
+      groupActivityInstanceIdDbKey.wrapLong(record.getActivityInstanceId());
+      addSignCorrelationColumnFamily.put(addSignCorrelationDbCompositeKey, NilType.INSTANCE);
+    }
+  }
+
+  @Override
+  public List<UserTaskRecord> getAddSignTasks(final long groupActivityInstanceId) {
+    groupActivityInstanceIdDbKey.wrapLong(groupActivityInstanceId);
+    final List<UserTaskRecord> tasks = new ArrayList<>();
+    addSignCorrelationColumnFamily.whileEqualPrefix(
+        groupActivityInstanceIdDbKey,
+        (_, _) -> {
+          entityDbValue.reset();
+          if (userTaskColumnFamily.get(taskIdDbKey) != null) {
+            // 每条独立实例：共享 recordBuffer 会让列表全部坍缩为最后一条
+            tasks.add(entityDbValue.unwrap(new UserTaskRecord()));
+          }
+          return true;
+        });
+    return tasks;
   }
 
   @Override
@@ -73,6 +126,16 @@ public class UserTaskRepository implements MutableUserTaskRepository, RockResour
             visitor.visit(
                 writeKey(taskIdDbKey, BusinessRepositoryColumnFamilies.USER_TASK),
                 writeValue(entityDbValue));
+            // 加签任务同步发射组员关联条目（与 save/delete 对称）
+            if (entityDbValue.getAddSignRole() == AddSignRole.ADD_SIGN
+                && entityDbValue.getActivityInstanceId() > 0) {
+              groupActivityInstanceIdDbKey.wrapLong(entityDbValue.getActivityInstanceId());
+              visitor.visit(
+                  writeKey(
+                      addSignCorrelationDbCompositeKey,
+                      BusinessRepositoryColumnFamilies.ADD_SIGN_CORRELATION),
+                  writeValue(NilType.INSTANCE));
+            }
           }
         });
   }

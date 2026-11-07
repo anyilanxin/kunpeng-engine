@@ -41,11 +41,13 @@
     <bpmn:serviceTask id="Task_ship" name="逐单发货">
       <bpmn:extensionElements>
         <kunpeng:taskDefinition type="ship-job" retries="3" />
-        <kunpeng:loopCharacteristics collection="=orders" elementVariable="order" />
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_payment_mi</bpmn:incoming>
       <bpmn:outgoing>Flow_ship_catch</bpmn:outgoing>
       <bpmn:multiInstanceLoopCharacteristics isSequential="false">
+        <bpmn:extensionElements>
+          <kunpeng:loopCharacteristics collection="=orders" elementVariable="order" />
+        </bpmn:extensionElements>
         <bpmn:loopCardinality>3</bpmn:loopCardinality>
         <bpmn:completionCondition xsi:type="bpmn:tFormalExpression">=numberOfCompletedInstances == 3</bpmn:completionCondition>
       </bpmn:multiInstanceLoopCharacteristics>

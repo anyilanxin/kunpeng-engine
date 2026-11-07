@@ -16,22 +16,28 @@
  */
 package com.anyilanxin.kunpeng.engine.bpmn.commandapi.usertask.processor;
 
+import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnUserTask;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.BpmnTransformer;
 import com.anyilanxin.kunpeng.engine.bpmn.LogEventWriter;
 import com.anyilanxin.kunpeng.engine.bpmn.authorization.AuthorizationDeniedException;
 import com.anyilanxin.kunpeng.engine.bpmn.authorization.AuthorizationHandler;
+import com.anyilanxin.kunpeng.engine.bpmn.command.behavior.impl.AddSignBehavior;
 import com.anyilanxin.kunpeng.engine.bpmn.command.behavior.impl.VariableBehavior;
 import com.anyilanxin.kunpeng.engine.bpmn.commandapi.usertask.UserTaskApiAbstractProcessor;
 import com.anyilanxin.kunpeng.protocol.business.impl.eventlog.BusinessLogRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.activityinstance.ActivityInstanceRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.usertask.UserTaskRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.complete.UserTaskCompleteRequestRecord;
+import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.AddSignMode;
 import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.UserTaskLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.record.commandapi.record.usertask.CommandApiUserTaskValueLifeCycle;
 import com.anyilanxin.kunpeng.repository.business.modules.activityinstance.ImmutableActivityInstanceRepository;
+import com.anyilanxin.kunpeng.repository.business.modules.deployment.bpmnresource.record.ProcessDefinitionRuntime;
 import com.anyilanxin.kunpeng.repository.business.modules.key.ImmutableKeyGeneratorRepository;
 import com.anyilanxin.kunpeng.repository.business.modules.usertask.ImmutableUserTaskRepository;
+import java.util.List;
 import java.util.Map;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * 用户任务完成 API 处理器。
@@ -49,6 +55,7 @@ public class UserTaskCompleteProcessor
   private final ImmutableActivityInstanceRepository activityInstance;
   private final ImmutableUserTaskRepository userTask;
   private final AuthorizationHandler authorization;
+  private final AddSignBehavior addSignBehavior;
 
   public UserTaskCompleteProcessor(final LogEventWriter writer) {
     super(writer, writer.getRepository().userTaskRepository());
@@ -60,6 +67,63 @@ public class UserTaskCompleteProcessor
     sourceId = writer.getSourceId();
     variableBehavior = writer.behavior().variableBehavior();
     authorization = new AuthorizationHandler(writer);
+    addSignBehavior = writer.behavior().addSignBehavior();
+  }
+
+  /**
+   * 完成请求携带的后加签并入预登记：名单/模式/模型许可校验后合并落行，原任务完成时消费创建。
+   *
+   * @return 校验与合并成功返回真；否则已回错误响应返回假
+   */
+  private boolean mergeCarriedAfterSign(
+      final BusinessLogRecord<UserTaskCompleteRequestRecord> record,
+      final UserTaskRecord userTask,
+      final ActivityInstanceRecord instanceRecord) {
+    final UserTaskCompleteRequestRecord value = record.getValue();
+    final List<String> assignees = value.getAddSignAssignees();
+    final AddSignMode mode = value.getAddSignMode();
+    if (mode != AddSignMode.PARALLEL && mode != AddSignMode.SEQUENTIAL) {
+      writer.adErrorResponse(record.getRequestId(), 0, "携带后加签时必须指定并行或串行模式");
+      return false;
+    }
+    if (StringUtils.isNotBlank(userTask.getAssignee())
+        && assignees.contains(userTask.getAssignee())) {
+      writer.adErrorResponse(record.getRequestId(), 0, "不允许加签给原任务审批人本人");
+      return false;
+    }
+    final ProcessDefinitionRuntime runtime =
+        bpmnResource.getRuntime(userTask.getProcessDefinitionId());
+    if (runtime == null) {
+      writer.adErrorResponse(record.getRequestId(), 0, "流程定义不存在，无法携带后加签");
+      return false;
+    }
+    // 许可看原任务定义（级联锚任务剥后缀回原元素），与前/后加签门户同一口径
+    final String originKey =
+        userTask.getTaskDefinitionKey().endsWith(BpmnUserTask.ADD_SIGN_DEFINITION_SUFFIX)
+            ? userTask
+                .getTaskDefinitionKey()
+                .substring(
+                    0,
+                    userTask.getTaskDefinitionKey().length()
+                        - BpmnUserTask.ADD_SIGN_DEFINITION_SUFFIX.length())
+            : userTask.getTaskDefinitionKey();
+    final BpmnUserTask element =
+        runtime.executableProcess().getElementById(originKey, BpmnUserTask.class);
+    if (!element.isAddSignEnabled()) {
+      writer.adErrorResponse(record.getRequestId(), 0, "任务定义未允许加签（建模需声明 kunpeng:addSign）");
+      return false;
+    }
+    final String cascadeReject = addSignBehavior.cascadeRejectReason(userTask, element);
+    if (cascadeReject != null) {
+      writer.adErrorResponse(record.getRequestId(), 0, cascadeReject);
+      return false;
+    }
+    if (!addSignBehavior.mergeAfterSignRegistration(
+        userTask, assignees, mode, record.getRequestId())) {
+      writer.adErrorResponse(record.getRequestId(), 0, "已登记的后加签模式与本次不一致，不允许混用");
+      return false;
+    }
+    return true;
   }
 
   @Override
@@ -79,10 +143,20 @@ public class UserTaskCompleteProcessor
           record.getRequestId(), AuthorizationDeniedException.CODE, e.getMessage());
       return;
     }
+    if (userTask.getAddSignCount() > 0) {
+      // 冻结门控按任务粒度（任意层级）：名下加签组在途即冻结，组归零解冻
+      writer.adErrorResponse(record.getRequestId(), 0, "当前任务存在进行中的加签组，已冻结，不允许完成");
+      return;
+    }
 
     final ActivityInstanceRecord instanceRecord =
         activityInstance.getRecord(userTask.getActivityInstanceId());
     if (instanceRecord != null) {
+      // 完成携带后加签：先校验并合并进预登记（完成与加签派生同命令级联原子）
+      final List<String> carriedAssignees = value.getAddSignAssignees();
+      if (!carriedAssignees.isEmpty() && !mergeCarriedAfterSign(record, userTask, instanceRecord)) {
+        return;
+      }
       final Map<String, Object> variables = value.getVariables();
       final Map<String, Object> localVariables = value.getLocalVariables();
       if (!localVariables.isEmpty()) {

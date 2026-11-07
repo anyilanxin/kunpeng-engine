@@ -37,6 +37,7 @@ public class RepositoryActivityInstanceApplierRegister {
         .register(new RocksdbRepositoryActivityInstanceCompletingApplierImpl(repository))
         .register(new RocksdbRepositoryActivityInstanceTerminatedApplierImpl(repository))
         .register(new RocksdbRepositoryActivityInstanceTerminatingApplierImpl(repository))
+        .register(new RocksdbRepositoryActivityInstanceUpdatingApplierImpl(repository))
         .register(new RocksdbRepositoryActivityInstanceListenerCompletedApplierImpl(repository))
         .register(new RocksdbRepositoryActivityInstanceListenerCreatedApplierImpl(repository))
         .register(new RocksdbRepositoryActivityInstanceListenerDenyApplierImpl(repository));

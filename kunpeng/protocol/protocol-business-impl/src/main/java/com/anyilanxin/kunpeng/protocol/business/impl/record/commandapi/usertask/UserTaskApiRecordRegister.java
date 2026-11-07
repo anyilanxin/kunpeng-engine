@@ -16,6 +16,10 @@
  */
 package com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask;
 
+import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.addsign.AddSignAfterRequestRecord;
+import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.addsign.AddSignAfterResponseRecord;
+import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.addsign.AddSignBeforeRequestRecord;
+import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.addsign.AddSignBeforeResponseRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.assignee.UserTaskAssigneeRequestRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.assignee.UserTaskAssigneeResponseRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.cancel.UserTaskCancelRequestRecord;
@@ -76,6 +80,17 @@ public class UserTaskApiRecordRegister {
         .register(CommandApiUserTaskValueLifeCycle.OWN_RESPONSE, UserTaskOwnResponseRecord::new)
         .register(CommandApiUserTaskValueLifeCycle.UPDATE_REQUEST, UserTaskUpdateRequestRecord::new)
         .register(
-            CommandApiUserTaskValueLifeCycle.UPDATE_RESPONSE, UserTaskUpdateResponseRecord::new);
+            CommandApiUserTaskValueLifeCycle.UPDATE_RESPONSE, UserTaskUpdateResponseRecord::new)
+        .register(
+            CommandApiUserTaskValueLifeCycle.ADD_SIGN_BEFORE_REQUEST,
+            AddSignBeforeRequestRecord::new)
+        .register(
+            CommandApiUserTaskValueLifeCycle.ADD_SIGN_BEFORE_RESPONSE,
+            AddSignBeforeResponseRecord::new)
+        .register(
+            CommandApiUserTaskValueLifeCycle.ADD_SIGN_AFTER_REQUEST, AddSignAfterRequestRecord::new)
+        .register(
+            CommandApiUserTaskValueLifeCycle.ADD_SIGN_AFTER_RESPONSE,
+            AddSignAfterResponseRecord::new);
   }
 }

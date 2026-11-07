@@ -271,6 +271,24 @@ public interface KunpengClient extends AutoCloseable, JobClient, GatewayServiceD
   CancelUserTaskCommand newCancelUserTaskCommand();
 
   /**
+   * 前加签（原任务冻结、加签归零解冻）
+   *
+   * @return {@link
+   *     com.anyilanxin.kunpeng.client.command.usertask.addsign.AddSignBeforeUserTaskCommand }
+   */
+  com.anyilanxin.kunpeng.client.command.usertask.addsign.AddSignBeforeUserTaskCommand
+      newAddSignBeforeUserTaskCommand();
+
+  /**
+   * 后加签预登记（完成前登记/追加，完成时按登记创建）
+   *
+   * @return {@link
+   *     com.anyilanxin.kunpeng.client.command.usertask.addsign.AddSignAfterUserTaskCommand }
+   */
+  com.anyilanxin.kunpeng.client.command.usertask.addsign.AddSignAfterUserTaskCommand
+      newAddSignAfterUserTaskCommand();
+
+  /**
    * 关联消息
    *
    * @return {@link MessageCorrelationCommand }

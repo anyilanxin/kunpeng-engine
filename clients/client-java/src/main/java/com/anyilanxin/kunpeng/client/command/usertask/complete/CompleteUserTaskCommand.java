@@ -15,7 +15,9 @@ package com.anyilanxin.kunpeng.client.command.usertask.complete;
 import com.anyilanxin.kunpeng.client.command.CommandWithTenantStep;
 import com.anyilanxin.kunpeng.client.command.CommandWithVariables;
 import com.anyilanxin.kunpeng.client.command.FinalCommandStep;
+import com.anyilanxin.kunpeng.client.command.usertask.AddSignMode;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
 
 public interface CompleteUserTaskCommand {
@@ -82,5 +84,15 @@ public interface CompleteUserTaskCommand {
      */
     @Override
     CompleteUserTaskCommandStep1 variable(String key, Object value);
+
+    /**
+     * 完成时携带后加签（与完成同命令级联原子）：原任务完成后活动置 AWAITING，加签全部结束后活动才结束走出边。
+     *
+     * @param assignees 加签人名单（不可含原任务审批人本人）
+     * @param addSignMode 加签模式（并行/串行）
+     * @return the builder for this command. Call {@link #send()} to complete the command and send
+     *     it to the broker.
+     */
+    CompleteUserTaskCommandStep1 addSignAfter(List<String> assignees, AddSignMode addSignMode);
   }
 }

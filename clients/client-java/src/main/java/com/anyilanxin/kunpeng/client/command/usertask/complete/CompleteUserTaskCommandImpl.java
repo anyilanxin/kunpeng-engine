@@ -14,11 +14,13 @@ package com.anyilanxin.kunpeng.client.command.usertask.complete;
 
 import com.anyilanxin.kunpeng.client.KunpengClientConfiguration;
 import com.anyilanxin.kunpeng.client.command.*;
+import com.anyilanxin.kunpeng.client.command.usertask.AddSignMode;
 import com.anyilanxin.kunpeng.gateway.grpc.service.UserTaskServiceGrpc;
 import com.anyilanxin.kunpeng.gateway.grpc.service.UserTaskServiceOuterClass;
 import io.grpc.stub.StreamObserver;
 import java.time.Duration;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
@@ -102,6 +104,18 @@ public final class CompleteUserTaskCommandImpl
   @Override
   public CompleteUserTaskCommandStep1 taskId(final long userTaskId) {
     requestBuilder.setUserTaskId(userTaskId);
+    return this;
+  }
+
+  @Override
+  public CompleteUserTaskCommandStep1 addSignAfter(
+      final List<String> assignees, final AddSignMode addSignMode) {
+    requestBuilder.clearAddSignAssignees();
+    requestBuilder.addAllAddSignAssignees(assignees);
+    requestBuilder.setAddSignMode(
+        addSignMode == AddSignMode.SEQUENTIAL
+            ? UserTaskServiceOuterClass.AddSignMode.ADD_SIGN_MODE_SEQUENTIAL
+            : UserTaskServiceOuterClass.AddSignMode.ADD_SIGN_MODE_PARALLEL);
     return this;
   }
 }

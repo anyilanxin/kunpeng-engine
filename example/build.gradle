@@ -42,6 +42,11 @@ dependencies {
     implementation "com.baomidou:mybatis-plus-annotation"
     implementation "com.baomidou:mybatis-plus-spring-boot4-starter"
     implementation "com.baomidou:mybatis-plus-jsqlparser"
+    // BOM 钉的是 mybatis 3.6.0（供 sink-rdbms 使用），但 mybatis-plus 3.5.18.1 只兼容 mybatis 3.5.x（3.6.0 移除了 MetaClass.forClass(Class, ReflectorFactory)）；
+    // platform 约束与直钉版本同走最高版本裁决，须 strictly 才能钉回 plus 声明的 3.5.19
+    implementation('org.mybatis:mybatis') {
+        version { strictly '3.5.19' }
+    }
     implementation "com.baomidou:dynamic-datasource-spring-boot4-starter"
     implementation 'com.alibaba:druid-spring-boot-4-starter'
 

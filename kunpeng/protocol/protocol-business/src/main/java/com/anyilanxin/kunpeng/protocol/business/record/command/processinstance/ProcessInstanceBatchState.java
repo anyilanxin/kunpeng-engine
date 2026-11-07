@@ -33,6 +33,9 @@ public enum ProcessInstanceBatchState implements CommandValueLifeCycle {
   ACTIVATE_DIRECT_ACTIVATE((short) 5, PROCESS_INDEX_64),
   BATCH_COMPLETE((short) 6, PROCESS_INDEX_65),
   BATCH_COMPLETED((short) 7, PROCESS_INDEX_66),
+  ACTIVATE_MI_CREATE((short) 8, PROCESS_INDEX_231),
+  ACTIVATE_TASK_CREATE((short) 9, PROCESS_INDEX_232),
+  ACTIVATE_TASK_TERMINATE((short) 10, PROCESS_INDEX_233),
   ;
 
   private final short value;
@@ -53,6 +56,9 @@ public enum ProcessInstanceBatchState implements CommandValueLifeCycle {
       case 5 -> ACTIVATE_DIRECT_ACTIVATE;
       case 6 -> BATCH_COMPLETE;
       case 7 -> BATCH_COMPLETED;
+      case 8 -> ACTIVATE_MI_CREATE;
+      case 9 -> ACTIVATE_TASK_CREATE;
+      case 10 -> ACTIVATE_TASK_TERMINATE;
       default -> UNKNOWN;
     };
   }
@@ -67,6 +73,9 @@ public enum ProcessInstanceBatchState implements CommandValueLifeCycle {
       case 5 -> ACTIVATE_DIRECT_ACTIVATE;
       case 6 -> BATCH_COMPLETE;
       case 7 -> BATCH_COMPLETED;
+      case 8 -> ACTIVATE_MI_CREATE;
+      case 9 -> ACTIVATE_TASK_CREATE;
+      case 10 -> ACTIVATE_TASK_TERMINATE;
       default -> NULL_VAL;
     };
   }

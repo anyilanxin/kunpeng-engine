@@ -27,6 +27,7 @@ import com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance.
 import com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance.ActivityInstanceListenerType;
 import com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance.ActivityInstanceRecordValue;
 import com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance.ActivityInstanceState;
+import com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance.AddSignState;
 import com.anyilanxin.kunpeng.protocol.common.TenantOwned;
 import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 import com.anyilanxin.kunpeng.structpack.AutoDeclareProperties;
@@ -92,9 +93,11 @@ public class ActivityInstanceRecord extends UnifiedRecordValue<ActivityInstanceR
   private final DocumentProperty variablesProperty = new DocumentProperty(27, VARIABLES);
   private final StringProperty tenantIdProp =
       new StringProperty(28, TENANT_ID, TenantOwned.DEFAULT_TENANT_IDENTIFIER);
+  private final EnumProperty<AddSignState> addSignStateProp =
+      new EnumProperty<>(29, "ADD_SIGN_STATE", AddSignState.class, AddSignState.NONE);
 
   public ActivityInstanceRecord() {
-    super(28);
+    super(29);
     // formatting:off
     declareProperty(activityInstanceIdProp)
       .declareProperty(parentActivityInstanceIdProp)
@@ -123,7 +126,8 @@ public class ActivityInstanceRecord extends UnifiedRecordValue<ActivityInstanceR
       .declareProperty(listenerTypeProp)
       .declareProperty(listenerIndexProp)
       .declareProperty(variablesProperty)
-      .declareProperty(tenantIdProp);
+      .declareProperty(tenantIdProp)
+      .declareProperty(addSignStateProp);
     // formatting:on
   }
 
@@ -509,6 +513,16 @@ public class ActivityInstanceRecord extends UnifiedRecordValue<ActivityInstanceR
 
   public ActivityInstanceRecord setTenantId(final DirectBuffer tenantId) {
     tenantIdProp.setValue(tenantId);
+    return this;
+  }
+
+  @Override
+  public AddSignState getAddSignState() {
+    return addSignStateProp.getValue();
+  }
+
+  public ActivityInstanceRecord setAddSignState(final AddSignState addSignState) {
+    addSignStateProp.setValue(addSignState);
     return this;
   }
 

@@ -80,7 +80,9 @@ public enum BpmnElementType {
   /** 临时子流程 */
   AD_HOC_SUB_PROCESS("adHocSubProcess"),
   /** 多实例活动体（由转换器构造，不对应具体 XSD 元素名） */
-  MULTI_INSTANCE_BODY("multiInstanceBody");
+  MULTI_INSTANCE_BODY("multiInstanceBody"),
+  /** 加签用户任务容器（解析期由原任务派生合成，不对应具体 XSD 元素名；ordinal 上 wire 冻结，只能尾部追加） */
+  ADD_SIGN_USER_TASK("addSignUserTask");
 
   /** XSD 元素名 -> 枚举的索引，静态构建一次，避免每次查找线性扫描 */
   private static final Map<String, BpmnElementType> TYPE_NAME_INDEX;

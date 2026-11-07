@@ -68,9 +68,7 @@ public final class MultiInstanceActivityTransformer implements ElementTransforme
 
     final BpmnMultiInstanceBody multiInstanceBody =
         new BpmnMultiInstanceBody(
-            element.getId(),
-            buildLoopCharacteristics(element, loopCharacteristics, context),
-            innerActivity);
+            element.getId(), buildLoopCharacteristics(loopCharacteristics, context), innerActivity);
 
     multiInstanceBody.setFlowScope(innerActivity.getFlowScope());
     innerActivity.setFlowScope(multiInstanceBody);
@@ -87,11 +85,11 @@ public final class MultiInstanceActivityTransformer implements ElementTransforme
   /**
    * 解析循环特征：串行标记、次数/完成条件/集合表达式与元素变量名。
    *
-   * <p>集合与元素变量从活动自身的扩展元素（kunpeng:loopCharacteristics）读取。 multiInstanceLoopCharacteristics 元素按 XSD
-   * 不允许携带扩展元素。
+   * <p>集合与元素变量从 multiInstanceLoopCharacteristics 元素自身的扩展元素（kunpeng:loopCharacteristics）读取，
+   * 与模型器面板写入位置、部署期校验（MultiInstanceLoopCharacteristicsValidator）读取位置一致； tLoopCharacteristics 继承
+   * tBaseElement，XSD 允许携带 extensionElements。
    */
   private BpmnLoopCharacteristics buildLoopCharacteristics(
-      final Activity element,
       final MultiInstanceLoopCharacteristics elementLoopCharacteristics,
       final BpmnTransformContext context) {
     final ScriptExpression completionCondition =
@@ -113,7 +111,7 @@ public final class MultiInstanceActivityTransformer implements ElementTransforme
     }
 
     final KunpengLoopCharacteristics loopCharacteristics =
-        element.getSingleExtensionElement(KunpengLoopCharacteristics.class);
+        elementLoopCharacteristics.getSingleExtensionElement(KunpengLoopCharacteristics.class);
     final String elementVariable =
         loopCharacteristics == null ? null : loopCharacteristics.getElementVariable();
     final ScriptExpression collection =

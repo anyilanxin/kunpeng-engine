@@ -101,8 +101,6 @@ public interface KunpengConstants {
 
   String ELEMENT_PROPERTY = "property";
 
-  String ELEMENT_USER_TASK = "userTask";
-
   String ELEMENT_EXECUTION_LISTENERS = "executionListeners";
   String ELEMENT_EXECUTION_LISTENER = "executionListener";
   String ELEMENT_TASK_LISTENERS = "taskListeners";
@@ -119,6 +117,14 @@ public interface KunpengConstants {
   String ELEMENT_PRIORITY_DEFINITION = "priorityDefinition";
 
   String ELEMENT_AD_HOC = "adHoc";
+
+  String ELEMENT_ADD_SIGN = "addSign";
+
+  /** kunpeng:addSign 的级联深度上限属性（1=禁止级联） */
+  String ATTRIBUTE_MAX_DEPTH = "maxDepth";
+
+  /** kunpeng:addSign 的级联允许属性（false=加签任务不可再加签） */
+  String ATTRIBUTE_CASCADE = "cascade";
 
   String ELEMENT_LINKED_RESOURCE = "linkedResource";
   String ELEMENT_LINKED_RESOURCES = "linkedResources";

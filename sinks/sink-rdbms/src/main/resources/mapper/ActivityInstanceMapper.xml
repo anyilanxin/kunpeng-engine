@@ -24,14 +24,16 @@
       parent_activity_instance_id, call_process_instance_id, process_definition_id,
       process_definition_key, activity_definition_key, activity_definition_name, activity_definition_type, task_id, assignee,
       start_activity_definition_key, start_activity_instance_id, state,
-      incident_id, sequence_counter, start_time, end_time, duration, revision, resource_id
+      incident_id, sequence_counter, start_time, end_time, duration, revision, resource_id,
+      add_sign_state
     ) VALUES (
       #{activityInstanceId}, #{processInstanceId}, #{rootProcessInstanceId},
       #{parentActivityInstanceId}, #{callProcessInstanceId}, #{processDefinitionId},
       #{definitionKey}, #{activityKey}, #{activityName}, #{activityType}, #{taskId}, #{assignee},
       #{startActivityDefinitionKey}, #{startActivityInstanceId}, #{state},
       #{incidentId}, #{sequenceCounter}, #{startTime,jdbcType=TIMESTAMP},
-      #{endTime,jdbcType=TIMESTAMP}, #{duration}, #{revision}, #{resourceId}
+      #{endTime,jdbcType=TIMESTAMP}, #{duration}, #{revision}, #{resourceId},
+      #{addSignState}
     )
   </insert>
 
@@ -44,7 +46,8 @@
         incident_id = #{incidentId},
         end_time = #{endTime,jdbcType=TIMESTAMP},
         duration = #{duration},
-        revision = #{revision}
+        revision = #{revision},
+        add_sign_state = #{addSignState}
     WHERE activity_instance_id = #{activityInstanceId}
   </update>
 
