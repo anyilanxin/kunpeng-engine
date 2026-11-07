@@ -21,6 +21,7 @@ import static com.anyilanxin.kunpeng.structpack.util.DocumentUtil.convertToMap;
 import com.anyilanxin.kunpeng.engine.bpmn.LogEventWriter;
 import com.anyilanxin.kunpeng.engine.bpmn.command.bpmn.activities.ActivityContent;
 import com.anyilanxin.kunpeng.engine.script.ScriptContext;
+import com.anyilanxin.kunpeng.protocol.business.EngineReservedVariables;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.activityinstance.ActivityInstanceRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.processinstance.ProcessInstanceRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.usertask.UserTaskRecord;
@@ -41,6 +42,26 @@ import org.agrona.DirectBuffer;
  * @since 2026.9.0
  */
 public class VariableBehavior {
+  /** 引擎保留变量名前缀：内部快照/载荷（MI 集合快照、加签展开载荷）以此命名，客户端路径写入/删除一律拒绝（契约单源见 {@link EngineReservedVariables}） */
+  public static final String ENGINE_RESERVED_PREFIX = EngineReservedVariables.PREFIX;
+
+  /** 是否引擎保留变量名 */
+  public static boolean isReservedName(final String name) {
+    return name.startsWith(ENGINE_RESERVED_PREFIX);
+  }
+
+  /** 客户端路径变量名校验：保留前缀拒绝（快照/载荷一致性，防止打穿批处理游标取元素） */
+  public static void assertClientVariables(final Map<String, Object> variables) {
+    variables.keySet().stream()
+        .filter(VariableBehavior::isReservedName)
+        .findFirst()
+        .ifPresent(
+            name -> {
+              throw new IllegalArgumentException(
+                  "变量名不允许使用引擎保留前缀 " + ENGINE_RESERVED_PREFIX + ": " + name);
+            });
+  }
+
   private final LogEventWriter writer;
   private final ImmutableVariableRepository variable;
   private final ImmutableActivityInstanceRepository activityInstance;
@@ -122,6 +143,22 @@ public class VariableBehavior {
     if (variables == null || variables.isEmpty()) {
       return;
     }
+    assertClientVariables(variables);
+    updateScopeVariables(
+        content.getActivityInstanceId(),
+        content.getParentActivityInstanceId(),
+        content.getProcessDefinitionId(),
+        content.getProcessInstanceId(),
+        content.getRequestId(),
+        variables);
+  }
+
+  /** 引擎内部变量写入（保留前缀快照/载荷专用）：跳过客户端保留前缀校验 */
+  public void variableUpdateInternal(
+      final ActivityContent content, final Map<String, Object> variables) {
+    if (variables == null || variables.isEmpty()) {
+      return;
+    }
     updateScopeVariables(
         content.getActivityInstanceId(),
         content.getParentActivityInstanceId(),
@@ -139,6 +176,7 @@ public class VariableBehavior {
     if (variables == null || variables.isEmpty()) {
       return;
     }
+    assertClientVariables(variables);
     updateScopeVariables(
         processInstanceId,
         processInstanceId,
@@ -152,13 +190,15 @@ public class VariableBehavior {
     if (variables == null) {
       return;
     }
+    final Map<String, Object> decoded = convertToMap(variables);
+    assertClientVariables(decoded);
     updateScopeVariables(
         content.getActivityInstanceId(),
         content.getParentActivityInstanceId(),
         content.getProcessDefinitionId(),
         content.getProcessInstanceId(),
         content.getRequestId(),
-        convertToMap(variables));
+        decoded);
   }
 
   /** 变量更新统一路径：合并（旧值 ← 新值）后落事件，写后回填缓存。 事件写入会经失效钩子摘除旧快照，随后以合并结果重建。 */
@@ -243,6 +283,7 @@ public class VariableBehavior {
       final long processDefinitionId,
       final long processInstanceId,
       final Map<String, Object> variables) {
+    assertClientVariables(variables);
     final VariableRecord variableRecord = new VariableRecord();
     variableRecord.setVariables(variables);
     variableRecord.setParentScopId(parentScopeId);

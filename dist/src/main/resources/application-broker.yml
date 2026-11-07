@@ -11,7 +11,7 @@ kunpeng:
   broker:
     raft:
       partitioning:
-        partitions-count: 2
+        partitions-count: 1
         replication-factor: 1
     manage:
       init-broker-id: node01
@@ -20,16 +20,16 @@ kunpeng:
       cpu-thread-count: 2
       io-thread-count: 2
     sinks:
-      #      dbms:
-      #        className: com.anyilanxin.kunpeng.sink.rdbms.RdbmsSink
-      #        args:
-      #          url: jdbc:mysql://localhost:3306/kunpeng_process?allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=utf8&useSSL=false&rewriteBatchedStatement=true&serverTimezone=Asia/Shanghai
-      #          #          url: jdbc:postgresql://localhost:5432/kunpeng_process
-      #          password: root
-      #          userName: root
-      #          tablePrefix: ANYI_
-      #          caseSensitive: true
-      #          autoDdl: true
+      dbms:
+        className: com.anyilanxin.kunpeng.sink.rdbms.RdbmsSink
+        args:
+          url: jdbc:mysql://localhost:3306/kunpeng_process?allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=utf8&useSSL=false&rewriteBatchedStatement=true&serverTimezone=Asia/Shanghai
+          #          url: jdbc:postgresql://localhost:5432/kunpeng_process
+          password: root
+          userName: root
+          tablePrefix: ANYI_
+          caseSensitive: true
+          autoDdl: true
       anyistandlone:
         className: com.anyilanxin.platform.coreprocess.sink.rdbms.AnyiRdbmsSink
         jarPath: /Users/zxuanhong/Projects/ay/anyi-platform/backend/core-process/process-sink/build/libs/process-sink-2.0.0-alpha4-all.jar

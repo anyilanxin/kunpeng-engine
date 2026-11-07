@@ -17,6 +17,7 @@
 package com.anyilanxin.kunpeng.engine.bpmn.commandapi.variable.processor;
 
 import com.anyilanxin.kunpeng.engine.bpmn.LogEventWriter;
+import com.anyilanxin.kunpeng.engine.bpmn.command.behavior.impl.VariableBehavior;
 import com.anyilanxin.kunpeng.engine.bpmn.commandapi.variable.VariableApiAbstractProcessor;
 import com.anyilanxin.kunpeng.protocol.business.impl.eventlog.BusinessLogRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.usertask.UserTaskRecord;
@@ -60,6 +61,19 @@ public class VariableUpdateApiProcessor
     }
     if (value.getVariables().isEmpty()) {
       writer.adErrorResponse(record.getRequestId(), -1, "缺少修改的变量信息 key");
+      return;
+    }
+    // 引擎保留前缀（MI 集合快照/加签展开载荷）拒绝写入：打穿快照会导致批处理游标取元素错位
+    final String reserved =
+        value.getVariables().keySet().stream()
+            .filter(VariableBehavior::isReservedName)
+            .findFirst()
+            .orElse(null);
+    if (reserved != null) {
+      writer.adErrorResponse(
+          record.getRequestId(),
+          -1,
+          "变量名不允许使用引擎保留前缀 " + VariableBehavior.ENGINE_RESERVED_PREFIX + ": " + reserved);
       return;
     }
     writer.addEvent(

@@ -19,12 +19,15 @@ package com.anyilanxin.kunpeng.gateway.grpc.service.impl;
 import static com.anyilanxin.kunpeng.gateway.grpc.utils.RequestUtil.ensureJsonSet;
 
 import com.anyilanxin.kunpeng.broker.client.business.client.UserTaskClient;
+import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.AddSignAfterRequest;
+import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.AddSignBeforeRequest;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskCancelRequest;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskCompleteRequest;
 import com.anyilanxin.kunpeng.gateway.grpc.GrpcErrorHandle;
 import com.anyilanxin.kunpeng.gateway.grpc.service.GrpcService;
 import com.anyilanxin.kunpeng.gateway.grpc.service.UserTaskServiceGrpc;
 import com.anyilanxin.kunpeng.gateway.grpc.service.UserTaskServiceOuterClass;
+import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.AddSignMode;
 import io.grpc.stub.StreamObserver;
 
 /**
@@ -55,6 +58,12 @@ public class GrpcUserTaskServiceImpl extends UserTaskServiceGrpc.UserTaskService
     final long userTaskId = request.getUserTaskId();
     final UserTaskCompleteRequest brokerRequest = new UserTaskCompleteRequest(userTaskId);
     brokerRequest.setVariable(ensureJsonSet(request.getVariable()));
+    // 完成携带后加签：名单非空时模式必须显式（NONE 由引擎拒绝）
+    if (request.getAddSignAssigneesCount() > 0) {
+      brokerRequest
+          .setAddSignAssignees(request.getAddSignAssigneesList())
+          .setAddSignMode(addSignMode(request.getAddSignMode()));
+    }
     commands
         .completeUserTask(brokerRequest)
         .whenComplete(
@@ -97,5 +106,67 @@ public class GrpcUserTaskServiceImpl extends UserTaskServiceGrpc.UserTaskService
                 }
               }
             });
+  }
+
+  @Override
+  public void addSignBeforeUserTask(
+      final UserTaskServiceOuterClass.AddSignBeforeUserTaskRequest request,
+      final StreamObserver<UserTaskServiceOuterClass.AddSignBeforeUserTaskResponse>
+          responseObserver) {
+    final AddSignBeforeRequest brokerRequest =
+        new AddSignBeforeRequest(request.getUserTaskId())
+            .setAssignees(request.getAssigneesList())
+            .setAddSignMode(addSignMode(request.getAddSignMode()));
+    commands
+        .addSignBeforeUserTask(brokerRequest)
+        .whenComplete(
+            (brokerResponse, throwable) -> {
+              if (throwable != null) {
+                responseObserver.onError(handle.error(responseObserver, throwable));
+              } else {
+                if (brokerResponse.isSuccess()) {
+                  responseObserver.onNext(
+                      UserTaskServiceOuterClass.AddSignBeforeUserTaskResponse.newBuilder().build());
+                  responseObserver.onCompleted();
+                } else {
+                  responseObserver.onError(handle.error(responseObserver, brokerResponse));
+                }
+              }
+            });
+  }
+
+  @Override
+  public void addSignAfterUserTask(
+      final UserTaskServiceOuterClass.AddSignAfterUserTaskRequest request,
+      final StreamObserver<UserTaskServiceOuterClass.AddSignAfterUserTaskResponse>
+          responseObserver) {
+    final AddSignAfterRequest brokerRequest =
+        new AddSignAfterRequest(request.getUserTaskId())
+            .setAssignees(request.getAssigneesList())
+            .setAddSignMode(addSignMode(request.getAddSignMode()));
+    commands
+        .addSignAfterUserTask(brokerRequest)
+        .whenComplete(
+            (brokerResponse, throwable) -> {
+              if (throwable != null) {
+                responseObserver.onError(handle.error(responseObserver, throwable));
+              } else {
+                if (brokerResponse.isSuccess()) {
+                  responseObserver.onNext(
+                      UserTaskServiceOuterClass.AddSignAfterUserTaskResponse.newBuilder().build());
+                  responseObserver.onCompleted();
+                } else {
+                  responseObserver.onError(handle.error(responseObserver, brokerResponse));
+                }
+              }
+            });
+  }
+
+  private AddSignMode addSignMode(final UserTaskServiceOuterClass.AddSignMode mode) {
+    return switch (mode) {
+      case ADD_SIGN_MODE_PARALLEL -> AddSignMode.PARALLEL;
+      case ADD_SIGN_MODE_SEQUENTIAL -> AddSignMode.SEQUENTIAL;
+      default -> AddSignMode.NONE;
+    };
   }
 }

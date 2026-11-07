@@ -42,5 +42,6 @@ public class ActivityInstanceDbModel {
   private Timestamp endTime;
   private Long duration;
   private Integer revision;
+  private String addSignState;
   private Integer resourceId;
 }

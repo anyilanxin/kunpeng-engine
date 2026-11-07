@@ -102,6 +102,8 @@ public enum BusinessRepositoryColumnFamilies implements ColumnFamilies {
 
   DISTRIBUTE_SERIAL(LOCAL_COLUMN_FAMILY, 130),
   DISTRIBUTE_SERIAL_INDEX(LOCAL_COLUMN_FAMILY, 131),
+  /** 加签关联列族：原活动实例 id → 加签任务 id（用户任务域） */
+  ADD_SIGN_CORRELATION(LOCAL_COLUMN_FAMILY, 132),
   ;
   private final PredefinedColumnFamily family;
   private final int virtualFamily;

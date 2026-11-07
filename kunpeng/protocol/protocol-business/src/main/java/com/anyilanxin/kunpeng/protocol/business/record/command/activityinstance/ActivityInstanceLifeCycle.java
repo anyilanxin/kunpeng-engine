@@ -51,7 +51,10 @@ public enum ActivityInstanceLifeCycle implements CommandValueLifeCycle {
   LISTENER_CREATE((short) 13, PROCESS_INDEX_90),
   LISTENER_COMPLETED((short) 14, PROCESS_INDEX_91),
 
-  LISTENER_DENY((short) 15, PROCESS_INDEX_92);
+  LISTENER_DENY((short) 15, PROCESS_INDEX_92),
+
+  /** 行内字段更新（加签状态等）：事件载体，仅经 applier 落行，不路由元素处理器 */
+  UPDATING((short) 16, PROCESS_INDEX_230);
 
   private final short value;
   private final short processIndex;
@@ -103,6 +106,7 @@ public enum ActivityInstanceLifeCycle implements CommandValueLifeCycle {
       case 13 -> LISTENER_CREATE;
       case 14 -> LISTENER_COMPLETED;
       case 15 -> LISTENER_DENY;
+      case 16 -> UPDATING;
       default -> UNKNOWN;
     };
   }
@@ -124,6 +128,7 @@ public enum ActivityInstanceLifeCycle implements CommandValueLifeCycle {
       case 13 -> LISTENER_CREATE;
       case 14 -> LISTENER_COMPLETED;
       case 15 -> LISTENER_DENY;
+      case 16 -> UPDATING;
       default -> NULL_VAL;
     };
   }

@@ -409,4 +409,32 @@
     </addColumn>
   </changeSet>
 
+  <!-- 加签：任务主从引用与计数（列表列 JSON 数组文本）；活动加签状态（NONE/FROZEN/AWAITING） -->
+  <changeSet id="2026.9.0-add-sign" author="anyilanxin">
+    <addColumn tableName="${table.user_task}">
+      <column name="add_sign_role" type="VARCHAR(16)"/>
+      <column name="origin_activity_instance_id" type="BIGINT"/>
+      <column name="add_sign_phase" type="VARCHAR(16)"/>
+      <column name="add_sign_mode" type="VARCHAR(16)"/>
+      <column name="add_sign_count" type="INT"/>
+      <column name="remaining_assignees" type="${text.type}"/>
+      <column name="after_sign_assignees" type="${text.type}"/>
+    </addColumn>
+    <addColumn tableName="${table.activity_instance}">
+      <column name="add_sign_state" type="VARCHAR(16)"/>
+    </addColumn>
+  </changeSet>
+
+  <!-- 加签：任务加签层级（原任务/普通任务=0，第 N 级加签任务=N）；追加式——add-sign changeset 已在库执行不可改 -->
+  <changeSet id="2026.9.0-add-sign-depth" author="anyilanxin">
+    <addColumn tableName="${table.user_task}">
+      <column name="add_sign_depth" type="INT"/>
+    </addColumn>
+  </changeSet>
+
+  <!-- 加签：origin 改名 root（语义=加签根活动实例 E0，全层级共用；列语义不变只改名），追加式 rename -->
+  <changeSet id="2026.9.0-add-sign-root-rename" author="anyilanxin">
+    <renameColumn tableName="${table.user_task}" oldColumnName="origin_activity_instance_id" newColumnName="root_activity_instance_id" columnDataType="BIGINT"/>
+  </changeSet>
+
 </databaseChangeLog>

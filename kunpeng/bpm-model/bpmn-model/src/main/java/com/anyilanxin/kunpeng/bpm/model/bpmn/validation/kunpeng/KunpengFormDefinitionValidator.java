@@ -12,10 +12,8 @@
  */
 package com.anyilanxin.kunpeng.bpm.model.bpmn.validation.kunpeng;
 
-import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.KunpengConstants;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengFormDefinition;
-import com.anyilanxin.kunpeng.bpm.model.xml.instance.ModelElementInstance;
 import com.anyilanxin.kunpeng.bpm.model.xml.validation.ModelElementValidator;
 import com.anyilanxin.kunpeng.bpm.model.xml.validation.ValidationResultCollector;
 
@@ -38,32 +36,21 @@ public class KunpengFormDefinitionValidator
     final String formId = element.getFormId();
     final String externalReference = element.getExternalReference();
 
-    final ModelElementInstance nativeUserTaskElement =
-        element
-            .getParentElement()
-            .getUniqueChildElementByNameNs(
-                BpmnModelConstants.KUNPENG_NS, KunpengConstants.ELEMENT_USER_TASK);
-
-    if (nativeUserTaskElement == null) {
-      if (isBlank(formKey) == isBlank(formId)) {
-        validationResultCollector.addError(
-            0,
-            String.format(
-                ERROR_MESSAGE_ONE_NONEMPTY_ELEMENT,
-                KunpengConstants.ATTRIBUTE_FORM_ID,
-                KunpengConstants.ATTRIBUTE_FORM_KEY,
-                ""));
-      }
-    } else {
-      if (isBlank(externalReference) == isBlank(formId)) {
-        validationResultCollector.addError(
-            0,
-            String.format(
-                ERROR_MESSAGE_ONE_NONEMPTY_ELEMENT,
-                KunpengConstants.ATTRIBUTE_FORM_ID,
-                KunpengConstants.ATTRIBUTE_EXTERNAL_REFERENCE,
-                " for native user tasks"));
-      }
+    // 引擎只有一种用户任务（kunpeng:userTask 标记元素已拔除）：formId/formKey/externalReference 三者恰好一个非空
+    final int nonBlankCount =
+        (isBlank(formKey) ? 0 : 1)
+            + (isBlank(formId) ? 0 : 1)
+            + (isBlank(externalReference) ? 0 : 1);
+    if (nonBlankCount != 1) {
+      validationResultCollector.addError(
+          0,
+          String.format(
+              ERROR_MESSAGE_ONE_NONEMPTY_ELEMENT,
+              KunpengConstants.ATTRIBUTE_FORM_ID,
+              KunpengConstants.ATTRIBUTE_FORM_KEY
+                  + "/"
+                  + KunpengConstants.ATTRIBUTE_EXTERNAL_REFERENCE,
+              ""));
     }
   }
 

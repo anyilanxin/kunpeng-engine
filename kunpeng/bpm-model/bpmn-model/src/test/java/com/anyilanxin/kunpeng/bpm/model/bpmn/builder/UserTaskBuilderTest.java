@@ -177,52 +177,21 @@ class UserTaskBuilderTest {
     }
 
     @Test
-    void shouldMarkAsKunpengUserTask() {
-        final BpmnModelInstance instance =
-                Bpmn.createExecutableProcess("process")
-                        .startEvent()
-                        .userTask("userTask1")
-                        .kunpengUserTask()
-                        .endEvent()
-                        .done();
-
-        final Collection<KunpengUserTask> kunpengUserTasks =
-                instance.getModelElementsByType(KunpengUserTask.class);
-
-        assertThat(kunpengUserTasks).hasSize(1);
-    }
-
-    @Test
-    void shouldMarkAsKunpengUserTaskIfUsedMultipleTimes() {
+    void shouldApplyPriorityDefinitionViaKunpengUserTask() {
+        // kunpeng:userTask 标记元素已拔除（引擎只有一种用户任务）：kunpengUserTask() 仅保留缺省优先级定义装配
         final BpmnModelInstance instance =
                 Bpmn.createExecutableProcess("process")
                         .startEvent()
                         .userTask("userTask1")
                         .kunpengUserTask()
                         .kunpengUserTask()
-                        .kunpengUserTask()
                         .endEvent()
                         .done();
 
-        final Collection<KunpengUserTask> kunpengUserTasks =
-                instance.getModelElementsByType(KunpengUserTask.class);
+        final Collection<KunpengPriorityDefinition> priorities =
+                instance.getModelElementsByType(KunpengPriorityDefinition.class);
 
-        assertThat(kunpengUserTasks).hasSize(1);
-    }
-
-    @Test
-    void shouldNotMarkAsKunpengUserTaskByDefault() {
-        final BpmnModelInstance instance =
-                Bpmn.createExecutableProcess("process")
-                        .startEvent()
-                        .userTask("userTask1")
-                        .endEvent()
-                        .done();
-
-        final Collection<KunpengUserTask> kunpengUserTasks =
-                instance.getModelElementsByType(KunpengUserTask.class);
-
-        assertThat(kunpengUserTasks).isEmpty();
+        assertThat(priorities).hasSize(1);
     }
 
     @Test

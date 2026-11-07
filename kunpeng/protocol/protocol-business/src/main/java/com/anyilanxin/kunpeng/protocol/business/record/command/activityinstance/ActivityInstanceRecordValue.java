@@ -80,4 +80,7 @@ public interface ActivityInstanceRecordValue
 
   /** 当前监听器下标 */
   int getListenerIndex();
+
+  /** 活动实例的加签标记（NONE=无加签 / FROZEN=前加签冻结中 / AWAITING=后加签待放行） */
+  AddSignState getAddSignState();
 }

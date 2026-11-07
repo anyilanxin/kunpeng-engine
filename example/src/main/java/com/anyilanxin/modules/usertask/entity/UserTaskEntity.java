@@ -127,4 +127,40 @@ public class UserTaskEntity extends BaseEntity {
   /** 资源 id */
   @TableField(value = "RESOURCE_ID")
   private Integer resourceId;
+
+  /** 加签角色（NONE=原任务，ADD_SIGN=加签任务） */
+  @TableField(value = "ADD_SIGN_ROLE")
+  private String addSignRole;
+
+  /** 加签任务指向的根活动实例 id（加签根 E0，全层级共用；2026.9.0 由 origin 改名 root） */
+  @TableField(value = "ROOT_ACTIVITY_INSTANCE_ID")
+  private Long rootActivityInstanceId;
+
+  /** 加签阶段（前/后加签） */
+  @TableField(value = "ADD_SIGN_PHASE")
+  private String addSignPhase;
+
+  /** 加签模式（并行/串行） */
+  @TableField(value = "ADD_SIGN_MODE")
+  private String addSignMode;
+
+  /** 本任务名下在途加签任务数 */
+  @TableField(value = "ADD_SIGN_COUNT")
+  private Integer addSignCount;
+
+  /** 加签层级（原任务/普通任务=0，第 N 级加签任务=N） */
+  @TableField(value = "ADD_SIGN_DEPTH")
+  private Integer addSignDepth;
+
+  /** 是否允许对本任务再加签（引擎创建时按建模固化） */
+  @TableField(value = "ADD_SIGN_ALLOWED")
+  private Boolean addSignAllowed;
+
+  /** 串行加签链剩余名单（JSON 数组文本） */
+  @TableField(value = "REMAINING_ASSIGNEES")
+  private String remainingAssignees;
+
+  /** 后加签预登记名单（JSON 数组文本） */
+  @TableField(value = "AFTER_SIGN_ASSIGNEES")
+  private String afterSignAssignees;
 }

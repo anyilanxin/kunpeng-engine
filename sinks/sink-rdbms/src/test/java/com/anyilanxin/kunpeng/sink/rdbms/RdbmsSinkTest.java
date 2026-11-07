@@ -244,6 +244,46 @@ class RdbmsSinkTest {
   }
 
   @Test
+  void shouldApplyUserTaskUpdatingEvent() {
+    // 加签登记/父计数变更走 UPDATING 事件：导出面必须接受并更新任务行，否则 sink 侧计数/名单停在创建值
+    emit(1L, ValueType.USER_TASK, UserTaskLifeCycle.CREATED, new Fakes.UserTaskValue());
+
+    final var updating = new Fakes.UserTaskValue();
+    updating.addSignCount = 2;
+    updating.addSignDepth = 2;
+    updating.afterSignAssignees = List.of("carol", "dave");
+    emit(2L, ValueType.USER_TASK, UserTaskLifeCycle.UPDATING, updating);
+    sink.flush();
+
+    try (var session = verifyFactory.openSession()) {
+      final var mapper = session.getMapper(VerificationMapper.class);
+      assertThat(mapper.totalRows()).isOne();
+      assertThat(mapper.userTaskRow()).containsEntry("ADD_SIGN_COUNT", 2);
+      assertThat(mapper.userTaskRow()).containsEntry("ADD_SIGN_DEPTH", 2);
+    }
+    assertThat(controller.getPosition()).isEqualTo(2L);
+  }
+
+  @Test
+  void shouldSkipEngineReservedVariablesOnExport() {
+    // 引擎保留前缀（MI 集合快照/加签展开载荷）是批处理窗口内的机械载荷，不落业务变量表；同记录业务变量照常导出
+    final var variables = new Fakes.VariableValue();
+    variables.variables.put("amount", 10);
+    variables.variables.put("__kunpeng_addsign_payload", List.of("carol"));
+    variables.variables.put("__kunpeng_mi_input_collection", List.of("a", "b"));
+    emit(1L, ValueType.VARIABLE, VariableLifeCycle.CREATED, variables);
+    sink.flush();
+
+    try (var session = verifyFactory.openSession()) {
+      final var mapper = session.getMapper(VerificationMapper.class);
+      assertThat(mapper.variableRows())
+          .extracting(row -> row.get("NAME"))
+          .containsExactly("amount");
+    }
+    assertThat(controller.getPosition()).isEqualTo(1L);
+  }
+
+  @Test
   void shouldInsertRowForSequenceFlowTaking() {
     // 连线实例的首事件是 TAKING（非 ACTIVATING），必须建行而不是走 update 静默丢行
     final var flow = new Fakes.ActivityInstanceValue();

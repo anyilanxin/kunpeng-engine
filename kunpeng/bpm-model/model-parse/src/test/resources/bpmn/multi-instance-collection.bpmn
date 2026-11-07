@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:kunpeng="http://anyilanxin.com/schema/kunpeng/1.0" id="Definitions_mi_collection" targetNamespace="http://bpmn.io/schema/bpmn">
+  <!-- 模型器实际产出形态：kunpeng:loopCharacteristics 位于 multiInstanceLoopCharacteristics 元素自身的扩展元素内（与部署期校验读取位置一致），
+       活动自身扩展只有 assignmentDefinition；集合为静态列表、无 loopCardinality -->
+  <bpmn:process id="Process_mi_collection" name="多实例测试" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>SequenceFlow_cvgig3w</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Task_p38m2yr">
+      <bpmn:extensionElements>
+        <kunpeng:assignmentDefinition assignee="=assignee" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_cvgig3w</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_kisf1ce</bpmn:outgoing>
+      <bpmn:multiInstanceLoopCharacteristics id="MultiInstanceLoopCharacteristics_7ub8gf3">
+        <bpmn:extensionElements>
+          <kunpeng:loopCharacteristics collection="=[1,2,3,4]" elementVariable="assignee" />
+        </bpmn:extensionElements>
+        <bpmn:completionCondition xsi:type="bpmn:tFormalExpression" id="FormalExpression_qq9kpko">=nrOfCompletedInstances==4</bpmn:completionCondition>
+      </bpmn:multiInstanceLoopCharacteristics>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="SequenceFlow_cvgig3w" sourceRef="StartEvent_1" targetRef="Task_p38m2yr" />
+    <bpmn:endEvent id="EndEvent_8159y0e">
+      <bpmn:incoming>SequenceFlow_kisf1ce</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_kisf1ce" sourceRef="Task_p38m2yr" targetRef="EndEvent_8159y0e" />
+  </bpmn:process>
+</bpmn:definitions>

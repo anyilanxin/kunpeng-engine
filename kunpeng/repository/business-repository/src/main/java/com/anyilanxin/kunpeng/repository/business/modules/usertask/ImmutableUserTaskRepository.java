@@ -18,6 +18,7 @@ package com.anyilanxin.kunpeng.repository.business.modules.usertask;
 
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.usertask.UserTaskRecord;
 import com.anyilanxin.kunpeng.repository.business.ResourceDataSplit;
+import java.util.List;
 
 /**
  * 用户任务域只读仓储接口。
@@ -28,4 +29,7 @@ import com.anyilanxin.kunpeng.repository.business.ResourceDataSplit;
 public interface ImmutableUserTaskRepository extends ResourceDataSplit {
 
   UserTaskRecord getRecord(final long taskId);
+
+  /** 查询原活动实例名下的全部加签任务（按关联前缀扫描，行存在才收录）。 */
+  List<UserTaskRecord> getAddSignTasks(final long originActivityInstanceId);
 }

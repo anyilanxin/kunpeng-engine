@@ -34,5 +34,6 @@
   <property name="large.type" value="CLOB" dbms="h2"/>
 
   <include file="changesets/2026.9.0.xml" relativeToChangelogFile="true"/>
+  <include file="changesets/2026.11.0.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

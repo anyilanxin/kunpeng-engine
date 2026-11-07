@@ -15,6 +15,7 @@ package com.anyilanxin.kunpeng.sink.rdbms.handler;
 import static com.anyilanxin.kunpeng.sink.rdbms.mapper.Tables.VARIABLE;
 
 import com.anyilanxin.kunpeng.protocol.business.BusinessEventRecord;
+import com.anyilanxin.kunpeng.protocol.business.EngineReservedVariables;
 import com.anyilanxin.kunpeng.protocol.business.ValueLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.ValueType;
 import com.anyilanxin.kunpeng.protocol.business.record.command.variable.VariableLifeCycle;
@@ -28,6 +29,8 @@ import java.util.Set;
 
 /**
  * 变量：一条记录可携带同 scope 下的多个变量，展开为多行，行主键是 {@code (scope_id, name)}。 创建保存全量行，更新只改值与版本。
+ *
+ * <p>引擎保留前缀（{@link EngineReservedVariables}，MI 集合快照/加签展开载荷等内部机械载荷）不导出：非业务变量，仅供引擎批处理窗口内消费。
  *
  * <p>{@code REMOVED} 事件不携带可定位的值明细（历史清理会连带删除实例变量），这里不响应。
  *
@@ -58,6 +61,9 @@ public final class VariableRecordHandler implements RecordModelHandler {
     }
     final var creating = record.getValueState() == VariableLifeCycle.CREATED;
     for (final var entry : variables.entrySet()) {
+      if (entry.getKey().startsWith(EngineReservedVariables.PREFIX)) {
+        continue;
+      }
       final var model = new VariableDbModel();
       model.setScopeId(value.getScopId());
       model.setName(entry.getKey());

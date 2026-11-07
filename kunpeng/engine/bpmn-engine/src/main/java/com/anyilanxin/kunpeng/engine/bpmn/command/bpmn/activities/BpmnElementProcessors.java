@@ -20,6 +20,7 @@ import com.anyilanxin.kunpeng.bpm.common.BpmnElementType;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnFlowElement;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnProcess;
 import com.anyilanxin.kunpeng.engine.bpmn.LogEventWriter;
+import com.anyilanxin.kunpeng.engine.bpmn.command.bpmn.activities.container.addsign.AddSignElementProcessor;
 import com.anyilanxin.kunpeng.engine.bpmn.command.bpmn.activities.container.adhocsubprocess.AdHocSubProcessElementProcessor;
 import com.anyilanxin.kunpeng.engine.bpmn.command.bpmn.activities.container.adhocsubprocessinnerinstance.AdHocSubProcessInnerInstanceElementProcessor;
 import com.anyilanxin.kunpeng.engine.bpmn.command.bpmn.activities.container.callactivity.CallActivityElementProcessor;
@@ -65,6 +66,7 @@ public final class BpmnElementProcessors {
   private void init() {
     register(new AdHocSubProcessElementProcessor(writer))
         .register(new AdHocSubProcessInnerInstanceElementProcessor(writer))
+        .register(new AddSignElementProcessor(writer))
         .register(new CallActivityElementProcessor(writer))
         .register(new EventSubProcessElementProcessor(writer))
         .register(new MultiInstanceElementProcessor(writer))

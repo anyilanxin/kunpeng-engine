@@ -18,11 +18,13 @@ package com.anyilanxin.kunpeng.engine.bpmn.command.bpmn.usertask.processor;
 
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnUserTask;
 import com.anyilanxin.kunpeng.engine.bpmn.LogEventWriter;
+import com.anyilanxin.kunpeng.engine.bpmn.command.behavior.impl.AddSignBehavior;
 import com.anyilanxin.kunpeng.engine.bpmn.command.bpmn.usertask.BpmnUserTaskElementAbstractProcessor;
 import com.anyilanxin.kunpeng.protocol.business.impl.eventlog.BusinessLogRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.activityinstance.ActivityInstanceRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.usertask.UserTaskRecord;
 import com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance.ActivityInstanceLifeCycle;
+import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.AddSignRole;
 import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.UserTaskLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.UserTaskState;
 
@@ -53,7 +55,31 @@ public class BpmnUserTaskCompletedProcessor extends BpmnUserTaskElementAbstractP
     writer.addEvent(
         value.getTaskId(), UserTaskLifeCycle.COMPLETED, logRecord.getRequestId(), value);
 
+    // 加签任务完成：只反馈组实例计数（结构保证永不触达活动）；带后加签登记则延迟传播——派生子组，锚任务完结计数延迟到子组完结
+    if (value.getAddSignRole() == AddSignRole.ADD_SIGN) {
+      final AddSignBehavior addSignBehavior = writer.behavior().addSignBehavior();
+      if (!value.getAfterSignAssignees().isEmpty()) {
+        final ActivityInstanceRecord group =
+            activityInstance.getRecord(value.getActivityInstanceId());
+        if (group != null) {
+          addSignBehavior.onTaskCompletedWithAfterSigns(value, group, logRecord.getRequestId());
+        }
+        return;
+      }
+      addSignBehavior.onSignTaskEnded(value, logRecord.getRequestId(), false);
+      return;
+    }
+
     final ActivityInstanceRecord record = activityInstance.getRecord(value.getActivityInstanceId());
+
+    // 后加签预登记在途：消费登记派生 AFTER 组（顶级时活动置 AWAITING 扣出边），组完结才放行 E0
+    if (!value.getAfterSignAssignees().isEmpty()) {
+      writer
+          .behavior()
+          .addSignBehavior()
+          .onTaskCompletedWithAfterSigns(value, record, logRecord.getRequestId());
+      return;
+    }
 
     writer.addCommand(
         record.getActivityInstanceId(),

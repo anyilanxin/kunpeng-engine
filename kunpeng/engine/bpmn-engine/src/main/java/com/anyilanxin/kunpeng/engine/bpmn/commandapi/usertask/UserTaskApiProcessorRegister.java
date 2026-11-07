@@ -31,6 +31,8 @@ public final class UserTaskApiProcessorRegister {
   public static void registerRepository(
       final LogEventProcessors processors, final LogEventWriter writer) {
     processors
+        .onCommand(new UserTaskAddSignBeforeProcessor(writer))
+        .onCommand(new UserTaskAddSignAfterProcessor(writer))
         .onCommand(new UserTaskAssigneeProcessor(writer))
         .onCommand(new UserTaskClaimProcessor(writer))
         .onCommand(new UserTaskCompleteProcessor(writer))
