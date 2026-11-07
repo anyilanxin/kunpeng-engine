@@ -18,6 +18,7 @@ package com.anyilanxin.kunpeng.engine.bpmn;
 
 import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.BUSINESS_RAFT_GLOBAL_SOURCE;
 import static com.anyilanxin.kunpeng.protocol.common.Protocol.DEPLOYMENT_PARTITION;
+import static com.anyilanxin.kunpeng.structpack.util.BufferUtil.bufferAsString;
 
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.BpmnFactory;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.BpmnValidator;
@@ -59,6 +60,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import org.agrona.DirectBuffer;
 import org.agrona.collections.IntHashSet;
 import org.springframework.beans.factory.BeanFactory;
 
@@ -160,6 +162,29 @@ public class LogEventWriter {
     checkerAwareList.add(historyCleanupDueDateChecker);
   }
 
+  /** 当前命令链授权元数据（信封 JSON，null=未携带）：分发层每条记录边界重置，本链生成记录自动携带 */
+  private DirectBuffer currentAuthorizationMetadata;
+
+  /** 分发层注入当前命令链的授权元数据信封；null 清空（跨落库/时间边界的记录链自然丢失，v3 规则） */
+  public LogEventWriter authorizationMetadata(final DirectBuffer authorizationMetadata) {
+    this.currentAuthorizationMetadata = authorizationMetadata;
+    return this;
+  }
+
+  /**
+   * @return 当前命令链授权元数据 JSON 文本；未携带为空串
+   */
+  public String currentAuthorizationMetadata() {
+    return currentAuthorizationMetadata == null ? "" : bufferAsString(currentAuthorizationMetadata);
+  }
+
+  /** 生成记录信封携带当前命令链授权元数据（未携带时不写入） */
+  private void applyAuthorizationMetadata(final RecordMetadata metadata) {
+    if (currentAuthorizationMetadata != null) {
+      metadata.authorizationMetadata(currentAuthorizationMetadata);
+    }
+  }
+
   public void addCommand(
       final ValueLifeCycle lifeCycle, final long requestId, final UnifiedRecordValue recordValue) {
     addCommand(-1, lifeCycle, requestId, recordValue);
@@ -180,6 +205,7 @@ public class LogEventWriter {
         .batchOperationReference(-1)
         .operationReference(-1)
         .requestId(requestId);
+    applyAuthorizationMetadata(metadata);
     collectSupplier.get().addCommand(key, valueMapper.copyValue(lifeCycle, recordValue), metadata);
   }
 
@@ -203,6 +229,7 @@ public class LogEventWriter {
         .batchOperationReference(batchOperationReference)
         .operationReference(-1)
         .requestId(requestId);
+    applyAuthorizationMetadata(metadata);
     collectSupplier.get().addCommand(key, valueMapper.copyValue(lifeCycle, recordValue), metadata);
   }
 
@@ -223,6 +250,7 @@ public class LogEventWriter {
         .operationReference(operationReference)
         .batchOperationReference(batchOperationReference)
         .requestId(requestId);
+    applyAuthorizationMetadata(metadata);
     collectSupplier.get().addCommand(key, valueMapper.copyValue(lifeCycle, recordValue), metadata);
   }
 
@@ -248,6 +276,7 @@ public class LogEventWriter {
         .batchOperationReference(-1)
         .operationReference(-1)
         .requestId(requestId);
+    applyAuthorizationMetadata(metadata);
     final UnifiedRecordValue value = valueMapper.copyValue(lifeCycle, recordValue);
     collectSupplier.get().addEvent(key, value, metadata);
     collectSupplier.get().addState(key, value, metadata);

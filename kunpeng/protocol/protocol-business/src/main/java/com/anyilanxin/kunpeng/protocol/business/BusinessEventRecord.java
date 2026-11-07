@@ -72,6 +72,15 @@ public interface BusinessEventRecord<T extends RecordValue> extends JsonSerializ
   String getRejectionReason();
 
   /**
+   * 授权元数据（JSON 文本）：随记录信封携带的身份上下文（标准键 userId/groups），导出可见；未携带为空串。
+   *
+   * <p>只在命令链内同步流转、不落库——跨落库/时间边界（如定时器唤醒触发的记录）自然为空。
+   *
+   * @return 授权元数据 JSON；未携带为空串
+   */
+  String getAuthorizationMetadata();
+
+  /**
    * @return 写入该记录的 Broker 版本
    */
   String getBrokerVersion();

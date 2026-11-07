@@ -17,6 +17,8 @@
 package com.anyilanxin.kunpeng.engine.bpmn.commandapi.processinstance.processor;
 
 import com.anyilanxin.kunpeng.engine.bpmn.LogEventWriter;
+import com.anyilanxin.kunpeng.engine.bpmn.authorization.AuthorizationDeniedException;
+import com.anyilanxin.kunpeng.engine.bpmn.authorization.AuthorizationHandler;
 import com.anyilanxin.kunpeng.engine.bpmn.commandapi.processinstance.ProcessInstanceApiAbstractProcessor;
 import com.anyilanxin.kunpeng.protocol.business.impl.eventlog.BusinessLogRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.processinstance.ProcessInstanceRecord;
@@ -36,9 +38,11 @@ public class ProcessInstanceCancelProcessor
     extends ProcessInstanceApiAbstractProcessor<ProcessInstanceCancelRequestRecord> {
   private final ProcessInstanceCancelResponseRecord response =
       new ProcessInstanceCancelResponseRecord();
+  private final AuthorizationHandler authorization;
 
   public ProcessInstanceCancelProcessor(final LogEventWriter writer) {
     super(writer);
+    authorization = new AuthorizationHandler(writer);
   }
 
   @Override
@@ -59,6 +63,13 @@ public class ProcessInstanceCancelProcessor
         || instanceRecord.getState() == ProcessInstanceState.CANCELED) {
       writer.adErrorResponse(
           record.getRequestId(), 404, "流程实例处于:" + instanceRecord.getState().describe() + ",无法操作取消");
+      return;
+    }
+    try {
+      authorization.checkCancelInstance(instanceRecord.getStartUserId());
+    } catch (final AuthorizationDeniedException e) {
+      writer.adErrorResponse(
+          record.getRequestId(), AuthorizationDeniedException.CODE, e.getMessage());
       return;
     }
     writer.addCommand(

@@ -84,6 +84,8 @@ public class ProcessInstanceRecordEntity extends UnpackedObject implements Store
   private final StringProperty tenantIdProp =
       new StringProperty(23, TENANT_ID, TenantOwned.DEFAULT_TENANT_IDENTIFIER);
 
+  // 授权元数据不落库（只驻命令层，v3 流转规则），实例侧仅存 start_user_id 提取物
+
   public ProcessInstanceRecordEntity() {
     super(23);
     declareProperty(processInstanceIdProp)

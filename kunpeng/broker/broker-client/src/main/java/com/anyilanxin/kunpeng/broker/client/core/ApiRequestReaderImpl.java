@@ -40,6 +40,7 @@ public class ApiRequestReaderImpl implements ApiRequestReader {
   private long requestTime = -1;
   private boolean hasData;
   private DirectBuffer data;
+  private DirectBuffer authorizationMetadata;
 
   @Override
   public void reset() {
@@ -50,6 +51,7 @@ public class ApiRequestReaderImpl implements ApiRequestReader {
     resourceId = -1;
     hasData = false;
     data = null;
+    authorizationMetadata = null;
   }
 
   @Override
@@ -88,6 +90,11 @@ public class ApiRequestReaderImpl implements ApiRequestReader {
   }
 
   @Override
+  public DirectBuffer authorizationMetadata() {
+    return authorizationMetadata;
+  }
+
+  @Override
   public void wrap(final DirectBuffer buffer, final int offset, final int length) {
     decoder.wrapAndApplyHeader(buffer, offset, header);
     key = decoder.key();
@@ -103,6 +110,14 @@ public class ApiRequestReaderImpl implements ApiRequestReader {
     } else {
       data = new UnsafeBuffer(new byte[decoder.dataLength()]);
       decoder.wrapData(data);
+    }
+    final int authorizationMetadataLength = decoder.authorizationMetadataLength();
+    if (authorizationMetadataLength > 0) {
+      authorizationMetadata = new UnsafeBuffer(new byte[authorizationMetadataLength]);
+      decoder.wrapAuthorizationMetadata(authorizationMetadata);
+    } else {
+      decoder.skipAuthorizationMetadata();
+      authorizationMetadata = null;
     }
   }
 

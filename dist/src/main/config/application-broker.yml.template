@@ -200,6 +200,11 @@ kunpeng:
         enabled: false
         reject-backlog: 50000            # lag ≥ 该值拒绝业务命令（RESOURCE_EXHAUSTED）
         resume-backlog: 40000            # 拒绝后 lag ≤ 该值才恢复放行（须小于 reject-backlog）
+    # 授权校验（独立配置实体；默认关，灰度启用后引擎校验取消实例发起人/完成用户任务审批人）
+    authorization:
+      enabled: false
+      admin-users: []                    # admin 白名单：操作人 userId 命中即旁路全部校验
+      admin-groups: []                   # admin 白名单：操作人 groups 任一命中即旁路
     # BPMN 引擎
     engine:
       max-batch: 200                   # 单批 follow-up 命令/状态上限（越大吞吐越高、单批内存与延迟越高）

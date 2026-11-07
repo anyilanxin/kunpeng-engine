@@ -21,7 +21,7 @@
   - valueType/lifeCycle 为面别编号池语义，由解码方按主题所属面别解释，编号池不合并
 -->
 <sbe:messageSchema xmlns:sbe="http://fixprotocol.io/2016/sbe"
-  package="com.anyilanxin.kunpeng.broker.client.core.protocol" id="14" version="1"
+  package="com.anyilanxin.kunpeng.broker.client.core.protocol" id="14" version="2"
   description="Kunpeng Unified Transport Envelope" byteOrder="littleEndian">
 
   <types>
@@ -63,6 +63,8 @@
     <field name="hasData" id="6" type="BooleanType"/>
     <field name="requestTime" id="7" type="uint64"/>
     <data name="data" id="8" type="blob"/>
+    <!-- 统一授权元数据（JSON，UTF-8）：所有命令零改动携带，网关从请求头/插件链转换而来 -->
+    <data name="authorizationMetadata" id="9" type="varDataEncoding" semanticType="string"/>
   </sbe:message>
 
   <sbe:message name="ApiResponse" id="2" description="统一传输响应封装">

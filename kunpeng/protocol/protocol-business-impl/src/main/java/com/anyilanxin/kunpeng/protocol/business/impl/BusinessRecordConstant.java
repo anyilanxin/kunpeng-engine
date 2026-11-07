@@ -89,6 +89,12 @@ public interface BusinessRecordConstant {
   /** 业务 key */
   String BUSINESS_KEY = "BUSINESS_KEY";
 
+  /** 授权元数据 map 标准键：操作人 id（对齐 OAuth2 sub claim） */
+  String AUTHORIZATION_USER_ID = "userId";
+
+  /** 授权元数据 map 标准键：操作人所属组（对齐 OAuth2 groups claim） */
+  String AUTHORIZATION_GROUPS = "groups";
+
   /** 流程实例 id */
   String PROCESS_INSTANCE_ID = "PROCESS_INSTANCE_ID";
 

@@ -213,6 +213,9 @@ public class BrokerClientImpl extends Actor implements BrokerClient {
       value.write(reusableValueBuffer, 0);
       apiRequestWriter.data(reusableValueBuffer);
     }
+    if (request.authorizationMetadata() != null) {
+      apiRequestWriter.authorizationMetadata(request.authorizationMetadata());
+    }
     // 统一封装格式编码 byte[]
     final MutableDirectBuffer requestDataBuffer =
         new UnsafeBuffer(new byte[apiRequestWriter.getLength()]);

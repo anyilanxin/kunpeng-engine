@@ -60,6 +60,7 @@ public final class RecordMetadata implements BufferWriter, BufferReader {
   //  private final AuthInfo authorization = new AuthInfo();
   private final UnsafeBuffer rejectionType = new UnsafeBuffer(0, 0);
   private final UnsafeBuffer rejectionReason = new UnsafeBuffer(0, 0);
+  private final UnsafeBuffer authorizationMetadata = new UnsafeBuffer(0, 0);
 
   // always the current version by default
   private int protocolVersion = 6;
@@ -125,14 +126,18 @@ public final class RecordMetadata implements BufferWriter, BufferReader {
       decoder.skipRejectionReason();
     }
 
-    //    final int authorizationLength = decoder.authorizationLength();
-    //    if (authorizationLength > 0) {
-    //      final DirectBuffer authBuffer = new UnsafeBuffer();
-    //      decoder.wrapAuthorization(authBuffer);
-    ////      authorization.wrap(authBuffer);
-    //    } else {
-    //      decoder.skipAuthorization();
-    //    }
+    // 授权元数据组仅存在于协议版本 7+ 的帧（旧段无此组，访问会越界，按消息头版本门控）
+    if (headerDecoder.version() >= 7) {
+      final int authorizationMetadataLength = decoder.authorizationMetadataLength();
+      if (authorizationMetadataLength > 0) {
+        decoder.wrapAuthorizationMetadata(authorizationMetadata);
+      } else {
+        decoder.skipAuthorizationMetadata();
+        authorizationMetadata.wrap(0, 0);
+      }
+    } else {
+      authorizationMetadata.wrap(0, 0);
+    }
   }
 
   @Override
@@ -141,9 +146,9 @@ public final class RecordMetadata implements BufferWriter, BufferReader {
         + RecordMetadataEncoder.rejectionTypeHeaderLength()
         + rejectionType.capacity()
         + RecordMetadataEncoder.rejectionReasonHeaderLength()
-        + rejectionReason.capacity();
-    //      + RecordMetadataEncoder.authoriz;ationHeaderLength()
-    //      + authorization.getLength();
+        + rejectionReason.capacity()
+        + RecordMetadataEncoder.authorizationMetadataHeaderLength()
+        + authorizationMetadata.capacity();
   }
 
   @Override
@@ -181,7 +186,7 @@ public final class RecordMetadata implements BufferWriter, BufferReader {
     // working with variable-length fields
     encoder.putRejectionType(rejectionType, 0, rejectionType.capacity());
     encoder.putRejectionReason(rejectionReason, 0, rejectionReason.capacity());
-    //    encoder.putAuthorization(authorization.toDirectBuffer(), 0, authorization.getLength());
+    encoder.putAuthorizationMetadata(authorizationMetadata, 0, authorizationMetadata.capacity());
   }
 
   public long getRequestId() {
@@ -291,19 +296,36 @@ public final class RecordMetadata implements BufferWriter, BufferReader {
     return bufferAsString(rejectionReason);
   }
 
-  //  public RecordMetadata authorization(final AuthInfo authorization) {
-  //    this.authorization.copyFrom(authorization);
-  //    return this;
-  //  }
-  //
-  //  public RecordMetadata authorization(final DirectBuffer buffer) {
-  //    authorization.wrap(buffer);
-  //    return this;
-  //  }
-  //
-  //  public AuthInfo getAuthorization() {
-  //    return authorization;
-  //  }
+  /** 设置统一授权元数据（JSON，UTF-8）；null 清空 */
+  public RecordMetadata authorizationMetadata(final DirectBuffer buffer) {
+    if (buffer == null) {
+      authorizationMetadata.wrap(0, 0);
+    } else {
+      authorizationMetadata.wrap(buffer);
+    }
+    return this;
+  }
+
+  /** 设置统一授权元数据（JSON 文本）；null/空串清空 */
+  public RecordMetadata authorizationMetadata(final String json) {
+    if (json == null || json.isEmpty()) {
+      authorizationMetadata.wrap(0, 0);
+    } else {
+      authorizationMetadata.wrap(json.getBytes(StandardCharsets.UTF_8));
+    }
+    return this;
+  }
+
+  /**
+   * @return 授权元数据 JSON 文本；未携带为空串
+   */
+  public String getAuthorizationMetadata() {
+    return bufferAsString(authorizationMetadata);
+  }
+
+  public DirectBuffer getAuthorizationMetadataBuffer() {
+    return authorizationMetadata;
+  }
 
   public RecordMetadata brokerVersion(final VersionInfo brokerVersion) {
     this.brokerVersion = brokerVersion;
@@ -351,6 +373,7 @@ public final class RecordMetadata implements BufferWriter, BufferReader {
     valueFollowState = ValueLifeCycle.UnknownState.UNKNOWN;
     rejectionType.wrap(0, 0);
     rejectionReason.wrap(0, 0);
+    authorizationMetadata.wrap(0, 0);
     //    authorization.reset();
     brokerVersion = CURRENT_BROKER_VERSION;
     recordVersion = DEFAULT_RECORD_VERSION;
@@ -370,6 +393,7 @@ public final class RecordMetadata implements BufferWriter, BufferReader {
         requestStreamId,
         rejectionType,
         rejectionReason,
+        authorizationMetadata,
         protocolVersion,
         brokerVersion,
         recordVersion,
@@ -395,6 +419,7 @@ public final class RecordMetadata implements BufferWriter, BufferReader {
         && recordType == that.recordType
         && rejectionType.equals(that.rejectionType)
         && rejectionReason.equals(that.rejectionReason)
+        && authorizationMetadata.equals(that.authorizationMetadata)
         //      && authorization.equals(that.authorization)
         && brokerVersion.equals(that.brokerVersion)
         && recordVersion == that.recordVersion
@@ -423,10 +448,9 @@ public final class RecordMetadata implements BufferWriter, BufferReader {
     if (rejectionReason.capacity() > 0) {
       builder.append(", rejectionReason=").append(bufferAsString(rejectionReason));
     }
-
-    //    if (!authorization.isEmpty()) {
-    //      builder.append(", authorization=").append(authorization);
-    //    }
+    if (authorizationMetadata.capacity() > 0) {
+      builder.append(", authorizationMetadata=").append(getAuthorizationMetadata());
+    }
     if (operationReference != RecordMetadataEncoder.operationReferenceNullValue()) {
       builder.append(", operationReference=").append(operationReference);
     }
@@ -453,6 +477,9 @@ public final class RecordMetadata implements BufferWriter, BufferReader {
     metadata.batchOperationReference = batchOperationReference;
     metadata.rejectionReason(getRejectionReason());
     metadata.brokerVersion = brokerVersion;
+    if (authorizationMetadata.capacity() > 0) {
+      metadata.authorizationMetadata(getAuthorizationMetadata());
+    }
     return metadata;
   }
 }

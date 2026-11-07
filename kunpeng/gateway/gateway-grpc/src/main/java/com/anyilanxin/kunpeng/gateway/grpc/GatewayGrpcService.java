@@ -154,6 +154,7 @@ public class GatewayGrpcService extends Actor {
     final NettyServerBuilder builder = configureNetwork(gatewayCfg.getNetwork());
     configureExecutor(builder);
     configureTls(builder);
+    builder.intercept(new AuthorizationMetadataInterceptor());
     for (final GrpcService service : grpcServices) {
       builder.addService(service);
     }

@@ -36,4 +36,7 @@ public interface ApiRequestWriter extends BufferWriter {
   ApiRequestWriter lifeCycle(int lifeCycle);
 
   ApiRequestWriter data(DirectBuffer data);
+
+  /** 统一授权元数据（JSON，UTF-8 字节），null 表示未携带（编码为零长度组） */
+  ApiRequestWriter authorizationMetadata(DirectBuffer authorizationMetadata);
 }

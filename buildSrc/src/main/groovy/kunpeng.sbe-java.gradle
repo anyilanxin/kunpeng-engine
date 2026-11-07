@@ -29,7 +29,7 @@ def commonTypePath = rootDir.path + "/kunpeng/protocol/protocol/src/main/resourc
 def copySbeFiles = {
     copy {
         from file("src/main/resources/sbe/schemas")
-        filter(ReplaceTokens, tokens: ['project.version': version, 'protocol.version': "6", 'common.types.path': commonTypePath])
+        filter(ReplaceTokens, tokens: ['project.version': version, 'protocol.version': "7", 'common.types.path': commonTypePath])
         into file("build")
     }
 }

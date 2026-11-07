@@ -20,6 +20,7 @@ import static com.anyilanxin.kunpeng.protocol.common.Protocol.DEPLOYMENT_PARTITI
 
 import com.anyilanxin.kunpeng.broker.client.core.protocol.ApiRequestEncoder;
 import com.anyilanxin.kunpeng.protocol.common.api.RequestRecordValue;
+import org.agrona.DirectBuffer;
 
 /**
  * broker 请求抽象基类（面无关）：请求类别/值类型/生命状态均为协议编号。
@@ -38,6 +39,7 @@ public abstract class BrokerRequest<VALUE extends RequestRecordValue> {
   private final int lifeCycle;
   private int partitionId = NOT_SPECIFIED_PARTITION;
   private final VALUE value;
+  private DirectBuffer authorizationMetadata;
 
   protected BrokerRequest(
       final int requestType, final int valueType, final int lifeCycle, final VALUE value) {
@@ -49,6 +51,15 @@ public abstract class BrokerRequest<VALUE extends RequestRecordValue> {
 
   public VALUE getValue() {
     return value;
+  }
+
+  /** 统一授权元数据（JSON，UTF-8 字节）：随传输帧信封携带，任何命令零改动复用；null 表示未携带 */
+  public void setAuthorizationMetadata(final DirectBuffer authorizationMetadata) {
+    this.authorizationMetadata = authorizationMetadata;
+  }
+
+  public DirectBuffer authorizationMetadata() {
+    return authorizationMetadata;
   }
 
   public void setKey(final long key) {

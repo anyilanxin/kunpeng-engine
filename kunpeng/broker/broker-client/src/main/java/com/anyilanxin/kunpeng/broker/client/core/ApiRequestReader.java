@@ -44,4 +44,9 @@ public interface ApiRequestReader extends BufferReader {
   boolean hasData();
 
   DirectBuffer data();
+
+  /**
+   * @return 请求携带的统一授权元数据（JSON，UTF-8 字节）；未携带时为 null
+   */
+  DirectBuffer authorizationMetadata();
 }

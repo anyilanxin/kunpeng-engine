@@ -81,7 +81,7 @@ public final class TimerTriggerProcessor extends TimerAbstractProcessor {
               .setRootProcessInstanceId(processInstanceId)
               .setLifeCycle(ProcessInstanceLifeCycle.ACTIVATING)
               .setBusinessKey("")
-              .setStartUserId("")
+              .setStartUserId("SYSTEM")
               .setStartActivityDefinitionKey(catchEvent.getId())
               .setProcessDefinitionId(value.getProcessDefinitionId())
               .setProcessDefinitionKey(value.getProcessDefinitionKey());

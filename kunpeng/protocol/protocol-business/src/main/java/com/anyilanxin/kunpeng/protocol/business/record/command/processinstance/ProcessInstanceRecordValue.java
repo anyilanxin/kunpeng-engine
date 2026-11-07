@@ -50,7 +50,7 @@ public interface ProcessInstanceRecordValue
   /** 流程定义 id */
   long getProcessDefinitionId();
 
-  /** 开始用户 id */
+  /** 开始用户 id（从命令层授权元数据提取的发起人；元数据本身不落库，见 v3 流转规则） */
   String getStartUserId();
 
   /** 开始活动key列表 */
