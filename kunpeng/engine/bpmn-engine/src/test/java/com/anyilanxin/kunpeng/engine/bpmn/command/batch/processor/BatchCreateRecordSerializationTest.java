@@ -31,6 +31,7 @@ import com.anyilanxin.kunpeng.protocol.business.ValueLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.ValueType;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.activityinstance.ActivityInstanceRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.processinstance.ProcessInstanceBatchRecord;
+import com.anyilanxin.kunpeng.protocol.business.record.command.processinstance.BatchBusinessType;
 import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 import com.anyilanxin.kunpeng.repository.business.ImmutableBusinessRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -77,8 +78,14 @@ class BatchCreateRecordSerializationTest {
     for (final UnifiedRecordValue value : captor.getAllValues()) {
       final ProcessInstanceBatchRecord batch = (ProcessInstanceBatchRecord) value;
       assertDoesNotThrow(batch::getLength);
-      assertEquals(ValueType.UNKNOW, batch.getBatchAfterValueType());
+      // 无回调缺省必须是可解码组合：valueType=PROCESS_BATCH_INSTANCE + -1 经 from() default 返回全局 UNKNOWN
+      // （未设置语义）；UNKNOW valueType 则会被 fromProtocolValue 直接拒绝，
+      // sink 侧 Jackson 读 getBatchAfterLifeCycle 抛 IllegalStateException
+      assertEquals(ValueType.PROCESS_BATCH_INSTANCE, batch.getBatchAfterValueType());
+      assertDoesNotThrow(batch::getBatchAfterLifeCycle);
+      assertEquals(ValueLifeCycle.UNKNOWN, batch.getBatchAfterLifeCycle());
       assertEquals(-1L, batch.getBatchAfterBusinessId());
+      assertEquals(BatchBusinessType.UNKNOW, batch.getBatchAfterType());
     }
   }
 }

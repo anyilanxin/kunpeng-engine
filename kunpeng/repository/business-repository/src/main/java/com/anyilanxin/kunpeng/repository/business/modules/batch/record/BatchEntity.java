@@ -51,8 +51,11 @@ public class BatchEntity extends UnpackedObject implements StoreValue {
       new EnumProperty<>(6, "BATCH_TYPE", BatchBusinessType.class);
   private final LongProperty currentExecutionIdProp =
       new LongProperty(7, "CURRENT_EXECUTION_ID", -1);
+  // 与 ProcessInstanceBatchRecord 同款缺省：无完成回调=PROCESS_BATCH_INSTANCE+-1（读侧经 from() default 返回全局
+  // UNKNOWN；UNKNOW 编码可行但无法解码）
   private final EnumProperty<ValueType> batchAfterValueTypeProp =
-      new EnumProperty<>(8, "BATCH_AFTER_VALUE_TYPE", ValueType.class, ValueType.UNKNOW);
+      new EnumProperty<>(
+          8, "BATCH_AFTER_VALUE_TYPE", ValueType.class, ValueType.PROCESS_BATCH_INSTANCE);
   private final ShortProperty batchAfterLifeCycleProp =
       new ShortProperty(9, "BATCH_AFTER_LIFE_CYCLE", (short) -1);
   private final LongProperty batchAfterBusinessIdProp =
