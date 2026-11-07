@@ -48,10 +48,14 @@ public class GatewayCfg {
 
   @NestedConfigurationProperty private LongPollingCfg longPolling = new LongPollingCfg();
 
+  @NestedConfigurationProperty
+  private GatewayAuthorizationCfg authorization = new GatewayAuthorizationCfg();
+
   public void init(final String basePath, final ClusterCfg clusterCfg) {
     if (network.getSecurity() == null) {
       network.setSecurity(new SecurityCfg());
     }
     network.init(clusterCfg, basePath);
+    authorization.getInterceptor().init(basePath);
   }
 }

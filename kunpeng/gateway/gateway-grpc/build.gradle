@@ -39,6 +39,7 @@ dependencies {
     implementation project(':kunpeng:utils')
 
     implementation 'org.agrona:agrona'
+    implementation 'com.nimbusds:oauth2-oidc-sdk'
     implementation 'tools.jackson.core:jackson-core'
     implementation 'net.jcip:jcip-annotations'
     implementation 'org.springframework:spring-core'

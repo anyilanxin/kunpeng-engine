@@ -32,6 +32,7 @@ public class RepositoryUserTaskApplierRegister {
       final EnableRegisterRepositoryAppliers appliers, final BusinessRepository repository) {
     appliers
         .register(new RocksdbRepositoryUserTaskCancelApplierImpl(repository))
+        .register(new RocksdbRepositoryUserTaskClaimApplierImpl(repository))
         .register(new RocksdbRepositoryUserTaskCanceledApplierImpl(repository))
         .register(new RocksdbRepositoryUserTaskCompletedApplierImpl(repository))
         .register(new RocksdbRepositoryUserTaskCompletingApplierImpl(repository))

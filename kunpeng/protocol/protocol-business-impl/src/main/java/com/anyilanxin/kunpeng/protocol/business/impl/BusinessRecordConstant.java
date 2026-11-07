@@ -92,8 +92,11 @@ public interface BusinessRecordConstant {
   /** 授权元数据 map 标准键：操作人 id（对齐 OAuth2 sub claim） */
   String AUTHORIZATION_USER_ID = "userId";
 
-  /** 授权元数据 map 标准键：操作人所属组（对齐 OAuth2 groups claim） */
-  String AUTHORIZATION_GROUPS = "groups";
+  /** 授权元数据 map 标准键：操作人姓名（审计/导出用，不参与校验） */
+  String AUTHORIZATION_USER_NAME = "userName";
+
+  /** 授权元数据 map 标准键：操作人角色 id 列表（候选审批组匹配 + admin 白名单） */
+  String AUTHORIZATION_ROLE_IDS = "roleIds";
 
   /** 流程实例 id */
   String PROCESS_INSTANCE_ID = "PROCESS_INSTANCE_ID";

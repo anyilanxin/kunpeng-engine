@@ -12,6 +12,7 @@
  */
 package com.anyilanxin.kunpeng.client.command.usertask.cancel;
 
+import com.anyilanxin.kunpeng.client.AuthorizationHeaders;
 import com.anyilanxin.kunpeng.client.KunpengClientConfiguration;
 import com.anyilanxin.kunpeng.client.command.*;
 import com.anyilanxin.kunpeng.gateway.grpc.service.UserTaskServiceGrpc;
@@ -80,7 +81,7 @@ public final class CancelUserTaskCommandImpl implements CancelUserTaskCommand {
   private void sendGrpcRequest(
       final UserTaskServiceOuterClass.CancelUserTaskRequest request,
       final StreamObserver<UserTaskServiceOuterClass.CancelUserTaskResponse> streamObserver) {
-    asyncStub
+    AuthorizationHeaders.attach(asyncStub, null, null, config)
         .withDeadlineAfter(requestTimeout.toMillis(), TimeUnit.MILLISECONDS)
         .cancelUserTask(request, streamObserver);
   }

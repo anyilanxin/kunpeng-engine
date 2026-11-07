@@ -12,6 +12,7 @@
  */
 package com.anyilanxin.kunpeng.client.command.processinstance;
 
+import com.anyilanxin.kunpeng.client.AuthorizationHeaders;
 import com.anyilanxin.kunpeng.client.KunpengClientConfiguration;
 import com.anyilanxin.kunpeng.client.command.CredentialsProvider;
 import com.anyilanxin.kunpeng.client.command.FinalCommandStep;
@@ -26,6 +27,7 @@ import java.util.function.Predicate;
 
 public final class CancelProcessInstanceCommandImpl implements CancelProcessInstanceCommand {
   private final ProcessInstanceServiceGrpc.ProcessInstanceServiceStub asyncStub;
+  private final KunpengClientConfiguration config;
   private final Predicate<CredentialsProvider.StatusCode> retryPredicate;
   private final ProcessInstanceServiceOuterClass.CancelProcessInstanceRequest.Builder
       requestBuilder;
@@ -36,6 +38,7 @@ public final class CancelProcessInstanceCommandImpl implements CancelProcessInst
       final KunpengClientConfiguration config,
       final Predicate<CredentialsProvider.StatusCode> retryPredicate) {
     this.asyncStub = asyncStub;
+    this.config = config;
     this.retryPredicate = retryPredicate;
 
     requestBuilder = ProcessInstanceServiceOuterClass.CancelProcessInstanceRequest.newBuilder();
@@ -74,7 +77,7 @@ public final class CancelProcessInstanceCommandImpl implements CancelProcessInst
       final ProcessInstanceServiceOuterClass.CancelProcessInstanceRequest request,
       final StreamObserver<ProcessInstanceServiceOuterClass.CancelProcessInstanceResponse>
           streamObserver) {
-    asyncStub
+    AuthorizationHeaders.attach(asyncStub, null, null, config)
         .withDeadlineAfter(requestTimeout.toMillis(), TimeUnit.MILLISECONDS)
         .cancelProcessInstance(request, streamObserver);
   }

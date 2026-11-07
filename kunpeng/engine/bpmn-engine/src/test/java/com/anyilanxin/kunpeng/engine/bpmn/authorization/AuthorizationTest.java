@@ -33,30 +33,33 @@ class AuthorizationTest {
   }
 
   @Test
-  void parsesUserIdAndGroups() {
+  void parsesStandardKeys() {
     final Authorization authorization =
-        Authorization.fromJson("{\"userId\":\"u1\",\"groups\":[\"g1\",\"g2\"]}");
+        Authorization.fromJson(
+            "{\"userId\":\"u1\",\"userName\":\"张三\",\"roleIds\":[\"r1\",\"r2\"]}");
     assertEquals("u1", authorization.userId());
-    assertEquals(List.of("g1", "g2"), authorization.groups());
+    assertEquals("张三", authorization.userName());
+    assertEquals(List.of("r1", "r2"), authorization.roleIds());
   }
 
   @Test
-  void missingGroupsYieldsEmptyList() {
+  void missingOptionalKeysYieldDefaults() {
     final Authorization authorization = Authorization.fromJson("{\"userId\":\"u1\"}");
     assertEquals("u1", authorization.userId());
-    assertTrue(authorization.groups().isEmpty());
+    assertEquals("", authorization.userName());
+    assertTrue(authorization.roleIds().isEmpty());
   }
 
   @Test
   void missingUserIdFails() {
     assertThrows(
-        IllegalArgumentException.class, () -> Authorization.fromJson("{\"groups\":[\"g1\"]}"));
+        IllegalArgumentException.class, () -> Authorization.fromJson("{\"roleIds\":[\"r1\"]}"));
   }
 
   @Test
-  void nonListGroupsYieldsEmptyList() {
+  void nonListRoleIdsYieldsEmptyList() {
     final Authorization authorization =
-        Authorization.fromJson("{\"userId\":\"u1\",\"groups\":\"g1\"}");
-    assertTrue(authorization.groups().isEmpty());
+        Authorization.fromJson("{\"userId\":\"u1\",\"roleIds\":\"r1\"}");
+    assertTrue(authorization.roleIds().isEmpty());
   }
 }

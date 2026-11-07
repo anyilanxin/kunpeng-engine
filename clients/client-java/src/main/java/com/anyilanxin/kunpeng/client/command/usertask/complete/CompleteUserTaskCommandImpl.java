@@ -12,6 +12,7 @@
  */
 package com.anyilanxin.kunpeng.client.command.usertask.complete;
 
+import com.anyilanxin.kunpeng.client.AuthorizationHeaders;
 import com.anyilanxin.kunpeng.client.KunpengClientConfiguration;
 import com.anyilanxin.kunpeng.client.command.*;
 import com.anyilanxin.kunpeng.client.command.usertask.AddSignMode;
@@ -96,7 +97,7 @@ public final class CompleteUserTaskCommandImpl
   private void sendGrpcRequest(
       final UserTaskServiceOuterClass.CompleteUserTaskRequest request,
       final StreamObserver<UserTaskServiceOuterClass.CompleteUserTaskResponse> streamObserver) {
-    asyncStub
+    AuthorizationHeaders.attach(asyncStub, null, null, config)
         .withDeadlineAfter(requestTimeout.toMillis(), TimeUnit.MILLISECONDS)
         .completeUserTask(request, streamObserver);
   }

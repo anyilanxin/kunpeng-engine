@@ -49,6 +49,16 @@ public interface KunpengClientConfiguration {
   CredentialsProvider getCredentialsProvider();
 
   /**
+   * @see KunpengClientBuilder#authorizationMetadataProvider(AuthorizationMetadataProvider)
+   */
+  AuthorizationMetadataProvider getAuthorizationMetadataProvider();
+
+  /**
+   * @see KunpengClientBuilder#authorizationTokenProvider(AuthorizationTokenProvider)
+   */
+  AuthorizationTokenProvider getAuthorizationTokenProvider();
+
+  /**
    * @see KunpengClientBuilder#defaultTenantId(String)
    */
   String getDefaultTenantId();

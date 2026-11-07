@@ -16,6 +16,8 @@
  */
 package com.anyilanxin.kunpeng.client.spring.configuration;
 
+import com.anyilanxin.kunpeng.client.AuthorizationMetadataProvider;
+import com.anyilanxin.kunpeng.client.AuthorizationTokenProvider;
 import com.anyilanxin.kunpeng.client.KunpengClientBuilderImpl;
 import com.anyilanxin.kunpeng.client.KunpengClientConfiguration;
 import com.anyilanxin.kunpeng.client.command.CredentialsProvider;
@@ -30,6 +32,7 @@ import java.util.Properties;
 import java.util.concurrent.ScheduledExecutorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 
 /**
  * Spring 客户端配置。
@@ -46,6 +49,8 @@ public class SpringKunpengClientConfiguration implements KunpengClientConfigurat
   private final List<ClientInterceptor> interceptors;
   private final KunpengClientExecutorService kunpengClientExecutorService;
   private final CredentialsProvider credentialsProvider;
+  private final AuthorizationMetadataProvider authorizationMetadataProvider;
+  private final AuthorizationTokenProvider authorizationTokenProvider;
   private final boolean plaintext;
 
   public SpringKunpengClientConfiguration(
@@ -53,12 +58,16 @@ public class SpringKunpengClientConfiguration implements KunpengClientConfigurat
       final JsonMapper jsonMapper,
       final List<ClientInterceptor> interceptors,
       final KunpengClientExecutorService kunpengClientExecutorService,
-      final CredentialsProvider credentialsProvider) {
+      final CredentialsProvider credentialsProvider,
+      final ObjectProvider<AuthorizationMetadataProvider> authorizationMetadataProvider,
+      final ObjectProvider<AuthorizationTokenProvider> authorizationTokenProvider) {
     this.kunpengClientProperties = kunpengClientProperties;
     this.jsonMapper = jsonMapper;
     this.interceptors = interceptors;
     this.kunpengClientExecutorService = kunpengClientExecutorService;
     this.credentialsProvider = credentialsProvider;
+    this.authorizationMetadataProvider = authorizationMetadataProvider.getIfAvailable();
+    this.authorizationTokenProvider = authorizationTokenProvider.getIfAvailable();
     plaintext = kunpengClientProperties.isPlaintext();
   }
 
@@ -139,6 +148,16 @@ public class SpringKunpengClientConfiguration implements KunpengClientConfigurat
   @Override
   public CredentialsProvider getCredentialsProvider() {
     return credentialsProvider;
+  }
+
+  @Override
+  public AuthorizationMetadataProvider getAuthorizationMetadataProvider() {
+    return authorizationMetadataProvider;
+  }
+
+  @Override
+  public AuthorizationTokenProvider getAuthorizationTokenProvider() {
+    return authorizationTokenProvider;
   }
 
   @Override

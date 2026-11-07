@@ -72,6 +72,8 @@ public final class KunpengClientBuilderImpl
   private boolean usePlaintextConnection = false;
   private String certificatePath;
   private CredentialsProvider credentialsProvider;
+  private AuthorizationMetadataProvider authorizationMetadataProvider;
+  private AuthorizationTokenProvider authorizationTokenProvider;
   private Duration keepAlive = DEFAULT_KEEP_ALIVE;
   private JsonMapper jsonMapper = new KunpengObjectMapper();
   private String overrideAuthority;
@@ -406,6 +408,20 @@ public final class KunpengClientBuilderImpl
   }
 
   @Override
+  public KunpengClientBuilder authorizationMetadataProvider(
+      final AuthorizationMetadataProvider authorizationMetadataProvider) {
+    this.authorizationMetadataProvider = authorizationMetadataProvider;
+    return this;
+  }
+
+  @Override
+  public KunpengClientBuilder authorizationTokenProvider(
+      final AuthorizationTokenProvider authorizationTokenProvider) {
+    this.authorizationTokenProvider = authorizationTokenProvider;
+    return this;
+  }
+
+  @Override
   public KunpengClientBuilder keepAlive(final Duration keepAlive) {
     if (keepAlive.isNegative() || keepAlive.isZero()) {
       throw new IllegalArgumentException("The keep alive must be a positive number.");
@@ -454,6 +470,16 @@ public final class KunpengClientBuilderImpl
   @Override
   public JsonMapper getJsonMapper() {
     return jsonMapper;
+  }
+
+  @Override
+  public AuthorizationMetadataProvider getAuthorizationMetadataProvider() {
+    return authorizationMetadataProvider;
+  }
+
+  @Override
+  public AuthorizationTokenProvider getAuthorizationTokenProvider() {
+    return authorizationTokenProvider;
   }
 
   @Override

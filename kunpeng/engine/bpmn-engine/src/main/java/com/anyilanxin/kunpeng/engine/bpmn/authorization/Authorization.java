@@ -16,8 +16,9 @@
  */
 package com.anyilanxin.kunpeng.engine.bpmn.authorization;
 
-import static com.anyilanxin.kunpeng.protocol.business.impl.BusinessRecordConstant.AUTHORIZATION_GROUPS;
+import static com.anyilanxin.kunpeng.protocol.business.impl.BusinessRecordConstant.AUTHORIZATION_ROLE_IDS;
 import static com.anyilanxin.kunpeng.protocol.business.impl.BusinessRecordConstant.AUTHORIZATION_USER_ID;
+import static com.anyilanxin.kunpeng.protocol.business.impl.BusinessRecordConstant.AUTHORIZATION_USER_NAME;
 import static com.anyilanxin.kunpeng.structpack.util.DocumentUtil.convertToMap;
 import static com.anyilanxin.kunpeng.structpack.util.DocumentUtil.convertToMsgPack;
 
@@ -26,21 +27,23 @@ import java.util.Map;
 import org.agrona.concurrent.UnsafeBuffer;
 
 /**
- * 授权实体：信封授权元数据（JSON）解析出的具体身份，供引擎处理器直接使用。标准键 userId/groups，其余字段不参与校验。
+ * 授权实体：信封授权元数据（JSON）解析出的具体身份，供引擎处理器直接使用。标准键 userId/userName/roleIds，其余字段不参与校验。
  *
  * @author zxuanhong
  * @since 2026.9.0
  */
 public final class Authorization {
   /** 未携带授权元数据的操作人（未认证/系统语义） */
-  public static final Authorization NONE = new Authorization("", List.of());
+  public static final Authorization NONE = new Authorization("", "", List.of());
 
   private final String userId;
-  private final List<String> groups;
+  private final String userName;
+  private final List<String> roleIds;
 
-  private Authorization(final String userId, final List<String> groups) {
+  private Authorization(final String userId, final String userName, final List<String> roleIds) {
     this.userId = userId;
-    this.groups = groups;
+    this.userName = userName;
+    this.roleIds = roleIds;
   }
 
   /** 从信封授权元数据 JSON 解析；空文本返回 {@link #NONE}，携带元数据但缺 userId 标准键直接失败。 */
@@ -53,14 +56,16 @@ public final class Authorization {
     if (userId == null) {
       throw new IllegalArgumentException("授权元数据缺少标准键 userId");
     }
-    final Object groups = metadata.get(AUTHORIZATION_GROUPS);
-    final List<String> groupList;
-    if (groups instanceof final List<?> list) {
-      groupList = list.stream().map(String::valueOf).toList();
+    final Object userName = metadata.get(AUTHORIZATION_USER_NAME);
+    final Object roleIds = metadata.get(AUTHORIZATION_ROLE_IDS);
+    final List<String> roleIdList;
+    if (roleIds instanceof final List<?> list) {
+      roleIdList = list.stream().map(String::valueOf).toList();
     } else {
-      groupList = List.of();
+      roleIdList = List.of();
     }
-    return new Authorization(userId.toString(), groupList);
+    return new Authorization(
+        userId.toString(), userName == null ? "" : userName.toString(), roleIdList);
   }
 
   /**
@@ -71,9 +76,16 @@ public final class Authorization {
   }
 
   /**
-   * @return 操作人所属组；未携带为空列表
+   * @return 操作人所属角色 id；未携带为空列表
    */
-  public List<String> groups() {
-    return groups;
+  public List<String> roleIds() {
+    return roleIds;
+  }
+
+  /**
+   * @return 操作人姓名；未携带为空串
+   */
+  public String userName() {
+    return userName;
   }
 }

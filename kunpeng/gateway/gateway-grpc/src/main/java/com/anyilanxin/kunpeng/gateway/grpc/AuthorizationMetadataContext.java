@@ -19,11 +19,14 @@ package com.anyilanxin.kunpeng.gateway.grpc;
 import static com.anyilanxin.kunpeng.structpack.util.DocumentUtil.convertToMap;
 import static com.anyilanxin.kunpeng.structpack.util.DocumentUtil.convertToMsgPack;
 
+import com.anyilanxin.kunpeng.broker.client.core.BrokerRequest;
 import com.anyilanxin.kunpeng.protocol.business.impl.BusinessRecordConstant;
+import com.anyilanxin.kunpeng.structpack.util.DocumentUtil;
 import io.grpc.Context;
 import io.grpc.Metadata;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.agrona.DirectBuffer;
 import org.agrona.concurrent.UnsafeBuffer;
 
 /**
@@ -58,6 +61,19 @@ public final class AuthorizationMetadataContext {
   public static Map<String, Object> authorizationMetadata() {
     final Map<String, Object> value = AUTHORIZATION_METADATA.get();
     return value == null ? Map.of() : value;
+  }
+
+  /** 把当前调用的授权元数据转写进 broker 请求信封（统一通道，任何命令零改动复用）；元数据为空不设置。 */
+  public static void attachTo(final BrokerRequest<?> request) {
+    final Map<String, Object> metadata = authorizationMetadata();
+    if (metadata.isEmpty()) {
+      return;
+    }
+    final DirectBuffer encoded =
+        new UnsafeBuffer(
+            DocumentUtil.convertToJsonBytes(
+                new UnsafeBuffer(DocumentUtil.convertToMsgPack(metadata))));
+    request.setAuthorizationMetadata(encoded);
   }
 
   /** JSON 文本 → 授权元数据 map（可变 map，供标准键补齐） */
