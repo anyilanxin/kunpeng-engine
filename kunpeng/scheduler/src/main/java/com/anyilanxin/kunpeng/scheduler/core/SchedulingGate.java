@@ -73,10 +73,13 @@ public final class SchedulingGate {
   /**
    * owner 排空后尝试休眠。
    *
+   * <p>必须 setRelease：与 {@link #state()} 的 getAcquire 配对，把 drain 期间的普通写（相位、fastLane、订阅槽等） 发布给随后经 CAS
+   * 接管的其他 runner——plain set 在 JMM 上没有 release 边，跨载体可见性将依赖硬件兜底。
+   *
    * @return true 表示回到 WAITING（调用方须复查队列, 非空则 tryWakeup 重入队）
    */
   public boolean trySleep() {
-    STATE.set(this, WAITING);
+    STATE.setRelease(this, WAITING);
     return true;
   }
 
