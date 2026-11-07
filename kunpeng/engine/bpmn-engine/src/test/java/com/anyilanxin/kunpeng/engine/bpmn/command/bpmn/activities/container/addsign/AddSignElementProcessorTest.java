@@ -18,6 +18,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -83,6 +84,13 @@ class AddSignElementProcessorTest {
     writer = mock(LogEventWriter.class);
     repository = mock(ImmutableBusinessRepository.class, RETURNS_DEEP_STUBS);
     when(writer.getRepository()).thenReturn(repository);
+    // createSignTaskAt 固化加签许可时按原始 key 解析原任务元素（级联关闭 → 组员 allowed=false）；
+    // 泛型方法 deep-stub 按擦除返回，when() 内调用即 CCE：链先取局部变量 + doReturn 桩设
+    final var executableProcess =
+        repository.bpmnResourceRepository().getRuntime(PROCESS_DEFINITION_ID).executableProcess();
+    doReturn(new BpmnUserTask("task1"))
+        .when(executableProcess)
+        .getElementById(any(), eq(BpmnUserTask.class));
     variableBehavior = mock(VariableBehavior.class);
     final AddSignBehavior addSignBehavior = new AddSignBehavior(writer, variableBehavior);
     final BatchBehavior batchBehavior = new BatchBehavior(writer);

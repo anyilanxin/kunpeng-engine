@@ -132,8 +132,8 @@ public class UserTaskEntity extends BaseEntity {
   @TableField(value = "ADD_SIGN_ROLE")
   private String addSignRole;
 
-  /** 加签任务指向的原活动实例 id */
-  @TableField(value = "ORIGIN_ACTIVITY_INSTANCE_ID")
+  /** 加签任务指向的根活动实例 id（加签根 E0，全层级共用；2026.9.0 由 origin 改名 root） */
+  @TableField(value = "ROOT_ACTIVITY_INSTANCE_ID")
   private Long rootActivityInstanceId;
 
   /** 加签阶段（前/后加签） */
@@ -147,6 +147,14 @@ public class UserTaskEntity extends BaseEntity {
   /** 本任务名下在途加签任务数 */
   @TableField(value = "ADD_SIGN_COUNT")
   private Integer addSignCount;
+
+  /** 加签层级（原任务/普通任务=0，第 N 级加签任务=N） */
+  @TableField(value = "ADD_SIGN_DEPTH")
+  private Integer addSignDepth;
+
+  /** 是否允许对本任务再加签（引擎创建时按建模固化） */
+  @TableField(value = "ADD_SIGN_ALLOWED")
+  private Boolean addSignAllowed;
 
   /** 串行加签链剩余名单（JSON 数组文本） */
   @TableField(value = "REMAINING_ASSIGNEES")

@@ -207,8 +207,8 @@ public class MultiInstanceElementProcessor
         }
         return Either.right(false);
       }
-      // 集合与基数均未声明：非法模型（解析校验应拦），按空展开完结而非挂起
-      return Either.right(true);
+      // 集合与基数均未声明：非法模型（部署校验应拦），挂 incident 暴露——数值必须求出，静默空展开会掩盖问题
+      return Either.left("多实例(parallel)未声明集合或循环基数，无法确定实例数");
     }
     return Either.right(false);
   }
@@ -247,14 +247,18 @@ public class MultiInstanceElementProcessor
         return Either.left("多实例(sequential)基数表达式计算失败: " + result.getLeft());
       }
       final int loopCardinality = result.get().intValue();
-      if (loopCardinality <= 0) {
+      if (loopCardinality < 0) {
+        // 0=合法空展开完结；负数必须挂 incident，不能静默吞掉
+        return Either.left("多实例(sequential)基数为负数: " + loopCardinality);
+      }
+      if (loopCardinality == 0) {
         return Either.right(true);
       }
       variable.nrOfInstances = loopCardinality;
       return Either.right(false);
     }
-    // 集合与基数均未声明：非法模型（解析校验应拦），按空展开完结而非挂起或无限建链
-    return Either.right(true);
+    // 集合与基数均未声明：非法模型（部署校验应拦），挂 incident 暴露——数值必须求出，静默空展开会掩盖问题
+    return Either.left("多实例(sequential)未声明集合或循环基数，无法确定实例数");
   }
 
   /** 1-3 */

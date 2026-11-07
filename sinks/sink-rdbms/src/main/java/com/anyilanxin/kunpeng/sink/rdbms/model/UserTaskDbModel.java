@@ -48,6 +48,7 @@ public class UserTaskDbModel {
   private String addSignMode;
   private Integer addSignCount;
   private Integer addSignDepth;
+  private Boolean addSignAllowed;
   private String remainingAssignees;
   private String afterSignAssignees;
 }

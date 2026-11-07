@@ -106,8 +106,12 @@ public class UserTaskRecordEntity extends UnpackedObject implements StoreValue {
 
   private final IntegerProperty addSignDepthProp = new IntegerProperty(35, "ADD_SIGN_DEPTH", 0);
 
+  /** 是否允许对本任务再加签（创建时随任务记录固化） */
+  private final BooleanProperty addSignAllowedProp =
+      new BooleanProperty(36, "ADD_SIGN_ALLOWED", false);
+
   public UserTaskRecordEntity() {
-    super(35);
+    super(36);
     declareProperty(taskIdProp)
         .declareProperty(parentTaskIdProp)
         .declareProperty(revProp)
@@ -142,7 +146,8 @@ public class UserTaskRecordEntity extends UnpackedObject implements StoreValue {
         .declareProperty(remainingAssigneesProp)
         .declareProperty(afterSignAssigneesProp)
         .declareProperty(afterSignModeProp)
-        .declareProperty(addSignDepthProp);
+        .declareProperty(addSignDepthProp)
+        .declareProperty(addSignAllowedProp);
   }
 
   public void wrap(final UserTaskRecord record) {
@@ -180,7 +185,8 @@ public class UserTaskRecordEntity extends UnpackedObject implements StoreValue {
         .setRemainingAssignees(record.getRemainingAssignees())
         .setAfterSignAssignees(record.getAfterSignAssignees())
         .setAfterSignMode(record.getAfterSignMode())
-        .setAddSignDepth(record.getAddSignDepth());
+        .setAddSignDepth(record.getAddSignDepth())
+        .setAddSignAllowed(record.isAddSignAllowed());
   }
 
   public UserTaskRecord unwrap(final UserTaskRecord taskRecord) {
@@ -220,7 +226,8 @@ public class UserTaskRecordEntity extends UnpackedObject implements StoreValue {
         .setRemainingAssignees(getRemainingAssignees())
         .setAfterSignAssignees(getAfterSignAssignees())
         .setAfterSignMode(getAfterSignMode())
-        .setAddSignDepth(getAddSignDepth());
+        .setAddSignDepth(getAddSignDepth())
+        .setAddSignAllowed(isAddSignAllowed());
   }
 
   public long getTaskId() {
@@ -603,6 +610,15 @@ public class UserTaskRecordEntity extends UnpackedObject implements StoreValue {
 
   public UserTaskRecordEntity setAddSignDepth(final int addSignDepth) {
     addSignDepthProp.setValue(addSignDepth);
+    return this;
+  }
+
+  public boolean isAddSignAllowed() {
+    return addSignAllowedProp.getValue();
+  }
+
+  public UserTaskRecordEntity setAddSignAllowed(final boolean addSignAllowed) {
+    addSignAllowedProp.setValue(addSignAllowed);
     return this;
   }
 

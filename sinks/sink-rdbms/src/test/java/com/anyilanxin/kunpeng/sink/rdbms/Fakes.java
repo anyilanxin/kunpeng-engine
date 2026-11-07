@@ -717,7 +717,8 @@ final class Fakes {
     AddSignPhase addSignPhase = AddSignPhase.NONE;
     AddSignMode addSignMode = AddSignMode.NONE;
     int addSignCount;
-  int addSignDepth;
+    int addSignDepth;
+    boolean addSignAllowed;
     List<String> remainingAssignees = List.of();
     List<String> afterSignAssignees = List.of();
     AddSignMode afterSignMode = AddSignMode.NONE;
@@ -885,6 +886,11 @@ final class Fakes {
     @Override
     public int getAddSignDepth() {
       return addSignDepth;
+    }
+
+    @Override
+    public boolean isAddSignAllowed() {
+      return addSignAllowed;
     }
 
     @Override

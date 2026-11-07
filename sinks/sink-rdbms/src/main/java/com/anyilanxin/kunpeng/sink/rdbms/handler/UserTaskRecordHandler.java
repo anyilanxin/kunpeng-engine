@@ -115,6 +115,7 @@ public final class UserTaskRecordHandler implements RecordModelHandler {
     model.setAddSignMode(nameOf(value.getAddSignMode()));
     model.setAddSignCount(value.getAddSignCount());
     model.setAddSignDepth(value.getAddSignDepth() > 0 ? value.getAddSignDepth() : null);
+    model.setAddSignAllowed(value.isAddSignAllowed());
     model.setRemainingAssignees(JsonValues.toJson(value.getRemainingAssignees()));
     model.setAfterSignAssignees(JsonValues.toJson(value.getAfterSignAssignees()));
   }

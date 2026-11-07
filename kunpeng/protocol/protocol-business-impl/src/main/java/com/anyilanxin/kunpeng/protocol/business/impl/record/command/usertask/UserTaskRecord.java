@@ -114,8 +114,12 @@ public class UserTaskRecord extends UnifiedRecordValue<UserTaskRecord>
   /** 加签层级：原任务/普通任务=0，第 N 级加签任务=N（创建时随组载荷写入，门户按其+1 与建模 maxDepth 比较） */
   private final IntegerProperty addSignDepthProp = new IntegerProperty(36, "ADD_SIGN_DEPTH", 0);
 
+  /** 是否允许对本任务再加签（创建时按建模固化，导出面按其展示/隐藏加签入口） */
+  private final BooleanProperty addSignAllowedProp =
+      new BooleanProperty(37, "ADD_SIGN_ALLOWED", false);
+
   public UserTaskRecord() {
-    super(36);
+    super(37);
     declareProperty(taskIdProp)
         .declareProperty(parentTaskIdProp)
         .declareProperty(revProp)
@@ -151,7 +155,8 @@ public class UserTaskRecord extends UnifiedRecordValue<UserTaskRecord>
         .declareProperty(remainingAssigneesProp)
         .declareProperty(afterSignAssigneesProp)
         .declareProperty(afterSignModeProp)
-        .declareProperty(addSignDepthProp);
+        .declareProperty(addSignDepthProp)
+        .declareProperty(addSignAllowedProp);
   }
 
   public void wrap(final ActivityInstanceRecord instanceRecord) {
@@ -601,6 +606,16 @@ public class UserTaskRecord extends UnifiedRecordValue<UserTaskRecord>
 
   public UserTaskRecord setAddSignDepth(final int addSignDepth) {
     addSignDepthProp.setValue(addSignDepth);
+    return this;
+  }
+
+  @Override
+  public boolean isAddSignAllowed() {
+    return addSignAllowedProp.getValue();
+  }
+
+  public UserTaskRecord setAddSignAllowed(final boolean addSignAllowed) {
+    addSignAllowedProp.setValue(addSignAllowed);
     return this;
   }
 

@@ -256,27 +256,44 @@ public class AddSignBehavior {
       final Counters counters,
       final int index,
       final long requestId) {
+    // 仓储 getRecord 返回共享缓冲：rootActivityInstanceId 沿父链再查会覆写 group 引用本身，
+    // 之后 writeCounters 会把计数器错写到父作用域（组游标永滞初值=并行展开失控根因）。
+    // 先 copy 固化组自身（spawnGroup 同款防线），后续读写一律以快照为准。
+    final ActivityInstanceRecord groupSnapshot = group.copy();
+    // 加签许可随创建固化（与门户 cascadeRejectReason 同口径）：组员可再加签 = 原元素开启 cascade 且本任务深度+1 ≤ maxDepth
+    final BpmnUserTask originElement =
+        writer
+            .getRepository()
+            .bpmnResourceRepository()
+            .getRuntime(groupSnapshot.getProcessDefinitionId())
+            .executableProcess()
+            .getElementById(payload.taskKey, BpmnUserTask.class);
+    final boolean cascadeAllowed =
+        originElement != null
+            && originElement.isAddSignCascade()
+            && payload.depth + 1 <= originElement.getAddSignMaxDepth();
     final UserTaskRecord signTask = new UserTaskRecord();
-    signTask.wrap(group);
+    signTask.wrap(groupSnapshot);
     signTask
-        .setTaskId(writer.nextCurrentSourceKey(group.getProcessInstanceId()))
-        .setTaskDefinitionKey(group.getActivityDefinitionKey())
+        .setTaskId(writer.nextCurrentSourceKey(groupSnapshot.getProcessInstanceId()))
+        .setTaskDefinitionKey(groupSnapshot.getActivityDefinitionKey())
         .setTaskDefinitionName(payload.taskName)
         .setAssignee(payload.assignees.get(index))
         .setLifeCycle(UserTaskLifeCycle.CREATING)
         .setAddSignRole(AddSignRole.ADD_SIGN)
-        .setParentTaskId(group.getTaskId())
-        .setRootActivityInstanceId(rootActivityInstanceId(group))
+        .setParentTaskId(groupSnapshot.getTaskId())
+        .setRootActivityInstanceId(rootActivityInstanceId(groupSnapshot))
         .setAddSignPhase(payload.phase)
         .setAddSignMode(payload.mode)
         .setRemainingAssignees(
             payload.mode == AddSignMode.SEQUENTIAL
                 ? List.copyOf(payload.assignees.subList(index + 1, payload.assignees.size()))
                 : List.of())
-        .setAddSignDepth(payload.depth);
+        .setAddSignDepth(payload.depth)
+        .setAddSignAllowed(cascadeAllowed);
     counters.cursor = index;
     counters.created = index + 1;
-    final ActivityContent groupContent = new ActivityContent(group, requestId);
+    final ActivityContent groupContent = new ActivityContent(groupSnapshot, requestId);
     writeCounters(groupContent, counters);
     writer.addCommand(signTask.getTaskId(), UserTaskLifeCycle.CREATING, requestId, signTask);
   }

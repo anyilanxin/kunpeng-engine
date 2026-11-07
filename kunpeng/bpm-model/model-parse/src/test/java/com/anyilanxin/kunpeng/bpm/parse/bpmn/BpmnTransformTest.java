@@ -63,6 +63,9 @@ class BpmnTransformTest {
   /** 进阶流程：边界事件（定时/错误）、多实例、信号捕获、消息抛出、调用活动与事件子流程。 */
   private static final String ADVANCED_BPMN = "bpmn/advanced.bpmn";
 
+  /** 多实例集合（模型器产出形态）：kunpeng:loopCharacteristics 在 MI 元素扩展内、静态列表、无基数。 */
+  private static final String MI_COLLECTION_BPMN = "bpmn/multi-instance-collection.bpmn";
+
   /** 加签流程：一个声明 kunpeng:addSign 的用户任务 + 一个未声明的用户任务。 */
   private static final String ADD_SIGN_BPMN = "bpmn/addsign.bpmn";
 
@@ -176,6 +179,9 @@ class BpmnTransformTest {
     assertNotNull(multiInstanceBody.getInnerActivity());
     assertFalse(multiInstanceBody.getLoopCharacteristics().isSequential());
     assertNotNull(multiInstanceBody.getLoopCharacteristics().getCompletionCondition());
+    // 集合表达式从 MI 元素自身的扩展元素读取（与模型器/部署期校验同位置），活动层不再读取
+    assertEquals("orders", multiInstanceBody.getLoopCharacteristics().getCollection().getSourceText());
+    assertNotNull(multiInstanceBody.getLoopCharacteristics().getLoopCardinality());
     assertEquals("order", multiInstanceBody.getLoopCharacteristics().getElementVariable());
     assertEquals("Flow_payment_mi", multiInstanceBody.getIncoming().get(0).getId());
     assertEquals("Flow_ship_catch", multiInstanceBody.getOutgoing().get(0).getId());
@@ -213,6 +219,21 @@ class BpmnTransformTest {
     assertEquals("Sub_escalation", escalationStart.getEventSubProcessId());
     assertEquals(
         "URGENT-1", escalationStart.getEscalation().getEscalationCodeExpression().getSourceText());
+  }
+
+  @Test
+  void shouldReadCollectionFromMultiInstanceElementExtension() {
+    // 回归（并行 MI 空展开事故）：模型器把 kunpeng:loopCharacteristics 写在 MI 元素扩展内，
+    // 转换器曾从活动层扩展读取导致 collection=null，运行期按"集合与基数均未声明"空展开完结
+    final BpmnProcess process = transformFirst(MI_COLLECTION_BPMN);
+    final BpmnMultiInstanceBody body =
+        process.getElementById("Task_p38m2yr", BpmnMultiInstanceBody.class);
+    assertFalse(body.getLoopCharacteristics().isSequential());
+    assertEquals(
+        "[1,2,3,4]", body.getLoopCharacteristics().getCollection().getSourceText());
+    assertEquals("assignee", body.getLoopCharacteristics().getElementVariable());
+    assertNull(body.getLoopCharacteristics().getLoopCardinality());
+    assertNotNull(body.getLoopCharacteristics().getCompletionCondition());
   }
 
   @Test

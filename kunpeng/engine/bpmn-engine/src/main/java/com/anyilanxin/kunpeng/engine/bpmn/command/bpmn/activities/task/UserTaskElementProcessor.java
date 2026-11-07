@@ -117,7 +117,11 @@ public class UserTaskElementProcessor implements BpmnActivityElementProcessor<Bp
     final UserTaskRecord userTaskRecord = new UserTaskRecord();
     userTaskRecord.wrap(newInstanceRecord);
     userTaskRecord.setLifeCycle(UserTaskLifeCycle.CREATING);
-    userTaskRecord.setTaskDefinitionName(element.getName()).setTaskDefinitionKey(element.getId());
+    userTaskRecord
+        .setTaskDefinitionName(element.getName())
+        .setTaskDefinitionKey(element.getId())
+        // 加签许可随创建固化：原任务看建模 kunpeng:addSign 声明（导出面据此展示/隐藏加签入口）
+        .setAddSignAllowed(element.isAddSignEnabled());
 
     writer.addCommand(
         userTaskRecord.getTaskId(),
