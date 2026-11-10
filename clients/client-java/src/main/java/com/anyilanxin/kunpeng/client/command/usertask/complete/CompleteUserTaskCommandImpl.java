@@ -83,21 +83,26 @@ public final class CompleteUserTaskCommandImpl
   private KunpengFuture<CompleteUserTaskCommandResponse> sendGrpcRequest() {
     final UserTaskServiceOuterClass.CompleteUserTaskRequest request = requestBuilder.build();
 
+    // 授权头在请求线程一次性物化到 stub：重试跑在 gRPC 回调线程，宿主 ThreadLocal 身份（如 SecurityContextHolder）不可见
+    final UserTaskServiceGrpc.UserTaskServiceStub attached =
+        AuthorizationHeaders.attach(asyncStub, null, null, config);
+
     final RetriableClientFutureImpl<
             CompleteUserTaskCommandResponse, UserTaskServiceOuterClass.CompleteUserTaskResponse>
         future =
             new RetriableClientFutureImpl<>(
                 CompleteUserTaskCommandResponseImpl::new,
                 retryPredicate,
-                streamObserver -> sendGrpcRequest(request, streamObserver));
-    sendGrpcRequest(request, future);
+                streamObserver -> sendGrpcRequest(attached, request, streamObserver));
+    sendGrpcRequest(attached, request, future);
     return future;
   }
 
   private void sendGrpcRequest(
+      final UserTaskServiceGrpc.UserTaskServiceStub attached,
       final UserTaskServiceOuterClass.CompleteUserTaskRequest request,
       final StreamObserver<UserTaskServiceOuterClass.CompleteUserTaskResponse> streamObserver) {
-    AuthorizationHeaders.attach(asyncStub, null, null, config)
+    attached
         .withDeadlineAfter(requestTimeout.toMillis(), TimeUnit.MILLISECONDS)
         .completeUserTask(request, streamObserver);
   }

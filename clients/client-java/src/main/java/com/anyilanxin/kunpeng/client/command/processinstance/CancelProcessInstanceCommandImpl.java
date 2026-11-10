@@ -61,6 +61,10 @@ public final class CancelProcessInstanceCommandImpl implements CancelProcessInst
     final ProcessInstanceServiceOuterClass.CancelProcessInstanceRequest request =
         requestBuilder.build();
 
+    // 授权头在请求线程一次性物化到 stub：重试跑在 gRPC 回调线程，宿主 ThreadLocal 身份（如 SecurityContextHolder）不可见
+    final ProcessInstanceServiceGrpc.ProcessInstanceServiceStub attached =
+        AuthorizationHeaders.attach(asyncStub, null, null, config);
+
     final RetriableClientFutureImpl<
             CancelProcessInstanceCommandResponse,
             ProcessInstanceServiceOuterClass.CancelProcessInstanceResponse>
@@ -68,16 +72,17 @@ public final class CancelProcessInstanceCommandImpl implements CancelProcessInst
             new RetriableClientFutureImpl<>(
                 CancelProcessInstanceCommandResponseImpl::new,
                 retryPredicate,
-                streamObserver -> sendGrpcRequest(request, streamObserver));
-    sendGrpcRequest(request, future);
+                streamObserver -> sendGrpcRequest(attached, request, streamObserver));
+    sendGrpcRequest(attached, request, future);
     return future;
   }
 
   private void sendGrpcRequest(
+      final ProcessInstanceServiceGrpc.ProcessInstanceServiceStub attached,
       final ProcessInstanceServiceOuterClass.CancelProcessInstanceRequest request,
       final StreamObserver<ProcessInstanceServiceOuterClass.CancelProcessInstanceResponse>
           streamObserver) {
-    AuthorizationHeaders.attach(asyncStub, null, null, config)
+    attached
         .withDeadlineAfter(requestTimeout.toMillis(), TimeUnit.MILLISECONDS)
         .cancelProcessInstance(request, streamObserver);
   }

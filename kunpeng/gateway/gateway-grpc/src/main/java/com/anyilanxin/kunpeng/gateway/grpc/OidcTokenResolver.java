@@ -17,6 +17,7 @@
 package com.anyilanxin.kunpeng.gateway.grpc;
 
 import com.anyilanxin.kunpeng.configuration.gateway.GatewayAuthorizationCfg;
+import com.anyilanxin.kunpeng.protocol.common.UserMetadataConstant;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.ECDSAVerifier;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
@@ -38,8 +39,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * OAuth2 token 解析器：JWKS 验签（RemoteJWKSet 自带公钥缓存与按 kid 刷新）+ 过期/issuer 校验 + claim 映射，
- * 构造授权元数据标准键（userId/userName/roleIds）。验签失败直接抛异常（配置了 OAuth2 即强制验签，不做静默降级）。
+ * OAuth2 token 解析器：JWKS 验签（RemoteJWKSet 自带公钥缓存与按 kid 刷新）+ 过期/issuer 校验 + claim 映射， 构造授权元数据标准键（见
+ * {@link UserMetadataConstant}，名字/邮箱按 OIDC 标准 claim 默认）。验签失败直接抛异常（配置了 OAuth2 即强制验签，不做静默降级）。
  *
  * @author zxuanhong
  * @since 2026.9.0
@@ -127,22 +128,35 @@ public final class OidcTokenResolver {
         throw new IllegalArgumentException(
             "OAuth2 token 缺少操作人 id claim(" + cfg.getUserIdClaim() + ")，无法构造授权元数据");
       }
-      metadata.put("userId", userId);
-      if (cfg.getUserNameClaim() != null && !cfg.getUserNameClaim().isBlank()) {
-        final String userName = claims.getStringClaim(cfg.getUserNameClaim());
-        if (userName != null) {
-          metadata.put("userName", userName);
-        }
-      }
-      if (cfg.getRoleIdsClaim() != null && !cfg.getRoleIdsClaim().isBlank()) {
-        final List<String> roleIds = claims.getStringListClaim(cfg.getRoleIdsClaim());
-        if (roleIds != null && !roleIds.isEmpty()) {
-          metadata.put("roleIds", roleIds);
+      metadata.put(UserMetadataConstant.USER_ID, userId);
+      putIfPresent(metadata, UserMetadataConstant.FIRST_NAME, cfg.getFirstNameClaim(), claims);
+      putIfPresent(metadata, UserMetadataConstant.LAST_NAME, cfg.getLastNameClaim(), claims);
+      putIfPresent(metadata, UserMetadataConstant.EMAIL, cfg.getEmailClaim(), claims);
+      putIfPresent(metadata, UserMetadataConstant.TENANT_ID, cfg.getTenantIdClaim(), claims);
+      if (cfg.getGroupsClaim() != null && !cfg.getGroupsClaim().isBlank()) {
+        final List<String> groups = claims.getStringListClaim(cfg.getGroupsClaim());
+        if (groups != null && !groups.isEmpty()) {
+          metadata.put(UserMetadataConstant.GROUPS, groups);
         }
       }
     } catch (final java.text.ParseException e) {
       throw new IllegalArgumentException("OAuth2 token claim 类型不匹配:" + e.getMessage(), e);
     }
     return metadata;
+  }
+
+  private void putIfPresent(
+      final Map<String, Object> metadata,
+      final String key,
+      final String claimName,
+      final JWTClaimsSet claims)
+      throws java.text.ParseException {
+    if (claimName == null || claimName.isBlank()) {
+      return;
+    }
+    final String value = claims.getStringClaim(claimName);
+    if (value != null) {
+      metadata.put(key, value);
+    }
   }
 }

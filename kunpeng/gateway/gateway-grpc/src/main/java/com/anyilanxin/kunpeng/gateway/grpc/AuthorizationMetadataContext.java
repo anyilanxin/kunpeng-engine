@@ -20,7 +20,7 @@ import static com.anyilanxin.kunpeng.structpack.util.DocumentUtil.convertToMap;
 import static com.anyilanxin.kunpeng.structpack.util.DocumentUtil.convertToMsgPack;
 
 import com.anyilanxin.kunpeng.broker.client.core.BrokerRequest;
-import com.anyilanxin.kunpeng.protocol.business.impl.BusinessRecordConstant;
+import com.anyilanxin.kunpeng.protocol.common.UserMetadataConstant;
 import com.anyilanxin.kunpeng.structpack.util.DocumentUtil;
 import io.grpc.Context;
 import io.grpc.Metadata;
@@ -33,7 +33,8 @@ import org.agrona.concurrent.UnsafeBuffer;
  * 授权元数据上下文：{@link AuthorizationMetadataInterceptor} 把请求头的身份信息（OAuth2 Bearer token 或授权元数据
  * JSON）转换成授权元数据 Map 写入 gRPC {@link Context}，服务端实现从这里读取并整体转写进命令 Record 的编码 meta 部分。
  *
- * <p>Map 标准键（其余字段透传做审计）：{@code userId}（操作人 id，OAuth2 {@code sub} claim 对齐）、{@code groups}（所属组）。
+ * <p>Map 标准键见 {@link UserMetadataConstant}（userId 必填，groups/firstName/lastName/email/tenantId
+ * 可选审计透传）。
  *
  * <p>头契约：{@code Authorization: Bearer <jwt>}（标准 OAuth2）或 {@code x-authorization-metadata}（JSON
  * map，二选一，元数据头优先）。
@@ -83,9 +84,8 @@ public final class AuthorizationMetadataContext {
 
   /** OAuth2 sub claim 补齐 userId 标准键（已显式携带 userId 时不覆盖） */
   static void alignUserId(final Map<String, Object> metadata) {
-    if (!metadata.containsKey(BusinessRecordConstant.AUTHORIZATION_USER_ID)
-        && metadata.containsKey("sub")) {
-      metadata.put(BusinessRecordConstant.AUTHORIZATION_USER_ID, metadata.get("sub"));
+    if (!metadata.containsKey(UserMetadataConstant.USER_ID) && metadata.containsKey("sub")) {
+      metadata.put(UserMetadataConstant.USER_ID, metadata.get("sub"));
     }
   }
 }

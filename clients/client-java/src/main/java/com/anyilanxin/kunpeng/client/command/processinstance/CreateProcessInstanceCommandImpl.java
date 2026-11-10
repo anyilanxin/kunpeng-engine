@@ -90,6 +90,9 @@ public final class CreateProcessInstanceCommandImpl
     final ProcessInstanceServiceOuterClass.CreateProcessInstanceRequest request =
         requestBuilder.build();
 
+    // 授权头在请求线程一次性物化到 stub：重试跑在 gRPC 回调线程，宿主 ThreadLocal 身份（如 SecurityContextHolder）不可见
+    final ProcessInstanceServiceGrpc.ProcessInstanceServiceStub attached = authStub();
+
     final RetriableClientFutureImpl<
             CreateProcessInstanceCommandResponse,
             ProcessInstanceServiceOuterClass.CreateProcessInstanceResponse>
@@ -97,16 +100,17 @@ public final class CreateProcessInstanceCommandImpl
             new RetriableClientFutureImpl<>(
                 CreateProcessInstanceCommandResponseImpl::new,
                 retryPredicate,
-                streamObserver -> sendGrpcRequest(request, streamObserver));
-    sendGrpcRequest(request, future);
+                streamObserver -> sendGrpcRequest(attached, request, streamObserver));
+    sendGrpcRequest(attached, request, future);
     return future;
   }
 
   private void sendGrpcRequest(
+      final ProcessInstanceServiceGrpc.ProcessInstanceServiceStub attached,
       final ProcessInstanceServiceOuterClass.CreateProcessInstanceRequest request,
       final StreamObserver<ProcessInstanceServiceOuterClass.CreateProcessInstanceResponse>
           streamObserver) {
-    authStub()
+    attached
         .withDeadlineAfter(requestTimeout.toMillis(), TimeUnit.MILLISECONDS)
         .createProcessInstance(request, streamObserver);
   }

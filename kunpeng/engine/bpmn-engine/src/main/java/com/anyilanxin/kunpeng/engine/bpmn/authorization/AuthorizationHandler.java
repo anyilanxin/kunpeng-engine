@@ -73,15 +73,15 @@ public final class AuthorizationHandler {
     }
     final List<String> candidateGroups = userTask.getCandidateGroups();
     if (candidateGroups != null && !candidateGroups.isEmpty()) {
-      final boolean matched = operator.roleIds().stream().anyMatch(candidateGroups::contains);
+      final boolean matched = operator.groups().stream().anyMatch(candidateGroups::contains);
       if (!matched) {
-        throw new AuthorizationDeniedException("操作人所属角色不在任务候选审批组内，无权签收");
+        throw new AuthorizationDeniedException("操作人所属组不在任务候选审批组内，无权签收");
       }
     }
     return operator;
   }
 
-  /** 完成用户任务：审批人匹配 → 候选审批人包含操作人 → 候选审批组与操作人角色相交；三者全空（公开任务）放行。 */
+  /** 完成用户任务：审批人匹配 → 候选审批人包含操作人 → 候选审批组与操作人所属组相交；三者全空（公开任务）放行。 */
   public void checkCompleteTask(final UserTaskRecord userTask) {
     final AuthorizationCfg cfg = cfg();
     if (!enabled(cfg)) {
@@ -108,10 +108,10 @@ public final class AuthorizationHandler {
     }
     final List<String> candidateGroups = userTask.getCandidateGroups();
     if (candidateGroups != null && !candidateGroups.isEmpty()) {
-      final boolean groupMatched = operator.roleIds().stream().anyMatch(candidateGroups::contains);
+      final boolean groupMatched = operator.groups().stream().anyMatch(candidateGroups::contains);
       if (!groupMatched) {
         throw new AuthorizationDeniedException(
-            "操作人(" + operator.userId() + ")所属角色不在任务候选审批组内，无权完成任务");
+            "操作人(" + operator.userId() + ")所属组不在任务候选审批组内，无权完成任务");
       }
     }
   }
@@ -126,7 +126,7 @@ public final class AuthorizationHandler {
 
   private boolean isAdmin(final AuthorizationCfg cfg, final Authorization operator) {
     return cfg.getAdminUsers().contains(operator.userId())
-        || operator.roleIds().stream().anyMatch(cfg.getAdminRoleIds()::contains);
+        || operator.groups().stream().anyMatch(cfg.getAdminGroups()::contains);
   }
 
   /**

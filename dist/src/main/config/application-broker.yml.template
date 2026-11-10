@@ -204,7 +204,7 @@ kunpeng:
     authorization:
       enabled: false
       admin-users: []                    # admin 白名单：操作人 userId 命中即旁路全部校验
-      admin-role-ids: []                 # admin 白名单：操作人 roleIds 任一命中即旁路
+      admin-groups: []                   # admin 白名单：操作人 groups 任一命中即旁路
     # BPMN 引擎
     engine:
       max-batch: 200                   # 单批 follow-up 命令/状态上限（越大吞吐越高、单批内存与延迟越高）

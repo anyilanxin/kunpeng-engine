@@ -46,11 +46,20 @@ public class GatewayAuthorizationCfg {
   /** 操作人 id 的 claim 名（映射为授权元数据标准键 userId） */
   private String userIdClaim = "sub";
 
-  /** 操作人姓名的 claim 名（空则不映射 userName） */
-  private String userNameClaim;
+  /** 操作人名的 claim 名（OIDC 标准 given_name，映射 firstName） */
+  private String firstNameClaim = "given_name";
 
-  /** 角色 id 的 claim 名（空则不映射 roleIds） */
-  private String roleIdsClaim;
+  /** 操作人姓的 claim 名（OIDC 标准 family_name，映射 lastName） */
+  private String lastNameClaim = "family_name";
+
+  /** 操作人邮箱的 claim 名（OIDC 标准 email，映射 email；空则不映射） */
+  private String emailClaim = "email";
+
+  /** 所属组 id 列表的 claim 名（非标准 claim，无默认；空则不映射 groups） */
+  private String groupsClaim;
+
+  /** 所属租户 id 的 claim 名（非标准 claim，无默认；空则不映射 tenantId） */
+  private String tenantIdClaim;
 
   /** 自定义授权拦截器挂载（token→授权元数据统一转换，优先于内置 OIDC） */
   private InterceptorCfg interceptor = new InterceptorCfg();

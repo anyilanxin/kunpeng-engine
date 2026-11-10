@@ -21,7 +21,7 @@ import java.util.List;
 
 /**
  * 引擎授权校验独立配置实体（yaml 键 {@code kunpeng.broker.authorization.*}，dist broker/restore profile 经
- * Properties 子类注册）：渐进启用开关 + admin 白名单（用户/角色id）。默认关闭，灰度验证后转强制；后续授权相关扩展 （插件链、claim/resolve
+ * Properties 子类注册）：渐进启用开关 + admin 白名单（用户/组 id）。默认关闭，灰度验证后转强制；后续授权相关扩展 （插件链、claim/resolve
  * 规则、资源级权限）集中定义在本实体。
  *
  * @author zxuanhong
@@ -30,7 +30,7 @@ import java.util.List;
 public class AuthorizationCfg {
   private boolean enabled = false;
   private List<String> adminUsers = new ArrayList<>();
-  private List<String> adminRoleIds = new ArrayList<>();
+  private List<String> adminGroups = new ArrayList<>();
 
   public boolean isEnabled() {
     return enabled;
@@ -48,12 +48,12 @@ public class AuthorizationCfg {
     this.adminUsers = adminUsers;
   }
 
-  public List<String> getAdminRoleIds() {
-    return adminRoleIds;
+  public List<String> getAdminGroups() {
+    return adminGroups;
   }
 
-  public void setAdminRoleIds(final List<String> adminRoleIds) {
-    this.adminRoleIds = adminRoleIds;
+  public void setAdminGroups(final List<String> adminGroups) {
+    this.adminGroups = adminGroups;
   }
 
   @Override
@@ -62,8 +62,8 @@ public class AuthorizationCfg {
         + enabled
         + ", adminUsers="
         + adminUsers
-        + ", adminRoleIds="
-        + adminRoleIds
+        + ", adminGroups="
+        + adminGroups
         + '}';
   }
 }
