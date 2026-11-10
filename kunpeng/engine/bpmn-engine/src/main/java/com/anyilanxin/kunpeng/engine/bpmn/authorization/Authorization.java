@@ -16,8 +16,12 @@
  */
 package com.anyilanxin.kunpeng.engine.bpmn.authorization;
 
-import static com.anyilanxin.kunpeng.protocol.business.impl.BusinessRecordConstant.AUTHORIZATION_GROUPS;
-import static com.anyilanxin.kunpeng.protocol.business.impl.BusinessRecordConstant.AUTHORIZATION_USER_ID;
+import static com.anyilanxin.kunpeng.protocol.common.UserMetadataConstant.EMAIL;
+import static com.anyilanxin.kunpeng.protocol.common.UserMetadataConstant.FIRST_NAME;
+import static com.anyilanxin.kunpeng.protocol.common.UserMetadataConstant.GROUPS;
+import static com.anyilanxin.kunpeng.protocol.common.UserMetadataConstant.LAST_NAME;
+import static com.anyilanxin.kunpeng.protocol.common.UserMetadataConstant.TENANT_ID;
+import static com.anyilanxin.kunpeng.protocol.common.UserMetadataConstant.USER_ID;
 import static com.anyilanxin.kunpeng.structpack.util.DocumentUtil.convertToMap;
 import static com.anyilanxin.kunpeng.structpack.util.DocumentUtil.convertToMsgPack;
 
@@ -26,20 +30,36 @@ import java.util.Map;
 import org.agrona.concurrent.UnsafeBuffer;
 
 /**
- * 授权实体：信封授权元数据（JSON）解析出的具体身份，供引擎处理器直接使用。标准键 userId/groups，其余字段不参与校验。
+ * 授权实体：信封授权元数据（JSON）解析出的具体身份，供引擎处理器直接使用。标准键见 {@link
+ * UserMetadataConstant}（userId/groups/firstName/lastName/email/tenantId），校验只消费 userId 与
+ * groups，其余为审计字段。
  *
  * @author zxuanhong
  * @since 2026.9.0
  */
 public final class Authorization {
   /** 未携带授权元数据的操作人（未认证/系统语义） */
-  public static final Authorization NONE = new Authorization("", List.of());
+  public static final Authorization NONE = new Authorization("", "", "", "", "", List.of());
 
   private final String userId;
+  private final String firstName;
+  private final String lastName;
+  private final String email;
+  private final String tenantId;
   private final List<String> groups;
 
-  private Authorization(final String userId, final List<String> groups) {
+  private Authorization(
+      final String userId,
+      final String firstName,
+      final String lastName,
+      final String email,
+      final String tenantId,
+      final List<String> groups) {
     this.userId = userId;
+    this.firstName = firstName;
+    this.lastName = lastName;
+    this.email = email;
+    this.tenantId = tenantId;
     this.groups = groups;
   }
 
@@ -49,18 +69,28 @@ public final class Authorization {
       return NONE;
     }
     final Map<String, Object> metadata = convertToMap(new UnsafeBuffer(convertToMsgPack(json)));
-    final Object userId = metadata.get(AUTHORIZATION_USER_ID);
+    final Object userId = metadata.get(USER_ID);
     if (userId == null) {
       throw new IllegalArgumentException("授权元数据缺少标准键 userId");
     }
-    final Object groups = metadata.get(AUTHORIZATION_GROUPS);
+    final Object groups = metadata.get(GROUPS);
     final List<String> groupList;
     if (groups instanceof final List<?> list) {
       groupList = list.stream().map(String::valueOf).toList();
     } else {
       groupList = List.of();
     }
-    return new Authorization(userId.toString(), groupList);
+    return new Authorization(
+        userId.toString(),
+        text(metadata.get(FIRST_NAME)),
+        text(metadata.get(LAST_NAME)),
+        text(metadata.get(EMAIL)),
+        text(metadata.get(TENANT_ID)),
+        groupList);
+  }
+
+  private static String text(final Object value) {
+    return value == null ? "" : value.toString();
   }
 
   /**
@@ -71,9 +101,37 @@ public final class Authorization {
   }
 
   /**
-   * @return 操作人所属组；未携带为空列表
+   * @return 操作人所属组 id；未携带为空列表
    */
   public List<String> groups() {
     return groups;
+  }
+
+  /**
+   * @return 操作人名；未携带为空串
+   */
+  public String firstName() {
+    return firstName;
+  }
+
+  /**
+   * @return 操作人姓；未携带为空串
+   */
+  public String lastName() {
+    return lastName;
+  }
+
+  /**
+   * @return 操作人邮箱；未携带为空串
+   */
+  public String email() {
+    return email;
+  }
+
+  /**
+   * @return 操作人所属租户 id；未携带为空串
+   */
+  public String tenantId() {
+    return tenantId;
   }
 }

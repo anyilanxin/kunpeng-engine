@@ -152,6 +152,26 @@ public interface KunpengClientBuilder {
    */
   KunpengClientBuilder credentialsProvider(CredentialsProvider credentialsProvider);
 
+  /**
+   * Registers the authorization metadata provider, resolved and attached as the {@code
+   * x-authorization-metadata} header on every command send (in the sending thread).
+   *
+   * @param authorizationMetadataProvider the provider for per-call operator identity
+   * @return the builder for this client
+   */
+  KunpengClientBuilder authorizationMetadataProvider(
+      AuthorizationMetadataProvider authorizationMetadataProvider);
+
+  /**
+   * Registers the OAuth2 token provider, resolved and attached as the {@code Authorization: Bearer}
+   * header on every command send; token-to-identity conversion happens gateway-side.
+   *
+   * @param authorizationTokenProvider the provider for per-call bearer token
+   * @return the builder for this client
+   */
+  KunpengClientBuilder authorizationTokenProvider(
+      AuthorizationTokenProvider authorizationTokenProvider);
+
   /** Time interval between keep alive messages sent to the gateway. The default is 45 seconds. */
   KunpengClientBuilder keepAlive(Duration keepAlive);
 

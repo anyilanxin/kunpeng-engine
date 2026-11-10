@@ -15,12 +15,12 @@
  */
 package com.anyilanxin.kunpeng.client.command.processinstance;
 
+import com.anyilanxin.kunpeng.client.AuthorizationHeaders;
 import com.anyilanxin.kunpeng.client.KunpengClientConfiguration;
 import com.anyilanxin.kunpeng.client.command.*;
 import com.anyilanxin.kunpeng.gateway.grpc.service.ProcessInstanceServiceGrpc;
 import com.anyilanxin.kunpeng.gateway.grpc.service.ProcessInstanceServiceOuterClass;
 import io.grpc.Metadata;
-import io.grpc.stub.MetadataUtils;
 import io.grpc.stub.StreamObserver;
 import java.time.Duration;
 import java.util.HashSet;
@@ -90,6 +90,9 @@ public final class CreateProcessInstanceCommandImpl
     final ProcessInstanceServiceOuterClass.CreateProcessInstanceRequest request =
         requestBuilder.build();
 
+    // 授权头在请求线程一次性物化到 stub：重试跑在 gRPC 回调线程，宿主 ThreadLocal 身份（如 SecurityContextHolder）不可见
+    final ProcessInstanceServiceGrpc.ProcessInstanceServiceStub attached = authStub();
+
     final RetriableClientFutureImpl<
             CreateProcessInstanceCommandResponse,
             ProcessInstanceServiceOuterClass.CreateProcessInstanceResponse>
@@ -97,33 +100,25 @@ public final class CreateProcessInstanceCommandImpl
             new RetriableClientFutureImpl<>(
                 CreateProcessInstanceCommandResponseImpl::new,
                 retryPredicate,
-                streamObserver -> sendGrpcRequest(request, streamObserver));
-    sendGrpcRequest(request, future);
+                streamObserver -> sendGrpcRequest(attached, request, streamObserver));
+    sendGrpcRequest(attached, request, future);
     return future;
   }
 
   private void sendGrpcRequest(
+      final ProcessInstanceServiceGrpc.ProcessInstanceServiceStub attached,
       final ProcessInstanceServiceOuterClass.CreateProcessInstanceRequest request,
       final StreamObserver<ProcessInstanceServiceOuterClass.CreateProcessInstanceResponse>
           streamObserver) {
-    authStub()
+    attached
         .withDeadlineAfter(requestTimeout.toMillis(), TimeUnit.MILLISECONDS)
         .createProcessInstance(request, streamObserver);
   }
 
-  /** 命令携带身份时附着标准授权头/授权元数据头，未设置时用裸 stub */
+  /** 命令显式身份优先，缺省回落构建期注册的 provider（发送线程解析），两者皆无用裸 stub */
   private ProcessInstanceServiceGrpc.ProcessInstanceServiceStub authStub() {
-    if (authorizationToken == null && authorizationMetadata == null) {
-      return asyncStub;
-    }
-    final Metadata headers = new Metadata();
-    if (authorizationMetadata != null) {
-      headers.put(AUTHORIZATION_METADATA_HEADER, objectMapper.toJson(authorizationMetadata));
-    }
-    if (authorizationToken != null) {
-      headers.put(AUTHORIZATION_HEADER, "Bearer " + authorizationToken);
-    }
-    return asyncStub.withInterceptors(MetadataUtils.newAttachHeadersInterceptor(headers));
+    return AuthorizationHeaders.attach(
+        asyncStub, authorizationToken, authorizationMetadata, config);
   }
 
   @Override

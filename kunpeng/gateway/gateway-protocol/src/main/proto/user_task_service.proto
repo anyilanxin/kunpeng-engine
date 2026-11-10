@@ -52,6 +52,14 @@ message CancelUserTaskRequest {
 message CancelUserTaskResponse {
 }
 
+message ClaimUserTaskRequest {
+  int64 userTaskId = 1;
+  string tenantId = 2;
+}
+
+message ClaimUserTaskResponse {
+}
+
 message AddSignBeforeUserTaskRequest {
   int64 userTaskId = 1;
   string tenantId = 2;
@@ -101,6 +109,13 @@ service UserTaskService {
      - maxJobsToActivate is less than 1
   */
   rpc CancelUserTask (CancelUserTaskRequest) returns (stream CancelUserTaskResponse) {
+  }
+
+  /*
+   * 签收用户任务：签收人不随请求传递，由引擎从授权元数据(x-authorization-metadata / Bearer)操作人身份设置；
+   * 授权开启时校验候选人归属，重复签收/非候选人返回 403 错误
+   */
+  rpc ClaimUserTask (ClaimUserTaskRequest) returns (stream ClaimUserTaskResponse) {
   }
 
 

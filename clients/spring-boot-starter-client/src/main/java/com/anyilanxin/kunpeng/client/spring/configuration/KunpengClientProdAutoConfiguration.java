@@ -16,6 +16,8 @@
  */
 package com.anyilanxin.kunpeng.client.spring.configuration;
 
+import com.anyilanxin.kunpeng.client.AuthorizationMetadataProvider;
+import com.anyilanxin.kunpeng.client.AuthorizationTokenProvider;
 import com.anyilanxin.kunpeng.client.ExecutorResource;
 import com.anyilanxin.kunpeng.client.KunpengClient;
 import com.anyilanxin.kunpeng.client.KunpengClientConfiguration;
@@ -69,13 +71,19 @@ public class KunpengClientProdAutoConfiguration {
       @Qualifier(value = "kunpengJsonMapper") final JsonMapper jsonMapper,
       final List<ClientInterceptor> interceptors,
       final KunpengClientExecutorService kunpengClientExecutorService,
-      final CredentialsProvider kunpengClientCredentialsProvider) {
+      final CredentialsProvider kunpengClientCredentialsProvider,
+      final org.springframework.beans.factory.ObjectProvider<AuthorizationMetadataProvider>
+          authorizationMetadataProvider,
+      final org.springframework.beans.factory.ObjectProvider<AuthorizationTokenProvider>
+          authorizationTokenProvider) {
     return new SpringKunpengClientConfiguration(
         kunpengClientProperties,
         jsonMapper,
         interceptors,
         kunpengClientExecutorService,
-        kunpengClientCredentialsProvider);
+        kunpengClientCredentialsProvider,
+        authorizationMetadataProvider,
+        authorizationTokenProvider);
   }
 
   @Bean(destroyMethod = "close")

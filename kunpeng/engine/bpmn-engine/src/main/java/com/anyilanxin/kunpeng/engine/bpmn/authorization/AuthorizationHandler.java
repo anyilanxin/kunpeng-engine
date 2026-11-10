@@ -54,7 +54,34 @@ public final class AuthorizationHandler {
     }
   }
 
-  /** 完成用户任务：审批人匹配 → 候选审批人包含操作人 → 候选审批组与操作人组相交；三者全空（公开任务）放行。 */
+  /** 签收用户任务：返回操作人身份供设置签收人。签收必须携带操作人身份（签收人来自身份而非请求参数）；候选人归属校验跟随 enabled 开关。 */
+  public Authorization requireClaimOperator(final UserTaskRecord userTask) {
+    final Authorization operator = currentOperator();
+    if (operator.userId().isEmpty()) {
+      throw new AuthorizationDeniedException("签收需要携带操作人身份（授权元数据缺失 userId）");
+    }
+    final AuthorizationCfg cfg = cfg();
+    if (!enabled(cfg) || isAdmin(cfg, operator)) {
+      return operator;
+    }
+    final List<String> candidateUsers = userTask.getCandidateUsers();
+    if (candidateUsers != null && !candidateUsers.isEmpty()) {
+      if (!candidateUsers.contains(operator.userId())) {
+        throw new AuthorizationDeniedException("操作人(" + operator.userId() + ")非任务候选审批人，无权签收");
+      }
+      return operator;
+    }
+    final List<String> candidateGroups = userTask.getCandidateGroups();
+    if (candidateGroups != null && !candidateGroups.isEmpty()) {
+      final boolean matched = operator.groups().stream().anyMatch(candidateGroups::contains);
+      if (!matched) {
+        throw new AuthorizationDeniedException("操作人所属组不在任务候选审批组内，无权签收");
+      }
+    }
+    return operator;
+  }
+
+  /** 完成用户任务：审批人匹配 → 候选审批人包含操作人 → 候选审批组与操作人所属组相交；三者全空（公开任务）放行。 */
   public void checkCompleteTask(final UserTaskRecord userTask) {
     final AuthorizationCfg cfg = cfg();
     if (!enabled(cfg)) {

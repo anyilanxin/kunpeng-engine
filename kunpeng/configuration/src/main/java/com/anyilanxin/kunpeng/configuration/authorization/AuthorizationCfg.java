@@ -21,7 +21,7 @@ import java.util.List;
 
 /**
  * 引擎授权校验独立配置实体（yaml 键 {@code kunpeng.broker.authorization.*}，dist broker/restore profile 经
- * Properties 子类注册）：渐进启用开关 + admin 白名单（用户/组）。默认关闭，灰度验证后转强制；后续授权相关扩展 （插件链、claim/resolve
+ * Properties 子类注册）：渐进启用开关 + admin 白名单（用户/组 id）。默认关闭，灰度验证后转强制；后续授权相关扩展 （插件链、claim/resolve
  * 规则、资源级权限）集中定义在本实体。
  *
  * @author zxuanhong

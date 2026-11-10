@@ -24,6 +24,7 @@ import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterCommunicationServ
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.cluster.utils.TlsConfigUtil;
 import com.anyilanxin.kunpeng.configuration.SecurityCfg;
+import com.anyilanxin.kunpeng.configuration.gateway.GatewayAuthorizationCfg;
 import com.anyilanxin.kunpeng.configuration.gateway.GatewayCfg;
 import com.anyilanxin.kunpeng.configuration.gateway.GatewayGrpcNetworkCfg;
 import com.anyilanxin.kunpeng.configuration.gateway.GatewayThreadsCfg;
@@ -66,6 +67,8 @@ public class GatewayGrpcService extends Actor {
   private static final Logger LOG = GatewayLoggers.GATEWAY_LOGGER_GRPC;
 
   private final GatewayCfg gatewayCfg;
+  private final com.anyilanxin.kunpeng.utils.jar.ExternalJarRepository jarRepository =
+      new com.anyilanxin.kunpeng.utils.jar.ExternalJarRepository();
   private final MeterRegistry meterRegistry;
   private final BrokerClient brokerClient;
   private final ClusterTopologyService topologyManager;
@@ -154,11 +157,41 @@ public class GatewayGrpcService extends Actor {
     final NettyServerBuilder builder = configureNetwork(gatewayCfg.getNetwork());
     configureExecutor(builder);
     configureTls(builder);
-    builder.intercept(new AuthorizationMetadataInterceptor());
+    builder.intercept(
+        new AuthorizationMetadataInterceptor(
+            mountCustomInterceptor(gatewayCfg.getAuthorization()),
+            OidcTokenResolver.of(gatewayCfg.getAuthorization())));
     for (final GrpcService service : grpcServices) {
       builder.addService(service);
     }
     return builder.addService(healthManager.getHealthService()).build();
+  }
+
+  /**
+   * 挂载自定义授权拦截器（与 sink 同款外部 jar 装载）：className 必填，jarPath 有值经 ExternalJarRepository 装载 （同内容 jar
+   * 去重共享加载器），空则网关 classpath 查找；未配置返回 null
+   */
+  private AuthorizationInterceptor mountCustomInterceptor(final GatewayAuthorizationCfg cfg) {
+    if (cfg == null
+        || cfg.getInterceptor() == null
+        || cfg.getInterceptor().getClassName() == null
+        || cfg.getInterceptor().getClassName().isBlank()) {
+      return null;
+    }
+    final com.anyilanxin.kunpeng.configuration.gateway.InterceptorCfg interceptorCfg =
+        cfg.getInterceptor();
+    try {
+      final ClassLoader classLoader =
+          interceptorCfg.isExternal()
+              ? jarRepository.load(interceptorCfg.getJarPath())
+              : AuthorizationInterceptor.class.getClassLoader();
+      final Class<?> clazz = Class.forName(interceptorCfg.getClassName(), true, classLoader);
+      return (AuthorizationInterceptor) clazz.getDeclaredConstructor().newInstance();
+    } catch (final ReflectiveOperationException
+        | com.anyilanxin.kunpeng.utils.jar.ExternalJarLoadException e) {
+      throw new IllegalStateException(
+          "自定义授权拦截器装载失败(无参构造是唯一实例化入口):" + interceptorCfg.getClassName(), e);
+    }
   }
 
   private NettyServerBuilder configureNetwork(final GatewayGrpcNetworkCfg cfg) {

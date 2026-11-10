@@ -26,7 +26,6 @@ import com.anyilanxin.kunpeng.engine.bpmn.LogEventWriter;
 import com.anyilanxin.kunpeng.engine.bpmn.command.behavior.impl.VariableBehavior;
 import com.anyilanxin.kunpeng.engine.bpmn.commandapi.processinstance.ProcessInstanceApiAbstractProcessor;
 import com.anyilanxin.kunpeng.protocol.business.ValueType;
-import com.anyilanxin.kunpeng.protocol.business.impl.BusinessRecordConstant;
 import com.anyilanxin.kunpeng.protocol.business.impl.eventlog.BusinessLogRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.async.AsyncRequestRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.deployment.ProcessDefinitionRecord;
@@ -35,6 +34,7 @@ import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.processin
 import com.anyilanxin.kunpeng.protocol.business.record.command.async.AsyncRequestLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.record.command.processinstance.ProcessInstanceLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.record.commandapi.record.processinstance.CommandApiProcessInstanceValueLifeCycle;
+import com.anyilanxin.kunpeng.protocol.common.UserMetadataConstant;
 import com.anyilanxin.kunpeng.repository.business.modules.async.ImmutableAsyncRepository;
 import com.anyilanxin.kunpeng.repository.business.modules.deployment.bpmnresource.record.ProcessDefinitionRuntime;
 import com.anyilanxin.kunpeng.repository.business.modules.key.ImmutableKeyGeneratorRepository;
@@ -126,7 +126,7 @@ public class ProcessInstanceCreateProcessor
       return "";
     }
     final Map<String, Object> metadata = convertToMap(new UnsafeBuffer(convertToMsgPack(json)));
-    final Object userId = metadata.get(BusinessRecordConstant.AUTHORIZATION_USER_ID);
+    final Object userId = metadata.get(UserMetadataConstant.USER_ID);
     if (userId == null) {
       throw new IllegalArgumentException("授权元数据缺少标准键 userId，无法确定流程发起人");
     }

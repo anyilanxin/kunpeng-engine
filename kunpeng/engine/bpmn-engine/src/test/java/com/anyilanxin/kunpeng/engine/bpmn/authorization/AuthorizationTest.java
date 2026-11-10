@@ -33,17 +33,27 @@ class AuthorizationTest {
   }
 
   @Test
-  void parsesUserIdAndGroups() {
+  void parsesStandardKeys() {
     final Authorization authorization =
-        Authorization.fromJson("{\"userId\":\"u1\",\"groups\":[\"g1\",\"g2\"]}");
+        Authorization.fromJson(
+            "{\"userId\":\"u1\",\"firstName\":\"三\",\"lastName\":\"张\",\"email\":\"u1@x.com\","
+                + "\"tenantId\":\"t1\",\"groups\":[\"g1\",\"g2\"]}");
     assertEquals("u1", authorization.userId());
+    assertEquals("三", authorization.firstName());
+    assertEquals("张", authorization.lastName());
+    assertEquals("u1@x.com", authorization.email());
+    assertEquals("t1", authorization.tenantId());
     assertEquals(List.of("g1", "g2"), authorization.groups());
   }
 
   @Test
-  void missingGroupsYieldsEmptyList() {
+  void missingOptionalKeysYieldDefaults() {
     final Authorization authorization = Authorization.fromJson("{\"userId\":\"u1\"}");
     assertEquals("u1", authorization.userId());
+    assertEquals("", authorization.firstName());
+    assertEquals("", authorization.lastName());
+    assertEquals("", authorization.email());
+    assertEquals("", authorization.tenantId());
     assertTrue(authorization.groups().isEmpty());
   }
 

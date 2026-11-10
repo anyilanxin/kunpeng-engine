@@ -34,12 +34,25 @@ import java.util.Map;
  *   <li>{@code Authorization: Bearer <jwt>}：解码 JWT payload claims（sub→userId 标准键对齐）。
  * </ol>
  *
- * <p>v1 不做 token 签名校验（信任边界假设上游已认证），签名校验（JWKS/auth-server）为后续演进项。网关是引擎身份的信任边界，引擎只认从这里转写进命令字段的值。
+ * <p>Bearer token 转换优先级：自定义授权拦截器（外部 jar 挂载，kunpeng.gateway.authorization.interceptor.*）> 内置 OIDC
+ * 验签解析（jwks 配置）> 免验签 claims 解码（信任边界假设上游已认证）。 网关是引擎身份的信任边界，引擎只认从这里转写进命令字段的值。
  *
  * @author zxuanhong
  * @since 2026.9.0
  */
 public final class AuthorizationMetadataInterceptor implements ServerInterceptor {
+  private final AuthorizationInterceptor customInterceptor;
+  private final OidcTokenResolver oidcResolver;
+
+  /**
+   * @param customInterceptor 自定义授权拦截器（token→授权元数据统一转换）；null 表示未挂载
+   * @param oidcResolver 内置 OAuth2 验签解析器；null 表示未启用（Bearer 免验签解码）
+   */
+  public AuthorizationMetadataInterceptor(
+      final AuthorizationInterceptor customInterceptor, final OidcTokenResolver oidcResolver) {
+    this.customInterceptor = customInterceptor;
+    this.oidcResolver = oidcResolver;
+  }
 
   @Override
   public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(
@@ -53,7 +66,7 @@ public final class AuthorizationMetadataInterceptor implements ServerInterceptor
     return Contexts.interceptCall(context, call, headers, next);
   }
 
-  private static Map<String, Object> extractMetadata(final Metadata headers) {
+  private Map<String, Object> extractMetadata(final Metadata headers) {
     final String metadataJson =
         headers.get(AuthorizationMetadataContext.AUTHORIZATION_METADATA_HEADER);
     if (metadataJson != null && !metadataJson.isBlank()) {
@@ -62,7 +75,12 @@ public final class AuthorizationMetadataInterceptor implements ServerInterceptor
     final String authorization = headers.get(AuthorizationMetadataContext.AUTHORIZATION_HEADER);
     if (authorization != null
         && authorization.regionMatches(true, 0, "Bearer ", 0, "Bearer ".length())) {
-      return jwtClaims(authorization.substring("Bearer ".length()).trim());
+      final String token = authorization.substring("Bearer ".length()).trim();
+      if (customInterceptor != null) {
+        final Map<String, Object> metadata = customInterceptor.toAuthorizationMetadata(token);
+        return metadata == null ? Map.of() : metadata;
+      }
+      return oidcResolver == null ? jwtClaims(token) : oidcResolver.resolve(token);
     }
     return Map.of();
   }

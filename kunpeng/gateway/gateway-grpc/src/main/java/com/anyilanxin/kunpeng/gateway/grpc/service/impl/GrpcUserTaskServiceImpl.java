@@ -22,7 +22,9 @@ import com.anyilanxin.kunpeng.broker.client.business.client.UserTaskClient;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.AddSignAfterRequest;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.AddSignBeforeRequest;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskCancelRequest;
+import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskClaimRequest;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskCompleteRequest;
+import com.anyilanxin.kunpeng.gateway.grpc.AuthorizationMetadataContext;
 import com.anyilanxin.kunpeng.gateway.grpc.GrpcErrorHandle;
 import com.anyilanxin.kunpeng.gateway.grpc.service.GrpcService;
 import com.anyilanxin.kunpeng.gateway.grpc.service.UserTaskServiceGrpc;
@@ -58,6 +60,7 @@ public class GrpcUserTaskServiceImpl extends UserTaskServiceGrpc.UserTaskService
     final long userTaskId = request.getUserTaskId();
     final UserTaskCompleteRequest brokerRequest = new UserTaskCompleteRequest(userTaskId);
     brokerRequest.setVariable(ensureJsonSet(request.getVariable()));
+    AuthorizationMetadataContext.attachTo(brokerRequest);
     // 完成携带后加签：名单非空时模式必须显式（NONE 由引擎拒绝）
     if (request.getAddSignAssigneesCount() > 0) {
       brokerRequest
@@ -89,6 +92,7 @@ public class GrpcUserTaskServiceImpl extends UserTaskServiceGrpc.UserTaskService
       final StreamObserver<UserTaskServiceOuterClass.CancelUserTaskResponse> responseObserver) {
     final long userTaskId = request.getUserTaskId();
     final UserTaskCancelRequest brokerRequest = new UserTaskCancelRequest(userTaskId);
+    AuthorizationMetadataContext.attachTo(brokerRequest);
     commands
         .cancelUserTask(brokerRequest)
         .whenComplete(
@@ -109,6 +113,31 @@ public class GrpcUserTaskServiceImpl extends UserTaskServiceGrpc.UserTaskService
   }
 
   @Override
+  public void claimUserTask(
+      final UserTaskServiceOuterClass.ClaimUserTaskRequest request,
+      final StreamObserver<UserTaskServiceOuterClass.ClaimUserTaskResponse> responseObserver) {
+    // 签收人不随请求传递：授权元数据操作人身份由引擎侧设置
+    final UserTaskClaimRequest brokerRequest = new UserTaskClaimRequest(request.getUserTaskId());
+    AuthorizationMetadataContext.attachTo(brokerRequest);
+    commands
+        .claimUserTask(brokerRequest)
+        .whenComplete(
+            (brokerResponse, throwable) -> {
+              if (throwable != null) {
+                responseObserver.onError(handle.error(responseObserver, throwable));
+              } else {
+                if (brokerResponse.isSuccess()) {
+                  responseObserver.onNext(
+                      UserTaskServiceOuterClass.ClaimUserTaskResponse.newBuilder().build());
+                  responseObserver.onCompleted();
+                } else {
+                  responseObserver.onError(handle.error(responseObserver, brokerResponse));
+                }
+              }
+            });
+  }
+
+  @Override
   public void addSignBeforeUserTask(
       final UserTaskServiceOuterClass.AddSignBeforeUserTaskRequest request,
       final StreamObserver<UserTaskServiceOuterClass.AddSignBeforeUserTaskResponse>
@@ -117,6 +146,7 @@ public class GrpcUserTaskServiceImpl extends UserTaskServiceGrpc.UserTaskService
         new AddSignBeforeRequest(request.getUserTaskId())
             .setAssignees(request.getAssigneesList())
             .setAddSignMode(addSignMode(request.getAddSignMode()));
+    AuthorizationMetadataContext.attachTo(brokerRequest);
     commands
         .addSignBeforeUserTask(brokerRequest)
         .whenComplete(
@@ -144,6 +174,7 @@ public class GrpcUserTaskServiceImpl extends UserTaskServiceGrpc.UserTaskService
         new AddSignAfterRequest(request.getUserTaskId())
             .setAssignees(request.getAssigneesList())
             .setAddSignMode(addSignMode(request.getAddSignMode()));
+    AuthorizationMetadataContext.attachTo(brokerRequest);
     commands
         .addSignAfterUserTask(brokerRequest)
         .whenComplete(

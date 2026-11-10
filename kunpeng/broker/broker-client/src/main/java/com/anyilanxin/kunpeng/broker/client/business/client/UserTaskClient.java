@@ -19,11 +19,13 @@ package com.anyilanxin.kunpeng.broker.client.business.client;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.AddSignAfterRequest;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.AddSignBeforeRequest;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskCancelRequest;
+import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskClaimRequest;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskCompleteRequest;
 import com.anyilanxin.kunpeng.broker.client.core.BrokerResponse;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.addsign.AddSignAfterResponseRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.addsign.AddSignBeforeResponseRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.cancel.UserTaskCancelResponseRecord;
+import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.claim.UserTaskClaimResponseRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.complete.UserTaskCompleteResponseRecord;
 import java.util.concurrent.CompletableFuture;
 
@@ -41,6 +43,10 @@ public interface UserTaskClient {
   /** 取消用户任务 */
   CompletableFuture<BrokerResponse<UserTaskCancelResponseRecord>> cancelUserTask(
       UserTaskCancelRequest request);
+
+  /** 签收用户任务（签收人由引擎从授权元数据操作人身份设置） */
+  CompletableFuture<BrokerResponse<UserTaskClaimResponseRecord>> claimUserTask(
+      UserTaskClaimRequest request);
 
   /** 前加签（原任务冻结，加签归零解冻） */
   CompletableFuture<BrokerResponse<AddSignBeforeResponseRecord>> addSignBeforeUserTask(

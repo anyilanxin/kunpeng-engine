@@ -27,6 +27,7 @@ import com.anyilanxin.kunpeng.client.command.processinstance.CreateProcessInstan
 import com.anyilanxin.kunpeng.client.command.signal.correlation.SignalCorrelationCommand;
 import com.anyilanxin.kunpeng.client.command.topology.TopologyCommand;
 import com.anyilanxin.kunpeng.client.command.usertask.cancel.CancelUserTaskCommand;
+import com.anyilanxin.kunpeng.client.command.usertask.claim.ClaimUserTaskCommand;
 import com.anyilanxin.kunpeng.client.command.usertask.complete.CompleteUserTaskCommand;
 import com.anyilanxin.kunpeng.client.command.variable.remove.RemoveVariableCommand;
 import com.anyilanxin.kunpeng.client.command.variable.update.UpdateVariableCommand;
@@ -269,6 +270,9 @@ public interface KunpengClient extends AutoCloseable, JobClient, GatewayServiceD
    * @return {@link CancelUserTaskCommand }
    */
   CancelUserTaskCommand newCancelUserTaskCommand();
+
+  /** 签收用户任务（签收人由引擎从授权元数据操作人身份设置） */
+  ClaimUserTaskCommand newClaimUserTaskCommand();
 
   /**
    * 前加签（原任务冻结、加签归零解冻）

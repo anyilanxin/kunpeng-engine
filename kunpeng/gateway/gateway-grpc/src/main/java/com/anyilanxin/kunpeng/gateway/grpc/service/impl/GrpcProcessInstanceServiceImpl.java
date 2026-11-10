@@ -27,10 +27,7 @@ import com.anyilanxin.kunpeng.gateway.grpc.service.GrpcService;
 import com.anyilanxin.kunpeng.gateway.grpc.service.ProcessInstanceServiceGrpc;
 import com.anyilanxin.kunpeng.gateway.grpc.service.ProcessInstanceServiceOuterClass;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.processinstance.create.ProcessInstanceCreateResponseRecord;
-import com.anyilanxin.kunpeng.structpack.util.DocumentUtil;
 import io.grpc.stub.StreamObserver;
-import java.util.Map;
-import org.agrona.concurrent.UnsafeBuffer;
 
 /**
  * 流程实例 gRPC 服务实现。
@@ -80,14 +77,7 @@ public class GrpcProcessInstanceServiceImpl
         .setVariable(ensureJsonSet(request.getVariable()))
         .setTenantId(request.getTenantId());
     // 授权元数据进传输帧信封（统一通道，任何命令零改动复用）
-    final Map<String, Object> authorizationMetadata =
-        AuthorizationMetadataContext.authorizationMetadata();
-    if (!authorizationMetadata.isEmpty()) {
-      brokerRequest.setAuthorizationMetadata(
-          new UnsafeBuffer(
-              DocumentUtil.convertToJsonBytes(
-                  new UnsafeBuffer(DocumentUtil.convertToMsgPack(authorizationMetadata)))));
-    }
+    AuthorizationMetadataContext.attachTo(brokerRequest);
     commands
         .createProcessInstance(brokerRequest)
         .whenComplete(
@@ -131,6 +121,7 @@ public class GrpcProcessInstanceServiceImpl
     final long processInstanceId = request.getProcessInstanceId();
     final ProcessInstanceCancelRequest brokerRequest =
         new ProcessInstanceCancelRequest(processInstanceId);
+    AuthorizationMetadataContext.attachTo(brokerRequest);
     commands
         .cancelProcessInstance(brokerRequest)
         .whenComplete(

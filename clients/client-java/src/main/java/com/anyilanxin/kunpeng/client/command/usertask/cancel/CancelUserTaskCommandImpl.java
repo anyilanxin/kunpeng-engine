@@ -12,6 +12,7 @@
  */
 package com.anyilanxin.kunpeng.client.command.usertask.cancel;
 
+import com.anyilanxin.kunpeng.client.AuthorizationHeaders;
 import com.anyilanxin.kunpeng.client.KunpengClientConfiguration;
 import com.anyilanxin.kunpeng.client.command.*;
 import com.anyilanxin.kunpeng.gateway.grpc.service.UserTaskServiceGrpc;
@@ -66,21 +67,26 @@ public final class CancelUserTaskCommandImpl implements CancelUserTaskCommand {
   private KunpengFuture<CancelUserTaskCommandResponse> sendGrpcRequest() {
     final UserTaskServiceOuterClass.CancelUserTaskRequest request = requestBuilder.build();
 
+    // 授权头在请求线程一次性物化到 stub：重试跑在 gRPC 回调线程，宿主 ThreadLocal 身份（如 SecurityContextHolder）不可见
+    final UserTaskServiceGrpc.UserTaskServiceStub attached =
+        AuthorizationHeaders.attach(asyncStub, null, null, config);
+
     final RetriableClientFutureImpl<
             CancelUserTaskCommandResponse, UserTaskServiceOuterClass.CancelUserTaskResponse>
         future =
             new RetriableClientFutureImpl<>(
                 CancelUserTaskCommandResponseImpl::new,
                 retryPredicate,
-                streamObserver -> sendGrpcRequest(request, streamObserver));
-    sendGrpcRequest(request, future);
+                streamObserver -> sendGrpcRequest(attached, request, streamObserver));
+    sendGrpcRequest(attached, request, future);
     return future;
   }
 
   private void sendGrpcRequest(
+      final UserTaskServiceGrpc.UserTaskServiceStub attached,
       final UserTaskServiceOuterClass.CancelUserTaskRequest request,
       final StreamObserver<UserTaskServiceOuterClass.CancelUserTaskResponse> streamObserver) {
-    asyncStub
+    attached
         .withDeadlineAfter(requestTimeout.toMillis(), TimeUnit.MILLISECONDS)
         .cancelUserTask(request, streamObserver);
   }
