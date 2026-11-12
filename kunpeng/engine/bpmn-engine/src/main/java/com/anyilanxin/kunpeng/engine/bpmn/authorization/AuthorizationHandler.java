@@ -16,7 +16,8 @@
  */
 package com.anyilanxin.kunpeng.engine.bpmn.authorization;
 
-import com.anyilanxin.kunpeng.configuration.authorization.AuthorizationCfg;
+import com.anyilanxin.kunpeng.configuration.broker.AuthorizationCfg;
+import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
 import com.anyilanxin.kunpeng.engine.bpmn.LogEventWriter;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.usertask.UserTaskRecord;
 import java.util.List;
@@ -125,19 +126,18 @@ public final class AuthorizationHandler {
   }
 
   private boolean isAdmin(final AuthorizationCfg cfg, final Authorization operator) {
-    return cfg.getAdminUsers().contains(operator.userId())
-        || operator.groups().stream().anyMatch(cfg.getAdminGroups()::contains);
+    return operator.groups().stream().anyMatch(cfg.getAdminGroups()::contains);
   }
 
   /**
-   * 从 Spring 容器解析独立配置实体 AuthorizationCfg（dist broker/restore profile 注册）；容器无该
-   * bean（裸单测）视为未配置=功能关闭（默认关语义）
+   * 从 Spring 容器解析 BrokerCfg 取内嵌授权配置（dist broker/restore profile 注册）；容器无该 bean（裸单测）视为未配置=功能关闭（默认关语义）
    */
   private AuthorizationCfg cfg() {
     final BeanFactory beanFactory = writer.getBeanFactory();
     if (beanFactory == null) {
       return null;
     }
-    return beanFactory.getBeanProvider(AuthorizationCfg.class).getIfAvailable();
+    final BrokerCfg brokerCfg = beanFactory.getBeanProvider(BrokerCfg.class).getIfAvailable();
+    return brokerCfg == null ? null : brokerCfg.getAuthorization();
   }
 }
