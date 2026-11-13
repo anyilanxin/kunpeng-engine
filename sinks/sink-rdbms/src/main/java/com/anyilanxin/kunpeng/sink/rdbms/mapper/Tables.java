@@ -130,7 +130,16 @@ public final class Tables {
               "end_time",
               "duration",
               "revision",
-              "resource_id"),
+              "resource_id",
+              "add_sign_role",
+              "root_activity_instance_id",
+              "add_sign_phase",
+              "add_sign_mode",
+              "add_sign_count",
+              "add_sign_depth",
+              "add_sign_allowed",
+              "remaining_assignees",
+              "after_sign_assignees"),
           List.of("task_id"));
 
   /**

@@ -387,7 +387,7 @@ class RdbmsSinkTest {
             TableName.TIMER,
             TableName.MESSAGE_SUBSCRIPTION,
             TableName.SIGNAL_SUBSCRIPTION,
-            TableName.SINK_POSITION);
+            TableName.POSITION);
     try (final var connection = DriverManager.getConnection(jdbcUrl, "sa", "")) {
       final var metadata = connection.getMetaData();
       for (final var table : tables) {

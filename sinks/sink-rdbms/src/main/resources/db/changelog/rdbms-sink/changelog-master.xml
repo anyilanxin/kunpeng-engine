@@ -23,7 +23,8 @@
 
   <!--
     跨方言列类型变量：时间列在 MySQL/MariaDB 上用 DATETIME(3)（规避 TIMESTAMP 的 2038 上限），
-    大文本列按各方言的可用类型。后续加字段/加表请按版本号追加 changesets/<版本>.xml 并在此 include。
+    大文本列按各方言的可用类型。开发期单基线：schema 尚未正式发布，改结构直接改 baseline.xml
+    （终态建表）并重置库，不追加变更集；正式发布后的演进才按版本号追加 changesets/<版本>.xml 并在此 include。
   -->
   <property name="ts.type" value="DATETIME(3)" dbms="mysql,mariadb"/>
   <property name="ts.type" value="TIMESTAMP(3)" dbms="postgresql,h2"/>
@@ -33,9 +34,6 @@
   <property name="large.type" value="TEXT" dbms="postgresql"/>
   <property name="large.type" value="CLOB" dbms="h2"/>
 
-  <include file="changesets/2026.9.0.xml" relativeToChangelogFile="true"/>
-  <include file="changesets/2026.11.0.xml" relativeToChangelogFile="true"/>
-  <include file="changesets/2026.11.1.xml" relativeToChangelogFile="true"/>
-  <include file="changesets/2026.11.2.xml" relativeToChangelogFile="true"/>
+  <include file="changesets/baseline.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

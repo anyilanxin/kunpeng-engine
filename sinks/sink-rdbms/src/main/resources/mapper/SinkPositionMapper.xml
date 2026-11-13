@@ -28,12 +28,12 @@
 
   <select id="findOne" resultMap="sinkPositionRow">
     SELECT partition_id, sink, exported_position, created_time, update_time
-    FROM ${table.sink_position}
+    FROM ${table.position}
     WHERE partition_id = #{partitionId}
   </select>
 
   <insert id="insert" parameterType="com.anyilanxin.kunpeng.sink.rdbms.model.SinkPositionDbModel">
-    INSERT INTO ${table.sink_position} (
+    INSERT INTO ${table.position} (
       partition_id, sink, exported_position, created_time, update_time
     ) VALUES (
       #{partitionId}, #{sink}, #{exportedPosition},
@@ -44,7 +44,7 @@
   <!-- 只推进位置与更新时间；sink / created_time 是创建期列不被覆盖。
        WHERE 带单调守卫：位置只许前进，滞后的并发/恢复写入不影响已有水位 -->
   <update id="update" parameterType="com.anyilanxin.kunpeng.sink.rdbms.model.SinkPositionDbModel">
-    UPDATE ${table.sink_position}
+    UPDATE ${table.position}
     SET exported_position = #{exportedPosition},
         update_time = #{updateTime,jdbcType=TIMESTAMP}
     WHERE partition_id = #{partitionId}
@@ -52,9 +52,9 @@
   </update>
 
   <delete id="removePartition">
-    DELETE FROM ${table.sink_position} WHERE partition_id = #{partitionId}
+    DELETE FROM ${table.position} WHERE partition_id = #{partitionId}
   </delete>
 
-  <delete id="clearAll">DELETE FROM ${table.sink_position}</delete>
+  <delete id="clearAll">DELETE FROM ${table.position}</delete>
 
 </mapper>
