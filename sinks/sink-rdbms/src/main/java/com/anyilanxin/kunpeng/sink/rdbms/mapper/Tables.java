@@ -126,8 +126,6 @@ public final class Tables {
               "due_date",
               "follow_up_date",
               "state",
-              "candidate_groups",
-              "candidate_users",
               "start_time",
               "end_time",
               "duration",

@@ -80,8 +80,6 @@ public final class UserTaskRecordHandler implements RecordModelHandler {
       model.setDueTime(RecordModelHandler.at(value.getDueDate()));
       model.setFollowUpTime(RecordModelHandler.at(value.getFollowUpDate()));
       model.setState(nameOf(value.getState()));
-      model.setCandidateGroups(JsonValues.toJson(value.getCandidateGroups()));
-      model.setCandidateUsers(JsonValues.toJson(value.getCandidateUsers()));
       model.setStartTime(RecordModelHandler.at(value.getStartTime()));
       model.setEndTime(RecordModelHandler.at(value.getEndTime()));
       model.setDuration(value.getDuration() > 0 ? value.getDuration() : null);
@@ -100,8 +98,6 @@ public final class UserTaskRecordHandler implements RecordModelHandler {
     model.setDueTime(RecordModelHandler.at(value.getDueDate()));
     model.setFollowUpTime(RecordModelHandler.at(value.getFollowUpDate()));
     model.setState(nameOf(value.getState()));
-    model.setCandidateGroups(JsonValues.toJson(value.getCandidateGroups()));
-    model.setCandidateUsers(JsonValues.toJson(value.getCandidateUsers()));
     model.setEndTime(RecordModelHandler.at(value.getEndTime()));
     model.setDuration(value.getDuration() > 0 ? value.getDuration() : null);
     model.setRevision(value.getRev());
