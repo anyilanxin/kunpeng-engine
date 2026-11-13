@@ -19,6 +19,7 @@ import static com.anyilanxin.kunpeng.sink.rdbms.mapper.Tables.PROCESS_INSTANCE;
 import static com.anyilanxin.kunpeng.sink.rdbms.mapper.Tables.SIGNAL_SUBSCRIPTION;
 import static com.anyilanxin.kunpeng.sink.rdbms.mapper.Tables.TIMER;
 import static com.anyilanxin.kunpeng.sink.rdbms.mapper.Tables.USER_TASK;
+import static com.anyilanxin.kunpeng.sink.rdbms.mapper.Tables.USER_TASK_CANDIDATE;
 import static com.anyilanxin.kunpeng.sink.rdbms.mapper.Tables.VARIABLE;
 
 import com.anyilanxin.kunpeng.protocol.business.BusinessEventRecord;
@@ -57,6 +58,8 @@ public final class HistoryCleanupRecordHandler implements RecordModelHandler {
         RowChange.deleteByColumn(ACTIVITY_INSTANCE, "process_instance_id", processInstanceId));
     buffer.offer(RowChange.deleteByColumn(VARIABLE, "process_instance_id", processInstanceId));
     buffer.offer(RowChange.deleteByColumn(USER_TASK, "process_instance_id", processInstanceId));
+    buffer.offer(
+        RowChange.deleteByColumn(USER_TASK_CANDIDATE, "process_instance_id", processInstanceId));
     buffer.offer(RowChange.deleteByColumn(INCIDENT, "process_instance_id", processInstanceId));
     buffer.offer(RowChange.deleteByColumn(TIMER, "process_instance_id", processInstanceId));
     buffer.offer(

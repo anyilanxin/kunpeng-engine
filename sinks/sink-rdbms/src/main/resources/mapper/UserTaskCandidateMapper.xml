@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+  ~ Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  -->
+<mapper namespace="com.anyilanxin.kunpeng.sink.rdbms.mapper.UserTaskCandidateMapper">
+
+  <insert id="insert" parameterType="com.anyilanxin.kunpeng.sink.rdbms.model.UserTaskCandidateDbModel">
+    INSERT INTO ${table.user_task_candidate} (
+      task_id, process_instance_id, candidate_type, candidate_value, resource_id
+    ) VALUES (
+      #{taskId}, #{processInstanceId}, #{candidateType}, #{candidateValue}, #{resourceId}
+    )
+  </insert>
+
+  <delete id="cleanupByTask">
+    DELETE FROM ${table.user_task_candidate} WHERE task_id = #{taskId}
+  </delete>
+
+  <delete id="cleanupHistory">
+    DELETE FROM ${table.user_task_candidate} WHERE process_instance_id = #{processInstanceId}
+  </delete>
+
+  <delete id="clearAll">DELETE FROM ${table.user_task_candidate}</delete>
+
+</mapper>
