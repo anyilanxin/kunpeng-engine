@@ -60,6 +60,23 @@ message ClaimUserTaskRequest {
 message ClaimUserTaskResponse {
 }
 
+message AssignUserTaskRequest {
+  int64 userTaskId = 1;
+  string tenantId = 2;
+  string assignee = 3;
+}
+
+message AssignUserTaskResponse {
+}
+
+message UnclaimUserTaskRequest {
+  int64 userTaskId = 1;
+  string tenantId = 2;
+}
+
+message UnclaimUserTaskResponse {
+}
+
 message AddSignBeforeUserTaskRequest {
   int64 userTaskId = 1;
   string tenantId = 2;
@@ -116,6 +133,20 @@ service UserTaskService {
    * 授权开启时校验候选人归属，重复签收/非候选人返回 403 错误
    */
   rpc ClaimUserTask (ClaimUserTaskRequest) returns (stream ClaimUserTaskResponse) {
+  }
+
+  /*
+   * 改派用户任务（管理员动作）：新审批人 assignee 随请求传递，引擎仅改 assignee 不动候选人与变量；
+   * 授权开启时操作人须命中 admin 白名单，非管理员返回 403 错误
+   */
+  rpc AssignUserTask (AssignUserTaskRequest) returns (stream AssignUserTaskResponse) {
+  }
+
+  /*
+   * 取消签收用户任务：仅清空签收人(任务回到候选池)，不动候选人与变量；
+   * 授权开启时操作人须为当前签收人(admin 白名单旁路)，非签收人返回 403 错误
+   */
+  rpc UnclaimUserTask (UnclaimUserTaskRequest) returns (stream UnclaimUserTaskResponse) {
   }
 
 

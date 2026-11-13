@@ -26,9 +26,11 @@ import com.anyilanxin.kunpeng.client.command.processinstance.CancelProcessInstan
 import com.anyilanxin.kunpeng.client.command.processinstance.CreateProcessInstanceCommand;
 import com.anyilanxin.kunpeng.client.command.signal.correlation.SignalCorrelationCommand;
 import com.anyilanxin.kunpeng.client.command.topology.TopologyCommand;
+import com.anyilanxin.kunpeng.client.command.usertask.assignee.AssignUserTaskCommand;
 import com.anyilanxin.kunpeng.client.command.usertask.cancel.CancelUserTaskCommand;
 import com.anyilanxin.kunpeng.client.command.usertask.claim.ClaimUserTaskCommand;
 import com.anyilanxin.kunpeng.client.command.usertask.complete.CompleteUserTaskCommand;
+import com.anyilanxin.kunpeng.client.command.usertask.unclaim.UnclaimUserTaskCommand;
 import com.anyilanxin.kunpeng.client.command.variable.remove.RemoveVariableCommand;
 import com.anyilanxin.kunpeng.client.command.variable.update.UpdateVariableCommand;
 import com.anyilanxin.kunpeng.client.loadbalancer.GatewayServiceDiscoverClient;
@@ -273,6 +275,12 @@ public interface KunpengClient extends AutoCloseable, JobClient, GatewayServiceD
 
   /** 签收用户任务（签收人由引擎从授权元数据操作人身份设置） */
   ClaimUserTaskCommand newClaimUserTaskCommand();
+
+  /** 改派用户任务（管理员动作：新审批人随命令传递，admin 白名单校验在引擎侧） */
+  AssignUserTaskCommand newAssignUserTaskCommand();
+
+  /** 取消签收用户任务（仅清空签收人，签收人匹配校验在引擎侧） */
+  UnclaimUserTaskCommand newUnclaimUserTaskCommand();
 
   /**
    * 前加签（原任务冻结、加签归零解冻）

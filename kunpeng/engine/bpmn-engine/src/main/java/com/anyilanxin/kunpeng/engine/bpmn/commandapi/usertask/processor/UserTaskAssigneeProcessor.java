@@ -16,43 +16,64 @@
  */
 package com.anyilanxin.kunpeng.engine.bpmn.commandapi.usertask.processor;
 
-import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformation.BpmnTransformer;
 import com.anyilanxin.kunpeng.engine.bpmn.LogEventWriter;
-import com.anyilanxin.kunpeng.engine.bpmn.command.behavior.impl.VariableBehavior;
+import com.anyilanxin.kunpeng.engine.bpmn.authorization.AuthorizationDeniedException;
+import com.anyilanxin.kunpeng.engine.bpmn.authorization.AuthorizationHandler;
 import com.anyilanxin.kunpeng.engine.bpmn.commandapi.usertask.UserTaskApiAbstractProcessor;
 import com.anyilanxin.kunpeng.protocol.business.impl.eventlog.BusinessLogRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.usertask.UserTaskRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.assignee.UserTaskAssigneeRequestRecord;
+import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.assignee.UserTaskAssigneeResponseRecord;
+import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.UserTaskLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.record.commandapi.record.usertask.CommandApiUserTaskValueLifeCycle;
-import com.anyilanxin.kunpeng.repository.business.modules.key.ImmutableKeyGeneratorRepository;
+import org.apache.commons.lang3.StringUtils;
 
 /**
- * 用户任务改派 API 处理器。
+ * 用户任务改派 API 处理器：管理员动作——新审批人来自请求参数（不是操作人身份），启用授权时操作人须命中 admin 白名单；仅改 assignee 不动候选人与变量，重复改派允许。
  *
  * @author zxuanhong
  * @since 2026.9.0
  */
 public class UserTaskAssigneeProcessor
     extends UserTaskApiAbstractProcessor<UserTaskAssigneeRequestRecord> {
-  final LogEventWriter writer;
-  private final BpmnTransformer bpmnTransformer;
-  private final ImmutableKeyGeneratorRepository keyGenerator;
-  private final int sourceId;
-  private final VariableBehavior variableBehavior;
+  private final LogEventWriter writer;
+  private final AuthorizationHandler authorization;
+  private final UserTaskAssigneeResponseRecord response = new UserTaskAssigneeResponseRecord();
 
   public UserTaskAssigneeProcessor(final LogEventWriter writer) {
     super(writer, writer.getRepository().userTaskRepository());
     this.writer = writer;
-    keyGenerator = writer.getRepository().keyGeneratorRepository();
-    bpmnTransformer = writer.getBpmnTransformer();
-    sourceId = writer.getSourceId();
-    variableBehavior = writer.behavior().variableBehavior();
+    authorization = new AuthorizationHandler(writer);
   }
 
   @Override
   public void innerProcessRecord(
       final BusinessLogRecord<UserTaskAssigneeRequestRecord> record,
-      final UserTaskRecord userTask) {}
+      final UserTaskRecord userTask) {
+    if (userTask.getLifeCycle() != UserTaskLifeCycle.CREATED) {
+      writer.adErrorResponse(
+          record.getRequestId(), 0, "当前任务状态不允许此操作:" + userTask.getState().name());
+      return;
+    }
+    final String assignee = record.getValue().getAssignee();
+    if (StringUtils.isBlank(assignee)) {
+      writer.adErrorResponse(record.getRequestId(), 0, "改派目标审批人不能为空");
+      return;
+    }
+    try {
+      authorization.checkReassign();
+    } catch (final AuthorizationDeniedException e) {
+      writer.adErrorResponse(
+          record.getRequestId(), AuthorizationDeniedException.CODE, e.getMessage());
+      return;
+    }
+    userTask.setAssignee(assignee);
+    writer.addCommand(
+        userTask.getTaskId(), UserTaskLifeCycle.ASSIGNEE, record.getRequestId(), userTask);
+    response.reset();
+    writer.adResponse(
+        CommandApiUserTaskValueLifeCycle.ASSIGNEE_RESPONSE, record.getRequestId(), response);
+  }
 
   @Override
   public CommandApiUserTaskValueLifeCycle valueLifeCycle() {

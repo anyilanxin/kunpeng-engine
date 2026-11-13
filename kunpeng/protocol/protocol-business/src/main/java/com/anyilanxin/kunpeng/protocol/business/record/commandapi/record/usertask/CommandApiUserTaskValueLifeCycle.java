@@ -34,6 +34,8 @@ import static com.anyilanxin.kunpeng.protocol.business.RecordMappingIndex.RECORD
 import static com.anyilanxin.kunpeng.protocol.business.RecordMappingIndex.RECORD_INDEX_88;
 import static com.anyilanxin.kunpeng.protocol.business.RecordMappingIndex.RECORD_INDEX_89;
 import static com.anyilanxin.kunpeng.protocol.business.RecordMappingIndex.RECORD_INDEX_90;
+import static com.anyilanxin.kunpeng.protocol.business.RecordMappingIndex.RECORD_INDEX_91;
+import static com.anyilanxin.kunpeng.protocol.business.RecordMappingIndex.RECORD_INDEX_92;
 import static com.anyilanxin.kunpeng.protocol.business.RecordProcessIndex.*;
 
 import com.anyilanxin.kunpeng.protocol.business.ValueType;
@@ -65,7 +67,9 @@ public enum CommandApiUserTaskValueLifeCycle implements CommandApiValueLifeCycle
   ADD_SIGN_BEFORE_REQUEST((short) 18, PROCESS_INDEX_228, RECORD_INDEX_87),
   ADD_SIGN_BEFORE_RESPONSE((short) 19, NOT_PROCESS_INDEX, RECORD_INDEX_88),
   ADD_SIGN_AFTER_REQUEST((short) 20, PROCESS_INDEX_229, RECORD_INDEX_89),
-  ADD_SIGN_AFTER_RESPONSE((short) 21, NOT_PROCESS_INDEX, RECORD_INDEX_90);
+  ADD_SIGN_AFTER_RESPONSE((short) 21, NOT_PROCESS_INDEX, RECORD_INDEX_90),
+  UNCLAIM_REQUEST((short) 22, PROCESS_INDEX_234, RECORD_INDEX_91),
+  UNCLAIM_RESPONSE((short) 23, NOT_PROCESS_INDEX, RECORD_INDEX_92);
 
   private final short value;
   private final short processIndex;
@@ -106,6 +110,8 @@ public enum CommandApiUserTaskValueLifeCycle implements CommandApiValueLifeCycle
       case 19 -> ADD_SIGN_BEFORE_RESPONSE;
       case 20 -> ADD_SIGN_AFTER_REQUEST;
       case 21 -> ADD_SIGN_AFTER_RESPONSE;
+      case 22 -> UNCLAIM_REQUEST;
+      case 23 -> UNCLAIM_RESPONSE;
       default -> throw new IllegalStateException("Unexpected value: " + value);
     };
   }

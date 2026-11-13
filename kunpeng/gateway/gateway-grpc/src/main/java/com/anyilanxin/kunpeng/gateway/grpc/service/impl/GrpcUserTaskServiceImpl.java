@@ -21,9 +21,11 @@ import static com.anyilanxin.kunpeng.gateway.grpc.utils.RequestUtil.ensureJsonSe
 import com.anyilanxin.kunpeng.broker.client.business.client.UserTaskClient;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.AddSignAfterRequest;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.AddSignBeforeRequest;
+import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskAssigneeRequest;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskCancelRequest;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskClaimRequest;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskCompleteRequest;
+import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskUnclaimRequest;
 import com.anyilanxin.kunpeng.gateway.grpc.AuthorizationMetadataContext;
 import com.anyilanxin.kunpeng.gateway.grpc.GrpcErrorHandle;
 import com.anyilanxin.kunpeng.gateway.grpc.service.GrpcService;
@@ -129,6 +131,58 @@ public class GrpcUserTaskServiceImpl extends UserTaskServiceGrpc.UserTaskService
                 if (brokerResponse.isSuccess()) {
                   responseObserver.onNext(
                       UserTaskServiceOuterClass.ClaimUserTaskResponse.newBuilder().build());
+                  responseObserver.onCompleted();
+                } else {
+                  responseObserver.onError(handle.error(responseObserver, brokerResponse));
+                }
+              }
+            });
+  }
+
+  @Override
+  public void assignUserTask(
+      final UserTaskServiceOuterClass.AssignUserTaskRequest request,
+      final StreamObserver<UserTaskServiceOuterClass.AssignUserTaskResponse> responseObserver) {
+    // 改派=管理员动作：新审批人随请求传递，操作人身份经授权元数据携带（admin 白名单校验在引擎侧）
+    final UserTaskAssigneeRequest brokerRequest =
+        new UserTaskAssigneeRequest(request.getUserTaskId(), request.getAssignee());
+    AuthorizationMetadataContext.attachTo(brokerRequest);
+    commands
+        .assignUserTask(brokerRequest)
+        .whenComplete(
+            (brokerResponse, throwable) -> {
+              if (throwable != null) {
+                responseObserver.onError(handle.error(responseObserver, throwable));
+              } else {
+                if (brokerResponse.isSuccess()) {
+                  responseObserver.onNext(
+                      UserTaskServiceOuterClass.AssignUserTaskResponse.newBuilder().build());
+                  responseObserver.onCompleted();
+                } else {
+                  responseObserver.onError(handle.error(responseObserver, brokerResponse));
+                }
+              }
+            });
+  }
+
+  @Override
+  public void unclaimUserTask(
+      final UserTaskServiceOuterClass.UnclaimUserTaskRequest request,
+      final StreamObserver<UserTaskServiceOuterClass.UnclaimUserTaskResponse> responseObserver) {
+    // 取消签收不随请求传值：操作人身份经授权元数据携带，签收人匹配校验在引擎侧
+    final UserTaskUnclaimRequest brokerRequest =
+        new UserTaskUnclaimRequest(request.getUserTaskId());
+    AuthorizationMetadataContext.attachTo(brokerRequest);
+    commands
+        .unclaimUserTask(brokerRequest)
+        .whenComplete(
+            (brokerResponse, throwable) -> {
+              if (throwable != null) {
+                responseObserver.onError(handle.error(responseObserver, throwable));
+              } else {
+                if (brokerResponse.isSuccess()) {
+                  responseObserver.onNext(
+                      UserTaskServiceOuterClass.UnclaimUserTaskResponse.newBuilder().build());
                   responseObserver.onCompleted();
                 } else {
                   responseObserver.onError(handle.error(responseObserver, brokerResponse));

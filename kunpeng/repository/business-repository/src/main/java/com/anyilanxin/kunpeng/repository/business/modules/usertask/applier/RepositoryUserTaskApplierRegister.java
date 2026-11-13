@@ -31,6 +31,7 @@ public class RepositoryUserTaskApplierRegister {
   public static void register(
       final EnableRegisterRepositoryAppliers appliers, final BusinessRepository repository) {
     appliers
+        .register(new RocksdbRepositoryUserTaskAssigneeApplierImpl(repository))
         .register(new RocksdbRepositoryUserTaskCancelApplierImpl(repository))
         .register(new RocksdbRepositoryUserTaskClaimApplierImpl(repository))
         .register(new RocksdbRepositoryUserTaskCanceledApplierImpl(repository))
@@ -42,6 +43,7 @@ public class RepositoryUserTaskApplierRegister {
         .register(new RocksdbRepositoryUserTaskDeletedApplierImpl(repository))
         .register(new RocksdbRepositoryUserTaskTerminatedApplierImpl(repository))
         .register(new RocksdbRepositoryUserTaskTerminatingApplierImpl(repository))
+        .register(new RocksdbRepositoryUserTaskUnclaimApplierImpl(repository))
         .register(new RocksdbRepositoryUserTaskUpdatedApplierImpl(repository))
         .register(new RocksdbRepositoryUserTaskUpdatingApplierImpl(repository));
   }

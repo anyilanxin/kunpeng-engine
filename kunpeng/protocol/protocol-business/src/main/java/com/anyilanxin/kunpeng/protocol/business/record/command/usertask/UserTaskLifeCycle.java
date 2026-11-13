@@ -43,7 +43,8 @@ public enum UserTaskLifeCycle implements ValueLifeCycle {
   TERMINATED((short) 17, PROCESS_INDEX_126),
   LISTENER_CREATE((short) 18, PROCESS_INDEX_127),
   LISTENER_COMPLETED((short) 19, PROCESS_INDEX_128),
-  LISTENER_DENY((short) 20, PROCESS_INDEX_129);
+  LISTENER_DENY((short) 20, PROCESS_INDEX_129),
+  UNCLAIM((short) 21, PROCESS_INDEX_235);
 
   private final short value;
   private final short processIndex;
@@ -100,6 +101,7 @@ public enum UserTaskLifeCycle implements ValueLifeCycle {
       case 18 -> LISTENER_CREATE;
       case 19 -> LISTENER_COMPLETED;
       case 20 -> LISTENER_DENY;
+      case 21 -> UNCLAIM;
       default -> UNKNOWN;
     };
   }
@@ -125,6 +127,7 @@ public enum UserTaskLifeCycle implements ValueLifeCycle {
       case 17 -> TERMINATED;
       case 18 -> LISTENER_CREATE;
       case 19 -> LISTENER_COMPLETED;
+      case 21 -> UNCLAIM;
       default -> NULL_VAL;
     };
   }

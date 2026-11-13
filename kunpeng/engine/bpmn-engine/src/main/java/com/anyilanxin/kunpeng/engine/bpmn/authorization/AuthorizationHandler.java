@@ -116,6 +116,36 @@ public final class AuthorizationHandler {
     }
   }
 
+  /** 取消签收用户任务：操作人必须是当前签收人（签收人匹配跟随授权开关，与完成任务同形态）；admin 白名单旁路。 */
+  public void checkUnclaim(final UserTaskRecord userTask) {
+    final AuthorizationCfg cfg = cfg();
+    if (!enabled(cfg)) {
+      return;
+    }
+    final Authorization operator = currentOperator();
+    if (isAdmin(cfg, operator)) {
+      return;
+    }
+    final String assignee = userTask.getAssignee();
+    if (!operator.userId().equals(assignee)) {
+      throw new AuthorizationDeniedException(
+          "操作人(" + operator.userId() + ")非任务签收人(" + assignee + ")，无权取消签收");
+    }
+  }
+
+  /** 改派用户任务：管理员动作——启用时操作人须命中 admin 白名单（用户/组），未启用放行（渐进语义同取消/完成）。 */
+  public void checkReassign() {
+    final AuthorizationCfg cfg = cfg();
+    if (!enabled(cfg)) {
+      return;
+    }
+    final Authorization operator = currentOperator();
+    if (isAdmin(cfg, operator)) {
+      return;
+    }
+    throw new AuthorizationDeniedException("操作人(" + operator.userId() + ")非管理员（admin 白名单），无权改派任务");
+  }
+
   private Authorization currentOperator() {
     return Authorization.fromJson(writer.currentAuthorizationMetadata());
   }
