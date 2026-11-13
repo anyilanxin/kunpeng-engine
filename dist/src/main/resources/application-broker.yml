@@ -9,6 +9,10 @@ kunpeng:
     seed-nodes:
       - 127.0.0.1:24109
   broker:
+    authorization:
+      enabled: true
+      admin-groups:
+        - 1314235356968173568
     raft:
       partitioning:
         partitions-count: 1

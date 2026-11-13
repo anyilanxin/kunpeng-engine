@@ -14,22 +14,20 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.anyilanxin.kunpeng.configuration.authorization;
+package com.anyilanxin.kunpeng.configuration.broker;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 引擎授权校验独立配置实体（yaml 键 {@code kunpeng.broker.authorization.*}，dist broker/restore profile 经
- * Properties 子类注册）：渐进启用开关 + admin 白名单（用户/组 id）。默认关闭，灰度验证后转强制；后续授权相关扩展 （插件链、claim/resolve
- * 规则、资源级权限）集中定义在本实体。
+ * 引擎授权校验配置（{@link BrokerCfg} 内嵌实体，yaml 键 {@code kunpeng.broker.authorization.*}）： 渐进启用开关 + admin
+ * 白名单（组 id，操作人所属组命中即旁路）。默认关闭，灰度验证后转强制；后续授权相关扩展 （插件链、claim/resolve 规则、资源级权限）集中定义在本实体。
  *
  * @author zxuanhong
  * @since 2026.9.0
  */
 public class AuthorizationCfg {
   private boolean enabled = false;
-  private List<String> adminUsers = new ArrayList<>();
   private List<String> adminGroups = new ArrayList<>();
 
   public boolean isEnabled() {
@@ -38,14 +36,6 @@ public class AuthorizationCfg {
 
   public void setEnabled(final boolean enabled) {
     this.enabled = enabled;
-  }
-
-  public List<String> getAdminUsers() {
-    return adminUsers;
-  }
-
-  public void setAdminUsers(final List<String> adminUsers) {
-    this.adminUsers = adminUsers;
   }
 
   public List<String> getAdminGroups() {
@@ -58,12 +48,6 @@ public class AuthorizationCfg {
 
   @Override
   public String toString() {
-    return "AuthorizationCfg{enabled="
-        + enabled
-        + ", adminUsers="
-        + adminUsers
-        + ", adminGroups="
-        + adminGroups
-        + '}';
+    return "AuthorizationCfg{enabled=" + enabled + ", adminGroups=" + adminGroups + '}';
   }
 }

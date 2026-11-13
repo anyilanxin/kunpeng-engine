@@ -64,6 +64,9 @@ public class BrokerCfg {
 
   @NestedConfigurationProperty private EngineCfg engine = new EngineCfg();
 
+  /** 授权校验配置（默认关；键 kunpeng.broker.authorization.*） */
+  @NestedConfigurationProperty private AuthorizationCfg authorization = new AuthorizationCfg();
+
   private Path brokerBase;
 
   private boolean enableMetricsSink;
