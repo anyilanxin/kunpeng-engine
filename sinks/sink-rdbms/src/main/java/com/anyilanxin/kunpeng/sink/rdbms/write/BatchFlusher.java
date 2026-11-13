@@ -23,6 +23,7 @@ import com.anyilanxin.kunpeng.sink.rdbms.model.ProcessDefinitionDbModel;
 import com.anyilanxin.kunpeng.sink.rdbms.model.ProcessInstanceDbModel;
 import com.anyilanxin.kunpeng.sink.rdbms.model.SignalSubscriptionDbModel;
 import com.anyilanxin.kunpeng.sink.rdbms.model.TimerDbModel;
+import com.anyilanxin.kunpeng.sink.rdbms.model.UserTaskCandidateDbModel;
 import com.anyilanxin.kunpeng.sink.rdbms.model.UserTaskDbModel;
 import com.anyilanxin.kunpeng.sink.rdbms.model.VariableDbModel;
 import java.util.LinkedHashMap;
@@ -58,6 +59,9 @@ public final class BatchFlusher {
   private final Map<TableSpec, ModelSink> updates = new LinkedHashMap<>();
   private final Map<TableSpec, HistorySink> historyDeletes = new LinkedHashMap<>();
 
+  /** 按任务等值删除的路由（候选链接整任务刷新用，filterColumn=task_id）。 */
+  private final Map<TableSpec, HistorySink> taskDeletes = new LinkedHashMap<>();
+
   public BatchFlusher() {
     inserts.put(
         Tables.PROCESS_DEFINITION,
@@ -69,6 +73,9 @@ public final class BatchFlusher {
         (m, v) -> m.activityInstance().insert((ActivityInstanceDbModel) v));
     inserts.put(Tables.VARIABLE, (m, v) -> m.variable().insert((VariableDbModel) v));
     inserts.put(Tables.USER_TASK, (m, v) -> m.userTask().insert((UserTaskDbModel) v));
+    inserts.put(
+        Tables.USER_TASK_CANDIDATE,
+        (m, v) -> m.userTaskCandidate().insert((UserTaskCandidateDbModel) v));
     inserts.put(Tables.JOB, (m, v) -> m.job().insert((JobDbModel) v));
     inserts.put(Tables.INCIDENT, (m, v) -> m.incident().insert((IncidentDbModel) v));
     inserts.put(Tables.TIMER, (m, v) -> m.timer().insert((TimerDbModel) v));
@@ -101,12 +108,16 @@ public final class BatchFlusher {
         Tables.ACTIVITY_INSTANCE, (m, id) -> m.activityInstance().cleanupHistory(id));
     historyDeletes.put(Tables.VARIABLE, (m, id) -> m.variable().cleanupHistory(id));
     historyDeletes.put(Tables.USER_TASK, (m, id) -> m.userTask().cleanupHistory(id));
+    historyDeletes.put(
+        Tables.USER_TASK_CANDIDATE, (m, id) -> m.userTaskCandidate().cleanupHistory(id));
     historyDeletes.put(Tables.INCIDENT, (m, id) -> m.incident().cleanupHistory(id));
     historyDeletes.put(Tables.TIMER, (m, id) -> m.timer().cleanupHistory(id));
     historyDeletes.put(
         Tables.MESSAGE_SUBSCRIPTION, (m, id) -> m.messageSubscription().cleanupHistory(id));
     historyDeletes.put(
         Tables.SIGNAL_SUBSCRIPTION, (m, id) -> m.signalSubscription().cleanupHistory(id));
+
+    taskDeletes.put(Tables.USER_TASK_CANDIDATE, (m, id) -> m.userTaskCandidate().cleanupByTask(id));
   }
 
   /**
@@ -141,7 +152,11 @@ public final class BatchFlusher {
       case INSERT -> dispatch(insertAsUpdate ? updates : inserts, change, mappers, insertAsUpdate);
       case UPDATE -> dispatch(updates, change, mappers, false);
       case DELETE -> {
-        final var delete = historyDeletes.get(change.table());
+        // 候选链接整任务刷新（filterColumn=task_id）走任务删除路由；其余按流程实例删历史
+        final var delete =
+            "task_id".equals(change.filterColumn())
+                ? taskDeletes.get(change.table())
+                : historyDeletes.get(change.table());
         if (delete == null) {
           throw new IllegalStateException("No delete route for " + change.table().name());
         }

@@ -35,5 +35,6 @@
 
   <include file="changesets/2026.9.0.xml" relativeToChangelogFile="true"/>
   <include file="changesets/2026.11.0.xml" relativeToChangelogFile="true"/>
+  <include file="changesets/2026.11.1.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

@@ -13,12 +13,14 @@
 package com.anyilanxin.kunpeng.sink.rdbms.handler;
 
 import static com.anyilanxin.kunpeng.sink.rdbms.mapper.Tables.USER_TASK;
+import static com.anyilanxin.kunpeng.sink.rdbms.mapper.Tables.USER_TASK_CANDIDATE;
 
 import com.anyilanxin.kunpeng.protocol.business.BusinessEventRecord;
 import com.anyilanxin.kunpeng.protocol.business.ValueLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.ValueType;
 import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.UserTaskLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.UserTaskRecordValue;
+import com.anyilanxin.kunpeng.sink.rdbms.model.UserTaskCandidateDbModel;
 import com.anyilanxin.kunpeng.sink.rdbms.model.UserTaskDbModel;
 import com.anyilanxin.kunpeng.sink.rdbms.write.ChangeBuffer;
 import com.anyilanxin.kunpeng.sink.rdbms.write.JsonValues;
@@ -87,6 +89,7 @@ public final class UserTaskRecordHandler implements RecordModelHandler {
       model.setResourceId(record.getResourceId());
       fillAddSign(model, value);
       buffer.offer(RowChange.insert(USER_TASK, List.of(value.getTaskId()), model));
+      offerCandidates(buffer, value, record.getResourceId());
       return;
     }
     final var model = new UserTaskDbModel();
@@ -104,6 +107,57 @@ public final class UserTaskRecordHandler implements RecordModelHandler {
     model.setRevision(value.getRev());
     fillAddSign(model, value);
     buffer.offer(RowChange.update(USER_TASK, List.of(value.getTaskId()), model));
+    offerCandidates(buffer, value, record.getResourceId());
+  }
+
+  /**
+   * 候选链接整任务刷新：先按 task_id 清空再落当前候选集（窗口内同键合并，删除先于插入按首次入队顺序执行）。 每个任务事件都刷新而非仅创建——记录值上的候选集可能随事件变化，无状态
+   * handler 无法差量比对，整刷保证收敛正确。
+   */
+  private static void offerCandidates(
+      final ChangeBuffer buffer, final UserTaskRecordValue value, final int resourceId) {
+    final long taskId = value.getTaskId();
+    buffer.offer(RowChange.deleteByColumn(USER_TASK_CANDIDATE, "task_id", taskId));
+    final long instanceId = value.getProcessInstanceId();
+    if (value.getCandidateUsers() != null) {
+      for (final String user : value.getCandidateUsers()) {
+        if (user == null || user.isBlank()) {
+          continue;
+        }
+        buffer.offer(
+            RowChange.insert(
+                USER_TASK_CANDIDATE,
+                List.of(taskId, "USER", user),
+                candidateRow(taskId, instanceId, "USER", user, resourceId)));
+      }
+    }
+    if (value.getCandidateGroups() != null) {
+      for (final String group : value.getCandidateGroups()) {
+        if (group == null || group.isBlank()) {
+          continue;
+        }
+        buffer.offer(
+            RowChange.insert(
+                USER_TASK_CANDIDATE,
+                List.of(taskId, "GROUP", group),
+                candidateRow(taskId, instanceId, "GROUP", group, resourceId)));
+      }
+    }
+  }
+
+  private static UserTaskCandidateDbModel candidateRow(
+      final long taskId,
+      final long instanceId,
+      final String type,
+      final String candidateValue,
+      final int resourceId) {
+    final var row = new UserTaskCandidateDbModel();
+    row.setTaskId(taskId);
+    row.setProcessInstanceId(instanceId);
+    row.setCandidateType(type);
+    row.setCandidateValue(candidateValue);
+    row.setResourceId(resourceId);
+    return row;
   }
 
   /** 加签字段：主从引用/计数/名单（列表列 JSON），随创建与后续 UPDATING 事件同步 */

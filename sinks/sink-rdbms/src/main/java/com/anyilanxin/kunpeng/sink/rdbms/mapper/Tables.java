@@ -135,6 +135,17 @@ public final class Tables {
               "resource_id"),
           List.of("task_id"));
 
+  /**
+   * 任务候选链接（一行一个候选）：候选人/候选组拆行存储，供「assignee 优先、候选次之」的按人可见性查询做精确集合匹配 （JSON
+   * 数组列无法走索引且子串误伤）。任务事件到达时整任务刷新（先按 task_id 清空再落当前候选集）。
+   */
+  public static final TableSpec USER_TASK_CANDIDATE =
+      new TableSpec(
+          "user_task_candidate",
+          List.of(
+              "task_id", "process_instance_id", "candidate_type", "candidate_value", "resource_id"),
+          List.of("task_id", "candidate_type", "candidate_value"));
+
   public static final TableSpec JOB =
       new TableSpec(
           "job",
@@ -254,6 +265,7 @@ public final class Tables {
         ACTIVITY_INSTANCE,
         VARIABLE,
         USER_TASK,
+        USER_TASK_CANDIDATE,
         JOB,
         INCIDENT,
         TIMER,

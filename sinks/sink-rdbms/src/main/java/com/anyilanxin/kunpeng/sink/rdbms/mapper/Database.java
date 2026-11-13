@@ -137,6 +137,7 @@ public final class Database implements AutoCloseable {
       mappers.activityInstance().clearAll();
       mappers.variable().clearAll();
       mappers.userTask().clearAll();
+      mappers.userTaskCandidate().clearAll();
       mappers.job().clearAll();
       mappers.incident().clearAll();
       mappers.timer().clearAll();
