@@ -543,6 +543,20 @@ public class KunpengClientImpl implements KunpengClient {
   }
 
   @Override
+  public com.anyilanxin.kunpeng.client.command.usertask.assignee.AssignUserTaskCommand
+      newAssignUserTaskCommand() {
+    return new com.anyilanxin.kunpeng.client.command.usertask.assignee.AssignUserTaskCommandImpl(
+        userTaskService, configuration, retryPredicate);
+  }
+
+  @Override
+  public com.anyilanxin.kunpeng.client.command.usertask.unclaim.UnclaimUserTaskCommand
+      newUnclaimUserTaskCommand() {
+    return new com.anyilanxin.kunpeng.client.command.usertask.unclaim.UnclaimUserTaskCommandImpl(
+        userTaskService, configuration, retryPredicate);
+  }
+
+  @Override
   public com.anyilanxin.kunpeng.client.command.usertask.addsign.AddSignBeforeUserTaskCommand
       newAddSignBeforeUserTaskCommand() {
     return new com.anyilanxin.kunpeng.client.command.usertask.addsign

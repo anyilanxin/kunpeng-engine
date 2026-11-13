@@ -12,10 +12,14 @@
  */
 package com.anyilanxin.kunpeng.protocol.business.record.commandapi.record.usertask.assignee;
 
+import com.anyilanxin.kunpeng.protocol.business.record.commandapi.ResponseRecordValue;
 import com.anyilanxin.kunpeng.structpack.JsonSerializable;
 
 /**
+ * 用户任务改派响应 Value（空载体，任务定位走记录 key）。
+ *
  * @author zxuanhong
  * @since 2026.9.0
  */
-public interface UserTaskAssigneeResponseRecordValue extends JsonSerializable {}
+public interface UserTaskAssigneeResponseRecordValue
+    extends ResponseRecordValue, JsonSerializable {}

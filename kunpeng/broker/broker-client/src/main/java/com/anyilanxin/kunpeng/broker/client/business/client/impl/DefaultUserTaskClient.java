@@ -19,16 +19,20 @@ package com.anyilanxin.kunpeng.broker.client.business.client.impl;
 import com.anyilanxin.kunpeng.broker.client.business.client.UserTaskClient;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.AddSignAfterRequest;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.AddSignBeforeRequest;
+import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskAssigneeRequest;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskCancelRequest;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskClaimRequest;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskCompleteRequest;
+import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskUnclaimRequest;
 import com.anyilanxin.kunpeng.broker.client.core.BrokerClient;
 import com.anyilanxin.kunpeng.broker.client.core.BrokerResponse;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.addsign.AddSignAfterResponseRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.addsign.AddSignBeforeResponseRecord;
+import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.assignee.UserTaskAssigneeResponseRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.cancel.UserTaskCancelResponseRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.claim.UserTaskClaimResponseRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.complete.UserTaskCompleteResponseRecord;
+import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.unclaim.UserTaskUnclaimResponseRecord;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -59,6 +63,18 @@ public class DefaultUserTaskClient implements UserTaskClient {
   @Override
   public CompletableFuture<BrokerResponse<UserTaskClaimResponseRecord>> claimUserTask(
       final UserTaskClaimRequest request) {
+    return brokerClient.sendRequest(request);
+  }
+
+  @Override
+  public CompletableFuture<BrokerResponse<UserTaskUnclaimResponseRecord>> unclaimUserTask(
+      final UserTaskUnclaimRequest request) {
+    return brokerClient.sendRequest(request);
+  }
+
+  @Override
+  public CompletableFuture<BrokerResponse<UserTaskAssigneeResponseRecord>> assignUserTask(
+      final UserTaskAssigneeRequest request) {
     return brokerClient.sendRequest(request);
   }
 
