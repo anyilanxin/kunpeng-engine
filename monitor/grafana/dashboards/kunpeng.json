@@ -3042,7 +3042,7 @@
                     "sort": "desc"
                 }
             },
-            "description": "到期定时器与实际触发之间的滞后（timer 指标）",
+            "description": "调度 entry 从截止时间的排队滞后，不含日志追加与主引擎处理排队",
             "id": 70,
             "fieldConfig": {
                 "defaults": {"unit": "s"},
@@ -3121,7 +3121,7 @@
                     "sort": "desc"
                 }
             },
-            "description": "流程实例迁移/重放时的定时器去重表大小，按 intent 拆分",
+            "description": "调度命令在途去重表大小，按 intent 拆分；持续上涨说明主处理尚未释放登记",
             "id": 72,
             "fieldConfig": {
                 "defaults": {"unit": "short"},
@@ -3134,8 +3134,8 @@
                     "uid": "${DS_PROMETHEUS}",
                     "type": "prometheus"
                 },
-                "legendFormat": "{{intent}} {{job}}",
-                "expr": "max by (job, intent) (kunpeng_engine_timers_dedup_size{job=~\"$job\"})",
+                "legendFormat": "{{intent}} {{job}} p{{partition}}",
+                "expr": "max by (job, partition, intent) (kunpeng_engine_timers_dedup_size{job=~\"$job\", partition=~\"$partition\"})",
                 "refId": "A"
             }],
             "gridPos": {
@@ -3143,6 +3143,57 @@
                 "h": 8,
                 "x": 0,
                 "y": 32
+            }
+        },
+        {
+            "datasource": {
+                "uid": "${DS_PROMETHEUS}",
+                "type": "prometheus"
+            },
+            "options": {
+                "legend": {
+                    "showLegend": true,
+                    "placement": "bottom",
+                    "displayMode": "list"
+                },
+                "tooltip": {
+                    "mode": "multi",
+                    "sort": "desc"
+                }
+            },
+            "description": "单个 BPMN timer 从 dueDate 到一次有效处理尝试的延迟，包含扫描、日志追加与处理排队；失败重试会形成多次样本",
+            "id": 98,
+            "fieldConfig": {
+                "defaults": {"unit": "s"},
+                "overrides": []
+            },
+            "title": "BPMN Timer 到期处理尝试延迟（P99 / 均值）",
+            "type": "timeseries",
+            "targets": [
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "P99 {{job}} p{{partition}}",
+                    "expr": "histogram_quantile(0.99, sum by (job, partition, le) (rate(kunpeng_engine_timers_due_lag_seconds_bucket{job=~\"$job\", partition=~\"$partition\"}[5m])))",
+                    "refId": "A"
+                },
+                {
+                    "datasource": {
+                        "uid": "${DS_PROMETHEUS}",
+                        "type": "prometheus"
+                    },
+                    "legendFormat": "均值 {{job}} p{{partition}}",
+                    "expr": "sum by (job, partition) (rate(kunpeng_engine_timers_due_lag_seconds_sum{job=~\"$job\", partition=~\"$partition\"}[5m])) / sum by (job, partition) (rate(kunpeng_engine_timers_due_lag_seconds_count{job=~\"$job\", partition=~\"$partition\"}[5m]))",
+                    "refId": "B"
+                }
+            ],
+            "gridPos": {
+                "w": 24,
+                "h": 8,
+                "x": 0,
+                "y": 40
             }
         },
         {

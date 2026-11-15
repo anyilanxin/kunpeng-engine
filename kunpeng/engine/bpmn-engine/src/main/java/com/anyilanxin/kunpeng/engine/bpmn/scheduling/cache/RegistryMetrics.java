@@ -46,9 +46,11 @@ public interface RegistryMetrics {
 
     private final Map<ValueLifeCycle, AtomicInteger> sizes = new HashMap<>();
     private final MeterRegistry registry;
+    private final int partitionId;
 
-    public BoundedRegistryMetrics(final MeterRegistry registry) {
+    public BoundedRegistryMetrics(final MeterRegistry registry, final int partitionId) {
       this.registry = Objects.requireNonNull(registry, "must specify a meter registry");
+      this.partitionId = partitionId;
     }
 
     @Override
@@ -63,6 +65,7 @@ public interface RegistryMetrics {
       Gauge.builder(doc.getName(), tracker, AtomicInteger::intValue)
           .description(doc.getDescription())
           .tag(LifeCycleKey.LIFE_CYCLE.asString(), intentLabel)
+          .tag("partition", String.valueOf(partitionId))
           .register(registry);
       return tracker;
     }

@@ -37,16 +37,15 @@ import org.slf4j.LoggerFactory;
 /**
  * 单临界区定序器（{@link EventLogWriter} 实现）。
  *
- * <p>写者线程在一个同步临界区内完成「取号 → 算长 → 组帧 → 登记在途 → 存储移交 → 推进取号」。 可失败步骤全部位于取号提交点之前（拒绝零消耗）或存储移交之后（异步生命周期由
- * {@link EventStore.AppendListener} 回调承接），结构上不存在半成品 position 区间——
- * 无需提交链、看门狗与区间烧毁推进，故障只会拒绝当批，永不影响后续写入。
+ * <p>写者线程在一个同步临界区内完成「取号 → 算长 → 组帧 → 登记在途 → 存储移交 → 推进取号」。可失败步骤全部位于取号提交点之前（拒绝零消耗）或存储移交阶段； 同步移交失败通过
+ * {@link EventStore.AppendListener#onFailure} 烧毁完整区间并返回拒绝，后续写入继续使用下一区间。
  *
  * <p>不变量：
  *
  * <ul>
  *   <li>position 由临界区独占推进，成功区间并集无重叠；存储调用序 == firstPosition 升序
  *   <li>拒绝（关闭/空批/超限/序列化失败）不消耗 position
- *   <li>存储移交同步失败：区间烧毁（onFailure 后永不 onCommit），调用方仍收到 Appended
+ *   <li>存储移交同步失败：区间烧毁（onFailure 后永不 onCommit），调用方收到 STORAGE_FAILURE 拒绝
  *   <li>在途环仅登记持背压占位的批次（≤ 窗口上限 &lt; 环容量 1024）；内部上下文与流控零耦合， 永不拒绝、永不因流控状态失败
  * </ul>
  *
@@ -136,7 +135,9 @@ public final class PositionSequencer implements EventLogWriter {
       return new Rejected(admission);
     }
     final AppendResult result = appendUnderLock(context, entries, sourcePosition);
-    if (result instanceof Rejected) {
+    if (result instanceof final Rejected rejected
+        && rejected.reason() != RejectionReason.STORAGE_FAILURE) {
+      // 存储失败已完成 onFailure 生命周期，不能再次归还准入；其余拒绝发生在 onAppend 前。
       flowControl.abandonAdmission(context);
     }
     return result;
@@ -191,6 +192,9 @@ public final class PositionSequencer implements EventLogWriter {
       // 存储契约: onFailure 后该批永不 onCommit, 区间烧毁, 读者容忍 gap
       LOG.warn("存储移交同步失败, 烧毁区间 [{}, {}]", first, last, e);
       flowControl.onFailure(last, e);
+      nextWritePosition = last + 1;
+      metrics.incRejected(context, RejectionReason.STORAGE_FAILURE);
+      return new Rejected(RejectionReason.STORAGE_FAILURE);
     }
     nextWritePosition = last + 1;
 

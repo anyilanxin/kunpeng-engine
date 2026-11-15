@@ -35,6 +35,7 @@ import com.anyilanxin.kunpeng.protocol.business.impl.record.DefaultRecordValueMa
 import com.anyilanxin.kunpeng.protocol.business.record.RecordType;
 import com.anyilanxin.kunpeng.protocol.business.record.RecordValueMapper;
 import com.anyilanxin.kunpeng.protocol.business.record.command.job.JobLifeCycle;
+import com.anyilanxin.kunpeng.protocol.business.record.command.timer.TimerLifeCycle;
 import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 import com.anyilanxin.kunpeng.repository.business.BusinessRepository;
 import com.anyilanxin.kunpeng.repository.business.BusinessRepositoryAppliers;
@@ -108,6 +109,7 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
   private AsyncTimerRouter scheduleService;
   private LogEventWriter logEventWriter;
   private SchedulerContext schedulerContext;
+  private PendingCommandRegistry.Stageable pendingCommandRegistry;
   private final BusinessRepositoryFactory repositoryFactory;
   private final JobDeliveryPort jobDeliveryPort;
   private volatile ScheduledTasksHealthListener scheduledTasksHealthListener;
@@ -157,11 +159,13 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
   }
 
   private void initScheduled() {
-    // 去重面与历史实现保持一致: 仅 JobLifeCycle.TIME_OUT 在途去重, 容量 100_000
-    final var metrics = TimerMetrics.of(meterRegistry);
-    final var registry =
+    // Timer TRIGGER 与 Job TIME_OUT 都在扫描到处理完成之间去重；处理结束由主 actor 释放。
+    final var metrics = TimerMetrics.of(meterRegistry, partitionId.id());
+    pendingCommandRegistry =
         BoundedPendingCommandRegistry.forIntents(
-            new RegistryMetrics.BoundedRegistryMetrics(meterRegistry), JobLifeCycle.TIME_OUT);
+            new RegistryMetrics.BoundedRegistryMetrics(meterRegistry, partitionId.id()),
+            JobLifeCycle.TIME_OUT,
+            TimerLifeCycle.TRIGGER);
 
     // 相位判据仅 RUNNING 放行; 当前恒为 RUNNING, 暂停能力落地时切 streamProcessorPhase 即生效;
     // 中止判据恒 false: 定时任务的关闭权威在各 checker 的 onClose(句柄取消+任务自查), 调度器层不做兜底;
@@ -171,7 +175,7 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
             () -> streamProcessorPhase,
             () -> false,
             logStream::newWriter,
-            registry,
+            pendingCommandRegistry,
             clock,
             Duration.ofMillis(250),
             metrics);
@@ -547,7 +551,13 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
           processPosition = position;
           if ((recordType == RecordType.COMMAND || recordType == RecordType.COMMAND_API)
               && !loggedEvent.isSkipProcessing()) {
-            processEvent(loggedEvent);
+            try {
+              processEvent(loggedEvent);
+            } finally {
+              // processEvent 返回时批次已提交或回滚；此刻才允许后续扫描重新触发同一 key。
+              // append 成功只代表定序，不能提前释放，否则下一轮会重复灌入相同调度命令。
+              pendingCommandRegistry.remove(metadata.getLifeCycle(), loggedEvent.getKey());
+            }
           }
           // 处理/跳过即释放: 推进流控在途水位（释放窗口占位与在途环槽位）
           logStream.getFlowControl().onProcessed(processPosition);

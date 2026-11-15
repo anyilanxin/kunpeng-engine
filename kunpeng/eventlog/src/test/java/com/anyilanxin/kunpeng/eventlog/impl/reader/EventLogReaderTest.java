@@ -20,7 +20,7 @@ import static com.anyilanxin.kunpeng.eventlog.TestEntries.entry;
 import static com.anyilanxin.kunpeng.eventlog.TestEntries.entriesOfSize;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.anyilanxin.kunpeng.eventlog.AppendResult.Appended;
+import com.anyilanxin.kunpeng.eventlog.AppendResult;
 import com.anyilanxin.kunpeng.eventlog.EventLog;
 import com.anyilanxin.kunpeng.eventlog.EventLogReader;
 import com.anyilanxin.kunpeng.eventlog.InMemoryEventStore;
@@ -155,7 +155,9 @@ class EventLogReaderTest {
     store.failNextAppends(1);
     // position 7-8 烧毁
     final Object burned = log.newWriter().tryAppend(WriteContext.INTERNAL, entriesOfSize(2), -1);
-    assertThat(burned).isInstanceOf(Appended.class);
+    assertThat(burned).isInstanceOf(AppendResult.Rejected.class);
+    assertThat(((AppendResult.Rejected) burned).reason())
+        .isEqualTo(AppendResult.RejectionReason.STORAGE_FAILURE);
     // position 9 正常
     log.newWriter().tryAppend(WriteContext.INTERNAL, List.of(entry(1, -1, false, "m", "v")), -1);
     try (EventLogReader reader = log.newReader()) {

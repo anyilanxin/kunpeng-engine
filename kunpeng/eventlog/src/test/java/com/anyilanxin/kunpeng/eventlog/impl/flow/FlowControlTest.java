@@ -18,10 +18,15 @@ package com.anyilanxin.kunpeng.eventlog.impl.flow;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.anyilanxin.kunpeng.eventlog.AppendResult;
 import com.anyilanxin.kunpeng.eventlog.AppendResult.RejectionReason;
 import com.anyilanxin.kunpeng.eventlog.FlowControlParams;
+import com.anyilanxin.kunpeng.eventlog.InMemoryEventStore;
 import com.anyilanxin.kunpeng.eventlog.WriteContext;
 import com.anyilanxin.kunpeng.eventlog.impl.EventLogMetrics;
+import com.anyilanxin.kunpeng.eventlog.impl.sequencer.PositionSequencer;
+import java.time.Clock;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -161,5 +166,29 @@ class FlowControlTest {
     // 关闭全量释放: 环内滞留批（1025）占位归还
     controller.releaseAll();
     assertThat(controller.windowInflight()).isZero();
+  }
+
+  @Test
+  @DisplayName("存储失败拒绝只经 onFailure 归还一次准入，不重复扣减在途计数")
+  void storageFailureReleasesAdmissionExactlyOnce() {
+    final FlowController controller =
+        new FlowController(
+            new FlowControlParams(1, 1, 2, 0.1), System::nanoTime, EventLogMetrics.noop());
+    final InMemoryEventStore store = new InMemoryEventStore();
+    store.failNextAppends(1);
+    final var sequencer =
+        new PositionSequencer(
+            store, controller, EventLogMetrics.noop(), 1024, 1, Clock.systemUTC());
+
+    final var result =
+        sequencer.tryAppend(
+            WriteContext.USER_COMMAND, List.of(com.anyilanxin.kunpeng.eventlog.TestEntries.simple()));
+
+    assertThat(result).isInstanceOf(AppendResult.Rejected.class);
+    assertThat(((AppendResult.Rejected) result).reason())
+        .isEqualTo(RejectionReason.STORAGE_FAILURE);
+    assertThat(controller.windowInflight()).isZero();
+    sequencer.close();
+    store.shutdown();
   }
 }

@@ -62,8 +62,8 @@ public interface TimerMetrics {
   }
 
   /** 返回向给定注册表发布指标的实现。 */
-  static TimerMetrics of(final MeterRegistry registry) {
-    return new Impl(registry);
+  static TimerMetrics of(final MeterRegistry registry, final int partitionId) {
+    return new Impl(registry, partitionId);
   }
 
   /** 基于 Micrometer 的 {@link TimerMetrics}。 */
@@ -73,14 +73,18 @@ public interface TimerMetrics {
     private final Timer lag;
     private final Timer duration;
 
-    public Impl(final MeterRegistry registry) {
-      Gauge.builder("kunpeng.engine.timers.queued", queued, LongAdder::sum).register(registry);
+    public Impl(final MeterRegistry registry, final int partitionId) {
+      Gauge.builder("kunpeng.engine.timers.queued", queued, LongAdder::sum)
+          .tag("partition", String.valueOf(partitionId))
+          .register(registry);
       lag =
           Timer.builder("kunpeng.engine.timers.lag")
+              .tag("partition", String.valueOf(partitionId))
               .publishPercentileHistogram()
               .register(registry);
       duration =
           Timer.builder("kunpeng.engine.timers.duration")
+              .tag("partition", String.valueOf(partitionId))
               .publishPercentileHistogram()
               .register(registry);
     }

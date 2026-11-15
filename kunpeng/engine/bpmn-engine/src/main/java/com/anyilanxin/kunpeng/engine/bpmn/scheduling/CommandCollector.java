@@ -65,6 +65,13 @@ public interface CommandCollector {
       FollowUpCommandMetadata metadata);
 
   /**
+   * 返回给定生命周期的 key 是否已有命令在途。
+   *
+   * <p>调用方可据此停止重复扫描；在途记录不等于已消费，仍需保留后续重排。
+   */
+  boolean isPending(ValueLifeCycle lifeCycle, long key);
+
+  /**
    * 返回在给定后续元数据下是否仍可追加这些值。
    *
    * @param values 候选值

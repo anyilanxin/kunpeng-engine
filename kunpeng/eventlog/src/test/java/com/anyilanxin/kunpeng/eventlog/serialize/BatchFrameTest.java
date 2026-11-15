@@ -114,6 +114,22 @@ class BatchFrameTest {
   }
 
   @Test
+  @DisplayName("容量预审上界覆盖完整帧及全部 varint 开销")
+  void maximumSerializedLengthCoversFrameOverhead() {
+    for (final int n : new int[] {1, 2, 7, 100}) {
+      final List<AppendEntry> entries = new ArrayList<>();
+      for (int i = 0; i < n; i++) {
+        entries.add(entry(Long.MIN_VALUE + i, i - 1, false, "meta-" + i, "value-" + i));
+      }
+      final int payloadBytes = entries.stream().mapToInt(AppendEntry::getLength).sum();
+      final int maximum = BatchFrame.maximumSerializedLength(n, payloadBytes);
+      final int actual =
+          BatchFrame.calculateLength(Long.MAX_VALUE - n, Long.MIN_VALUE, Long.MAX_VALUE, entries);
+      assertThat(actual).isLessThanOrEqualTo(maximum);
+    }
+  }
+
+  @Test
   @DisplayName("sourceIndex 还原为绝对 sourcePosition")
   void sourceIndexResolution() {
     final ExpandableArrayBuffer buffer = new ExpandableArrayBuffer(128);
