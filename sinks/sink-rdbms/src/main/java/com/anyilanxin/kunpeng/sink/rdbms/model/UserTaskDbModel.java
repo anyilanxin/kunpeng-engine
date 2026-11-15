@@ -35,8 +35,6 @@ public class UserTaskDbModel {
   private Timestamp dueTime;
   private Timestamp followUpTime;
   private String state;
-  private String candidateGroups;
-  private String candidateUsers;
   private Timestamp startTime;
   private Timestamp endTime;
   private Long duration;

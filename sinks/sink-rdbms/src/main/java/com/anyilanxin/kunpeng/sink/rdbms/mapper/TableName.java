@@ -43,7 +43,7 @@ public enum TableName {
   MESSAGE_SUBSCRIPTION("table.message_subscription", "message_subscription"),
   SIGNAL_SUBSCRIPTION("table.signal_subscription", "signal_subscription"),
   // sink 自身的导出位置表（不走 RowChange 路由，由 RdbmsSink 直接读写）
-  SINK_POSITION("table.sink_position", "sink_position"),
+  POSITION("table.position", "position"),
   // changelog 索引（逻辑名须与 changesets 保持同步）
   IDX_PD_KEY("table.idx_pd_key", "idx_pd_key"),
   IDX_PI_ROOT("table.idx_pi_root", "idx_pi_root"),

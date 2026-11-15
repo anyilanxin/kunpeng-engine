@@ -49,7 +49,7 @@
   </select>
 
   <select id="sinkPositionRow" resultType="long">
-    SELECT exported_position FROM kp_sink_position WHERE partition_id = 1
+    SELECT exported_position FROM kp_position WHERE partition_id = 1
   </select>
 
 </mapper>

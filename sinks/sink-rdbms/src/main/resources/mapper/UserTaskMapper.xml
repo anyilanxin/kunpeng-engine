@@ -22,7 +22,7 @@
     INSERT INTO ${table.user_task} (
       task_id, activity_instance_id, process_instance_id, business_key, process_definition_id,
       process_definition_key, task_definition_key, task_definition_name, assignee, owner, priority, due_date,
-      follow_up_date, state, candidate_groups, candidate_users, start_time, end_time, duration,
+      follow_up_date, state, start_time, end_time, duration,
       revision, resource_id, add_sign_role, root_activity_instance_id, add_sign_phase,
       add_sign_mode, add_sign_count, add_sign_depth, add_sign_allowed, remaining_assignees,
       after_sign_assignees
@@ -30,7 +30,7 @@
       #{taskId}, #{activityInstanceId}, #{processInstanceId}, #{businessKey},
       #{processDefinitionId}, #{definitionKey}, #{taskDefinitionKey}, #{taskName}, #{assignee},
       #{owner}, #{priority}, #{dueTime,jdbcType=TIMESTAMP}, #{followUpTime,jdbcType=TIMESTAMP},
-      #{state}, #{candidateGroups}, #{candidateUsers}, #{startTime,jdbcType=TIMESTAMP},
+      #{state}, #{startTime,jdbcType=TIMESTAMP},
       #{endTime,jdbcType=TIMESTAMP}, #{duration}, #{revision}, #{resourceId},
       #{addSignRole}, #{rootActivityInstanceId}, #{addSignPhase}, #{addSignMode},
       #{addSignCount}, #{addSignDepth}, #{addSignAllowed}, #{remainingAssignees}, #{afterSignAssignees}
@@ -46,8 +46,6 @@
         due_date = #{dueTime,jdbcType=TIMESTAMP},
         follow_up_date = #{followUpTime,jdbcType=TIMESTAMP},
         state = #{state},
-        candidate_groups = #{candidateGroups},
-        candidate_users = #{candidateUsers},
         end_time = #{endTime,jdbcType=TIMESTAMP},
         duration = #{duration},
         revision = #{revision},

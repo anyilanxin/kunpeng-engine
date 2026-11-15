@@ -1,11 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+  ~ Copyright © 2026 anyilanxin zxh (anyilanxin@aliyun.com)
   ~
   ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU Affero General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
   ~
   ~ This program is distributed in the hope that it will be useful,
   ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,7 +12,7 @@
   ~ GNU Affero General Public License for more details.
   ~
   ~ You should have received a copy of the GNU Affero General Public License
-  ~ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
   -->
 <databaseChangeLog
   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
@@ -21,17 +20,20 @@
   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
-  <!-- 2026.9.0 基线：10 张业务表 + 索引。标识符统一 ${table.x}（变量值=完整物理名：前缀+大小写策略运行期注入，索引逻辑名须同步登记到 Tables.INDEXES）；列定义必须与 Tables.java 保持一致。 -->
+  <!-- 开发期单基线：11 张业务表 + 候选链接表 + sink 位置表一次建齐（终态列，无演进链）。
+       标识符统一 ${table.x}（变量值=完整物理名：前缀+大小写策略运行期注入，索引逻辑名须同步登记到 Tables.INDEXES）；
+       列定义必须与 Tables.java 保持一致。schema 未正式发布：改结构直接改本文件基线并重置库，不追加变更集；
+       正式发布后的演进才按版本追加 changesets/<版本>.xml。 -->
 
-  <changeSet id="2026.9.0-create-process-definition" author="anyilanxin">
+  <changeSet id="create-process-definition" author="anyilanxin">
     <createTable tableName="${table.process_definition}" remarks="流程定义">
       <column name="process_definition_id" type="BIGINT">
         <constraints primaryKey="true" nullable="false"/>
       </column>
-      <column name="definition_key" type="VARCHAR(255)">
+      <column name="process_definition_key" type="VARCHAR(255)">
         <constraints nullable="false"/>
       </column>
-      <column name="definition_name" type="VARCHAR(255)"/>
+      <column name="process_definition_name" type="VARCHAR(255)"/>
       <column name="version" type="INT">
         <constraints nullable="false"/>
       </column>
@@ -45,15 +47,17 @@
       <column name="candidate_starter_groups" type="${text.type}"/>
       <column name="candidate_starter_users" type="${text.type}"/>
       <column name="resource_content" type="${large.type}"/>
+      <!-- 业务扩展数据：部署资源级扩展信息（随 DeployResource 命令携带、引擎原样透传），JSON 文本列 -->
+      <column name="extended_data" type="${text.type}"/>
       <column name="resource_id" type="INT"/>
     </createTable>
     <createIndex tableName="${table.process_definition}" indexName="${table.idx_pd_key}">
-      <column name="definition_key"/>
+      <column name="process_definition_key"/>
       <column name="version"/>
     </createIndex>
   </changeSet>
 
-  <changeSet id="2026.9.0-create-process-instance" author="anyilanxin">
+  <changeSet id="create-process-instance" author="anyilanxin">
     <createTable tableName="${table.process_instance}" remarks="流程实例">
       <column name="process_instance_id" type="BIGINT">
         <constraints primaryKey="true" nullable="false"/>
@@ -64,11 +68,11 @@
       <column name="process_definition_id" type="BIGINT">
         <constraints nullable="false"/>
       </column>
-      <column name="definition_key" type="VARCHAR(255)">
+      <column name="process_definition_key" type="VARCHAR(255)">
         <constraints nullable="false"/>
       </column>
-      <column name="definition_name" type="VARCHAR(255)"/>
-      <column name="start_user" type="VARCHAR(255)"/>
+      <column name="process_definition_name" type="VARCHAR(255)"/>
+      <column name="start_user_id" type="VARCHAR(255)"/>
       <column name="state" type="VARCHAR(32)">
         <constraints nullable="false"/>
       </column>
@@ -88,7 +92,7 @@
     </createIndex>
   </changeSet>
 
-  <changeSet id="2026.9.0-create-activity-instance" author="anyilanxin">
+  <changeSet id="create-activity-instance" author="anyilanxin">
     <createTable tableName="${table.activity_instance}" remarks="活动实例">
       <column name="activity_instance_id" type="BIGINT">
         <constraints primaryKey="true" nullable="false"/>
@@ -102,16 +106,21 @@
       <column name="process_definition_id" type="BIGINT">
         <constraints nullable="false"/>
       </column>
-      <column name="definition_key" type="VARCHAR(255)">
+      <column name="process_definition_key" type="VARCHAR(255)">
         <constraints nullable="false"/>
       </column>
-      <column name="activity_key" type="VARCHAR(255)">
+      <column name="activity_definition_key" type="VARCHAR(255)">
         <constraints nullable="false"/>
       </column>
-      <column name="activity_name" type="VARCHAR(255)"/>
-      <column name="activity_type" type="VARCHAR(64)"/>
+      <column name="activity_definition_name" type="VARCHAR(255)"/>
+      <column name="activity_definition_type" type="VARCHAR(64)"/>
       <column name="task_id" type="BIGINT"/>
       <column name="assignee" type="VARCHAR(255)"/>
+      <!-- 起点信息（流程实例迁移/改单场景的起始来源） -->
+      <column name="start_activity_definition_key" type="VARCHAR(255)"/>
+      <column name="start_activity_instance_id" type="BIGINT"/>
+      <!-- 加签状态(NONE/FROZEN/AWAITING) -->
+      <column name="add_sign_state" type="VARCHAR(16)"/>
       <column name="state" type="VARCHAR(32)"/>
       <column name="incident_id" type="BIGINT"/>
       <column name="sequence_counter" type="BIGINT"/>
@@ -129,7 +138,7 @@
     </createIndex>
   </changeSet>
 
-  <changeSet id="2026.9.0-create-variable" author="anyilanxin">
+  <changeSet id="create-variable" author="anyilanxin">
     <createTable tableName="${table.variable}" remarks="流程变量">
       <column name="scope_id" type="BIGINT">
         <constraints primaryKey="true" nullable="false"/>
@@ -153,8 +162,8 @@
     </createIndex>
   </changeSet>
 
-  <changeSet id="2026.9.0-create-user-task" author="anyilanxin">
-    <createTable tableName="${table.user_task}" remarks="用户任务">
+  <changeSet id="create-user-task" author="anyilanxin">
+    <createTable tableName="${table.user_task}" remarks="用户任务(候选集经 user_task_candidate 链接表承载)">
       <column name="task_id" type="BIGINT">
         <constraints primaryKey="true" nullable="false"/>
       </column>
@@ -166,26 +175,39 @@
       <column name="process_definition_id" type="BIGINT">
         <constraints nullable="false"/>
       </column>
-      <column name="definition_key" type="VARCHAR(255)">
+      <column name="process_definition_key" type="VARCHAR(255)">
         <constraints nullable="false"/>
       </column>
       <column name="task_definition_key" type="VARCHAR(255)">
         <constraints nullable="false"/>
       </column>
-      <column name="task_name" type="VARCHAR(255)"/>
+      <column name="task_definition_name" type="VARCHAR(255)"/>
       <column name="assignee" type="VARCHAR(255)"/>
       <column name="owner" type="VARCHAR(255)"/>
       <column name="priority" type="INT"/>
-      <column name="due_time" type="${ts.type}"/>
-      <column name="follow_up_time" type="${ts.type}"/>
+      <column name="due_date" type="${ts.type}"/>
+      <column name="follow_up_date" type="${ts.type}"/>
       <column name="state" type="VARCHAR(32)"/>
-      <column name="candidate_groups" type="${text.type}"/>
-      <column name="candidate_users" type="${text.type}"/>
       <column name="start_time" type="${ts.type}"/>
       <column name="end_time" type="${ts.type}"/>
       <column name="duration" type="BIGINT"/>
       <column name="revision" type="INT"/>
       <column name="resource_id" type="INT"/>
+      <!-- 加签:主从引用/计数/名单 -->
+      <column name="add_sign_role" type="VARCHAR(16)"/>
+      <!-- 加签根活动实例 E0(全层级级联共用同一根) -->
+      <column name="root_activity_instance_id" type="BIGINT"/>
+      <column name="add_sign_phase" type="VARCHAR(16)"/>
+      <column name="add_sign_mode" type="VARCHAR(16)"/>
+      <column name="add_sign_count" type="INT"/>
+      <!-- 加签层级:第 N 级加签任务=N -->
+      <column name="add_sign_depth" type="INT"/>
+      <!-- 加签许可:引擎创建时按建模固化(原任务=声明允许;加签任务=开 cascade 且深度+1≤maxDepth) -->
+      <column name="add_sign_allowed" type="BOOLEAN" defaultValueBoolean="false">
+        <constraints nullable="false"/>
+      </column>
+      <column name="remaining_assignees" type="${text.type}"/>
+      <column name="after_sign_assignees" type="${text.type}"/>
     </createTable>
     <createIndex tableName="${table.user_task}" indexName="${table.idx_ut_instance}">
       <column name="process_instance_id"/>
@@ -195,7 +217,7 @@
     </createIndex>
   </changeSet>
 
-  <changeSet id="2026.9.0-create-job" author="anyilanxin">
+  <changeSet id="create-job" author="anyilanxin">
     <createTable tableName="${table.job}" remarks="Job 任务">
       <column name="job_id" type="BIGINT">
         <constraints primaryKey="true" nullable="false"/>
@@ -208,14 +230,14 @@
       <column name="retries" type="INT"/>
       <column name="retry_backoff" type="INT"/>
       <column name="priority" type="INT"/>
-      <column name="due_time" type="${ts.type}"/>
+      <column name="due_date" type="${ts.type}"/>
       <column name="lock_owner" type="VARCHAR(255)"/>
       <column name="lock_expire_time" type="${ts.type}"/>
       <column name="process_instance_id" type="BIGINT"/>
       <column name="activity_instance_id" type="BIGINT"/>
       <column name="process_definition_id" type="BIGINT"/>
-      <column name="definition_key" type="VARCHAR(255)"/>
-      <column name="activity_key" type="VARCHAR(255)"/>
+      <column name="process_definition_key" type="VARCHAR(255)"/>
+      <column name="activity_definition_key" type="VARCHAR(255)"/>
       <column name="task_id" type="BIGINT"/>
       <column name="incident_id" type="BIGINT"/>
       <column name="denied_reason" type="VARCHAR(1024)"/>
@@ -232,11 +254,11 @@
     </createIndex>
     <createIndex tableName="${table.job}" indexName="${table.idx_job_state_due}">
       <column name="state"/>
-      <column name="due_time"/>
+      <column name="due_date"/>
     </createIndex>
   </changeSet>
 
-  <changeSet id="2026.9.0-create-incident" author="anyilanxin">
+  <changeSet id="create-incident" author="anyilanxin">
     <createTable tableName="${table.incident}" remarks="异常事件">
       <column name="incident_id" type="BIGINT">
         <constraints primaryKey="true" nullable="false"/>
@@ -248,8 +270,8 @@
       <column name="process_instance_id" type="BIGINT"/>
       <column name="activity_instance_id" type="BIGINT"/>
       <column name="process_definition_id" type="BIGINT"/>
-      <column name="definition_key" type="VARCHAR(255)"/>
-      <column name="activity_key" type="VARCHAR(255)"/>
+      <column name="process_definition_key" type="VARCHAR(255)"/>
+      <column name="activity_definition_key" type="VARCHAR(255)"/>
       <column name="task_id" type="BIGINT"/>
       <column name="job_id" type="BIGINT"/>
       <column name="related_value_type" type="VARCHAR(64)"/>
@@ -266,18 +288,18 @@
     </createIndex>
   </changeSet>
 
-  <changeSet id="2026.9.0-create-timer" author="anyilanxin">
+  <changeSet id="create-timer" author="anyilanxin">
     <createTable tableName="${table.timer}" remarks="定时器">
       <column name="timer_id" type="BIGINT">
         <constraints primaryKey="true" nullable="false"/>
       </column>
-      <column name="due_time" type="${ts.type}"/>
+      <column name="due_date" type="${ts.type}"/>
       <column name="repetitions" type="INT"/>
       <column name="process_instance_id" type="BIGINT"/>
       <column name="activity_instance_id" type="BIGINT"/>
       <column name="process_definition_id" type="BIGINT"/>
-      <column name="definition_key" type="VARCHAR(255)"/>
-      <column name="activity_key" type="VARCHAR(255)"/>
+      <column name="process_definition_key" type="VARCHAR(255)"/>
+      <column name="activity_definition_key" type="VARCHAR(255)"/>
       <column name="timer_element_type" type="VARCHAR(64)"/>
       <column name="timer_type" type="VARCHAR(64)"/>
       <column name="timer_content" type="VARCHAR(1024)"/>
@@ -286,14 +308,14 @@
     </createTable>
     <createIndex tableName="${table.timer}" indexName="${table.idx_timer_due}">
       <column name="state"/>
-      <column name="due_time"/>
+      <column name="due_date"/>
     </createIndex>
     <createIndex tableName="${table.timer}" indexName="${table.idx_timer_instance}">
       <column name="process_instance_id"/>
     </createIndex>
   </changeSet>
 
-  <changeSet id="2026.9.0-create-message-subscription" author="anyilanxin">
+  <changeSet id="create-message-subscription" author="anyilanxin">
     <createTable tableName="${table.message_subscription}" remarks="消息订阅">
       <column name="message_subscription_id" type="BIGINT">
         <constraints primaryKey="true" nullable="false"/>
@@ -308,8 +330,8 @@
       <column name="correlation_activity_instance_id" type="BIGINT"/>
       <column name="correlation_process_instance_id" type="BIGINT"/>
       <column name="process_definition_id" type="BIGINT"/>
-      <column name="definition_key" type="VARCHAR(255)"/>
-      <column name="activity_key" type="VARCHAR(255)"/>
+      <column name="process_definition_key" type="VARCHAR(255)"/>
+      <column name="activity_definition_key" type="VARCHAR(255)"/>
       <column name="state" type="VARCHAR(32)"/>
       <column name="resource_id" type="INT"/>
     </createTable>
@@ -322,7 +344,7 @@
     </createIndex>
   </changeSet>
 
-  <changeSet id="2026.9.0-create-signal-subscription" author="anyilanxin">
+  <changeSet id="create-signal-subscription" author="anyilanxin">
     <createTable tableName="${table.signal_subscription}" remarks="信号订阅">
       <column name="signal_subscription_id" type="BIGINT">
         <constraints primaryKey="true" nullable="false"/>
@@ -334,8 +356,8 @@
       <column name="process_instance_id" type="BIGINT"/>
       <column name="activity_instance_id" type="BIGINT"/>
       <column name="process_definition_id" type="BIGINT"/>
-      <column name="definition_key" type="VARCHAR(255)"/>
-      <column name="activity_key" type="VARCHAR(255)"/>
+      <column name="process_definition_key" type="VARCHAR(255)"/>
+      <column name="activity_definition_key" type="VARCHAR(255)"/>
       <column name="state" type="VARCHAR(32)"/>
       <column name="resource_id" type="INT"/>
     </createTable>
@@ -347,17 +369,36 @@
     </createIndex>
   </changeSet>
 
-  <!-- 补齐活动实例的起点信息（流程实例迁移/改单场景的起始来源）；独立 changeset 保证已建库不因基线改动校验和失配 -->
-  <changeSet id="2026.9.0-add-activity-start-columns" author="anyilanxin">
-    <addColumn tableName="${table.activity_instance}">
-      <column name="start_activity_definition_key" type="VARCHAR(255)"/>
-      <column name="start_activity_instance_id" type="BIGINT"/>
-    </addColumn>
+  <changeSet id="create-user-task-candidate" author="anyilanxin">
+    <createTable tableName="${table.user_task_candidate}" remarks="任务候选链接(一行一个候选)">
+      <column name="task_id" type="BIGINT">
+        <constraints primaryKey="true" nullable="false"/>
+      </column>
+      <column name="process_instance_id" type="BIGINT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="candidate_type" type="VARCHAR(16)">
+        <constraints primaryKey="true" nullable="false"/>
+      </column>
+      <column name="candidate_value" type="VARCHAR(255)">
+        <constraints primaryKey="true" nullable="false"/>
+      </column>
+      <column name="resource_id" type="INT"/>
+    </createTable>
+    <!-- 反查索引:按人/组找任务(可见性 EXISTS 匹配) -->
+    <createIndex tableName="${table.user_task_candidate}" indexName="${table.idx_uct_value}">
+      <column name="candidate_type"/>
+      <column name="candidate_value"/>
+    </createIndex>
+    <!-- 实例历史清理直删 -->
+    <createIndex tableName="${table.user_task_candidate}" indexName="${table.idx_uct_instance}">
+      <column name="process_instance_id"/>
+    </createIndex>
   </changeSet>
 
   <!-- sink 自身的导出位置：与数据同事务提交，是业务端权威续传锚点（引擎侧位置只作压缩门槛与投递游标） -->
-  <changeSet id="2026.9.0-create-sink-position" author="anyilanxin">
-    <createTable tableName="${table.sink_position}" remarks="sink 导出位置（业务端权威续传锚点）">
+  <changeSet id="create-position" author="anyilanxin">
+    <createTable tableName="${table.position}" remarks="sink 导出位置（业务端权威续传锚点）">
       <column name="partition_id" type="INT">
         <constraints primaryKey="true" nullable="false"/>
       </column>
@@ -370,71 +411,6 @@
       <column name="created_time" type="${ts.type}"/>
       <column name="update_time" type="${ts.type}"/>
     </createTable>
-  </changeSet>
-
-  <!-- 列名对齐协议 Record key（DEFINITION_KEY→PROCESS_DEFINITION_KEY、ACTIVITY_KEY→ACTIVITY_DEFINITION_KEY、DUE_TIME→DUE_DATE、FOLLOW_UP_TIME→FOLLOW_UP_DATE、TASK_NAME→TASK_DEFINITION_NAME、START_USER→START_USER_ID）。
-       基线 createTable 已在存量库执行、不可改（校验和失配），新建库走先建后改名，存量库由本变更集原位改名保数据 -->
-  <changeSet id="2026.9.0-rename-columns-to-protocol-keys" author="anyilanxin">
-    <renameColumn tableName="${table.process_definition}" oldColumnName="definition_key" newColumnName="process_definition_key" columnDataType="VARCHAR(255)"/>
-    <renameColumn tableName="${table.process_definition}" oldColumnName="definition_name" newColumnName="process_definition_name" columnDataType="VARCHAR(255)"/>
-    <renameColumn tableName="${table.process_instance}" oldColumnName="definition_key" newColumnName="process_definition_key" columnDataType="VARCHAR(255)"/>
-    <renameColumn tableName="${table.process_instance}" oldColumnName="definition_name" newColumnName="process_definition_name" columnDataType="VARCHAR(255)"/>
-    <renameColumn tableName="${table.process_instance}" oldColumnName="start_user" newColumnName="start_user_id" columnDataType="VARCHAR(255)"/>
-    <renameColumn tableName="${table.activity_instance}" oldColumnName="definition_key" newColumnName="process_definition_key" columnDataType="VARCHAR(255)"/>
-    <renameColumn tableName="${table.activity_instance}" oldColumnName="activity_key" newColumnName="activity_definition_key" columnDataType="VARCHAR(255)"/>
-    <renameColumn tableName="${table.activity_instance}" oldColumnName="activity_name" newColumnName="activity_definition_name" columnDataType="VARCHAR(255)"/>
-    <renameColumn tableName="${table.activity_instance}" oldColumnName="activity_type" newColumnName="activity_definition_type" columnDataType="VARCHAR(64)"/>
-    <renameColumn tableName="${table.user_task}" oldColumnName="definition_key" newColumnName="process_definition_key" columnDataType="VARCHAR(255)"/>
-    <renameColumn tableName="${table.user_task}" oldColumnName="task_name" newColumnName="task_definition_name" columnDataType="VARCHAR(255)"/>
-    <renameColumn tableName="${table.user_task}" oldColumnName="due_time" newColumnName="due_date" columnDataType="${ts.type}"/>
-    <renameColumn tableName="${table.user_task}" oldColumnName="follow_up_time" newColumnName="follow_up_date" columnDataType="${ts.type}"/>
-    <renameColumn tableName="${table.job}" oldColumnName="definition_key" newColumnName="process_definition_key" columnDataType="VARCHAR(255)"/>
-    <renameColumn tableName="${table.job}" oldColumnName="activity_key" newColumnName="activity_definition_key" columnDataType="VARCHAR(255)"/>
-    <renameColumn tableName="${table.job}" oldColumnName="due_time" newColumnName="due_date" columnDataType="${ts.type}"/>
-    <renameColumn tableName="${table.incident}" oldColumnName="definition_key" newColumnName="process_definition_key" columnDataType="VARCHAR(255)"/>
-    <renameColumn tableName="${table.incident}" oldColumnName="activity_key" newColumnName="activity_definition_key" columnDataType="VARCHAR(255)"/>
-    <renameColumn tableName="${table.timer}" oldColumnName="due_time" newColumnName="due_date" columnDataType="${ts.type}"/>
-    <renameColumn tableName="${table.timer}" oldColumnName="definition_key" newColumnName="process_definition_key" columnDataType="VARCHAR(255)"/>
-    <renameColumn tableName="${table.timer}" oldColumnName="activity_key" newColumnName="activity_definition_key" columnDataType="VARCHAR(255)"/>
-    <renameColumn tableName="${table.message_subscription}" oldColumnName="definition_key" newColumnName="process_definition_key" columnDataType="VARCHAR(255)"/>
-    <renameColumn tableName="${table.message_subscription}" oldColumnName="activity_key" newColumnName="activity_definition_key" columnDataType="VARCHAR(255)"/>
-    <renameColumn tableName="${table.signal_subscription}" oldColumnName="definition_key" newColumnName="process_definition_key" columnDataType="VARCHAR(255)"/>
-    <renameColumn tableName="${table.signal_subscription}" oldColumnName="activity_key" newColumnName="activity_definition_key" columnDataType="VARCHAR(255)"/>
-  </changeSet>
-
-  <!-- 业务扩展数据：部署资源级扩展信息（随 DeployResource 命令携带、引擎原样透传），JSON 文本列 -->
-  <changeSet id="2026.9.0-process-definition-extended-data" author="anyilanxin">
-    <addColumn tableName="${table.process_definition}">
-      <column name="extended_data" type="${text.type}"/>
-    </addColumn>
-  </changeSet>
-
-  <!-- 加签：任务主从引用与计数（列表列 JSON 数组文本）；活动加签状态（NONE/FROZEN/AWAITING） -->
-  <changeSet id="2026.9.0-add-sign" author="anyilanxin">
-    <addColumn tableName="${table.user_task}">
-      <column name="add_sign_role" type="VARCHAR(16)"/>
-      <column name="origin_activity_instance_id" type="BIGINT"/>
-      <column name="add_sign_phase" type="VARCHAR(16)"/>
-      <column name="add_sign_mode" type="VARCHAR(16)"/>
-      <column name="add_sign_count" type="INT"/>
-      <column name="remaining_assignees" type="${text.type}"/>
-      <column name="after_sign_assignees" type="${text.type}"/>
-    </addColumn>
-    <addColumn tableName="${table.activity_instance}">
-      <column name="add_sign_state" type="VARCHAR(16)"/>
-    </addColumn>
-  </changeSet>
-
-  <!-- 加签：任务加签层级（原任务/普通任务=0，第 N 级加签任务=N）；追加式——add-sign changeset 已在库执行不可改 -->
-  <changeSet id="2026.9.0-add-sign-depth" author="anyilanxin">
-    <addColumn tableName="${table.user_task}">
-      <column name="add_sign_depth" type="INT"/>
-    </addColumn>
-  </changeSet>
-
-  <!-- 加签：origin 改名 root（语义=加签根活动实例 E0，全层级共用；列语义不变只改名），追加式 rename -->
-  <changeSet id="2026.9.0-add-sign-root-rename" author="anyilanxin">
-    <renameColumn tableName="${table.user_task}" oldColumnName="origin_activity_instance_id" newColumnName="root_activity_instance_id" columnDataType="BIGINT"/>
   </changeSet>
 
 </databaseChangeLog>
