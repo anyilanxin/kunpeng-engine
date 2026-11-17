@@ -48,17 +48,19 @@ public final class SbeUtil {
       final int offset,
       final ByteOrder byteOrder) {
     final int dataLength = writer.getLength();
-    if (dataLength > 0xFFFF) {
-      throw new IllegalArgumentException(
-          "Nested payload of %d bytes exceeds the maximum of %d bytes"
-              .formatted(dataLength, 0xFFFF));
-    }
 
     // 长度头宽度必须与生成解码器的读取宽度一致；只写低 2 字节会留下未清零的高位字节，
     // 目标缓冲若是 journal 映射上的脏区域（就地截断后重写），残留字节会被解码成垃圾长度
     if (headerLength == Integer.BYTES) {
+      // 4 字节头（blob，uint32）承载上限即 schema maxValue，无人工上限；真实上界由
+      // segment 尺寸（启动校验 >= raft max-message-size）与入口消息限制约束
       buffer.putInt(offset, dataLength, byteOrder);
     } else {
+      if (dataLength > 0xFFFF) {
+        throw new IllegalArgumentException(
+            "Nested payload of %d bytes exceeds the maximum of %d bytes"
+                .formatted(dataLength, 0xFFFF));
+      }
       buffer.putShort(offset, (short) dataLength, byteOrder);
     }
     writer.write(buffer, offset + headerLength);

@@ -105,6 +105,27 @@ public class RaftEntrySBESerializerTest {
   }
 
   @Test
+  public void shouldWriteApplicationEntryLargerThan64KiBLimit() {
+    // given
+    final byte[] data = new byte[0xFFFF + 1];
+    for (int i = 0; i < data.length; i++) {
+      data[i] = (byte) i;
+    }
+    final SerializedApplicationEntry applicationEntryWritten =
+        new SerializedApplicationEntry(1, 2, new UnsafeBuffer(data));
+    final RaftLogEntry raftLogEntryExpected = new RaftLogEntry(5, applicationEntryWritten);
+
+    // when
+    final int writtenBytes = serializer.writeApplicationEntry(5, applicationEntryWritten, buffer, 0);
+    final RaftLogEntry raftLogEntryRead = serializer.readRaftLogEntry(buffer);
+
+    // then
+    assertThat(serializer.getApplicationEntrySerializedLength(applicationEntryWritten))
+        .isEqualTo(writtenBytes);
+    assertThat(raftLogEntryRead).isEqualTo(raftLogEntryExpected);
+  }
+
+  @Test
   public void shouldCalculateActualInitialEntrySize() {
     // given
     final InitialEntry initialEntry = new InitialEntry();
