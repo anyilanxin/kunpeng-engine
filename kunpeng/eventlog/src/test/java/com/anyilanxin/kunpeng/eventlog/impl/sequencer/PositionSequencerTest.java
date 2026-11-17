@@ -166,9 +166,11 @@ class PositionSequencerTest {
     assertThat(sequencer.tryAppend(WriteContext.INTERNAL, List.of(simple())))
         .isInstanceOf(Appended.class);
     store.failNextAppends(1);
-    // 第二批存储同步失败 → position 2 烧毁（定序仍成功, 与旧实现语义一致）
-    assertThat(sequencer.tryAppend(WriteContext.INTERNAL, List.of(simple())))
-        .isInstanceOf(Appended.class);
+    // 第二批存储同步失败 → position 2 烧毁，调用方收到 STORAGE_FAILURE 而非伪成功
+    final AppendResult failed = sequencer.tryAppend(WriteContext.INTERNAL, List.of(simple()));
+    assertThat(failed).isInstanceOf(Rejected.class);
+    assertThat(((Rejected) failed).reason())
+        .isEqualTo(AppendResult.RejectionReason.STORAGE_FAILURE);
     // 第三批从 3 继续
     final AppendResult third =
         sequencer.tryAppend(WriteContext.INTERNAL, List.of(simple()));

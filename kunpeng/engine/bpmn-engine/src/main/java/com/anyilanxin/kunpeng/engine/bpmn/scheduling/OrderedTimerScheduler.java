@@ -20,6 +20,7 @@ import com.anyilanxin.kunpeng.engine.bpmn.Loggers;
 import com.anyilanxin.kunpeng.eventlog.AppendResult;
 import com.anyilanxin.kunpeng.eventlog.EventLogWriter;
 import com.anyilanxin.kunpeng.eventlog.WriteContext;
+import com.anyilanxin.kunpeng.eventlog.serialize.BatchFrame;
 import com.anyilanxin.kunpeng.scheduler.ActorControl;
 import com.anyilanxin.kunpeng.scheduler.ScheduledTimer;
 import com.anyilanxin.kunpeng.scheduler.retry.AbortableRetryStrategy;
@@ -61,10 +62,18 @@ public final class OrderedTimerScheduler implements TimerScheduler, AutoCloseabl
   private ScheduledTimer scanTimer;
 
   private final CommandBatch.CapacityProbe capacityProbe =
-      (count, bytes) -> {
-        final EventLogWriter current = writer;
-        return current != null && current.canAppend(count, bytes);
-      };
+      (count, bytes) -> canAppendScheduledBatch(writer, count, bytes);
+
+  /** 首条交给真实组帧仲裁，避免保守上界把实际可写记录挡成永久空扫；后续条目按完整帧上界预审。 */
+  static boolean canAppendScheduledBatch(
+      final EventLogWriter writer, final int entryCount, final int payloadBytes) {
+    if (writer == null) {
+      return false;
+    }
+    return entryCount == 1
+        || writer.canAppend(
+            entryCount, BatchFrame.maximumSerializedLength(entryCount, payloadBytes));
+  }
 
   OrderedTimerScheduler(
       final Supplier<ExecutionPhase> phaseSupplier,
@@ -205,8 +214,8 @@ public final class OrderedTimerScheduler implements TimerScheduler, AutoCloseabl
     currentRetry
         .runWithRetry(
             () ->
-                currentWriter.tryAppend(WriteContext.SCHEDULED, batch.entries())
-                    instanceof AppendResult.Appended,
+                isAppendSuccessful(
+                    currentWriter.tryAppend(WriteContext.SCHEDULED, batch.entries())),
             abortCondition)
         .onComplete(
             (result, error) -> {
@@ -217,6 +226,16 @@ public final class OrderedTimerScheduler implements TimerScheduler, AutoCloseabl
                     error);
               }
             });
+  }
+
+  /** 判定 append 是否成功；仅暂时性拒绝进入重试。确定性非法批次直接抛出，使重试 future 异常完成并触发 staging 回滚。 */
+  static boolean isAppendSuccessful(final AppendResult result) {
+    if (result instanceof final AppendResult.Rejected rejected
+        && rejected.reason() == AppendResult.RejectionReason.INVALID_ARGUMENT) {
+      throw new IllegalArgumentException(
+          "Scheduled command batch is permanently invalid: " + result);
+    }
+    return result instanceof AppendResult.Appended;
   }
 
   private void drainDue() {

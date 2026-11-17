@@ -183,11 +183,17 @@ public class TimerDueDateChecker implements SchedulerCheckerAware {
       schedule(-1);
       return output.build();
     }
-    // 还有剩余定时器时重排下一次执行
-    if (nextDueDate > 0) {
-      schedule(nextDueDate);
+    final CommandBatch batch = output.build();
+    if (batch.isEmpty()) {
+      if (nextDueDate > 0) {
+        schedule(nextDueDate);
+      }
+    } else {
+      // 每个非空批次保留一次近期确认扫描：成功处理后存储已删，扫描自然转入休眠；
+      // append/处理失败并释放登记后，到期记录仍存在，可由该扫描重新触发，避免 nextDueDate=-1 或未来 timer 造成停排。
+      schedule(-1);
     }
-    return output.build();
+    return batch;
   }
 
   protected static final class TriggerTimersSideEffect implements Function<CommandCollector, Long> {
@@ -233,6 +239,11 @@ public class TimerDueDateChecker implements SchedulerCheckerAware {
 
     @Override
     public boolean visit(final TimerEventRecord timer) {
+      // 在途不等于已消费：停在头部并保留其 dueDate，让 execute() 继续重排；既避免重复写日志，
+      // 也避免全部跳过后 nextDueDate=-1 导致处理回滚时再也没有重试扫描。
+      if (output.isPending(TimerLifeCycle.TRIGGER, timer.getTimerId())) {
+        return false;
+      }
       // 追加失败（批次/日志写入器满容）时必须返回 false：让迭代停在该定时器上，
       // 由 execute() 以其 dueDate 重排下一轮，避免任务被静默丢弃
       return output.appendCommand(timer.getTimerId(), TimerLifeCycle.TRIGGER, timer);
@@ -245,6 +256,7 @@ public class TimerDueDateChecker implements SchedulerCheckerAware {
     private final ImmutableTimerEventRepository.TimerVisitor delegate;
     private final InstantSource clock;
     private final long giveYieldAfter;
+    private boolean visited;
 
     public YieldingDecorator(
         final InstantSource clock,
@@ -257,9 +269,11 @@ public class TimerDueDateChecker implements SchedulerCheckerAware {
 
     @Override
     public boolean visit(final TimerEventRecord timer) {
-      if (clock.millis() >= giveYieldAfter) {
+      // 时间预算在进入 visitor 前的索引/点查已消耗；首条必须完成尝试，否则慢读下每轮都零进展。
+      if (visited && clock.millis() >= giveYieldAfter) {
         return false;
       }
+      visited = true;
       return delegate.visit(timer);
     }
   }

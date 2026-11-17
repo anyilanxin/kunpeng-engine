@@ -34,6 +34,7 @@ import com.anyilanxin.kunpeng.engine.bpmn.command.distribute.serial.DistributeSe
 import com.anyilanxin.kunpeng.engine.bpmn.command.historycleanup.HistoryCleanupDueDateChecker;
 import com.anyilanxin.kunpeng.engine.bpmn.command.job.JobTimeoutChecker;
 import com.anyilanxin.kunpeng.engine.bpmn.command.timer.TimerDueDateChecker;
+import com.anyilanxin.kunpeng.engine.bpmn.command.timer.TimerTriggerMetrics;
 import com.anyilanxin.kunpeng.engine.bpmn.scheduling.TimerClock;
 import com.anyilanxin.kunpeng.engine.dmn.DmnEngine;
 import com.anyilanxin.kunpeng.engine.dmn.DmnEngineFactory;
@@ -91,6 +92,7 @@ public class LogEventWriter {
   private final MeterRegistry meterRegistry;
   private final RecordValueMapper valueMapper = DefaultRecordValueMapper.getInstance();
   private final TimerClock clock;
+  private final TimerTriggerMetrics timerTriggerMetrics;
   private final boolean isLeaderPartition;
   private final List<SchedulerCheckerAware> checkerAwareList = new ArrayList<>();
   private TimerDueDateChecker timerChecker;
@@ -114,6 +116,7 @@ public class LogEventWriter {
     this.meterRegistry = meterRegistry;
     this.repositoryFactory = repositoryFactory;
     this.clock = clock;
+    timerTriggerMetrics = new TimerTriggerMetrics(meterRegistry, partitionId);
     this.collectSupplier = collectSupplier;
     this.partitionId = partitionId;
     this.beanFactory = beanFactory;
@@ -408,6 +411,11 @@ public class LogEventWriter {
 
   public long millis() {
     return clock.millis();
+  }
+
+  /** 记录 BPMN timer 从 dueDate 到一次有效处理尝试的延迟；失败重试会形成多次样本。 */
+  public void observeTimerDueLag(final long dueDate) {
+    timerTriggerMetrics.observeDueLag(dueDate, millis());
   }
 
   List<SchedulerCheckerAware> schedulerCheckerAwares() {

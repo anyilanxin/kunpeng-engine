@@ -20,9 +20,7 @@ import com.anyilanxin.kunpeng.protocol.business.FollowUpCommandMetadata;
 import com.anyilanxin.kunpeng.protocol.business.ValueLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.ValueType;
 import com.anyilanxin.kunpeng.protocol.business.impl.RecordMetadata;
-import com.anyilanxin.kunpeng.protocol.business.impl.record.DefaultRecordValueMapper;
 import com.anyilanxin.kunpeng.protocol.business.record.RecordType;
-import com.anyilanxin.kunpeng.protocol.business.record.RecordValueMapper;
 import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 import com.anyilanxin.kunpeng.utils.Either;
 import java.util.List;
@@ -41,8 +39,6 @@ import java.util.List;
  * @since 2026.9.0
  */
 public final class BufferedCommandCollector implements CommandCollector {
-
-  private static final RecordValueMapper VALUE_MAPPER = DefaultRecordValueMapper.getInstance();
 
   private final HeapCommandBatch batch;
   private final PendingCommandRegistry.Staging staged;
@@ -66,7 +62,7 @@ public final class BufferedCommandCollector implements CommandCollector {
       final ValueLifeCycle lifeCycle,
       final UnifiedRecordValue value,
       final FollowUpCommandMetadata metadata) {
-    if (staged.contains(lifeCycle, key)) {
+    if (isPending(lifeCycle, key)) {
       return true;
     }
 
@@ -82,10 +78,14 @@ public final class BufferedCommandCollector implements CommandCollector {
         .brokerVersion(RecordMetadata.CURRENT_BROKER_VERSION)
         .operationReference(metadata.operationReference());
 
-    final Either<RuntimeException, Void> appended =
-        batch.append(key, -1, recordMetadata, VALUE_MAPPER.copyValue(lifeCycle, value));
+    final Either<RuntimeException, Void> appended = batch.append(key, -1, recordMetadata, value);
     appended.ifRight(ignored -> staged.add(lifeCycle, key));
     return appended.isRight();
+  }
+
+  @Override
+  public boolean isPending(final ValueLifeCycle lifeCycle, final long key) {
+    return staged.contains(lifeCycle, key);
   }
 
   @Override

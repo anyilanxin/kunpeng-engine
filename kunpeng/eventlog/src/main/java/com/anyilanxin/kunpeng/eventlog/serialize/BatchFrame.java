@@ -85,6 +85,17 @@ public final class BatchFrame {
   }
 
   /**
+   * 按载荷字节数计算完整批帧的保守上界，供写入前容量预审。
+   *
+   * <p>上界包含固定头、body 长度、批级 position/count/source/timestamp，以及每条目的 key/flags/sourceIndex 与两个长度前缀； 所有
+   * varint 均按最大 5（32 位）或 10（64 位）字节计。实际帧长只会小于或等于该值。
+   */
+  public static int maximumSerializedLength(final int entryCount, final int payloadBytes) {
+    final long maximum = FIXED_HEADER_BYTES + 5L + 35L + 26L * entryCount + payloadBytes;
+    return Math.toIntExact(maximum);
+  }
+
+  /**
    * 编码整个批帧到目标 buffer。
    *
    * @return 写出后的下一偏移

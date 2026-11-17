@@ -39,6 +39,8 @@ public sealed interface AppendResult {
     /** 在途窗口耗尽（仅 USER_COMMAND） */
     REQUEST_WINDOW_EXHAUSTED,
     /** 分区冻结中（数据手术窗口：停一切写者、保一切读者，仅放行引擎处理结果） */
-    FROZEN
+    FROZEN,
+    /** 存储移交同步失败；对应 position 区间已烧毁，可由调用方重试 */
+    STORAGE_FAILURE
   }
 }

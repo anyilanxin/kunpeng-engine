@@ -63,6 +63,7 @@ public final class TimerTriggerProcessor extends TimerAbstractProcessor {
       LOG.debug("Timer {} may have been cancelled", value.getTimerId());
       return;
     }
+    writer.observeTimerDueLag(value.getDueDate());
     final TimerElementType timerElementType = value.getTimerElementType();
     final ProcessDefinitionRuntime processDefinition =
         bpmnResource.getRuntime(value.getProcessDefinitionId());
