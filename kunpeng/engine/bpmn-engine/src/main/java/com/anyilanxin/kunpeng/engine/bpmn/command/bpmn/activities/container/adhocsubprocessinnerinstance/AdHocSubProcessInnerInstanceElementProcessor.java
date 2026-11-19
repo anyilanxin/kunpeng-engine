@@ -30,15 +30,16 @@ import com.anyilanxin.kunpeng.engine.bpmn.command.bpmn.activities.ActivityConten
 import com.anyilanxin.kunpeng.engine.bpmn.command.bpmn.activities.container.BpmnContainerActivityElementProcessor;
 import com.anyilanxin.kunpeng.engine.script.ScriptContext;
 import com.anyilanxin.kunpeng.engine.script.ScriptExpression;
+import com.anyilanxin.kunpeng.protocol.business.EngineReservedVariables;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.activityinstance.ActivityInstanceRecord;
 import com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance.ActivityInstanceLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.record.command.activityinstance.ActivityInstanceState;
 import com.anyilanxin.kunpeng.repository.business.ImmutableBusinessRepository;
 import com.anyilanxin.kunpeng.repository.business.modules.activityinstance.ImmutableActivityInstanceRepository;
-import com.anyilanxin.kunpeng.repository.business.modules.processinstance.ImmutableProcessInstanceRepository;
 import com.anyilanxin.kunpeng.utils.Either;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 临时子流程内部实例元素处理器：承载展开的内部活动，负责激活集合求值、完成条件评估与剩余实例的批量终止。
@@ -56,7 +57,6 @@ public class AdHocSubProcessInnerInstanceElementProcessor
   private final VariableBehavior variableBehavior;
   private final ActivityInstanceBehavior activityInstanceBehavior;
   private final IncidentBehavior incidentBehavior;
-  private final ImmutableProcessInstanceRepository processInstanceState;
   private final ImmutableActivityInstanceRepository activityInstance;
 
   public AdHocSubProcessInnerInstanceElementProcessor(final LogEventWriter writer) {
@@ -67,7 +67,6 @@ public class AdHocSubProcessInnerInstanceElementProcessor
     activityInstanceBehavior = behavior.activityInstanceBehavior();
     incidentBehavior = behavior.incidentBehavior();
     final ImmutableBusinessRepository repository = writer.getRepository();
-    processInstanceState = repository.processInstanceRepository();
     activityInstance = repository.instanceRepository();
   }
 
@@ -99,14 +98,20 @@ public class AdHocSubProcessInnerInstanceElementProcessor
       return;
     }
     final List<BpmnActivity> targets = activation.get();
-    for (final BpmnActivity target : targets) {
-      createChild(activityContext, target);
-    }
-    activityInstanceBehavior.onActivated(element, activityContext);
     if (targets.isEmpty()) {
       // 激活集合为空：无任务可等待，直接完成
+      activityInstanceBehavior.onActivated(element, activityContext);
       activityInstanceBehavior.onCompleting(element, activityContext);
+      return;
     }
+    // 名单快照落 inner 容器实例保留变量（创建窗口内求值源变量可能被修改），激活展开交批执行器游标推进（对齐 MI 创建批）
+    variableBehavior.variableUpdateInternal(
+        activityContext,
+        Map.of(
+            EngineReservedVariables.ADHOC_ACTIVATION_SET,
+            targets.stream().map(BpmnActivity::getId).toList()));
+    activityInstanceBehavior.onActivated(element, activityContext);
+    batchBehavior.createAdHocActivateBatch(activityContext);
   }
 
   @Override
@@ -168,23 +173,6 @@ public class AdHocSubProcessInnerInstanceElementProcessor
     variableBehavior.variableHistory(activityContext);
   }
 
-  @Override
-  public void onChildActivating(
-      final BpmnActivity element,
-      final ActivityContent parentContent,
-      final ActivityContent childContent) {
-    final ActivityInstanceRecord value = childContent.getValue();
-    value.setActivityDefinitionType(element.getElementType());
-    value.setActivityDefinitionName(element.getName());
-    value.setActivityDefinitionKey(element.getId());
-    value.setSequenceCounter(processInstanceState.getSequenceCounter(value.getProcessInstanceId()));
-    writer.addCommand(
-        value.getActivityInstanceId(),
-        ActivityInstanceLifeCycle.ACTIVATING,
-        parentContent.getRequestId(),
-        value);
-  }
-
   /** 求值完成条件：未声明时退化为"无存活子实例即完成"。求值失败挂 incident 并视为不完成。 */
   private boolean calculateComplete(
       final BpmnContainer element, final ActivityContent activityContext) {
@@ -231,16 +219,6 @@ public class AdHocSubProcessInnerInstanceElementProcessor
       targets.add(activity);
     }
     return Either.right(targets);
-  }
-
-  private void createChild(final ActivityContent parentContent, final BpmnActivity target) {
-    final ActivityInstanceRecord copy = parentContent.copy();
-    copy.setActivityInstanceId(writer.nextCurrentSourceKey(parentContent.getProcessInstanceId()));
-    copy.setParentActivityInstanceId(parentContent.getActivityInstanceId());
-    copy.setStartActivityInstanceId(parentContent.getActivityInstanceId());
-    copy.setStartActivityDefinitionKey(parentContent.getActivityDefinitionKey());
-    final ActivityContent childContent = parentContent.updateValue(copy);
-    onChildActivating(target, parentContent, childContent);
   }
 
   /** 内部实例容器经 flowScope 反查外层临时子流程。 */
