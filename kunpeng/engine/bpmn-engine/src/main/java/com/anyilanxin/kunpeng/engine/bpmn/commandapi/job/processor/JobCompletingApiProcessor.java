@@ -22,7 +22,6 @@ import com.anyilanxin.kunpeng.protocol.business.impl.eventlog.BusinessLogRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.job.JobRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.job.complete.JobCompleteRequestRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.job.complete.JobCompleteResponseRecord;
-import com.anyilanxin.kunpeng.protocol.business.record.command.job.JobKindType;
 import com.anyilanxin.kunpeng.protocol.business.record.command.job.JobLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.record.commandapi.record.job.CommandApiJobValueLifeCycle;
 
@@ -51,7 +50,6 @@ public class JobCompletingApiProcessor extends JobApiAbstractProcessor<JobComple
     jobRecord.setVariables(value.getVariablesBuffer());
     jobRecord.setLocalVariables(value.getLocalVariablesBuffer());
     // 注册延迟响应
-    final JobKindType jobKind = jobRecord.getJobKind();
     response.reset();
     response.setJobId(value.getJobId());
     writer.adResponse(

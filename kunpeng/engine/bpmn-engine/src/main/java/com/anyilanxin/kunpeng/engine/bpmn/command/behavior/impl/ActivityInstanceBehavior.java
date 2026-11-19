@@ -168,6 +168,7 @@ public class ActivityInstanceBehavior {
 
   /** 处理onTerminating */
   public void onTerminating(final ActivityContent activityContext) {
+    jobBehavior.cancelJob(activityContext);
     final ActivityInstanceRecord newInstanceRecord = activityContext.getValue();
     newInstanceRecord.setLifeCycle(ActivityInstanceLifeCycle.TERMINATING);
     newInstanceRecord.setState(ActivityInstanceState.TERMINATED);

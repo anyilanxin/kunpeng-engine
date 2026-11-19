@@ -17,6 +17,7 @@
 package com.anyilanxin.kunpeng.repository.business.modules.job;
 
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.job.JobRecord;
+import com.anyilanxin.kunpeng.protocol.business.record.command.job.JobKindType;
 import com.anyilanxin.kunpeng.repository.business.ResourceDataSplit;
 import com.anyilanxin.kunpeng.repository.business.modules.job.record.DeadlineIndex;
 import java.util.List;
@@ -34,6 +35,8 @@ public interface ImmutableJobRepository extends ResourceDataSplit {
   Optional<JobRecord> query(long key);
 
   JobRecord getRecord(long key);
+
+  JobRecord getRecord(JobKindType kindType, long correlationId);
 
   void processJobBatch(
       final DirectBuffer type,

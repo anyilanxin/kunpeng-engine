@@ -16,6 +16,7 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.BpmnModelConstants;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.KunpengConstants;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.impl.instance.BpmnModelElementInstanceImpl;
 import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengAdHoc;
+import com.anyilanxin.kunpeng.bpm.model.bpmn.instance.kunpeng.KunpengAdHocImplementationType;
 import com.anyilanxin.kunpeng.bpm.model.xml.ModelBuilder;
 import com.anyilanxin.kunpeng.bpm.model.xml.impl.instance.ModelTypeInstanceContext;
 import com.anyilanxin.kunpeng.bpm.model.xml.type.ModelElementTypeBuilder;
@@ -24,6 +25,8 @@ import com.anyilanxin.kunpeng.bpm.model.xml.type.attribute.Attribute;
 public class KunpengAdHocImpl extends BpmnModelElementInstanceImpl implements KunpengAdHoc {
 
   private static Attribute<String> activeElementsCollectionAttribute;
+
+  private static Attribute<String> implementationTypeAttribute;
 
   public KunpengAdHocImpl(final ModelTypeInstanceContext instanceContext) {
     super(instanceContext);
@@ -42,6 +45,12 @@ public class KunpengAdHocImpl extends BpmnModelElementInstanceImpl implements Ku
             .namespace(BpmnModelConstants.KUNPENG_NS)
             .build();
 
+    implementationTypeAttribute =
+        typeBuilder
+            .stringAttribute(KunpengConstants.ATTRIBUTE_IMPLEMENTATION_TYPE)
+            .namespace(BpmnModelConstants.KUNPENG_NS)
+            .build();
+
     typeBuilder.build();
   }
 
@@ -53,5 +62,17 @@ public class KunpengAdHocImpl extends BpmnModelElementInstanceImpl implements Ku
   @Override
   public void setActiveElementsCollection(final String activeElementsCollection) {
     activeElementsCollectionAttribute.setValue(this, activeElementsCollection);
+  }
+
+  @Override
+  public KunpengAdHocImplementationType getImplementationType() {
+    final String value = implementationTypeAttribute.getValue(this);
+    return value == null ? null : KunpengAdHocImplementationType.valueOf(value);
+  }
+
+  @Override
+  public void setImplementationType(final KunpengAdHocImplementationType implementationType) {
+    implementationTypeAttribute.setValue(
+        this, implementationType == null ? null : implementationType.name());
   }
 }

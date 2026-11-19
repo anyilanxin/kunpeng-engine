@@ -68,6 +68,8 @@ public interface KunpengConstants {
 
   String ATTRIBUTE_ACTIVE_ELEMENTS_COLLECTION = "activeElementsCollection";
 
+  String ATTRIBUTE_IMPLEMENTATION_TYPE = "implementationType";
+
   String ATTRIBUTE_RESOURCE_ID = "resourceId";
   String ATTRIBUTE_RESOURCE_TYPE = "resourceType";
   String ATTRIBUTE_LINK_NAME = "linkName";

@@ -27,6 +27,7 @@ import com.anyilanxin.kunpeng.protocol.business.impl.record.command.processinsta
 import com.anyilanxin.kunpeng.protocol.business.record.command.job.JobKindType;
 import com.anyilanxin.kunpeng.protocol.business.record.command.job.JobLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.record.command.job.JobState;
+import com.anyilanxin.kunpeng.repository.business.modules.job.ImmutableJobRepository;
 import com.anyilanxin.kunpeng.utils.Either;
 
 /**
@@ -39,6 +40,7 @@ public class JobBehavior {
   private final LogEventWriter writer;
   private final VariableBehavior variableBehavior;
   private final BpmnJobDeliveryBehavior jobDeliveryBehavior;
+  private final ImmutableJobRepository job;
 
   public JobBehavior(
       final LogEventWriter writer,
@@ -47,6 +49,7 @@ public class JobBehavior {
     this.writer = writer;
     this.jobDeliveryBehavior = jobDeliveryBehavior;
     this.variableBehavior = variableBehavior;
+    job = writer.getRepository().jobRepository();
   }
 
   public Either<String, Boolean> createListener(
@@ -133,7 +136,28 @@ public class JobBehavior {
     return Either.right(true);
   }
 
-  public void cancelJob(final ActivityContent activityContext) {}
+  public void cancelJob(final ActivityContent activityContext) {
+    final long activityInstanceId = activityContext.getActivityInstanceId();
+    final long requestId = activityContext.getRequestId();
+    cancelJob(JobKindType.ACTIVITY, activityInstanceId, requestId);
+    cancelJob(JobKindType.ACTIVITY_LISTENER, activityInstanceId, requestId);
+  }
+
+  /** 取消流程实例名下在途的流程级监听器 job（活动类 job 由各自活动的终止链取消）。 */
+  public void cancelProcessJobs(final ProcessInstanceRecord instanceRecord, final long requestId) {
+    cancelJob(JobKindType.PROCESS_LISTENER, instanceRecord.getProcessInstanceId(), requestId);
+  }
+
+  /** 按 job 种类与关联 id 查回在途 job 发取消命令；关联查询走存储层 getRecord(kindType, correlationId)。 */
+  private void cancelJob(
+      final JobKindType jobKind, final long correlationId, final long requestId) {
+    final JobRecord stored = job.getRecord(jobKind, correlationId);
+    if (stored == null) {
+      // 该归属下无在途 job，无可取消
+      return;
+    }
+    writer.addCommand(stored.getJobId(), JobLifeCycle.CANCELING, requestId, stored);
+  }
 
   public Either<String, JobProperty> praseJobProperty(
       final BpmnJobProperties jobProperties, final ActivityContent activityContext) {

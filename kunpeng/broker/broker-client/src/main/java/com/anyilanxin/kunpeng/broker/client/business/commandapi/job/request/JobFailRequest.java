@@ -30,13 +30,12 @@ public class JobFailRequest extends JobAbstractRequest<JobFailRequestRecord> {
 
   public JobFailRequest(final long jobId, final int retries, final int retryBackOff) {
     super(CommandApiJobValueLifeCycle.FAIL_REQUEST, new JobFailRequestRecord());
-    //    record.setJobId(jobId);
-    //    record.setRetries(retries);
-    //    record.setRetryBackOff(retryBackOff);
+    setKey(jobId);
+    getValue().setJobId(jobId).setRetries(retries).setRetryBackOff(retryBackOff);
   }
 
   public JobFailRequest setErrorMessage(final String errorMessage) {
-    //    record.setDeniedReason(errorMessage);
+    getValue().setDeniedReason(errorMessage);
     return this;
   }
 }

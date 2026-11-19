@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:kunpeng="http://anyilanxin.com/schema/kunpeng/1.0"
+                  id="Definitions_adhoc"
+                  targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:process id="Process_adhoc" isExecutable="true">
+    <bpmn:startEvent id="Start_1">
+      <bpmn:outgoing>Flow_start_adhoc</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:adHocSubProcess id="Sub_adhoc" cancelRemainingInstances="false">
+      <bpmn:extensionElements>
+        <kunpeng:adHoc activeElementsCollection='=["Task_review","Task_approve"]'
+                       implementationType="BPMN" />
+      </bpmn:extensionElements>
+      <bpmn:userTask id="Task_review" name="评审">
+        <bpmn:incoming>Flow_review_end</bpmn:incoming>
+        <bpmn:outgoing>Flow_review_end</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:userTask id="Task_approve" name="审批" />
+      <bpmn:serviceTask id="Task_notify" name="通知">
+        <bpmn:extensionElements>
+          <kunpeng:taskDefinition type="notify-job" />
+        </bpmn:extensionElements>
+      </bpmn:serviceTask>
+      <bpmn:task id="Task_ship_adhoc" name="发货">
+        <bpmn:multiInstanceLoopCharacteristics isSequential="false">
+          <bpmn:loopCardinality>3</bpmn:loopCardinality>
+        </bpmn:multiInstanceLoopCharacteristics>
+      </bpmn:task>
+      <bpmn:sequenceFlow id="Flow_review_end" sourceRef="Task_review" targetRef="Task_approve" />
+      <bpmn:completionCondition xsi:type="bpmn:tFormalExpression"
+                                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">=completed &gt;= 1</bpmn:completionCondition>
+    </bpmn:adHocSubProcess>
+    <bpmn:endEvent id="End_1">
+      <bpmn:incoming>Flow_adhoc_end</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_start_adhoc" sourceRef="Start_1" targetRef="Sub_adhoc" />
+    <bpmn:sequenceFlow id="Flow_adhoc_end" sourceRef="Sub_adhoc" targetRef="End_1" />
+  </bpmn:process>
+</bpmn:definitions>

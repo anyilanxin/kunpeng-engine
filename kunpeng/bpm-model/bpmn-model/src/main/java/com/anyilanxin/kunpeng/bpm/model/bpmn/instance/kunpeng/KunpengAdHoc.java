@@ -29,4 +29,17 @@ public interface KunpengAdHoc extends BpmnModelElementInstance {
    * @param activateElements the collection of element to be activated
    */
   void setActiveElementsCollection(final String activateElements);
+
+  /**
+   * @return the implementation type that controls the ad-hoc sub-process, or null when not declared
+   *     (defaults to the BPMN properties control).
+   */
+  KunpengAdHocImplementationType getImplementationType();
+
+  /**
+   * Sets the implementation type that controls the ad-hoc sub-process.
+   *
+   * @param implementationType the implementation type
+   */
+  void setImplementationType(final KunpengAdHocImplementationType implementationType);
 }

@@ -33,6 +33,8 @@ import com.anyilanxin.kunpeng.protocol.business.record.command.usertask.UserTask
 /**
  * job 拒绝命令处理器。
  *
+ * <p>存在性门户检查在命令 API 面完成（拒绝链发起方接入时同走 JobApiAbstractProcessor 门户）。
+ *
  * @author zxuanhong
  * @since 2026.9.0
  */

@@ -24,6 +24,7 @@ import com.anyilanxin.kunpeng.bpm.model.bpmn.traversal.ModelWalker;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnCallActivity;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnFlowElement;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.element.BpmnProcess;
+import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformer.AdHocSubProcessTransformer;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformer.BoundaryEventTransformer;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformer.BusinessRuleTaskTransformer;
 import com.anyilanxin.kunpeng.bpm.parse.bpmn.transformer.CallActivityTransformer;
@@ -117,6 +118,7 @@ public final class BpmnTransformer {
 
     step3Visitor = new ElementTransformVisitor();
     step3Visitor.registerHandler(new CurrentProcessSwitcher());
+    step3Visitor.registerHandler(new AdHocSubProcessTransformer());
     step3Visitor.registerHandler(new ExclusiveGatewayTransformer());
     step3Visitor.registerHandler(new IntermediateCatchEventTransformer());
     step3Visitor.registerHandler(new SubProcessTransformer());

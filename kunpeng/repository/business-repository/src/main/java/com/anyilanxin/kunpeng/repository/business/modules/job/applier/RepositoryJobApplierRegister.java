@@ -19,6 +19,7 @@ package com.anyilanxin.kunpeng.repository.business.modules.job.applier;
 import com.anyilanxin.kunpeng.repository.business.BusinessRepository;
 import com.anyilanxin.kunpeng.repository.business.EnableRegisterRepositoryAppliers;
 import com.anyilanxin.kunpeng.repository.business.modules.job.applier.impl.RocksdbRepositoryJobBatchActivatedApplierImpl;
+import com.anyilanxin.kunpeng.repository.business.modules.job.applier.impl.RocksdbRepositoryJobCanceledApplierImpl;
 import com.anyilanxin.kunpeng.repository.business.modules.job.applier.impl.RocksdbRepositoryJobCompleteApplierImpl;
 import com.anyilanxin.kunpeng.repository.business.modules.job.applier.impl.RocksdbRepositoryJobCreatedApplierImpl;
 import com.anyilanxin.kunpeng.repository.business.modules.job.applier.impl.RocksdbRepositoryJobTimedOutApplierImpl;
@@ -39,6 +40,7 @@ public class RepositoryJobApplierRegister {
         .register(new RocksdbRepositoryJobUpdateApplierImpl(repository))
         .register(new RocksdbRepositoryJobCompleteApplierImpl(repository))
         .register(new RocksdbRepositoryJobTimedOutApplierImpl(repository))
-        .register(new RocksdbRepositoryJobBatchActivatedApplierImpl(repository));
+        .register(new RocksdbRepositoryJobBatchActivatedApplierImpl(repository))
+        .register(new RocksdbRepositoryJobCanceledApplierImpl(repository));
   }
 }

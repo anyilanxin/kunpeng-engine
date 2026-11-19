@@ -20,6 +20,7 @@ import com.anyilanxin.kunpeng.engine.bpmn.LogEventProcessors;
 import com.anyilanxin.kunpeng.engine.bpmn.LogEventWriter;
 import com.anyilanxin.kunpeng.engine.bpmn.commandapi.job.processor.JobBatchActivateApiProcessor;
 import com.anyilanxin.kunpeng.engine.bpmn.commandapi.job.processor.JobCompletingApiProcessor;
+import com.anyilanxin.kunpeng.engine.bpmn.commandapi.job.processor.JobFailingApiProcessor;
 
 /**
  * job API 处理器注册器。
@@ -33,6 +34,7 @@ public final class JobApiProcessorRegister {
       final LogEventProcessors processors, final LogEventWriter writer) {
     processors
         .onCommand(new JobBatchActivateApiProcessor(writer))
-        .onCommand(new JobCompletingApiProcessor(writer));
+        .onCommand(new JobCompletingApiProcessor(writer))
+        .onCommand(new JobFailingApiProcessor(writer));
   }
 }
