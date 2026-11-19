@@ -160,6 +160,28 @@ public class BatchBehavior {
         batchRecord);
   }
 
+  /**
+   * 临时子流程激活批：激活集合求值后挂载（名单快照在 inner 容器实例保留变量），执行器每轮创建一个子活动并自排（游标=已创建数），被 maxBatch
+   * 自然分段。创建类批无完成回调（batchAfter 不设置），耗尽即 BATCH_COMPLETED 终态。
+   */
+  public void createAdHocActivateBatch(final ActivityContent activityContext) {
+    final ProcessInstanceBatchRecord batchRecord = new ProcessInstanceBatchRecord();
+    batchRecord.setBatchId(writer.nextCurrentSourceKey(activityContext.getProcessInstanceId()));
+    batchRecord.setRequestId(activityContext.getRequestId());
+
+    batchRecord.setBatchValueType(ValueType.ACTIVITY);
+    batchRecord.setBatchLifeCycle(ActivityInstanceLifeCycle.ACTIVATED);
+    batchRecord.setBatchBusinessId(activityContext.getActivityInstanceId());
+    batchRecord.setBatchType(BatchBusinessType.ACTIVITY_INSTANCE);
+    batchRecord.setCurrentExecutionId(0);
+
+    writer.addCommand(
+        batchRecord.getBatchId(),
+        ProcessInstanceBatchState.ACTIVATE_ADHOC_CREATE,
+        activityContext.getRequestId(),
+        batchRecord);
+  }
+
   /** 并行加签创建批：前/后加签并行展开挂载（名单载体按相位：BEFORE=父任务行名单、AFTER=活动实例变量）， 执行器每轮创建一个加签任务并自排，无 batchAfter。 */
   public void createTaskCreateBatch(final ActivityContent activityContext) {
     final ProcessInstanceBatchRecord batchRecord = new ProcessInstanceBatchRecord();

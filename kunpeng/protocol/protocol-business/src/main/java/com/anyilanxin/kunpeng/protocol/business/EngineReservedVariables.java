@@ -35,4 +35,7 @@ public interface EngineReservedVariables {
 
   /** 加签组计数器（组活动实例作用域：total/created/completed/terminated/cursor） */
   String ADD_SIGN_COUNTERS = PREFIX + "addsign_counters";
+
+  /** 临时子流程激活集合快照（inner 容器实例作用域，批执行器按游标取目标元素 id） */
+  String ADHOC_ACTIVATION_SET = PREFIX + "adhoc_activation_set";
 }
