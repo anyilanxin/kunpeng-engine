@@ -6,7 +6,7 @@
 
 - 上游仓库：<https://github.com/camunda/camunda>
 - 导入时的来源提交（含上游最后一次提交）：<https://github.com/camunda/camunda/commit/a8fb2a5868e54f118a085bc688338c49950adf0c>
-- 上游仓库的 fork 存档：<https://github.com/anyilanxin/camunda/commit/a8fb2a5868e54f118a085bc688338c49950adf0c>
+- 上游仓库的 fork 存档：<https://github.com/anyilanxin/zxuanhong/commit/a8fb2a5868e54f118a085bc688338c49950adf0c>
 
 ## 为什么 Fork
 

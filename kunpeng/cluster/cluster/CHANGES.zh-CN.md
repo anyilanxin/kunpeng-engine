@@ -6,12 +6,12 @@
 
 - 上游仓库：<https://github.com/camunda/camunda>
 - 来源提交：<https://github.com/camunda/camunda/commit/a8fb2a5868e54f118a085bc688338c49950adf0c>（2026-08-19 取自主分支）
-- 上游仓库的 fork 存档：<https://github.com/anyilanxin/camunda/commit/a8fb2a5868e54f118a085bc688338c49950adf0c>
+- 上游仓库的 fork 存档：<https://github.com/zxuanhong/camunda/commit/a8fb2a5868e54f118a085bc688338c49950adf0c>
 
 此外，本模块中另有部分代码参考了更早由 Zeebe 维护的 Atomix fork
 [zeebe-io/atomix](https://github.com/zeebe-io/atomix)。参考的最后一次提交为
 [`fc935da`](https://github.com/zeebe-io/atomix/commit/fc935da2fe948c1f1ceef4ae4cadd60eb8333f49)，上游仓库存档地址为
-[anyilanxin/zeebe-io-atomix](https://github.com/anyilanxin/zeebe-io-atomix)（最后一次提交：
+[zxuanhong/zeebe-io-atomix](https://github.com/zxuanhong/zeebe-io-atomix)（最后一次提交：
 [`fc935da`](https://github.com/anyilanxin/zeebe-io-atomix/commit/fc935da2fe948c1f1ceef4ae4cadd60eb8333f49)）。
 例如：raft 镜像处理、raft join、bootstrap、leave。
 

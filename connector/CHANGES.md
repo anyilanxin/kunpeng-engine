@@ -9,7 +9,7 @@ their directories:
 
 - Upstream repository: <https://github.com/camunda/connectors>
 - Source commit at import time (last upstream commit included): <https://github.com/camunda/connectors/commit/6bdd060a30968ce176bfaa15e55ab7f015fffbbb>
-- Archived fork of the upstream repository (used as our code archive): <https://github.com/anyilanxin/connectors/commit/6bdd060a30968ce176bfaa15e55ab7f015fffbbb>
+- Archived fork of the upstream repository (used as our code archive): <https://github.com/zxuanhong/connectors/commit/6bdd060a30968ce176bfaa15e55ab7f015fffbbb>
 
 ## Why This Fork
 

@@ -8,12 +8,12 @@ pulled from the same commit:
 
 - Upstream repository: <https://github.com/camunda/camunda>
 - Source commit: <https://github.com/camunda/camunda/commit/a8fb2a5868e54f118a085bc688338c49950adf0c> (pulled from the main branch on Aug 19, 2026)
-- Archived fork of the upstream repository (used as our code archive): <https://github.com/anyilanxin/camunda/commit/a8fb2a5868e54f118a085bc688338c49950adf0c>
+- Archived fork of the upstream repository (used as our code archive): <https://github.com/zxuanhong/camunda/commit/a8fb2a5868e54f118a085bc688338c49950adf0c>
 
 Additionally, some code in this module references the earlier Zeebe-maintained Atomix fork
 [zeebe-io/atomix](https://github.com/zeebe-io/atomix). The last commit referenced is
 [`fc935da`](https://github.com/zeebe-io/atomix/commit/fc935da2fe948c1f1ceef4ae4cadd60eb8333f49), with the
-archived copy at [anyilanxin/zeebe-io-atomix](https://github.com/anyilanxin/zeebe-io-atomix) (last commit:
+archived copy at [zxuanhong/zeebe-io-atomix](https://github.com/zxuanhong/zeebe-io-atomix) (last commit:
 [`fc935da`](https://github.com/anyilanxin/zeebe-io-atomix/commit/fc935da2fe948c1f1ceef4ae4cadd60eb8333f49)).
 Examples include raft snapshot handling, raft join, bootstrap, and leave.
 

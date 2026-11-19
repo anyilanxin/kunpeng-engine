@@ -6,7 +6,7 @@
 
 - 上游仓库：<https://github.com/camunda/connectors>
 - 导入时的来源提交（含上游最后一次提交）：<https://github.com/camunda/connectors/commit/6bdd060a30968ce176bfaa15e55ab7f015fffbbb>
-- 上游仓库的 fork 存档：<https://github.com/anyilanxin/connectors/commit/6bdd060a30968ce176bfaa15e55ab7f015fffbbb>
+- 上游仓库的 fork 存档：<https://github.com/zxuanhong/connectors/commit/6bdd060a30968ce176bfaa15e55ab7f015fffbbb>
 
 ## 为什么 Fork
 

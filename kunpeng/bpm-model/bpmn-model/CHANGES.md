@@ -6,7 +6,7 @@ The code in this module originates from the bpmn-model module (BPMN 2.0 model AP
 
 - Upstream repository: <https://github.com/camunda/camunda>
 - Source commit at import time (last upstream commit included): <https://github.com/camunda/camunda/commit/a8fb2a5868e54f118a085bc688338c49950adf0c>
-- Archived fork of the upstream repository (used as our code archive): <https://github.com/anyilanxin/camunda/commit/a8fb2a5868e54f118a085bc688338c49950adf0c>
+- Archived fork of the upstream repository (used as our code archive): <https://github.com/zxuanhong/camunda/commit/a8fb2a5868e54f118a085bc688338c49950adf0c>
 
 ## Why This Fork
 

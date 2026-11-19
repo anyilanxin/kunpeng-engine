@@ -6,7 +6,7 @@ The code in this module originates from the xml-model module (generic XML model 
 
 - Upstream repository: <https://github.com/camunda/camunda-bpm-platform>
 - Source commit at import time (last upstream commit included): <https://github.com/camunda/camunda-bpm-platform/commit/ee4826e5e76c2348a1510ef46a2f4ccd3b080e48>
-- Archived fork of the upstream repository (used as our code archive): <https://github.com/anyilanxin/camunda-bpm-platform/commit/ee4826e5e76c2348a1510ef46a2f4ccd3b080e48>
+- Archived fork of the upstream repository (used as our code archive): <https://github.com/zxuanhong/camunda-bpm-platform/commit/ee4826e5e76c2348a1510ef46a2f4ccd3b080e48>
 
 ## Why This Fork
 
