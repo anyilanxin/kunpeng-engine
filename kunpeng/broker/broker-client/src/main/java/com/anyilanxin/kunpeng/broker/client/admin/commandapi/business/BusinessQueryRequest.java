@@ -32,7 +32,7 @@ public class BusinessQueryRequest
 
   public BusinessQueryRequest() {
     super(
-        AdminValueType.BUSINESS_CLUSTER_META,
+        AdminValueType.BUSINESS_DISPATCH_API,
         BusinessDispatchApiValueLifeCycle.DISPATCH_QUERY_REQUEST,
         new BusinessDispatchQueryRequestRecord());
   }

@@ -1,0 +1,24 @@
+{
+    "include": ["src"],
+    "compilerOptions": {
+        "useDefineForClassFields": true,
+        "lib": [
+            "ES2021",
+            "DOM",
+            "DOM.Iterable"
+        ],
+        "noEmit": true,
+        "module": "ESNext",
+        "isolatedModules": true,
+        "jsx": "react-jsx",
+        "target": "ES2021",
+        "noUnusedLocals": true,
+        "skipLibCheck": true,
+        "noFallthroughCasesInSwitch": true,
+        "moduleResolution": "bundler",
+        "allowImportingTsExtensions": true,
+        "noUnusedParameters": true,
+        "strict": true,
+        "moduleDetection": "force"
+    }
+}

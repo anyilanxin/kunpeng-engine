@@ -18,6 +18,7 @@ package com.anyilanxin.kunpeng.broker.client.admin;
 
 import com.anyilanxin.kunpeng.broker.client.core.BrokerResponse;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.business.dispatch.BusinessChangeResponseRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.business.query.BusinessDispatchQueryResponseRecord;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -39,6 +40,6 @@ public interface BusinessDispatchClient {
   CompletableFuture<BrokerResponse<BusinessChangeResponseRecord>> businessChangeReplication(
       int expectReplicationFactor, boolean apply);
 
-  /** 查询集群元数据 */
-  CompletableFuture<BrokerResponse<BusinessChangeResponseRecord>> businessDispatchQuery();
+  /** 查询集群元数据与最新调度计划（响应记录为查询专用记录，非变更响应记录） */
+  CompletableFuture<BrokerResponse<BusinessDispatchQueryResponseRecord>> businessDispatchQuery();
 }

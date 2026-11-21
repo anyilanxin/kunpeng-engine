@@ -28,6 +28,7 @@ configure(jarInfo) {
 dependencies {
     api project(':kunpeng:gateway:gateway-grpc')
     api project(':kunpeng:gateway:gateway-rest')
+    api project(':kunpeng:gateway:gateway-webapp')
     implementation project(':kunpeng:configuration')
     implementation project(':kunpeng:utils')
     implementation project(':kunpeng:structpack')

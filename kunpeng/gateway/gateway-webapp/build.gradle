@@ -1,0 +1,69 @@
+/*
+ * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+plugins {
+    id 'kunpeng.build-publish'
+    id 'com.github.node-gradle.node' version '7.1.0'
+}
+
+import com.github.gradle.node.pnpm.task.PnpmTask
+
+description = "Kunpeng Gateway Webapp"
+
+configure(jarInfo) {
+    archiveName = "kunpeng-gateway-webapp"
+}
+
+// 前端工程（web/）：node-gradle 自管 node/pnpm，构建产物直出 src/main/resources/static/webapp（不入库）
+node {
+    download = true
+    version = '22.20.0'
+    distBaseUrl = 'https://npmmirror.com/mirrors/node/'
+    pnpmVersion = '10.18.2'
+    nodeProjectDir = file("${project.projectDir}/web")
+}
+
+tasks.register('webappBuild', PnpmTask) {
+    dependsOn tasks.named('pnpmInstall')
+    group = 'build'
+    description = '构建 webapp 前端产物到 src/main/resources/static/webapp'
+    args = ['run', 'build']
+}
+
+tasks.named('processResources') {
+    dependsOn tasks.named('webappBuild')
+}
+
+dependencies {
+    api project(':kunpeng:gateway:gateway-grpc')
+    api project(':kunpeng:gateway:gateway-job')
+    api project(':kunpeng:broker:broker-client')
+    implementation project(':kunpeng:cluster:cluster-config')
+    implementation project(':kunpeng:cluster:cluster')
+    implementation project(':kunpeng:configuration')
+    implementation project(':kunpeng:protocol:protocol-admin')
+    implementation project(':kunpeng:protocol:protocol-admin-impl')
+    implementation project(':kunpeng:protocol:protocol-common')
+    implementation project(':kunpeng:structpack')
+    implementation project(':kunpeng:utils')
+
+    implementation 'org.springframework.boot:spring-boot'
+    implementation 'org.springframework.boot:spring-boot-autoconfigure'
+    implementation 'org.springframework:spring-webflux'
+    implementation 'org.springframework.security:spring-security-web'
+    implementation 'org.springframework.security:spring-security-config'
+    implementation 'org.agrona:agrona'
+}

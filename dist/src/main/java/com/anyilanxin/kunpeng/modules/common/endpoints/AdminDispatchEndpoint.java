@@ -22,6 +22,7 @@ import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminClus
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminDispatchPlanExecutionRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminDispatchPlanRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.admin.dispatch.AdminChangeResponseRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.admin.query.AdminDispatchQueryResponseRecord;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -53,7 +54,23 @@ public class AdminDispatchEndpoint {
   /** 查询管理面集群元数据 */
   @ReadOperation
   public DispatchResult dispatchQuery() {
-    return await(dispatchClient.adminDispatchQuery());
+    return awaitQuery(dispatchClient.adminDispatchQuery());
+  }
+
+  private DispatchResult awaitQuery(
+      final CompletableFuture<BrokerResponse<AdminDispatchQueryResponseRecord>> future) {
+    try {
+      final BrokerResponse<AdminDispatchQueryResponseRecord> response = future.join();
+      return new DispatchResult(
+          response.isSuccess(),
+          response.code(),
+          response.message(),
+          response.isSuccess() && response.getValue() != null
+              ? AdminDispatchResponse.of(response.getValue())
+              : null);
+    } catch (final CompletionException e) {
+      return DispatchResult.failure(e.getCause() == null ? e : e.getCause());
+    }
   }
 
   private DispatchResult await(
@@ -74,6 +91,12 @@ public class AdminDispatchEndpoint {
 
   /** 管理面调度响应 */
   record AdminDispatchResponse(AdminDispatchPlan dispatchPlan, AdminClusterMeta clusterMeta) {
+
+    static AdminDispatchResponse of(final AdminDispatchQueryResponseRecord record) {
+      return new AdminDispatchResponse(
+          AdminDispatchPlan.of(record.getDispatchPlan()),
+          AdminClusterMeta.of(record.getClusterMeta()));
+    }
 
     static AdminDispatchResponse of(final AdminChangeResponseRecord record) {
       return new AdminDispatchResponse(

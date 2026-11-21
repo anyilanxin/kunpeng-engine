@@ -48,6 +48,7 @@ import org.springframework.context.annotation.Profile;
       "com.anyilanxin.kunpeng.modules.gateway",
       "com.anyilanxin.kunpeng.modules.common",
       "com.anyilanxin.kunpeng.gateway.rest",
+      "com.anyilanxin.kunpeng.gateway.webapp",
     })
 @EnableAutoConfiguration
 @Profile("gateway")
