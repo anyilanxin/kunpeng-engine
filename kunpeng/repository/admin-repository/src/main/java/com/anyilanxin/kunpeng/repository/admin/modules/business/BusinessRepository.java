@@ -37,6 +37,7 @@ import com.anyilanxin.kunpeng.repository.admin.modules.business.record.BusinessD
 import com.anyilanxin.kunpeng.structpack.util.BufferUtil;
 import java.util.ArrayList;
 import java.util.List;
+import org.agrona.collections.MutableLong;
 import org.agrona.collections.MutableReference;
 import org.slf4j.Logger;
 
@@ -165,8 +166,11 @@ public class BusinessRepository implements MutableBusinessRepository {
   }
 
   @Override
-  public void dispatchPlanComplete(final long dispatchPlanId) {
-    if (lastDispatchPlanColumnFamily.get(lastDispatchPlanKey) != null) {
+  public void dispatchPlanComplete(final BusinessDispatchPlanRecord dispatchPlan) {
+    final long dispatchPlanId = dispatchPlan.getDispatchPlanId();
+    // GC 前任完结计划：get 把前任 id 载入键缓冲，按前任 id 删计划与明细（首份完结计划无前任，跳过）
+    if (lastDispatchPlanColumnFamily.get(lastDispatchPlanKey) != null
+        && dispatchPlanIdDbKey.getValue() != dispatchPlanId) {
       dispatchPlanColumnFamily.delete(dispatchPlanIdDbKey);
       dispatchPlanExecutionColumnFamily.whileEqualPrefix(
           dispatchPlanIdDbKey,
@@ -174,6 +178,9 @@ public class BusinessRepository implements MutableBusinessRepository {
             dispatchPlanExecutionColumnFamily.delete(dispatchPlanExecutionCompositeKey);
           });
     }
+    // 当前计划终态落库（SUCCEED/FAILED 由处理器置好）：单槽闸门按此判定放行，缺失即僵尸占坑
+    updateDispatchPlan(dispatchPlan);
+    // "最新完结计划"指针前移到当前计划
     dispatchPlanIdDbKey.wrapLong(dispatchPlanId);
     lastDispatchPlanColumnFamily.put(lastDispatchPlanKey, dispatchPlanIdDbKey);
   }
@@ -296,7 +303,23 @@ public class BusinessRepository implements MutableBusinessRepository {
 
   @Override
   public BusinessDispatchPlanRecord getDispatchPlan(final long dispatchPlanId) {
-    dispatchPlanIdDbKey.wrapLong(dispatchPlanId);
+    long targetPlanId = dispatchPlanId;
+    if (targetPlanId < 0) {
+      // -1 = 最新计划：取列族内最大计划 id（最新计划记录必留列族——前任仅在后续计划完结时才被 GC）
+      final MutableLong maxPlanId = new MutableLong(-1);
+      dispatchPlanColumnFamily.forEach(
+          (key, _) -> {
+            final long planId = key.getValue();
+            if (planId > maxPlanId.get()) {
+              maxPlanId.set(planId);
+            }
+          });
+      if (maxPlanId.get() < 0) {
+        return null;
+      }
+      targetPlanId = maxPlanId.get();
+    }
+    dispatchPlanIdDbKey.wrapLong(targetPlanId);
     if (dispatchPlanColumnFamily.get(dispatchPlanIdDbKey) != null) {
       final BusinessDispatchPlanRecord planRecord =
           dispatchPlanValueType.unwrap(dispatchPlanBuffer);

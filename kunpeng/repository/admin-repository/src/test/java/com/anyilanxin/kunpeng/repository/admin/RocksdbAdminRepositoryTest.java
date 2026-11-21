@@ -20,14 +20,22 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.anyilanxin.kunpeng.configuration.broker.rocksdb.RocksdbConfiguration;
 import com.anyilanxin.kunpeng.kvstore.KvStore;
+import com.anyilanxin.kunpeng.protocol.admin.AdminValueLifeCycle;
+import com.anyilanxin.kunpeng.protocol.admin.AdminValueType;
+import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanExecutionRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.delayed.DelayedRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.source.NodeSourceMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.source.NodeSourceRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.source.PartitionSourceRecord;
+import com.anyilanxin.kunpeng.protocol.admin.record.command.DispatchPlanState;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionType;
+import com.anyilanxin.kunpeng.protocol.admin.record.command.business.BusinessDispatchPlanLifeCycle;
+import com.anyilanxin.kunpeng.protocol.admin.record.command.business.BusinessDispatchType;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.delayed.DelayedType;
 import com.anyilanxin.kunpeng.cluster.business.step.RaftPartitionSource;
 import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
+import com.anyilanxin.kunpeng.structpack.util.BufferUtil;
 import org.agrona.collections.IntHashSet;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.nio.file.Path;
@@ -313,5 +321,92 @@ class RocksdbAdminRepositoryTest {
     assertThat(sources.get(0).getPartitionGroup()).isEqualTo("test-group");
     assertThat(sources.get(0).getPartitionId()).isEqualTo(1);
     assertThat(source.getPartitionSource("test-group", 1)).isNotNull();
+  }
+
+  /** 业务计划全生命周期（PLAN_CREATED → EXECUTED → 终态）经 applier 通道落库，终态选 COMPLETED/FAILED */
+  private void applyBusinessPlanLifecycle(
+      final long planId, final DispatchPlanState terminalState) {
+    applyBusinessPlanState(
+        planId, DispatchPlanState.UNKNOW, BusinessDispatchPlanLifeCycle.PLAN_CREATED.getValueState());
+    applyBusinessPlanState(
+        planId, DispatchPlanState.EXECUTED, BusinessDispatchPlanLifeCycle.EXECUTED.getValueState());
+    final short terminalLifeCycle =
+        terminalState == DispatchPlanState.FAILED
+            ? BusinessDispatchPlanLifeCycle.FAILED.getValueState()
+            : BusinessDispatchPlanLifeCycle.COMPLETED.getValueState();
+    applyBusinessPlanState(planId, terminalState, terminalLifeCycle);
+  }
+
+  private void applyBusinessPlanState(
+      final long planId, final DispatchPlanState state, final short lifeCycleState) {
+    final var plan = new BusinessDispatchPlanRecord();
+    plan.setDispatchPlanId(planId);
+    plan.setDispatchPlanType(BusinessDispatchType.CHANGE_PARTITION);
+    plan.setDispatchState(state);
+    plan.setApplyPlan(true);
+    plan.setInitialize(true);
+    plan.setExpectPartitionsCount(2);
+    plan.setExpectReplicationFactor(1);
+    final var execution = new BusinessDispatchPlanExecutionRecord();
+    execution.setDispatchPlanId(planId);
+    execution.setDispatchPlanExecutionId(planId * 10 + 1);
+    execution.setExecutionOrder(0);
+    BufferUtil.copyInto(execution, plan.executionPlan().add());
+    repository
+        .getAppliers()
+        .applyState(
+            planId,
+            AdminValueType.BUSINESS_DISPATCH,
+            AdminValueLifeCycle.fromProtocolValue(
+                AdminValueType.BUSINESS_DISPATCH, lifeCycleState),
+            plan);
+  }
+
+  @Test
+  void shouldPersistBusinessPlanTerminalStateAndReleaseSingleSlot() {
+    applyBusinessPlanLifecycle(1L, DispatchPlanState.SUCCEED);
+
+    // 回归核心：完结计划终态必须落库——修复前 COMPLETED 只挪指针不落库，记录永远停留在
+    // EXECUTED 成为僵尸，单槽闸门（getDispatchPlans + 终态判定）永久误拒后续调度
+    final var plansAfterFirst = repository.businessRepository().getDispatchPlans();
+    assertThat(plansAfterFirst).extracting(BusinessDispatchPlanRecord::getDispatchState)
+        .containsExactly(DispatchPlanState.SUCCEED);
+
+    // -1 = 最新计划：查询 API（businessDispatchQuery）从此可见
+    final var latestAfterFirst = repository.businessRepository().getDispatchPlan(-1L);
+    assertThat(latestAfterFirst).isNotNull();
+    assertThat(latestAfterFirst.getDispatchPlanId()).isEqualTo(1L);
+    assertThat(latestAfterFirst.getDispatchState()).isEqualTo(DispatchPlanState.SUCCEED);
+  }
+
+  @Test
+  void shouldGcPredecessorPlanOnNextCompletionAndStayIdempotent() {
+    applyBusinessPlanLifecycle(1L, DispatchPlanState.SUCCEED);
+    applyBusinessPlanLifecycle(2L, DispatchPlanState.SUCCEED);
+
+    // 前任计划 #1 及其明细被 GC；最新计划 #2 保留且终态可查
+    assertThat(repository.businessRepository().getDispatchPlan(1L)).isNull();
+    assertThat(repository.businessRepository().getDispatchPlanExecution(1L, 11L)).isNull();
+    final var latest = repository.businessRepository().getDispatchPlan(-1L);
+    assertThat(latest.getDispatchPlanId()).isEqualTo(2L);
+    assertThat(latest.getDispatchState()).isEqualTo(DispatchPlanState.SUCCEED);
+    assertThat(latest.executionPlan()).hasSize(1);
+
+    // 完结事件重放幂等：指针已指向当前计划时不自删，记录仍在且终态不变
+    applyBusinessPlanState(
+        2L, DispatchPlanState.SUCCEED, BusinessDispatchPlanLifeCycle.COMPLETED.getValueState());
+    final var replayed = repository.businessRepository().getDispatchPlan(2L);
+    assertThat(replayed).isNotNull();
+    assertThat(replayed.getDispatchState()).isEqualTo(DispatchPlanState.SUCCEED);
+  }
+
+  @Test
+  void shouldPersistFailedPlanTerminalState() {
+    // FAILED 与 COMPLETED 共用 dispatchPlanComplete：失败终态同样必须落库，否则僵尸占坑
+    applyBusinessPlanLifecycle(1L, DispatchPlanState.FAILED);
+
+    assertThat(repository.businessRepository().getDispatchPlans())
+        .extracting(BusinessDispatchPlanRecord::getDispatchState)
+        .containsExactly(DispatchPlanState.FAILED);
   }
 }

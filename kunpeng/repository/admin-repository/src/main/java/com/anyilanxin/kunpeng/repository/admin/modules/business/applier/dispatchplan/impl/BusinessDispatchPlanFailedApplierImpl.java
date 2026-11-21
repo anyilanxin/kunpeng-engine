@@ -37,7 +37,7 @@ public class BusinessDispatchPlanFailedApplierImpl implements BusinessDispatchPl
 
   @Override
   public void applyState(final long key, final BusinessDispatchPlanRecord recordValue) {
-    repositoryBusiness.dispatchPlanComplete(key);
+    repositoryBusiness.dispatchPlanComplete(recordValue);
   }
 
   @Override

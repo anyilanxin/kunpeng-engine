@@ -38,7 +38,15 @@ public interface MutableBusinessRepository extends ImmutableBusinessRepository {
 
   void updateDispatchPlan(final BusinessDispatchPlanRecord dispatchPlan);
 
-  void dispatchPlanComplete(final long dispatchPlanId);
+  /**
+   * 计划完结落库（COMPLETED/FAILED 共用）：当前计划按记录携带的终态持久化（处理器已置 SUCCEED/FAILED）， GC 指针指向的
+   * 前任完结计划及其明细，最后把"最新完结计划"指针前移到当前计划。
+   *
+   * <p>终态必须落库：单槽闸门按计划记录的 {@code DispatchPlanState} 判定占坑，跳过落库会让完结计划永远停在 EXECUTED 成为僵尸，闸门永久误拒后续调度。
+   *
+   * @param dispatchPlan 完结计划记录（携带终态与计划 id）
+   */
+  void dispatchPlanComplete(final BusinessDispatchPlanRecord dispatchPlan);
 
   void dispatchPlanExecution(final BusinessDispatchPlanExecutionRecord dispatchPlanExecution);
 
