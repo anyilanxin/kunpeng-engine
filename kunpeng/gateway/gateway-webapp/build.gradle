@@ -65,5 +65,8 @@ dependencies {
     implementation 'org.springframework:spring-webflux'
     implementation 'org.springframework.security:spring-security-web'
     implementation 'org.springframework.security:spring-security-config'
+    implementation 'io.micrometer:micrometer-core'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'jakarta.annotation:jakarta.annotation-api'
     implementation 'org.agrona:agrona'
 }
