@@ -16,12 +16,12 @@
 .page-hero__visual .worker-pulse-visual,
 .page-hero__visual .partition-matrix-visual,
 .page-hero__visual .cluster-topology { flex: none; }
-.page-hero__visual .node-cluster-visual { transform: scale(.7); }
-.page-hero__visual .worker-pulse-visual { transform: scale(.72); }
-.page-hero__visual .partition-matrix-visual { transform: scale(.78); }
-.page-hero--compact .page-hero__visual .node-cluster-visual { transform: scale(.6); }
-.page-hero--compact .page-hero__visual .worker-pulse-visual { transform: scale(.62); }
-.page-hero--compact .page-hero__visual .partition-matrix-visual { transform: scale(.68); }
+.page-hero__visual .node-cluster-visual { transform: scale(.74); }
+.page-hero__visual .worker-pulse-visual { transform: scale(.77); }
+.page-hero__visual .partition-matrix-visual { transform: scale(.83); }
+.page-hero--compact .page-hero__visual .node-cluster-visual { transform: scale(.65); }
+.page-hero--compact .page-hero__visual .worker-pulse-visual { transform: scale(.67); }
+.page-hero--compact .page-hero__visual .partition-matrix-visual { transform: scale(.73); }
 
 /* 集群扩缩容操作区 */
 .dispatch-ops {

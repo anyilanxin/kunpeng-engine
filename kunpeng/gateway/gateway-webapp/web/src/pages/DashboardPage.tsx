@@ -5,7 +5,6 @@ import {
   CheckCircleFilled,
   CloudServerOutlined,
   PartitionOutlined,
-  ReloadOutlined,
   SyncOutlined,
   ThunderboltOutlined,
   WarningFilled,
@@ -17,12 +16,10 @@ import PageHeader from '../components/PageHeader';
 import SectionHeader from '../components/SectionHeader';
 import PartitionGroupOverview from '../components/PartitionGroupOverview';
 import { useBrokers, useJobWorkers } from '../data/ClusterDataContext';
-import { useMockRefresh } from '../hooks/useMockRefresh';
 import { getPartitionCells, getWorkerSessions, shortNodeName } from '../utils/cluster';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const { refreshing, refresh } = useMockRefresh();
   const brokers = useBrokers();
   const workers = useJobWorkers();
   const partitions = getPartitionCells(brokers);
@@ -44,7 +41,6 @@ export default function DashboardPage() {
         actions={
           <>
             <Button size="small" type="primary" icon={<PartitionOutlined />} onClick={() => navigate('/partitions')}>查看分区矩阵</Button>
-            <Button size="small" icon={<ReloadOutlined spin={refreshing} />} onClick={refresh}>刷新数据</Button>
           </>
         }
       />

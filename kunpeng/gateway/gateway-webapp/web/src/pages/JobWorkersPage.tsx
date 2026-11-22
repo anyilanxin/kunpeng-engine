@@ -7,7 +7,6 @@ import {
   CodeOutlined,
   EyeOutlined,
   GatewayOutlined,
-  ReloadOutlined,
   SearchOutlined,
   ThunderboltOutlined,
 } from '@ant-design/icons';
@@ -57,7 +56,7 @@ export default function JobWorkersPage() {
     window.addEventListener('resize', measure);
     return () => window.removeEventListener('resize', measure);
   }, []);
-  const { refreshing, refresh } = useMockRefresh('JobWorker 快照已刷新');
+  const { refreshing } = useMockRefresh('JobWorker 快照已刷新');
   const jobWorkerMocks = useJobWorkers();
   const allSessions = getWorkerSessions(jobWorkerMocks);
   const allSubscriptions = jobWorkerMocks.flatMap((snapshot) => snapshot.subscriptions);
@@ -112,7 +111,6 @@ export default function JobWorkersPage() {
         title="任务有去处，执行有回响"
         description="管理 Gateway 中的 JobWorker 会话、任务订阅与变量抓取配置。"
         visual={<WorkerPulseVisual />}
-        actions={<Button size="small" icon={<ReloadOutlined spin={refreshing} />} onClick={refresh}>刷新 Worker 状态</Button>}
       />
 
       <section className="metrics-grid">

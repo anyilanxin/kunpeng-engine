@@ -1,11 +1,10 @@
 import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import { Alert, Button, Descriptions, Drawer, Empty, Input, Select, Tag } from 'antd';
+import { Alert, Descriptions, Drawer, Empty, Input, Select, Tag } from 'antd';
 import {
   CloudServerOutlined,
   DeploymentUnitOutlined,
   PartitionOutlined,
-  ReloadOutlined,
   SearchOutlined,
   SwapOutlined,
 } from '@ant-design/icons';
@@ -41,7 +40,7 @@ export default function PartitionMatrixPage({ group, eyebrow, title, description
   const [role, setRole] = useState<'ALL' | PartitionRole>('ALL');
   const [keyword, setKeyword] = useState('');
   const [selected, setSelected] = useState<PartitionCell | null>(null);
-  const { refreshing, refresh } = useMockRefresh(refreshText);
+  const { refreshing } = useMockRefresh(refreshText);
   const brokers = useBrokers();
   const cells = useMemo(() => getPartitionCells(brokers, group), [brokers, group]);
 
@@ -76,7 +75,6 @@ export default function PartitionMatrixPage({ group, eyebrow, title, description
         title={title}
         description={description}
         visual={visual}
-        actions={<Button size="small" icon={<ReloadOutlined spin={refreshing} />} onClick={refresh}>刷新分区快照</Button>}
       />
 
       <section className="metrics-grid">

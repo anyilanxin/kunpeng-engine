@@ -5,7 +5,6 @@ import {
   CloudServerOutlined,
   EyeOutlined,
   GatewayOutlined,
-  ReloadOutlined,
   SafetyCertificateOutlined,
   SearchOutlined,
 } from '@ant-design/icons';
@@ -32,7 +31,7 @@ export default function NodesPage() {
   const [health, setHealth] = useState('ALL');
   const [nodeType, setNodeType] = useState<NodeTypeFilter>('ALL');
   const [selectedNode, setSelectedNode] = useState<Broker | null>(null);
-  const { refreshing, refresh } = useMockRefresh('节点状态已刷新');
+  const { refreshing } = useMockRefresh('节点状态已刷新');
   const brokers = useBrokers();
   const workers = useJobWorkers();
   const allPartitions = getPartitionCells(brokers);
@@ -108,7 +107,6 @@ export default function NodesPage() {
         title="每一个节点，都清晰可见"
         description="统一查看 Broker 与 Gateway 节点，追踪连接状态、分区角色和副本健康。"
         visual={<NodeClusterVisual />}
-        actions={<Button size="small" icon={<ReloadOutlined spin={refreshing} />} onClick={refresh}>刷新节点状态</Button>}
       />
 
       <section className="metrics-grid">

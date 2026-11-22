@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ReloadOutlined, SearchOutlined, ThunderboltOutlined } from '@ant-design/icons';
+import { SearchOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import { Alert, Button, Empty, Table, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { api } from '../api';
@@ -17,7 +17,7 @@ interface LoadVo {
 }
 
 export default function GatewaysPage() {
-  const { data, error, loading, refresh } = usePolling<GatewayVo[]>(() => api<GatewayVo[]>('/gateways'));
+  const { data, error, loading } = usePolling<GatewayVo[]>(() => api<GatewayVo[]>('/gateways'));
   const [loads, setLoads] = useState<Record<string, LoadVo>>({});
 
   if (error && !data) {
@@ -118,7 +118,6 @@ export default function GatewaysPage() {
         title="网关接入，一览无余"
         description="查看网关发现列表与客户端连接负载，网关无状态多副本水平扩展。"
         visual={<WorkerPulseVisual />}
-        actions={<Button size="small" icon={<ReloadOutlined spin={loading} />} onClick={refresh}>刷新网关列表</Button>}
       />
 
       {error && <Alert type="warning" showIcon message={`部分数据拉取失败：${error}`} style={{ marginBottom: 14 }} />}

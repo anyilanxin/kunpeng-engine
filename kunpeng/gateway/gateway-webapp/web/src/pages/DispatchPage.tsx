@@ -7,7 +7,7 @@ import SectionHeader from '../components/SectionHeader';
 import PartitionVisual from '../components/PartitionVisual';
 import type { DispatchExecutionVo, DispatchOpVo, DispatchVo } from '../types';
 import { Alert, App, Button, Descriptions, Drawer, Empty, InputNumber, Table, Tag, Typography } from 'antd';
-import { CaretRightOutlined, EyeOutlined, ReloadOutlined, SwapOutlined } from '@ant-design/icons';
+import { CaretRightOutlined, EyeOutlined, SwapOutlined } from '@ant-design/icons';
 import { useState } from 'react';
 
 function ExecutionsTimeline({ executions }: { executions: DispatchExecutionVo[] }) {
@@ -70,7 +70,7 @@ function PartitionMetaTable({ rows }: { rows: MetaRow[] }) {
 }
 
 export default function DispatchPage() {
-  const { data, error, loading, refresh } = usePolling<DispatchVo>(() => api<DispatchVo>('/dispatch'));
+  const { data, error, refresh } = usePolling<DispatchVo>(() => api<DispatchVo>('/dispatch'));
   const [metaOpen, setMetaOpen] = useState(false);
   const [replication, setReplication] = useState<number | null>(null);
   const [partitions, setPartitions] = useState<number | null>(null);
@@ -123,7 +123,6 @@ export default function DispatchPage() {
         title="调度计划与集群元数据"
         description="查看业务面/管理面集群元数据、调度执行计划与执行明细。"
         visual={<PartitionVisual columns={3} leaderRows={[0, 1, 2]} badge="调度执行 · 计划追踪" />}
-        actions={<Button size="small" icon={<ReloadOutlined spin={loading} />} onClick={refresh}>刷新调度数据</Button>}
       />
 
       {error && <Alert type="warning" showIcon message={`部分数据拉取失败：${error}`} style={{ marginBottom: 14 }} />}
