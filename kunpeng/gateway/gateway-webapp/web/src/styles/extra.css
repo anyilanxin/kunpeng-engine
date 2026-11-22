@@ -1,27 +1,27 @@
 /* 控制台本地扩展样式：调度中心页面专属（参考设计体系的补充，不修改参考 verbatim 文件） */
 
-/* 页头横幅整体压至原高 3/5（基线 168→100、紧凑 136→82）：文字同步收缩，视觉动画 transform 等比缩放不裁剪（绝对定位坐标系不动盒子） */
-.page-hero { min-height: 100px; border-radius: 16px; }
-.page-hero--compact { min-height: 82px; }
-.page-hero__content { padding: 8px 22px; }
-.page-hero__eyebrow { margin-bottom: 2px; font-size: 8px; letter-spacing: 1.4px; }
-.page-hero h1 { font-size: 14px; line-height: 1.25; }
-.page-hero p { max-width: 520px; margin: 3px 0 0; font-size: 10px; line-height: 1.5; }
+/* 页头横幅压矮回调版（基线 168→136、紧凑 136→120，约原高 8 折）：动画视觉放大到可辨识，文字保持紧凑；视觉动画 transform 等比缩放不裁剪（绝对定位坐标系不动盒子） */
+.page-hero { min-height: 136px; border-radius: 16px; }
+.page-hero--compact { min-height: 120px; }
+.page-hero__content { padding: 10px 22px; }
+.page-hero__eyebrow { margin-bottom: 3px; font-size: 8px; letter-spacing: 1.4px; }
+.page-hero h1 { font-size: 15px; line-height: 1.3; }
+.page-hero p { max-width: 520px; margin: 4px 0 0; font-size: 10px; line-height: 1.55; }
 .page-hero__actions { position: absolute; z-index: 5; top: auto; right: 22px; bottom: 10px; gap: 7px; margin-top: 0; }
-.page-hero__glow { top: -60px; width: 240px; height: 240px; }
-.page-hero__grid { height: 150px; }
+.page-hero__glow { top: -70px; width: 280px; height: 280px; }
+.page-hero__grid { height: 180px; }
 
 .page-hero__visual { display: flex; align-items: center; justify-content: center; }
 .page-hero__visual .node-cluster-visual,
 .page-hero__visual .worker-pulse-visual,
 .page-hero__visual .partition-matrix-visual,
 .page-hero__visual .cluster-topology { flex: none; }
-.page-hero__visual .node-cluster-visual { transform: scale(.53); }
-.page-hero__visual .worker-pulse-visual { transform: scale(.56); }
-.page-hero__visual .partition-matrix-visual { transform: scale(.6); }
-.page-hero--compact .page-hero__visual .node-cluster-visual { transform: scale(.43); }
-.page-hero--compact .page-hero__visual .worker-pulse-visual { transform: scale(.46); }
-.page-hero--compact .page-hero__visual .partition-matrix-visual { transform: scale(.49); }
+.page-hero__visual .node-cluster-visual { transform: scale(.7); }
+.page-hero__visual .worker-pulse-visual { transform: scale(.72); }
+.page-hero__visual .partition-matrix-visual { transform: scale(.78); }
+.page-hero--compact .page-hero__visual .node-cluster-visual { transform: scale(.6); }
+.page-hero--compact .page-hero__visual .worker-pulse-visual { transform: scale(.62); }
+.page-hero--compact .page-hero__visual .partition-matrix-visual { transform: scale(.68); }
 
 /* 集群扩缩容操作区 */
 .dispatch-ops {
