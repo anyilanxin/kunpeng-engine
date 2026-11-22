@@ -24,9 +24,11 @@ import com.anyilanxin.kunpeng.gateway.webapp.service.WebappConsoleService.Gatewa
 import com.anyilanxin.kunpeng.gateway.webapp.service.WebappConsoleService.OverviewVo;
 import com.anyilanxin.kunpeng.gateway.webapp.service.WebappConsoleService.PartitionVo;
 import com.anyilanxin.kunpeng.gateway.webapp.service.WebappConsoleService.TopologyVo;
+import java.time.Duration;
 import java.util.List;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,6 +36,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
@@ -99,6 +102,17 @@ public class WebappConsoleController {
   @GetMapping("/cluster/brokers")
   public Mono<WebappResult<List<WebappConsoleService.BrokerSnapshotVo>>> brokerSnapshots() {
     return Mono.fromSupplier(consoleService::brokerSnapshots).map(WebappResult::ok);
+  }
+
+  /** 集群事件 SSE 流：membership 增删/可达性变化实时推送（15s 心跳保活），前端收到即触发刷新 */
+  @GetMapping(value = "/cluster/events", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+  public Flux<ServerSentEvent<String>> clusterEvents() {
+    return Flux.merge(
+        consoleService
+            .clusterEvents()
+            .map(data -> ServerSentEvent.<String>builder().event("cluster").data(data).build()),
+        Flux.interval(Duration.ofSeconds(15))
+            .map(tick -> ServerSentEvent.<String>builder().comment("keep-alive").build()));
   }
 
   /** 参考控制台模型：本网关 Worker 连接与订阅关系快照 */

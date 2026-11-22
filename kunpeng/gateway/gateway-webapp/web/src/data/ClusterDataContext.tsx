@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { App } from 'antd';
 import { api } from '../api';
@@ -27,6 +27,18 @@ export function ClusterDataProvider({ children }: { children: ReactNode }) {
     6000,
   );
   const { message } = App.useApp();
+
+  // SSE 集群事件（membership 增删/可达性变化）：收到即静默重取，节点上下线秒级可见；轮询兜底
+  const brokerRefresh = brokerQuery.refresh;
+  const workerRefresh = workerQuery.refresh;
+  useEffect(() => {
+    const source = new EventSource('/api/v1/webapp/cluster/events');
+    source.addEventListener('cluster', () => {
+      void brokerRefresh();
+      void workerRefresh();
+    });
+    return () => source.close();
+  }, [brokerRefresh, workerRefresh]);
 
   const refresh = async () => {
     try {

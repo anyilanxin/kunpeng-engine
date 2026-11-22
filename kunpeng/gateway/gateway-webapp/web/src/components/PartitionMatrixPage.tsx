@@ -80,7 +80,7 @@ export default function PartitionMatrixPage({ group, eyebrow, title, description
       />
 
       <section className="metrics-grid">
-        <MetricCard title="在线 Broker" value={brokers.length} icon={<CloudServerOutlined />} tone="green" footer={`${brokers.length} 个节点在线`} />
+        <MetricCard title="在线 Broker" value={brokers.filter((broker) => broker.state !== 'OFFLINE').length} icon={<CloudServerOutlined />} tone="green" footer={`${brokers.filter((broker) => broker.state === 'ONLINE').length} 在线 · 共 ${brokers.length} 注册`} />
         <MetricCard title="逻辑分区" value={partitionIds.length} icon={<PartitionOutlined />} tone="blue" footer="1 个分区组" />
         <MetricCard title="副本因子" value={replicationFactor} icon={<DeploymentUnitOutlined />} tone="cyan" footer={`共 ${cells.length} 个分区副本`} />
         <MetricCard title="当前变更" value="无" icon={<SwapOutlined />} tone="violet" footer="以当前快照为准" />
@@ -116,9 +116,12 @@ export default function PartitionMatrixPage({ group, eyebrow, title, description
                     <span className="node-identity__icon"><CloudServerOutlined /><i /></span>
                     <div><strong>{shortNodeName(broker.memberId)}</strong><small>{broker.memberId} · Source #{broker.nodeSourceId}</small></div>
                   </div>
+                  <span className={`node-state-tag node-state-tag--${(broker.state ?? 'ONLINE').toLowerCase()}`}>
+                    <i />{broker.state === 'OFFLINE' ? '离线' : broker.state === 'UNREGISTERED' ? '未注册' : '在线'}
+                  </span>
                   <span className="partition-node-card__count">{partitions.length} 个副本</span>
                 </div>
-                <div className="partition-node-card__meta">{broker.address}</div>
+                <div className="partition-node-card__meta">{broker.address ?? '—'}</div>
                 <div className="node-partition-chips">
                   {partitions.map((partition) => (
                     <button

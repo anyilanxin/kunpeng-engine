@@ -14,6 +14,7 @@ package com.anyilanxin.kunpeng.protocol.admin.record.commandapi.admin.query;
 
 import com.anyilanxin.kunpeng.protocol.admin.record.command.admin.AdminClusterMetaRecordValue;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.admin.AdminDispatchPlanRecordValue;
+import com.anyilanxin.kunpeng.protocol.admin.record.command.source.NodeSourceMetaRecordValue;
 import com.anyilanxin.kunpeng.protocol.common.RecordValue;
 import com.anyilanxin.kunpeng.protocol.common.api.ResponseRecordValue;
 
@@ -27,4 +28,7 @@ public interface AdminDispatchQueryResponseRecordValue extends RecordValue, Resp
   AdminDispatchPlanRecordValue getDispatchPlan();
 
   AdminClusterMetaRecordValue getClusterMeta();
+
+  /** 节点 source 注册表（权威节点清单：memberId + sourceId） */
+  NodeSourceMetaRecordValue getNodeSourceMeta();
 }

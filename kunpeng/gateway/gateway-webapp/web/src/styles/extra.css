@@ -149,6 +149,52 @@
   white-space: nowrap;
 }
 
+/* 节点实时状态徽章（注册表 × membership 可达性） */
+.node-state-tag {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px;
+  font-size: 11px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.node-state-tag i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.node-state-tag--online {
+  color: #14936c;
+  background: #e7f8f1;
+  border: 1px solid #bfe9d8;
+}
+
+.node-state-tag--offline {
+  color: #d8404a;
+  background: #fdecee;
+  border: 1px solid #f4c9cb;
+}
+
+.node-state-tag--offline i {
+  animation: node-state-pulse 1.5s ease-in-out infinite;
+}
+
+.node-state-tag--unregistered {
+  color: #c07b16;
+  background: #fdf3e3;
+  border: 1px solid #f3ddba;
+}
+
+@keyframes node-state-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .35; }
+}
+
 /* 分区 chips 区固定 3 排（chip 30px + 行距 8px），超出部分卡片内滚动，保证卡片等高 */
 .node-partition-chips {
   display: flex;

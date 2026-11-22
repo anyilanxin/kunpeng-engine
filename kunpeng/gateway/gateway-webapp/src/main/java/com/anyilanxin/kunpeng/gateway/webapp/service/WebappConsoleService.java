@@ -32,16 +32,25 @@ import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminDisp
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessClusterMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanExecutionRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.admin.query.AdminDispatchQueryResponseRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.business.dispatch.BusinessChangeResponseRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.business.query.BusinessDispatchQueryResponseRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionInfoMetaRecordValue;
+import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionMemberMetaRecordValue;
+import com.anyilanxin.kunpeng.protocol.admin.record.command.source.NodeSourceRecordValue;
 import com.anyilanxin.kunpeng.utils.VersionUtil;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Sinks;
 
 /**
  * 控制台数据聚合服务：拓扑/分区（含 sourceId 实时视图）/job 流/网关/调度查询读本进程运行时视图与既有管理面查询链路； 调度操作（重新负载/改副本/改分区）走既有
@@ -58,6 +67,9 @@ public class WebappConsoleService {
   private final ClusterDispatchClient dispatchClient;
   private final AtomixCluster atomixCluster;
 
+  /** 集群事件流（replay 最新一条，后端 membership 变化实时推送前端刷新） */
+  private final Sinks.Many<String> clusterEventSink = Sinks.many().replay().limit(1);
+
   public WebappConsoleService(
       final ClusterTopologyService topologyService,
       final GatewayTopologyManager gatewayTopologyManager,
@@ -69,41 +81,164 @@ public class WebappConsoleService {
     this.jobHub = jobHub;
     this.dispatchClient = dispatchClient;
     this.atomixCluster = atomixCluster;
+    atomixCluster
+        .getMembershipService()
+        .addListener(
+            event ->
+                clusterEventSink.tryEmitNext("membership:" + event.type().name().toLowerCase()));
   }
 
-  /** 控制台快照模型：broker 全量节点（含服务地址、Node Source ID 与逐副本明细），供分区矩阵与节点页使用 */
+  /** 控制台快照模型：broker 节点权威清单（注册表=管理分区元数据）×实时可达性（membership）×分区归属（管理元数据，在线叠加拓扑 role/health/term） */
   public List<BrokerSnapshotVo> brokerSnapshots() {
+    final var admin = dispatchClient.adminDispatchQuery().join();
+    final var business = dispatchClient.businessDispatchQuery().join();
     final Map<String, Member> members = new TreeMap<>();
     for (final Member member : atomixCluster.getMembershipService().getMembers()) {
       members.put(member.id().id(), member);
     }
-    final List<BrokerSnapshotVo> snapshots = new ArrayList<>();
+    final Map<String, List<PartitionMemberInfo>> topologyByMember = new HashMap<>();
     for (final var entry : topologyService.getMemberPartitions().entrySet()) {
-      final String memberId = entry.getKey().id();
+      topologyByMember.put(entry.getKey().id(), entry.getValue());
+    }
+    final Map<String, List<PartitionRef>> ownership = partitionOwnership(admin, business);
+    final List<BrokerSnapshotVo> snapshots = new ArrayList<>();
+    final Set<String> listed = new HashSet<>();
+    // 权威清单：注册表成员（memberId + sourceId）；地址与可达性实时查 membership
+    for (final NodeSourceRecordValue source : registrySources(admin)) {
+      final String memberId = source.getMemberId();
       final Member member = members.get(memberId);
-      final List<PartitionSnapshotVo> partitions = new ArrayList<>();
-      for (final PartitionMemberInfo info : entry.getValue()) {
-        partitions.add(
-            new PartitionSnapshotVo(
-                info.getPartitionId().group(),
-                info.getPartitionId().id(),
-                info.getRole().name(),
-                info.getHealth().name(),
-                info.getTerm(),
-                info.getSourceId(),
-                info.getAgentSourceIds() == null
-                    ? List.of()
-                    : List.copyOf(info.getAgentSourceIds())));
-      }
-      partitions.sort(
-          Comparator.comparing(PartitionSnapshotVo::group)
-              .thenComparingInt(PartitionSnapshotVo::id));
+      final boolean reachable = member != null && member.isReachable();
       snapshots.add(
           new BrokerSnapshotVo(
-              memberId, member.address().toString(), nodeSourceId(member), partitions));
+              memberId,
+              member == null ? null : member.address().toString(),
+              source.getSourceId(),
+              reachable ? STATE_ONLINE : STATE_OFFLINE,
+              memberPartitions(memberId, reachable, ownership, topologyByMember)));
+      listed.add(memberId);
     }
+    // 注册表外但正承载分区的成员：注册链路滞后观察态
+    for (final var entry : topologyByMember.entrySet()) {
+      final String memberId = entry.getKey();
+      if (listed.contains(memberId) || entry.getValue() == null || entry.getValue().isEmpty()) {
+        continue;
+      }
+      final Member member = members.get(memberId);
+      final boolean reachable = member != null && member.isReachable();
+      final String nodeSource =
+          member == null ? null : member.properties().getProperty(NODE_SOURCE_PROPERTY_KEY);
+      snapshots.add(
+          new BrokerSnapshotVo(
+              memberId,
+              member == null ? null : member.address().toString(),
+              nodeSource == null ? -1 : Integer.parseInt(nodeSource),
+              reachable ? STATE_UNREGISTERED : STATE_OFFLINE,
+              memberPartitions(memberId, reachable, ownership, topologyByMember)));
+    }
+    snapshots.sort(Comparator.comparingInt(BrokerSnapshotVo::nodeSourceId));
     return snapshots;
   }
+
+  private List<NodeSourceRecordValue> registrySources(
+      final BrokerResponse<AdminDispatchQueryResponseRecord> admin) {
+    if (admin.isSuccess()
+        && admin.getValue() != null
+        && admin.getValue().getNodeSourceMeta() != null) {
+      return admin.getValue().getNodeSourceMeta().getSources();
+    }
+    return List.of();
+  }
+
+  /** 分区归属（权威）：业务面（raft-partition 列表）+ 管理面（admin-partition 单分区）元数据投影为 memberId -> 副本列表 */
+  private Map<String, List<PartitionRef>> partitionOwnership(
+      final BrokerResponse<AdminDispatchQueryResponseRecord> admin,
+      final BrokerResponse<BusinessDispatchQueryResponseRecord> business) {
+    final List<PartitionInfoMetaRecordValue> metas = new ArrayList<>();
+    if (business.isSuccess()
+        && business.getValue() != null
+        && business.getValue().getClusterMeta() != null) {
+      metas.addAll(business.getValue().getClusterMeta().getMeta());
+    }
+    if (admin.isSuccess()
+        && admin.getValue() != null
+        && admin.getValue().getClusterMeta() != null
+        && admin.getValue().getClusterMeta().getMeta() != null) {
+      metas.add(admin.getValue().getClusterMeta().getMeta());
+    }
+    final Map<String, List<PartitionRef>> ownership = new HashMap<>();
+    for (final PartitionInfoMetaRecordValue meta : metas) {
+      for (final PartitionMemberMetaRecordValue member : meta.getPartitionMembers()) {
+        ownership
+            .computeIfAbsent(member.getMemberId(), key -> new ArrayList<>())
+            .add(new PartitionRef(meta.getPartitionGroup(), meta.getPartitionId()));
+      }
+    }
+    return ownership;
+  }
+
+  /** 单节点分区列表：元数据归属为基线，在线时叠加拓扑 role/health/term；离线节点分区一律标 UNHEALTHY */
+  private List<PartitionSnapshotVo> memberPartitions(
+      final String memberId,
+      final boolean reachable,
+      final Map<String, List<PartitionRef>> ownership,
+      final Map<String, List<PartitionMemberInfo>> topologyByMember) {
+    final Map<String, PartitionMemberInfo> topologyIndex = new HashMap<>();
+    final List<PartitionMemberInfo> infos = topologyByMember.get(memberId);
+    if (infos != null) {
+      for (final PartitionMemberInfo info : infos) {
+        topologyIndex.put(info.getPartitionId().group() + ":" + info.getPartitionId().id(), info);
+      }
+    }
+    final List<PartitionSnapshotVo> partitions = new ArrayList<>();
+    final Set<String> covered = new HashSet<>();
+    for (final PartitionRef ref : ownership.getOrDefault(memberId, List.of())) {
+      covered.add(ref.group() + ":" + ref.id());
+      final PartitionMemberInfo info = topologyIndex.get(ref.group() + ":" + ref.id());
+      partitions.add(
+          info == null
+              ? new PartitionSnapshotVo(
+                  ref.group(),
+                  ref.id(),
+                  "INACTIVE",
+                  reachable ? "UNKNOWN" : "UNHEALTHY",
+                  0,
+                  -1,
+                  List.of())
+              : partitionSnapshot(info, reachable));
+    }
+    for (final PartitionMemberInfo info : topologyIndex.values()) {
+      final String key = info.getPartitionId().group() + ":" + info.getPartitionId().id();
+      if (!covered.contains(key)) {
+        partitions.add(partitionSnapshot(info, reachable));
+      }
+    }
+    partitions.sort(
+        Comparator.comparing(PartitionSnapshotVo::group).thenComparingInt(PartitionSnapshotVo::id));
+    return partitions;
+  }
+
+  private PartitionSnapshotVo partitionSnapshot(
+      final PartitionMemberInfo info, final boolean reachable) {
+    return new PartitionSnapshotVo(
+        info.getPartitionId().group(),
+        info.getPartitionId().id(),
+        info.getRole().name(),
+        reachable ? info.getHealth().name() : "UNHEALTHY",
+        info.getTerm(),
+        info.getSourceId(),
+        info.getAgentSourceIds() == null ? List.of() : List.copyOf(info.getAgentSourceIds()));
+  }
+
+  /** 集群事件流（membership 增删/可达性变化），SSE 推送用 */
+  public Flux<String> clusterEvents() {
+    return clusterEventSink.asFlux();
+  }
+
+  private static final String STATE_ONLINE = "ONLINE";
+  private static final String STATE_OFFLINE = "OFFLINE";
+  private static final String STATE_UNREGISTERED = "UNREGISTERED";
+
+  private record PartitionRef(String group, int id) {}
 
   /** 控制台快照模型：本网关 Worker 连接与订阅关系（单网关进程视角；broker 内嵌网关即本节点网关） */
   public List<JobWorkerSnapshotVo> workerSnapshots() {
@@ -368,9 +503,13 @@ public class WebappConsoleService {
 
   // ===== 视图记录 =====
 
-  /** 前端节点/分区矩阵快照：broker 节点 */
+  /** 前端节点/分区矩阵快照：broker 节点（state=ONLINE/OFFLINE/UNREGISTERED；离线成员 address 可能为 null） */
   public record BrokerSnapshotVo(
-      String memberId, String address, int nodeSourceId, List<PartitionSnapshotVo> partitions) {}
+      String memberId,
+      String address,
+      int nodeSourceId,
+      String state,
+      List<PartitionSnapshotVo> partitions) {}
 
   /** 前端节点/分区矩阵快照：单个分区副本 */
   public record PartitionSnapshotVo(

@@ -17,10 +17,14 @@ export interface Partition {
   agentSourceIds: number[];
 }
 
+/** 节点实时状态：注册表权威清单 × membership 可达性（本地扩展字段，verbatim 偏离点见技能） */
+export type BrokerState = 'ONLINE' | 'OFFLINE' | 'UNREGISTERED';
+
 export interface Broker {
   memberId: string;
-  address: string;
+  address: string | null;
   nodeSourceId: number;
+  state?: BrokerState;
   partitions: Partition[];
 }
 

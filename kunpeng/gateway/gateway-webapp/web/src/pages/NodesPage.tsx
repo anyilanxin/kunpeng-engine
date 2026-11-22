@@ -66,7 +66,17 @@ export default function NodesPage() {
       width: 190,
       render: (_, broker) => <NodeTypeTags gateway={gatewayIds.has(broker.memberId)} />,
     },
-    { title: '服务地址', dataIndex: 'address', width: 190, render: (address: string) => <code className="address-code">{address}</code> },
+    { title: '服务地址', dataIndex: 'address', width: 190, render: (address: string | null) => <code className="address-code">{address ?? '—'}</code> },
+    {
+      title: '状态',
+      key: 'state',
+      width: 96,
+      render: (_, broker) => (
+        <span className={`node-state-tag node-state-tag--${(broker.state ?? 'ONLINE').toLowerCase()}`}>
+          <i />{broker.state === 'OFFLINE' ? '离线' : broker.state === 'UNREGISTERED' ? '未注册' : '在线'}
+        </span>
+      ),
+    },
     { title: 'Node Source ID', dataIndex: 'nodeSourceId', width: 140, render: (id: number) => <Tag className="id-tag">#{id}</Tag> },
     {
       title: 'Leader 分区',

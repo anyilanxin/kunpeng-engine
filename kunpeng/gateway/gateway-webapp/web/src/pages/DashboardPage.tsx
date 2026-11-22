@@ -50,7 +50,7 @@ export default function DashboardPage() {
       />
 
       <section className="metrics-grid">
-        <MetricCard title="在线 Broker" value={<>{brokers.length}<small> / {brokers.length}</small></>} icon={<CloudServerOutlined />} tone="blue" footer="全部节点在线" trend={0} />
+        <MetricCard title="在线 Broker" value={<>{brokers.filter((broker) => broker.state !== 'OFFLINE').length}<small> / {brokers.length}</small></>} icon={<CloudServerOutlined />} tone="blue" footer={`${brokers.filter((broker) => broker.state === 'ONLINE').length} 在线 · 共 ${brokers.length} 注册`} trend={0} />
         <MetricCard title="逻辑分区" value={new Set(partitions.map((item) => `${item.group}-${item.id}`)).size} icon={<PartitionOutlined />} tone="cyan" footer={`${leaders} 个 Leader · ${followers} 个 Follower`} />
         <MetricCard title="Worker 会话" value={sessions.length} icon={<ApiOutlined />} tone="violet" footer={`${jobTypes.size} 种任务类型已订阅`} />
         <MetricCard title="任务类型" value={jobTypes.size} icon={<ThunderboltOutlined />} tone="green" footer="覆盖流程任务与消息事件" />
