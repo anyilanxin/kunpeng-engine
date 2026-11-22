@@ -23,11 +23,14 @@ import com.anyilanxin.kunpeng.cluster.dispatch.commandapi.admin.AbstractAdminApi
 import com.anyilanxin.kunpeng.protocol.admin.impl.eventlog.AdminLogRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminClusterMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminDispatchPlanRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.source.NodeSourceMetaRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.source.NodeSourceRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.admin.query.AdminDispatchQueryRequestRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.admin.query.AdminDispatchQueryResponseRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.commandapi.admin.AdminDispatchApiValueLifeCycle;
 import com.anyilanxin.kunpeng.repository.admin.AdminImmutableRepository;
 import com.anyilanxin.kunpeng.repository.admin.modules.admin.ImmutableAdminRepository;
+import com.anyilanxin.kunpeng.repository.admin.modules.source.ImmutableSourceRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,12 +46,14 @@ public class AdminQueryApiProcessor
   private final AdminDispatchQueryResponseRecord response;
   private final LogEventWriter writer;
   private final ImmutableAdminRepository repositoryAdmin;
+  private final ImmutableSourceRepository repositorySource;
 
   public AdminQueryApiProcessor(final LogEventWriter writer) {
     this.writer = writer;
     response = new AdminDispatchQueryResponseRecord();
     final AdminImmutableRepository repository = writer.getRepository();
     repositoryAdmin = repository.adminRepository();
+    repositorySource = repository.sourceRepository();
   }
 
   @Override
@@ -61,6 +66,13 @@ public class AdminQueryApiProcessor
     final AdminDispatchPlanRecord dispatchPlan = repositoryAdmin.getDispatchPlan();
     if (dispatchPlan != null) {
       copyInto(dispatchPlan, response.getDispatchPlan());
+    }
+    final NodeSourceMetaRecord nodeSourceMeta = repositorySource.getNodeSourceMeta();
+    if (nodeSourceMeta != null) {
+      copyInto(nodeSourceMeta, response.getNodeSourceMeta());
+    }
+    for (final NodeSourceRecord source : repositorySource.getNodeSources()) {
+      copyInto(source, response.getNodeSourceMeta().sources().add());
     }
     writer.adResponse(
         AdminDispatchApiValueLifeCycle.DISPATCH_QUERY_RESPONSE, record.getRequestId(), response);

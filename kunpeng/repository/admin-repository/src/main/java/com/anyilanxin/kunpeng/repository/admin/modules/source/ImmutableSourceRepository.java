@@ -32,6 +32,9 @@ public interface ImmutableSourceRepository {
 
   NodeSourceRecord getNodeSource(String memberId);
 
+  /** 全量节点 source 注册表（权威节点清单；逐行新 Record，防共享 buffer 塌缩） */
+  List<NodeSourceRecord> getNodeSources();
+
   NodeSourceMetaRecord getNodeSourceMeta();
 
   PartitionSourceRecord getPartitionSource(String partitionGroup, int partitionId);

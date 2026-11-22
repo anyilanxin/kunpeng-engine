@@ -32,7 +32,7 @@ public class AdminQueryRequest
 
   public AdminQueryRequest() {
     super(
-        AdminValueType.ADMIN_CLUSTER_META,
+        AdminValueType.ADMIN_DISPATCH_API,
         AdminDispatchApiValueLifeCycle.DISPATCH_QUERY_REQUEST,
         new AdminDispatchQueryRequestRecord());
   }

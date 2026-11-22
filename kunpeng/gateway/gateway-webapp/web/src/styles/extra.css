@@ -1,0 +1,628 @@
+/* 控制台本地扩展样式：调度中心页面专属（参考设计体系的补充，不修改参考 verbatim 文件） */
+
+/* 页头横幅压矮回调版（基线 168→136、紧凑 136→120，约原高 8 折）：动画视觉放大到可辨识，文字保持紧凑；视觉动画 transform 等比缩放不裁剪（绝对定位坐标系不动盒子） */
+.page-hero { min-height: 136px; border-radius: 16px; }
+.page-hero--compact { min-height: 120px; }
+.page-hero__content { padding: 10px 22px; }
+.page-hero__eyebrow { margin-bottom: 3px; font-size: 8px; letter-spacing: 1.4px; }
+.page-hero h1 { font-size: 15px; line-height: 1.3; }
+.page-hero p { max-width: 520px; margin: 4px 0 0; font-size: 10px; line-height: 1.55; }
+.page-hero__actions { position: absolute; z-index: 5; top: auto; right: 22px; bottom: 10px; gap: 7px; margin-top: 0; }
+.page-hero__glow { top: -70px; width: 280px; height: 280px; }
+.page-hero__grid { height: 180px; }
+
+.page-hero__visual { display: flex; align-items: center; justify-content: center; }
+.page-hero__visual .node-cluster-visual,
+.page-hero__visual .worker-pulse-visual,
+.page-hero__visual .partition-matrix-visual,
+.page-hero__visual .cluster-topology { flex: none; }
+.page-hero__visual .node-cluster-visual { transform: scale(.74); }
+.page-hero__visual .worker-pulse-visual { transform: scale(.77); }
+.page-hero__visual .partition-matrix-visual { transform: scale(.83); }
+.page-hero--compact .page-hero__visual .node-cluster-visual { transform: scale(.65); }
+.page-hero--compact .page-hero__visual .worker-pulse-visual { transform: scale(.67); }
+
+/* 分区矩阵（业务分区/管理分区/调度中心）：158px 盒内矩阵绘制仅 92px 且垂直居中，盒底有 33px 内容留白——
+   放大 + 下移吃掉底部留白（盒底空白由 hero overflow 裁掉，无可见损伤）：
+   .82 + 下移 16px → 矩阵底距卡底 ~2px；浮动徽章顶余量 ~6px */
+.page-hero--compact .page-hero__visual .partition-matrix-visual { transform: translateY(16px) scale(.82); }
+
+/* 工作台拓扑（唯一基线 hero 页）：verbatim svg min-height 195px 高于 136px 基线横幅，上下各被裁 ~30px——
+   压掉 min-height 让 svg 按容器高走（viewBox 等比缩放不裁剪），整体再微缩留边距 */
+.page-hero__visual .cluster-topology svg { min-height: 0; }
+.page-hero__visual .cluster-topology { transform: scale(.93); }
+
+/* 拓扑脉冲环：Chrome 下 SVG 子元素 transform-origin:center 默认绕 viewBox 中心缩放（transform-box:view-box），
+   环放大时飞离节点中心并经 svg overflow:visible 溢出横幅被裁——锚回自身中心，涟漪原位扩散 */
+.page-hero__visual .cluster-topology .topology-pulse { transform-box: fill-box; }
+
+/* 集群扩缩容操作区 */
+.dispatch-ops {
+  display: grid;
+  gap: 10px;
+}
+
+.dispatch-op {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  border: 1px solid #e3ebf7;
+  border-radius: 12px;
+  background: #f8fbff;
+}
+
+.dispatch-op__label {
+  flex: 0 0 64px;
+  font-weight: 600;
+  color: #243b57;
+}
+
+.dispatch-op__hint {
+  flex: 1;
+  min-width: 180px;
+  font-size: 12px;
+  color: #8a94a6;
+}
+
+.dispatch-op-result {
+  margin-top: 12px;
+  padding: 10px 14px;
+  border: 1px solid #c9e7d9;
+  border-radius: 12px;
+  background: #f2fbf7;
+}
+
+.dispatch-op-result--error {
+  border-color: #f3c9c9;
+  background: #fdf3f3;
+}
+
+.dispatch-op-result__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+
+.dispatch-op-result__meta {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #51637e;
+}
+
+/* 分区归属：节点卡片网格（一节点一卡，固定 3 列 × 2 排可视约 6 节点，超出整体滚动；卡内分区固定 3 排，超出内部滚动） */
+.partition-node-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: 210px;
+  gap: 12px;
+  max-height: calc(2 * 210px + 12px);
+  padding-right: 4px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@media (max-width: 1280px) {
+  .partition-node-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .partition-node-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.partition-panel.is-refreshing .partition-node-grid {
+  opacity: 0.6;
+}
+
+.partition-node-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  background: #f8fbff;
+  border: 1px solid #e3ebf7;
+  border-radius: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.partition-node-card:hover {
+  border-color: #c9dcfb;
+  box-shadow: 0 10px 26px rgba(46, 82, 132, 0.08);
+}
+
+.partition-node-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.partition-node-card__meta {
+  margin-top: -4px;
+  font-size: 11px;
+  color: #8a94a6;
+}
+
+.partition-node-card__count {
+  flex-shrink: 0;
+  padding: 1px 10px;
+  font-size: 12px;
+  color: #246bfd;
+  background: #e5eefd;
+  border: 1px solid #c9dcfb;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* 节点实时状态徽章（注册表 × membership 可达性） */
+.node-state-tag {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px;
+  font-size: 11px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.node-state-tag i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.node-state-tag--online {
+  color: #14936c;
+  background: #e7f8f1;
+  border: 1px solid #bfe9d8;
+}
+
+.node-state-tag--offline {
+  color: #d8404a;
+  background: #fdecee;
+  border: 1px solid #f4c9cb;
+}
+
+.node-state-tag--offline i {
+  animation: node-state-pulse 1.5s ease-in-out infinite;
+}
+
+.node-state-tag--unregistered {
+  color: #c07b16;
+  background: #fdf3e3;
+  border: 1px solid #f3ddba;
+}
+
+@keyframes node-state-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .35; }
+}
+
+/* 分区 chips 区（2026-11-22 用户定案两行式）：固定 4 列网格，单元上行=分区序号、下行=角色状态，
+   等宽等高对得整齐；固定 3 排（32px + 行距 6px），超出部分卡片内滚动，保证卡片等高 */
+.node-partition-chips {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  flex: none;
+  align-content: flex-start;
+  height: calc(3 * 32px + 2 * 6px);
+  padding-right: 6px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.node-partition-chip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  height: 32px;
+  padding: 0 3px;
+  cursor: pointer;
+  background: #f2f6fc;
+  border: 1px solid #e3ebf7;
+  border-radius: 8px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+/* 序号=右上角角标（小徽标清晰可读），角色文字居中在上（无 # 前缀） */
+.node-partition-chip b {
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  padding: 1px 4px;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #51637e;
+  background: rgba(255, 255, 255, 0.78);
+  border-radius: 5px;
+  box-shadow: inset 0 0 0 1px rgba(215, 228, 246, 0.9);
+  pointer-events: none;
+}
+
+.node-partition-chip--leader b { color: #246bfd; }
+.node-partition-chip--unhealthy b { color: #d8404a; background: rgba(255, 255, 255, 0.85); }
+
+.node-partition-chip:hover {
+  border-color: #bcd3f5;
+  box-shadow: 0 4px 12px rgba(46, 82, 132, 0.1);
+}
+
+.node-partition-chip span {
+  position: relative;
+  z-index: 1;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #51637e;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.node-partition-chip--leader {
+  background: #e5eefd;
+  border-color: #c9dcfb;
+}
+
+.node-partition-chip--leader span {
+  color: #246bfd;
+  font-weight: 600;
+}
+
+.node-partition-chip--candidate {
+  background: #fdf3e3;
+  border-color: #f3ddba;
+}
+
+.node-partition-chip--candidate span {
+  color: #c07b16;
+}
+
+.node-partition-chip--promotable {
+  background: #f1ebfd;
+  border-color: #e0d3f7;
+}
+
+.node-partition-chip--promotable span {
+  color: #7a4fd1;
+}
+
+.node-partition-chip--passive,
+.node-partition-chip--inactive {
+  background: #f5f6f9;
+  border-color: #e8eaef;
+}
+
+.node-partition-chip--passive span,
+.node-partition-chip--inactive span {
+  color: #97a2b3;
+}
+
+.node-partition-chip--unhealthy {
+  background: #fdeeee;
+  border-color: #f4c9cb;
+}
+
+.node-partition-chip--unhealthy b,
+.node-partition-chip--unhealthy span {
+  color: #d8404a;
+}
+
+/* JobWorker 页整页撑满视口：页头/指标卡固定，面板吃满剩余高度，滚动只发生在表格体内部 */
+.page--fill .worker-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.page--fill .worker-panel__top {
+  flex: none;
+}
+
+.worker-table-region {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.worker-table-region .worker-table-summary,
+.worker-table-region .table-panel__footer {
+  flex: none;
+}
+
+.worker-table-region .ant-table-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.worker-table-region .ant-spin-nested-loading,
+.worker-table-region .ant-spin-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.worker-table-region .ant-spin-container > .ant-table {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.worker-table-region .ant-table-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.worker-table-region .ant-table-body {
+  flex: 1;
+  min-height: 0;
+  max-height: 100% !important;
+  overflow-y: auto !important;
+}
+
+/* 订阅关系表格视图（worker-table-summary 间距） */
+.subscription-compact .worker-table-summary {
+  margin-bottom: 10px;
+}
+
+/* 抽屉内订阅会话列表：数量不限，区域内部滚动 */
+.subscription-sessions-scroll {
+  max-height: 460px;
+  padding: 2px 0;
+  overflow: auto;
+}
+
+.subscription-worker-group .drawer-section-title {
+  margin-top: 14px;
+}
+
+.subscription-session--clickable {
+  width: 100%;
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-bottom: 1px dashed #e8edf4;
+  text-align: left;
+  transition: background 0.2s;
+}
+
+.subscription-session--clickable:hover {
+  background: #f6faff;
+}
+
+
+.dispatch-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .dispatch-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dispatch-panel .ant-descriptions {
+  margin-bottom: 4px;
+}
+
+.dispatch-meta-button {
+  margin-top: 12px;
+}
+
+.dispatch-transfer {
+  margin: 10px 0 2px;
+}
+
+.dispatch-executions-wrap {
+  max-height: 360px;
+  overflow: auto;
+  /* 左侧留出时间线圆点光环（box-shadow 4px 外扩）不被滚动容器裁剪 */
+  padding: 0 4px 0 8px;
+}
+
+.dispatch-execution {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  padding: 0 0 16px;
+}
+
+.dispatch-execution:last-child {
+  padding-bottom: 4px;
+}
+
+.dispatch-execution__rail {
+  position: relative;
+  flex: 0 0 10px;
+  display: flex;
+  justify-content: center;
+}
+
+.dispatch-execution__rail::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  bottom: -6px;
+  width: 2px;
+  border-radius: 2px;
+  background: #e3ebf7;
+}
+
+.dispatch-execution:last-child .dispatch-execution__rail::before {
+  bottom: auto;
+  height: 18px;
+}
+
+.dispatch-execution__rail i {
+  position: relative;
+  width: 10px;
+  height: 10px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: #246bfd;
+  box-shadow: 0 0 0 4px rgba(36, 107, 253, 0.14);
+}
+
+.dispatch-execution--failed .dispatch-execution__rail i,
+.dispatch-execution--plan_delayed .dispatch-execution__rail i {
+  background: #e5484d;
+  box-shadow: 0 0 0 4px rgba(229, 72, 77, 0.14);
+}
+
+.dispatch-execution--executed .dispatch-execution__rail i,
+.dispatch-execution--executing .dispatch-execution__rail i {
+  background: #14a074;
+  box-shadow: 0 0 0 4px rgba(20, 160, 116, 0.14);
+}
+
+.dispatch-execution__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.dispatch-execution__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dispatch-execution__meta {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+  font-size: 12px;
+  color: #51637e;
+}
+
+.dispatch-execution__message {
+  color: #8a94a6;
+}
+
+.dispatch-meta-drawer .drawer-section-title {
+  margin-top: 18px;
+}
+
+.dispatch-note {
+  margin: 4px 2px 0;
+  font-size: 12px;
+  color: #8a94a6;
+}
+
+/* 登录页会话说明（服务端会话提示） */
+.login-form-options--end {
+  justify-content: flex-end;
+}
+
+.login-session-note {
+  margin: 14px 2px 0;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #8a94a6;
+  text-align: center;
+}
+
+/* 菜单与顶栏常规化（2026-11-22 用户定案：浏览器端管理后台，仅侧栏与顶栏去圆角浮动卡、贴边；
+   底栏与内容区卡片风格不动）：
+   侧栏通高贴左（上/下/左三边贴边），顶栏贴顶、左缘紧挨侧栏以竖线分隔，高度与菜单 logo 区(86px)对齐 */
+.desktop-sider {
+  padding: 0;
+}
+
+.sider-inner {
+  background: #fff;
+  border: 0;
+  border-right: 1px solid #e9eef5;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.app-header {
+  top: 0;
+  height: 72px;
+  margin: 0;
+  background: #fff;
+  border: 0;
+  border-bottom: 1px solid #e9eef5;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+/* logo 区与顶栏等高收矮（2026-11-22 用户反馈太高）：贴顶近一点、高度 86→72 */
+.cluster-brand {
+  min-height: 72px;
+  padding: 12px 22px;
+}
+
+/* 内容区三段布局（2026-11-22 用户定案）：顶部导航 / 中部内容 / 底部固定段（项目信息 + ICP 备案位）；
+   sticky bottom 让底栏在滚动中途恒驻视口底缘，短页时由 flex 链压到底 */
+.main-layout {
+  min-height: 100vh;
+}
+
+.app-content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding-bottom: 0;
+}
+
+.app-content .route-frame {
+  /* flex 列容器下 margin:auto 会禁用 stretch（内容收缩居中/溢出），显式铺满并保留超宽屏居中 */
+  width: 100%;
+  min-width: 0;
+  max-width: 1800px;
+  align-self: center;
+  margin: 0 auto 16px;
+}
+
+.app-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  display: grid;
+  /* 三列槽位：左（项目信息）/ 中（备案信息）/ 右（项目信息）——
+     备案未配置时只有两个子元素，第二条自动落到中列（左+中） */
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  max-width: none;
+  /* 负横向 margin 逃出 app-content 左右 padding：左缘接菜单分隔竖线、右缘贴窗口边 */
+  margin: auto -20px 0;
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.94);
+  border-top: 1px solid #e9eef5;
+  backdrop-filter: blur(14px);
+}
+
+.app-footer > span:nth-child(1) { justify-self: start; }
+.app-footer > span:nth-child(2) { justify-self: center; }
+.app-footer > span:nth-child(3) { justify-self: end; }

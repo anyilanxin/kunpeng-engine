@@ -31,7 +31,9 @@ import com.anyilanxin.kunpeng.cluster.cluster.messaging.ClusterEventService;
 import com.anyilanxin.kunpeng.cluster.cluster.messaging.MessagingService;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.admin.dispatch.AdminChangeResponseRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.admin.query.AdminDispatchQueryResponseRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.business.dispatch.BusinessChangeResponseRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.business.query.BusinessDispatchQueryResponseRecord;
 import com.anyilanxin.kunpeng.scheduler.ActorSchedulingService;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
 import java.util.concurrent.CompletableFuture;
@@ -72,7 +74,7 @@ public class DefaultClusterDispatchClient implements ClusterDispatchClient {
   }
 
   @Override
-  public CompletableFuture<BrokerResponse<AdminChangeResponseRecord>> adminDispatchQuery() {
+  public CompletableFuture<BrokerResponse<AdminDispatchQueryResponseRecord>> adminDispatchQuery() {
     final AdminQueryRequest request = new AdminQueryRequest();
     return brokerClient.sendRequest(request);
   }
@@ -105,7 +107,8 @@ public class DefaultClusterDispatchClient implements ClusterDispatchClient {
   }
 
   @Override
-  public CompletableFuture<BrokerResponse<BusinessChangeResponseRecord>> businessDispatchQuery() {
+  public CompletableFuture<BrokerResponse<BusinessDispatchQueryResponseRecord>>
+      businessDispatchQuery() {
     final BusinessQueryRequest request = new BusinessQueryRequest();
     return brokerClient.sendRequest(request);
   }

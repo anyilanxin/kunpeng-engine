@@ -37,6 +37,6 @@ public class BusinessDispatchEndpoint {
   /** 查询业务集群元数据 */
   @ReadOperation
   public DispatchResult dispatchQuery() {
-    return BusinessDispatchResponses.await(dispatchClient.businessDispatchQuery());
+    return BusinessDispatchResponses.awaitQuery(dispatchClient.businessDispatchQuery());
   }
 }

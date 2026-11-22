@@ -38,3 +38,9 @@ hs_err_pid*.log
 replay_pid*.log
 .zcode/
 docs/smart-socket/
+/.jython_cache/
+
+# gateway-webapp 前端构建产物与依赖（Gradle 内构建，不入库）
+/kunpeng/gateway/gateway-webapp/src/main/resources/static/webapp/
+/kunpeng/gateway/gateway-webapp/web/node_modules/
+/kunpeng/gateway/gateway-webapp/web/tsconfig.tsbuildinfo

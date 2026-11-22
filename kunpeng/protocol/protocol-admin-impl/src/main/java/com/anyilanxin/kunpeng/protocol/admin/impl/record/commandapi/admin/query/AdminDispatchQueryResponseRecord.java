@@ -20,13 +20,14 @@ import static com.anyilanxin.kunpeng.structpack.util.BufferUtil.copyInto;
 
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminClusterMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminDispatchPlanRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.source.NodeSourceMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.commandapi.admin.query.AdminDispatchQueryResponseRecordValue;
 import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 import com.anyilanxin.kunpeng.structpack.AutoDeclareProperties;
 import com.anyilanxin.kunpeng.structpack.property.ObjectProperty;
 
 /**
- * 管理面调度查询响应记录，携带当前调度计划与集群元数据快照。
+ * 管理面调度查询响应记录，携带当前调度计划、集群元数据快照与节点 source 注册表。
  *
  * @author zxuanhong
  * @since 2026.9.0
@@ -39,12 +40,15 @@ public class AdminDispatchQueryResponseRecord
       new ObjectProperty<>(1, "DISPATCH_PLAN", new AdminDispatchPlanRecord());
   private final ObjectProperty<AdminClusterMetaRecord> clusterMetaProp =
       new ObjectProperty<>(2, "CLUSTER_META", new AdminClusterMetaRecord());
+  private final ObjectProperty<NodeSourceMetaRecord> nodeSourceMetaProp =
+      new ObjectProperty<>(3, "NODE_SOURCE_META", new NodeSourceMetaRecord());
 
   public AdminDispatchQueryResponseRecord() {
-    super(2);
+    super(3);
     // formatting:off
     declareProperty(dispatchPlanProp)
-      .declareProperty(clusterMetaProp);
+      .declareProperty(clusterMetaProp)
+      .declareProperty(nodeSourceMetaProp);
     // formatting:on
   }
 
@@ -68,6 +72,18 @@ public class AdminDispatchQueryResponseRecord
 
   public AdminDispatchQueryResponseRecord setClusterMeta(final AdminClusterMetaRecord clusterMeta) {
     copyInto(clusterMeta, clusterMetaProp);
+    return this;
+  }
+
+  /** 节点 source 注册表（权威节点清单） */
+  @Override
+  public NodeSourceMetaRecord getNodeSourceMeta() {
+    return nodeSourceMetaProp.getValue();
+  }
+
+  public AdminDispatchQueryResponseRecord setNodeSourceMeta(
+      final NodeSourceMetaRecord nodeSourceMeta) {
+    copyInto(nodeSourceMeta, nodeSourceMetaProp);
     return this;
   }
 

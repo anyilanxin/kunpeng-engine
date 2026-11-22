@@ -210,6 +210,14 @@ public class SourceRepository implements MutableSourceRepository {
   }
 
   @Override
+  public List<NodeSourceRecord> getNodeSources() {
+    final List<NodeSourceRecord> result = new ArrayList<>();
+    nodeSourceColumnFamily.forEach(
+        _ -> result.add(nodeSourceValueType.unwrap(new NodeSourceRecord())));
+    return result;
+  }
+
+  @Override
   public NodeSourceMetaRecord getNodeSourceMeta() {
     if (nodeSourceMetaColumnFamily.get(nodeSourceMetaDbKey) != null) {
       return nodeSourceMetaValueType.unwrap(nodeSourceMetaBuffer);

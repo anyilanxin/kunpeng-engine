@@ -22,6 +22,7 @@ import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.Busine
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.common.PartitionInfoMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.business.dispatch.BusinessChangeResponseRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.business.query.BusinessDispatchQueryResponseRecord;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -54,9 +55,32 @@ final class BusinessDispatchResponses {
     }
   }
 
+  /** 等待调度查询响应并转换为端点结果（查询响应记录与变更响应记录不同型） */
+  static DispatchResult awaitQuery(
+      final CompletableFuture<BrokerResponse<BusinessDispatchQueryResponseRecord>> future) {
+    try {
+      final BrokerResponse<BusinessDispatchQueryResponseRecord> response = future.join();
+      return new DispatchResult(
+          response.isSuccess(),
+          response.code(),
+          response.message(),
+          response.isSuccess() && response.getValue() != null
+              ? BusinessDispatchResponse.of(response.getValue())
+              : null);
+    } catch (final CompletionException e) {
+      return DispatchResult.failure(e.getCause() == null ? e : e.getCause());
+    }
+  }
+
   /** 业务面调度响应 */
   record BusinessDispatchResponse(
       BusinessDispatchPlan dispatchPlan, BusinessClusterMeta clusterMeta) {
+
+    static BusinessDispatchResponse of(final BusinessDispatchQueryResponseRecord record) {
+      return new BusinessDispatchResponse(
+          BusinessDispatchPlan.of(record.getDispatchPlan()),
+          BusinessClusterMeta.of(record.getClusterMeta()));
+    }
 
     static BusinessDispatchResponse of(final BusinessChangeResponseRecord record) {
       return new BusinessDispatchResponse(
