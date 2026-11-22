@@ -98,7 +98,7 @@ export default function NodesPage() {
         title="每一个节点，都清晰可见"
         description="统一查看 Broker 与 Gateway 节点，追踪连接状态、分区角色和副本健康。"
         visual={<NodeClusterVisual />}
-        actions={<Button icon={<ReloadOutlined spin={refreshing} />} onClick={refresh}>刷新节点状态</Button>}
+        actions={<Button size="small" icon={<ReloadOutlined spin={refreshing} />} onClick={refresh}>刷新节点状态</Button>}
       />
 
       <section className="metrics-grid">

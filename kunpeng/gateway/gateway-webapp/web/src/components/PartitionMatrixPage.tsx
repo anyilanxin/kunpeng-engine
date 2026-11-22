@@ -76,7 +76,7 @@ export default function PartitionMatrixPage({ group, eyebrow, title, description
         title={title}
         description={description}
         visual={visual}
-        actions={<Button icon={<ReloadOutlined spin={refreshing} />} onClick={refresh}>刷新分区快照</Button>}
+        actions={<Button size="small" icon={<ReloadOutlined spin={refreshing} />} onClick={refresh}>刷新分区快照</Button>}
       />
 
       <section className="metrics-grid">

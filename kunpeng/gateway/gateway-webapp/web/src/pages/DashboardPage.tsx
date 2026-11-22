@@ -43,8 +43,8 @@ export default function DashboardPage() {
         visual={<ClusterTopology />}
         actions={
           <>
-            <Button type="primary" icon={<PartitionOutlined />} onClick={() => navigate('/partitions')}>查看分区矩阵</Button>
-            <Button icon={<ReloadOutlined spin={refreshing} />} onClick={refresh}>刷新数据</Button>
+            <Button size="small" type="primary" icon={<PartitionOutlined />} onClick={() => navigate('/partitions')}>查看分区矩阵</Button>
+            <Button size="small" icon={<ReloadOutlined spin={refreshing} />} onClick={refresh}>刷新数据</Button>
           </>
         }
       />

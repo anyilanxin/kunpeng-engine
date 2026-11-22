@@ -112,7 +112,7 @@ export default function JobWorkersPage() {
         title="任务有去处，执行有回响"
         description="管理 Gateway 中的 JobWorker 会话、任务订阅与变量抓取配置。"
         visual={<WorkerPulseVisual />}
-        actions={<Button icon={<ReloadOutlined spin={refreshing} />} onClick={refresh}>刷新 Worker 状态</Button>}
+        actions={<Button size="small" icon={<ReloadOutlined spin={refreshing} />} onClick={refresh}>刷新 Worker 状态</Button>}
       />
 
       <section className="metrics-grid">

@@ -123,7 +123,7 @@ export default function DispatchPage() {
         title="调度计划与集群元数据"
         description="查看业务面/管理面集群元数据、调度执行计划与执行明细。"
         visual={<PartitionVisual columns={3} leaderRows={[0, 1, 2]} badge="调度执行 · 计划追踪" />}
-        actions={<Button icon={<ReloadOutlined spin={loading} />} onClick={refresh}>刷新调度数据</Button>}
+        actions={<Button size="small" icon={<ReloadOutlined spin={loading} />} onClick={refresh}>刷新调度数据</Button>}
       />
 
       {error && <Alert type="warning" showIcon message={`部分数据拉取失败：${error}`} style={{ marginBottom: 14 }} />}
