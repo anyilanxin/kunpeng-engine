@@ -19,11 +19,11 @@ package com.anyilanxin.kunpeng.gateway.webapp.controller;
 import com.anyilanxin.kunpeng.gateway.webapp.core.WebappResult;
 import com.anyilanxin.kunpeng.gateway.webapp.service.WebappConsoleService;
 import com.anyilanxin.kunpeng.gateway.webapp.service.WebappConsoleService.DispatchVo;
-import com.anyilanxin.kunpeng.gateway.webapp.service.WebappConsoleService.GatewayLoadVo;
 import com.anyilanxin.kunpeng.gateway.webapp.service.WebappConsoleService.GatewayVo;
 import com.anyilanxin.kunpeng.gateway.webapp.service.WebappConsoleService.OverviewVo;
 import com.anyilanxin.kunpeng.gateway.webapp.service.WebappConsoleService.PartitionVo;
 import com.anyilanxin.kunpeng.gateway.webapp.service.WebappConsoleService.TopologyVo;
+import com.anyilanxin.kunpeng.gateway.webapp.service.WebappMonitoringService;
 import java.time.Duration;
 import java.util.List;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -56,9 +56,12 @@ import reactor.core.publisher.Mono;
     matchIfMissing = true)
 public class WebappConsoleController {
   private final WebappConsoleService consoleService;
+  private final WebappMonitoringService monitoringService;
 
-  public WebappConsoleController(final WebappConsoleService consoleService) {
+  public WebappConsoleController(
+      final WebappConsoleService consoleService, final WebappMonitoringService monitoringService) {
     this.consoleService = consoleService;
+    this.monitoringService = monitoringService;
   }
 
   /** 集群总览关键数字 */
@@ -86,10 +89,11 @@ public class WebappConsoleController {
     return Mono.fromSupplier(consoleService::gateways).map(WebappResult::ok);
   }
 
-  /** 网关负载查询 */
-  @GetMapping("/gateways/load")
-  public Mono<WebappResult<GatewayLoadVo>> gatewayLoad(@RequestParam final String grpcAddress) {
-    return Mono.fromFuture(consoleService.gatewayLoad(grpcAddress)).map(WebappResult::ok);
+  /** 网关负载 SSE 流：后端统一节拍采样全网关负载推送（订阅驱动，前端不再逐网关轮询） */
+  @GetMapping(value = "/gateways/load/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+  public Flux<ServerSentEvent<List<WebappConsoleService.GatewayLoadSnapshotVo>>>
+      gatewayLoadStream() {
+    return consoleService.gatewayLoadStream();
   }
 
   /** 本网关 job 流合并视图（actuator jobstreams 对等形状：gateway 连接 + 订阅关系） */
@@ -102,6 +106,13 @@ public class WebappConsoleController {
   @GetMapping("/cluster/brokers")
   public Mono<WebappResult<List<WebappConsoleService.BrokerSnapshotVo>>> brokerSnapshots() {
     return Mono.fromSupplier(consoleService::brokerSnapshots).map(WebappResult::ok);
+  }
+
+  /** 集群大屏：指标时序（读时采样 + 内存环形缓冲，无人观看时窗口不滚动）；node 缺省为本节点，远端经集群消息单播拉取 */
+  @GetMapping("/monitoring")
+  public Mono<WebappResult<WebappMonitoringService.MonitoringVo>> monitoring(
+      @RequestParam(required = false, name = "node") final String node) {
+    return Mono.fromSupplier(() -> monitoringService.sampleOf(node)).map(WebappResult::ok);
   }
 
   /** 集群事件 SSE 流：membership 增删/可达性变化实时推送（15s 心跳保活），前端收到即触发刷新 */

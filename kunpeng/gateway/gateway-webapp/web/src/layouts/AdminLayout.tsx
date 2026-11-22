@@ -12,6 +12,7 @@ import {
   DashboardOutlined,
   DownOutlined,
   GatewayOutlined,
+  LineChartOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
   MenuOutlined,
@@ -33,7 +34,8 @@ const { Header, Sider, Content } = Layout;
 
 /** 菜单路由表：label 走 i18n（语言切换即时生效），subtitle 维持英文副标（现状设计） */
 const ROUTES: { path: string; labelKey: string; subtitle: string }[] = [
-  { path: '/', labelKey: 'app.menu.dashboard', subtitle: 'Cluster overview' },
+  { path: '/', labelKey: 'app.menu.monitoring', subtitle: 'Live cluster metrics' },
+  { path: '/overview', labelKey: 'app.menu.dashboard', subtitle: 'Cluster overview' },
   { path: '/nodes', labelKey: 'app.menu.nodes', subtitle: 'Broker nodes' },
   { path: '/partitions', labelKey: 'app.menu.partitions', subtitle: 'Business raft partitions' },
   { path: '/admin-partitions', labelKey: 'app.menu.adminPartitions', subtitle: 'Admin partitions' },
@@ -43,7 +45,8 @@ const ROUTES: { path: string; labelKey: string; subtitle: string }[] = [
 ];
 
 const MENU_ICONS: Record<string, ReactNode> = {
-  '/': <DashboardOutlined />,
+  '/': <LineChartOutlined />,
+  '/overview': <DashboardOutlined />,
   '/nodes': <ClusterOutlined />,
   '/partitions': <PartitionOutlined />,
   '/admin-partitions': <ControlOutlined />,

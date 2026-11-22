@@ -38,7 +38,10 @@ import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.business.que
 import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionInfoMetaRecordValue;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionMemberMetaRecordValue;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.source.NodeSourceRecordValue;
+import com.anyilanxin.kunpeng.protocol.gateway.GatewayConnectorRecord;
+import com.anyilanxin.kunpeng.protocol.gateway.GatewayInfo;
 import com.anyilanxin.kunpeng.utils.VersionUtil;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -48,8 +51,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 
 /**
@@ -348,11 +354,36 @@ public class WebappConsoleService {
         .toList();
   }
 
-  /** 网关负载查询 */
-  public CompletableFuture<GatewayLoadVo> gatewayLoad(final String grpcAddress) {
-    return gatewayTopologyManager
-        .getGatewayLoad(grpcAddress)
-        .thenApply(record -> new GatewayLoadVo(record.nodeId(), record.connectorNum()));
+  /** 网关负载快照单条：查询失败连接数记 -1（前端显示查询失败，事实呈现） */
+  public record GatewayLoadSnapshotVo(String grpcAddress, String nodeId, int connectorNum) {}
+
+  /** 全网关负载快照：本地直读 + 远端经 manage 消息链，逐网关独立成败 */
+  public List<GatewayLoadSnapshotVo> gatewayLoadSnapshots() {
+    final List<GatewayLoadSnapshotVo> snapshots = new ArrayList<>();
+    for (final GatewayInfo info : gatewayTopologyManager.getGateways()) {
+      try {
+        final GatewayConnectorRecord record =
+            gatewayTopologyManager.getGatewayLoad(info.getGrpcAddress()).get(10, TimeUnit.SECONDS);
+        snapshots.add(
+            new GatewayLoadSnapshotVo(
+                info.getGrpcAddress(), record.nodeId(), record.connectorNum()));
+      } catch (final Exception e) {
+        snapshots.add(new GatewayLoadSnapshotVo(info.getGrpcAddress(), info.getNodeId(), -1));
+      }
+    }
+    return snapshots;
+  }
+
+  /** 网关负载 SSE 流：订阅驱动、每 5s 推一次全网关快照（首推立即），无人订阅零采样 */
+  public Flux<ServerSentEvent<List<GatewayLoadSnapshotVo>>> gatewayLoadStream() {
+    return Flux.interval(Duration.ZERO, Duration.ofSeconds(5))
+        .concatMap(tick -> Mono.fromSupplier(this::gatewayLoadSnapshots))
+        .map(
+            data ->
+                ServerSentEvent.<List<GatewayLoadSnapshotVo>>builder()
+                    .event("gateway-load")
+                    .data(data)
+                    .build());
   }
 
   /** 本网关 job 流合并视图（actuator jobstreams 对等形状：gateway 连接 + 订阅关系，按 jobType 分组） */
@@ -591,7 +622,6 @@ public class WebappConsoleService {
       String nodeId, String version, String grpcAddress, boolean allowClientDiscovery) {}
 
   /** 网关负载 */
-  public record GatewayLoadVo(String nodeId, int activeConnections) {}
 
   /** job 流合并视图（actuator jobstreams 对等形状） */
   public record JobStreamsVo(GatewaySnapshotVo gateway, List<JobSubscriptionVo> subscriptions) {}

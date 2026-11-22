@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
-import { SearchOutlined, ThunderboltOutlined } from '@ant-design/icons';
-import { Alert, Button, Empty, Table, Tag } from 'antd';
+import { useEffect, useMemo, useState } from 'react';
+import { ThunderboltOutlined } from '@ant-design/icons';
+import { Alert, Empty, Table, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useTranslation } from 'react-i18next';
 import { api } from '../api';
@@ -13,9 +13,11 @@ import SectionHeader from '../components/SectionHeader';
 import WorkerPulseVisual from '../components/WorkerPulseVisual';
 import type { GatewayVo } from '../types';
 
+/** 后端 GatewayLoadSnapshotVo 镜像（SSE 推送，查询失败 connectorNum = -1） */
 interface LoadVo {
+  grpcAddress: string;
   nodeId: string;
-  activeConnections: number;
+  connectorNum: number;
 }
 
 export default function GatewaysPage() {
@@ -24,27 +26,23 @@ export default function GatewaysPage() {
   const { data, error, loading } = usePolling<GatewayVo[]>(() => api<GatewayVo[]>('/gateways'));
   const [loads, setLoads] = useState<Record<string, LoadVo>>({});
 
+  /** 网关负载走 SSE 后台推送：后端统一节拍采样全网关并推快照，前端不再逐网关轮询/手动查询 */
+  useEffect(() => {
+    const source = new EventSource('/api/v1/webapp/gateways/load/stream');
+    source.addEventListener('gateway-load', (event) => {
+      const rows = JSON.parse((event as MessageEvent<string>).data) as LoadVo[];
+      setLoads(Object.fromEntries(rows.map((row) => [row.grpcAddress, row])));
+    });
+    return () => source.close();
+  }, []);
+
   if (error && !data) {
     return <ErrorAlert message={error} />;
   }
 
   const gateways = data ?? [];
 
-  const queryLoad = async (address: string) => {
-    let value: LoadVo;
-    try {
-      value = await api<LoadVo>(`/gateways/load?grpcAddress=${encodeURIComponent(address)}`);
-    } catch {
-      value = { nodeId: '-', activeConnections: -1 };
-    }
-    setLoads((prev) => ({ ...prev, [address]: value }));
-  };
-
-  const queryAll = () => {
-    gateways.forEach((g) => queryLoad(g.grpcAddress));
-  };
-
-  const hasKnownLoad = gateways.some((g) => loads[g.grpcAddress]?.activeConnections >= 0);
+  const hasKnownLoad = gateways.some((g) => loads[g.grpcAddress]?.connectorNum >= 0);
 
   // ECharts 渲染到 canvas，fillStyle 不解析 var()；取色时把 CSS 变量解析成具体色值（mode 变化触发重算）
   const loadOption = useMemo(() => {
@@ -52,7 +50,7 @@ export default function GatewaysPage() {
     const cssVar = (name: string) => rootStyle.getPropertyValue(name).trim();
     const entries = gateways.map((g) => ({
       address: g.grpcAddress.replace(/^https?:\/\//, ''),
-      value: loads[g.grpcAddress]?.activeConnections ?? 0,
+      value: loads[g.grpcAddress]?.connectorNum ?? 0,
       known: g.grpcAddress in loads,
     }));
     return {
@@ -102,18 +100,13 @@ export default function GatewaysPage() {
       key: 'load',
       render: (_, g) => {
         const load = loads[g.grpcAddress];
-        return (
-          <>
-            <a onClick={() => queryLoad(g.grpcAddress)} style={{ marginRight: 10 }}>
-              {t('app.gateways.query')}
-            </a>
-            {load &&
-              (load.activeConnections >= 0 ? (
-                <Tag color="geekblue">{t('app.gateways.connections', { count: load.activeConnections })}</Tag>
-              ) : (
-                <Tag color="error">{t('app.gateways.queryFailed')}</Tag>
-              ))}
-          </>
+        if (!load) {
+          return <span className="load-waiting">{t('app.gateways.loadWaiting')}</span>;
+        }
+        return load.connectorNum >= 0 ? (
+          <Tag color="geekblue">{t('app.gateways.connections', { count: load.connectorNum })}</Tag>
+        ) : (
+          <Tag color="error">{t('app.gateways.queryFailed')}</Tag>
         );
       },
     },
@@ -135,7 +128,6 @@ export default function GatewaysPage() {
         <SectionHeader
           title={t('app.gateways.listTitle')}
           description={t('app.gateways.listDesc', { count: gateways.length })}
-          extra={<Button size="small" icon={<SearchOutlined />} onClick={queryAll}>{t('app.gateways.queryAll')}</Button>}
         />
         <Table
           rowKey="grpcAddress"

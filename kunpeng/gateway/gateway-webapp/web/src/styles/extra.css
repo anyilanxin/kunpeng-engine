@@ -661,6 +661,56 @@
   animation: none;
 }
 
+/* 分区角标与悬浮描边暗色降亮度（2026-11-22 反馈轮：角标白圈、hover 浅白边在暗色下读成纯白） */
+html[data-theme='dark'] .node-partition-chip b {
+  box-shadow: inset 0 0 0 1px rgba(126, 166, 224, 0.4);
+}
+
+html[data-theme='dark'] .node-partition-chip:hover {
+  border-color: rgba(126, 166, 224, 0.55);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+html[data-theme='dark'] .node-partition-chip--candidate {
+  border-color: rgba(226, 168, 102, 0.4);
+}
+
+html[data-theme='dark'] .node-partition-chip--unhealthy {
+  border-color: rgba(216, 64, 74, 0.45);
+}
+
+html[data-theme='dark'] .partition-group-card:hover {
+  border-color: rgba(126, 166, 224, 0.45);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+}
+
+html[data-theme='dark'] .partition-cell:hover {
+  border-color: rgba(126, 166, 224, 0.6);
+  box-shadow: 0 6px 13px rgba(0, 0, 0, 0.4);
+}
+
+html[data-theme='dark'] .partition-cell--leader:hover {
+  border-color: rgba(126, 166, 224, 0.85);
+}
+
+html[data-theme='dark'] .subscription-card:hover {
+  border-color: rgba(126, 166, 224, 0.45);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+}
+
+/* 节点状态徽章（在线/离线/未注册）暗色描边降亮度（2026-11-22 反馈轮：浅色实边框在暗色下读成纯白） */
+html[data-theme='dark'] .node-state-tag--online {
+  border-color: rgba(35, 197, 143, 0.4);
+}
+
+html[data-theme='dark'] .node-state-tag--offline {
+  border-color: rgba(235, 90, 90, 0.4);
+}
+
+html[data-theme='dark'] .node-state-tag--unregistered {
+  border-color: rgba(240, 164, 59, 0.4);
+}
+
 /* ══════ 暗色模式（2026-11-22 定案）：html[data-theme='dark'] 变量翻转 + 渐变/装饰面定点覆盖。
    变量化底座见 global.css :root，暗色值集中在本段；饱和装饰色（品牌渐变/角色色板）刻意保持 ══════ */
 html[data-theme='dark'] {
@@ -794,4 +844,101 @@ html[data-theme='dark'] .metric-card--green .metric-card__icon { color: #35c194;
   border-radius: 8px;
   box-shadow: 0 6px 16px rgba(49, 86, 137, 0.08);
   animation: nc-float 4s ease-in-out infinite;
+}
+
+/* ===== 集群大屏（首页）：页头与 stat 行固定，三段图表网格为唯一滚动区（单渲染模式两列网格固定） ===== */
+.page--fill .monitoring-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-right: 2px;
+}
+
+.monitoring-scroll > section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.monitoring-scroll > section > .section-header {
+  margin: 0;
+}
+
+.monitoring-charts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.monitoring-chart {
+  padding-bottom: 6px;
+}
+
+/* 多系列大版面图独占整行 */
+.monitoring-chart--wide {
+  grid-column: 1 / -1;
+}
+
+.monitoring-chart-head {
+  padding: 10px 14px 0;
+}
+
+.monitoring-chart-head .section-header h2 {
+  font-size: 13px;
+}
+
+/* 无数据空态：配置门控的数据源（如 RocksDB 统计默认关）给说明文案 */
+.monitoring-chart-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 10px 14px 14px;
+  padding: 0 24px;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.monitoring-error {
+  padding: 8px 2px;
+  color: #d8404a;
+  font-size: 12px;
+}
+
+@media (max-width: 1100px) {
+  .monitoring-charts {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 集群大屏节点切换器：hero 卡内描边下拉（与卡片同语言），上方细分隔线破单调 */
+.page-hero__toolbar {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.monitoring-node-select {
+  min-width: 150px;
+  font-size: 12px;
+}
+
+.monitoring-node-select .ant-select-selector {
+  background: var(--surface) !important;
+  border-radius: 8px;
+}
+
+.monitoring-node-select:hover .ant-select-selector {
+  border-color: var(--accent-mid) !important;
+}
+
+.monitoring-node-select .ant-select-selection-item {
+  color: var(--text-2);
+  font-weight: 600;
 }

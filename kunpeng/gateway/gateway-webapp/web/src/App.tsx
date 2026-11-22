@@ -6,6 +6,7 @@ import { me } from './api';
 import type { MeInfo } from './api';
 import AdminLayout from './layouts/AdminLayout';
 import DashboardPage from './pages/DashboardPage';
+import MonitoringPage from './pages/MonitoringPage';
 import NodesPage from './pages/NodesPage';
 import PartitionsPage from './pages/PartitionsPage';
 import AdminPartitionsPage from './pages/AdminPartitionsPage';
@@ -54,7 +55,8 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<Navigate to="/" replace />} />
         <Route element={<AdminLayout user={user} onLoggedOut={() => setUser(undefined)} />}>
-          <Route path="/" element={<DashboardPage />} />
+          <Route path="/" element={<MonitoringPage />} />
+          <Route path="/overview" element={<DashboardPage />} />
           <Route path="/nodes" element={<NodesPage />} />
           <Route path="/partitions" element={<PartitionsPage />} />
           <Route path="/admin-partitions" element={<AdminPartitionsPage />} />
