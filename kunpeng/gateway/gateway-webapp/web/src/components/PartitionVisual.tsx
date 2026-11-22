@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface PartitionVisualProps {
   /** 分区（RAFT 组）数量 */
@@ -23,9 +24,10 @@ export default function PartitionVisual({
   columns = 6,
   leaderRows,
   warn,
-  badge = '多 RAFT 组 · 日志复制中',
+  badge,
   single = false,
 }: PartitionVisualProps) {
+  const { t } = useTranslation();
   const cycle = leaderRows ?? Array.from({ length: columns }, (_, index) => index % 3);
   const specs: ColumnSpec[] = cycle.map((leader, index) => ({
     leader,
@@ -35,7 +37,7 @@ export default function PartitionVisual({
 
   return (
     <div className={`partition-matrix-visual${single ? ' partition-matrix-visual--single' : ''}`} aria-hidden="true">
-      <span className="pmv-badge"><i className="live-dot" />{badge}</span>
+      <span className="pmv-badge"><i className="live-dot" />{badge ?? t('app.visuals.defaultBadge')}</span>
       <div className="pmv-labels"><span>n01</span><span>n02</span><span>n03</span></div>
       <div className="pmv-cols">
         {specs.map((col, index) => (

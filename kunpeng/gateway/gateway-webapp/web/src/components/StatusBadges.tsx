@@ -1,4 +1,5 @@
 import { CheckCircleFilled, ExclamationCircleFilled, QuestionCircleFilled } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import type { PartitionHealth, PartitionRole } from '../types/cluster';
 
 export function RoleBadge({ role }: { role: PartitionRole }) {
@@ -6,11 +7,12 @@ export function RoleBadge({ role }: { role: PartitionRole }) {
 }
 
 export function HealthBadge({ health }: { health: PartitionHealth }) {
+  const { t } = useTranslation();
   const healthy = health === 'HEALTHY';
   return (
     <span className={`health-badge health-badge--${health.toLowerCase()}`}>
       {health === 'UNKNOWN' ? <QuestionCircleFilled /> : healthy ? <CheckCircleFilled /> : <ExclamationCircleFilled />}
-      {healthy ? '健康' : health === 'UNHEALTHY' ? '异常' : '未知'}
+      {healthy ? t('app.common.healthy') : health === 'UNHEALTHY' ? t('app.common.unhealthy') : t('app.common.unknown')}
     </span>
   );
 }

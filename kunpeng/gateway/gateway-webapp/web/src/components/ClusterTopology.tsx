@@ -1,7 +1,10 @@
+import { useTranslation } from 'react-i18next';
+
 export default function ClusterTopology() {
+  const { t } = useTranslation();
   return (
-    <div className="cluster-topology" aria-label="流程客户端与 JobWorker 经 Gateway 与承载 Raft 分区的 Broker 通信">
-      <div className="cluster-topology__caption"><span className="live-dot" /> LIVE TOPOLOGY <span>任务流转中</span></div>
+    <div className="cluster-topology" aria-label={t('app.visuals.topologyAria')}>
+      <div className="cluster-topology__caption"><span className="live-dot" /> LIVE TOPOLOGY <span>{t('app.visuals.topologyCaption')}</span></div>
       <svg viewBox="0 0 560 220" role="img" aria-hidden="true">
         <defs>
           <linearGradient id="flow-line" x1="0" y1="0" x2="1" y2="0">
@@ -40,7 +43,7 @@ export default function ClusterTopology() {
           <circle className="topology-node__outer" r="32" fill="url(#node-fill)" filter="url(#node-shadow)" />
           <circle className="topology-node__icon" r="21" />
           <path d="M-8 -5 L0 -11 L8 -5 L8 5 L0 11 L-8 5 Z M0 -11 V0 M-8 5 L0 0 L8 5" />
-          <text y="52">流程客户端</text>
+          <text y="52">{t('app.visuals.topologyClient')}</text>
         </g>
 
         <g className="topology-node topology-node--worker" transform="translate(58 158)">
@@ -57,7 +60,7 @@ export default function ClusterTopology() {
           <circle className="topology-node__icon topology-node__icon--cyan" r="23" />
           <path d="M-9 -8 H9 V8 H-9 Z M-5 -3 H5 M-5 2 H5 M-5 7 H1" />
           <text x="-22" y="-47">Gateway</text>
-          <text className="topology-node__meta" x="-22" y="53">任务接入</text>
+          <text className="topology-node__meta" x="-22" y="53">{t('app.visuals.topologyGateway')}</text>
         </g>
 
         {/* Broker 节点：Raft 分区直接承载在 Broker 上 */}
@@ -71,7 +74,7 @@ export default function ClusterTopology() {
             <rect className="topology-partition-chip--leader" x="-4" y="24" width="8" height="5" rx="1.5" />
             <rect x="5" y="24" width="8" height="5" rx="1.5" />
           </g>
-          <title>Broker 节点 · 承载 Raft 分区副本</title>
+          <title>{t('app.visuals.topologyBrokerTitle')}</title>
           <text y="52">Broker 01</text>
         </g>
 
@@ -85,7 +88,7 @@ export default function ClusterTopology() {
             <rect x="-4" y="24" width="8" height="5" rx="1.5" />
             <rect x="5" y="24" width="8" height="5" rx="1.5" />
           </g>
-          <title>Broker 节点 · 承载 Raft 分区副本</title>
+          <title>{t('app.visuals.topologyBrokerTitle')}</title>
           <text y="52">Broker 02</text>
         </g>
 

@@ -1,4 +1,7 @@
+import { useTranslation } from 'react-i18next';
+
 export default function LoginClusterVisual() {
+  const { t } = useTranslation();
   return (
     <div className="login-cluster-visual" aria-hidden="true">
       <div className="login-cluster-visual__orbit login-cluster-visual__orbit--one" />
@@ -68,8 +71,8 @@ export default function LoginClusterVisual() {
         <circle className="login-flow-particle" r="4"><animateMotion dur="2.6s" begin=".5s" repeatCount="indefinite"><mpath href="#login-link-c" /></animateMotion></circle>
         <circle className="login-flow-particle" r="4"><animateMotion dur="2.6s" begin="1.7s" repeatCount="indefinite"><mpath href="#login-link-f" /></animateMotion></circle>
       </svg>
-      <div className="login-cluster-visual__badge login-cluster-visual__badge--leader"><i /> BROKER <strong>分区承载</strong></div>
-      <div className="login-cluster-visual__badge login-cluster-visual__badge--health"><i /> GATEWAY <strong>集群接入</strong></div>
+      <div className="login-cluster-visual__badge login-cluster-visual__badge--leader"><i /> BROKER <strong>{t('app.visuals.loginBrokerBadge')}</strong></div>
+      <div className="login-cluster-visual__badge login-cluster-visual__badge--health"><i /> GATEWAY <strong>{t('app.visuals.loginGatewayBadge')}</strong></div>
     </div>
   );
 }

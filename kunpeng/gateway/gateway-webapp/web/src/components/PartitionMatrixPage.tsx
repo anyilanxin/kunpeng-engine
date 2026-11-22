@@ -8,6 +8,7 @@ import {
   SearchOutlined,
   SwapOutlined,
 } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import MetricCard from './MetricCard';
 import PageHeader from './PageHeader';
 import SectionHeader from './SectionHeader';
@@ -17,8 +18,8 @@ import { useMockRefresh } from '../hooks/useMockRefresh';
 import type { PartitionCell, PartitionRole } from '../types/cluster';
 import { getPartitionCells, shortNodeName } from '../utils/cluster';
 
-const roleOptions: { value: 'ALL' | PartitionRole; label: string }[] = [
-  { value: 'ALL', label: '全部角色' },
+const roleOptions = (t: (key: string) => string): { value: 'ALL' | PartitionRole; label: string }[] => [
+  { value: 'ALL', label: t('app.partitions.allRoles') },
   { value: 'LEADER', label: 'Leader' },
   { value: 'FOLLOWER', label: 'Follower' },
   { value: 'CANDIDATE', label: 'Candidate' },
@@ -30,17 +31,17 @@ const roleOptions: { value: 'ALL' | PartitionRole; label: string }[] = [
 interface PartitionMatrixPageProps {
   group: string;
   eyebrow: string;
-  title: string;
-  description: string;
+  titleKey: string;
+  descriptionKey: string;
   visual: ReactNode;
-  refreshText: string;
 }
 
-export default function PartitionMatrixPage({ group, eyebrow, title, description, visual, refreshText }: PartitionMatrixPageProps) {
+export default function PartitionMatrixPage({ group, eyebrow, titleKey, descriptionKey, visual }: PartitionMatrixPageProps) {
+  const { t } = useTranslation();
   const [role, setRole] = useState<'ALL' | PartitionRole>('ALL');
   const [keyword, setKeyword] = useState('');
   const [selected, setSelected] = useState<PartitionCell | null>(null);
-  const { refreshing } = useMockRefresh(refreshText);
+  const { refreshing } = useMockRefresh();
   const brokers = useBrokers();
   const cells = useMemo(() => getPartitionCells(brokers, group), [brokers, group]);
 
@@ -67,34 +68,37 @@ export default function PartitionMatrixPage({ group, eyebrow, title, description
   const leader = selectedPeers.find((cell) => cell.role === 'LEADER');
   const followers = selectedPeers.filter((cell) => cell.role !== 'LEADER');
 
+  const stateLabel = (state: string | undefined) =>
+    state === 'OFFLINE' ? t('app.common.offline') : state === 'UNREGISTERED' ? t('app.common.unregistered') : t('app.common.online');
+
   return (
     <div className="page">
       <PageHeader
         compact
         eyebrow={eyebrow}
-        title={title}
-        description={description}
+        title={t(titleKey)}
+        description={t(descriptionKey)}
         visual={visual}
       />
 
       <section className="metrics-grid">
-        <MetricCard title="在线 Broker" value={brokers.filter((broker) => broker.state !== 'OFFLINE').length} icon={<CloudServerOutlined />} tone="green" footer={`${brokers.filter((broker) => broker.state === 'ONLINE').length} 在线 · 共 ${brokers.length} 注册`} />
-        <MetricCard title="逻辑分区" value={partitionIds.length} icon={<PartitionOutlined />} tone="blue" footer="1 个分区组" />
-        <MetricCard title="副本因子" value={replicationFactor} icon={<DeploymentUnitOutlined />} tone="cyan" footer={`共 ${cells.length} 个分区副本`} />
-        <MetricCard title="当前变更" value="无" icon={<SwapOutlined />} tone="violet" footer="以当前快照为准" />
+        <MetricCard title={t('app.common.metricOnlineBrokers')} value={brokers.filter((broker) => broker.state !== 'OFFLINE').length} icon={<CloudServerOutlined />} tone="green" footer={t('app.common.metricOnlineFooter', { online: brokers.filter((broker) => broker.state === 'ONLINE').length, total: brokers.length })} />
+        <MetricCard title={t('app.common.metricLogical')} value={partitionIds.length} icon={<PartitionOutlined />} tone="blue" footer={t('app.common.partitionGroupCount')} />
+        <MetricCard title={t('app.partitions.replicationFactor')} value={replicationFactor} icon={<DeploymentUnitOutlined />} tone="cyan" footer={t('app.partitions.replicationFooter', { count: cells.length })} />
+        <MetricCard title={t('app.common.currentChange')} value={t('app.common.none')} icon={<SwapOutlined />} tone="violet" footer={t('app.partitions.footerNote')} />
       </section>
 
       <section className={`panel partition-panel ${refreshing ? 'is-refreshing' : ''}`}>
         <SectionHeader
-          title="分区归属"
-          description="一张卡片一个节点，卡片内为该节点承载的全部分区副本（按角色着色）"
-          extra={<span className="snapshot-label"><i className="live-dot" /> 快照已同步</span>}
+          title={t('app.partitions.sectionTitle')}
+          description={t('app.partitions.sectionDesc')}
+          extra={<span className="snapshot-label"><i className="live-dot" /> {t('app.partitions.snapshotSynced')}</span>}
         />
         <div className="partition-toolbar">
           <div className="partition-toolbar__left">
-            <Input allowClear value={keyword} onChange={(event) => setKeyword(event.target.value)} prefix={<SearchOutlined />} placeholder="搜索节点或分区号" />
-            <Select value={role} onChange={setRole} options={roleOptions} />
-            <span className="matrix-count">{brokerRows.length}{brokerRows.length !== brokers.length ? ` / ${brokers.length}` : ''} 个节点 · {partitionIds.length} 个分区</span>
+            <Input allowClear value={keyword} onChange={(event) => setKeyword(event.target.value)} prefix={<SearchOutlined />} placeholder={t('app.partitions.searchPlaceholder')} />
+            <Select value={role} onChange={setRole} options={roleOptions(t)} />
+            <span className="matrix-count">{t('app.partitions.nodeCount', { nodes: `${brokerRows.length}${brokerRows.length !== brokers.length ? ` / ${brokers.length}` : ''}`, partitions: partitionIds.length })}</span>
           </div>
           <div className="matrix-legend">
             {(['LEADER', 'FOLLOWER', 'CANDIDATE', 'PROMOTABLE', 'PASSIVE', 'INACTIVE'] as PartitionRole[]).map((item) => (
@@ -104,7 +108,7 @@ export default function PartitionMatrixPage({ group, eyebrow, title, description
         </div>
 
         {brokerRows.length === 0 ? (
-          <Empty description="没有符合条件的节点" />
+          <Empty description={t('app.common.noMatchingNodes')} />
         ) : (
           <div className="partition-node-grid">
             {brokerRows.map(({ broker, partitions }) => (
@@ -115,9 +119,9 @@ export default function PartitionMatrixPage({ group, eyebrow, title, description
                     <div><strong>{shortNodeName(broker.memberId)}</strong><small>{broker.memberId} · Source #{broker.nodeSourceId}</small></div>
                   </div>
                   <span className={`node-state-tag node-state-tag--${(broker.state ?? 'ONLINE').toLowerCase()}`}>
-                    <i />{broker.state === 'OFFLINE' ? '离线' : broker.state === 'UNREGISTERED' ? '未注册' : '在线'}
+                    <i />{stateLabel(broker.state)}
                   </span>
-                  <span className="partition-node-card__count">{partitions.length} 个副本</span>
+                  <span className="partition-node-card__count">{t('app.common.replicasUnit', { count: partitions.length })}</span>
                 </div>
                 <div className="partition-node-card__meta">{broker.address ?? '—'}</div>
                 <div className="node-partition-chips">
@@ -137,12 +141,12 @@ export default function PartitionMatrixPage({ group, eyebrow, title, description
             ))}
           </div>
         )}
-        <div className="matrix-footer"><span>一张卡片一个节点，chips 颜色按角色（Leader 蓝 / Follower 灰蓝 / Candidate 橙 / Promotable 紫），红色为异常副本；节点多于 6 个或卡内分区多于 3 排时区域内滚动。</span><span>点击分区 chip 查看复制链路 →</span></div>
+        <div className="matrix-footer"><span>{t('app.partitions.gridFooter')}</span><span>{t('app.partitions.gridFooterHint')}</span></div>
       </section>
 
       <Drawer
         className="detail-drawer partition-detail-drawer"
-        title={selected ? `${selected.group} · 分区 ${selected.id}` : ''}
+        title={selected ? t('app.partitions.drawerTitle', { group: selected.group, id: selected.id }) : ''}
         width={560}
         open={Boolean(selected)}
         onClose={() => setSelected(null)}
@@ -150,28 +154,28 @@ export default function PartitionMatrixPage({ group, eyebrow, title, description
       >
         {selected && (
           <>
-            {selected.health !== 'HEALTHY' && <Alert className="partition-alert" type="warning" showIcon message="当前副本健康状态异常" description="建议检查节点网络与 Raft 日志复制状态。" />}
+            {selected.health !== 'HEALTHY' && <Alert className="partition-alert" type="warning" showIcon message={t('app.partitions.healthAlert')} description={t('app.partitions.healthAlertDesc')} />}
             <div className="partition-detail-identity">
               <span><PartitionOutlined /></span>
               <div><small>PARTITION</small><strong>{selected.group}-{selected.id}</strong><p>{selected.broker.memberId} · {selected.broker.address}</p></div>
               <HealthBadge health={selected.health} />
             </div>
             <Descriptions column={2} bordered size="middle" items={[
-              { key: 'group', label: '分区组', children: selected.group, span: 2 },
-              { key: 'id', label: '分区 ID', children: selected.id },
-              { key: 'term', label: '当前任期', children: <Tag color="blue">Term {selected.term}</Tag> },
+              { key: 'group', label: t('app.partitions.labelGroup'), children: selected.group, span: 2 },
+              { key: 'id', label: t('app.partitions.labelPartitionId'), children: selected.id },
+              { key: 'term', label: t('app.partitions.labelTerm'), children: <Tag color="blue">Term {selected.term}</Tag> },
               { key: 'source', label: 'Source ID', children: selected.sourceId },
               { key: 'node', label: 'Node Source ID', children: selected.broker.nodeSourceId },
-              { key: 'agents', label: 'Agent Source IDs', children: selected.agentSourceIds.length ? selected.agentSourceIds.map((id) => <Tag key={id}>#{id}</Tag>) : '—', span: 2 },
+              { key: 'agents', label: t('app.partitions.labelAgents'), children: selected.agentSourceIds.length ? selected.agentSourceIds.map((id) => <Tag key={id}>#{id}</Tag>) : '—', span: 2 },
             ]} />
-            <div className="drawer-section-title"><strong>Raft 副本复制链路</strong><span>Term {selected.term}</span></div>
+            <div className="drawer-section-title"><strong>{t('app.partitions.copySection')}</strong><span>Term {selected.term}</span></div>
             <div className="replication-flow">
               {leader && <div className="replication-leader"><span className="replication-node-icon"><DeploymentUnitOutlined /></span><div><small>LEADER</small><strong>{shortNodeName(leader.broker.memberId)}</strong></div><i className="live-dot" /></div>}
               <div className="replication-stream"><span /><i /><i /><i /></div>
               <div className="replication-followers">
                 {followers.map((cell) => <div key={cell.broker.memberId}><span className="replication-node-icon"><DeploymentUnitOutlined /></span><div><small>{cell.role}</small><strong>{shortNodeName(cell.broker.memberId)}</strong></div><HealthBadge health={cell.health} /></div>)}
               </div>
-              <p><span className="live-dot" /> 日志条目正在从 Leader 复制到 {followers.length} 个副本</p>
+              <p><span className="live-dot" /> {t('app.partitions.copyHint', { count: followers.length })}</p>
             </div>
           </>
         )}

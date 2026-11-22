@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { Spin } from 'antd';
+import { useTranslation } from 'react-i18next';
 import { me } from './api';
 import type { MeInfo } from './api';
 import AdminLayout from './layouts/AdminLayout';
@@ -17,6 +18,7 @@ import { ClusterDataProvider } from './data/ClusterDataContext';
 export interface CurrentUser extends MeInfo {}
 
 export default function App() {
+  const { t } = useTranslation();
   const [user, setUser] = useState<CurrentUser>();
   const [checking, setChecking] = useState(true);
   const location = useLocation();
@@ -32,8 +34,8 @@ export default function App() {
 
   if (checking) {
     return (
-      <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: '#f3f7fd' }}>
-        <Spin size="large" tip="加载中..."><div style={{ width: 120, height: 60 }} /></Spin>
+      <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: 'var(--bg)' }}>
+        <Spin size="large" tip={t('app.common.loading')}><div style={{ width: 120, height: 60 }} /></Spin>
       </div>
     );
   }

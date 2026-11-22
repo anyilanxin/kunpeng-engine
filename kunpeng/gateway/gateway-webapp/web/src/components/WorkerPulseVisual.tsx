@@ -1,9 +1,11 @@
 import { ApiOutlined } from '@ant-design/icons';
 import { useJobWorkers } from '../data/ClusterDataContext';
 import { getWorkerSessions } from '../utils/cluster';
+import { useTranslation } from 'react-i18next';
 
 /** Worker 心跳视觉：任务类型胶囊与会话数取自真实快照 */
 export default function WorkerPulseVisual() {
+  const { t } = useTranslation();
   const workers = useJobWorkers();
   const sessions = getWorkerSessions(workers);
   const jobTypes = Array.from(new Set(sessions.map((session) => session.jobType))).slice(0, 3);
@@ -18,7 +20,7 @@ export default function WorkerPulseVisual() {
       {jobTypes.map((jobType, index) => (
         <span className={`worker-pulse-visual__chip ${slots[index]}`} key={jobType}>{jobType}<i /></span>
       ))}
-      <span className="worker-pulse-visual__status"><i className="live-dot" /> {sessions.length ? `${sessions.length} SESSIONS` : '等待订阅'}</span>
+      <span className="worker-pulse-visual__status"><i className="live-dot" />{sessions.length ? t('app.visuals.workerOnlineBadge', { count: sessions.length }) : t('app.visuals.workerWaiting')}</span>
     </div>
   );
 }
