@@ -1,5 +1,9 @@
 /** 品牌标识：内联 SVG 标记（无外部图片资产），KUNPENG 控制台 */
+import { useTranslation } from 'react-i18next';
+
 export default function ClusterBrand({ compact = false }: { compact?: boolean }) {
+  const { t } = useTranslation();
+
   return (
     <div className={`cluster-brand ${compact ? 'cluster-brand--compact' : ''}`}>
       <span className="cluster-brand__mark" aria-hidden="true">
@@ -24,7 +28,7 @@ export default function ClusterBrand({ compact = false }: { compact?: boolean })
       {!compact && (
         <span className="cluster-brand__text">
           <strong>KUNPENG</strong>
-          <small>微服务编排引擎</small>
+          <small>{t('app.brand.subtitle')}</small>
         </span>
       )}
     </div>

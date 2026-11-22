@@ -14,7 +14,8 @@ export default defineConfig({
     port: 5177,
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:2024',
+        // 本地联调可用 WEBAPP_API_TARGET 指到其他 broker 实例（默认 2024 用户本地端口）
+        target: process.env.WEBAPP_API_TARGET ?? 'http://127.0.0.1:2024',
         changeOrigin: true,
       },
     },

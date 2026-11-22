@@ -4,6 +4,23 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Kunpeng 集群控制台</title>
+    <script>
+      // 首帧前同步语言与主题（localStorage 优先，否则跟随系统），防止暗色闪白/语言跳动
+      (function () {
+        try {
+          var lang = localStorage.getItem('webapp-lang');
+          document.documentElement.lang =
+            lang === 'en' ? 'en' : lang === 'zh-TW' ? 'zh-TW' : 'zh-CN';
+          var theme = localStorage.getItem('webapp-theme');
+          if (theme !== 'light' && theme !== 'dark') {
+            theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          }
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      })();
+    </script>
     <style>
       html,
       body,
@@ -13,6 +30,9 @@
       }
       body {
         background: #f3f7fd;
+      }
+      html[data-theme='dark'] body {
+        background: #0c1424;
       }
     </style>
   </head>

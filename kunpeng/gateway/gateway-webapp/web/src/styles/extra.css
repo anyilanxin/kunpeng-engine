@@ -48,22 +48,22 @@
   gap: 10px;
   flex-wrap: wrap;
   padding: 10px 14px;
-  border: 1px solid #e3ebf7;
+  border: 1px solid var(--line-2);
   border-radius: 12px;
-  background: #f8fbff;
+  background: var(--surface-soft);
 }
 
 .dispatch-op__label {
   flex: 0 0 64px;
   font-weight: 600;
-  color: #243b57;
+  color: var(--text);
 }
 
 .dispatch-op__hint {
   flex: 1;
   min-width: 180px;
   font-size: 12px;
-  color: #8a94a6;
+  color: var(--muted);
 }
 
 .dispatch-op-result {
@@ -71,12 +71,12 @@
   padding: 10px 14px;
   border: 1px solid #c9e7d9;
   border-radius: 12px;
-  background: #f2fbf7;
+  background: var(--green-soft);
 }
 
 .dispatch-op-result--error {
   border-color: #f3c9c9;
-  background: #fdf3f3;
+  background: var(--red-soft);
 }
 
 .dispatch-op-result__head {
@@ -91,7 +91,7 @@
   display: block;
   margin-top: 4px;
   font-size: 12px;
-  color: #51637e;
+  color: var(--text-2);
 }
 
 /* 分区归属：节点卡片网格（一节点一卡，固定 3 列 × 2 排可视约 6 节点，超出整体滚动；卡内分区固定 3 排，超出内部滚动） */
@@ -127,14 +127,14 @@
   flex-direction: column;
   gap: 10px;
   padding: 14px 16px;
-  background: #f8fbff;
-  border: 1px solid #e3ebf7;
+  background: var(--surface-soft);
+  border: 1px solid var(--line-2);
   border-radius: 14px;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .partition-node-card:hover {
-  border-color: #c9dcfb;
+  border-color: var(--accent-line);
   box-shadow: 0 10px 26px rgba(46, 82, 132, 0.08);
 }
 
@@ -148,16 +148,16 @@
 .partition-node-card__meta {
   margin-top: -4px;
   font-size: 11px;
-  color: #8a94a6;
+  color: var(--muted);
 }
 
 .partition-node-card__count {
   flex-shrink: 0;
   padding: 1px 10px;
   font-size: 12px;
-  color: #246bfd;
-  background: #e5eefd;
-  border: 1px solid #c9dcfb;
+  color: var(--primary);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent-line);
   border-radius: 999px;
   white-space: nowrap;
 }
@@ -183,13 +183,13 @@
 
 .node-state-tag--online {
   color: #14936c;
-  background: #e7f8f1;
+  background: var(--green-soft);
   border: 1px solid #bfe9d8;
 }
 
 .node-state-tag--offline {
   color: #d8404a;
-  background: #fdecee;
+  background: var(--red-soft);
   border: 1px solid #f4c9cb;
 }
 
@@ -199,7 +199,7 @@
 
 .node-state-tag--unregistered {
   color: #c07b16;
-  background: #fdf3e3;
+  background: var(--orange-soft);
   border: 1px solid #f3ddba;
 }
 
@@ -231,8 +231,8 @@
   height: 32px;
   padding: 0 3px;
   cursor: pointer;
-  background: #f2f6fc;
-  border: 1px solid #e3ebf7;
+  background: var(--surface-soft);
+  border: 1px solid var(--line-2);
   border-radius: 8px;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
@@ -246,15 +246,15 @@
   font-size: 9px;
   font-weight: 600;
   line-height: 1.2;
-  color: #51637e;
-  background: rgba(255, 255, 255, 0.78);
+  color: var(--text-2);
+  background: var(--panel);
   border-radius: 5px;
   box-shadow: inset 0 0 0 1px rgba(215, 228, 246, 0.9);
   pointer-events: none;
 }
 
-.node-partition-chip--leader b { color: #246bfd; }
-.node-partition-chip--unhealthy b { color: #d8404a; background: rgba(255, 255, 255, 0.85); }
+.node-partition-chip--leader b { color: var(--primary); }
+.node-partition-chip--unhealthy b { color: #d8404a; background: var(--panel); }
 
 .node-partition-chip:hover {
   border-color: #bcd3f5;
@@ -269,23 +269,23 @@
   font-size: 10px;
   font-weight: 600;
   line-height: 1.2;
-  color: #51637e;
+  color: var(--text-2);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .node-partition-chip--leader {
-  background: #e5eefd;
-  border-color: #c9dcfb;
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
 }
 
 .node-partition-chip--leader span {
-  color: #246bfd;
+  color: var(--primary);
   font-weight: 600;
 }
 
 .node-partition-chip--candidate {
-  background: #fdf3e3;
+  background: var(--orange-soft);
   border-color: #f3ddba;
 }
 
@@ -294,8 +294,8 @@
 }
 
 .node-partition-chip--promotable {
-  background: #f1ebfd;
-  border-color: #e0d3f7;
+  background: var(--violet-soft);
+  border-color: var(--line-2);
 }
 
 .node-partition-chip--promotable span {
@@ -304,17 +304,17 @@
 
 .node-partition-chip--passive,
 .node-partition-chip--inactive {
-  background: #f5f6f9;
-  border-color: #e8eaef;
+  background: var(--surface-soft);
+  border-color: var(--line-2);
 }
 
 .node-partition-chip--passive span,
 .node-partition-chip--inactive span {
-  color: #97a2b3;
+  color: var(--muted-2);
 }
 
 .node-partition-chip--unhealthy {
-  background: #fdeeee;
+  background: var(--red-soft);
   border-color: #f4c9cb;
 }
 
@@ -404,13 +404,13 @@
   cursor: pointer;
   background: none;
   border: none;
-  border-bottom: 1px dashed #e8edf4;
+  border-bottom: 1px dashed var(--line-2);
   text-align: left;
   transition: background 0.2s;
 }
 
 .subscription-session--clickable:hover {
-  background: #f6faff;
+  background: var(--surface-soft);
 }
 
 
@@ -471,7 +471,7 @@
   bottom: -6px;
   width: 2px;
   border-radius: 2px;
-  background: #e3ebf7;
+  background: var(--line-2);
 }
 
 .dispatch-execution:last-child .dispatch-execution__rail::before {
@@ -485,7 +485,7 @@
   height: 10px;
   margin-top: 5px;
   border-radius: 50%;
-  background: #246bfd;
+  background: var(--primary);
   box-shadow: 0 0 0 4px rgba(36, 107, 253, 0.14);
 }
 
@@ -519,11 +519,11 @@
   flex-wrap: wrap;
   margin-top: 2px;
   font-size: 12px;
-  color: #51637e;
+  color: var(--text-2);
 }
 
 .dispatch-execution__message {
-  color: #8a94a6;
+  color: var(--muted);
 }
 
 .dispatch-meta-drawer .drawer-section-title {
@@ -533,7 +533,7 @@
 .dispatch-note {
   margin: 4px 2px 0;
   font-size: 12px;
-  color: #8a94a6;
+  color: var(--muted);
 }
 
 /* 登录页会话说明（服务端会话提示） */
@@ -545,21 +545,21 @@
   margin: 14px 2px 0;
   font-size: 12px;
   line-height: 1.7;
-  color: #8a94a6;
+  color: var(--muted);
   text-align: center;
 }
 
 /* 菜单与顶栏常规化（2026-11-22 用户定案：浏览器端管理后台，仅侧栏与顶栏去圆角浮动卡、贴边；
    底栏与内容区卡片风格不动）：
-   侧栏通高贴左（上/下/左三边贴边），顶栏贴顶、左缘紧挨侧栏以竖线分隔，高度与菜单 logo 区(86px)对齐 */
+   侧栏通高贴左（上/下/左三边贴边），顶栏贴顶、左缘紧挨侧栏以竖线分隔，高度与菜单 logo 区(57px)对齐 */
 .desktop-sider {
   padding: 0;
 }
 
 .sider-inner {
-  background: #fff;
+  background: var(--surface);
   border: 0;
-  border-right: 1px solid #e9eef5;
+  border-right: 1px solid var(--line);
   border-radius: 0;
   box-shadow: none;
   backdrop-filter: none;
@@ -567,20 +567,21 @@
 
 .app-header {
   top: 0;
-  height: 72px;
+  height: 57px;
   margin: 0;
-  background: #fff;
+  background: var(--surface);
   border: 0;
-  border-bottom: 1px solid #e9eef5;
+  border-bottom: 1px solid var(--line);
   border-radius: 0;
   box-shadow: none;
   backdrop-filter: none;
 }
 
-/* logo 区与顶栏等高收矮（2026-11-22 用户反馈太高）：贴顶近一点、高度 86→72 */
+/* logo 区与顶栏等高收矮（2026-11-22 用户反馈太高）：贴顶近一点、高度 86→72→57（再缩 15px），
+   padding 12→9 保证 39px mark 在 57px 内垂直居中 */
 .cluster-brand {
-  min-height: 72px;
-  padding: 12px 22px;
+  min-height: 57px;
+  padding: 9px 22px;
 }
 
 /* 内容区三段布局（2026-11-22 用户定案）：顶部导航 / 中部内容 / 底部固定段（项目信息 + ICP 备案位）；
@@ -618,11 +619,179 @@
   /* 负横向 margin 逃出 app-content 左右 padding：左缘接菜单分隔竖线、右缘贴窗口边 */
   margin: auto -20px 0;
   padding: 10px 20px;
-  background: rgba(255, 255, 255, 0.94);
-  border-top: 1px solid #e9eef5;
+  background: var(--panel);
+  border-top: 1px solid var(--line);
   backdrop-filter: blur(14px);
 }
 
 .app-footer > span:nth-child(1) { justify-self: start; }
 .app-footer > span:nth-child(2) { justify-self: center; }
 .app-footer > span:nth-child(3) { justify-self: end; }
+
+/* ══════ 语言/明暗切换器（AntD Button 组合；顶栏与登录页共用，视觉参考 anyi-platform） ══════ */
+.pref-switchers {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 登录页右上角挂载位（login-form-panel 为 relative 容器） */
+.login-switchers {
+  position: absolute;
+  z-index: 5;
+  top: 22px;
+  right: 26px;
+}
+
+.pref-lang-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 104px;
+}
+
+.pref-lang-item .anticon { color: var(--primary); }
+
+/* 主题切换点击处圆形扩散过渡（View Transition，参考 anyi-platform design.css） */
+::view-transition-old(root),
+::view-transition-new(root) {
+  z-index: 2147483646;
+  mix-blend-mode: normal;
+  animation: none;
+}
+
+/* ══════ 暗色模式（2026-11-22 定案）：html[data-theme='dark'] 变量翻转 + 渐变/装饰面定点覆盖。
+   变量化底座见 global.css :root，暗色值集中在本段；饱和装饰色（品牌渐变/角色色板）刻意保持 ══════ */
+html[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0c1424;
+  --panel: rgba(17, 27, 47, 0.92);
+  --panel-line: rgba(120, 150, 200, 0.14);
+  --surface: #111b31;
+  --surface-soft: #14203a;
+  --text: #e9effa;
+  --text-2: #c3d0e4;
+  --muted: #8b9bb5;
+  --muted-2: #75869f;
+  --faint: #5c6d88;
+  --line: #23334f;
+  --line-2: #1d2b45;
+  --line-soft: #182640;
+  --line-input: #1d2b45;
+  --primary: #4d8dff;
+  --primary-dark: #9cc2ff;
+  --accent-mid: #6ea3ff;
+  --accent-soft: rgba(77, 141, 255, 0.14);
+  --accent-tint: rgba(77, 141, 255, 0.2);
+  --accent-line: rgba(77, 141, 255, 0.35);
+  --green-soft: rgba(35, 197, 143, 0.12);
+  --cyan-soft: rgba(45, 190, 210, 0.12);
+  --violet-soft: rgba(139, 109, 227, 0.14);
+  --orange-soft: rgba(240, 164, 59, 0.13);
+  --red-soft: rgba(235, 90, 90, 0.14);
+  --scrollbar: #2c3d5e;
+  --scrollbar-hover: #3d517a;
+  --selection-bg: rgba(77, 141, 255, 0.32);
+  --shadow: 0 10px 34px rgba(0, 0, 0, 0.4);
+}
+
+html[data-theme='dark'] ::selection { color: #dbe7ff; }
+
+/* 应用壳与页头横幅：浅蓝径向光斑换暗蓝，横幅整体换暗底渐变（覆盖 verbatim 原始渐变） */
+html[data-theme='dark'] .app-shell {
+  background:
+    radial-gradient(circle at 90% 3%, rgba(77, 141, 255, 0.1), transparent 26%),
+    radial-gradient(circle at 32% 90%, rgba(77, 141, 255, 0.07), transparent 30%),
+    var(--bg);
+}
+
+html[data-theme='dark'] .page-hero {
+  background:
+    radial-gradient(ellipse at 78% 30%, rgba(77, 141, 255, 0.16), transparent 35%),
+    linear-gradient(110deg, rgba(20, 31, 54, 0.98), rgba(17, 27, 47, 0.91));
+  border: 1px solid var(--panel-line);
+}
+
+html[data-theme='dark'] .page-hero__glow {
+  background: radial-gradient(circle, rgba(77, 141, 255, 0.14), transparent 65%);
+}
+
+html[data-theme='dark'] .page-hero__eyebrow { color: #8fb2e8; }
+
+/* 侧栏集群卡：浅蓝渐变换暗蓝透射 */
+html[data-theme='dark'] .sider-cluster-card {
+  background: linear-gradient(150deg, rgba(77, 141, 255, 0.12), rgba(77, 141, 255, 0.05));
+  border-color: var(--accent-line);
+}
+
+/* 语义色文字在暗色下提亮（verbatim 保留的饱和原值在暗底上偏暗） */
+html[data-theme='dark'] .health-badge--healthy { color: #35c194; }
+html[data-theme='dark'] .health-badge--unhealthy { color: #eda95c; }
+html[data-theme='dark'] .health-warning { color: #e2b06a; border-color: rgba(240, 164, 59, 0.3); }
+html[data-theme='dark'] .role-badge--candidate,
+html[data-theme='dark'] .partition-cell--candidate,
+html[data-theme='dark'] .node-partition-chip--candidate span { color: #e2a866; }
+html[data-theme='dark'] .role-badge--promotable,
+html[data-theme='dark'] .partition-cell--promotable,
+html[data-theme='dark'] .node-partition-chip--promotable span { color: #b9a3ef; }
+html[data-theme='dark'] .role-badge--passive,
+html[data-theme='dark'] .partition-cell--passive { color: #8fb2cc; }
+html[data-theme='dark'] .node-gateway-summary__jobs .ant-tag { color: #a99cc4; }
+
+/* 拓扑角标浅绿透明底换暗色（verbatim rgba(231,248,241,.7) 字面量） */
+html[data-theme='dark'] .cluster-topology__caption > span:last-child {
+  color: #35c194;
+  background: var(--green-soft);
+}
+
+/* 登录页：浅蓝点阵底换暗蓝，品牌蓝 showcase 渐变保持（暗色下同样成立） */
+html[data-theme='dark'] .login-page {
+  background:
+    radial-gradient(rgba(97, 148, 214, 0.08) 1px, transparent 1px),
+    radial-gradient(circle at 12% 20%, rgba(77, 141, 255, 0.12), transparent 30%),
+    radial-gradient(circle at 90% 85%, rgba(77, 141, 255, 0.09), transparent 28%),
+    linear-gradient(145deg, #0e1729, #0a111e);
+  background-size: 26px 26px, auto, auto, auto;
+}
+
+html[data-theme='dark'] .login-page::before { opacity: 0.35; }
+
+/* hero 装饰动画链路/流线：浅色字面值在深底上过淡（浅色模式保持原值），暗色提亮为半透蓝 */
+html[data-theme='dark'] .nc-links use { stroke: rgba(126, 166, 224, 0.45); }
+html[data-theme='dark'] .worker-pulse-visual__line { background: rgba(126, 166, 224, 0.42); }
+html[data-theme='dark'] .pmv-stream { background: linear-gradient(rgba(126, 166, 224, 0.42), rgba(126, 166, 224, 0.16)); }
+
+/* 拓扑动画节点：白渐变圆体（url(#node-fill)）暗色下刺眼——CSS fill 覆盖 presentation 属性换深蓝面板色；
+   外环/图标圈浅描边换半透蓝；图标符号浅色饱和中间色随语义提亮体系走（浅色模式全部原值不动） */
+html[data-theme='dark'] .topology-node__outer { stroke: rgba(126, 166, 224, 0.55); fill: #16233e; }
+html[data-theme='dark'] .topology-node__icon { stroke: rgba(126, 166, 224, 0.45); }
+html[data-theme='dark'] .topology-node__icon--cyan { stroke: rgba(77, 196, 212, 0.45); }
+html[data-theme='dark'] .topology-node__icon--violet { stroke: rgba(169, 143, 235, 0.45); }
+html[data-theme='dark'] .topology-node__icon--green { stroke: rgba(53, 193, 148, 0.45); }
+html[data-theme='dark'] .topology-node path { stroke: #6ea3ff; }
+html[data-theme='dark'] .topology-node:has(.topology-node__icon--cyan) path { stroke: #3fc5d4; }
+html[data-theme='dark'] .topology-node:has(.topology-node__icon--violet) path { stroke: #b9a3ef; }
+html[data-theme='dark'] .topology-node:has(.topology-node__icon--green) path { stroke: #35c194; }
+html[data-theme='dark'] .topology-pulse { stroke: rgba(126, 166, 224, 0.4); }
+html[data-theme='dark'] .topology-links use { stroke: rgba(126, 166, 224, 0.4); }
+html[data-theme='dark'] .topology-partitions rect { fill: rgba(126, 166, 224, 0.55); }
+
+/* 指标卡 tone 图标：cyan/violet/green 图标色浅色字面值在暗底上偏暗，随语义提亮体系走 */
+html[data-theme='dark'] .metric-card--cyan .metric-card__icon { color: #3fc5d4; }
+html[data-theme='dark'] .metric-card--violet .metric-card__icon { color: #b9a3ef; }
+html[data-theme='dark'] .metric-card--green .metric-card__icon { color: #35c194; }
+
+/* JobWorker hero 会话数徽章化（2026-11-22 用户反馈：与节点管理在线徽章 .nc-badge 同款更协调、凸显内容）：
+   裸文字换芯片底（两主题一致，与 .nc-badge 同规格） */
+.worker-pulse-visual__status {
+  padding: 6px 10px;
+  color: var(--text-2);
+  font-size: 8px;
+  letter-spacing: 0;
+  background: var(--panel);
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  box-shadow: 0 6px 16px rgba(49, 86, 137, 0.08);
+  animation: nc-float 4s ease-in-out infinite;
+}

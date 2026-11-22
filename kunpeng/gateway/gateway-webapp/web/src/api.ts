@@ -1,3 +1,5 @@
+import { i18n } from './i18n';
+
 export interface Envelope<T> {
   code: number;
   success: boolean;
@@ -75,10 +77,11 @@ export function dispatchChangePartitions(expectPartitionsCount: number, apply: b
   });
 }
 
-/** 时间戳(ms)转可读时间；-1/0 显示 - */
+/** 时间戳(ms)转可读时间（跟随当前界面语言）；-1/0 显示 - */
 export function time(ms: number): string {
   if (!ms || ms < 0) {
     return '-';
   }
-  return new Date(ms).toLocaleString('zh-CN', { hour12: false });
+  const locale = i18n.language === 'zh-TW' ? 'zh-TW' : i18n.language === 'en' ? 'en-US' : 'zh-CN';
+  return new Date(ms).toLocaleString(locale, { hour12: false });
 }

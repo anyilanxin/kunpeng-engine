@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { App } from 'antd';
+import { useTranslation } from 'react-i18next';
 import { api } from '../api';
 import { usePolling } from '../usePolling';
 import type { Broker, JobWorkerSnapshot } from '../types/cluster';
@@ -27,6 +28,7 @@ export function ClusterDataProvider({ children }: { children: ReactNode }) {
     6000,
   );
   const { message } = App.useApp();
+  const { t } = useTranslation();
 
   // SSE 集群事件（membership 增删/可达性变化）：收到即静默重取，节点上下线秒级可见；轮询兜底
   const brokerRefresh = brokerQuery.refresh;
@@ -43,9 +45,9 @@ export function ClusterDataProvider({ children }: { children: ReactNode }) {
   const refresh = async () => {
     try {
       await Promise.all([brokerQuery.refresh(), workerQuery.refresh()]);
-      message.success('集群数据已刷新');
+      message.success(t('app.common.refreshed'));
     } catch (e) {
-      message.error(e instanceof Error ? e.message : '刷新失败');
+      message.error(e instanceof Error ? e.message : t('app.common.refreshFailed'));
     }
   };
 

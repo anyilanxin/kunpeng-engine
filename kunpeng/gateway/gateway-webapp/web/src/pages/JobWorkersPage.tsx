@@ -10,6 +10,7 @@ import {
   SearchOutlined,
   ThunderboltOutlined,
 } from '@ant-design/icons';
+import { Trans, useTranslation } from 'react-i18next';
 import MetricCard from '../components/MetricCard';
 import PageHeader from '../components/PageHeader';
 import WorkerPulseVisual from '../components/WorkerPulseVisual';
@@ -33,6 +34,7 @@ function groupSessionsByWorker(sessions: { gateway: string; address: string; ses
 }
 
 export default function JobWorkersPage() {
+  const { t } = useTranslation();
   const [view, setView] = useState('sessions');
   const [keyword, setKeyword] = useState('');
   const [gatewayId, setGatewayId] = useState('ALL');
@@ -56,7 +58,7 @@ export default function JobWorkersPage() {
     window.addEventListener('resize', measure);
     return () => window.removeEventListener('resize', measure);
   }, []);
-  const { refreshing } = useMockRefresh('JobWorker 快照已刷新');
+  const { refreshing } = useMockRefresh();
   const jobWorkerMocks = useJobWorkers();
   const allSessions = getWorkerSessions(jobWorkerMocks);
   const allSubscriptions = jobWorkerMocks.flatMap((snapshot) => snapshot.subscriptions);
@@ -79,28 +81,28 @@ export default function JobWorkersPage() {
 
   const columns: ColumnsType<SessionRow> = [
     {
-      title: '任务类型',
+      title: t('app.common.jobType'),
       dataIndex: 'jobType',
       width: 190,
       render: (jobType: string) => <div className={`job-type job-type--${jobColor(jobType)}`}><span><ThunderboltOutlined /></span><div><strong>{jobType}</strong><small>{formatJobType(jobType)}</small></div></div>,
     },
-    { title: 'Worker', dataIndex: 'worker', width: 180, render: (worker: string) => <span className="worker-name"><ApiOutlined />{worker}</span> },
+    { title: t('app.workers.colWorker'), dataIndex: 'worker', width: 180, render: (worker: string) => <span className="worker-name"><ApiOutlined />{worker}</span> },
     { title: 'Session ID', dataIndex: 'sessionId', width: 110, sorter: (a, b) => a.sessionId - b.sessionId, render: (id: number) => <Tag className="id-tag">#{id}</Tag> },
     {
-      title: 'Gateway',
+      title: t('app.workers.colGateway'),
       key: 'gateway',
       width: 180,
       render: (_, session) => <div className="gateway-cell"><strong>{shortNodeName(session.gateway.memberId)}</strong><small>{session.gateway.address}</small></div>,
     },
     { title: 'Capacity', dataIndex: 'capacity', width: 110, sorter: (a, b) => a.capacity - b.capacity, render: (capacity: number) => <span className={`capacity-value ${capacity > 0 ? 'capacity-value--active' : ''}`}><i />{capacity}</span> },
-    { title: '租户', dataIndex: 'tenantIds', width: 150, render: (tenants: string[]) => <div className="tag-list">{tenants.map((tenant) => <Tag key={tenant}>{tenant}</Tag>)}</div> },
+    { title: t('app.workers.colTenant'), dataIndex: 'tenantIds', width: 150, render: (tenants: string[]) => <div className="tag-list">{tenants.map((tenant) => <Tag key={tenant}>{tenant}</Tag>)}</div> },
     {
-      title: '抓取变量',
+      title: t('app.workers.colVariables'),
       dataIndex: 'fetchVariables',
       width: 210,
       render: (variables: string[]) => variables.length ? <div className="tag-list">{variables.slice(0, 2).map((variable) => <Tag className="variable-tag" key={variable}><CodeOutlined />{variable}</Tag>)}</div> : <span className="muted-text">—</span>,
     },
-    { title: '操作', key: 'action', fixed: 'right', width: 90, render: (_, session) => <Button type="link" icon={<EyeOutlined />} onClick={() => setSelected(session)}>详情</Button> },
+    { title: t('app.common.action'), key: 'action', fixed: 'right', width: 90, render: (_, session) => <Button type="link" icon={<EyeOutlined />} onClick={() => setSelected(session)}>{t('app.common.detail')}</Button> },
   ];
 
   return (
@@ -108,16 +110,16 @@ export default function JobWorkersPage() {
       <PageHeader
         compact
         eyebrow="JOBWORKER ORCHESTRATION"
-        title="任务有去处，执行有回响"
-        description="管理 Gateway 中的 JobWorker 会话、任务订阅与变量抓取配置。"
+        title={t('app.workers.heroTitle')}
+        description={t('app.workers.heroDesc')}
         visual={<WorkerPulseVisual />}
       />
 
       <section className="metrics-grid">
-        <MetricCard title="在线 Gateway" value={jobWorkerMocks.length} icon={<GatewayOutlined />} tone="blue" footer="均已建立连接" />
-        <MetricCard title="Worker 会话" value={allSessions.length} icon={<ApiOutlined />} tone="cyan" footer="全部处于订阅状态" />
-        <MetricCard title="任务类型" value={jobTypes.length} icon={<ThunderboltOutlined />} tone="violet" footer="覆盖流程任务与消息事件" />
-        <MetricCard title="可用 Capacity" value={totalCapacity} icon={<CloudServerOutlined />} tone="green" footer="所有 Worker 容量之和" />
+        <MetricCard title={t('app.workers.metricGatewaysOnline')} value={jobWorkerMocks.length} icon={<GatewayOutlined />} tone="blue" footer={t('app.workers.metricGatewaysFooter')} />
+        <MetricCard title={t('app.common.metricSessions')} value={allSessions.length} icon={<ApiOutlined />} tone="cyan" footer={t('app.workers.metricSessionsFooter')} />
+        <MetricCard title={t('app.common.metricJobTypes')} value={jobTypes.length} icon={<ThunderboltOutlined />} tone="violet" footer={t('app.common.metricJobTypesFooter')} />
+        <MetricCard title={t('app.workers.metricCapacity')} value={totalCapacity} icon={<CloudServerOutlined />} tone="green" footer={t('app.workers.metricCapacityFooter')} />
       </section>
 
       <section className="panel worker-panel">
@@ -126,14 +128,14 @@ export default function JobWorkersPage() {
             activeKey={view}
             onChange={setView}
             items={[
-              { key: 'sessions', label: <span className="worker-tab-label"><ApiOutlined />Worker 会话 <b>{allSessions.length}</b></span> },
-              { key: 'subscriptions', label: <span className="worker-tab-label"><GatewayOutlined />订阅关系 <b>{allSubscriptions.length}</b></span> },
+              { key: 'sessions', label: <span className="worker-tab-label"><ApiOutlined />{t('app.workers.tabSessions')} <b>{allSessions.length}</b></span> },
+              { key: 'subscriptions', label: <span className="worker-tab-label"><GatewayOutlined />{t('app.workers.tabSubscriptions')} <b>{allSubscriptions.length}</b></span> },
             ]}
           />
           <div className="table-filters worker-filters">
-            <Input allowClear prefix={<SearchOutlined />} placeholder="搜索任务类型或 Worker" value={keyword} onChange={(event) => setKeyword(event.target.value)} />
+            <Input allowClear prefix={<SearchOutlined />} placeholder={t('app.workers.searchPlaceholder')} value={keyword} onChange={(event) => setKeyword(event.target.value)} />
             <Select value={gatewayId} onChange={setGatewayId} options={[
-              { value: 'ALL', label: '全部 Gateway' },
+              { value: 'ALL', label: t('app.workers.allGateways') },
               ...jobWorkerMocks.map(({ gateway }) => ({ value: gateway.memberId, label: shortNodeName(gateway.memberId) })),
             ]} />
           </div>
@@ -141,39 +143,39 @@ export default function JobWorkersPage() {
 
         {view === 'sessions' ? (
           <div className="worker-table-region">
-            <div className="worker-table-summary"><span>会话连接</span><small>展示各 Gateway 已注册的 JobWorker 与订阅配置</small><span className="snapshot-label"><i className="live-dot" /> 实时快照</span></div>
+            <div className="worker-table-summary"><span>{t('app.workers.sessionsSummary')}</span><small>{t('app.workers.sessionsSummaryDesc')}</small><span className="snapshot-label"><i className="live-dot" /> {t('app.workers.liveSnapshot')}</span></div>
             <Table
               rowKey={(record) => `${record.gateway.memberId}-${record.sessionId}`}
               columns={columns}
               dataSource={sessions}
               loading={refreshing}
-              pagination={sessions.length > 50 ? { pageSize: 50, showSizeChanger: true, pageSizeOptions: [20, 50, 100], showTotal: (total) => `共 ${total} 个会话` } : false}
+              pagination={sessions.length > 50 ? { pageSize: 50, showSizeChanger: true, pageSizeOptions: [20, 50, 100], showTotal: (total) => t('app.workers.sessionsTotal', { count: total }) } : false}
               scroll={{ x: 1370, y: 1 }}
-              locale={{ emptyText: <Empty description="没有符合条件的 Worker 会话" /> }}
+              locale={{ emptyText: <Empty description={t('app.workers.emptySessions')} /> }}
             />
-            <div className="table-panel__footer"><span>共 {sessions.length} 个会话</span><small>Capacity 为 Worker 当前声明的可用任务容量</small></div>
+            <div className="table-panel__footer"><span>{t('app.workers.sessionsTotal', { count: sessions.length })}</span><small>{t('app.workers.sessionsCapacityNote')}</small></div>
           </div>
         ) : (
           <div className={`worker-table-region subscription-compact ${refreshing ? 'is-refreshing' : ''}`}>
-            <div className="worker-table-summary"><span>订阅关系</span><small>{subscriptions.length} 种任务类型 · 按 Worker 分组，详情见抽屉</small><span className="snapshot-label"><i className="live-dot" /> 实时快照</span></div>
+            <div className="worker-table-summary"><span>{t('app.workers.subsSummary')}</span><small>{t('app.workers.subsSummaryDesc', { count: subscriptions.length })}</small><span className="snapshot-label"><i className="live-dot" /> {t('app.workers.liveSnapshot')}</span></div>
             <Table
               rowKey={(record) => record.jobType}
               size="middle"
               dataSource={subscriptions}
               loading={refreshing}
-              pagination={subscriptions.length > 50 ? { pageSize: 50, showTotal: (total) => `共 ${total} 种任务类型` } : false}
+              pagination={subscriptions.length > 50 ? { pageSize: 50, showTotal: (total) => t('app.workers.subsTotal', { count: total }) } : false}
               scroll={{ y: 1 }}
-              locale={{ emptyText: <Empty description="没有符合条件的订阅关系" /> }}
+              locale={{ emptyText: <Empty description={t('app.workers.emptySubs')} /> }}
               columns={[
                 {
-                  title: '任务类型',
+                  title: t('app.common.jobType'),
                   dataIndex: 'jobType',
                   width: 220,
                   render: (jobType: string) => <div className={`job-type job-type--${jobColor(jobType)}`}><span><ThunderboltOutlined /></span><div><strong>{jobType}</strong><small>{formatJobType(jobType)}</small></div></div>,
                 },
-                { title: '订阅数', dataIndex: 'sessions', width: 100, sorter: (a, b) => a.sessions.length - b.sessions.length, render: (sessions: unknown[]) => <span className="number-cell number-cell--leader">{sessions.length}</span> },
+                { title: t('app.workers.colSubs'), dataIndex: 'sessions', width: 100, sorter: (a, b) => a.sessions.length - b.sessions.length, render: (sessions: unknown[]) => <span className="number-cell number-cell--leader">{sessions.length}</span> },
                 {
-                  title: 'Worker',
+                  title: t('app.workers.colWorker'),
                   key: 'workers',
                   render: (_, record) => {
                     const groups = groupSessionsByWorker(record.sessions);
@@ -181,7 +183,7 @@ export default function JobWorkersPage() {
                   },
                 },
                 {
-                  title: 'Gateway',
+                  title: t('app.workers.colGateway'),
                   key: 'gateways',
                   width: 200,
                   render: (_, record) => {
@@ -189,7 +191,7 @@ export default function JobWorkersPage() {
                     return <div className="tag-list">{gateways.map((gateway) => <Tag key={gateway}>{shortNodeName(gateway)}</Tag>)}</div>;
                   },
                 },
-                { title: '操作', key: 'action', width: 90, render: (_, record) => <Button type="link" icon={<EyeOutlined />} onClick={() => setSelectedSubscription(record)}>详情</Button> },
+                { title: t('app.common.action'), key: 'action', width: 90, render: (_, record) => <Button type="link" icon={<EyeOutlined />} onClick={() => setSelectedSubscription(record)}>{t('app.common.detail')}</Button> },
               ]}
             />
           </div>
@@ -198,11 +200,11 @@ export default function JobWorkersPage() {
 
       <Drawer
         className="detail-drawer worker-detail-drawer"
-        title="JobWorker 会话详情"
+        title={t('app.workers.drawerTitle')}
         width={560}
         open={Boolean(selected)}
         onClose={() => setSelected(null)}
-        extra={<span className="health-badge health-badge--healthy"><i className="live-dot" />订阅中</span>}
+        extra={<span className="health-badge health-badge--healthy"><i className="live-dot" />{t('app.workers.subscribing')}</span>}
       >
         {selected && (
           <>
@@ -217,24 +219,24 @@ export default function JobWorkersPage() {
               <div><ApiOutlined /><span><small>JobWorker</small><strong>{selected.worker}</strong></span></div>
             </div>
             <Descriptions column={1} bordered size="middle" items={[
-              { key: 'worker', label: 'Worker 名称', children: selected.worker },
-              { key: 'address', label: 'Gateway 地址', children: selected.gateway.address },
-              { key: 'capacity', label: '可用 Capacity', children: <strong>{selected.capacity}</strong> },
-              { key: 'tenant', label: '租户列表', children: <div className="tag-list">{selected.tenantIds.map((tenant) => <Tag key={tenant}>{tenant}</Tag>)}</div> },
-              { key: 'variables', label: '抓取变量', children: selected.fetchVariables.length ? <div className="tag-list">{selected.fetchVariables.map((variable) => <Tag className="variable-tag" key={variable}><CodeOutlined />{variable}</Tag>)}</div> : '不抓取变量' },
+              { key: 'worker', label: t('app.workers.labelWorkerName'), children: selected.worker },
+              { key: 'address', label: t('app.workers.labelGatewayAddress'), children: selected.gateway.address },
+              { key: 'capacity', label: t('app.workers.metricCapacity'), children: <strong>{selected.capacity}</strong> },
+              { key: 'tenant', label: t('app.workers.labelTenantList'), children: <div className="tag-list">{selected.tenantIds.map((tenant) => <Tag key={tenant}>{tenant}</Tag>)}</div> },
+              { key: 'variables', label: t('app.workers.colVariables'), children: selected.fetchVariables.length ? <div className="tag-list">{selected.fetchVariables.map((variable) => <Tag className="variable-tag" key={variable}><CodeOutlined />{variable}</Tag>)}</div> : t('app.workers.noVariables') },
             ]} />
-            <div className="worker-detail-note"><span className="live-dot" /><div><strong>长连接订阅正常</strong><p>Gateway 会将匹配 <b>{selected.jobType}</b> 类型的流程任务推送到此 Worker。</p></div></div>
+            <div className="worker-detail-note"><span className="live-dot" /><div><strong>{t('app.workers.noteTitle')}</strong><p><Trans i18nKey="app.workers.noteBody" values={{ jobType: selected.jobType }} components={{ b: <b /> }} /></p></div></div>
           </>
         )}
       </Drawer>
 
       <Drawer
         className="detail-drawer subscription-detail-drawer"
-        title={selectedSubscription ? `${selectedSubscription.jobType} · 订阅关系` : ''}
+        title={selectedSubscription ? t('app.workers.subsDrawerTitle', { jobType: selectedSubscription.jobType }) : ''}
         width={560}
         open={Boolean(selectedSubscription)}
         onClose={() => setSelectedSubscription(null)}
-        extra={selectedSubscription && <Tag color="blue">{selectedSubscription.sessions.length} 个订阅</Tag>}
+        extra={selectedSubscription && <Tag color="blue">{t('app.workers.subsCountTag', { count: selectedSubscription.sessions.length })}</Tag>}
       >
         {selectedSubscription && (
           <>
@@ -245,7 +247,7 @@ export default function JobWorkersPage() {
             <div className="subscription-sessions-scroll">
               {groupSessionsByWorker(selectedSubscription.sessions).map(({ worker, sessions }) => (
                 <div className="subscription-worker-group" key={worker}>
-                  <div className="drawer-section-title"><strong><ApiOutlined /> {worker}</strong><span>{sessions.length} 个会话</span></div>
+                  <div className="drawer-section-title"><strong><ApiOutlined /> {worker}</strong><span>{t('app.workers.sessionCount', { count: sessions.length })}</span></div>
                   {sessions.map((session) => (
                     <button
                       className="subscription-session subscription-session--clickable"
@@ -264,7 +266,7 @@ export default function JobWorkersPage() {
                 </div>
               ))}
             </div>
-            <p className="dispatch-note">点击会话查看 Worker 详情（容量/租户/抓取变量）。</p>
+            <p className="dispatch-note">{t('app.workers.clickHint')}</p>
           </>
         )}
       </Drawer>

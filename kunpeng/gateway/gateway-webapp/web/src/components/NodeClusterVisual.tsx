@@ -1,13 +1,14 @@
 import { CloudServerOutlined } from '@ant-design/icons';
-import { useBrokers } from '../data/ClusterDataContext';
-import { shortNodeName } from '../utils/cluster';
+import { useTranslation } from 'react-i18next';
 
-/** Broker 节点间心跳链路视觉：节点卡片与在线徽章取自真实集群快照（最多展示前三个节点） */
+/** Broker 节点间心跳链路视觉：概念示意死数据（装饰视觉两分法），固定三节点、不接真实集群状态 */
 export default function NodeClusterVisual() {
-  const brokers = useBrokers();
-  const slots = ['nc-card--one', 'nc-card--two', 'nc-card--three'];
-  const cards = brokers.slice(0, 3);
-  const unhealthy = brokers.filter((broker) => broker.partitions.some((partition) => partition.health !== 'HEALTHY')).length;
+  const { t } = useTranslation();
+  const nodes = [
+    { slot: 'nc-card--one', name: 'node-01', meta: '4 Leaders · 1F' },
+    { slot: 'nc-card--two', name: 'node-02', meta: '3 Leaders · 2F' },
+    { slot: 'nc-card--three', name: 'node-03', meta: '4 Leaders · 1F' },
+  ];
 
   return (
     <div className="node-cluster-visual" aria-hidden="true">
@@ -32,24 +33,14 @@ export default function NodeClusterVisual() {
         <circle className="nc-particle nc-particle--violet" r="3"><animateMotion dur="2.4s" begin=".7s" repeatCount="indefinite"><mpath href="#nc-link-b" /></animateMotion></circle>
         <circle className="nc-particle nc-particle--cyan" r="3"><animateMotion dur="2.8s" begin=".3s" repeatCount="indefinite"><mpath href="#nc-link-c" /></animateMotion></circle>
       </svg>
-      {cards.length === 0 && (
-        <div className="nc-card nc-card--one">
+      {nodes.map((node) => (
+        <div className={`nc-card ${node.slot}`} key={node.name}>
           <span className="nc-card__icon"><CloudServerOutlined /><i /></span>
-          <span className="nc-card__meta"><strong>暂无节点</strong><small>等待集群快照</small></span>
+          <span className="nc-card__meta"><strong>{node.name}</strong><small>{node.meta}</small></span>
+          <span className="nc-card__status"><i className="live-dot" />{t('app.visuals.online')}</span>
         </div>
-      )}
-      {cards.map((broker, index) => {
-        const leaders = broker.partitions.filter((partition) => partition.role === 'LEADER').length;
-        const warn = broker.partitions.some((partition) => partition.health !== 'HEALTHY');
-        return (
-          <div className={`nc-card ${slots[index]}`} key={broker.memberId}>
-            <span className="nc-card__icon"><CloudServerOutlined /><i /></span>
-            <span className="nc-card__meta"><strong>{shortNodeName(broker.memberId)}</strong><small>{leaders} Leaders · {broker.partitions.length - leaders}F</small></span>
-            <span className={`nc-card__status${warn ? ' nc-card__status--warn' : ''}`}>{warn ? '副本异常' : <><i className="live-dot" />在线</>}</span>
-          </div>
-        );
-      })}
-      <span className="nc-badge"><i className="live-dot" />{brokers.length} / {brokers.length} 节点在线{unhealthy ? ` · ${unhealthy} 需关注` : ' · 心跳同步中'}</span>
+      ))}
+      <span className="nc-badge"><i className="live-dot" />{t('app.visuals.nodeOnlineBadge', { total: nodes.length })}{t('app.visuals.nodeHeartbeat')}</span>
     </div>
   );
 }

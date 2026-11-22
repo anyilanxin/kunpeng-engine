@@ -1,10 +1,12 @@
 import { CloudServerOutlined, DeploymentUnitOutlined, PartitionOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useBrokers } from '../data/ClusterDataContext';
 import { getPartitionCells, getPartitionGroups, shortNodeName } from '../utils/cluster';
 import SectionHeader from './SectionHeader';
 
 export default function PartitionGroupOverview() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const brokers = useBrokers();
   const groups = getPartitionGroups(brokers);
@@ -13,10 +15,10 @@ export default function PartitionGroupOverview() {
   return (
     <div className="panel partition-overview-panel">
       <SectionHeader
-        title="分区运行概览"
-        description="逻辑分区与副本角色分布"
+        title={t('app.dashboard.groupTitle')}
+        description={t('app.dashboard.groupDesc')}
         icon={<DeploymentUnitOutlined />}
-        extra={<span className="live-label"><i className="live-dot" /> 已同步</span>}
+        extra={<span className="live-label"><i className="live-dot" /> {t('app.dashboard.synced')}</span>}
       />
       <div className="partition-group-cards">
         {groups.map((group, index) => {
@@ -27,14 +29,14 @@ export default function PartitionGroupOverview() {
           return (
             <button className={`partition-group-card partition-group-card--${index === 0 ? 'blue' : 'violet'}`} key={group} onClick={() => navigate(group === 'admin-partition' ? '/admin-partitions' : '/partitions')}>
               <span className="partition-group-card__icon"><PartitionOutlined /></span>
-              <span className="partition-group-card__content"><strong>{group}</strong><small>{partitionCount} 个逻辑分区 · {groupCells.length} 个副本</small><span className="partition-group-card__track"><i style={{ width: `${healthPercent}%` }} /></span></span>
-              <span className="partition-group-card__value"><strong>{healthPercent}%</strong><small>健康</small></span>
+              <span className="partition-group-card__content"><strong>{group}</strong><small>{t('app.dashboard.groupStats', { partitions: partitionCount, replicas: groupCells.length })}</small><span className="partition-group-card__track"><i style={{ width: `${healthPercent}%` }} /></span></span>
+              <span className="partition-group-card__value"><strong>{healthPercent}%</strong><small>{t('app.common.healthy')}</small></span>
             </button>
           );
         })}
       </div>
       <div className="leader-distribution">
-        <div className="leader-distribution__header"><span>Leader 节点分布</span><small>按当前快照统计</small></div>
+        <div className="leader-distribution__header"><span>{t('app.dashboard.leaderDistribution')}</span><small>{t('app.dashboard.bySnapshot')}</small></div>
         <div className="leader-distribution__chart">
           {brokers.map((broker, index) => {
             const count = broker.partitions.filter((partition) => partition.role === 'LEADER').length;

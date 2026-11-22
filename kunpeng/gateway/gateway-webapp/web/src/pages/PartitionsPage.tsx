@@ -7,10 +7,9 @@ export default function PartitionsPage() {
     <PartitionMatrixPage
       group="raft-partition"
       eyebrow="BUSINESS RAFT PARTITIONS"
-      title="业务分区归属，一屏尽览"
-      description="多 RAFT 组业务分区，按节点追踪角色、任期与副本健康。"
+      titleKey="app.partitions.businessTitle"
+      descriptionKey="app.partitions.businessDesc"
       visual={<PartitionVisual />}
-      refreshText="业务分区快照已刷新"
     />
   );
 }
