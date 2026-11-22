@@ -58,6 +58,255 @@
   color: #51637e;
 }
 
+/* 分区归属：节点卡片网格（一节点一卡，固定 3 列 × 2 排可视约 6 节点，超出整体滚动；卡内分区固定 3 排，超出内部滚动） */
+.partition-node-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: 210px;
+  gap: 12px;
+  max-height: calc(2 * 210px + 12px);
+  padding-right: 4px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@media (max-width: 1280px) {
+  .partition-node-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .partition-node-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.partition-panel.is-refreshing .partition-node-grid {
+  opacity: 0.6;
+}
+
+.partition-node-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  background: #f8fbff;
+  border: 1px solid #e3ebf7;
+  border-radius: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.partition-node-card:hover {
+  border-color: #c9dcfb;
+  box-shadow: 0 10px 26px rgba(46, 82, 132, 0.08);
+}
+
+.partition-node-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.partition-node-card__meta {
+  margin-top: -4px;
+  font-size: 11px;
+  color: #8a94a6;
+}
+
+.partition-node-card__count {
+  flex-shrink: 0;
+  padding: 1px 10px;
+  font-size: 12px;
+  color: #246bfd;
+  background: #e5eefd;
+  border: 1px solid #c9dcfb;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* 分区 chips 区固定 3 排（chip 30px + 行距 8px），超出部分卡片内滚动，保证卡片等高 */
+.node-partition-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex: none;
+  align-content: flex-start;
+  height: calc(3 * 30px + 2 * 8px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.node-partition-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  height: 30px;
+  padding: 5px 10px;
+  cursor: pointer;
+  background: #f2f6fc;
+  border: 1px solid #e3ebf7;
+  border-radius: 9px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.node-partition-chip:hover {
+  border-color: #bcd3f5;
+  box-shadow: 0 4px 12px rgba(46, 82, 132, 0.1);
+}
+
+.node-partition-chip b {
+  font-size: 12px;
+  color: #243b57;
+}
+
+.node-partition-chip span {
+  font-size: 11px;
+  color: #51637e;
+}
+
+.node-partition-chip--leader {
+  background: #e5eefd;
+  border-color: #c9dcfb;
+}
+
+.node-partition-chip--leader span {
+  color: #246bfd;
+  font-weight: 600;
+}
+
+.node-partition-chip--candidate {
+  background: #fdf3e3;
+  border-color: #f3ddba;
+}
+
+.node-partition-chip--candidate span {
+  color: #c07b16;
+}
+
+.node-partition-chip--promotable {
+  background: #f1ebfd;
+  border-color: #e0d3f7;
+}
+
+.node-partition-chip--promotable span {
+  color: #7a4fd1;
+}
+
+.node-partition-chip--passive,
+.node-partition-chip--inactive {
+  background: #f5f6f9;
+  border-color: #e8eaef;
+}
+
+.node-partition-chip--passive span,
+.node-partition-chip--inactive span {
+  color: #97a2b3;
+}
+
+.node-partition-chip--unhealthy {
+  background: #fdeeee;
+  border-color: #f4c9cb;
+}
+
+.node-partition-chip--unhealthy b,
+.node-partition-chip--unhealthy span {
+  color: #d8404a;
+}
+
+/* JobWorker 页整页撑满视口：页头/指标卡固定，面板吃满剩余高度，滚动只发生在表格体内部 */
+.page--fill .worker-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.page--fill .worker-panel__top {
+  flex: none;
+}
+
+.worker-table-region {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.worker-table-region .worker-table-summary,
+.worker-table-region .table-panel__footer {
+  flex: none;
+}
+
+.worker-table-region .ant-table-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.worker-table-region .ant-spin-nested-loading,
+.worker-table-region .ant-spin-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.worker-table-region .ant-spin-container > .ant-table {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.worker-table-region .ant-table-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.worker-table-region .ant-table-body {
+  flex: 1;
+  min-height: 0;
+  max-height: 100% !important;
+  overflow-y: auto !important;
+}
+
+/* 订阅关系表格视图（worker-table-summary 间距） */
+.subscription-compact .worker-table-summary {
+  margin-bottom: 10px;
+}
+
+/* 抽屉内订阅会话列表：数量不限，区域内部滚动 */
+.subscription-sessions-scroll {
+  max-height: 460px;
+  padding: 2px 0;
+  overflow: auto;
+}
+
+.subscription-worker-group .drawer-section-title {
+  margin-top: 14px;
+}
+
+.subscription-session--clickable {
+  width: 100%;
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-bottom: 1px dashed #e8edf4;
+  text-align: left;
+  transition: background 0.2s;
+}
+
+.subscription-session--clickable:hover {
+  background: #f6faff;
+}
+
 
 .dispatch-grid {
   display: grid;

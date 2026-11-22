@@ -1,9 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Descriptions, Drawer, Empty, Input, Select, Table, Tabs, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
   ApiOutlined,
-  ArrowRightOutlined,
   CloudServerOutlined,
   CodeOutlined,
   EyeOutlined,
@@ -25,11 +24,39 @@ type SessionRow = WorkerSession & { jobType: string; gateway: Gateway };
 const jobColors = ['blue', 'cyan', 'violet', 'orange', 'green'];
 const jobColor = (jobType: string) => jobColors[jobType.length % jobColors.length];
 
+/** 订阅会话按 worker 分组：同一 worker 多会话聚合（×N 会话数），不逐会话平铺 */
+function groupSessionsByWorker(sessions: { gateway: string; address: string; sessionId: number; worker: string }[]) {
+  const groups = new Map<string, { gateway: string; address: string; sessionId: number; worker: string }[]>();
+  for (const session of sessions) {
+    groups.set(session.worker, [...(groups.get(session.worker) ?? []), session]);
+  }
+  return Array.from(groups.entries()).map(([worker, list]) => ({ worker, sessions: list }));
+}
+
 export default function JobWorkersPage() {
   const [view, setView] = useState('sessions');
   const [keyword, setKeyword] = useState('');
   const [gatewayId, setGatewayId] = useState('ALL');
   const [selected, setSelected] = useState<SessionRow | null>(null);
+  const [selectedSubscription, setSelectedSubscription] = useState<{ jobType: string; sessions: { gateway: string; address: string; sessionId: number; worker: string }[] } | null>(null);
+  /** 整页撑满视口：量出页头以下可用高度，页面自身不滚，滚动只发生在表格体内部 */
+  const pageRef = useRef<HTMLDivElement>(null);
+  const [fillHeight, setFillHeight] = useState<number>();
+  useEffect(() => {
+    const measure = () => {
+      const page = pageRef.current;
+      if (!page) return;
+      const content = document.querySelector('.app-content');
+      const footer = document.querySelector('.app-footer') as HTMLElement | null;
+      const contentPadding = content ? parseFloat(getComputedStyle(content).paddingBottom) : 0;
+      const footerStyle = footer ? getComputedStyle(footer) : null;
+      const footerSpace = footer && footerStyle ? footer.offsetHeight + parseFloat(footerStyle.marginTop) + parseFloat(footerStyle.marginBottom) : 0;
+      setFillHeight(Math.max(420, window.innerHeight - page.getBoundingClientRect().top - contentPadding - footerSpace));
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, []);
   const { refreshing, refresh } = useMockRefresh('JobWorker 快照已刷新');
   const jobWorkerMocks = useJobWorkers();
   const allSessions = getWorkerSessions(jobWorkerMocks);
@@ -78,7 +105,7 @@ export default function JobWorkersPage() {
   ];
 
   return (
-    <div className="page">
+    <div className="page page--fill" ref={pageRef} style={fillHeight ? { height: fillHeight } : undefined}>
       <PageHeader
         compact
         eyebrow="JOBWORKER ORCHESTRATION"
@@ -115,45 +142,58 @@ export default function JobWorkersPage() {
         </div>
 
         {view === 'sessions' ? (
-          <>
+          <div className="worker-table-region">
             <div className="worker-table-summary"><span>会话连接</span><small>展示各 Gateway 已注册的 JobWorker 与订阅配置</small><span className="snapshot-label"><i className="live-dot" /> 实时快照</span></div>
             <Table
               rowKey={(record) => `${record.gateway.memberId}-${record.sessionId}`}
               columns={columns}
               dataSource={sessions}
               loading={refreshing}
-              pagination={false}
-              scroll={{ x: 1370 }}
+              pagination={sessions.length > 50 ? { pageSize: 50, showSizeChanger: true, pageSizeOptions: [20, 50, 100], showTotal: (total) => `共 ${total} 个会话` } : false}
+              scroll={{ x: 1370, y: 1 }}
               locale={{ emptyText: <Empty description="没有符合条件的 Worker 会话" /> }}
             />
             <div className="table-panel__footer"><span>共 {sessions.length} 个会话</span><small>Capacity 为 Worker 当前声明的可用任务容量</small></div>
-          </>
+          </div>
         ) : (
-          <div className={`subscription-grid ${refreshing ? 'is-refreshing' : ''}`}>
-            {subscriptions.map((subscription, index) => (
-              <article className="subscription-card" key={subscription.jobType} style={{ animationDelay: `${index * 70}ms` }}>
-                <div className="subscription-card__header">
-                  <div className={`job-type job-type--${jobColor(subscription.jobType)}`}><span><ThunderboltOutlined /></span><div><strong>{subscription.jobType}</strong><small>{formatJobType(subscription.jobType)}</small></div></div>
-                  <Tag color="blue">{subscription.sessions.length} 个订阅</Tag>
-                </div>
-                <div className="subscription-card__body">
-                  {subscription.sessions.map((session) => (
-                    <div className="subscription-session" key={`${session.gateway}-${session.sessionId}`}>
-                      <span className="subscription-session__worker"><ApiOutlined /></span>
-                      <div className="subscription-session__identity"><strong>{session.worker}</strong><small>Session #{session.sessionId}</small></div>
-                      <div className="subscription-session__link"><span /><i /></div>
-                      <div className="subscription-session__gateway"><strong><GatewayOutlined />{shortNodeName(session.gateway)}</strong><small>{session.address}</small></div>
-                      <span className="subscription-session__status"><i className="live-dot" />ACTIVE</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="subscription-card__footer"><span><i className="live-dot" /> 订阅通道正常</span><button onClick={() => {
-                  const session = allSessions.find((item) => item.jobType === subscription.jobType && item.sessionId === subscription.sessions[0].sessionId);
-                  if (session) setSelected(session);
-                }}>查看会话 <ArrowRightOutlined /></button></div>
-              </article>
-            ))}
-            {subscriptions.length === 0 && <Empty description="没有符合条件的订阅关系" />}
+          <div className={`worker-table-region subscription-compact ${refreshing ? 'is-refreshing' : ''}`}>
+            <div className="worker-table-summary"><span>订阅关系</span><small>{subscriptions.length} 种任务类型 · 按 Worker 分组，详情见抽屉</small><span className="snapshot-label"><i className="live-dot" /> 实时快照</span></div>
+            <Table
+              rowKey={(record) => record.jobType}
+              size="middle"
+              dataSource={subscriptions}
+              loading={refreshing}
+              pagination={subscriptions.length > 50 ? { pageSize: 50, showTotal: (total) => `共 ${total} 种任务类型` } : false}
+              scroll={{ y: 1 }}
+              locale={{ emptyText: <Empty description="没有符合条件的订阅关系" /> }}
+              columns={[
+                {
+                  title: '任务类型',
+                  dataIndex: 'jobType',
+                  width: 220,
+                  render: (jobType: string) => <div className={`job-type job-type--${jobColor(jobType)}`}><span><ThunderboltOutlined /></span><div><strong>{jobType}</strong><small>{formatJobType(jobType)}</small></div></div>,
+                },
+                { title: '订阅数', dataIndex: 'sessions', width: 100, sorter: (a, b) => a.sessions.length - b.sessions.length, render: (sessions: unknown[]) => <span className="number-cell number-cell--leader">{sessions.length}</span> },
+                {
+                  title: 'Worker',
+                  key: 'workers',
+                  render: (_, record) => {
+                    const groups = groupSessionsByWorker(record.sessions);
+                    return <div className="tag-list">{groups.slice(0, 4).map(({ worker, sessions }) => <Tag key={worker}>{worker}{sessions.length > 1 && ` ×${sessions.length}`}</Tag>)}{groups.length > 4 && <Tag>+{groups.length - 4}</Tag>}</div>;
+                  },
+                },
+                {
+                  title: 'Gateway',
+                  key: 'gateways',
+                  width: 200,
+                  render: (_, record) => {
+                    const gateways = Array.from(new Set(record.sessions.map((session) => session.gateway)));
+                    return <div className="tag-list">{gateways.map((gateway) => <Tag key={gateway}>{shortNodeName(gateway)}</Tag>)}</div>;
+                  },
+                },
+                { title: '操作', key: 'action', width: 90, render: (_, record) => <Button type="link" icon={<EyeOutlined />} onClick={() => setSelectedSubscription(record)}>详情</Button> },
+              ]}
+            />
           </div>
         )}
       </section>
@@ -186,6 +226,47 @@ export default function JobWorkersPage() {
               { key: 'variables', label: '抓取变量', children: selected.fetchVariables.length ? <div className="tag-list">{selected.fetchVariables.map((variable) => <Tag className="variable-tag" key={variable}><CodeOutlined />{variable}</Tag>)}</div> : '不抓取变量' },
             ]} />
             <div className="worker-detail-note"><span className="live-dot" /><div><strong>长连接订阅正常</strong><p>Gateway 会将匹配 <b>{selected.jobType}</b> 类型的流程任务推送到此 Worker。</p></div></div>
+          </>
+        )}
+      </Drawer>
+
+      <Drawer
+        className="detail-drawer subscription-detail-drawer"
+        title={selectedSubscription ? `${selectedSubscription.jobType} · 订阅关系` : ''}
+        width={560}
+        open={Boolean(selectedSubscription)}
+        onClose={() => setSelectedSubscription(null)}
+        extra={selectedSubscription && <Tag color="blue">{selectedSubscription.sessions.length} 个订阅</Tag>}
+      >
+        {selectedSubscription && (
+          <>
+            <div className="worker-detail-hero">
+              <span className={`job-type__detail job-type__detail--${jobColor(selectedSubscription.jobType)}`}><ThunderboltOutlined /></span>
+              <div><small>JOB TYPE</small><h3>{selectedSubscription.jobType}</h3><p>{formatJobType(selectedSubscription.jobType)}</p></div>
+            </div>
+            <div className="subscription-sessions-scroll">
+              {groupSessionsByWorker(selectedSubscription.sessions).map(({ worker, sessions }) => (
+                <div className="subscription-worker-group" key={worker}>
+                  <div className="drawer-section-title"><strong><ApiOutlined /> {worker}</strong><span>{sessions.length} 个会话</span></div>
+                  {sessions.map((session) => (
+                    <button
+                      className="subscription-session subscription-session--clickable"
+                      key={`${session.gateway}-${session.sessionId}`}
+                      onClick={() => {
+                        const row = allSessions.find((item) => item.jobType === selectedSubscription.jobType && item.sessionId === session.sessionId);
+                        if (row) setSelected(row);
+                      }}
+                    >
+                      <div className="subscription-session__identity"><small>Session #{session.sessionId}</small></div>
+                      <div className="subscription-session__link"><span /><i /></div>
+                      <div className="subscription-session__gateway"><strong><GatewayOutlined />{shortNodeName(session.gateway)}</strong><small>{session.address}</small></div>
+                      <span className="subscription-session__status"><i className="live-dot" />ACTIVE</span>
+                    </button>
+                  ))}
+                </div>
+              ))}
+            </div>
+            <p className="dispatch-note">点击会话查看 Worker 详情（容量/租户/抓取变量）。</p>
           </>
         )}
       </Drawer>

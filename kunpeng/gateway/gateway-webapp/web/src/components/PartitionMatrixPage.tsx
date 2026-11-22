@@ -49,13 +49,20 @@ export default function PartitionMatrixPage({ group, eyebrow, title, description
     cells.map((cell) => cell.id),
   )).sort((a, b) => a - b), [cells]);
 
+  /** 节点卡片：每节点全部副本按角色 chips 铺排；网格固定 3 列 × 2 排可视（约 6 节点），超出滚动 */
+  const brokerRows = useMemo(() => brokers.map((broker) => ({
+    broker,
+    partitions: broker.partitions
+      .filter((partition) => partition.group === group && (role === 'ALL' || partition.role === role))
+      .sort((a, b) => a.id - b.id),
+  })).filter(({ broker, partitions }) => {
+    const haystack = `${broker.memberId} ${broker.address} ${broker.partitions.filter((p) => p.group === group).map((p) => `#${p.id}`).join(' ')}`.toLowerCase();
+    return haystack.includes(keyword.toLowerCase()) && partitions.length > 0;
+  }), [brokers, group, role, keyword]);
+
   const replicationFactor = partitionIds.length
     ? Math.round(cells.length / partitionIds.length)
     : 0;
-
-  const visibleBrokers = useMemo(() => brokers.filter((broker) =>
-    `${broker.memberId} ${broker.address}`.toLowerCase().includes(keyword.toLowerCase()),
-  ), [brokers, keyword]);
 
   const selectedPeers = selected ? cells.filter((cell) => cell.id === selected.id) : [];
   const leader = selectedPeers.find((cell) => cell.role === 'LEADER');
@@ -81,15 +88,15 @@ export default function PartitionMatrixPage({ group, eyebrow, title, description
 
       <section className={`panel partition-panel ${refreshing ? 'is-refreshing' : ''}`}>
         <SectionHeader
-          title="分区归属矩阵"
-          description="按节点查看各分区的角色，分区 ID 按数值升序排列"
+          title="分区归属"
+          description="一张卡片一个节点，卡片内为该节点承载的全部分区副本（按角色着色）"
           extra={<span className="snapshot-label"><i className="live-dot" /> 快照已同步</span>}
         />
         <div className="partition-toolbar">
           <div className="partition-toolbar__left">
-            <Input allowClear value={keyword} onChange={(event) => setKeyword(event.target.value)} prefix={<SearchOutlined />} placeholder="搜索 Broker" />
+            <Input allowClear value={keyword} onChange={(event) => setKeyword(event.target.value)} prefix={<SearchOutlined />} placeholder="搜索节点或分区号" />
             <Select value={role} onChange={setRole} options={roleOptions} />
-            <span className="matrix-count">{visibleBrokers.length} 个节点 · {partitionIds.length} 个分区</span>
+            <span className="matrix-count">{brokerRows.length}{brokerRows.length !== brokers.length ? ` / ${brokers.length}` : ''} 个节点 · {partitionIds.length} 个分区</span>
           </div>
           <div className="matrix-legend">
             {(['LEADER', 'FOLLOWER', 'CANDIDATE', 'PROMOTABLE', 'PASSIVE', 'INACTIVE'] as PartitionRole[]).map((item) => (
@@ -98,39 +105,39 @@ export default function PartitionMatrixPage({ group, eyebrow, title, description
           </div>
         </div>
 
-        <div className="partition-matrix-wrap">
-          <table className="partition-matrix">
-            <thead><tr><th className="partition-matrix__broker-head">Broker ID</th>{partitionIds.map((id) => <th key={id}><span>分区</span>{id}</th>)}</tr></thead>
-            <tbody>
-              {visibleBrokers.map((broker, rowIndex) => (
-                <tr key={broker.memberId}>
-                  <th className="partition-matrix__broker-cell"><span className="matrix-node-icon"><CloudServerOutlined /></span><div><strong>{shortNodeName(broker.memberId)}</strong><small>Source #{broker.nodeSourceId}</small></div><i className="live-dot" /></th>
-                  {partitionIds.map((id, columnIndex) => {
-                    const cell = broker.partitions.find((partition) => partition.group === group && partition.id === id);
-                    const visible = cell && (role === 'ALL' || cell.role === role);
-                    return (
-                      <td key={id}>
-                        {cell && visible ? (
-                          <button
-                            className={`partition-cell partition-cell--${cell.role.toLowerCase()} ${cell.health !== 'HEALTHY' ? 'partition-cell--unhealthy' : ''}`}
-                            style={{ animationDelay: `${(rowIndex + columnIndex) * 35}ms` }}
-                            onClick={() => setSelected({ ...cell, broker })}
-                            title={`${cell.group}-${id} · ${cell.role} · ${cell.health}`}
-                          >
-                            <span>{cell.role.charAt(0) + cell.role.slice(1).toLowerCase()}</span>
-                            <i className="partition-cell__health" />
-                          </button>
-                        ) : <span className="partition-cell-empty">—</span>}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {visibleBrokers.length === 0 && <Empty description="没有符合条件的 Broker" />}
-        </div>
-        <div className="matrix-footer"><span>INACTIVE / PASSIVE 为非投票成员；「—」表示该节点未承载此分区或已被角色筛选隐藏。</span><span>点击分区单元格查看详情 →</span></div>
+        {brokerRows.length === 0 ? (
+          <Empty description="没有符合条件的节点" />
+        ) : (
+          <div className="partition-node-grid">
+            {brokerRows.map(({ broker, partitions }) => (
+              <div key={broker.memberId} className="partition-node-card">
+                <div className="partition-node-card__header">
+                  <div className="node-identity">
+                    <span className="node-identity__icon"><CloudServerOutlined /><i /></span>
+                    <div><strong>{shortNodeName(broker.memberId)}</strong><small>{broker.memberId} · Source #{broker.nodeSourceId}</small></div>
+                  </div>
+                  <span className="partition-node-card__count">{partitions.length} 个副本</span>
+                </div>
+                <div className="partition-node-card__meta">{broker.address}</div>
+                <div className="node-partition-chips">
+                  {partitions.map((partition) => (
+                    <button
+                      key={partition.id}
+                      className={`node-partition-chip node-partition-chip--${partition.role.toLowerCase()} ${partition.health !== 'HEALTHY' ? 'node-partition-chip--unhealthy' : ''}`}
+                      onClick={() => setSelected({ ...partition, broker })}
+                      title={`${partition.group}-${partition.id} · ${partition.role} · ${partition.health} · Source #${partition.sourceId}`}
+                    >
+                      <b>#{partition.id}</b>
+                      <span>{partition.role.charAt(0) + partition.role.slice(1).toLowerCase()}</span>
+                      <i className="partition-cell__health" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="matrix-footer"><span>一张卡片一个节点，chips 颜色按角色（Leader 蓝 / Follower 灰蓝 / Candidate 橙 / Promotable 紫），红色为异常副本；节点多于 6 个或卡内分区多于 3 排时区域内滚动。</span><span>点击分区 chip 查看复制链路 →</span></div>
       </section>
 
       <Drawer
