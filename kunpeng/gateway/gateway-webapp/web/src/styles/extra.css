@@ -359,7 +359,8 @@
 .dispatch-executions-wrap {
   max-height: 360px;
   overflow: auto;
-  padding-right: 4px;
+  /* 左侧留出时间线圆点光环（box-shadow 4px 外扩）不被滚动容器裁剪 */
+  padding: 0 4px 0 8px;
 }
 
 .dispatch-execution {
