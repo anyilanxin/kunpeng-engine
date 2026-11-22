@@ -8,6 +8,13 @@ kunpeng:
     node-id: node01
     seed-nodes:
       - 127.0.0.1:24109
+  gateway-webapp:
+    # 控制台登录用户（password 支持 {noop}/{bcrypt} 前缀）
+    users:
+      - username: admin
+        password: "{noop}admin123"
+        roles:
+          - ADMIN
   broker:
     authorization:
       enabled: true
