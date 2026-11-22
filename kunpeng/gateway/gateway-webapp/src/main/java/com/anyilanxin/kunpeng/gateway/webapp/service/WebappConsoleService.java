@@ -19,6 +19,7 @@ package com.anyilanxin.kunpeng.gateway.webapp.service;
 import static com.anyilanxin.kunpeng.protocol.common.ClusterCommonConstant.NODE_SOURCE_PROPERTY_KEY;
 
 import com.anyilanxin.kunpeng.broker.client.admin.ClusterDispatchClient;
+import com.anyilanxin.kunpeng.broker.client.core.BrokerResponse;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
 import com.anyilanxin.kunpeng.cluster.cluster.Member;
 import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
@@ -31,6 +32,7 @@ import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.admin.AdminDisp
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessClusterMetaRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanExecutionRecord;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.business.BusinessDispatchPlanRecord;
+import com.anyilanxin.kunpeng.protocol.admin.impl.record.commandapi.business.dispatch.BusinessChangeResponseRecord;
 import com.anyilanxin.kunpeng.protocol.admin.record.command.PartitionInfoMetaRecordValue;
 import com.anyilanxin.kunpeng.utils.VersionUtil;
 import java.util.ArrayList;
@@ -42,7 +44,8 @@ import java.util.concurrent.CompletableFuture;
 import org.springframework.stereotype.Service;
 
 /**
- * 控制台数据聚合服务：拓扑/分区（含 sourceId 实时视图）/job 流/网关/调度查询，全部读本进程运行时视图与既有管理面查询链路， 不新建任何写路径。
+ * 控制台数据聚合服务：拓扑/分区（含 sourceId 实时视图）/job 流/网关/调度查询读本进程运行时视图与既有管理面查询链路； 调度操作（重新负载/改副本/改分区）走既有
+ * BusinessDispatchClient 管理面链路。
  *
  * @author zxuanhong
  * @since 2026.9.0
@@ -217,22 +220,44 @@ public class WebappConsoleService {
         .thenApply(record -> new GatewayLoadVo(record.nodeId(), record.connectorNum()));
   }
 
-  /** 本网关 job 流连接视图（按 jobType 分组，会话按 streamId 升序） */
-  public List<JobTypeVo> jobStreams() {
-    final Map<String, List<JobStreamVo>> byType = new TreeMap<>();
-    for (final var info : jobHub.describe()) {
-      byType
-          .computeIfAbsent(info.jobType(), key -> new ArrayList<>())
-          .add(
-              new JobStreamVo(
-                  info.streamId(),
-                  info.worker(),
-                  info.capacity(),
-                  info.timeoutMillis(),
-                  info.tenantIds(),
-                  info.fetchVariables()));
+  /** 本网关 job 流合并视图（actuator jobstreams 对等形状：gateway 连接 + 订阅关系，按 jobType 分组） */
+  public JobStreamsVo jobStreams() {
+    final List<JobWorkerSnapshotVo> snapshots = workerSnapshots();
+    final Map<String, List<WorkerSessionVo>> connectionsByType = new TreeMap<>();
+    final Map<String, List<SubscriptionSessionVo>> subscriptionsByType = new TreeMap<>();
+    GatewaySnapshotVo gateway = null;
+    for (final JobWorkerSnapshotVo snapshot : snapshots) {
+      if (gateway == null) {
+        gateway = snapshot.gateway();
+      }
+      for (final GatewayConnectionVo connection : snapshot.gateway().connections()) {
+        connectionsByType
+            .computeIfAbsent(connection.jobType(), key -> new ArrayList<>())
+            .addAll(connection.sessions());
+      }
+      for (final JobSubscriptionVo subscription : snapshot.subscriptions()) {
+        subscriptionsByType
+            .computeIfAbsent(subscription.jobType(), key -> new ArrayList<>())
+            .addAll(subscription.sessions());
+      }
     }
-    return byType.entrySet().stream().map(e -> new JobTypeVo(e.getKey(), e.getValue())).toList();
+    if (gateway == null) {
+      final Member local = atomixCluster.getMembershipService().getLocalMember();
+      gateway =
+          new GatewaySnapshotVo(
+              local.id().id(), local.address().toString(), nodeSourceId(local), List.of());
+    }
+    return new JobStreamsVo(
+        new GatewaySnapshotVo(
+            gateway.memberId(),
+            gateway.address(),
+            gateway.nodeSourceId(),
+            connectionsByType.entrySet().stream()
+                .map(entry -> new GatewayConnectionVo(entry.getKey(), entry.getValue()))
+                .toList()),
+        subscriptionsByType.entrySet().stream()
+            .map(entry -> new JobSubscriptionVo(entry.getKey(), entry.getValue()))
+            .toList());
   }
 
   /** 调度查询聚合：业务面（clusterMeta+最新计划+执行明细）+ 管理面（admin 元数据+计划） */
@@ -244,6 +269,57 @@ public class WebappConsoleService {
             ? BusinessDispatch.of(business.getValue())
             : null,
         admin.isSuccess() && admin.getValue() != null ? AdminDispatch.of(admin.getValue()) : null);
+  }
+
+  /** 业务集群重新负载：apply=false 仅生成调度计划预览，不下发执行 */
+  public CompletableFuture<DispatchOpVo> dispatchBalance(final boolean apply) {
+    return toOpVo("businessClusterBalance", dispatchClient.businessClusterBalance(apply));
+  }
+
+  /** 修改业务集群副本因子：apply=false 仅生成调度计划预览 */
+  public CompletableFuture<DispatchOpVo> dispatchChangeReplication(
+      final int expectReplicationFactor, final boolean apply) {
+    return toOpVo(
+        "businessChangeReplication",
+        dispatchClient.businessChangeReplication(expectReplicationFactor, apply));
+  }
+
+  /** 修改业务集群分区数量：apply=false 仅生成调度计划预览 */
+  public CompletableFuture<DispatchOpVo> dispatchChangePartitions(
+      final int expectPartitionsCount, final boolean apply) {
+    return toOpVo(
+        "businessChangePartition",
+        dispatchClient.businessChangePartition(expectPartitionsCount, apply));
+  }
+
+  private CompletableFuture<DispatchOpVo> toOpVo(
+      final String operation,
+      final CompletableFuture<BrokerResponse<BusinessChangeResponseRecord>> future) {
+    return future
+        .thenApply(
+            response ->
+                new DispatchOpVo(
+                    operation,
+                    response.isSuccess(),
+                    response.code(),
+                    response.message(),
+                    response.isSuccess() && response.getValue() != null
+                        ? DispatchPlanVo.of(response.getValue().getDispatchPlan())
+                        : null,
+                    response.isSuccess() && response.getValue() != null
+                        ? ClusterMetaVo.of(response.getValue().getClusterMeta())
+                        : null))
+        .exceptionally(
+            cause -> {
+              final Throwable root = cause.getCause() == null ? cause : cause.getCause();
+              return new DispatchOpVo(
+                  operation,
+                  false,
+                  -1,
+                  root.getMessage() == null ? root.getClass().getSimpleName() : root.getMessage(),
+                  null,
+                  null);
+            });
   }
 
   private PartitionVo partitionDetail(final PartitionId id) {
@@ -378,20 +454,20 @@ public class WebappConsoleService {
   /** 网关负载 */
   public record GatewayLoadVo(String nodeId, int activeConnections) {}
 
-  /** jobType 分组连接视图 */
-  public record JobTypeVo(String jobType, List<JobStreamVo> streams) {}
-
-  /** 单条 job 流连接会话 */
-  public record JobStreamVo(
-      long streamId,
-      String worker,
-      int capacity,
-      long timeoutMillis,
-      List<String> tenantIds,
-      List<String> fetchVariables) {}
+  /** job 流合并视图（actuator jobstreams 对等形状） */
+  public record JobStreamsVo(GatewaySnapshotVo gateway, List<JobSubscriptionVo> subscriptions) {}
 
   /** 调度查询聚合结果 */
   public record DispatchVo(BusinessDispatch business, AdminDispatch admin) {}
+
+  /** 调度操作结果：成功时携带生成的调度计划与最新集群元数据；失败时 message 为原因 */
+  public record DispatchOpVo(
+      String operation,
+      boolean success,
+      int code,
+      String message,
+      DispatchPlanVo dispatchPlan,
+      ClusterMetaVo clusterMeta) {}
 
   /** 业务面调度查询：元数据 + 最新计划（含执行明细） */
   public record BusinessDispatch(ClusterMetaVo clusterMeta, DispatchPlanVo dispatchPlan) {

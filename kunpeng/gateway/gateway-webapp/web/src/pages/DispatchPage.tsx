@@ -1,13 +1,13 @@
-import { api, time } from '../api';
+import { api, dispatchBalance, dispatchChangePartitions, dispatchChangeReplication, time } from '../api';
 import { usePolling } from '../usePolling';
 import { ErrorAlert } from '../components/ErrorAlert';
 import { StateTag } from '../components/StatusBadge';
 import PageHeader from '../components/PageHeader';
 import SectionHeader from '../components/SectionHeader';
 import PartitionVisual from '../components/PartitionVisual';
-import type { DispatchExecutionVo, DispatchVo } from '../types';
-import { Alert, Button, Descriptions, Drawer, Empty, Table, Tag, Typography } from 'antd';
-import { ReloadOutlined, SwapOutlined } from '@ant-design/icons';
+import type { DispatchExecutionVo, DispatchOpVo, DispatchVo } from '../types';
+import { Alert, App, Button, Descriptions, Drawer, Empty, InputNumber, Table, Tag, Typography } from 'antd';
+import { CaretRightOutlined, EyeOutlined, ReloadOutlined, SwapOutlined } from '@ant-design/icons';
 import { useState } from 'react';
 
 function ExecutionsTimeline({ executions }: { executions: DispatchExecutionVo[] }) {
@@ -72,12 +72,48 @@ function PartitionMetaTable({ rows }: { rows: MetaRow[] }) {
 export default function DispatchPage() {
   const { data, error, loading, refresh } = usePolling<DispatchVo>(() => api<DispatchVo>('/dispatch'));
   const [metaOpen, setMetaOpen] = useState(false);
+  const [replication, setReplication] = useState<number | null>(null);
+  const [partitions, setPartitions] = useState<number | null>(null);
+  const [opResult, setOpResult] = useState<DispatchOpVo | null>(null);
+  const [opLoading, setOpLoading] = useState<string | null>(null);
+  const { modal, message } = App.useApp();
   const business = data?.business;
   const admin = data?.admin;
 
   if (error && !data) {
     return <ErrorAlert message={error} />;
   }
+
+  const runOp = async (key: string, action: () => Promise<DispatchOpVo>, applying: boolean) => {
+    setOpLoading(key);
+    try {
+      const result = await action();
+      setOpResult(result);
+      if (result.success) {
+        message.success(applying ? `调度计划已下发执行（#${result.dispatchPlan?.dispatchPlanId ?? '-'}）` : '调度计划预览已生成');
+        if (applying) {
+          await refresh();
+        }
+      } else {
+        message.error(`操作失败：${result.message}`);
+      }
+    } catch (e) {
+      message.error(e instanceof Error ? e.message : '操作失败');
+    } finally {
+      setOpLoading(null);
+    }
+  };
+
+  const withConfirm = (key: string, title: string, action: () => Promise<DispatchOpVo>) => {
+    modal.confirm({
+      title,
+      content: '将生成调度计划并下发执行，分区与副本会按计划迁移。确定继续？',
+      okText: '确认执行',
+      okButtonProps: { danger: true },
+      cancelText: '取消',
+      onOk: () => runOp(key, action, true),
+    });
+  };
 
   return (
     <div className="page">
@@ -91,6 +127,52 @@ export default function DispatchPage() {
       />
 
       {error && <Alert type="warning" showIcon message={`部分数据拉取失败：${error}`} style={{ marginBottom: 14 }} />}
+
+      <section className="panel dispatch-panel">
+        <SectionHeader
+          title="集群扩缩容"
+          description="预览仅生成调度计划不下发；执行需二次确认，结果见下方计划区"
+          icon={<SwapOutlined />}
+          extra={business?.clusterMeta && <Tag color="cyan">当前 {business.clusterMeta.currentPartitionCount} 分区 · {business.clusterMeta.currentReplicationFactor} 副本</Tag>}
+        />
+        <div className="dispatch-ops">
+          <div className="dispatch-op">
+            <span className="dispatch-op__label">重新负载</span>
+            <span className="dispatch-op__hint">按当前节点重新均衡分区归属</span>
+            <Button size="small" icon={<EyeOutlined />} loading={opLoading === 'balance-preview'} onClick={() => runOp('balance-preview', () => dispatchBalance(false), false)}>预览计划</Button>
+            <Button size="small" danger type="primary" icon={<CaretRightOutlined />} loading={opLoading === 'balance-apply'} onClick={() => withConfirm('balance-apply', '执行业务集群重新负载？', () => dispatchBalance(true))}>执行</Button>
+          </div>
+          <div className="dispatch-op">
+            <span className="dispatch-op__label">副本因子</span>
+            <InputNumber size="small" min={1} max={7} value={replication} onChange={setReplication} placeholder="目标副本数" style={{ width: 110 }} />
+            <Button size="small" icon={<EyeOutlined />} disabled={!replication} loading={opLoading === 'replication-preview'} onClick={() => replication && runOp('replication-preview', () => dispatchChangeReplication(replication, false), false)}>预览计划</Button>
+            <Button size="small" danger type="primary" icon={<CaretRightOutlined />} disabled={!replication} loading={opLoading === 'replication-apply'} onClick={() => replication && withConfirm('replication-apply', `执行副本因子变更为 ${replication}？`, () => dispatchChangeReplication(replication, true))}>执行</Button>
+          </div>
+          <div className="dispatch-op">
+            <span className="dispatch-op__label">分区数量</span>
+            <InputNumber size="small" min={1} max={64} value={partitions} onChange={setPartitions} placeholder="目标分区数" style={{ width: 110 }} />
+            <Button size="small" icon={<EyeOutlined />} disabled={!partitions} loading={opLoading === 'partitions-preview'} onClick={() => partitions && runOp('partitions-preview', () => dispatchChangePartitions(partitions, false), false)}>预览计划</Button>
+            <Button size="small" danger type="primary" icon={<CaretRightOutlined />} disabled={!partitions} loading={opLoading === 'partitions-apply'} onClick={() => partitions && withConfirm('partitions-apply', `执行分区数量变更为 ${partitions}？`, () => dispatchChangePartitions(partitions, true))}>执行</Button>
+          </div>
+        </div>
+        {opResult && (
+          <div className={`dispatch-op-result ${opResult.success ? '' : 'dispatch-op-result--error'}`}>
+            <div className="dispatch-op-result__head">
+              <strong>{opResult.operation}</strong>
+              <StateTag state={opResult.success ? 'SUCCEED' : 'FAILED'} />
+              {opResult.dispatchPlan && <Tag color="blue">计划 #{opResult.dispatchPlan.dispatchPlanId}</Tag>}
+              {opResult.dispatchPlan && <Tag>{opResult.dispatchPlan.dispatchPlanType}</Tag>}
+              {opResult.dispatchPlan && <Tag>{opResult.dispatchPlan.dispatchState}</Tag>}
+              <span>{opResult.message}</span>
+            </div>
+            {opResult.dispatchPlan && (
+              <span className="dispatch-op-result__meta">
+                分区 {opResult.dispatchPlan.oldPartitionsCount} → {opResult.dispatchPlan.expectPartitionsCount} · 副本 {opResult.dispatchPlan.oldReplicationFactor} → {opResult.dispatchPlan.expectReplicationFactor} · {opResult.dispatchPlan.applyPlan ? '已下发执行' : '仅预览'}
+              </span>
+            )}
+          </div>
+        )}
+      </section>
 
       <div className="dispatch-grid">
         <section className="panel dispatch-panel">

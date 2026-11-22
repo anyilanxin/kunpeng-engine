@@ -44,6 +44,30 @@ export async function me() {
   return api<{ username: string; roles: string[] }>('/me');
 }
 
+/** 业务集群重新负载：apply=false 仅生成调度计划预览 */
+export function dispatchBalance(apply: boolean) {
+  return api<import('./types').DispatchOpVo>('/dispatch/balance', {
+    method: 'POST',
+    body: JSON.stringify({ apply }),
+  });
+}
+
+/** 修改业务集群副本因子：apply=false 仅生成调度计划预览 */
+export function dispatchChangeReplication(expectReplicationFactor: number, apply: boolean) {
+  return api<import('./types').DispatchOpVo>('/dispatch/replication', {
+    method: 'POST',
+    body: JSON.stringify({ expectReplicationFactor, apply }),
+  });
+}
+
+/** 修改业务集群分区数量：apply=false 仅生成调度计划预览 */
+export function dispatchChangePartitions(expectPartitionsCount: number, apply: boolean) {
+  return api<import('./types').DispatchOpVo>('/dispatch/partitions', {
+    method: 'POST',
+    body: JSON.stringify({ expectPartitionsCount, apply }),
+  });
+}
+
 /** 时间戳(ms)转可读时间；-1/0 显示 - */
 export function time(ms: number): string {
   if (!ms || ms < 0) {

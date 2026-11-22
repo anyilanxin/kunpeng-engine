@@ -135,3 +135,13 @@ export interface DispatchVo {
   business: { clusterMeta: ClusterMetaVo; dispatchPlan: DispatchPlanVo } | null;
   admin: { clusterMeta: AdminClusterMetaVo; dispatchPlan: AdminDispatchPlanVo } | null;
 }
+
+/** 调度操作结果：成功时携带生成的调度计划与最新集群元数据 */
+export interface DispatchOpVo {
+  operation: string;
+  success: boolean;
+  code: number;
+  message: string;
+  dispatchPlan: DispatchPlanVo | null;
+  clusterMeta: ClusterMetaVo | null;
+}

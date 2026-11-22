@@ -1,5 +1,64 @@
 /* 控制台本地扩展样式：调度中心页面专属（参考设计体系的补充，不修改参考 verbatim 文件） */
 
+/* 集群扩缩容操作区 */
+.dispatch-ops {
+  display: grid;
+  gap: 10px;
+}
+
+.dispatch-op {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  border: 1px solid #e3ebf7;
+  border-radius: 12px;
+  background: #f8fbff;
+}
+
+.dispatch-op__label {
+  flex: 0 0 64px;
+  font-weight: 600;
+  color: #243b57;
+}
+
+.dispatch-op__hint {
+  flex: 1;
+  min-width: 180px;
+  font-size: 12px;
+  color: #8a94a6;
+}
+
+.dispatch-op-result {
+  margin-top: 12px;
+  padding: 10px 14px;
+  border: 1px solid #c9e7d9;
+  border-radius: 12px;
+  background: #f2fbf7;
+}
+
+.dispatch-op-result--error {
+  border-color: #f3c9c9;
+  background: #fdf3f3;
+}
+
+.dispatch-op-result__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+
+.dispatch-op-result__meta {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #51637e;
+}
+
+
 .dispatch-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

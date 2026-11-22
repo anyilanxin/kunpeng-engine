@@ -21,7 +21,6 @@ import com.anyilanxin.kunpeng.gateway.webapp.service.WebappConsoleService;
 import com.anyilanxin.kunpeng.gateway.webapp.service.WebappConsoleService.DispatchVo;
 import com.anyilanxin.kunpeng.gateway.webapp.service.WebappConsoleService.GatewayLoadVo;
 import com.anyilanxin.kunpeng.gateway.webapp.service.WebappConsoleService.GatewayVo;
-import com.anyilanxin.kunpeng.gateway.webapp.service.WebappConsoleService.JobTypeVo;
 import com.anyilanxin.kunpeng.gateway.webapp.service.WebappConsoleService.OverviewVo;
 import com.anyilanxin.kunpeng.gateway.webapp.service.WebappConsoleService.PartitionVo;
 import com.anyilanxin.kunpeng.gateway.webapp.service.WebappConsoleService.TopologyVo;
@@ -30,6 +29,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -88,9 +89,9 @@ public class WebappConsoleController {
     return Mono.fromFuture(consoleService.gatewayLoad(grpcAddress)).map(WebappResult::ok);
   }
 
-  /** 本网关 job 流连接视图（按 jobType 分组） */
+  /** 本网关 job 流合并视图（actuator jobstreams 对等形状：gateway 连接 + 订阅关系） */
   @GetMapping("/jobs/streams")
-  public Mono<WebappResult<List<JobTypeVo>>> jobStreams() {
+  public Mono<WebappResult<WebappConsoleService.JobStreamsVo>> jobStreams() {
     return Mono.fromSupplier(consoleService::jobStreams).map(WebappResult::ok);
   }
 
@@ -111,4 +112,43 @@ public class WebappConsoleController {
   public Mono<WebappResult<DispatchVo>> dispatch() {
     return Mono.fromSupplier(consoleService::dispatch).map(WebappResult::ok);
   }
+
+  /** 业务集群重新负载：apply=false 仅生成调度计划预览 */
+  @PostMapping("/dispatch/balance")
+  public Mono<WebappResult<WebappConsoleService.DispatchOpVo>> dispatchBalance(
+      @RequestBody final BalanceRequest request) {
+    return Mono.fromFuture(() -> consoleService.dispatchBalance(request.apply()))
+        .map(WebappResult::ok);
+  }
+
+  /** 修改业务集群副本因子：apply=false 仅生成调度计划预览 */
+  @PostMapping("/dispatch/replication")
+  public Mono<WebappResult<WebappConsoleService.DispatchOpVo>> dispatchChangeReplication(
+      @RequestBody final ReplicationRequest request) {
+    return Mono.fromFuture(
+            () ->
+                consoleService.dispatchChangeReplication(
+                    request.expectReplicationFactor(), request.apply()))
+        .map(WebappResult::ok);
+  }
+
+  /** 修改业务集群分区数量：apply=false 仅生成调度计划预览 */
+  @PostMapping("/dispatch/partitions")
+  public Mono<WebappResult<WebappConsoleService.DispatchOpVo>> dispatchChangePartitions(
+      @RequestBody final PartitionsRequest request) {
+    return Mono.fromFuture(
+            () ->
+                consoleService.dispatchChangePartitions(
+                    request.expectPartitionsCount(), request.apply()))
+        .map(WebappResult::ok);
+  }
+
+  /** 重新负载请求体 */
+  public record BalanceRequest(boolean apply) {}
+
+  /** 副本因子变更请求体 */
+  public record ReplicationRequest(int expectReplicationFactor, boolean apply) {}
+
+  /** 分区数量变更请求体 */
+  public record PartitionsRequest(int expectPartitionsCount, boolean apply) {}
 }
