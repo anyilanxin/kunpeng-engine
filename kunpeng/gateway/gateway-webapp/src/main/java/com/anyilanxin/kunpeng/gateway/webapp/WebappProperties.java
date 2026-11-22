@@ -34,6 +34,9 @@ public class WebappProperties {
   /** Web 控制台总开关，关闭时安全链与 API 均不装配 */
   private boolean enabled = true;
 
+  /** 控制台底栏备案信息（如 ICP 备案号），空则前端不显示 */
+  private String filingInfo;
+
   /** 控制台用户清单 */
   private List<WebappUser> users = new ArrayList<>();
 
@@ -43,6 +46,14 @@ public class WebappProperties {
 
   public void setEnabled(final boolean enabled) {
     this.enabled = enabled;
+  }
+
+  public String getFilingInfo() {
+    return filingInfo;
+  }
+
+  public void setFilingInfo(final String filingInfo) {
+    this.filingInfo = filingInfo;
   }
 
   public List<WebappUser> getUsers() {

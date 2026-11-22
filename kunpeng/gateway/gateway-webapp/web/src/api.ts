@@ -29,8 +29,15 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   return body.data;
 }
 
+/** 当前用户（filingInfo 为后台配置的底栏备案信息，空则前端不显示） */
+export interface MeInfo {
+  username: string;
+  roles: string[];
+  filingInfo?: string | null;
+}
+
 export async function login(username: string, password: string) {
-  return api<{ username: string; roles: string[] }>('/login', {
+  return api<MeInfo>('/login', {
     method: 'POST',
     body: JSON.stringify({ username, password }),
   });
@@ -41,7 +48,7 @@ export async function logout() {
 }
 
 export async function me() {
-  return api<{ username: string; roles: string[] }>('/me');
+  return api<MeInfo>('/me');
 }
 
 /** 业务集群重新负载：apply=false 仅生成调度计划预览 */

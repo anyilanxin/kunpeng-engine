@@ -16,6 +16,7 @@
  */
 package com.anyilanxin.kunpeng.gateway.webapp.controller;
 
+import com.anyilanxin.kunpeng.gateway.webapp.WebappProperties;
 import com.anyilanxin.kunpeng.gateway.webapp.core.WebappResult;
 import java.util.List;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -54,18 +55,22 @@ import reactor.core.publisher.Mono;
     matchIfMissing = true)
 public class WebappAuthController {
   private final ReactiveAuthenticationManager authenticationManager;
+  private final WebappProperties properties;
   private final ServerSecurityContextRepository securityContextRepository =
       new WebSessionServerSecurityContextRepository();
 
-  public WebappAuthController(final ReactiveAuthenticationManager authenticationManager) {
+  public WebappAuthController(
+      final ReactiveAuthenticationManager authenticationManager,
+      final WebappProperties properties) {
     this.authenticationManager = authenticationManager;
+    this.properties = properties;
   }
 
   /** 登录请求体 */
   public record LoginRequest(String username, String password) {}
 
-  /** 当前用户信息 */
-  public record MeResponse(String username, List<String> roles) {}
+  /** 当前用户信息（filingInfo 为控制台底栏备案信息，空则前端不显示） */
+  public record MeResponse(String username, List<String> roles, String filingInfo) {}
 
   /** 登录：认证通过后安全上下文写入 session（cookie 会话），认证失败（账号不存在/密码错误）回 401 信封 */
   @PostMapping(value = "/login", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -101,14 +106,15 @@ public class WebappAuthController {
     return ReactiveSecurityContextHolder.getContext()
         .map(SecurityContext::getAuthentication)
         .filter(Authentication::isAuthenticated)
-        .map(WebappAuthController::me)
+        .map(this::me)
         .map(WebappResult::ok)
         .defaultIfEmpty(WebappResult.fail(401, "未登录"));
   }
 
-  private static MeResponse me(final Authentication authentication) {
+  private MeResponse me(final Authentication authentication) {
     return new MeResponse(
         authentication.getName(),
-        authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList());
+        authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList(),
+        properties.getFilingInfo());
   }
 }

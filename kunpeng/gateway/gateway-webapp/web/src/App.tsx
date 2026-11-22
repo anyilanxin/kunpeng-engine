@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { Spin } from 'antd';
 import { me } from './api';
+import type { MeInfo } from './api';
 import AdminLayout from './layouts/AdminLayout';
 import DashboardPage from './pages/DashboardPage';
 import NodesPage from './pages/NodesPage';
@@ -13,10 +14,7 @@ import GatewaysPage from './pages/GatewaysPage';
 import LoginPage from './pages/LoginPage';
 import { ClusterDataProvider } from './data/ClusterDataContext';
 
-export interface CurrentUser {
-  username: string;
-  roles: string[];
-}
+export interface CurrentUser extends MeInfo {}
 
 export default function App() {
   const [user, setUser] = useState<CurrentUser>();

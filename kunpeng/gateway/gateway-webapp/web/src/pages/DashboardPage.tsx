@@ -38,11 +38,6 @@ export default function DashboardPage() {
         title="流程无界，集群有序。"
         description="统一感知 Broker、Raft 分区与 JobWorker，让每一个流程任务可靠抵达。"
         visual={<ClusterTopology />}
-        actions={
-          <>
-            <Button size="small" type="primary" icon={<PartitionOutlined />} onClick={() => navigate('/partitions')}>查看分区矩阵</Button>
-          </>
-        }
       />
 
       <section className="metrics-grid">

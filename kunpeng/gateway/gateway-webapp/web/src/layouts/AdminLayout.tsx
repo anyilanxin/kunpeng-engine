@@ -23,6 +23,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import ClusterBrand from '../components/ClusterBrand';
 import { useBrokers } from '../data/ClusterDataContext';
 import { logout } from '../api';
+import type { MeInfo } from '../api';
 import { getPartitionCells } from '../utils/cluster';
 
 const { Header, Sider, Content } = Layout;
@@ -57,7 +58,7 @@ const searchRoutes: Record<string, string> = {
   'Gateway 管理': '/gateways',
 };
 
-export default function AdminLayout({ user, onLoggedOut }: { user: { username: string; roles: string[] }; onLoggedOut: () => void }) {
+export default function AdminLayout({ user, onLoggedOut }: { user: MeInfo; onLoggedOut: () => void }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -220,7 +221,11 @@ export default function AdminLayout({ user, onLoggedOut }: { user: { username: s
         </Header>
         <Content className="app-content">
           <div className="route-frame" key={location.pathname}><Outlet /></div>
-          <footer className="app-footer"><span>KUNPENG CLUSTER CONSOLE</span><span>微服务编排引擎 · 集群管理</span></footer>
+          <footer className="app-footer">
+            <span>KUNPENG CLUSTER CONSOLE</span>
+            {user.filingInfo && <span>{user.filingInfo}</span>}
+            <span>微服务编排引擎 · 集群管理</span>
+          </footer>
         </Content>
       </Layout>
     </Layout>

@@ -110,7 +110,7 @@ export default function NodesPage() {
       />
 
       <section className="metrics-grid">
-        <MetricCard title="在线 Broker" value={<>{brokers.length}<small> / {brokers.length}</small></>} icon={<CloudServerOutlined />} tone="blue" footer={`${brokers.length} 个节点在线`} />
+        <MetricCard title="在线 Broker" value={<>{brokers.filter((broker) => broker.state === 'ONLINE').length}<small> / {brokers.length}</small></>} icon={<CloudServerOutlined />} tone="blue" footer={`${brokers.filter((broker) => broker.state === 'ONLINE').length} 在线 · 共 ${brokers.length} 注册`} />
         <MetricCard title="Broker 节点" value={brokers.length} icon={<CloudServerOutlined />} tone="cyan" footer="全部承载 Raft 分区" />
         <MetricCard title="Gateway 节点" value={workers.length} icon={<GatewayOutlined />} tone="violet" footer="Worker 连接状态正常" />
         <MetricCard title="异常副本" value={allPartitions.filter((item) => item.health !== 'HEALTHY').length} icon={<SafetyCertificateOutlined />} tone="green" footer="需要关注的副本数量" />

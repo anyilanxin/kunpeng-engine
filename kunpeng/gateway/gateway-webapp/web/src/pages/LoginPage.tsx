@@ -3,6 +3,7 @@ import { Alert, App, Button, Form, Input } from 'antd';
 import { ArrowRightOutlined, LockOutlined, SafetyCertificateOutlined, UserOutlined } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { login } from '../api';
+import type { MeInfo } from '../api';
 import ClusterBrand from '../components/ClusterBrand';
 import LoginClusterVisual from '../components/LoginClusterVisual';
 
@@ -11,7 +12,7 @@ interface LoginFormValues {
   password: string;
 }
 
-export default function LoginPage({ onLoggedIn }: { onLoggedIn: (user: { username: string; roles: string[] }) => void }) {
+export default function LoginPage({ onLoggedIn }: { onLoggedIn: (user: MeInfo) => void }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();

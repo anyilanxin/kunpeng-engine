@@ -128,9 +128,8 @@ export default function PartitionMatrixPage({ group, eyebrow, title, description
                       onClick={() => setSelected({ ...partition, broker })}
                       title={`${partition.group}-${partition.id} · ${partition.role} · ${partition.health} · Source #${partition.sourceId}`}
                     >
-                      <b>#{partition.id}</b>
+                      <b>{partition.id}</b>
                       <span>{partition.role.charAt(0) + partition.role.slice(1).toLowerCase()}</span>
-                      <i className="partition-cell__health" />
                     </button>
                   ))}
                 </div>
