@@ -16,10 +16,9 @@
  */
 package com.anyilanxin.kunpeng.gateway.webapp.security;
 
-import com.anyilanxin.kunpeng.gateway.webapp.WebappProperties;
+import com.anyilanxin.kunpeng.configuration.gateway.GatewayWebappCfg;
+import com.anyilanxin.kunpeng.gateway.webapp.ConditionalOnWebappEnabled;
 import java.nio.charset.StandardCharsets;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -50,11 +49,7 @@ import reactor.core.publisher.Mono;
  */
 @Configuration(proxyBeanMethods = false)
 @EnableWebFluxSecurity
-@EnableConfigurationProperties(WebappProperties.class)
-@ConditionalOnProperty(
-    name = "kunpeng.gateway-webapp.enabled",
-    havingValue = "true",
-    matchIfMissing = true)
+@ConditionalOnWebappEnabled
 public class WebappSecurityConfiguration {
 
   /** 控制台安全链：登录接口与静态壳放行，数据接口认证；未认证 API 请求回 401（SPA 据此转登录页） */
@@ -95,7 +90,7 @@ public class WebappSecurityConfiguration {
 
   /** 用户明细服务：配置文件用户清单直读，缺号即抛（不可登录） */
   @Bean
-  ReactiveUserDetailsService webappUserDetailsService(final WebappProperties properties) {
+  ReactiveUserDetailsService webappUserDetailsService(final GatewayWebappCfg properties) {
     return username ->
         Mono.justOrEmpty(
                 properties.getUsers().stream()

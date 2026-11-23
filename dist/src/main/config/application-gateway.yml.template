@@ -84,6 +84,15 @@ kunpeng:
       timeout: 10000
       probe-timeout: 10000
       min-empty-responses: 3           # 连续空响应达到该次数后停止挂起
+    # Web 控制台（/webapp 静态壳 + /api/v1/webapp/** 数据接口；未配置用户时不可登录）
+    webapp:
+      # enabled: true                # 总开关（关闭时安全链与 API 均不装配，默认 true）
+      # filing-info: 京ICP备XXXXXXXX号 # 底栏备案信息（空则前端不显示）
+      # users:                       # 控制台用户清单（password 支持 {noop}/{bcrypt} 等前缀格式）
+      #   - username: admin
+      #     password: "{noop}admin123"
+      #     roles:
+      #       - ADMIN
     # 线程：管理线程 1、gRPC 线程池按 CPU 核数自适应（只读，不可配置）
 
 # 独立网关与 broker 同机部署时 HTTP 端口（REST/SSE/长轮询）也要错开 broker 的 8080

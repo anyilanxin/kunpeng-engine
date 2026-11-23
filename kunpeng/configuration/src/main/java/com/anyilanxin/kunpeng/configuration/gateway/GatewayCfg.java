@@ -51,6 +51,8 @@ public class GatewayCfg {
   @NestedConfigurationProperty
   private GatewayAuthorizationCfg authorization = new GatewayAuthorizationCfg();
 
+  @NestedConfigurationProperty private GatewayWebappCfg webapp = new GatewayWebappCfg();
+
   public void init(final String basePath, final ClusterCfg clusterCfg) {
     if (network.getSecurity() == null) {
       network.setSecurity(new SecurityCfg());

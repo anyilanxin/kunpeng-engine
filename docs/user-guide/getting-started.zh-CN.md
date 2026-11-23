@@ -185,6 +185,17 @@ docker run -d --name kunpeng \
   kunpeng:<version>
 ```
 
+### 8.1 Docker Compose 集群部署
+
+多节点集群可用 Docker Compose 编排：同目录 [docker-compose.yml](docker-compose.yml) 提供一个最小集群示例——1 个独立 gateway（客户端统一接入，gRPC `24108` / HTTP `2024` / actuator `9600`）+ 3 个 broker（4 业务分区 × 3 副本，关闭内嵌网关，`broker1` 为种子节点），节点配置全部通过环境变量完成，数据与日志按节点挂载到 `./kunpeng-cluster/`。
+
+```bash
+# 镜像版本可用环境变量指定（缺省 2026.11.1-alpha1）
+KUNPENG_VERSION=<version> docker compose up -d
+```
+
+集群引导与分区分配需要少量时间（新数据目录首次启动约 15~30s），完成后客户端从 gateway 的 gRPC 端口接入；compose 中的环境变量与配置项的对应关系见第 10 节。
+
 ## 9. 客户端接入
 
 客户端通过网关的 gRPC 端口（默认 `127.0.0.1:24108`）接入。Java SDK 示例：

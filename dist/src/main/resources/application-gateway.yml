@@ -12,3 +12,14 @@ springdoc:
     enabled: true
   swagger-ui:
     enabled: true
+# Web 控制台（默认开启，未配置用户时不可登录；示例：
+kunpeng:
+  gateway:
+    webapp:
+      enabled: true
+      filing-info: 京ICP备XXXXXXXX号
+      users:
+        - username: admin
+          password: "{noop}admin123"
+          roles:
+            - ADMIN
