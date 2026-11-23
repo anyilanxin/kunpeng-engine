@@ -29,6 +29,14 @@ English | [简体中文](getting-started.zh-CN.md)
 #   result: dist/build/jib-image.tar, import with: docker load -i dist/build/jib-image.tar
 ```
 
+The offline flow above is also wrapped as a one-shot script; the only input is the base image tar path:
+
+```bash
+./docs/build-offline-image.sh /path/to/base-jre.tar
+```
+
+The script runs `:dist:jibBuildLocalTar` (no registry access, docker not required for the build itself), then imports `dist/build/jib-image.tar` with `docker load` (this step requires a local docker daemon), and prints the resulting tags `kunpeng:<version>` and `kunpeng:latest`. The image tar stays at `dist/build/jib-image.tar` for transfer to offline hosts.
+
 ## 3. Mandatory JVM Arguments
 
 Due to agrona constraints, launching the fat jar directly with `java -jar` requires the following two arguments (`--add-opens` works per module/package: one argument opens one package, they do not cover each other):
