@@ -16,7 +16,6 @@
  */
 package com.anyilanxin.kunpeng.gateway.webapp;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
@@ -40,10 +39,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
  * @since 2026.9.0
  */
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnProperty(
-    name = "kunpeng.gateway-webapp.enabled",
-    havingValue = "true",
-    matchIfMissing = true)
+@ConditionalOnWebappEnabled
 public class WebappWebFluxConfiguration implements WebFluxConfigurer {
 
   @Override

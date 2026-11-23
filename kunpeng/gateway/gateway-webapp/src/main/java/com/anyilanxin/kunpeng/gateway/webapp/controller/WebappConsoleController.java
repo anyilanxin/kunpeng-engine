@@ -16,6 +16,7 @@
  */
 package com.anyilanxin.kunpeng.gateway.webapp.controller;
 
+import com.anyilanxin.kunpeng.gateway.webapp.ConditionalOnWebappEnabled;
 import com.anyilanxin.kunpeng.gateway.webapp.core.WebappResult;
 import com.anyilanxin.kunpeng.gateway.webapp.service.WebappConsoleService;
 import com.anyilanxin.kunpeng.gateway.webapp.service.WebappConsoleService.DispatchVo;
@@ -26,7 +27,6 @@ import com.anyilanxin.kunpeng.gateway.webapp.service.WebappConsoleService.Topolo
 import com.anyilanxin.kunpeng.gateway.webapp.service.WebappMonitoringService;
 import java.time.Duration;
 import java.util.List;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -50,10 +50,7 @@ import reactor.core.publisher.Mono;
     value = "/{version}/webapp",
     version = "v1",
     produces = MediaType.APPLICATION_JSON_VALUE)
-@ConditionalOnProperty(
-    name = "kunpeng.gateway-webapp.enabled",
-    havingValue = "true",
-    matchIfMissing = true)
+@ConditionalOnWebappEnabled
 public class WebappConsoleController {
   private final WebappConsoleService consoleService;
   private final WebappMonitoringService monitoringService;

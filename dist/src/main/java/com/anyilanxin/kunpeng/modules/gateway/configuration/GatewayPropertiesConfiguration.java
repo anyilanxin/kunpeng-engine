@@ -17,8 +17,10 @@
 package com.anyilanxin.kunpeng.modules.gateway.configuration;
 
 import com.anyilanxin.kunpeng.configuration.gateway.GatewayCfg;
+import com.anyilanxin.kunpeng.configuration.gateway.GatewayWebappCfg;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -35,4 +37,10 @@ public class GatewayPropertiesConfiguration {
 
   @ConfigurationProperties("kunpeng.gateway")
   public static class GatewayProperties extends GatewayCfg {}
+
+  /** Web 控制台配置（kunpeng.gateway.webapp.*），供 webapp 模块消费 */
+  @Bean
+  GatewayWebappCfg gatewayWebappCfg(final GatewayProperties properties) {
+    return properties.getWebapp();
+  }
 }

@@ -17,8 +17,10 @@
 package com.anyilanxin.kunpeng.modules.broker.configuration;
 
 import com.anyilanxin.kunpeng.configuration.broker.BrokerCfg;
+import com.anyilanxin.kunpeng.configuration.gateway.GatewayWebappCfg;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -35,4 +37,10 @@ public class BrokerPropertiesConfiguration {
 
   @ConfigurationProperties("kunpeng.broker")
   public static class BrokerProperties extends BrokerCfg {}
+
+  /** 内嵌网关 Web 控制台配置（kunpeng.broker.gateway.webapp.*），供 webapp 模块消费 */
+  @Bean
+  GatewayWebappCfg gatewayWebappCfg(final BrokerProperties properties) {
+    return properties.getGateway().getWebapp();
+  }
 }

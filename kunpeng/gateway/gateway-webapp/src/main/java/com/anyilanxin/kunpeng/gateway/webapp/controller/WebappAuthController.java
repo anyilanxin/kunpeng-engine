@@ -16,10 +16,10 @@
  */
 package com.anyilanxin.kunpeng.gateway.webapp.controller;
 
-import com.anyilanxin.kunpeng.gateway.webapp.WebappProperties;
+import com.anyilanxin.kunpeng.configuration.gateway.GatewayWebappCfg;
+import com.anyilanxin.kunpeng.gateway.webapp.ConditionalOnWebappEnabled;
 import com.anyilanxin.kunpeng.gateway.webapp.core.WebappResult;
 import java.util.List;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -49,19 +49,16 @@ import reactor.core.publisher.Mono;
     value = "/{version}/webapp",
     version = "v1",
     produces = MediaType.APPLICATION_JSON_VALUE)
-@ConditionalOnProperty(
-    name = "kunpeng.gateway-webapp.enabled",
-    havingValue = "true",
-    matchIfMissing = true)
+@ConditionalOnWebappEnabled
 public class WebappAuthController {
   private final ReactiveAuthenticationManager authenticationManager;
-  private final WebappProperties properties;
+  private final GatewayWebappCfg properties;
   private final ServerSecurityContextRepository securityContextRepository =
       new WebSessionServerSecurityContextRepository();
 
   public WebappAuthController(
       final ReactiveAuthenticationManager authenticationManager,
-      final WebappProperties properties) {
+      final GatewayWebappCfg properties) {
     this.authenticationManager = authenticationManager;
     this.properties = properties;
   }
