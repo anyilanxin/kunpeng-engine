@@ -186,6 +186,17 @@ docker run -d --name kunpeng \
   kunpeng:<version>
 ```
 
+### 8.1 Cluster with Docker Compose
+
+A multi-node cluster can be orchestrated with Docker Compose: [docker-compose.yml](docker-compose.yml) in this directory provides a minimal example — one standalone gateway (single client entry point — gRPC `24108` / HTTP `2024` / actuator `9600`) plus three brokers (4 business partitions × replication factor 3, embedded gateway disabled, `broker1` as the seed node). Node settings are provided entirely via environment variables, and data and logs are mounted per node under `./kunpeng-cluster/`.
+
+```bash
+# Image version can be selected via an environment variable (defaults to 2026.11.1-alpha1)
+KUNPENG_VERSION=<version> docker compose up -d
+```
+
+Cluster bootstrap and partition assignment take a short while (~15–30s on first start with fresh data directories); afterwards clients connect through the gateway gRPC port. The environment variables used in the compose file map to the configuration items in section 10.
+
 ## 9. Client Access
 
 Clients connect via the gateway gRPC port (default `127.0.0.1:24108`). Java SDK example:

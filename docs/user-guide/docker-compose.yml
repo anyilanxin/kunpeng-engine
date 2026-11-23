@@ -1,0 +1,117 @@
+###############################################################################
+#                          Generated on Kunpeng cluster                         #
+###############################################################################
+version: "3"
+services:
+  gateway:
+    container_name: gateway
+    image: kunpeng:${KUNPENG_VERSION:-2026.11.1-alpha1}
+    #restart: always
+    environment:
+      - KUNPENG_CLUSTER_NODETYPE=gateway
+      - START_TYPE=gateway
+      - KUNPENG_GATEWAY_ALLOWCLIENTDISCOVERY=true
+      - KUNPENG_LOG_LEVEL=debug
+      - KUNPENG_CLUSTER_NODEID=gateway
+      - KUNPENG_CLUSTER_SEEDNODES=broker1:24109
+      - KUNPENG_GATEWAY_WEBAPP_ENABLED=true
+      - KUNPENG_GATEWAY_WEBAPP_FILINGINFO=京ICP备XXXXXXXX号
+      - KUNPENG_GATEWAY_WEBAPP_USERS_0_USERNAME=admin
+      - KUNPENG_GATEWAY_WEBAPP_USERS_0_PASSWORD={noop}admin123
+      - KUNPENG_GATEWAY_WEBAPP_USERS_0_ROLES_0=ADMIN
+    networks:
+      - net
+    ports:
+      - "9600:9600"
+      - "2024:2024"
+      - "24108:24108"
+    volumes:
+      - ./kunpeng-cluster/gateway/logs:/kunpeng/logs
+
+
+  broker1:
+    container_name: broker1
+    image: kunpeng:${KUNPENG_VERSION:-2026.11.1-alpha1}
+    #restart: always
+    environment:
+      - START_TYPE=broker
+      - KUNPENG_LOG_LEVEL=debug
+      - KUNPENG_CLUSTER_NODEID=broker1
+      - KUNPENG_CLUSTER_SEEDNODES=broker1:24109
+      - KUNPENG_BROKER_GATEWAY_ENABLE=false
+      - KUNPENG_BROKER_RAFT_PARTITIONING_PARTITIONSCOUNT=4
+      - KUNPENG_BROKER_RAFT_PARTITIONING_REPLICATIONFACTOR=3
+      - KUNPENG_BROKER_SINKS_ANYISTANDLONEPROCESS_CLASSNAME=com.anyilanxin.kunpeng.sink.rdbms.RdbmsSink
+      - KUNPENG_BROKER_SINKS_ANYISTANDLONEPROCESS_ARGS_URL=jdbc:mysql://localhost:3306/kunpeng_process?allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=utf8&useSSL=false&rewriteBatchedStatement=true&serverTimezone=Asia/Shanghai
+      - KUNPENG_BROKER_SINKS_ANYISTANDLONEPROCESS_ARGS_PASSWORD=root
+      - KUNPENG_BROKER_SINKS_ANYISTANDLONEPROCESS_ARGS_USERNAME=root
+      - KUNPENG_BROKER_SINKS_ANYISTANDLONEPROCESS_ARGS_TABLEPREFIX=ANYI_
+      - KUNPENG_BROKER_SINKS_ANYISTANDLONEPROCESS_ARGS_CASESENSITIVE=true
+      - KUNPENG_BROKER_SINKS_ANYISTANDLONEPROCESS_ARGS_TABLENAMECASE=UPPER
+      - KUNPENG_BROKER_SINKS_ANYISTANDLONEPROCESS_ARGS_AUTODDL=true
+    networks:
+      - net
+    volumes:
+      - ./kunpeng-cluster/broker1/logs:/kunpeng/logs
+      - ./kunpeng-cluster/broker1/data:/kunpeng/data
+
+
+
+  broker2:
+    container_name: broker2
+    image: kunpeng:${KUNPENG_VERSION:-2026.11.1-alpha1}
+    #restart: always
+    environment:
+      - START_TYPE=broker
+      - KUNPENG_LOG_LEVEL=debug
+      - KUNPENG_CLUSTER_NODEID=broker2
+      - KUNPENG_CLUSTER_SEEDNODES=broker1:24109
+      - KUNPENG_BROKER_GATEWAY_ENABLE=false
+      - KUNPENG_BROKER_RAFT_PARTITIONING_PARTITIONSCOUNT=4
+      - KUNPENG_BROKER_RAFT_PARTITIONING_REPLICATIONFACTOR=3
+      - KUNPENG_BROKER_SINKS_ANYISTANDLONEPROCESS_CLASSNAME=com.anyilanxin.kunpeng.sink.rdbms.RdbmsSink
+      - KUNPENG_BROKER_SINKS_ANYISTANDLONEPROCESS_ARGS_URL=jdbc:mysql://localhost:3306/kunpeng_process?allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=utf8&useSSL=false&rewriteBatchedStatement=true&serverTimezone=Asia/Shanghai
+      - KUNPENG_BROKER_SINKS_ANYISTANDLONEPROCESS_ARGS_PASSWORD=root
+      - KUNPENG_BROKER_SINKS_ANYISTANDLONEPROCESS_ARGS_USERNAME=root
+      - KUNPENG_BROKER_SINKS_ANYISTANDLONEPROCESS_ARGS_TABLEPREFIX=ANYI_
+      - KUNPENG_BROKER_SINKS_ANYISTANDLONEPROCESS_ARGS_CASESENSITIVE=true
+      - KUNPENG_BROKER_SINKS_ANYISTANDLONEPROCESS_ARGS_TABLENAMECASE=UPPER
+      - KUNPENG_BROKER_SINKS_ANYISTANDLONEPROCESS_ARGS_AUTODDL=true
+    networks:
+      - net
+    volumes:
+      - ./kunpeng-cluster/broker2/logs:/kunpeng/logs
+      - ./kunpeng-cluster/broker2/data:/kunpeng/data
+
+
+  broker3:
+    container_name: broker3
+    image: kunpeng:${KUNPENG_VERSION:-2026.11.1-alpha1}
+    #restart: always
+    environment:
+      - START_TYPE=broker
+      - KUNPENG_LOG_LEVEL=debug
+      - KUNPENG_CLUSTER_NODEID=broker3
+      - KUNPENG_CLUSTER_SEEDNODES=broker1:24109
+      - KUNPENG_BROKER_GATEWAY_ENABLE=false
+      - KUNPENG_BROKER_RAFT_PARTITIONING_PARTITIONSCOUNT=4
+      - KUNPENG_BROKER_RAFT_PARTITIONING_REPLICATIONFACTOR=3
+      - KUNPENG_BROKER_SINKS_ANYISTANDLONEPROCESS_CLASSNAME=com.anyilanxin.kunpeng.sink.rdbms.RdbmsSink
+      - KUNPENG_BROKER_SINKS_ANYISTANDLONEPROCESS_ARGS_URL=jdbc:mysql://localhost:3306/kunpeng_process?allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=utf8&useSSL=false&rewriteBatchedStatement=true&serverTimezone=Asia/Shanghai
+      - KUNPENG_BROKER_SINKS_ANYISTANDLONEPROCESS_ARGS_PASSWORD=root
+      - KUNPENG_BROKER_SINKS_ANYISTANDLONEPROCESS_ARGS_USERNAME=root
+      - KUNPENG_BROKER_SINKS_ANYISTANDLONEPROCESS_ARGS_TABLEPREFIX=ANYI_
+      - KUNPENG_BROKER_SINKS_ANYISTANDLONEPROCESS_ARGS_CASESENSITIVE=true
+      - KUNPENG_BROKER_SINKS_ANYISTANDLONEPROCESS_ARGS_TABLENAMECASE=UPPER
+      - KUNPENG_BROKER_SINKS_ANYISTANDLONEPROCESS_ARGS_AUTODDL=true
+    networks:
+      - net
+    volumes:
+      - ./kunpeng-cluster/broker3/logs:/kunpeng/logs
+      - ./kunpeng-cluster/broker3/data:/kunpeng/data
+
+
+
+networks:
+   net:
+    driver: bridge
