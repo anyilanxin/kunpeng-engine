@@ -28,6 +28,14 @@
 #   产物 dist/build/jib-image.tar，导入：docker load -i dist/build/jib-image.tar
 ```
 
+上面的离线流程也封装为一键脚本，唯一输入为基础镜像 tar 路径：
+
+```bash
+./docs/build-offline-image.sh /path/to/base-jre.tar
+```
+
+脚本执行 `:dist:jibBuildLocalTar`（不访问镜像仓库，构建本身不需要 docker），随后用 `docker load` 导入 `dist/build/jib-image.tar`（此步需要本机 docker），完成后输出镜像标签 `kunpeng:<version>` 与 `kunpeng:latest`；镜像 tar 保留在 `dist/build/jib-image.tar`，可拷贝到离线主机后再导入。
+
 ## 3. 必需 JVM 参数
 
 由于 agrona 限制，直接 `java -jar` 启动 fat jar 时必须加上以下两条（`--add-opens` 按模块/包粒度生效，一条只开一个包，互不涵盖）：
