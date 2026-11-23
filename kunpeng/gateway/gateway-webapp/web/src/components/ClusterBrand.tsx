@@ -1,4 +1,20 @@
-/** 品牌标识：内联 SVG 标记（无外部图片资产），KUNPENG 控制台 */
+/*
+ * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ *
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU Affero General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU Affero General Public License for more details.
+ *
+ *   You should have received a copy of the GNU Affero General Public License
+ *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+/** 品牌标识：用户提供的 logo.png（public 静态资产），KUNPENG 控制台 */
 import { useTranslation } from 'react-i18next';
 
 export default function ClusterBrand({ compact = false }: { compact?: boolean }) {
@@ -6,25 +22,7 @@ export default function ClusterBrand({ compact = false }: { compact?: boolean })
 
   return (
     <div className={`cluster-brand ${compact ? 'cluster-brand--compact' : ''}`}>
-      <span className="cluster-brand__mark" aria-hidden="true">
-        <svg viewBox="0 0 39 39" role="presentation">
-          <defs>
-            <linearGradient id="kb-mark" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stopColor="#4d8dff" />
-              <stop offset="1" stopColor="#1f54d6" />
-            </linearGradient>
-          </defs>
-          <rect width="39" height="39" rx="12" fill="url(#kb-mark)" />
-          <path
-            d="M13 27V12l13 15V12"
-            fill="none"
-            stroke="#ffffff"
-            strokeWidth="3.4"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </span>
+      <img className="cluster-brand__mark" src="logo.png" alt="" aria-hidden="true" />
       {!compact && (
         <span className="cluster-brand__text">
           <strong>KUNPENG</strong>

@@ -1,3 +1,19 @@
+/*
+ * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ *
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU Affero General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU Affero General Public License for more details.
+ *
+ *   You should have received a copy of the GNU Affero General Public License
+ *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { CloudUploadOutlined, DashboardOutlined, FieldTimeOutlined, PartitionOutlined } from '@ant-design/icons';
 import { Select } from 'antd';
@@ -11,7 +27,7 @@ import MetricCard from '../components/MetricCard';
 import PageHeader from '../components/PageHeader';
 import SectionHeader from '../components/SectionHeader';
 
-/** 后端 WebappMonitoringService.MonitoringVo 镜像 */
+/** 后端 MonitoringSnapshotVo 镜像（cluster 模块跨进程 JSON 契约） */
 interface Point {
   t: number;
   v: number;
@@ -210,10 +226,17 @@ export default function MonitoringPage() {
   const { t } = useTranslation();
   const { mode } = useThemeMode();
   const brokers = useBrokers();
-  /** 切换节点：undefined = 本节点；其余为 broker memberId */
+  /** 切换节点：broker memberId（监控数据来自 broker 节点，无本节点视角）；undefined = 初始化中 */
   const [node, setNode] = useState<string>();
+  useEffect(() => {
+    if (node || brokers.length === 0) return;
+    setNode((brokers.find((broker) => broker.state !== 'OFFLINE') ?? brokers[0]).memberId);
+  }, [brokers, node]);
   const { data, error, refresh } = usePolling<MonitoringVo>(
-    () => api<MonitoringVo>(`/monitoring${node ? `?node=${encodeURIComponent(node)}` : ''}`),
+    () =>
+      node
+        ? api<MonitoringVo>(`/monitoring?node=${encodeURIComponent(node)}`)
+        : new Promise<MonitoringVo>(() => {}),
     5000,
   );
   const pageRef = useRef<HTMLDivElement>(null);
@@ -333,21 +356,15 @@ export default function MonitoringPage() {
   const bpStat = summary['backpressure.rejecting'];
   const depthStat = summary['scheduler.queue.depth'];
 
-  const nodeOptions = useMemo<{ value: string; label: string; disabled?: boolean }[]>(() => {
-    const options: { value: string; label: string; disabled?: boolean }[] = [
-      { value: '', label: t('app.monitoring.selfNode') },
-    ];
-    const localId = data?.nodeId && !node ? data.nodeId : node;
-    for (const broker of brokers) {
-      if (broker.memberId === localId) continue;
-      options.push({
+  const nodeOptions = useMemo<{ value: string; label: string; disabled?: boolean }[]>(
+    () =>
+      brokers.map((broker) => ({
         value: broker.memberId,
         label: broker.memberId,
         disabled: broker.state === 'OFFLINE',
-      });
-    }
-    return options;
-  }, [brokers, data?.nodeId, node, t]);
+      })),
+    [brokers],
+  );
 
   return (
     <div className="page page--fill" ref={pageRef} style={fillHeight ? { height: fillHeight } : undefined}>
@@ -360,8 +377,8 @@ export default function MonitoringPage() {
           <Select
             className="monitoring-node-select"
             size="small"
-            value={node ?? ''}
-            onChange={(value) => setNode(value || undefined)}
+            value={node}
+            onChange={(value) => setNode(value)}
             options={nodeOptions}
             aria-label={t('app.monitoring.nodeLabel')}
           />

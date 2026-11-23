@@ -1,4 +1,20 @@
-import { useMemo, useState } from 'react';
+/*
+ * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ *
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU Affero General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU Affero General Public License for more details.
+ *
+ *   You should have received a copy of the GNU Affero General Public License
+ *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Alert, Descriptions, Drawer, Empty, Input, Select, Tag } from 'antd';
 import {
@@ -27,6 +43,119 @@ const roleOptions = (t: (key: string) => string): { value: 'ALL' | PartitionRole
   { value: 'PASSIVE', label: 'Passive' },
   { value: 'INACTIVE', label: 'Inactive' },
 ];
+
+/** Raft 副本复制链路：节点卡片保持原样式（Leader/副本卡片），Leader 到每个副本的具体流向用流线动画（参照集群信息拓扑）；当前查看节点紫色标记 */
+function ReplicationFlow({
+  leader,
+  followers,
+  viewingMemberId,
+}: {
+  leader: PartitionCell | undefined;
+  followers: PartitionCell[];
+  viewingMemberId: string;
+}) {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const leaderRef = useRef<HTMLDivElement>(null);
+  const followerRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [routes, setRoutes] = useState<{ key: string; healthy: boolean; d: string }[]>([]);
+
+  const isViewing = (memberId: string) => memberId === viewingMemberId;
+
+  /** 卡片布局测量：Leader 右缘中点 -> 各副本左缘中点的贝塞尔路径（容器内相对坐标，Drawer 滑入变换被相对计算抵消） */
+  useLayoutEffect(() => {
+    const measure = () => {
+      const wrap = wrapRef.current;
+      const leaderCard = leaderRef.current;
+      if (!wrap || !leaderCard) return;
+      const wrapRect = wrap.getBoundingClientRect();
+      const leaderRect = leaderCard.getBoundingClientRect();
+      const x1 = leaderRect.right - wrapRect.left;
+      const y1 = leaderRect.top + leaderRect.height / 2 - wrapRect.top;
+      const measured = followers
+        .map((cell, index) => {
+          const el = followerRefs.current[index];
+          if (!el) return null;
+          const rect = el.getBoundingClientRect();
+          const x2 = rect.left - wrapRect.left;
+          const y2 = rect.top + rect.height / 2 - wrapRect.top;
+          const dx = Math.max(30, (x2 - x1) * 0.5);
+          return {
+            key: cell.broker.memberId,
+            healthy: cell.health === 'HEALTHY',
+            d: `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`,
+          };
+        })
+        .filter((route): route is { key: string; healthy: boolean; d: string } => route !== null);
+      setRoutes(measured);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    if (wrapRef.current) observer.observe(wrapRef.current);
+    return () => observer.disconnect();
+  }, [leader, followers]);
+
+  if (!leader) {
+    // 无 Leader（选举中等）：无复制流向可画，节点平铺事实呈现
+    return (
+      <div className="rf-noleader">
+        {[...followers].map((cell) => (
+          <span key={cell.broker.memberId} className={`rf-noleader__chip ${isViewing(cell.broker.memberId) ? 'rf-noleader__chip--viewing' : ''}`}>
+            <i />{shortNodeName(cell.broker.memberId)} · {cell.role}
+          </span>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="rf-flow" ref={wrapRef}>
+      <svg className="rf-lines" aria-hidden="true">
+        <defs>
+          <linearGradient id="rf-flow-line" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stopColor="#78c8ff" />
+            <stop offset="1" stopColor="#3778f6" />
+          </linearGradient>
+          {routes.map((route) => (
+            <path key={route.key} id={`rf-route-${route.key}`} d={route.d} className={route.healthy ? undefined : 'rf-route--unhealthy'} />
+          ))}
+        </defs>
+        <g className="rf-links">{routes.map((route) => <use key={route.key} href={`#rf-route-${route.key}`} />)}</g>
+        <g className="rf-flows">{routes.filter((route) => route.healthy).map((route) => <use key={route.key} href={`#rf-route-${route.key}`} />)}</g>
+        {routes.filter((route) => route.healthy).map((route, index) => (
+          <circle key={route.key} className="rf-particle" r="3.5">
+            <animateMotion dur={`${2.1 + index * 0.15}s`} begin={`${index * 0.55}s`} repeatCount="indefinite">
+              <mpath href={`#rf-route-${route.key}`} />
+            </animateMotion>
+          </circle>
+        ))}
+      </svg>
+
+      {/* Leader 卡片（原样式，垂直居中于左列） */}
+      <div className="rf-col rf-col--leader">
+        <div ref={leaderRef} className={`replication-leader rf-card ${isViewing(leader.broker.memberId) ? 'rf-card--viewing' : ''}`}>
+          <span className="replication-node-icon"><DeploymentUnitOutlined /></span>
+          <div><small>LEADER</small><strong>{shortNodeName(leader.broker.memberId)}</strong></div>
+          <i className="live-dot" />
+        </div>
+      </div>
+
+      {/* 副本卡片（原样式，右列竖排；连线流向 = Leader → 副本） */}
+      <div className="rf-col rf-col--followers replication-followers">
+        {followers.map((cell, index) => (
+          <div
+            key={cell.broker.memberId}
+            ref={(el) => { followerRefs.current[index] = el; }}
+            className={`rf-card ${isViewing(cell.broker.memberId) ? 'rf-card--viewing' : ''}`}
+          >
+            <span className="replication-node-icon"><DeploymentUnitOutlined /></span>
+            <div><small>{cell.role}</small><strong>{shortNodeName(cell.broker.memberId)}</strong></div>
+            <HealthBadge health={cell.health} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 interface PartitionMatrixPageProps {
   group: string;
@@ -170,11 +299,7 @@ export default function PartitionMatrixPage({ group, eyebrow, titleKey, descript
             ]} />
             <div className="drawer-section-title"><strong>{t('app.partitions.copySection')}</strong><span>Term {selected.term}</span></div>
             <div className="replication-flow">
-              {leader && <div className="replication-leader"><span className="replication-node-icon"><DeploymentUnitOutlined /></span><div><small>LEADER</small><strong>{shortNodeName(leader.broker.memberId)}</strong></div><i className="live-dot" /></div>}
-              <div className="replication-stream"><span /><i /><i /><i /></div>
-              <div className="replication-followers">
-                {followers.map((cell) => <div key={cell.broker.memberId}><span className="replication-node-icon"><DeploymentUnitOutlined /></span><div><small>{cell.role}</small><strong>{shortNodeName(cell.broker.memberId)}</strong></div><HealthBadge health={cell.health} /></div>)}
-              </div>
+              <ReplicationFlow leader={leader} followers={followers} viewingMemberId={selected.broker.memberId} />
               <p><span className="live-dot" /> {t('app.partitions.copyHint', { count: followers.length })}</p>
             </div>
           </>

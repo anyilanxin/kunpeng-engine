@@ -16,6 +16,7 @@
  */
 package com.anyilanxin.kunpeng.gateway.webapp.controller;
 
+import com.anyilanxin.kunpeng.cluster.cluster.monitoring.MonitoringSnapshotVo;
 import com.anyilanxin.kunpeng.gateway.webapp.ConditionalOnWebappEnabled;
 import com.anyilanxin.kunpeng.gateway.webapp.core.WebappResult;
 import com.anyilanxin.kunpeng.gateway.webapp.service.WebappConsoleService;
@@ -105,9 +106,9 @@ public class WebappConsoleController {
     return Mono.fromSupplier(consoleService::brokerSnapshots).map(WebappResult::ok);
   }
 
-  /** 集群大屏：指标时序（读时采样 + 内存环形缓冲，无人观看时窗口不滚动）；node 缺省为本节点，远端经集群消息单播拉取 */
+  /** 集群大屏：指标时序（broker 节点读时采样 + 内存环形缓冲，无人观看时窗口不滚动）；node 为 broker 成员 id，同进程直读、跨进程集群消息单播拉取 */
   @GetMapping("/monitoring")
-  public Mono<WebappResult<WebappMonitoringService.MonitoringVo>> monitoring(
+  public Mono<WebappResult<MonitoringSnapshotVo>> monitoring(
       @RequestParam(required = false, name = "node") final String node) {
     return Mono.fromSupplier(() -> monitoringService.sampleOf(node)).map(WebappResult::ok);
   }

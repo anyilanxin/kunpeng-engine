@@ -1,3 +1,19 @@
+/*
+ * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ *
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU Affero General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU Affero General Public License for more details.
+ *
+ *   You should have received a copy of the GNU Affero General Public License
+ *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 /* 控制台本地扩展样式：调度中心页面专属（参考设计体系的补充，不修改参考 verbatim 文件） */
 
 /* 页头横幅压矮回调版（基线 168→136、紧凑 136→120，约原高 8 折）：动画视觉放大到可辨识，文字保持紧凑；视觉动画 transform 等比缩放不裁剪（绝对定位坐标系不动盒子） */
@@ -942,3 +958,26 @@ html[data-theme='dark'] .metric-card--green .metric-card__icon { color: #35c194;
   color: var(--text-2);
   font-weight: 600;
 }
+
+/* ===== Raft 副本复制链路（节点=原卡片样式；流向线=集群信息拓扑同款流线；当前查看=紫色） ===== */
+.rf-flow { position: relative; display: flex; align-items: stretch; gap: 72px; padding: 6px 0 2px; }
+.rf-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.rf-links use { fill: none; stroke: #d3e3f6; stroke-width: 1.4; }
+.rf-flows use { fill: none; stroke: url(#rf-flow-line); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 3 13; animation: topology-dash 2.2s linear infinite; }
+.rf-route--unhealthy { stroke: transparent; }
+.rf-particle { fill: #3f7cf0; filter: drop-shadow(0 0 4px rgba(47, 111, 244, .55)); }
+.rf-col--leader { display: flex; flex-direction: column; justify-content: center; }
+.rf-col--leader .replication-leader { position: relative; margin: 0; flex: none; }
+.rf-col--followers { flex: 1; display: grid; grid-template-columns: 1fr; gap: 10px; align-content: start; }
+.rf-col--followers > div { position: relative; }
+/* 当前查看节点：与业务分区选中 chip 同款视觉（accent-soft 底 + accent-line 描边 + chip hover 阴影，明暗随变量自动翻转） */
+.rf-card--viewing { background: var(--accent-soft) !important; border-color: var(--accent-line) !important; box-shadow: 0 4px 12px rgba(46, 82, 132, 0.1) !important; }
+/* 无 Leader 态（选举中）：节点平铺 */
+.rf-noleader { display: flex; flex-wrap: wrap; gap: 8px; padding: 6px 0; }
+.rf-noleader__chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; font-size: 10px; color: var(--text-2); background: var(--surface); border: 1px solid var(--line-2); border-radius: 999px; }
+.rf-noleader__chip i { width: 6px; height: 6px; background: var(--muted); border-radius: 50%; }
+.rf-noleader__chip--viewing { color: var(--primary); background: var(--accent-soft); border-color: var(--accent-line); }
+.rf-noleader__chip--viewing i { background: var(--primary); }
+
+/* 暗色：复制链路流线（当前查看标记的 accent 变量暗色自动翻转，无需专块） */
+html[data-theme='dark'] .rf-links use { stroke: rgba(126, 166, 224, 0.4); }

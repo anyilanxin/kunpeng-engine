@@ -18,7 +18,9 @@ package com.anyilanxin.kunpeng.modules.broker;
 
 import com.anyilanxin.kunpeng.broker.Broker;
 import com.anyilanxin.kunpeng.broker.client.core.BrokerClient;
+import com.anyilanxin.kunpeng.broker.monitoring.DefaultMonitoringSnapshotService;
 import com.anyilanxin.kunpeng.cluster.cluster.AtomixCluster;
+import com.anyilanxin.kunpeng.cluster.cluster.monitoring.MonitoringSnapshotService;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
 import com.anyilanxin.kunpeng.gateway.grpc.gatewaydiscover.GatewayTopologyManagerImpl;
 import com.anyilanxin.kunpeng.gateway.job.GatewayJobHub;
@@ -98,5 +100,11 @@ public class BrokerModuleConfiguration {
     // 阻塞至引导链完成（含内嵌网关），启动失败快速抛出
     broker.start().join();
     return broker;
+  }
+
+  /** 节点监控快照：broker 进程读时采样持有观察窗，并应答跨节点单播拉取（Web 控制台消费） */
+  @Bean(initMethod = "register", destroyMethod = "unregister")
+  public MonitoringSnapshotService monitoringSnapshotService() {
+    return new DefaultMonitoringSnapshotService(meterRegistry, atomixCluster);
   }
 }

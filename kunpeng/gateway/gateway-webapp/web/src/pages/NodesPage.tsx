@@ -1,3 +1,19 @@
+/*
+ * Copyright © 2026 anyilanxin zxh(anyilanxin@aliyun.com)
+ *
+ *   This program is free software: you can redistribute it and/or modify
+ *   it under the terms of the GNU Affero General Public License as published by
+ *   the Free Software Foundation, either version 3 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU Affero General Public License for more details.
+ *
+ *   You should have received a copy of the GNU Affero General Public License
+ *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 import { useEffect, useMemo, useState } from 'react';
 import { Button, Descriptions, Drawer, Empty, Input, Segmented, Select, Table, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
@@ -7,9 +23,11 @@ import {
   GatewayOutlined,
   SafetyCertificateOutlined,
   SearchOutlined,
+  ThunderboltOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
+import { api } from '../api';
 import MetricCard from '../components/MetricCard';
 import NodeClusterVisual from '../components/NodeClusterVisual';
 import PageHeader from '../components/PageHeader';
@@ -18,7 +36,12 @@ import { HealthBadge, RoleBadge } from '../components/StatusBadges';
 import { useBrokers, useJobWorkers } from '../data/ClusterDataContext';
 import { useMockRefresh } from '../hooks/useMockRefresh';
 import type { Broker } from '../types/cluster';
+import type { GatewayVo } from '../types';
 import { getPartitionCells, shortNodeName } from '../utils/cluster';
+import { usePolling } from '../usePolling';
+
+/** member id 形如 zone@nodeId，取裸 nodeId 段 */
+const bareId = (id: string) => (id.includes('@') ? id.slice(id.indexOf('@') + 1) : id);
 
 type NodeTypeFilter = 'ALL' | 'BROKER' | 'GATEWAY';
 
@@ -36,12 +59,17 @@ export default function NodesPage() {
   const { refreshing } = useMockRefresh();
   const brokers = useBrokers();
   const workers = useJobWorkers();
+  /** 网关节点清单：拓扑发现列表（与 Gateway 管理页同源），不依赖 JobWorker 接入 */
+  const { data: gatewayData } = usePolling<GatewayVo[]>(() => api<GatewayVo[]>('/gateways'), 5000);
+  const gateways = gatewayData ?? [];
   const allPartitions = getPartitionCells(brokers);
 
   const gatewayIds = useMemo(
     () => new Set(workers.map(({ gateway }) => gateway.memberId)),
     [workers],
   );
+  /** 网关裸 nodeId 集：内嵌形态下 broker 节点与网关同 nodeId 即带网关角色 */
+  const gatewayBareIds = useMemo(() => new Set(gateways.map(({ nodeId }) => bareId(nodeId))), [gateways]);
   const getNodeGateway = (memberId: string) => workers.find(({ gateway }) => gateway.memberId === memberId)?.gateway;
 
   useEffect(() => setKeyword(searchParams.get('keyword') ?? ''), [searchParams]);
@@ -49,9 +77,13 @@ export default function NodesPage() {
   const nodes = useMemo(() => brokers.filter((broker) => {
     const matchesKeyword = `${broker.memberId} ${broker.address} ${broker.nodeSourceId}`.toLowerCase().includes(keyword.toLowerCase());
     const hasIssue = broker.partitions.some((partition) => partition.health !== 'HEALTHY');
-    const matchesType = nodeType === 'ALL' || (nodeType === 'GATEWAY' ? gatewayIds.has(broker.memberId) : true);
-    return matchesKeyword && matchesType && (health === 'ALL' || (health === 'ATTENTION' ? hasIssue : !hasIssue));
-  }), [brokers, gatewayIds, health, keyword, nodeType]);
+    return matchesKeyword && (health === 'ALL' || (health === 'ATTENTION' ? hasIssue : !hasIssue));
+  }), [brokers, health, keyword]);
+
+  /** 网关节点视图行：keyword 过滤（节点 id / gRPC 地址） */
+  const gatewayRows = useMemo(() => gateways.filter(({ nodeId, grpcAddress }) =>
+    `${nodeId} ${grpcAddress}`.toLowerCase().includes(keyword.toLowerCase()),
+  ), [gateways, keyword]);
   const selectedGateway = selectedNode ? getNodeGateway(selectedNode.memberId) : undefined;
 
   const stateLabel = (state: string | undefined) =>
@@ -104,6 +136,14 @@ export default function NodesPage() {
     { title: t('app.common.action'), key: 'action', fixed: 'right', width: 100, render: (_, broker) => <Button type="link" icon={<EyeOutlined />} onClick={() => setSelectedNode(broker)}>{t('app.common.detail')}</Button> },
   ];
 
+  /** 网关节点视图列：拓扑发现清单（节点/版本/gRPC 地址/客户端发现） */
+  const gatewayColumns: ColumnsType<GatewayVo> = [
+    { title: t('app.gateways.colNode'), dataIndex: 'nodeId', render: (v: string) => <span className="worker-name"><ThunderboltOutlined />{v}</span> },
+    { title: t('app.gateways.colVersion'), dataIndex: 'version', width: 170, render: (v: string) => <Tag className="id-tag">{v}</Tag> },
+    { title: t('app.gateways.colGrpc'), dataIndex: 'grpcAddress', render: (v: string) => <code className="address-code">{v}</code> },
+    { title: t('app.gateways.colDiscovery'), dataIndex: 'allowClientDiscovery', width: 130, render: (v: boolean) => (v ? <Tag color="success">{t('app.gateways.allow')}</Tag> : <Tag color="warning">{t('app.gateways.deny')}</Tag>) },
+  ];
+
   return (
     <div className="page">
       <PageHeader
@@ -117,14 +157,14 @@ export default function NodesPage() {
       <section className="metrics-grid">
         <MetricCard title={t('app.common.metricOnlineBrokers')} value={<>{brokers.filter((broker) => broker.state === 'ONLINE').length}<small> / {brokers.length}</small></>} icon={<CloudServerOutlined />} tone="blue" footer={t('app.common.metricOnlineFooter', { online: brokers.filter((broker) => broker.state === 'ONLINE').length, total: brokers.length })} />
         <MetricCard title={t('app.nodes.metricBrokerNodes')} value={brokers.length} icon={<CloudServerOutlined />} tone="cyan" footer={t('app.nodes.metricBrokerFooter')} />
-        <MetricCard title={t('app.nodes.metricGateways')} value={workers.length} icon={<GatewayOutlined />} tone="violet" footer={t('app.nodes.metricGatewayFooter')} />
+        <MetricCard title={t('app.nodes.metricGateways')} value={gateways.length} icon={<GatewayOutlined />} tone="violet" footer={t('app.nodes.metricGatewayFooter')} />
         <MetricCard title={t('app.nodes.metricUnhealthy')} value={allPartitions.filter((item) => item.health !== 'HEALTHY').length} icon={<SafetyCertificateOutlined />} tone="green" footer={t('app.nodes.metricUnhealthyFooter')} />
       </section>
 
       <section className="panel table-panel">
         <SectionHeader
           title={t('app.nodes.listTitle')}
-          description={t('app.nodes.listDesc', { count: nodes.length })}
+          description={t('app.nodes.listDesc', { count: nodeType === 'GATEWAY' ? gatewayRows.length : nodes.length })}
           extra={<div className="table-filters"><Input allowClear prefix={<SearchOutlined />} placeholder={t('app.nodes.searchPlaceholder')} value={keyword} onChange={(event) => setKeyword(event.target.value)} /><Select value={health} onChange={setHealth} options={[{ value: 'ALL', label: t('app.nodes.healthAll') }, { value: 'HEALTHY', label: t('app.common.healthy') }, { value: 'ATTENTION', label: t('app.common.attention') }]} /></div>}
         />
         <div className="node-type-tabs">
@@ -134,20 +174,31 @@ export default function NodesPage() {
             options={[
               { value: 'ALL', label: t('app.nodes.tabAll', { count: brokers.length }) },
               { value: 'BROKER', label: t('app.nodes.tabBroker', { count: brokers.length }) },
-              { value: 'GATEWAY', label: t('app.nodes.tabGateway', { count: workers.length }) },
+              { value: 'GATEWAY', label: t('app.nodes.tabGateway', { count: gateways.length }) },
             ]}
           />
           <span>{t('app.nodes.tabHint')}</span>
         </div>
-        <Table
-          rowKey="memberId"
-          columns={columns}
-          dataSource={nodes}
-          loading={refreshing}
-          pagination={false}
-          scroll={{ x: 1210 }}
-          locale={{ emptyText: <Empty description={t('app.common.noMatchingNodes')} /> }}
-        />
+        {nodeType === 'GATEWAY' ? (
+          <Table
+            rowKey="nodeId"
+            columns={gatewayColumns}
+            dataSource={gatewayRows}
+            loading={refreshing}
+            pagination={false}
+            locale={{ emptyText: <Empty description={t('app.common.noMatchingNodes')} /> }}
+          />
+        ) : (
+          <Table
+            rowKey="memberId"
+            columns={columns}
+            dataSource={nodes}
+            loading={refreshing}
+            pagination={false}
+            scroll={{ x: 1210 }}
+            locale={{ emptyText: <Empty description={t('app.common.noMatchingNodes')} /> }}
+          />
+        )}
         <div className="table-panel__footer"><span><i className="live-dot" /> {t('app.nodes.heartbeatOk')}</span><small>{t('app.nodes.lastUpdated', { time: t('app.header.justNow') })}</small></div>
       </section>
 
@@ -168,7 +219,7 @@ export default function NodesPage() {
             </div>
             <Descriptions column={2} size="middle" bordered items={[
               { key: 'address', label: t('app.nodes.colAddress'), children: selectedNode.address, span: 2 },
-              { key: 'roles', label: t('app.nodes.labelRole'), children: <NodeTypeTags gateway={gatewayIds.has(selectedNode.memberId)} />, span: 2 },
+              { key: 'roles', label: t('app.nodes.labelRole'), children: <NodeTypeTags gateway={gatewayBareIds.has(bareId(selectedNode.memberId))} />, span: 2 },
               { key: 'source', label: 'Node Source ID', children: selectedNode.nodeSourceId },
               { key: 'count', label: t('app.nodes.labelReplicaCount'), children: selectedNode.partitions.length },
               { key: 'leaders', label: 'Leader', children: selectedNode.partitions.filter((item) => item.role === 'LEADER').length },
