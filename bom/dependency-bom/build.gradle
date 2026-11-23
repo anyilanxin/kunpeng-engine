@@ -32,10 +32,10 @@ dependencies {
     api platform("org.springframework.boot:spring-boot-dependencies:$springBootVersion")
     api platform("io.grpc:grpc-bom:$grpcBomVersion")
     api platform("com.google.protobuf:protobuf-bom:$protobufBomVersion")
-    api platform('com.google.cloud:libraries-bom:26.93.0')
+    api platform('com.google.cloud:libraries-bom:26.94.0')
     api platform('org.junit:junit-bom:6.1.3')
-    api platform("io.micrometer:micrometer-bom:1.17.2")
-    api platform("tools.jackson:jackson-bom:3.2.4")
+    api platform("io.micrometer:micrometer-bom:1.18.0")
+    api platform("tools.jackson:jackson-bom:3.3.0")
     api platform("org.apache.logging.log4j:log4j-bom:2.26.1")
     constraints {
         // rpc
@@ -60,13 +60,13 @@ dependencies {
         api "org.immutables:annotate:$immutables"
         api "org.immutables:value:$immutables"
 
-        api 'io.aeron:aeron-driver:1.54.0'
-        api "org.bouncycastle:bcpkix-jdk18on:1.86"
-        api "org.bouncycastle:bcprov-jdk18on:1.86"
+        api 'io.aeron:aeron-driver:1.54.2'
+        api "org.bouncycastle:bcpkix-jdk18on:1.87"
+        api "org.bouncycastle:bcprov-jdk18on:1.87"
         api 'io.vavr:vavr:1.1.0'
         api 'com.github.javaparser:javaparser-core:3.28.2'
         api 'com.google.http-client:google-http-client:2.2.0'
-        api 'org.apache.httpcomponents.core5:httpcore5:5.4.4'
+        api 'org.apache.httpcomponents.core5:httpcore5:5.5'
         api 'org.apache.httpcomponents.client5:httpclient5:5.6.5'
         api 'com.alibaba:druid-spring-boot-4-starter:1.2.28'
         api "com.fasterxml.uuid:java-uuid-generator:5.2.0"
@@ -76,15 +76,15 @@ dependencies {
         api "com.github.vertical-blank:sql-formatter:2.0.5"
         api "org.jeasy:easy-random-core:5.0.0"
         api "com.google.code.gson:gson:2.15.0"
-        api "com.google.errorprone:error_prone_annotations:2.52.0"
+        api "com.google.errorprone:error_prone_annotations:2.53.0"
         api "org.objenesis:objenesis:3.6"
         api "org.checkerframework:checker-qual:4.4.0"
         api "com.google.code.findbugs:jsr305:3.0.2"
         api "io.github.classgraph:classgraph:6.0.2"
         api 'com.hazelcast:hazelcast:5.7.0'
-        api 'com.github.jnr:jnr-posix:3.2.8'
+        api 'com.github.jnr:jnr-posix:3.2.9'
         api "org.apache.commons:commons-compress:1.28.0"
-        api 'com.google.api.grpc:proto-google-common-protos:2.81.0'
+        api 'com.google.api.grpc:proto-google-common-protos:2.82.0'
         api 'com.github.spotbugs:spotbugs-annotations:4.10.5'
         api 'commons-validator:commons-validator:1.11.0'
         api "commons-beanutils:commons-beanutils:1.11.0"
@@ -95,7 +95,7 @@ dependencies {
         api 'javax.annotation:javax.annotation-api:1.3.2'
         api "org.jetbrains:annotations:26.1.0"
         api "com.cronutils:cron-utils:9.2.1"
-        api 'io.pebbletemplates:pebble:4.1.2'
+        api 'io.pebbletemplates:pebble:4.1.3'
         api 'dev.failsafe:failsafe:3.3.2'
         api 'uk.co.jemos.podam:podam:8.0.2.RELEASE'
         api 'net.steppschuh.markdowngenerator:markdowngenerator:1.3.1.1'
@@ -106,7 +106,6 @@ dependencies {
         api "org.reactivestreams:reactive-streams:1.0.4"
         api "org.mockito:mockito-core:5.24.0"
         api 'org.apache.commons:commons-text:1.15.0'
-        api "joda-time:joda-time:2.15.1"
         api "com.squareup.okio:okio-jvm:3.18.2"
         api 'com.github.jnr:jnr-ffi:2.3.7'
         api 'com.github.jnr:jnr-constants:0.11.4'
@@ -117,7 +116,7 @@ dependencies {
         api "com.google.cloud:spring-cloud-gcp-logging:8.3.1"
         api "org.apache.commons:commons-collections4:4.6.0"
         api 'commons-codec:commons-codec:1.23.0'
-        api 'org.apache.commons:commons-lang3:3.21.0'
+        api 'org.apache.commons:commons-lang3:3.22.0'
         api 'commons-io:commons-io:2.22.0'
         api "org.wiremock:wiremock-standalone:3.13.2"
         api "org.apache.maven:maven-plugin-api:4.0.0-rc-7"
@@ -132,14 +131,12 @@ dependencies {
         api "org.jdbi:jdbi3-core:3.55.0"
         api "org.jdbi:jdbi3-jackson2:3.55.0"
         api 'org.mariadb.jdbc:mariadb-java-client:4.0.0'
-        api "org.apache.fory:fory-core:1.7.7"
+        api "org.apache.fory:fory-core:1.7.8"
 
         // connector fork相关----start
-        def ayza = "10.1.0"
+        def ayza = "10.1.2"
         api "io.github.hakky54:ayza:$ayza"
         api "io.github.hakky54:ayza-for-pem:$ayza"
-        api 'org.camunda.feel:feel-engine:1.22.1'
-        api 'org.scala-lang:scala-library:3.10.0'
         api 'org.skyscreamer:jsonassert:1.5.3'
         api 'org.apache.maven:maven-model:4.0.0-rc-7'
         api 'org.apache.maven:maven-artifact:4.0.0-rc-7'
@@ -147,9 +144,10 @@ dependencies {
         api 'com.samskivert:jmustache:1.16'
         api 'org.apache.groovy:groovy-all:6.0.0'
         api 'org.jetbrains.kotlin:kotlin-scripting-jsr223:2.4.21'
+        api 'org.codehaus.janino:janino:3.1.12'
         // connector fork相关----end
 
-        def mapstructPlus = "1.5.3"
+        def mapstructPlus = "1.5.4"
         api "io.github.linpeilie:mapstruct-plus-spring-boot-starter:${mapstructPlus}"
         api "io.github.linpeilie:mapstruct-plus-processor:${mapstructPlus}"
 
@@ -157,7 +155,7 @@ dependencies {
         api "uk.org.webcompere:system-stubs-core:$stubs"
         api "uk.org.webcompere:system-stubs-jupiter:$stubs"
 
-        def springdoc = "3.2.0"
+        def springdoc = "3.2.1"
         api "org.springdoc:springdoc-openapi-starter-common:$springdoc"
         api "org.springdoc:springdoc-openapi-starter-webflux-ui:$springdoc"
         api "org.springdoc:springdoc-openapi-starter-webmvc-ui:$springdoc"
@@ -172,7 +170,7 @@ dependencies {
         api "io.swagger.core.v3:swagger-annotations:$swagger"
         api "io.swagger.core.v3:swagger-models:$swagger"
 
-        def swaggerParse = "2.1.48"
+        def swaggerParse = "2.1.49"
         api "io.swagger.parser.v3:swagger-parser:$swaggerParse"
         api "io.swagger.parser.v3:swagger-parser-v3:$swaggerParse"
         api "io.swagger.parser.v3:swagger-parser-core:$swaggerParse"
@@ -201,7 +199,7 @@ dependencies {
 
         // 压缩工具----start
         api 'org.lz4:lz4-java:1.8.1'
-        api 'com.github.luben:zstd-jni:1.5.7-25'
+        api 'com.github.luben:zstd-jni:1.5.7-28'
         // 压缩工具----end
 
         // sink相关---start
