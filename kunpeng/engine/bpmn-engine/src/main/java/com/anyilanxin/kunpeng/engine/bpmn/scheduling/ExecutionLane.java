@@ -21,14 +21,14 @@ import com.anyilanxin.kunpeng.scheduler.SchedulingHints;
 /**
  * 可承接异步定时任务的具名执行车道。
  *
- * <p>每条车道携带用于标识其执行上下文的 actor 标签，以及描述底层 actor 应如何托管的调度 提示。
+ * <p>车道携带用于标识其执行上下文的 actor 标签，以及描述底层 actor 应如何托管的调度提示。当前只有 COMPUTE 一条： 全部调度任务都经它在独立于主处理 actor
+ * 的线程上执行。
  *
  * @author zxuanhong
  * @since 2026.9.0
  */
 public enum ExecutionLane {
-  COMPUTE("ComputeLaneActor", SchedulingHints.CPU_BOUND),
-  BATCH("BatchLaneActor", SchedulingHints.IO_BOUND);
+  COMPUTE("ComputeLaneActor", SchedulingHints.CPU_BOUND);
 
   private final String label;
   private final SchedulingHints schedulingHints;

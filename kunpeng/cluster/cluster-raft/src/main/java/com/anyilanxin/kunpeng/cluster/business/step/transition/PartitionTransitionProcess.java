@@ -47,7 +47,13 @@ final class PartitionTransitionProcess<CONTENT extends TransitionContent> {
   public static final String MSG_PREPARE_TRANSITION_COMPLETED =
       MSG_PREPARE_TRANSITION + " completed";
   private static final Logger LOG = ClusterRaftLoggers.CLUSTER_RAFT;
-  private static final long STEP_TIMEOUT_MS = Duration.ofSeconds(60).toMillis();
+
+  /**
+   * 单个切换步骤的慢步骤告警阈值：超过后仍未见完成回调即记 WARN。只是可见性阈值，不是失败条件——同一分区的切换严格串行， 一个不完成的步骤会让后续切换（含关机的
+   * TO_INACTIVE）一直排在它后面。
+   */
+  private static final Duration STEP_TIMEOUT = Duration.ofSeconds(60);
+
   private TransitionStep<CONTENT> currentStep;
   private final List<TransitionStep<CONTENT>> pendingSteps;
   private final int totalSteps;
@@ -106,20 +112,37 @@ final class PartitionTransitionProcess<CONTENT extends TransitionContent> {
               term,
               stepLabel(),
               nextStep.getName());
+          // 慢步骤看门狗（只告警不失败）：引导快照、大库恢复、日志回放等步骤可以合法地超过 STEP_TIMEOUT，
+          // 超时即失败会误杀它们；但超过阈值的步骤必须可见——卡死的步骤与慢步骤在日志里要能区分，
+          // 否则后续切换（含关机）只是在队列里无声地等。回调与定时器都在 concurrencyControl 线程上执行
+          final boolean[] stepFinished = {false};
+          concurrencyControl.schedule(
+              STEP_TIMEOUT,
+              () -> {
+                if (!stepFinished[0]) {
+                  LOG.warn(
+                      "Transition to {} on term {} - step {}: {} is still running after {} ms;"
+                          + " later transitions for this partition are queued behind it",
+                      role,
+                      term,
+                      stepLabel(),
+                      nextStep.getName(),
+                      ActorClock.currentTimeMillis() - stepStartedAtMs);
+                }
+              });
+          final ActorFuture<Void> stepFuture;
           switch (transitionType) {
-            case TO_LEADER ->
-                nextStep
-                    .onLeader(context, term)
-                    .onComplete((_, error) -> onStepCompletion(future, error));
-            case TO_FOLLOWER ->
-                nextStep
-                    .onFollower(context, term)
-                    .onComplete((_, error) -> onStepCompletion(future, error));
-            case TO_INACTIVE ->
-                nextStep
-                    .onInactive(context, term)
-                    .onComplete((_, error) -> onStepCompletion(future, error));
+            case TO_LEADER -> stepFuture = nextStep.onLeader(context, term);
+            case TO_FOLLOWER -> stepFuture = nextStep.onFollower(context, term);
+            case TO_INACTIVE -> stepFuture = nextStep.onInactive(context, term);
+            default ->
+                throw new IllegalStateException("Unexpected transition type: " + transitionType);
           }
+          stepFuture.onComplete(
+              (_, error) -> {
+                stepFinished[0] = true;
+                onStepCompletion(future, error);
+              });
         });
   }
 

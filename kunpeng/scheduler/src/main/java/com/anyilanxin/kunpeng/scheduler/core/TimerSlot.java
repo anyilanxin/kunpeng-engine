@@ -25,22 +25,39 @@ package com.anyilanxin.kunpeng.scheduler.core;
 public final class TimerSlot extends SubscriptionSlot {
 
   private volatile boolean pending;
-  private volatile long timerId;
+  // 截止时间、入堆序号与堆内下标只在 owner runner 线程上读写
+  private long deadlineMillis;
+  private long sequence;
+  private int heapIndex = -1;
   private volatile boolean recurring;
   private volatile long periodMillis;
   private volatile ActorCell cell;
 
-  public TimerSlot(final long timerId, final Runnable action) {
+  public TimerSlot(final Runnable action) {
     super(action);
-    this.timerId = timerId;
   }
 
-  public long getTimerId() {
-    return timerId;
+  public long getDeadlineMillis() {
+    return deadlineMillis;
   }
 
-  public void setTimerId(final long timerId) {
-    this.timerId = timerId;
+  /** 重设截止时间（recurring 到期重排下一轮时用），并按新的入堆序号排在同截止时间的后来者之后 */
+  public void setDeadlineMillis(final long deadlineMillis, final long sequence) {
+    this.deadlineMillis = deadlineMillis;
+    this.sequence = sequence;
+  }
+
+  public long getSequence() {
+    return sequence;
+  }
+
+  /** 在 {@link TimerQueue} 中的下标；不在堆中为 -1 */
+  public int getHeapIndex() {
+    return heapIndex;
+  }
+
+  public void setHeapIndex(final int heapIndex) {
+    this.heapIndex = heapIndex;
   }
 
   public boolean isRecurring() {

@@ -154,4 +154,4 @@ docker run -d --name kunpeng \
 | `kunpeng.gateway.network.host` / `port` | 自动探测 / `2024` | 独立网关 gRPC 监听 |
 | `kunpeng.broker.raft.partitioning.partitions-count` | `1` | 分区数 |
 | `kunpeng.broker.raft.partitioning.replication-factor` | `1` | 副本数 |
-| `kunpeng.broker.threads.cpu-thread-count` / `io-thread-count` | `2` / `2` | broker CPU / IO 线程数 |
+| `kunpeng.broker.threads.cpu-thread-count` / `io-thread-count` | `max(1, CPU 核数 - 2)` / `2` | broker CPU / IO 线程数 |

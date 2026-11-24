@@ -114,7 +114,7 @@ public class PartitionService<CONTENT extends PartitionStartupContext> {
     return result;
   }
 
-  /** 请求离开分区，成功后执行关闭流程并删除分区数据目录。 */
+  /** 不请求离开分区：直接执行关闭流程并删除分区数据目录（本地移除，不通知集群其他成员）。 */
   public ActorFuture<PartitionService<CONTENT>> stopAndDelete() {
     final var concurrencyControl = context.getConcurrencyControl();
     final var result = concurrencyControl.<PartitionService<CONTENT>>createFuture();
@@ -122,7 +122,7 @@ public class PartitionService<CONTENT extends PartitionStartupContext> {
         () -> {
           final var raftPartition = raftPartition();
           if (raftPartition == null) {
-            result.completeExceptionally(errorPartitionNotAvailable("leave"));
+            result.completeExceptionally(errorPartitionNotAvailable("stopAndDelete"));
             return;
           }
           onPartitionLeaveCompleted(null, result);

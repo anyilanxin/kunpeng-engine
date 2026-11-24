@@ -154,6 +154,7 @@ public final class LeaderRole extends ActiveRole implements LogAppender {
     // Configuration changes should not be allowed until the leader has committed a no-op entry.
     // See https://groups.google.com/forum/#!topic/raft-dev/t4xj6dJTP6E
     if (initializing()) {
+      appender.retryRejectedPromotion(request);
       return CompletableFuture.completedFuture(
           logResponse(
               ReconfigureResponse.builder()
@@ -166,6 +167,7 @@ public final class LeaderRole extends ActiveRole implements LogAppender {
       // A configuration entry would move the frozen log head the desired leader is catching up to,
       // so reject it (subject to retries). Force reconfiguration steps the leader down, which
       // clears the pause, so it is not gated here.
+      appender.retryRejectedPromotion(request);
       return CompletableFuture.completedFuture(
           logResponse(
               ReconfigureResponse.builder()
@@ -188,6 +190,7 @@ public final class LeaderRole extends ActiveRole implements LogAppender {
       if (isDuplicateReconfigureRequest(request)) {
         return ongoingReconfigurationRequestFuture;
       }
+      appender.retryRejectedPromotion(request);
       return CompletableFuture.completedFuture(
           logResponse(
               ReconfigureResponse.builder()
@@ -534,6 +537,17 @@ public final class LeaderRole extends ActiveRole implements LogAppender {
    */
   private boolean configuring() {
     return configuring > 0;
+  }
+
+  /**
+   * Returns a boolean value indicating whether a reconfiguration request would currently be
+   * rejected with a CONFIGURATION_ERROR (initializing, paused for a leadership transfer, or another
+   * configuration change under way).
+   *
+   * @return Indicates whether a reconfiguration must wait.
+   */
+  boolean reconfigurationBlocked() {
+    return initializing() || isPausedForTransfer() || configuring() || jointConsensus();
   }
 
   /**

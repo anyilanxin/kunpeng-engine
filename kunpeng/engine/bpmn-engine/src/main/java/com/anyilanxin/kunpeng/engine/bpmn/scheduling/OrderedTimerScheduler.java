@@ -61,6 +61,11 @@ public final class OrderedTimerScheduler implements TimerScheduler, AutoCloseabl
   private volatile AbortableRetryStrategy retry;
   private ScheduledTimer scanTimer;
 
+  /** 为队首条目补的一次性唤醒及其对应的队首（只在所属 actor 线程上读写）；被更早的队首取代时取消旧唤醒 */
+  private ScheduledTimer headWake;
+
+  private Entry wakeArmedFor;
+
   private final CommandBatch.CapacityProbe capacityProbe =
       (count, bytes) -> canAppendScheduledBatch(writer, count, bytes);
 
@@ -72,7 +77,9 @@ public final class OrderedTimerScheduler implements TimerScheduler, AutoCloseabl
     }
     return entryCount == 1
         || writer.canAppend(
-            entryCount, BatchFrame.maximumSerializedLength(entryCount, payloadBytes));
+            WriteContext.SCHEDULED,
+            entryCount,
+            BatchFrame.maximumSerializedLength(entryCount, payloadBytes));
   }
 
   OrderedTimerScheduler(
@@ -106,6 +113,10 @@ public final class OrderedTimerScheduler implements TimerScheduler, AutoCloseabl
     writer = writerSupplier.get();
     retry = new AbortableRetryStrategy(control);
     scanTimer = control.runAtFixedRate(scanInterval, this::drainDue);
+    // 重新绑定前留在队列里的条目：旧载体上的唤醒已失效，按新载体补齐
+    headWake = null;
+    wakeArmedFor = null;
+    ensureHeadWake();
   }
 
   /** 解绑本调度器，取消扫描循环并释放其 actor 绑定。 */
@@ -114,6 +125,11 @@ public final class OrderedTimerScheduler implements TimerScheduler, AutoCloseabl
       scanTimer.cancel();
       scanTimer = null;
     }
+    if (headWake != null) {
+      headWake.cancel();
+      headWake = null;
+    }
+    wakeArmedFor = null;
     carrier = null;
     writer = null;
     retry = null;
@@ -254,6 +270,35 @@ public final class OrderedTimerScheduler implements TimerScheduler, AutoCloseabl
       metrics.onDequeue();
       current.submit(entry);
     }
+    ensureHeadWake();
+  }
+
+  /**
+   * 保证队首条目到点即被执行：周期扫描的节拍与队首截止时间不对齐，只靠它远期条目要等到下一次扫描（最多晚一个扫描间隔）。 队首变化时补一次到点的一次性
+   * drain；周期扫描只保留为时钟调整等情形的兜底校准。
+   */
+  private void ensureHeadWake() {
+    final Entry head = queue.peek();
+    final ActorControl current = carrier;
+    if (head == null || current == null) {
+      return;
+    }
+    if (head == wakeArmedFor) {
+      return;
+    }
+    if (headWake != null) {
+      headWake.cancel();
+    }
+    wakeArmedFor = head;
+    headWake =
+        current.schedule(
+            Duration.ofMillis(Math.max(head.deadline - clock.millis(), 0)), this::headWake);
+  }
+
+  private void headWake() {
+    headWake = null;
+    wakeArmedFor = null;
+    drainDue();
   }
 
   /**
@@ -321,15 +366,7 @@ public final class OrderedTimerScheduler implements TimerScheduler, AutoCloseabl
       }
       metrics.onEnqueue();
       queue.add(this);
-      final long lead = deadline - clock.millis();
-      if (lead < scanInterval.toMillis()) {
-        final ActorControl current = carrier;
-        if (current != null) {
-          // 一次性 drain 覆盖整个扫描间隔内的到期, 避免恰好错过扫描节拍时白等一整个间隔
-          current.schedule(
-              Duration.ofMillis(Math.max(lead, 0)), OrderedTimerScheduler.this::drainDue);
-        }
-      }
+      ensureHeadWake();
     }
 
     @Override
@@ -341,6 +378,11 @@ public final class OrderedTimerScheduler implements TimerScheduler, AutoCloseabl
               if (live) {
                 live = false;
                 metrics.onDequeue();
+                if (queue.peek() == this) {
+                  // 被取消的是队首：立刻摘掉，否则排在它后面的条目只能等周期扫描
+                  queue.poll();
+                  ensureHeadWake();
+                }
               }
             });
       }

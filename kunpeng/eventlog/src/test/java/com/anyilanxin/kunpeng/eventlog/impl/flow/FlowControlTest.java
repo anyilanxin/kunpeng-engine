@@ -169,6 +169,33 @@ class FlowControlTest {
   }
 
   @Test
+  @DisplayName("释放游标: 跨过未登记的内部事件, 迟到的失败释放与重复的处理水位都不重复归还占位")
+  void releaseCursorDoesNotDoubleRelease() {
+    final FlowController controller =
+        new FlowController(
+            new FlowControlParams(10, 1, 10, 0.1), System::nanoTime, EventLogMetrics.noop());
+
+    // 在途批 1、2、5；3、4 是内部事件（不登记在途环）
+    for (final long position : new long[] {1, 2, 5}) {
+      assertThat(controller.tryAcquire(WriteContext.USER_COMMAND)).isNull();
+      controller.onAppend(position, position, 1, true);
+    }
+    assertThat(controller.windowInflight()).isEqualTo(3);
+
+    // 处理到 2：只释放 1、2
+    controller.onProcessed(2);
+    assertThat(controller.windowInflight()).isEqualTo(1);
+
+    // 迟到的失败释放（position 1 已释放）与重复到达的处理水位都不再归还
+    controller.onFailure(1, new RuntimeException("late failure"));
+    controller.onProcessed(2);
+    assertThat(controller.windowInflight()).isEqualTo(1);
+
+    controller.onProcessed(100);
+    assertThat(controller.windowInflight()).isZero();
+  }
+
+  @Test
   @DisplayName("存储失败拒绝只经 onFailure 归还一次准入，不重复扣减在途计数")
   void storageFailureReleasesAdmissionExactlyOnce() {
     final FlowController controller =

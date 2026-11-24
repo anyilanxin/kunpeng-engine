@@ -241,7 +241,7 @@ KunpengClient client =
 | `kunpeng.broker.raft.partitioning.replication-factor` | `1` | 业务分区副本数（多节点建议奇数） |
 | `kunpeng.broker.manage.init-broker-id` | 无（必填） | 初始引导节点的裸 node-id，全集群所有节点配同一值 |
 | `kunpeng.broker.manage.replication-factor` | `1` | 管理面 raft 副本数（建议奇数） |
-| `kunpeng.broker.threads.cpu-thread-count` / `io-thread-count` | `2` / `2` | broker CPU / IO 线程数 |
+| `kunpeng.broker.threads.cpu-thread-count` / `io-thread-count` | `max(1, CPU 核数 - 2)` / `2` | broker CPU / IO 线程数 |
 
 ## 11. 数据目录、日志与停机
 

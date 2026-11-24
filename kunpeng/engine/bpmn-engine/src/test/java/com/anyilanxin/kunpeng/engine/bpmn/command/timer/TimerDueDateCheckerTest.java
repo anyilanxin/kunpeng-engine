@@ -17,12 +17,15 @@
 package com.anyilanxin.kunpeng.engine.bpmn.command.timer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -39,11 +42,19 @@ import com.anyilanxin.kunpeng.engine.bpmn.scheduling.cache.RegistryMetrics;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.timer.TimerEventRecord;
 import com.anyilanxin.kunpeng.protocol.business.record.command.timer.TimerLifeCycle;
 import com.anyilanxin.kunpeng.repository.business.modules.timer.ImmutableTimerEventRepository;
+import com.anyilanxin.kunpeng.scheduler.Actor;
+import com.anyilanxin.kunpeng.scheduler.ActorControl;
+import com.anyilanxin.kunpeng.scheduler.ActorScheduler;
+import com.anyilanxin.kunpeng.scheduler.core.Phases;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.time.Instant;
 import java.time.InstantSource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+import org.agrona.concurrent.UnsafeBuffer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -119,7 +130,14 @@ class TimerDueDateCheckerTest {
     timer.setTimerId(999).setDueDate(1_900);
 
     final var command = (CommandRecord) scan.batch().entries().getFirst();
-    final var snapshot = (TimerEventRecord) command.valueSnapshot();
+    // 快照是入批时的编码字节：按批帧的写法（元数据在前、值在后）写出后还原，再读字段
+    final var metadataLength = command.metadata().getLength();
+    final var frame = new UnsafeBuffer(new byte[command.getLength()]);
+    command.metadata().write(frame, 0);
+    command.valueSnapshot().write(frame, metadataLength);
+    final var snapshot = new TimerEventRecord();
+    snapshot.wrap(frame, metadataLength, command.valueSnapshot().getLength());
+
     assertEquals(44, snapshot.getTimerId());
     assertEquals(900, snapshot.getDueDate());
   }
@@ -140,7 +158,7 @@ class TimerDueDateCheckerTest {
 
   @ParameterizedTest
   @ValueSource(longs = {-1, 2_000})
-  void shouldScheduleConfirmationScanForEveryNonEmptyBatch(final long repositoryNextDueDate) {
+  void shouldScheduleFollowUpScanForEveryNonEmptyBatch(final long repositoryNextDueDate) {
     final var clock = new MutableClock(1_000);
     final var timer =
         new TimerEventRecord().setTimerId(45).setDueDate(900).setProcessDefinitionKey("test");
@@ -164,7 +182,72 @@ class TimerDueDateCheckerTest {
     final var batch = checker.execute(collector);
 
     assertEquals(1, batch.entries().size());
-    verify(scheduler).scheduleAt(eq(1_040L), any(TimerJob.class));
+    // 仓库没给出下一个到期时间：保留一次确认扫描；给出了（未来到期）：到点唤醒，不等确认扫描
+    final long expected = repositoryNextDueDate > 0 ? repositoryNextDueDate : 1_040L;
+    verify(scheduler).scheduleAt(eq(expected), any(TimerJob.class));
+  }
+
+  @Test
+  void shouldContinueScanAfterMinimalIntervalWhenStoppedAtADueTimer() {
+    final var clock = new MutableClock(1_000);
+    final var timer =
+        new TimerEventRecord().setTimerId(46).setDueDate(900).setProcessDefinitionKey("test");
+    // 时间预算用尽：访问一条后就停在仍在到期的下一条上
+    final var repository = mock(ImmutableTimerEventRepository.class);
+    when(repository.processTimersWithDueDateBefore(anyLong(), any()))
+        .thenAnswer(
+            invocation -> {
+              final ImmutableTimerEventRepository.TimerVisitor visitor = invocation.getArgument(1);
+              visitor.visit(timer);
+              clock.advance(20);
+              return timer.getDueDate();
+            });
+    final var scheduler = mock(TimerScheduler.class);
+    when(scheduler.scheduleAt(anyLong(), any(TimerJob.class)))
+        .thenReturn(mock(TimerScheduler.TimerHandle.class));
+    final var checker = new TimerDueDateChecker(repository, clock);
+    checker.onRecovered(new SchedulerContext(scheduler, 1, TimerClock.passthrough(clock)));
+    clearInvocations(scheduler);
+
+    checker.execute(new BufferedCommandCollector((_, _) -> true, timerRegistry().stage()));
+
+    assertEquals(1_020, clock.millis());
+    // 停在到期记录上：按最小重排间隔（1ms）续扫，而不是等确认扫描
+    verify(scheduler).scheduleAt(eq(1_021L), any(TimerJob.class));
+  }
+
+  @Test
+  void shouldReplaceScheduledScanThatIsMoreThanOneMillisecondLate() {
+    final var clock = new MutableClock(1_000);
+    final var scheduler = mock(TimerScheduler.class);
+    when(scheduler.scheduleAt(anyLong(), any(TimerJob.class)))
+        .thenReturn(mock(TimerScheduler.TimerHandle.class));
+    final var repository = mock(ImmutableTimerEventRepository.class);
+    when(repository.processTimersWithDueDateBefore(anyLong(), any())).thenReturn(-1L);
+    final var checker = new TimerDueDateChecker(repository, clock);
+    checker.onRecovered(new SchedulerContext(scheduler, 1, TimerClock.passthrough(clock)));
+    // 恢复时的首次扫描已执行完（没有定时器，之后没有排程）
+    checker.execute(new BufferedCommandCollector((_, _) -> true, timerRegistry().stage()));
+    clearInvocations(scheduler);
+
+    checker.schedule(5_000);
+    verify(scheduler).scheduleAt(eq(5_000L), any(TimerJob.class));
+    clearInvocations(scheduler);
+    // 已排程 5000；新到期时间只早 4ms：也要替换（判定精度从 40ms 降到 1ms）
+    clock.advance(1);
+    checker.schedule(4_996);
+    verify(scheduler).scheduleAt(eq(4_996L), any(TimerJob.class));
+
+    // 已排程 4996；新到期时间更晚：保持原排程
+    clearInvocations(scheduler);
+    checker.schedule(6_000);
+    verify(scheduler, never()).scheduleAt(anyLong(), any(TimerJob.class));
+
+    // 已到期：最迟 1ms 后执行
+    clearInvocations(scheduler);
+    clock.advance(1);
+    checker.schedule(900);
+    verify(scheduler).scheduleAt(eq(1_003L), any(TimerJob.class));
   }
 
   @Test
@@ -196,6 +279,84 @@ class TimerDueDateCheckerTest {
     final CommandBatch batch = collector.build();
     staged.commit();
     return new Scan(nextDueDate, batch);
+  }
+
+  @Test
+  void shouldPropagateScanFailureWithoutReschedulingInPlace() throws Exception {
+    final var clock = new MutableClock(1_000);
+    final var failure = new IllegalStateException("storage read failed");
+    final var failing = failingChecker(clock, failure);
+    clearInvocations(failing.scheduler());
+
+    // 不在车道线程上（没有可失败的 actor）：异常原样上抛，不再原地重排
+    final var collector = new BufferedCommandCollector((_, _) -> true, timerRegistry().stage());
+    assertSame(
+        failure,
+        assertThrows(IllegalStateException.class, () -> failing.checker().execute(collector)));
+    verify(failing.scheduler(), never()).scheduleAt(anyLong(), any(TimerJob.class));
+  }
+
+  @Test
+  void shouldFailTheSchedulingLaneActorWhenScanFailsOnIt() throws Exception {
+    final var clock = new MutableClock(1_000);
+    final var failure = new IllegalStateException("storage read failed");
+    final var failing = failingChecker(clock, failure);
+    final var scheduler = ActorScheduler.newActorScheduler()
+        .setCpuBoundActorThreadCount(1)
+        .setSchedulerName("lane-fail")
+        .build();
+    scheduler.start();
+    try {
+      final AtomicReference<ActorControl> lane = new AtomicReference<>();
+      scheduler
+          .submitActor(
+              new Actor() {
+                @Override
+                public String getName() {
+                  return "lane";
+                }
+
+                @Override
+                protected void onActorStarting() {
+                  lane.set(actor);
+                }
+              })
+          .get(10, TimeUnit.SECONDS);
+      final CompletableFuture<Throwable> outcome = new CompletableFuture<>();
+      lane.get()
+          .run(
+              () -> {
+                try {
+                  failing.checker()
+                      .execute(
+                          new BufferedCommandCollector((_, _) -> true, timerRegistry().stage()));
+                  outcome.complete(null);
+                } catch (final Throwable t) {
+                  outcome.complete(t);
+                }
+              });
+
+      assertSame(failure, outcome.get(10, TimeUnit.SECONDS));
+      // 扫描失败让所在车道进入 FAILED：交由 LanePool 重建并经 rearm 重新排程
+      assertEquals(Phases.FAILED, lane.get().getLifecyclePhase());
+    } finally {
+      scheduler.close();
+    }
+  }
+
+  /** 仓库扫描恒抛异常的检查器，已 onRecovered 绑定到 mock 调度器 */
+  private record Failing(TimerDueDateChecker checker, TimerScheduler scheduler) {}
+
+  private static Failing failingChecker(
+      final MutableClock clock, final RuntimeException failure) {
+    final var repository = mock(ImmutableTimerEventRepository.class);
+    when(repository.processTimersWithDueDateBefore(anyLong(), any())).thenThrow(failure);
+    final var scheduler = mock(TimerScheduler.class);
+    when(scheduler.scheduleAt(anyLong(), any(TimerJob.class)))
+        .thenReturn(mock(TimerScheduler.TimerHandle.class));
+    final var checker = new TimerDueDateChecker(repository, clock);
+    checker.onRecovered(new SchedulerContext(scheduler, 1, TimerClock.passthrough(clock)));
+    return new Failing(checker, scheduler);
   }
 
   private static BoundedPendingCommandRegistry timerRegistry() {

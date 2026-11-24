@@ -73,6 +73,68 @@ final class PartitionTransitionProcessTest {
     assertThat(order).containsExactly("storage", "repository", "engine");
   }
 
+  @Test
+  void slowStepWatchdogIsArmedPerStepAndNeverFailsTheTransition() {
+    final var control = new DirectControl();
+    final var slowStep = new CompletableActorFuture<Void>();
+    final List<String> order = new ArrayList<>();
+    final var process =
+        new PartitionTransitionProcess<>(
+            List.of(new PendingStep("slow", slowStep), new RecordingStep("engine", order)),
+            control,
+            new StubContent(),
+            TransitionType.TO_LEADER,
+            1L,
+            Role.LEADER);
+    final ActorFuture<Void> future = new CompletableActorFuture<>();
+    process.start(future);
+
+    // 第一步未完成：切换进行中，只为它挂了一个看门狗
+    assertThat(future.isDone()).isFalse();
+    assertThat(control.scheduled).hasSize(1);
+
+    // 看门狗到期只告警，不让切换失败
+    control.scheduled.getFirst().run();
+    assertThat(future.isDone()).isFalse();
+
+    // 慢步骤完成 → 推进到下一步（第二个看门狗挂上）→ 切换正常完成
+    slowStep.complete(null);
+    assertThat(order).containsExactly("engine");
+    assertThat(control.scheduled).hasSize(2);
+    assertThat(future.isDone()).isTrue();
+
+    // 迟到的看门狗对已完成的步骤无事发生
+    control.scheduled.forEach(Runnable::run);
+  }
+
+  /** 返回给定 future 的步骤桩：leader 切换下由测试决定它何时完成。 */
+  private record PendingStep(String name, ActorFuture<Void> pending)
+      implements TransitionStep<TransitionContent> {
+
+    @Override
+    public String getName() {
+      return name;
+    }
+
+    @Override
+    public ActorFuture<Void> onLeader(
+        final TransitionContent context, final long currentTerm) {
+      return pending;
+    }
+
+    @Override
+    public ActorFuture<Void> onFollower(
+        final TransitionContent context, final long currentTerm) {
+      return CompletableActorFuture.completed(null);
+    }
+
+    @Override
+    public ActorFuture<Void> onInactive(
+        final TransitionContent context, final long currentTerm) {
+      return CompletableActorFuture.completed(null);
+    }
+  }
+
   private static List<TransitionStep<TransitionContent>> steps(final List<String> order) {
     return List.of(
         new RecordingStep("storage", order),
@@ -150,8 +212,10 @@ final class PartitionTransitionProcessTest {
     }
   }
 
-  /** 同步直发并发控制：提交即在本线程执行，future 立即完成。 */
+  /** 同步直发并发控制：提交即在本线程执行，future 立即完成；定时任务只登记不执行，由测试决定何时触发。 */
   private static final class DirectControl implements ConcurrencyControl {
+
+    private final List<Runnable> scheduled = new ArrayList<>();
 
     @Override
     public ActorFuture<Void> run(final Runnable action) {
@@ -170,6 +234,7 @@ final class PartitionTransitionProcessTest {
 
     @Override
     public ScheduledTimer schedule(final Duration delay, final Runnable runnable) {
+      scheduled.add(runnable);
       return () -> {};
     }
 

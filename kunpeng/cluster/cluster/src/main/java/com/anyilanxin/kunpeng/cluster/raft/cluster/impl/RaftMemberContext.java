@@ -432,6 +432,11 @@ public final class RaftMemberContext {
     promotionTriggered = true;
   }
 
+  /** 清除“已发起”标记：已发起的晋升被 leader 拒绝后，下一次确认追加重新触发。 */
+  public void resetPromotionTriggered() {
+    promotionTriggered = false;
+  }
+
   /** 该成员是否经重配置从 ACTIVE 降级而来（区别于以 PASSIVE 身份加入的成员）。 */
   public boolean isDemotedFromVoting() {
     return demotedFromVoting;

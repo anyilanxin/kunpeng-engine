@@ -144,10 +144,9 @@ public final class PositionSequencer implements EventLogWriter {
   }
 
   @Override
-  public boolean canAppend(final int entryCount, final int batchSizeBytes) {
-    return !closed
-        && batchSizeBytes <= maxBatchSize
-        && flowControl.canAcquire(WriteContext.USER_COMMAND);
+  public boolean canAppend(
+      final WriteContext context, final int entryCount, final int batchSizeBytes) {
+    return !closed && batchSizeBytes <= maxBatchSize && flowControl.canAcquire(context);
   }
 
   @Override

@@ -22,6 +22,7 @@ import com.anyilanxin.kunpeng.scheduler.core.ActorCell;
 import com.anyilanxin.kunpeng.scheduler.core.CarrierContext;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
+import java.util.ArrayDeque;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
@@ -33,7 +34,6 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import org.agrona.concurrent.ManyToOneConcurrentLinkedQueue;
 import org.slf4j.Logger;
 
 /**
@@ -70,16 +70,15 @@ public class CompletableActorFuture<V> implements ActorFuture<V> {
   private V value;
   private String failure;
   private Throwable failureCause;
-  private long completedAt = -1;
 
-  // 注册/排空互斥: 封死 "offer 进队 vs 完成排空已结束" 的可见性竞态
+  // 注册/排空互斥: 封死 "登记回调 vs 完成排空已结束" 的可见性竞态
   private final Object completionSync = new Object();
 
   // 惰性创建的阻塞等待设施（多数 future 不会被外部线程等待）
   private volatile ReentrantLock completionLock;
   private volatile Condition isDoneCondition;
-  private final ManyToOneConcurrentLinkedQueue<BiConsumer<V, Throwable>> blockedCallbacks =
-      new ManyToOneConcurrentLinkedQueue<>();
+  // 完成前登记的回调：多数 future 登记前已完成或从不被续接，按需创建；读写全部在 completionSync 内
+  private ArrayDeque<BiConsumer<V, Throwable>> blockedCallbacks;
 
   public CompletableActorFuture() {}
 
@@ -105,7 +104,6 @@ public class CompletableActorFuture<V> implements ActorFuture<V> {
     value = null;
     failure = null;
     failureCause = null;
-    completedAt = -1;
   }
 
   public boolean isAwaitingResult() {
@@ -116,7 +114,6 @@ public class CompletableActorFuture<V> implements ActorFuture<V> {
   public void complete(final V value) {
     if (STATE.compareAndSet(this, AWAITING_RESULT, COMPLETING)) {
       this.value = value;
-      completedAt = System.currentTimeMillis();
       STATE.setRelease(this, COMPLETED);
       onCompleted();
     } else {
@@ -129,7 +126,6 @@ public class CompletableActorFuture<V> implements ActorFuture<V> {
     if (STATE.compareAndSet(this, AWAITING_RESULT, COMPLETING)) {
       this.failure = failure;
       failureCause = throwable;
-      completedAt = System.currentTimeMillis();
       STATE.setRelease(this, COMPLETED_EXCEPTIONALLY);
       onCompleted();
     } else {
@@ -186,10 +182,6 @@ public class CompletableActorFuture<V> implements ActorFuture<V> {
 
   public String getFailure() {
     return failure;
-  }
-
-  public long getCompletedAt() {
-    return completedAt;
   }
 
   @Override
@@ -250,7 +242,7 @@ public class CompletableActorFuture<V> implements ActorFuture<V> {
     // （启动链 runOnCompletion(completed future) 大量出现此形态）
     synchronized (completionSync) {
       if (!isDone()) {
-        blockedCallbacks.add((resIgnore, errorIgnore) -> onCompletion.wakeSignal());
+        addBlockedCallback((resIgnore, errorIgnore) -> onCompletion.wakeSignal());
         return;
       }
     }
@@ -286,7 +278,7 @@ public class CompletableActorFuture<V> implements ActorFuture<V> {
 
     synchronized (completionSync) {
       if (!isDone()) {
-        blockedCallbacks.add(checkedConsumer);
+        addBlockedCallback(checkedConsumer);
       }
     }
     // monitor happens-before 保证: 若未入队则此刻必能读到完成态
@@ -385,8 +377,10 @@ public class CompletableActorFuture<V> implements ActorFuture<V> {
   /** 复用关闭：回调清空、状态复位 */
   public void close() {
     if (isDone()) {
-      // ManyToOneConcurrentLinkedQueue 不支持 clear(), 逐个排空
-      while (blockedCallbacks.poll() != null) {}
+      // 完成时的排空在 completionSync 内进行，这里同锁丢弃残留（登记后未及消费的回调不执行）
+      synchronized (completionSync) {
+        blockedCallbacks = null;
+      }
       setAwaitingResult();
     } else {
       STATE.setRelease(this, CLOSED);
@@ -395,6 +389,14 @@ public class CompletableActorFuture<V> implements ActorFuture<V> {
 
   // ===== 内部 =====
 
+  /** 调用方须持有 completionSync */
+  private void addBlockedCallback(final BiConsumer<V, Throwable> callback) {
+    if (blockedCallbacks == null) {
+      blockedCallbacks = new ArrayDeque<>();
+    }
+    blockedCallbacks.addLast(callback);
+  }
+
   private void onCompleted() {
     signalWaiters();
     synchronized (completionSync) {
@@ -402,9 +404,14 @@ public class CompletableActorFuture<V> implements ActorFuture<V> {
     }
   }
 
+  /** 调用方须持有 completionSync；回调执行期间同线程重入（如 close）不会使局部引用失效 */
   private void drainCallbacks() {
+    final ArrayDeque<BiConsumer<V, Throwable>> callbacks = blockedCallbacks;
+    if (callbacks == null) {
+      return;
+    }
     BiConsumer<V, Throwable> callback;
-    while ((callback = blockedCallbacks.poll()) != null) {
+    while ((callback = callbacks.pollFirst()) != null) {
       try {
         callback.accept(value, failureCause);
       } catch (final RuntimeException e) {

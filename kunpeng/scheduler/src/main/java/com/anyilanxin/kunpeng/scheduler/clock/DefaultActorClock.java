@@ -17,19 +17,24 @@
 package com.anyilanxin.kunpeng.scheduler.clock;
 
 /**
- * 默认时钟：millis 值每毫秒至多采样一次 System.currentTimeMillis; 亚毫秒精度查询每次调用 nanoTime。
+ * 默认时钟：每毫秒至多采样一次 System.currentTimeMillis; 亚毫秒精度查询每次调用 nanoTime。
+ *
+ * <p>毫秒值 = 最近一次采样时的（墙上时钟 − 单调时钟）+ 当前单调时钟：采样结果只占一个 volatile 字段，读侧随时用单调时钟外推。
+ * 载体线程忙于一个长任务（采样暂停）期间，被其它线程读到的时间照常前进。
  *
  * @author zxuanhong
  * @since 2026.9.0
  */
 public class DefaultActorClock implements ActorClock {
 
-  private long currentNanoTime;
-  private long currentTimeMillis;
+  /** 最近一次采样时墙上时钟落后单调时钟多少毫秒（一次 volatile 写发布，读侧无需再同步） */
+  private volatile long wallMinusNanoMillis;
+
+  private volatile long currentNanoTime;
 
   public DefaultActorClock() {
     currentNanoTime = System.nanoTime();
-    currentTimeMillis = System.currentTimeMillis();
+    wallMinusNanoMillis = System.currentTimeMillis() - currentNanoTime / 1_000_000L;
   }
 
   @Override
@@ -38,7 +43,7 @@ public class DefaultActorClock implements ActorClock {
     final long elapsed = nowNano - currentNanoTime;
     if (elapsed >= 1_000_000L) {
       currentNanoTime = nowNano;
-      currentTimeMillis = System.currentTimeMillis();
+      wallMinusNanoMillis = System.currentTimeMillis() - nowNano / 1_000_000L;
       return true;
     }
     return false;
@@ -46,7 +51,7 @@ public class DefaultActorClock implements ActorClock {
 
   @Override
   public long getTimeMillis() {
-    return currentTimeMillis;
+    return wallMinusNanoMillis + System.nanoTime() / 1_000_000L;
   }
 
   @Override

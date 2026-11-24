@@ -47,9 +47,45 @@ public final class SchedulerMetrics {
   private final Counter timerCancelled;
   private final Counter blockingSubmitted;
   private final Counter blockingCompleted;
-  private final ConcurrentHashMap<String, Counter> jobSubmitted = new ConcurrentHashMap<>();
-  private final ConcurrentHashMap<String, Counter> jobExecuted = new ConcurrentHashMap<>();
-  private final ConcurrentHashMap<String, Counter> jobRejected = new ConcurrentHashMap<>();
+  // 池名 → 该池的 job 计数器。池数量固定且很少，首个 job 注册一次，之后热路径只做一次 map 读取
+  private final ConcurrentHashMap<String, JobCounters> jobCounters = new ConcurrentHashMap<>();
+
+  /** 单个池的 job 计数器（提交/执行/拒绝，拒绝按原因打标；拒绝是冷路径，按需注册） */
+  private static final class JobCounters {
+    private final Counter submitted;
+    private final Counter executed;
+    private final ConcurrentHashMap<String, Counter> rejected = new ConcurrentHashMap<>();
+
+    private JobCounters(
+        final MeterRegistry registry, final String schedulerTag, final String pool) {
+      submitted =
+          Counter.builder(SchedulerMetricsDoc.JOB_SUBMITTED.getName())
+              .tags("scheduler", schedulerTag, "pool", pool)
+              .description(SchedulerMetricsDoc.JOB_SUBMITTED.getDescription())
+              .register(registry);
+      executed =
+          Counter.builder(SchedulerMetricsDoc.JOB_EXECUTED.getName())
+              .tags("scheduler", schedulerTag, "pool", pool)
+              .description(SchedulerMetricsDoc.JOB_EXECUTED.getDescription())
+              .register(registry);
+    }
+
+    private void incRejected(
+        final MeterRegistry registry,
+        final String schedulerTag,
+        final String pool,
+        final String reason) {
+      rejected
+          .computeIfAbsent(
+              reason,
+              key ->
+                  Counter.builder(SchedulerMetricsDoc.JOB_REJECTED.getName())
+                      .tags("scheduler", schedulerTag, "pool", pool, "reason", key)
+                      .description(SchedulerMetricsDoc.JOB_REJECTED.getDescription())
+                      .register(registry))
+          .increment();
+    }
+  }
 
   public static SchedulerMetrics noop() {
     return NOOP;
@@ -181,15 +217,7 @@ public final class SchedulerMetrics {
     if (registry == null) {
       return;
     }
-    jobSubmitted
-        .computeIfAbsent(
-            pool,
-            key ->
-                Counter.builder(SchedulerMetricsDoc.JOB_SUBMITTED.getName())
-                    .tags("scheduler", schedulerTag, "pool", key)
-                    .description(SchedulerMetricsDoc.JOB_SUBMITTED.getDescription())
-                    .register(registry))
-        .increment();
+    jobCounters(pool).submitted.increment();
   }
 
   /** job 执行成功（按池打标） */
@@ -197,15 +225,7 @@ public final class SchedulerMetrics {
     if (registry == null) {
       return;
     }
-    jobExecuted
-        .computeIfAbsent(
-            pool,
-            key ->
-                Counter.builder(SchedulerMetricsDoc.JOB_EXECUTED.getName())
-                    .tags("scheduler", schedulerTag, "pool", key)
-                    .description(SchedulerMetricsDoc.JOB_EXECUTED.getDescription())
-                    .register(registry))
-        .increment();
+    jobCounters(pool).executed.increment();
   }
 
   /** job 拒绝（按池 + 原因打标: ACTOR_CLOSED / ACTOR_FAILED） */
@@ -213,14 +233,16 @@ public final class SchedulerMetrics {
     if (registry == null) {
       return;
     }
-    jobRejected
-        .computeIfAbsent(
-            pool + '/' + reason,
-            key ->
-                Counter.builder(SchedulerMetricsDoc.JOB_REJECTED.getName())
-                    .tags("scheduler", schedulerTag, "pool", pool, "reason", reason)
-                    .description(SchedulerMetricsDoc.JOB_REJECTED.getDescription())
-                    .register(registry))
-        .increment();
+    jobCounters(pool).incRejected(registry, schedulerTag, pool, reason);
+  }
+
+  /** 每个 job 的必经路径：先 get，未注册才走 computeIfAbsent（后者每次都要构造捕获 lambda） */
+  private JobCounters jobCounters(final String pool) {
+    JobCounters counters = jobCounters.get(pool);
+    if (counters == null) {
+      counters =
+          jobCounters.computeIfAbsent(pool, key -> new JobCounters(registry, schedulerTag, key));
+    }
+    return counters;
   }
 }

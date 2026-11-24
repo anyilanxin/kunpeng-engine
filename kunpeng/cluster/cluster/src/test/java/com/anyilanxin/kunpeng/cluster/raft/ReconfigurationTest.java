@@ -213,6 +213,37 @@ final class ReconfigurationTest {
                                 .containsExactlyInAnyOrderElementsOf(expected)));
   }
 
+  /**
+   * 等待所有给定节点都把 members 视为 ACTIVE 投票成员，且自身不在联合共识中。 退出联合共识也不等于晋升完成：新成员以 PASSIVE
+   * 身份加入，追平后才由 leader 经一次重配置晋升；晋升完成前下线旧成员会令法定人数凑不齐。
+   */
+  private static void awaitVotingMembersOn(
+      final Collection<RaftServer> observers, final MemberId... members) {
+    final var ids = Arrays.stream(members).map(MemberId::toString).collect(Collectors.toSet());
+    Awaitility.await()
+        // 并发 fsync 负载下追平与晋升重配置的收敛可能超过 Awaitility 缺省 10s
+        .atMost(Duration.ofSeconds(30))
+        .untilAsserted(
+            () ->
+                assertThat(observers)
+                    .allSatisfy(
+                        node -> {
+                          assertThat(
+                                  node.getContext()
+                                      .getCluster()
+                                      .getConfiguration()
+                                      .requiresJointConsensus())
+                              .isFalse();
+                          assertThat(node.cluster().getMembers())
+                              .filteredOn(member -> ids.contains(member.memberId().toString()))
+                              .hasSize(members.length)
+                              .allSatisfy(
+                                  member ->
+                                      assertThat(member.getType())
+                                          .isEqualTo(RaftMember.Type.ACTIVE));
+                        }));
+  }
+
   /** 等待所有给定节点的提交索引都达到 index（允许后续配置条目进一步推进提交索引）。 */
   private static void awaitCommittedOn(
       final Collection<RaftServer> observers, final long index) {
@@ -514,6 +545,7 @@ final class ReconfigurationTest {
                                           .getConfiguration()
                                           .requiresJointConsensus())
                                   .isFalse()));
+      awaitVotingMembersOn(List.of(a, b, c, d, e), N4, N5);
 
       // 执行：两台旧成员下线，quorum 只能依赖新成员
       a.shutdown().join();

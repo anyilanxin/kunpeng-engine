@@ -262,9 +262,26 @@ public class AtomixCluster implements BootstrapService, Managed<Void> {
       return openFuture;
     }
 
-    openFuture = startServices().thenComposeAsync(v -> completeStartup(), threadContext);
+    // 启动失败即回滚（见 rollbackFailedStart）：本类与 leader 发现服务在构造时就各建了一条非守护线程
+    openFuture =
+        startServices()
+            .thenComposeAsync(v -> completeStartup(), threadContext)
+            .handle((ignored, error) -> error)
+            .thenCompose(this::rollbackFailedStart);
 
     return openFuture;
+  }
+
+  /**
+   * 启动链失败后的回滚：调用方拿到的只有失败（Spring 的工厂方法此时抛出，实例不会注册成 bean、销毁方法不会被调用），
+   * 不回滚的话已启动的服务和构造时建的两条非守护线程都留下，启动失败的进程永远不退出。 按 {@link #stop()} 的逆序停服务并关闭线程（没启动过的服务 stop
+   * 是空操作），之后以原异常完成。
+   */
+  private CompletableFuture<Void> rollbackFailedStart(final Throwable error) {
+    if (error == null) {
+      return CompletableFuture.completedFuture(null);
+    }
+    return stop().thenCompose(ignored -> CompletableFuture.<Void>failedFuture(error));
   }
 
   @Override

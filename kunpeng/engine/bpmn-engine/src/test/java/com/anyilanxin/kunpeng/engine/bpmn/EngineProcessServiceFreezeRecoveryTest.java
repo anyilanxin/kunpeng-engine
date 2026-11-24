@@ -80,6 +80,11 @@ class EngineProcessServiceFreezeRecoveryTest {
   }
 
   private void openEngine() throws Exception {
+    openEngine(() -> {});
+  }
+
+  /** 引擎 actor 启动前执行一次性动作（如预置持久状态）：恢复链在启动过程中读取，启动后再写入会与读标记赛跑 */
+  private void openEngine(final Runnable beforeStart) throws Exception {
     db =
         new DefaultRocksdbFactory<BusinessRepositoryColumnFamilies>()
             .createDb(
@@ -124,6 +129,7 @@ class EngineProcessServiceFreezeRecoveryTest {
             new SimpleMeterRegistry(),
             TimerClock.passthrough(InstantSource.system()),
             scheduler);
+    beforeStart.run();
     // 启动引擎 actor：走完 starting→started 相位（日志读写器初始化、恢复链、冻结标记恢复）
     scheduler.submitActor(engine).get(10, TimeUnit.SECONDS);
   }
@@ -142,9 +148,8 @@ class EngineProcessServiceFreezeRecoveryTest {
 
   @Test
   void frozenMarkerIsRecoveredAcrossEngineRestart() throws Exception {
-    // 手术窗口内崩溃：标记已持久化（drain=true），内存冻结态随进程丢失
-    openEngine();
-    repository.frozenStateRepository().markFrozen(true);
+    // 手术窗口内崩溃：标记已持久化（drain=true），内存冻结态随进程丢失——崩溃前写入的标记在引擎启动前就在库里
+    openEngine(() -> repository.frozenStateRepository().markFrozen(true));
 
     // 引擎启动恢复链：凭标记重入冻结窗口（含排干），writer 重新冻结
     assertTrue(await(engine::isFrozen, 10_000), "重启后应凭持久标记重入冻结窗口");

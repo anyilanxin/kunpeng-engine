@@ -64,7 +64,7 @@ public final class SchedulingGate {
    *
    * <p>必须是 CAS：取走（poll）与接管之间 submitter 可能恰好 CAS 成功再次入队， 产生同一 cell 的第二份实例； CAS 失败即说明发生并发接管。
    *
-   * @return false 表示已被其他载体接管，调用方须丢弃本实例
+   * @return false 表示门不在 WAKING_UP（平台池下不可能发生：每个 WAITING→WAKING_UP 片段恰一个入队者，队列中同一 cell 至多一份实例）
    */
   public boolean markRunning() {
     return STATE.compareAndSet(this, WAKING_UP, RUNNING);
@@ -73,13 +73,16 @@ public final class SchedulingGate {
   /**
    * owner 排空后尝试休眠。
    *
-   * <p>必须 setRelease：与 {@link #state()} 的 getAcquire 配对，把 drain 期间的普通写（相位、fastLane、订阅槽等） 发布给随后经 CAS
-   * 接管的其他 runner——plain set 在 JMM 上没有 release 边，跨载体可见性将依赖硬件兜底。
+   * <p>必须是 volatile 写，不能是 release 写：调用方写入 WAITING 之后要复查票差与队列（{@code ActorCell.finishDrain}），而
+   * release 写只约束它之前的写不后移，不约束它之后的读不前移。缺 StoreLoad 屏障时，WAITING 尚未全局可见复查就已读到旧值，与此同时并发提交者的 CAS 仍见到旧的
+   * RUNNING 而失败——两边都不入队，cell 永久停在 WAITING 而队列里有任务（多 runner 下实测每次跨线程投递约 4e-6~4e-5 命中）。
+   *
+   * <p>volatile 写同时把 drain 期间的普通写（相位、fastLane、订阅槽等）发布给随后经 CAS 接管的其他 runner。
    *
    * @return true 表示回到 WAITING（调用方须复查队列, 非空则 tryWakeup 重入队）
    */
   public boolean trySleep() {
-    STATE.setRelease(this, WAITING);
+    STATE.setVolatile(this, WAITING);
     return true;
   }
 

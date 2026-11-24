@@ -242,7 +242,7 @@ Configuration can be set via `config/application-*.yml`, `-D` system properties,
 | `kunpeng.broker.raft.partitioning.replication-factor` | `1` | Business partition replication factor (odd, for multi-node) |
 | `kunpeng.broker.manage.init-broker-id` | none (required) | Bare node-id of the initial bootstrap node; same value on every node |
 | `kunpeng.broker.manage.replication-factor` | `1` | Management raft replication factor (odd recommended) |
-| `kunpeng.broker.threads.cpu-thread-count` / `io-thread-count` | `2` / `2` | Broker CPU / IO threads |
+| `kunpeng.broker.threads.cpu-thread-count` / `io-thread-count` | `max(1, CPU cores - 2)` / `2` | Broker CPU / IO threads |
 
 ## 11. Data Directories, Logs, Shutdown
 

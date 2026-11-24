@@ -82,6 +82,7 @@ public final class SchedulerImpl {
     metrics.incActorSubmitted();
     switch (hints) {
       case IO_BOUND -> {
+        requireRunners(ioPool, "-io-scheduler");
         cell.onScheduled(ioPool, metrics);
         // 必须经调度门 CAS（WAITING→WAKING_UP）后再入队: 首次调度若绕过 CAS 直接入队,
         // gate 停留 WAITING, 后续提交者在 runner 取走-接管窗口内 CAS 成功会再次入队同一 cell
@@ -89,11 +90,26 @@ public final class SchedulerImpl {
       }
       case VIRTUAL_THREAD -> virtualPool.submitTask(cell);
       default -> {
+        requireRunners(cpuPool, "-cpu-scheduler");
         cell.onScheduled(cpuPool, metrics);
         cell.wakeSignal();
       }
     }
     return cell.getStartingFuture();
+  }
+
+  /**
+   * 池内没有 runner 线程时路由无处可投（{@code RunnerPool.route} 会数组越界，cell 卡在 WAKING_UP）：在提交处给出明确的配置错误。 线程数配成 0
+   * 的池可以存在（如网关不设 IO 池），只是不能承接对应类型的 actor。
+   */
+  private void requireRunners(final RunnerPool pool, final String poolSuffix) {
+    if (pool.runnerCount() == 0) {
+      throw new IllegalStateException(
+          "Actor pool '"
+              + schedulerName
+              + poolSuffix
+              + "' has no runner threads; raise its thread count above 0 to schedule actors on it");
+    }
   }
 
   public void stop() {

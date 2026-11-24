@@ -28,7 +28,7 @@ import org.slf4j.MDC;
 /**
  * 平台线程载体：固定线程 + 偷取主循环。
  *
- * <p>主循环：跨线程回调排空 → 时钟步进 + 定时轮扫描 → 本队列取 cell（空则偷）→ 执行 （MDC 注入 actor 上下文）→ idle 退避。
+ * <p>主循环：跨线程回调排空 → 时钟步进 + 到期定时器扫描 → 本队列取 cell（空则偷）→ 执行 （MDC 注入 actor 上下文）→ idle 退避。
  *
  * @author zxuanhong
  * @since 2026.9.0
@@ -94,11 +94,18 @@ public final class StealingRunner implements CellRunner {
         cell = steal();
       }
       if (cell != null) {
-        // 取走瞬间原子接管: 关闭 poll→markRunning 窗口, 防 submitter 在窗口内再次入队产生第二份实例
-        if (cell.claimedBy(this)) {
-          execute(context, cell);
-          idle.reset();
+        // 取走瞬间原子接管: 关闭 poll→markRunning 窗口, 防 submitter 在窗口内再次入队产生第二份实例。
+        // 按门的不变量接管必然成功；失败即协议被破坏，静默丢弃只会让该 cell 无痕地永久停摆，这里直接抛出让载体线程失败
+        if (!cell.claimedBy(this)) {
+          throw new IllegalStateException(
+              "Polled cell '"
+                  + cell.getName()
+                  + "' is not claimable (gate="
+                  + cell.getGate().state()
+                  + "): scheduler gate invariant violated");
         }
+        execute(context, cell);
+        idle.reset();
       } else {
         idle.idle();
       }

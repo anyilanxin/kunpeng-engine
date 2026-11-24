@@ -23,8 +23,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 /**
  * runner 的跨线程回调队列（定时器取消路由等）；主循环每轮排空。
  *
- * <p>无界：回调的消费端依赖 owner 线程约束（如 TimerHub 的 slots/wheel 非线程安全）, 有界队列满载时退化到调用方线程执行会破坏该约束——宁可不设上限, 以提交侧
- * hint 唤醒载体及时排空。
+ * <p>无界：回调的消费端依赖 owner 线程约束（如 TimerHub 的定时器堆非线程安全）, 有界队列满载时退化到调用方线程执行会破坏该约束——宁可不设上限, 以提交侧 hint
+ * 唤醒载体及时排空。
  *
  * @author zxuanhong
  * @since 2026.9.0

@@ -76,6 +76,12 @@ public class LogEventWriter {
   // Integer.parseInt + 分配），因此只解析缓存一次，避免每次写事件都重新解析。
   public static final VersionInfo BROKER_VERSION = VersionInfo.parse(VersionUtil.getVersion());
 
+  /**
+   * job 超时扫描单轮上限。截断即零延迟续扫，上限太小会让每轮固定开销（定时器到期 → 唤醒 → 车道执行 → RocksDB 读 → 追加）占比过高： 上限 10 时积压期约 1000
+   * 轮/秒。
+   */
+  private static final int JOB_TIMEOUT_SCAN_BATCH_SIZE = 100;
+
   private final BusinessRepository repository;
   private final ProcessingCollectSupplier collectSupplier;
   private final int partitionId;
@@ -141,22 +147,25 @@ public class LogEventWriter {
   }
 
   private void initCheckerAware(final BusinessRepositoryFactory repositoryFactory) {
+    // 5 个检查器都只在同一 compute 车道线程上顺序执行，共用一份仓库实例（主处理 actor 的 repository 与车道线程并发，保持独立）
+    final BusinessRepository checkerRepository = repositoryFactory.create();
 
     final JobTimeoutChecker jobChecker =
         new JobTimeoutChecker(
-            repositoryFactory.create().jobRepository(), Duration.ofSeconds(1), 10, clock);
+            checkerRepository.jobRepository(),
+            Duration.ofSeconds(1),
+            JOB_TIMEOUT_SCAN_BATCH_SIZE,
+            clock);
 
-    timerChecker =
-        new TimerDueDateChecker(repositoryFactory.create().timerEventRepository(), clock);
+    timerChecker = new TimerDueDateChecker(checkerRepository.timerEventRepository(), clock);
 
     final HistoryCleanupDueDateChecker historyCleanupDueDateChecker =
-        new HistoryCleanupDueDateChecker(
-            repositoryFactory.create().historyCleanupRepository(), clock);
+        new HistoryCleanupDueDateChecker(checkerRepository.historyCleanupRepository(), clock);
 
     final DistributeParallelChecker distributeParallelProcessor =
-        new DistributeParallelChecker(repositoryFactory.create().distributeParallelRepository());
+        new DistributeParallelChecker(checkerRepository.distributeParallelRepository());
     final DistributeSerialChecker distributeSerialProcessor =
-        new DistributeSerialChecker(repositoryFactory.create().distributeSerialRepository());
+        new DistributeSerialChecker(checkerRepository.distributeSerialRepository());
 
     checkerAwareList.add(jobChecker);
     checkerAwareList.add(timerChecker);

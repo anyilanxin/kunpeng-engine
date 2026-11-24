@@ -90,8 +90,9 @@ public final class TypedEventLogWriter implements EventLogWriter {
   }
 
   @Override
-  public boolean canAppend(final int entryCount, final int batchSizeBytes) {
-    return delegate.canAppend(entryCount, batchSizeBytes);
+  public boolean canAppend(
+      final WriteContext context, final int entryCount, final int batchSizeBytes) {
+    return delegate.canAppend(context, entryCount, batchSizeBytes);
   }
 
   @Override

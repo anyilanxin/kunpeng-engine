@@ -48,7 +48,7 @@ import org.junit.jupiter.api.Timeout;
  * @author zxuanhong
  * @since 2026.9.0
  */
-@DisplayName("PositionSequencer 无锁定序")
+@DisplayName("PositionSequencer 定序")
 class PositionSequencerTest {
 
   private static final class Ctx {
@@ -62,8 +62,11 @@ class PositionSequencerTest {
   }
 
   private static Ctx sequencer(final InMemoryEventStore store) {
-    final FlowController flow = new FlowController(FlowControlParams.disabled(),
-        System::nanoTime, EventLogMetrics.noop());
+    return sequencer(store, FlowControlParams.disabled());
+  }
+
+  private static Ctx sequencer(final InMemoryEventStore store, final FlowControlParams params) {
+    final FlowController flow = new FlowController(params, System::nanoTime, EventLogMetrics.noop());
     return new Ctx(new PositionSequencer(store, flow, EventLogMetrics.noop(),
         1024 * 1024, 1, Clock.systemUTC()), flow);
   }
@@ -183,8 +186,27 @@ class PositionSequencerTest {
   void canAppend() {
     final InMemoryEventStore store = new InMemoryEventStore();
     final PositionSequencer sequencer = sequencer(store).sequencer;
-    assertThat(sequencer.canAppend(1, 16)).isTrue();
+    assertThat(sequencer.canAppend(WriteContext.USER_COMMAND, 1, 16)).isTrue();
     sequencer.close();
-    assertThat(sequencer.canAppend(1, 16)).isFalse();
+    assertThat(sequencer.canAppend(WriteContext.USER_COMMAND, 1, 16)).isFalse();
+  }
+
+  @Test
+  @DisplayName("canAppend 按上下文判定：用户命令窗口耗尽时定时批次仍可写，探测结论与真实追加一致")
+  void canAppendFollowsTheWriteContext() {
+    final PositionSequencer sequencer =
+        sequencer(new InMemoryEventStore(), FlowControlParams.defaults()).sequencer;
+    // 初始窗口 100：占满后用户命令被挡
+    for (int i = 0; i < 100; i++) {
+      assertThat(sequencer.tryAppend(WriteContext.USER_COMMAND, simple()))
+          .isInstanceOf(Appended.class);
+    }
+    assertThat(sequencer.canAppend(WriteContext.USER_COMMAND, 1, 16)).isFalse();
+    assertThat(sequencer.tryAppend(WriteContext.USER_COMMAND, simple()))
+        .isInstanceOf(Rejected.class);
+    // 定时触发批次不受窗口约束：探测放行，真实追加同样放行
+    assertThat(sequencer.canAppend(WriteContext.SCHEDULED, 1, 16)).isTrue();
+    assertThat(sequencer.tryAppend(WriteContext.SCHEDULED, simple()))
+        .isInstanceOf(Appended.class);
   }
 }

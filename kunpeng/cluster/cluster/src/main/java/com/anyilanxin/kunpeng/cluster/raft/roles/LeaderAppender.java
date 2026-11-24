@@ -55,6 +55,7 @@ final class LeaderAppender {
 
   private final int maxBatchSizePerAppend;
   private final RaftContext raft;
+  private final LeaderRole leaderRole;
   private boolean open = true;
 
   private final LeaderAppenderMetrics metrics;
@@ -69,6 +70,7 @@ final class LeaderAppender {
 
   LeaderAppender(final LeaderRole leader) {
     raft = checkNotNull(leader.raft, "context cannot be null");
+    leaderRole = leader;
     metrics = new LeaderAppenderMetrics(raft.getName(), raft.getMeterRegistry());
     maxBatchSizePerAppend = raft.getMaxAppendBatchSize();
     leaderTime = System.currentTimeMillis();
@@ -270,6 +272,11 @@ final class LeaderAppender {
         || member.getMatchIndex() < raft.getLog().getLastIndex()) {
       return;
     }
+    if (leaderRole.reconfigurationBlocked()) {
+      // 晋升要发起一次重配置。此刻 leader 不接受重配置（另一个重配置在进行、leader 尚在初始化、为领导权移交暂停）时，
+      // 发起了也会被拒绝，而成员侧对这类拒绝不再重试，该成员会永远停在 PASSIVE。先不标记已触发，等下一次确认追加再触发
+      return;
+    }
 
     member.markPromotionTriggered();
     LOGGER.info(
@@ -277,6 +284,26 @@ final class LeaderAppender {
         member.getMember().memberId(),
         member.getMatchIndex());
     member.getMember().promote(RaftMember.Type.ACTIVE);
+  }
+
+  /**
+   * 一次重配置请求刚被 {@link LeaderRole#onReconfigure} 以“此刻不能改配置”拒绝。
+   *
+   * <p>{@link #promoteIfCaughtUp} 里的判断管不到一种情况：重配置请求是投到 raft 线程队列里延后提交的，提交之前又可能有别的重配置开始
+   * （两个成员的确认追加响应挨着处理时就是如此）。请求里被提升为投票成员、此刻仍是被动成员且已触发晋升的，就是被拒的那次晋升： 清掉已触发标记，下一次确认追加重新触发。
+   */
+  void retryRejectedPromotion(final ReconfigureRequest request) {
+    for (final RaftMember member : request.members()) {
+      if (member.getType() != RaftMember.Type.ACTIVE) {
+        continue;
+      }
+      final var context = raft.getCluster().getMemberContext(member.memberId());
+      if (context != null
+          && context.getMember().getType() == RaftMember.Type.PASSIVE
+          && context.isPromotionTriggered()) {
+        context.resetPromotionTriggered();
+      }
+    }
   }
 
   /** Resets the match index when a response fails. */
