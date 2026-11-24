@@ -37,8 +37,11 @@ public interface EventLogWriter extends AutoCloseable {
    */
   AppendResult tryAppend(WriteContext context, List<AppendEntry> entries, long sourcePosition);
 
-  /** 是否可再写（流控余量探测，不做真写入） */
-  boolean canAppend(int entryCount, int batchSizeBytes);
+  /**
+   * 是否可再写（流控余量探测，不做真写入）。准入按 {@code context} 判定，与 {@link #tryAppend(WriteContext, AppendEntry)}
+   * 一致：只有 {@link WriteContext#USER_COMMAND} 受在途窗口约束，内部与定时上下文不受限。调用方必须传随后真实追加所用的上下文。
+   */
+  boolean canAppend(WriteContext context, int entryCount, int batchSizeBytes);
 
   /**
    * 冻结写入（数据手术窗口）：冻结后 {@link WriteContext#USER_COMMAND} 与 {@link WriteContext#INTER_PARTITION} 的追加以

@@ -63,7 +63,7 @@ public final class OrderedTimerScheduler implements TimerScheduler, AutoCloseabl
   private final CommandBatch.CapacityProbe capacityProbe =
       (count, bytes) -> {
         final EventLogWriter current = writer;
-        return current != null && current.canAppend(count, bytes);
+        return current != null && current.canAppend(WriteContext.SCHEDULED, count, bytes);
       };
 
   OrderedTimerScheduler(

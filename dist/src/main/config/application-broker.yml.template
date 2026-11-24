@@ -67,7 +67,7 @@ kunpeng:
       enable: false
     # actor 调度线程
     threads:
-      cpu-thread-count: 2              # CPU 线程数（计算密集）
+      # cpu-thread-count: 2            # CPU 线程数（计算密集）；不配置时为 max(1, CPU 核数 - 2)
       io-thread-count: 2               # IO 线程数（阻塞调用）
     # 业务（raft）通信网络（host/port/security 默认取 advance-host / start-port+port-offset / 集群 security）
     network:

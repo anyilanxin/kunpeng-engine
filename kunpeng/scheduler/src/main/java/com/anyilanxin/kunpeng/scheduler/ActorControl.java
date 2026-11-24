@@ -72,7 +72,7 @@ public final class ActorControl implements ConcurrencyControl {
    */
   public ActorFuture<Void> run(final Runnable action) {
     if (isCalledFromWithinActor()) {
-      return cell.submitInternal(ActorEnvelope.Kind.RUN, action, null).thenApply(ignored -> null);
+      return cell.submitInternal(ActorEnvelope.Kind.RUN, action, null);
     }
     return runBehind(action);
   }
@@ -98,7 +98,7 @@ public final class ActorControl implements ConcurrencyControl {
    * @return 动作完成 future
    */
   public ActorFuture<Void> runBehind(final Runnable action) {
-    return cell.submitExternal(ActorEnvelope.Kind.RUN, action, null).thenApply(ignored -> null);
+    return cell.submitExternal(ActorEnvelope.Kind.RUN, action, null);
   }
 
   /** runUntilDone: runnable 内调用 yieldThread() 请求重跑, 否则结束 */
@@ -156,7 +156,7 @@ public final class ActorControl implements ConcurrencyControl {
 
   public ScheduledTimer schedule(final Duration delay, final Runnable runnable) {
     ensureWithinActor();
-    // 必须用载体时钟: 定时轮按 clock.getTimeMillis() 轮询, 受控时钟（如测试 pin 时间）下
+    // 必须用载体时钟: 定时器按 clock.getTimeMillis() 判定到期, 受控时钟（如测试 pin 时间）下
     // 混用系统时钟会导致 timer 永不触发或立即触发
     final long deadline = ActorClock.currentTimeMillis() + delay.toMillis();
     return cell.scheduleTimer(deadline, runnable, false, 0);

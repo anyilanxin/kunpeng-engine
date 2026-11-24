@@ -65,6 +65,12 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
   public static final Logger LOGGER = Loggers.SYSTEM_LOGGER;
   private static final int DEFAULT_MAX_BATCH = 100;
 
+  /**
+   * 单个 job 内最多处理的日志条目数。整个积压在调度器眼里只是一个信封（按信封计数的排空预算管不到它）， 追平/恢复期间的百万级积压会独占载体线程；到量后经 runBehind
+   * 续跑，把线程让给已排队的控制指令与其他 actor。
+   */
+  private static final int MAX_ENTRIES_PER_JOB = 1000;
+
   private final EventLog logStream;
   private EventLogReader logStreamReader;
   private BatchEntryReader logStreamBatchReader;
@@ -169,7 +175,7 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
 
     // 相位判据仅 RUNNING 放行; 当前恒为 RUNNING, 暂停能力落地时切 streamProcessorPhase 即生效;
     // 中止判据恒 false: 定时任务的关闭权威在各 checker 的 onClose(句柄取消+任务自查), 调度器层不做兜底;
-    // 定时任务统一经车道 actor 执行, 与主处理隔离; 扫描间隔 250ms 保证到期执行的及时性上界
+    // 定时任务统一经车道 actor 执行, 与主处理隔离; 周期扫描只作时钟校正兜底, 到点执行由调度器为队首补的一次性唤醒保证
     final var schedulerFactory =
         new TimerSchedulerFactory(
             () -> streamProcessorPhase,
@@ -539,8 +545,10 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
     if (processing || !logStreamReader.hasNext()) {
       return;
     }
+    boolean yielded = false;
     try {
       processing = true;
+      int processedInJob = 0;
       while (logStreamReader.hasNext()) {
         final LoggedEntry loggedEvent = logStreamReader.next();
         final long position = loggedEvent.getPosition();
@@ -562,11 +570,20 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
           // 处理/跳过即释放: 推进流控在途水位（释放窗口占位与在途环槽位）
           logStream.getFlowControl().onProcessed(processPosition);
         }
+        if (++processedInJob >= MAX_ENTRIES_PER_JOB && logStreamReader.hasNext()) {
+          yielded = true;
+          break;
+        }
       }
     } finally {
       processing = false;
       checkQuiesced();
-      actor.submit(this::processNextEvent);
+      if (yielded) {
+        // 续跑排到外部队列尾部：已排队的控制指令与其他 actor 先得到执行
+        actor.runBehind(this::processNextEvent);
+      } else {
+        actor.submit(this::processNextEvent);
+      }
     }
   }
 

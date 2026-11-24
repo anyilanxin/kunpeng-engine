@@ -43,6 +43,12 @@ final class InflightRing {
   private final byte[] state = new byte[SIZE];
   private long lastAdded = Long.MIN_VALUE;
 
+  /**
+   * 释放游标：小于它的 position 都已释放或从未登记。释放严格自低向高，{@link #nextActive} 从这里起找而不是从环底逐格扫——
+   * 消费侧每条日志事件都会调一次释放，在途批少时从环底扫要空走过千格。
+   */
+  private long releasedBelow = Long.MIN_VALUE;
+
   /** 登记在途批。目标槽位被占（全量回绕）时覆盖并返回被驱逐者的 position（其占位由调用方 归还）；槽位空闲返回 -1。 */
   long add(final long lastPosition, final long nanos) {
     final int slot = slot(lastPosition);
@@ -50,6 +56,10 @@ final class InflightRing {
     position[slot] = lastPosition;
     appendedAtNanos[slot] = nanos;
     state[slot] = APPENDING;
+    if (displaced >= 0 && displaced >= releasedBelow) {
+      // 被驱逐者是环内最老的在途批，其槽位已归新批：游标越过它，后续扫描不会把新批误认成它
+      releasedBelow = displaced + 1;
+    }
     lastAdded = lastPosition;
     return displaced;
   }
@@ -78,14 +88,19 @@ final class InflightRing {
     return state[slot] != EMPTY ? appendedAtNanos[slot] : -1;
   }
 
-  /** 释放槽位（处理完成/失败/驱逐） */
+  /** 释放槽位（处理完成/失败/驱逐）；游标只前移 */
   void release(final long lastPosition) {
     state[slot(lastPosition)] = EMPTY;
+    if (lastPosition >= releasedBelow) {
+      releasedBelow = lastPosition + 1;
+    }
   }
 
   /** >= from 的最小活跃 position；无返回 {@link Long#MAX_VALUE} */
   long nextActive(final long from) {
-    for (long p = Math.max(from, lastAdded - SIZE + 1); p <= lastAdded; p++) {
+    for (long p = Math.max(Math.max(from, releasedBelow), lastAdded - SIZE + 1);
+        p <= lastAdded;
+        p++) {
       if (p >= from && state[slot(p)] != EMPTY) {
         return p;
       }

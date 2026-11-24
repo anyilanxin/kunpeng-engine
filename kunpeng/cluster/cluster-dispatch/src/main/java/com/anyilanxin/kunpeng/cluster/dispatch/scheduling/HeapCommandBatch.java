@@ -62,15 +62,15 @@ public final class HeapCommandBatch implements CommandBatch {
       final int sourceIndex,
       final AdminRecordMetadata metadata,
       final BufferWriter valueWriter) {
-    final var record = CommandRecord.materialize(key, sourceIndex, metadata, valueWriter);
-    final int recordLength = record.getLength();
+    // 先按元数据与值的编码长度过探针，通过后才物化快照：被拒的记录不做拷贝
+    final int recordLength = metadata.getLength() + valueWriter.getLength();
 
     if (!capacityProbe.test(records.size() + 1, byteSize + recordLength)) {
       return Either.left(
           new BatchCapacityExceededException(recordLength, records.size(), byteSize));
     }
 
-    records.add(record);
+    records.add(CommandRecord.materialize(key, sourceIndex, metadata, valueWriter));
     byteSize += recordLength;
     return Either.right(null);
   }

@@ -29,6 +29,6 @@ kunpeng:
     manage:
       init-broker-id: node01
       replication-factor: 1
+    # actor 调度线程；cpu-thread-count 不配置时为 max(1, CPU 核数 - 2)
     threads:
-      cpu-thread-count: 2
       io-thread-count: 2

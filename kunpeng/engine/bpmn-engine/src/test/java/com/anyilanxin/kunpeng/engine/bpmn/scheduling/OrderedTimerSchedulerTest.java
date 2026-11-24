@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -57,7 +58,7 @@ class OrderedTimerSchedulerTest {
   @Test
   void shouldLetFirstRecordReachRealAppendWhenConservativeProbeWouldReject() {
     final var writer = mock(EventLogWriter.class);
-    when(writer.canAppend(anyInt(), anyInt())).thenReturn(false);
+    when(writer.canAppend(any(), anyInt(), anyInt())).thenReturn(false);
 
     assertTrue(OrderedTimerScheduler.canAppendScheduledBatch(writer, 1, 100));
     assertFalse(OrderedTimerScheduler.canAppendScheduledBatch(writer, 2, 100));

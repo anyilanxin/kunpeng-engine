@@ -22,12 +22,14 @@ import com.anyilanxin.kunpeng.engine.bpmn.scheduling.TimerScheduler.TimerHandle;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.timer.TimerEventRecord;
 import com.anyilanxin.kunpeng.protocol.business.record.command.timer.TimerLifeCycle;
 import com.anyilanxin.kunpeng.repository.business.modules.timer.ImmutableTimerEventRepository;
+import com.anyilanxin.kunpeng.scheduler.ActorControl;
 import com.anyilanxin.kunpeng.utils.AtomicUtil;
 import java.time.Duration;
 import java.time.InstantSource;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
+import java.util.function.LongUnaryOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,11 +42,22 @@ import org.slf4j.LoggerFactory;
 public class TimerDueDateChecker implements SchedulerCheckerAware {
   private static final Logger LOG = LoggerFactory.getLogger(TimerDueDateChecker.class);
   private volatile boolean shouldRescheduleChecker;
-  private static final long TIMER_RESOLUTION = Duration.ofMillis(40).toMillis();
+
+  /**
+   * 最小重排间隔：到期时间已过或临近时，下一次执行至少推后这么久（避免立即重排独占车道），也是“已有排程是否晚于需要”的判定精度。 到点唤醒的延迟上界由它决定，取 1ms；扫描让出的时间预算另由
+   * {@link #SCAN_BUDGET} 约束，两者互不推导。
+   */
+  private static final long MIN_RESCHEDULE_INTERVAL = Duration.ofMillis(1).toMillis();
+
+  /** 一轮扫描触发过命令、且已扫完全部到期定时器时的确认扫描延迟：成功处理后存储已删，扫描自然转入休眠； 追加/处理失败并释放登记后，到期记录仍存在，由该扫描按此节奏重新触发。 */
+  private static final long CONFIRMATION_INTERVAL = Duration.ofMillis(40).toMillis();
+
+  /** 单轮扫描的时间预算：超过即让出车道，没扫完的到期定时器按最小重排间隔续扫。 */
+  private static final long SCAN_BUDGET = Duration.ofMillis(20).toMillis();
+
   private static final long PHANTOM_STALENESS = Duration.ofMillis(500).toMillis();
-  private static final double GIVE_YIELD_FACTOR = 0.5;
   private ScheduleDelayed scheduleService;
-  private final long timerResolution;
+  private final long minRescheduleInterval;
   private final Function<CommandCollector, Long> visitor;
   private final boolean yieldingDueDateChecker = true;
 
@@ -56,7 +69,7 @@ public class TimerDueDateChecker implements SchedulerCheckerAware {
 
   public TimerDueDateChecker(
       final ImmutableTimerEventRepository repositoryTimer, final InstantSource clock) {
-    timerResolution = TIMER_RESOLUTION;
+    minRescheduleInterval = MIN_RESCHEDULE_INTERVAL;
     visitor = new TriggerTimersSideEffect(repositoryTimer, clock, yieldingDueDateChecker);
     this.clock = clock;
   }
@@ -103,11 +116,11 @@ public class TimerDueDateChecker implements SchedulerCheckerAware {
   /**
    * 排程 checker 的下一次执行并记录到 {@link #nextExecution}。
    *
-   * <p>调用后保证在 {@link #timerResolution} 精度内最迟于给定到期时间存在一次已排程执行。
+   * <p>调用后保证在 {@link #minRescheduleInterval} 精度内最迟于给定到期时间存在一次已排程执行。
    *
-   * <p>当前没有排程时总是新建执行；若已有排程的时间比新时间晚（超出时间精度），则取消旧执行并替换；其余情况不新建排程。
+   * <p>当前没有排程时总是新建执行；若已有排程的时间比新时间晚（超出该精度），则取消旧执行并替换；其余情况不新建排程。
    *
-   * <p>保证下一次执行至少排在 {@link #timerResolution} 毫秒之后（例如到期时间已过期、就是当前或非常临近时）， 避免 checker
+   * <p>保证下一次执行至少排在 {@link #minRescheduleInterval} 毫秒之后（例如到期时间已过期、就是当前或非常临近时）， 避免 checker
    * 立即重排而让其他任务没有机会运行。
    *
    * <p>本方法线程安全，可并发调用；并发排程时会取消旧执行并重排。
@@ -115,6 +128,11 @@ public class TimerDueDateChecker implements SchedulerCheckerAware {
    * @param dueDate 下一次执行的到期时间
    */
   public void schedule(final long dueDate) {
+    reschedule(now -> Math.max(dueDate - now, minRescheduleInterval));
+  }
+
+  /** 安排一次执行：{@code delayFromNow} 以排程时刻的时钟读数为准给出延迟；已有更早（或相差不超过最小间隔）的排程时保持不变。 */
+  private void reschedule(final LongUnaryOperator delayFromNow) {
     if (!shouldRescheduleChecker) {
       return;
     }
@@ -123,10 +141,10 @@ public class TimerDueDateChecker implements SchedulerCheckerAware {
             nextExecution,
             currentlyPlanned -> {
               final var now = clock.millis();
-              final long scheduleFor = now + Math.max(dueDate - now, timerResolution);
+              final long scheduleFor = now + delayFromNow.applyAsLong(now);
               if (!(currentlyPlanned instanceof final NextExecution.Scheduled currentlyScheduled)
                   || isPhantom(currentlyScheduled, now)
-                  || (currentlyScheduled.scheduledFor() - scheduleFor > timerResolution)) {
+                  || (currentlyScheduled.scheduledFor() - scheduleFor > minRescheduleInterval)) {
                 final var task = scheduleService.scheduleAt(scheduleFor, this::execute);
                 return Optional.of(new NextExecution.Scheduled(scheduleFor, task));
               }
@@ -177,21 +195,25 @@ public class TimerDueDateChecker implements SchedulerCheckerAware {
     try {
       nextDueDate = visitor.apply(output);
     } catch (final RuntimeException e) {
-      // 访问失败时若不重排，checker 将永久停摆（nextExecution 已置 None），
-      // 所有到期定时器随之卡死；这里兜底 40ms 后重试
-      LOG.error("Timer due-date check failed; rescheduling to retry", e);
-      schedule(-1);
-      return output.build();
+      // 不做原地重试：持续性故障下重试只是固定节奏的日志风暴，问题照旧被掩盖。这里让所在车道 actor 失败，
+      // 由 LanePool 重建车道并上报定时任务不健康，重建完成后经 rearm 重新排程本检查器。
+      // 异常继续上抛，由 OrderedTimerScheduler 回滚本次已 staged 的命令（否则它们会永远挂在在途登记里不再触发）
+      LOG.error("Timer due-date check failed; failing the scheduling lane so it is rebuilt", e);
+      final ActorControl lane = ActorControl.current();
+      if (lane != null) {
+        lane.fail(e);
+      }
+      throw e;
     }
     final CommandBatch batch = output.build();
-    if (batch.isEmpty()) {
-      if (nextDueDate > 0) {
-        schedule(nextDueDate);
-      }
-    } else {
-      // 每个非空批次保留一次近期确认扫描：成功处理后存储已删，扫描自然转入休眠；
-      // append/处理失败并释放登记后，到期记录仍存在，可由该扫描重新触发，避免 nextDueDate=-1 或未来 timer 造成停排。
-      schedule(-1);
+    if (nextDueDate > 0) {
+      // 扫描停在某个定时器上：它是已触发待处理的在途队首（到期时间已过，按最小间隔轮询到它被处理）、
+      // 或还没到期的下一个定时器（到点唤醒），或因时间预算/批次容量没扫到的到期记录（按最小间隔续扫）。
+      schedule(nextDueDate);
+    } else if (!batch.isEmpty()) {
+      // 已扫完全部到期定时器：每个非空批次保留一次确认扫描——成功处理后存储已删，扫描自然转入休眠；
+      // append/处理失败并释放登记后，到期记录仍存在，可由该扫描重新触发，避免此后没有排程造成停排。
+      reschedule(now -> CONFIRMATION_INTERVAL);
     }
     return batch;
   }
@@ -216,7 +238,7 @@ public class TimerDueDateChecker implements SchedulerCheckerAware {
     public Long apply(final CommandCollector output) {
       final var now = clock.millis();
 
-      final var yieldAfter = now + Math.round(TIMER_RESOLUTION * GIVE_YIELD_FACTOR);
+      final var yieldAfter = now + SCAN_BUDGET;
 
       final ImmutableTimerEventRepository.TimerVisitor timerVisitor;
       if (yieldControl) {

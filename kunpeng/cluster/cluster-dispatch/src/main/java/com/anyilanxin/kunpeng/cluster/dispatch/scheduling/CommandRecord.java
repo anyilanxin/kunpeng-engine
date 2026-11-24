@@ -18,25 +18,22 @@ package com.anyilanxin.kunpeng.cluster.dispatch.scheduling;
 
 import com.anyilanxin.kunpeng.eventlog.AppendEntry;
 import com.anyilanxin.kunpeng.protocol.admin.impl.AdminRecordMetadata;
-import com.anyilanxin.kunpeng.protocol.admin.impl.record.DefaultRecordValueMapper;
-import com.anyilanxin.kunpeng.protocol.admin.record.RecordValueMapper;
-import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 import com.anyilanxin.kunpeng.structpack.buffer.BufferWriter;
+import com.anyilanxin.kunpeng.structpack.buffer.DirectBufferWriter;
 import org.agrona.concurrent.UnsafeBuffer;
 
 /**
  * 批内单条命令记录：不可变 record 形态的 {@link AppendEntry}。
  *
- * <p>入批时 value 被物化为独立字节拷贝并按生命周期还原为 typed value，后续对源缓冲的修改 不再影响批内快照。
+ * <p>入批时 value 被物化为独立字节拷贝，后续对源缓冲的修改不再影响批内快照。快照以编码后的字节原样保留： 追加日志时直接拷贝，不再还原为 typed value
+ * 后二次编码（省掉每条命令一次对象分配、一次 wrap 和一次全量编码）。
  *
  * @author zxuanhong
  * @since 2026.9.0
  */
 public record CommandRecord(
-    long key, int sourceIndex, AdminRecordMetadata header, UnifiedRecordValue valueSnapshot)
+    long key, int sourceIndex, AdminRecordMetadata header, BufferWriter valueSnapshot)
     implements AppendEntry {
-
-  private static final RecordValueMapper VALUE_MAPPER = DefaultRecordValueMapper.getInstance();
 
   @Override
   public boolean isSkipProcessing() {
@@ -54,7 +51,7 @@ public record CommandRecord(
   }
 
   /**
-   * 将 {@code valueWriter} 的字节拷贝为独立快照，并按其生命周期还原为 typed value。
+   * 将 {@code valueWriter} 的字节拷贝为独立快照。
    *
    * @param key 记录 key，无 key 传 {@code -1}
    * @param sourceIndex 批内回指，无回指传 {@code -1}
@@ -67,11 +64,8 @@ public record CommandRecord(
       final int sourceIndex,
       final AdminRecordMetadata metadata,
       final BufferWriter valueWriter) {
-    final var bytes = new byte[valueWriter.getLength()];
-    final var snapshot = new UnsafeBuffer(bytes);
+    final var snapshot = new UnsafeBuffer(new byte[valueWriter.getLength()]);
     valueWriter.write(snapshot, 0);
-    final UnifiedRecordValue typedValue = VALUE_MAPPER.getValue(metadata.getLifeCycle());
-    typedValue.wrap(snapshot, 0, snapshot.capacity());
-    return new CommandRecord(key, sourceIndex, metadata, typedValue);
+    return new CommandRecord(key, sourceIndex, metadata, new DirectBufferWriter().wrap(snapshot));
   }
 }

@@ -31,6 +31,8 @@ import com.anyilanxin.kunpeng.eventlog.storage.EventStore;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Clock;
 import java.util.concurrent.CopyOnWriteArraySet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * {@link EventLog} 实现：恢复（存储持久化提交位找回 lastPosition）→ 装配定序器/流控 → 提交通知分发。
@@ -39,6 +41,8 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * @since 2026.9.0
  */
 public final class EventLogImpl implements EventLog {
+
+  private static final Logger LOG = LoggerFactory.getLogger(EventLogImpl.class);
 
   private final EventStore store;
   private final String logName;
@@ -145,7 +149,14 @@ public final class EventLogImpl implements EventLog {
       try {
         listener.onRecordAvailable();
       } catch (final RuntimeException e) {
-        // 消费方回调异常不阻断其他监听者
+        // 一个消费方出错不阻断其他消费方，但必须留痕：监听者正是"有新日志 → 唤醒消费方"这一步，
+        // 静默吞掉的表现是事件已提交却无人处理/导出，且无从排查
+        LOG.error(
+            "提交通知监听者 {} 出错，该消费方不会被本次提交唤醒 [log: {}, partition: {}]",
+            listener.getClass().getName(),
+            logName,
+            partitionId,
+            e);
       }
     }
   }

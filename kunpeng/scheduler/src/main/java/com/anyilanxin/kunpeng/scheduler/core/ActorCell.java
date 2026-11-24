@@ -130,7 +130,8 @@ public final class ActorCell {
   /**
    * runner 取走 cell 后原子接管（gate WAKING_UP→RUNNING, 记录 homeRunner 供路由亲和与 owner 判定）。
    *
-   * @return false 表示 cell 已被其他载体并发接管（双入队防御）, 调用方须丢弃本实例
+   * @return false 表示门不在 WAKING_UP。按门的不变量（每个 WAITING→WAKING_UP 片段恰一个入队者）不会发生：平台 runner
+   *     据此抛出让载体线程失败；虚拟载体只在读到 WAKING_UP 时调用，失败则等下一次事件
    */
   public boolean claimedBy(final CellRunner runner) {
     if (gate.markRunning()) {
@@ -448,6 +449,14 @@ public final class ActorCell {
         envelope = submitted.poll();
       }
       if (envelope != null) {
+        if (phase.isTerminal() && envelope.getKind() != ActorEnvelope.Kind.LIFECYCLE) {
+          // 关闭/失败窗口内漏过相位检查的提交（submitExternal 的相位检查与入队不原子，清理阶段的排空也可能先于入队）：
+          // 终态后除收尾钩子（LIFECYCLE）外不再执行任何任务——否则动作会晚于 onActorClosed 执行，
+          // 抛异常时还会把已 CLOSED 的 actor 翻成 FAILED。统一异常完成
+          failEnvelope(envelope, new IllegalStateException("Actor 已关闭"));
+          releaseIfDisposable(envelope);
+          continue;
+        }
         if (!execute(envelope)) {
           // 死亡退出也必须走休眠收尾：VirtualCarrier 以 终态+WAITING 判定退线程，
           // 跳过会令门停在 RUNNING、载体永久驻留
@@ -477,6 +486,9 @@ public final class ActorCell {
 
   /**
    * 收尾协议: 先休眠后复查——复查见新工作则自行重新入队（提交者与 owner 只有一个能 CAS 成功, 不会双入队; 提交者在 RUNNING 期间 CAS 失败依赖本复查不丢唤醒）。
+   *
+   * <p>复查的正确性依赖 {@link SchedulingGate#trySleep()} 的 StoreLoad 屏障：WAITING
+   * 必须先于复查对其他线程可见，否则本方的复查与并发提交者的 CAS 会双向读到旧值而都不入队。
    *
    * <p>复查只能依赖票差与队列非空: trySleep 之后门已放开, 并发唤醒可让其他 runner 接管并排空本 cell（增删订阅槽）, 无门扫描订阅列表会以 CME 杀死
    * actor。订阅到期路径必然 wakeSignal 记票（fire 与记票间的纳秒级空隙由在途票兜住）, 票差已覆盖; 队列非空覆盖相位推进信封（advancePhase 的
@@ -683,32 +695,47 @@ public final class ActorCell {
    * @return 任一订阅到期已消费则 true
    *     <p>索引循环而非迭代器：订阅动作内可能再注册新订阅（如条件回调里 runOnCompletion）， 迭代器会抛
    *     CME；索引循环容忍遍历中增删（新增的追加在尾部，本轮或下轮消费）。
+   *     <p>原地压缩而不是逐个 remove：保留下来的订阅前移、最后裁掉尾部。大量订阅同轮到期时逐个 remove 每次都要搬移其后的全部元素， 总代价随数量平方增长。
    */
   private boolean pollSubscriptions() {
     boolean anyDue = false;
+    int write = 0;
     for (int i = 0; i < subscriptions.size(); i++) {
       final SubscriptionSlot slot = subscriptions.get(i);
+      boolean keep = true;
       if (slot.isCancelled()) {
-        subscriptions.remove(i);
-        i--;
-        continue;
-      }
-      if (slot.pollDue()) {
+        keep = false;
+      } else if (slot.pollDue()) {
         anyDue = true;
         final ActorEnvelope envelope = takeSelf();
         envelope.wrapSubscription(slot);
         if (!execute(envelope)) {
+          // actor 已进入终止相位：未处理的订阅（含当前这条）原序接回保留区之后
+          while (i < subscriptions.size()) {
+            subscriptions.set(write++, subscriptions.get(i++));
+          }
+          trimSubscriptions(write);
           return anyDue;
         }
         jobExecuted(envelope);
         releaseIfDisposable(envelope);
-        if (slot instanceof FutureSlot) {
-          subscriptions.remove(i);
-          i--;
-        }
+        // 一次性订阅消费完即摘除：FutureSlot 与非 recurring 的 TimerSlot 都只触发一次，留在表里既泄漏又拖慢每轮扫描
+        keep =
+            !(slot instanceof FutureSlot
+                || (slot instanceof final TimerSlot timer && !timer.isRecurring()));
+      }
+      if (keep) {
+        subscriptions.set(write++, slot);
       }
     }
+    trimSubscriptions(write);
     return anyDue;
+  }
+
+  private void trimSubscriptions(final int size) {
+    while (subscriptions.size() > size) {
+      subscriptions.remove(subscriptions.size() - 1);
+    }
   }
 
   // ===== 指标 =====

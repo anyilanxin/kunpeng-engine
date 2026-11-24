@@ -178,7 +178,7 @@ public class AdminCommandApiHandleImpl implements AdminCommandApiHandle, Closeab
     } else {
       appendEntry = RecordAppendEntryFactory.of(metadata, recordValue);
     }
-    if (logStreamWriter.canAppend(1, appendEntry.getLength())) {
+    if (logStreamWriter.canAppend(WriteContext.USER_COMMAND, 1, appendEntry.getLength())) {
       final AppendResult result = logStreamWriter.tryAppend(WriteContext.USER_COMMAND, appendEntry);
       if (result instanceof AppendResult.Rejected) {
         errorResponse(

@@ -81,7 +81,8 @@ final class AimdWindow {
       successSinceUpdate = 0;
       final double gradient = rtt.gradient();
       if (gradient < 1 + tolerance) {
-        window = Math.min(max, window + 1);
+        // 窗口已在上限（含窗口关闭时的 MAX_VALUE）时不能再加：MAX_VALUE + 1 溢出成负数后所有命令都会被拒
+        window = window >= max ? max : window + 1;
       } else {
         final double decrease = 1 - 0.5 * (1 - 1 / gradient);
         window = Math.max(min, (int) (window * Math.max(decrease, 0.5)));
