@@ -24,6 +24,8 @@ All notable changes to this project are documented in this file. The format foll
 
 - The inter-partition command sender is now closed when the partition steps down (it was never closed before)
 - Concurrent data-surgery freeze requests share one in-flight future (each used to trigger its own freeze)
+- Static `candidateGroups` and `candidateUsers` on a user task are split by comma. They used to go through list evaluation, which cannot handle a plain text value, so the task was never created
+- A failed `assignee`, `candidateGroups` or `candidateUsers` expression now raises an incident on the task instead of only logging it. The task stays in `CREATING` (it cannot be assigned, claimed or completed until then) and resolving the incident retries the creation
 
 ## [2026.9.0-alpha1] - 2026-10-20
 
