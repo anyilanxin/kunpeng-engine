@@ -370,7 +370,7 @@ class BusinessDispatchPlanGeneratorTest {
 
     assertOrderAndIds(plan, 2);
 
-    // 各分区按成员 ID 升序补足：p1 补 m2，p2 补 m0（新成员优先级为 1）
+    // 各分区按成员 ID 升序补足：p1 补 m2，p2 补 m0；原有成员重排为 3、2，新成员为 1
     final PartitionJoinRecord join1 = payload(plan, 0, PartitionExecutionType.JOIN);
     assertThat(join1.getPartitionMeta().getPartitionId()).isEqualTo(1);
     assertThat(join1.executionMemberId()).isEqualTo("member-2");
@@ -382,8 +382,93 @@ class BusinessDispatchPlanGeneratorTest {
     final List<PartitionInfoMetaRecord> finalMeta = metaOf(plan);
     assertThat(memberIds(finalMeta.get(0))).containsExactly("member-0", "member-1", "member-2");
     assertThat(memberIds(finalMeta.get(1))).containsExactly("member-1", "member-2", "member-0");
+    assertThat(priorityOf(finalMeta.get(0), "member-0")).isEqualTo(3);
+    assertThat(priorityOf(finalMeta.get(0), "member-1")).isEqualTo(2);
     assertThat(priorityOf(finalMeta.get(0), "member-2")).isEqualTo(1);
-    assertThat(priorityOf(finalMeta.get(0), "member-0")).isEqualTo(2);
+    assertThat(priorityOf(finalMeta.get(1), "member-1")).isEqualTo(3);
+    assertThat(priorityOf(finalMeta.get(1), "member-2")).isEqualTo(2);
+    assertThat(priorityOf(finalMeta.get(1), "member-0")).isEqualTo(1);
+    assertThat(finalMeta)
+        .allSatisfy(partition -> assertThat(partition.getTargetPriority()).isEqualTo(3));
+  }
+
+  /**
+   * 1→3 扩容：原有成员升到 3，两个新成员依次拿 2、1；奇数分区反转新成员顺序，使次优先级错开落到不同新成员上。
+   * 加入顺序仍按成员 ID 升序，不随优先级变化。
+   */
+  @Test
+  void replicationShouldAlternateNewMemberOrderWhenScalingFromOneToThree() {
+    final BusinessDispatchPlanRecord planRecord =
+        planRecord(BusinessDispatchType.CHANGE_REPLICATION, 41L)
+            .setOldReplicationFactor(1)
+            .setExpectReplicationFactor(3);
+    partition(planRecord, 1, "member-0", "member-0");
+    partition(planRecord, 2, "member-1", "member-1");
+
+    final BusinessDispatchPlanRecord plan =
+        changeReplicationGenerator(topologyWithLeaders("member-0", "member-1", "member-2"))
+            .createPlan(planRecord, Set.of(M0, M1, M2));
+
+    assertOrderAndIds(plan, 4);
+    assertJoin(plan, 0, 1, "member-1");
+    assertJoin(plan, 1, 1, "member-2");
+    assertJoin(plan, 2, 2, "member-0");
+    assertJoin(plan, 3, 2, "member-2");
+
+    // JOIN 负载携带重排后的拓扑：新成员据此拿到自己的优先级与目标优先级
+    final PartitionJoinRecord join = payload(plan, 1, PartitionExecutionType.JOIN);
+    assertThat(priorityOf(join.getPartitionMeta(), "member-2")).isEqualTo(2);
+    assertThat(join.getPartitionMeta().getTargetPriority()).isEqualTo(3);
+
+    final List<PartitionInfoMetaRecord> finalMeta = metaOf(plan);
+    // 奇数分区 1：新成员顺序反转，m2 拿 2、m1 拿 1
+    assertThat(memberIds(finalMeta.get(0))).containsExactly("member-0", "member-2", "member-1");
+    assertThat(priorityOf(finalMeta.get(0), "member-0")).isEqualTo(3);
+    assertThat(priorityOf(finalMeta.get(0), "member-2")).isEqualTo(2);
+    assertThat(priorityOf(finalMeta.get(0), "member-1")).isEqualTo(1);
+    // 偶数分区 2：新成员 m0、m2 依次拿 2、1
+    assertThat(memberIds(finalMeta.get(1))).containsExactly("member-1", "member-0", "member-2");
+    assertThat(priorityOf(finalMeta.get(1), "member-1")).isEqualTo(3);
+    assertThat(priorityOf(finalMeta.get(1), "member-0")).isEqualTo(2);
+    assertThat(priorityOf(finalMeta.get(1), "member-2")).isEqualTo(1);
+
+    assertThat(finalMeta)
+        .allSatisfy(partition -> assertThat(partition.getTargetPriority()).isEqualTo(3));
+    assertThat(finalMeta.get(0).getPrimaryMemberId()).isEqualTo("member-0");
+    assertThat(finalMeta.get(1).getPrimaryMemberId()).isEqualTo("member-1");
+  }
+
+  /** 原有成员优先级相同（旧规则扩容留下的布局）时按成员 ID 升序排名 */
+  @Test
+  void replicationShouldBreakEqualPrioritiesByMemberId() {
+    final BusinessDispatchPlanRecord planRecord =
+        planRecord(BusinessDispatchType.CHANGE_REPLICATION, 42L)
+            .setOldReplicationFactor(2)
+            .setExpectReplicationFactor(3);
+    // 记录里 m2 排在 m1 前面，两者优先级同为 1
+    final PartitionInfoMetaRecord partition = planRecord.oldMeta().add();
+    partition
+        .setPartitionGroup(GROUP)
+        .setPartitionId(2)
+        .setTargetPriority(1)
+        .setPrimaryMemberId("member-1");
+    partition.members().add().setMemberId("member-2").setPriority(1);
+    partition.members().add().setMemberId("member-1").setPriority(1);
+
+    final BusinessDispatchPlanRecord plan =
+        changeReplicationGenerator(topologyWithLeaders("member-0", "member-1", "member-2"))
+            .createPlan(planRecord, Set.of(M0, M1, M2));
+
+    assertOrderAndIds(plan, 1);
+    assertJoin(plan, 0, 2, "member-0");
+
+    final PartitionInfoMetaRecord finalMeta = metaOf(plan).getFirst();
+    assertThat(memberIds(finalMeta)).containsExactly("member-1", "member-2", "member-0");
+    assertThat(priorityOf(finalMeta, "member-1")).isEqualTo(3);
+    assertThat(priorityOf(finalMeta, "member-2")).isEqualTo(2);
+    assertThat(priorityOf(finalMeta, "member-0")).isEqualTo(1);
+    assertThat(finalMeta.getTargetPriority()).isEqualTo(3);
+    assertThat(finalMeta.getPrimaryMemberId()).isEqualTo("member-1");
   }
 
   @Test

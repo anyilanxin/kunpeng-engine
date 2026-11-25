@@ -32,7 +32,6 @@ import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 import com.anyilanxin.kunpeng.repository.admin.AdminImmutableRepository;
 import com.anyilanxin.kunpeng.repository.admin.modules.key.ImmutableKeyRepository;
 import java.util.*;
-import org.agrona.concurrent.UnsafeBuffer;
 
 /**
  * 管理调度计划制定入口。管理集群为单分区（分区编号恒为 1），管理面仅覆盖调整副本数（{@link
@@ -47,7 +46,8 @@ import org.agrona.concurrent.UnsafeBuffer;
  * <p>制定规则：
  *
  * <ul>
- *   <li>期望值大于历史值：从成员池中按成员 ID 升序补足差额成员（新成员优先级置 1），diff 推导为 JOIN；
+ *   <li>期望值大于历史值：从成员池中按成员 ID 升序补足差额成员，成员优先级按 {@link PartitionTopologyDiff#expandMembers}
+ *       重排（原有成员在前、新成员在后，目标优先级为期望副本数），diff 推导为 JOIN；
  *   <li>期望值小于历史值：从非 Leader 成员中按成员 ID 升序剔除差额成员（Leader 永不移除），diff 推导为 LEAVE；
  *   <li>相等时生成空计划。
  * </ul>
@@ -97,7 +97,7 @@ public final class AdminDispatchPlanMaker {
         .setExpectReplicationFactor(expectReplicationFactor);
   }
 
-  /** 目标拓扑：按成员 ID 升序补足至期望副本数（新成员优先级置 1） */
+  /** 目标拓扑：按成员 ID 升序补足至期望副本数，成员优先级按 {@link PartitionTopologyDiff#expandMembers} 重排 */
   private PartitionInfoMetaRecord expandReplication(
       final PartitionInfoMetaRecord partition,
       final Set<MemberId> memberIds,
@@ -107,20 +107,18 @@ public final class AdminDispatchPlanMaker {
     if (needed <= 0) {
       return partition;
     }
-    final PartitionInfoMetaRecord expanded = copyPartitionMeta(partition);
     final List<MemberId> members = new ArrayList<>(memberIds);
     members.sort(MEMBER_ORDER);
-    int added = 0;
+    final List<MemberId> addedMembers = new ArrayList<>(needed);
     for (final MemberId member : members) {
-      if (added == needed) {
+      if (addedMembers.size() == needed) {
         break;
       }
       if (!currentMembers.contains(member)) {
-        expanded.members().add().setMemberId(member.id()).setPriority(1);
-        added++;
+        addedMembers.add(member);
       }
     }
-    return expanded;
+    return PartitionTopologyDiff.expandMembers(partition, addedMembers, expectReplicationFactor);
   }
 
   /** 目标拓扑：Leader 永不移除，仅从非 Leader 成员中按 ID 升序剔除至期望副本数 */
@@ -238,15 +236,6 @@ public final class AdminDispatchPlanMaker {
     appendDiff(dispatchPlan, current, target);
     dispatchPlan.setMeta(target.getFirst());
     return dispatchPlan;
-  }
-
-  /** 深拷贝拓扑记录（避免计划内记录与入参元数据共享 buffer） */
-  private static PartitionInfoMetaRecord copyPartitionMeta(final PartitionInfoMetaRecord source) {
-    final UnsafeBuffer buffer = new UnsafeBuffer(new byte[source.getLength()]);
-    source.write(buffer, 0);
-    final PartitionInfoMetaRecord copy = new PartitionInfoMetaRecord();
-    copy.wrap(buffer, 0, buffer.capacity());
-    return copy;
   }
 
   /** 拓扑记录对应的分区 ID */

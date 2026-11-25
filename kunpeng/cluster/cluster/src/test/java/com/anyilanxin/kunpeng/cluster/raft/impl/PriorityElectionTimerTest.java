@@ -244,4 +244,51 @@ final class PriorityElectionTimerTest {
     // then
     assertThat(triggerCount.get()).as("第三次超时 target 已低于等于节点优先级，应触发选举").isOne();
   }
+
+  /**
+   * 1→3 扩容后的接任时序：原有成员沿用旧值（优先级 1、目标 1），两个新成员按重排后的值（2、3）与（1、3），
+   * 三者分别在第 1、2、3 个选举超时触发，没有同刻拉票。
+   */
+  @Test
+  void expandedMembersTriggerElectionsInPriorityOrder() {
+    // given
+    final Duration electionTimeout = Duration.ofMillis(100);
+    final AtomicInteger existingTriggers = new AtomicInteger();
+    final AtomicInteger secondPrioTriggers = new AtomicInteger();
+    final AtomicInteger lowestPrioTriggers = new AtomicInteger();
+    final PriorityElectionTimer existing =
+        new PriorityElectionTimer(
+            electionTimeout, threadContext, existingTriggers::getAndIncrement, log, 1, 1, 1);
+    final PriorityElectionTimer secondPrio =
+        new PriorityElectionTimer(
+            electionTimeout, threadContext, secondPrioTriggers::getAndIncrement, log, 3, 2, 1);
+    final PriorityElectionTimer lowestPrio =
+        new PriorityElectionTimer(
+            electionTimeout, threadContext, lowestPrioTriggers::getAndIncrement, log, 3, 1, 1);
+    final DeterministicScheduler scheduler = threadContext.getDeterministicScheduler();
+
+    // when
+    existing.reset();
+    secondPrio.reset();
+    lowestPrio.reset();
+    scheduler.tick(electionTimeout.toMillis(), TimeUnit.MILLISECONDS);
+
+    // then：第 1 个超时只有原有成员触发
+    assertThat(existingTriggers.get()).isOne();
+    assertThat(secondPrioTriggers.get()).isZero();
+    assertThat(lowestPrioTriggers.get()).isZero();
+
+    // when
+    scheduler.tick(electionTimeout.toMillis(), TimeUnit.MILLISECONDS);
+
+    // then：第 2 个超时轮到优先级 2 的新成员
+    assertThat(secondPrioTriggers.get()).isOne();
+    assertThat(lowestPrioTriggers.get()).isZero();
+
+    // when
+    scheduler.tick(electionTimeout.toMillis(), TimeUnit.MILLISECONDS);
+
+    // then：第 3 个超时轮到优先级 1 的新成员
+    assertThat(lowestPrioTriggers.get()).isOne();
+  }
 }

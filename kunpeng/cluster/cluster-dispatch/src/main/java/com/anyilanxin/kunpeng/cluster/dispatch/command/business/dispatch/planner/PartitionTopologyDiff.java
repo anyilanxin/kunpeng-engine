@@ -20,12 +20,14 @@ import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
 import com.anyilanxin.kunpeng.protocol.admin.impl.record.command.common.PartitionInfoMetaRecord;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 /**
  * 分区拓扑 diff 工具：对比当前拓扑与目标拓扑，统一推导 BOOTSTRAP/JOIN/LEAVE 操作序列。
@@ -53,6 +55,9 @@ import java.util.Set;
  *
  * <p>BOOTSTRAP 负载携带 bootstrapSnapshot 标识：当前拓扑为空（全量初始化，无既有数据）时为 false， 否则（扩容新增分区）为 true，
  * 执行端据此决定是否从既有分区引导数据；该标识仅对分区增加的引导操作有意义。
+ *
+ * <p>除推导操作序列外，本工具还提供两个目标拓扑的构造方法：{@link #removeMembers}（副本缩减，保留剩余成员的优先级）与 {@link
+ * #expandMembers}（副本扩容，成员优先级统一重排），业务面与管理面的副本数调整共用。
  *
  * @author zxuanhong
  * @since 2026.9.0
@@ -147,6 +152,54 @@ public final class PartitionTopologyDiff {
               }
             });
     return removed;
+  }
+
+  /**
+   * 构建副本扩容后的分区拓扑记录副本，成员优先级统一重排为 1..targetPriority 且互不重复：
+   *
+   * <ul>
+   *   <li>原有成员按（现有优先级降序、成员 ID 升序）排名，第 r 个（从 0 起）的优先级为 {@code targetPriority - r}；
+   *   <li>新成员排在原有成员之后，按入参顺序依次拿到 {@code addedMembers.size()} 到 1；分区号为奇数时反转顺序， 使各分区的次优先级错开落到不同的新成员上；
+   *   <li>目标优先级取 {@code targetPriority}，分区标识与主成员保持不变。
+   * </ul>
+   *
+   * <p>执行扩容明细的只有新成员，原有成员不更新本地的优先级与目标优先级，仍按旧值参与选举； 重排后的值随 JOIN 负载写到新成员，并作为计划的终态拓扑。
+   */
+  public static PartitionInfoMetaRecord expandMembers(
+      final PartitionInfoMetaRecord source,
+      final List<MemberId> addedMembers,
+      final int targetPriority) {
+    final Map<MemberId, Integer> existingPriorities =
+        new TreeMap<>(Comparator.comparing(MemberId::id));
+    source
+        .members()
+        .forEach(
+            member ->
+                existingPriorities.put(MemberId.from(member.getMemberId()), member.getPriority()));
+    // 先按成员 ID 升序，再按优先级降序做稳定排序
+    final List<MemberId> ranked = new ArrayList<>(existingPriorities.keySet());
+    ranked.sort(
+        Comparator.comparing((MemberId member) -> existingPriorities.get(member)).reversed());
+
+    final PartitionInfoMetaRecord expanded =
+        new PartitionInfoMetaRecord()
+            .setPartitionGroup(source.getPartitionGroup())
+            .setPartitionId(source.getPartitionId())
+            .setTargetPriority(targetPriority)
+            .setPrimaryMemberId(source.getPrimaryMemberId());
+    int priority = targetPriority;
+    for (final MemberId member : ranked) {
+      expanded.members().add().setMemberId(member.id()).setPriority(priority--);
+    }
+    final List<MemberId> added = new ArrayList<>(addedMembers);
+    if (source.getPartitionId() % 2 == 1) {
+      Collections.reverse(added);
+    }
+    priority = added.size();
+    for (final MemberId member : added) {
+      expanded.members().add().setMemberId(member.id()).setPriority(priority--);
+    }
+    return expanded;
   }
 
   /** 按分区 ID 升序建立 分区键 → 拓扑记录 的有序视图 */

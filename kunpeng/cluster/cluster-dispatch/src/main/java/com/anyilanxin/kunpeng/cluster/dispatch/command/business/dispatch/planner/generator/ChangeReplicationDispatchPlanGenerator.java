@@ -33,8 +33,9 @@ import java.util.Set;
 /**
  * CHANGE_REPLICATION 调度计划生成器：副本因子由历史值调整至期望值，分区数量不变。
  *
- * <p>期望值大于历史值时，为每个分区从成员池（入参 memberIds）中按成员 ID 升序补足差额成员（新成员优先级置 1）； 小于历史值时，从每个分区的非 Leader 成员中按成员 ID
- * 升序剔除差额成员（Leader 永不移除）； 相等时生成空计划。 成员池由调用方保证满足补足需要，本生成器不做充足性校验。 副本增减不涉及数据迁移。
+ * <p>期望值大于历史值时，为每个分区从成员池（入参 memberIds）中按成员 ID 升序补足差额成员，成员优先级按 {@link
+ * PartitionTopologyDiff#expandMembers} 重排（原有成员在前、新成员在后，目标优先级为期望副本数）； 小于历史值时，从每个分区的非 Leader 成员中按成员
+ * ID 升序剔除差额成员（Leader 永不移除）； 相等时生成空计划。 成员池由调用方保证满足补足需要，本生成器不做充足性校验。 副本增减不涉及数据迁移。
  *
  * @author zxuanhong
  * @since 2026.9.0
@@ -71,7 +72,7 @@ public class ChangeReplicationDispatchPlanGenerator extends AbstractDispatchPlan
         .setExpectReplicationFactor(expectReplicationFactor);
   }
 
-  /** 目标拓扑：各分区按成员 ID 升序补足至期望副本数（新成员优先级置 1），已达标分区保持不变 */
+  /** 目标拓扑：各分区按成员 ID 升序补足至期望副本数，成员优先级按 {@link PartitionTopologyDiff#expandMembers} 重排；已达标分区保持不变 */
   private void expandReplication(
       final Set<MemberId> memberIds,
       final List<PartitionInfoMetaRecord> partitions,
@@ -86,18 +87,17 @@ public class ChangeReplicationDispatchPlanGenerator extends AbstractDispatchPlan
         target.add(partition);
         continue;
       }
-      final PartitionInfoMetaRecord expanded = copyPartitionMeta(partition);
-      int added = 0;
+      final List<MemberId> addedMembers = new ArrayList<>(needed);
       for (final MemberId member : members) {
-        if (added == needed) {
+        if (addedMembers.size() == needed) {
           break;
         }
         if (!currentMembers.contains(member)) {
-          expanded.members().add().setMemberId(member.id()).setPriority(1);
-          added++;
+          addedMembers.add(member);
         }
       }
-      target.add(expanded);
+      target.add(
+          PartitionTopologyDiff.expandMembers(partition, addedMembers, expectReplicationFactor));
     }
   }
 
