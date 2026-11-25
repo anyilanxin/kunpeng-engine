@@ -223,7 +223,7 @@
             "cardUptime": "运行时长",
             "processed": "处理",
             "bpRejecting": "背压拒绝中",
-            "bpHint": "数据源未开启：broker 配置 flow-control.sink.enabled=true 后显示",
+            "bpHint": "数据源未开启：broker 配置 kunpeng.broker.flow-control.sink.enabled=true 后显示",
             "depth": "待执行",
             "noData": "暂无数据",
             "journalSize": "占用字节",

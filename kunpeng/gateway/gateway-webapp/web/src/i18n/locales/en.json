@@ -223,7 +223,7 @@
             "cardUptime": "Uptime",
             "processed": "Processed",
             "bpRejecting": "Backpressure rejecting",
-            "bpHint": "Source not enabled: shows once broker sets flow-control.sink.enabled=true",
+            "bpHint": "Source not enabled: shows once broker sets kunpeng.broker.flow-control.sink.enabled=true",
             "depth": "Pending",
             "noData": "No data yet",
             "journalSize": "Bytes",
