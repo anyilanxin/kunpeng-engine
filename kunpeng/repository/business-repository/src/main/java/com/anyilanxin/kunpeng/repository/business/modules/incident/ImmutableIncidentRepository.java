@@ -28,4 +28,7 @@ import com.anyilanxin.kunpeng.repository.business.ResourceDataSplit;
 public interface ImmutableIncidentRepository extends ResourceDataSplit {
 
   IncidentRecord getRecord(final long key);
+
+  /** 按属主业务 id（活动实例 id / 流程实例 id / 任务 id）查其挂着的 incident 记录，无则返回 null */
+  IncidentRecord getRecordByBusinessId(final long businessId);
 }

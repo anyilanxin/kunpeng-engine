@@ -116,6 +116,15 @@ public class IncidentRepository implements MutableIncidentRepository, RockResour
     return null;
   }
 
+  @Override
+  public IncidentRecord getRecordByBusinessId(final long businessId) {
+    businessIdDbKey.wrapLong(businessId);
+    if (incidentMappingColumnFamily.get(businessIdDbKey) == null) {
+      return null;
+    }
+    return getRecord(incidentIdDbKey.getValue());
+  }
+
   private long getBusinessId(final IncidentType incidentType) {
     return switch (incidentType) {
       case ACTIVITY -> entityDbValue.getActivityInstanceId();

@@ -26,6 +26,7 @@ All notable changes to this project are documented in this file. The format foll
 - Concurrent data-surgery freeze requests share one in-flight future (each used to trigger its own freeze)
 - Static `candidateGroups` and `candidateUsers` on a user task are split by comma. They used to go through list evaluation, which cannot handle a plain text value, so the task was never created
 - A failed `assignee`, `candidateGroups` or `candidateUsers` expression now raises an incident on the task instead of only logging it. The task stays in `CREATING` (it cannot be assigned, claimed or completed until then) and resolving the incident retries the creation
+- When an activity starts terminating (next to job cancellation), or a process instance or user task reaches a terminal state, the incident attached to it is deleted: a `DELETED` event is written, the incident row and the owner mapping are removed, and the export reports the terminal state. Previously such incidents stayed open and could no longer be resolved once the owner row was gone
 
 ## [2026.9.0-alpha1] - 2026-10-20
 

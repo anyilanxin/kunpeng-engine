@@ -41,12 +41,17 @@ public class ActivityInstanceBehavior {
   private final ImmutableProcessInstanceRepository processInstanceState;
   private final ImmutableActivityInstanceRepository activityInstance;
   private final JobBehavior jobBehavior;
+  private final IncidentBehavior incidentBehavior;
 
-  public ActivityInstanceBehavior(final JobBehavior jobBehavior, final LogEventWriter writer) {
+  public ActivityInstanceBehavior(
+      final JobBehavior jobBehavior,
+      final LogEventWriter writer,
+      final IncidentBehavior incidentBehavior) {
     this.writer = writer;
     processInstanceState = writer.getRepository().processInstanceRepository();
     activityInstance = writer.getRepository().instanceRepository();
     this.jobBehavior = jobBehavior;
+    this.incidentBehavior = incidentBehavior;
   }
 
   /** 处理onActivating */
@@ -170,6 +175,10 @@ public class ActivityInstanceBehavior {
   public void onTerminating(final ActivityContent activityContext) {
     jobBehavior.cancelJob(activityContext);
     final ActivityInstanceRecord newInstanceRecord = activityContext.getValue();
+    // 附属物清理与 job 取消同理：终止开始即删除挂在本活动上的 incident（无则空操作）。
+    // 活动终止统一从各元素 onTerminating 走到这里（含 toTerminated 快路径与各类终止命令的分发）。
+    incidentBehavior.deleteOwnerIncident(
+        newInstanceRecord.getActivityInstanceId(), activityContext.getRequestId());
     newInstanceRecord.setLifeCycle(ActivityInstanceLifeCycle.TERMINATING);
     newInstanceRecord.setState(ActivityInstanceState.TERMINATED);
     writer.addEvent(

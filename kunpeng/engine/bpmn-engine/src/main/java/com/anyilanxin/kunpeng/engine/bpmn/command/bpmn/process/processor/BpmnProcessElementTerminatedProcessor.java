@@ -76,6 +76,11 @@ public class BpmnProcessElementTerminatedProcessor extends BpmnProcessElementAbs
         ProcessInstanceLifeCycle.TERMINATED,
         logRecord.getRequestId(),
         value);
+    // 实例终态：同步删除其挂着的 incident（无则空操作）
+    writer
+        .behavior()
+        .incidentBehavior()
+        .deleteOwnerIncident(value.getProcessInstanceId(), logRecord.getRequestId());
 
     if (logRecord.getBatchOperationReferenceKey() > 0) {
       batchBehavior.handleTerminatedBatchReference(logRecord.getBatchOperationReferenceKey());

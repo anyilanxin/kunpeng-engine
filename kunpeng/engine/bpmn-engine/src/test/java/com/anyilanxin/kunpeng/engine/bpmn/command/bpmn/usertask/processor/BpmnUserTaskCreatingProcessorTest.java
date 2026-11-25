@@ -87,7 +87,9 @@ class BpmnUserTaskCreatingProcessorTest {
     when(variableBehavior.scriptContext(any(UserTaskRecord.class)))
         .thenReturn(mock(ScriptContext.class));
     when(behavior.variableBehavior()).thenReturn(variableBehavior);
-    when(behavior.incidentBehavior()).thenReturn(new IncidentBehavior(writer));
+    // 先构造后打桩：IncidentBehavior 构造器会读仓储，混入 when() 会话即 UnfinishedStubbing
+    final IncidentBehavior incidentBehavior = new IncidentBehavior(writer);
+    when(behavior.incidentBehavior()).thenReturn(incidentBehavior);
     when(writer.behavior()).thenReturn(behavior);
     when(writer.millis()).thenReturn(1L);
     when(writer.nextCurrentSourceKey(TASK_ID)).thenReturn(INCIDENT_ID);
