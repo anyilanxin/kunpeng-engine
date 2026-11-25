@@ -16,6 +16,10 @@ All notable changes to this project are documented in this file. The format foll
   - Write barrier for leadership transfers: the command entry is closed and the engine frozen until quiescent before the handover; it rolls back on timeout or refusal and the old leader keeps serving
 - gRPC maps `NOT_LEADER`, `LEADER_STEPPED_DOWN` and requests terminated by the gateway to `UNAVAILABLE`; REST reports the latter as 503
 
+### Changed
+
+- Increasing the replication factor now re-ranks member election priorities in the plan: existing members keep their relative order at the top, new members follow in descending priority (the order is reversed on odd partition ids), and the target priority is the new replication factor. Previously every added member got priority 1 and all of them campaigned at the same moment when the leader was vacant. Only plans created after this change are affected
+
 ### Fixed
 
 - The inter-partition command sender is now closed when the partition steps down (it was never closed before)

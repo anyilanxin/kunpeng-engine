@@ -80,12 +80,51 @@ class AdminDispatchPlanMakerTest {
     assertThat(join.getDispatchPlanId()).isEqualTo(10L);
     assertThat(executionEntry(plan, 0).getDispatchMemberId()).isEqualTo("member-2");
 
-    // 最终拓扑：原成员 + 新成员（新成员优先级为 1）
+    // 最终拓扑：原有成员重排为 3、2，新成员为 1，目标优先级为期望副本数
     final PartitionInfoMetaRecord finalMeta = plan.getMeta();
     assertThat(memberIds(finalMeta)).containsExactly("member-0", "member-1", "member-2");
-    assertThat(priorityOf(finalMeta, "member-0")).isEqualTo(2);
-    assertThat(priorityOf(finalMeta, "member-1")).isEqualTo(1);
+    assertThat(priorityOf(finalMeta, "member-0")).isEqualTo(3);
+    assertThat(priorityOf(finalMeta, "member-1")).isEqualTo(2);
     assertThat(priorityOf(finalMeta, "member-2")).isEqualTo(1);
+    assertThat(finalMeta.getTargetPriority()).isEqualTo(3);
+    assertThat(finalMeta.getPrimaryMemberId()).isEqualTo("member-0");
+  }
+
+  /**
+   * 1→3 扩容（初始成员的优先级与目标优先级都是 0）：原有成员升到 3；管理分区号为 1，两个新成员按反转顺序拿 2、1。
+   * 加入顺序仍按成员 ID 升序。
+   */
+  @Test
+  void upReplicationShouldRankNewMembersWhenScalingFromOneToThree() {
+    final AdminDispatchPlanRecord planRecord =
+        planRecord(12L).setOldReplicationFactor(1).setExpectReplicationFactor(3);
+    final PartitionInfoMetaRecord partition = new PartitionInfoMetaRecord();
+    partition
+        .setPartitionGroup(ADMIN_RAFT_GROUP)
+        .setPartitionId(1)
+        .setTargetPriority(0)
+        .setPrimaryMemberId("member-0");
+    partition.members().add().setMemberId("member-0").setPriority(0);
+    planRecord.setOldMeta(partition);
+
+    final AdminDispatchPlanRecord plan =
+        maker(topologyWithLeader("member-0", "member-1", "member-2"))
+            .createPlan(
+                planRecord,
+                Set.of(member("member-0"), member("member-1"), member("member-2")));
+
+    assertOrderAndIds(plan, 2);
+    final PartitionJoinRecord join1 = payload(plan, 0, PartitionExecutionType.JOIN);
+    assertThat(join1.executionMemberId()).isEqualTo("member-1");
+    final PartitionJoinRecord join2 = payload(plan, 1, PartitionExecutionType.JOIN);
+    assertThat(join2.executionMemberId()).isEqualTo("member-2");
+
+    final PartitionInfoMetaRecord finalMeta = plan.getMeta();
+    assertThat(memberIds(finalMeta)).containsExactly("member-0", "member-2", "member-1");
+    assertThat(priorityOf(finalMeta, "member-0")).isEqualTo(3);
+    assertThat(priorityOf(finalMeta, "member-2")).isEqualTo(2);
+    assertThat(priorityOf(finalMeta, "member-1")).isEqualTo(1);
+    assertThat(finalMeta.getTargetPriority()).isEqualTo(3);
     assertThat(finalMeta.getPrimaryMemberId()).isEqualTo("member-0");
   }
 
