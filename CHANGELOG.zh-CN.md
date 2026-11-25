@@ -24,6 +24,8 @@
 
 - 跨分区命令发送端随分区退位关闭（此前从不关闭）
 - 并发的数据手术冻结请求共享同一个在途 future（此前各自触发一次冻结）
+- 用户任务的静态 `candidateGroups`、`candidateUsers` 按逗号拆分。此前走列表求值，纯文本无法求值，任务不会被创建
+- `assignee`、`candidateGroups`、`candidateUsers` 表达式求值失败时在任务上挂 incident，不再只打日志。任务停在 `CREATING`（在此之前不能改派、认领、完成），解决 incident 后重新创建
 
 ## [2026.9.0-alpha1] - 2026-10-20
 
