@@ -53,7 +53,8 @@ final class InterPartitionCommandReceiverImpl {
     this.valueMapper = valueMapper;
   }
 
-  void handleMessage(final MemberId memberId, final byte[] message) {
+  /** 收下一条命令并写入本分区日志，返回的处理结果原样应答给发送方。 */
+  InterPartitionDeliveryStatus handleMessage(final MemberId memberId, final byte[] message) {
     LOG.trace("Received message from {}", memberId);
 
     final var decoded = decoder.decodeMessage(message, valueMapper);
@@ -64,13 +65,15 @@ final class InterPartitionCommandReceiverImpl {
           decoded.metadata.getValueType(),
           decoded.metadata.getLifeCycle(),
           memberId);
-      return;
+      return InterPartitionDeliveryStatus.REJECTED;
     }
 
     final AppendResult result = writeCommand(decoded);
     if (result instanceof final AppendResult.Rejected rejected) {
       logWriteFailure(memberId, decoded, rejected);
+      return InterPartitionDeliveryStatus.REJECTED;
     }
+    return InterPartitionDeliveryStatus.APPENDED;
   }
 
   private void logWriteFailure(

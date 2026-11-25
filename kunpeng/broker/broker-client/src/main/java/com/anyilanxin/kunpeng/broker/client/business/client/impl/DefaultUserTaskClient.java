@@ -51,42 +51,42 @@ public class DefaultUserTaskClient implements UserTaskClient {
   @Override
   public CompletableFuture<BrokerResponse<UserTaskCompleteResponseRecord>> completeUserTask(
       final UserTaskCompleteRequest request) {
-    return brokerClient.sendRequest(request);
+    return brokerClient.sendRequestWithRetry(request);
   }
 
   @Override
   public CompletableFuture<BrokerResponse<UserTaskCancelResponseRecord>> cancelUserTask(
       final UserTaskCancelRequest request) {
-    return brokerClient.sendRequest(request);
+    return brokerClient.sendRequestWithRetry(request);
   }
 
   @Override
   public CompletableFuture<BrokerResponse<UserTaskClaimResponseRecord>> claimUserTask(
       final UserTaskClaimRequest request) {
-    return brokerClient.sendRequest(request);
+    return brokerClient.sendRequestWithRetry(request);
   }
 
   @Override
   public CompletableFuture<BrokerResponse<UserTaskUnclaimResponseRecord>> unclaimUserTask(
       final UserTaskUnclaimRequest request) {
-    return brokerClient.sendRequest(request);
+    return brokerClient.sendRequestWithRetry(request);
   }
 
   @Override
   public CompletableFuture<BrokerResponse<UserTaskAssigneeResponseRecord>> assignUserTask(
       final UserTaskAssigneeRequest request) {
-    return brokerClient.sendRequest(request);
+    return brokerClient.sendRequestWithRetry(request);
   }
 
   @Override
   public CompletableFuture<BrokerResponse<AddSignBeforeResponseRecord>> addSignBeforeUserTask(
       final AddSignBeforeRequest request) {
-    return brokerClient.sendRequest(request);
+    return brokerClient.sendRequestWithRetry(request);
   }
 
   @Override
   public CompletableFuture<BrokerResponse<AddSignAfterResponseRecord>> addSignAfterUserTask(
       final AddSignAfterRequest request) {
-    return brokerClient.sendRequest(request);
+    return brokerClient.sendRequestWithRetry(request);
   }
 }

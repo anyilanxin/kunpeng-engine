@@ -16,11 +16,14 @@
  */
 package com.anyilanxin.kunpeng.engine.bpmn;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -45,6 +48,7 @@ import com.anyilanxin.kunpeng.broker.client.business.commandapi.CommandApiHandle
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.nio.file.Path;
 import java.time.InstantSource;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 import org.junit.jupiter.api.AfterEach;
@@ -53,6 +57,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 /**
  * 引擎级冻结标记恢复测试：broker 手术中重启后内存冻结态丢失，凭 PARTITION_STATE 持久标记重入冻结窗口； 冻结写标记、恢复先清标记再开闸、冻结窗口内幂等。
+ * 另覆盖 leader 转移冻结：不写标记、与数据手术冻结互斥、随引擎关闭解除。
  *
  * <p>事件日志与命令面为 mock（空日志空提交），仓储为真实 RocksDB 临时库——静止判定在空日志下立即成立，排干 future 即时完成。
  *
@@ -178,5 +183,89 @@ class EngineProcessServiceFreezeRecoveryTest {
     engine.resumeFromFreeze().get(10, TimeUnit.SECONDS);
     assertNull(repository.frozenStateRepository().frozenMarker());
     assertFalse(engine.isFrozen());
+  }
+
+  @Test
+  void leadershipTransferFreezeLeavesNoMarkerAndCompletesOnceQuiesced() throws Exception {
+    openEngine();
+    verify(logStream, timeout(10_000)).registerRecordAvailableListener(engine);
+
+    engine.freezeForLeadershipTransfer().get(10, TimeUnit.SECONDS);
+
+    verify(logStreamWriter, timeout(10_000)).freeze();
+    assertNull(
+        repository.frozenStateRepository().frozenMarker(),
+        "转移是秒级的内存状态，不写重启后仍生效的标记");
+    assertTrue(engine.isFrozen());
+    assertFalse(engine.isFrozenForDataSurgery());
+
+    engine.unfreezeFromLeadershipTransfer().get(10, TimeUnit.SECONDS);
+
+    assertFalse(engine.isFrozen());
+    verify(logStreamWriter, timeout(10_000)).unfreeze();
+  }
+
+  @Test
+  void leadershipTransferFreezeExcludesDataSurgery() throws Exception {
+    openEngine();
+    verify(logStream, timeout(10_000)).registerRecordAvailableListener(engine);
+    engine.freezeForLeadershipTransfer().get(10, TimeUnit.SECONDS);
+
+    // 手术的冻结与收尾都插不进来
+    final var surgeryFreeze =
+        assertThrows(
+            ExecutionException.class, () -> engine.freezeAndDrain(false).get(10, TimeUnit.SECONDS));
+    assertThat(surgeryFreeze.getCause()).hasMessageContaining("frozen for a leadership transfer");
+    assertThrows(ExecutionException.class, () -> engine.resumeFromFreeze().get(10, TimeUnit.SECONDS));
+    assertTrue(engine.isFrozen(), "手术收尾不能解开转移冻结");
+    verify(logStreamWriter, never()).unfreeze();
+
+    engine.unfreezeFromLeadershipTransfer().get(10, TimeUnit.SECONDS);
+
+    assertFalse(engine.isFrozen());
+  }
+
+  @Test
+  void dataSurgeryFreezeExcludesLeadershipTransfer() throws Exception {
+    openEngine();
+    verify(logStream, timeout(10_000)).registerRecordAvailableListener(engine);
+    engine.freezeAndDrain(false).get(10, TimeUnit.SECONDS);
+
+    final var transferFreeze =
+        assertThrows(
+            ExecutionException.class,
+            () -> engine.freezeForLeadershipTransfer().get(10, TimeUnit.SECONDS));
+    assertThat(transferFreeze.getCause()).hasMessageContaining("already frozen for DATA_SURGERY");
+    assertTrue(engine.isFrozenForDataSurgery());
+
+    // 解除转移冻结对手术冻结是空操作
+    engine.unfreezeFromLeadershipTransfer().get(10, TimeUnit.SECONDS);
+
+    assertTrue(engine.isFrozen());
+    verify(logStreamWriter, never()).unfreeze();
+  }
+
+  @Test
+  void unfreezeFromLeadershipTransferIsANoOpWithoutATransferFreeze() throws Exception {
+    openEngine();
+    verify(logStream, timeout(10_000)).registerRecordAvailableListener(engine);
+
+    engine.unfreezeFromLeadershipTransfer().get(10, TimeUnit.SECONDS);
+
+    assertFalse(engine.isFrozen());
+    verify(logStreamWriter, never()).unfreeze();
+  }
+
+  @Test
+  void closingTheEngineLiftsTheLeadershipTransferFreeze() throws Exception {
+    openEngine();
+    verify(logStream, timeout(10_000)).registerRecordAvailableListener(engine);
+    engine.freezeForLeadershipTransfer().get(10, TimeUnit.SECONDS);
+
+    // 转移成功时老 leader 直接退位、没有人来解冻：随引擎关闭解除
+    engine.closeAsync().get(10, TimeUnit.SECONDS);
+
+    assertFalse(engine.isFrozen());
+    verify(logStreamWriter, timeout(10_000)).unfreeze();
   }
 }

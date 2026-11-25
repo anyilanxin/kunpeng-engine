@@ -31,10 +31,10 @@ import java.util.Map;
 import org.slf4j.Logger;
 
 /**
- * Receives messages send by @{@link InterPartitionCommandSenderImpl} and tries to write them as
- * commands to the partition's log stream. Failure to write to the log stream, for example because
- * no disk space is available, the logstream rejected the write operation or message decoding
- * failure, are ignored. The sender is responsible for recognizing failures and retrying.
+ * Receives messages send by @{@link InterPartitionCommandSenderService} and tries to write them as
+ * commands to the partition's log stream. Whether the command made it into the log is acknowledged
+ * to the sender with {@link InterPartitionDeliveryStatus}; the sender retries commands that were
+ * definitely not appended.
  *
  * @author zxuanhong
  * @since 2026.9.0
@@ -72,10 +72,11 @@ public final class InterPartitionCommandReceiverActor extends Actor
 
   @Override
   protected void onActorStarting() {
-    communicationService.consume(
+    communicationService.replyTo(
         INNER_PARTITION_TOPIC_PREFIX + partitionId,
         DefaultSerializers.BASIC::decode,
-        this::tryHandleMessage,
+        this::handleMessage,
+        InterPartitionDeliveryStatus::toBytes,
         actor::run);
   }
 
@@ -94,11 +95,14 @@ public final class InterPartitionCommandReceiverActor extends Actor
     actor.run(() -> receiver.setDiskSpaceAvailable(true));
   }
 
-  private void tryHandleMessage(final MemberId memberId, final byte[] message) {
+  private InterPartitionDeliveryStatus handleMessage(
+      final MemberId memberId, final byte[] message) {
     try {
-      receiver.handleMessage(memberId, message);
+      return receiver.handleMessage(memberId, message);
     } catch (final RuntimeException e) {
-      LOG.error("Error while handling message", e);
+      LOG.error("Error while handling message from {}", memberId, e);
+      // 原样抛出让应答以处理器异常完结：命令是否已写入未知，发送端据此不重发
+      throw e;
     }
   }
 }

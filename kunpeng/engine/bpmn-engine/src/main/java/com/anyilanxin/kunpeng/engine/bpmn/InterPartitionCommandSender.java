@@ -21,7 +21,9 @@ import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 import org.agrona.collections.IntHashSet;
 
 /**
- * 支持向其他分区发送任意命令。发送可能不可靠且静默失败，调用方需自行检测并重试。
+ * 支持向其他分区发送任意命令。命令的目标分区确认写入其日志之前一直被跟踪：目标分区明确没收下或命令没发到它的 leader 时自动重发；等不到确认的命令可能已写入，不重发。
+ *
+ * <p>因此发送仍不是端到端可靠的：调用方需自行检测没有达成预期结果的命令并重试。
  *
  * @author zxuanhong
  * @since 2026.9.0

@@ -16,6 +16,7 @@
  */
 package com.anyilanxin.kunpeng.gateway.rest.core;
 
+import com.anyilanxin.kunpeng.broker.client.core.LeaderChangedException;
 import com.anyilanxin.kunpeng.protocol.gateway.GatewayLoggers;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
@@ -58,6 +59,13 @@ public class GlobalRestExceptionHandler {
   public Mono<ResponseEntity<Result<Void>>> handleBrokerReject(
       final BrokerCommandException exception) {
     return Mono.just(ResponseEntity.ok(Result.fail(exception.getCode(), exception.getMessage())));
+  }
+
+  /** 在途请求因 leader 变更被网关终止：命令可能已被执行，结果未知。归 503（暂时不可用），是否重试由调用方决定 */
+  @ExceptionHandler(LeaderChangedException.class)
+  public Mono<ResponseEntity<Result<Void>>> handleLeaderChanged(
+      final LeaderChangedException exception) {
+    return Mono.just(ResponseEntity.ok(Result.fail(503, exception.getMessage())));
   }
 
   /** 客户端入参错误：消息面向调用方可读，归 400 */

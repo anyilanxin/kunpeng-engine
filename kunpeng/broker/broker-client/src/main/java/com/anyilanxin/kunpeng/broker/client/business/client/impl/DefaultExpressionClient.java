@@ -39,6 +39,6 @@ public class DefaultExpressionClient implements ExpressionClient {
   @Override
   public CompletableFuture<BrokerResponse<EvaluateExpressionResponseRecord>> evaluateExpression(
       final EvaluateExpressionRequest request) {
-    return brokerClient.sendRequest(request);
+    return brokerClient.sendRequestWithRetry(request);
   }
 }

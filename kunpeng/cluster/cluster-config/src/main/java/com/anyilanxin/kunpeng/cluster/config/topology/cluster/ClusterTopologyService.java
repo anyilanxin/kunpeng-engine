@@ -51,6 +51,16 @@ public interface ClusterTopologyService {
    */
   Address getPartitionBusinessAddress(PartitionId partitionId);
 
+  /**
+   * 一次读出分区当前 leader 的成员、任期与业务面地址，三者取自同一份视图。
+   *
+   * @return 分区没有 leader 时返回 {@code null}；有 leader 但业务端口尚未广播时地址为 {@code null}
+   */
+  PartitionLeaderInfo getPartitionLeaderInfo(PartitionId partitionId);
+
+  /** 登记拓扑变化监听：视图每次重建（成员增删或元数据变化）后调用一次，运行在拓扑服务自己的线程上，监听方须自行切回自己的线程。 */
+  void addTopologyChangeListener(Runnable listener);
+
   IntHashSet getActivitySourceIds();
 
   IntHashSet getActivityPartitionIds();

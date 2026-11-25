@@ -78,13 +78,28 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
   private boolean processing = false;
   private long processPosition = -1;
 
-  /** 冻结排干在途 future（数据手术窗口；null=未冻结） */
+  /** 冻结在途 future（数据手术窗口或 leader 转移窗口；null=未冻结） */
   private volatile CompletableActorFuture<Void> freezeFuture;
+
+  /** 当前冻结的原因；只在 {@link #freezeFuture} 非 null 时有意义，与它一起读写 */
+  private volatile FreezeReason freezeReason;
+
+  /** closeAsync 已开始：之后不再接受新的冻结（leader 转移可能在退位的同一瞬间发起） */
+  private volatile boolean closing;
 
   private volatile boolean drainAfterQuiesce;
   private volatile TimerScheduler.TimerHandle drainPollHandle;
   private final Object freezeLock = new Object();
   private static final long FREEZE_DRAIN_POLL_MS = 500;
+
+  /** 冻结的原因。两种冻结都停掉分区全部外部写入，区别在持续多久、要不要留痕。 */
+  private enum FreezeReason {
+    /** 数据手术：持续分钟到小时，写持久标记，重启后凭标记重新进入 */
+    DATA_SURGERY,
+    /** leader 转移：秒级，纯内存状态，不写标记也不排干 */
+    LEADERSHIP_TRANSFER
+  }
+
   private MutableProcessedPositionRepository mutableProcessedPosition;
   private final CommandApiHandle commandApiHandle;
   private final RecordMetadata metadata = new RecordMetadata();
@@ -384,6 +399,7 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
    */
   @Override
   public ActorFuture<Void> closeAsync() {
+    closing = true;
     logStream.removeRecordAvailableListener(this);
     logEventWriter.schedulerCheckerAwares().forEach(SchedulerCheckerAware::onClose);
     if (currentTransaction != null) {
@@ -401,18 +417,34 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
     }
     final CompletableActorFuture<Void> drained = new CompletableActorFuture<>();
     actor.run(
-        () ->
-            lanePool
-                .shutdown(actor)
-                .onComplete(
-                    (ignored, error) -> {
-                      primaryScheduler.close();
-                      if (error != null) {
-                        drained.completeExceptionally(error);
-                      } else {
-                        drained.complete(null);
-                      }
-                    }));
+        () -> {
+          // 转移冻结只在本任期内有效：转移成功时老 leader 直接退位、没有人来解冻，随引擎关闭一并解除
+          final CompletableActorFuture<Void> transferFreeze = freezeFuture;
+          if (transferFreeze != null && freezeReason == FreezeReason.LEADERSHIP_TRANSFER) {
+            freezeFuture = null;
+            freezeReason = null;
+            // 已静止的冻结 future 已经正常完成，只有还在等静止的才需要以失败完结
+            if (!transferFreeze.isDone()) {
+              transferFreeze.completeExceptionally(
+                  new IllegalStateException(
+                      "partition "
+                          + partitionId
+                          + " closed while frozen for a leadership transfer"));
+            }
+            logStreamWriter.unfreeze();
+          }
+          lanePool
+              .shutdown(actor)
+              .onComplete(
+                  (ignored, error) -> {
+                    primaryScheduler.close();
+                    if (error != null) {
+                      drained.completeExceptionally(error);
+                    } else {
+                      drained.complete(null);
+                    }
+                  });
+        });
     return drained;
   }
 
@@ -422,31 +454,44 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
    *
    * <p>幂等契约：冻结期间重复调用（看门狗重发）返回同一在途 future。完成回调运行于完成方线程（引擎 actor 或 排水轮询车道），调用方如需回写自身 actor 状态须自行提交回目标
    * actor。
+   *
+   * <p>与 leader 转移冻结（{@link #freezeForLeadershipTransfer}）互斥：转移冻结进行中时立即失败。
    */
   public ActorFuture<Void> freezeAndDrain(final boolean drain) {
     synchronized (freezeLock) {
       final CompletableActorFuture<Void> existing = freezeFuture;
       if (existing != null) {
-        return existing;
+        // 看门狗重发复用在途的手术冻结；在途的是 leader 转移冻结，立即失败走手术自己的重试链
+        return freezeReason == FreezeReason.DATA_SURGERY
+            ? existing
+            : CompletableActorFuture.completedExceptionally(
+                new IllegalStateException(
+                    "partition " + partitionId + " is frozen for a leadership transfer"));
       }
       final CompletableActorFuture<Void> future = new CompletableActorFuture<>();
-      actor.run(
-          () -> {
-            if (logStreamReader == null) {
-              freezeFuture = null;
-              future.completeExceptionally(
-                  new IllegalStateException(
-                      "partition " + partitionId + " is not started; cannot freeze"));
-              return;
-            }
-            freezeFuture = future;
-            drainAfterQuiesce = drain;
-            logStreamWriter.freeze();
-            repository.frozenStateRepository().markFrozen(drain);
-            logEventWriter.schedulerCheckerAwares().forEach(SchedulerCheckerAware::onPaused);
-            LOGGER.info("Partition {} frozen, waiting quiesce (drain={})", partitionId, drain);
-            checkQuiesced();
-          });
+      // 在锁内登记冻结：等 actor 任务执行时才登记的话，本方法返回后、任务执行前，并发的另一次冻结看不到它在途
+      reserveFreeze(future, FreezeReason.DATA_SURGERY, drain);
+      queueFreeze(future, FreezeReason.DATA_SURGERY, drain);
+      return future;
+    }
+  }
+
+  /**
+   * 为 leader 转移冻结写入：冻结全部外部写入、暂停内部触发，等引擎静止——冻结之前收下的命令到此全部处理并应答完毕，日志头不再移动。
+   *
+   * <p>与数据手术冻结互斥：任一种冻结已在进行都立即失败。返回的 future 在引擎静止时完成。
+   */
+  public ActorFuture<Void> freezeForLeadershipTransfer() {
+    synchronized (freezeLock) {
+      final CompletableActorFuture<Void> existing = freezeFuture;
+      if (existing != null) {
+        return CompletableActorFuture.completedExceptionally(
+            new IllegalStateException(
+                "partition " + partitionId + " is already frozen for " + freezeReason));
+      }
+      final CompletableActorFuture<Void> future = new CompletableActorFuture<>();
+      reserveFreeze(future, FreezeReason.LEADERSHIP_TRANSFER, false);
+      queueFreeze(future, FreezeReason.LEADERSHIP_TRANSFER, false);
       return future;
     }
   }
@@ -456,26 +501,46 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
     final CompletableActorFuture<Void> future = new CompletableActorFuture<>();
     actor.run(
         () -> {
-          cancelDrainPoll();
+          if (freezeFuture != null && freezeReason == FreezeReason.LEADERSHIP_TRANSFER) {
+            // 手术收尾不能解开转移冻结：转移暂停期间 Raft 层要求分区零追加
+            future.completeExceptionally(
+                new IllegalStateException(
+                    "partition " + partitionId + " is frozen for a leadership transfer"));
+            return;
+          }
           // 先清标记再开闸：中途崩溃重启会凭残留标记重新冻结——保守方向无害（未冻当已冻只多等一次排干）
           repository.frozenStateRepository().clearFrozen();
-          final CompletableActorFuture<Void> freezing = freezeFuture;
-          freezeFuture = null;
-          if (freezing != null && !freezing.isDone()) {
-            freezing.completeExceptionally(
-                new IllegalStateException("partition " + partitionId + " resumed before drained"));
-          }
-          logEventWriter.schedulerCheckerAwares().forEach(SchedulerCheckerAware::onResumed);
-          logStreamWriter.unfreeze();
+          liftFreeze();
           LOGGER.info("Partition {} resumed from freeze", partitionId);
           future.complete(null);
         });
     return future;
   }
 
-  /** 当前是否处于冻结窗口（含排干等待中） */
+  /** 解除 leader 转移冻结（幂等）：没有转移冻结时什么都不做，数据手术冻结不受影响。 */
+  public ActorFuture<Void> unfreezeFromLeadershipTransfer() {
+    final CompletableActorFuture<Void> future = new CompletableActorFuture<>();
+    actor.run(
+        () -> {
+          if (!closing
+              && freezeFuture != null
+              && freezeReason == FreezeReason.LEADERSHIP_TRANSFER) {
+            liftFreeze();
+            LOGGER.info("Partition {} unfrozen after leadership transfer", partitionId);
+          }
+          future.complete(null);
+        });
+    return future;
+  }
+
+  /** 当前是否处于冻结窗口（数据手术或 leader 转移，含排干等待中） */
   public boolean isFrozen() {
     return freezeFuture != null;
+  }
+
+  /** 是否因数据手术处于冻结窗口（含排干等待中）。leader 转移冻结不算。 */
+  public boolean isFrozenForDataSurgery() {
+    return freezeFuture != null && freezeReason == FreezeReason.DATA_SURGERY;
   }
 
   /** 冻结排干剩余量（final − 全部 sink 最低确认位）；未冻结或不排干返回 -1，已静止待排干为非负 */
@@ -486,6 +551,64 @@ public class EngineProcessService extends Actor implements RecordAvailableListen
     final long lastWritten =
         Math.max(logStream.getLastWrittenPosition(), logStream.getLastCommittedPosition());
     return lastWritten < 1 ? 0 : lastWritten - sinkLowestPosition();
+  }
+
+  /** 登记一次冻结（持有 freezeLock）：此后对外的查询都能看到分区已冻结，实际生效在引擎 actor 上完成。 */
+  private void reserveFreeze(
+      final CompletableActorFuture<Void> future, final FreezeReason reason, final boolean drain) {
+    freezeFuture = future;
+    freezeReason = reason;
+    drainAfterQuiesce = drain;
+  }
+
+  /** 撤回 {@link #reserveFreeze} 的登记：冻结没能生效，不能让分区看起来仍在冻结中。 */
+  private void releaseFreezeReservation(final CompletableActorFuture<Void> future) {
+    if (freezeFuture == future) {
+      freezeFuture = null;
+      freezeReason = null;
+    }
+  }
+
+  /** 到引擎 actor 上让已登记的冻结生效；引擎没在服务（未启动完成或已在关闭）则撤回登记并以失败完结。 */
+  private void queueFreeze(
+      final CompletableActorFuture<Void> future, final FreezeReason reason, final boolean drain) {
+    actor.run(
+        () -> {
+          if (logStreamReader == null || closing) {
+            releaseFreezeReservation(future);
+            future.completeExceptionally(
+                new IllegalStateException(
+                    "partition " + partitionId + " is not serving; cannot freeze"));
+            return;
+          }
+          applyFreeze(reason, drain);
+        });
+  }
+
+  /** 冻结生效（引擎 actor 上）：冻结全部外部写入、暂停内部触发，随后开始等静止。冻结已由调用方登记。 */
+  private void applyFreeze(final FreezeReason reason, final boolean drain) {
+    logStreamWriter.freeze();
+    if (reason == FreezeReason.DATA_SURGERY) {
+      // 只有手术写标记：它用来在重启后重新进入冻结；转移是秒级的内存状态，写了标记节点下次当上 leader 时会被错误冻结
+      repository.frozenStateRepository().markFrozen(drain);
+    }
+    logEventWriter.schedulerCheckerAwares().forEach(SchedulerCheckerAware::onPaused);
+    LOGGER.info("Partition {} frozen ({}), waiting quiesce", partitionId, reason);
+    checkQuiesced();
+  }
+
+  /** 解除冻结（引擎 actor 上）：取消排干轮询、恢复内部触发与全部写入；没等到排干或静止的冻结 future 以失败完结。持久标记由调用方负责。 */
+  private void liftFreeze() {
+    cancelDrainPoll();
+    final CompletableActorFuture<Void> freezing = freezeFuture;
+    freezeFuture = null;
+    freezeReason = null;
+    if (freezing != null && !freezing.isDone()) {
+      freezing.completeExceptionally(
+          new IllegalStateException("partition " + partitionId + " resumed before drained"));
+    }
+    logEventWriter.schedulerCheckerAwares().forEach(SchedulerCheckerAware::onResumed);
+    logStreamWriter.unfreeze();
   }
 
   private void cancelDrainPoll() {

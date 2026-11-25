@@ -49,5 +49,11 @@ public interface CommandApiService {
    */
   void bindSinkPositionSupplier(final int partitionId, final LongSupplier lowestSinkPosition);
 
+  /**
+   * 把分区标记为处于 leader 转移窗口（{@code transferring=true}）或清除标记：标记期间该分区的新命令一律以 {@code NOT_LEADER}
+   * 回绝，不进日志。分区退位（{@link #unregisterHandlers}）时标记一并清除。
+   */
+  ActorFuture<Void> markLeadershipTransferring(final int partitionId, final boolean transferring);
+
   CommandApiHandle gettCommandApiHandle();
 }

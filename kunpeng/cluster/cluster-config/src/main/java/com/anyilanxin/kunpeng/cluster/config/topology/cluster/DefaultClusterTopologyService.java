@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import org.agrona.collections.Int2ObjectHashMap;
 import org.agrona.collections.IntHashSet;
 import org.slf4j.Logger;
@@ -86,6 +87,9 @@ public class DefaultClusterTopologyService extends Actor
 
   /** 拓扑版本：每次视图重建后在 actor 线程递增，读取方凭它缓存快照 */
   private volatile long topologyVersion;
+
+  /** 视图变化监听：每次重建后在 actor 线程上通知，监听方只做线程切换 */
+  private final List<Runnable> topologyChangeListeners = new CopyOnWriteArrayList<>();
 
   public DefaultClusterTopologyService(final ClusterMembershipService membershipService) {
     this.membershipService = membershipService;
@@ -258,11 +262,17 @@ public class DefaultClusterTopologyService extends Actor
                 }));
     views = new PartitionViews(memberInfos, leaders, sourceIds, sources, business);
     topologyVersion++;
+    topologyChangeListeners.forEach(Runnable::run);
   }
 
   @Override
   public long getTopologyVersion() {
     return topologyVersion;
+  }
+
+  @Override
+  public void addTopologyChangeListener(final Runnable listener) {
+    topologyChangeListeners.add(listener);
   }
 
   @Override
@@ -276,6 +286,15 @@ public class DefaultClusterTopologyService extends Actor
   public Address getPartitionBusinessAddress(final PartitionId partitionId) {
     final PartitionMemberInfo leader = views.partitionLeaders().get(partitionId);
     return leader == null ? null : businessAddresses.get(leader.getMemberId());
+  }
+
+  @Override
+  public PartitionLeaderInfo getPartitionLeaderInfo(final PartitionId partitionId) {
+    final PartitionMemberInfo leader = views.partitionLeaders().get(partitionId);
+    return leader == null
+        ? null
+        : new PartitionLeaderInfo(
+            leader.getMemberId(), leader.getTerm(), businessAddresses.get(leader.getMemberId()));
   }
 
   @Override

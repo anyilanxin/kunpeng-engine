@@ -6,6 +6,21 @@ All notable changes to this project are documented in this file. The format foll
 
 ## [Unreleased]
 
+### Added
+
+- Request handling across leader changes:
+  - When a broker steps down as leader, in-flight requests fail immediately with `LEADER_STEPPED_DOWN` (the command may already have been applied) instead of waiting for the caller's timeout; new commands received during a leadership transfer are rejected with `NOT_LEADER`
+  - The gateway automatically retries only failures where the command is known not to have entered the log (rejected during a leadership transfer, no command handler on the target node, partition leader unresolvable), backing off from 20ms with doubling up to 500ms; timeouts and other failures with an unknown outcome are not retried
+  - When a leader crashes or is partitioned, the gateway terminates in-flight requests sent to it as soon as the topology reports a different leader or term for the partition
+  - Inter-partition commands are delivered with an acknowledgement: the target partition acknowledges after writing to its log; rejected commands and commands to a node without a receiver are resent with backoff, while acknowledgement timeouts are not resent
+  - Write barrier for leadership transfers: the command entry is closed and the engine frozen until quiescent before the handover; it rolls back on timeout or refusal and the old leader keeps serving
+- gRPC maps `NOT_LEADER`, `LEADER_STEPPED_DOWN` and requests terminated by the gateway to `UNAVAILABLE`; REST reports the latter as 503
+
+### Fixed
+
+- The inter-partition command sender is now closed when the partition steps down (it was never closed before)
+- Concurrent data-surgery freeze requests share one in-flight future (each used to trigger its own freeze)
+
 ## [2026.9.0-alpha1] - 2026-10-20
 
 Initial public alpha: a microservices orchestration engine built from scratch — BPMN 2.0 execution, partitioned event logs, Raft replication, gateway/broker separation, no relational database, and sink-based export.

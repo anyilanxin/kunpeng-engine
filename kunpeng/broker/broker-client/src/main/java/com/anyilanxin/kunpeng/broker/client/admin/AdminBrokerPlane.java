@@ -50,7 +50,8 @@ public class AdminBrokerPlane implements BrokerPlane {
     if (address == null) {
       throw new BrokerException(10, "not found leader");
     }
-    return new Destination(TopicUtils.getTopicName(), address);
+    // 管理面按集群管理地址寻址，拿不到分区 leader 身份：这类请求不参与 leader 变更核对
+    return new Destination(TopicUtils.getTopicName(), address, null);
   }
 
   @Override
