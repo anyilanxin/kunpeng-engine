@@ -64,7 +64,7 @@ public class BehaviorImpl implements Behavior {
     catchEventBehavior =
         new CatchEventBehavior(writer, variableBehavior, timerChecker, jobBehavior);
     incidentBehavior = new IncidentBehavior(writer);
-    activityInstanceBehavior = new ActivityInstanceBehavior(jobBehavior, writer);
+    activityInstanceBehavior = new ActivityInstanceBehavior(jobBehavior, writer, incidentBehavior);
     sequenceFlowBehavior =
         new SequenceFlowBehavior(writer, activityInstanceBehavior, variableBehavior);
     userTaskBehavior = new UserTaskBehavior(writer, variableBehavior);

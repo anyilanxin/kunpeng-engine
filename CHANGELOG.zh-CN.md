@@ -26,6 +26,7 @@
 - 并发的数据手术冻结请求共享同一个在途 future（此前各自触发一次冻结）
 - 用户任务的静态 `candidateGroups`、`candidateUsers` 按逗号拆分。此前走列表求值，纯文本无法求值，任务不会被创建
 - `assignee`、`candidateGroups`、`candidateUsers` 表达式求值失败时在任务上挂 incident，不再只打日志。任务停在 `CREATING`（在此之前不能改派、认领、完成），解决 incident 后重新创建
+- 活动开始终止时（与 job 取消同点），以及流程实例、用户任务到终态时，同步删除其挂着的 incident：写 `DELETED` 事件，删 incident 行与属主映射，导出面据此更新终态。此前这类 incident 一直挂着，属主行删除后无法再解决
 
 ## [2026.9.0-alpha1] - 2026-10-20
 

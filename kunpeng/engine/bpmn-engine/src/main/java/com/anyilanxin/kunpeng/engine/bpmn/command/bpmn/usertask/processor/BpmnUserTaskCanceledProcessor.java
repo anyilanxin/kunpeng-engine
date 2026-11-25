@@ -53,6 +53,11 @@ public class BpmnUserTaskCanceledProcessor extends BpmnUserTaskElementAbstractPr
     record.setEndTime(writer.millis());
     writer.addEvent(
         record.getTaskId(), UserTaskLifeCycle.CANCELED, logRecord.getRequestId(), record);
+    // 任务行随取消删除：同步删除其挂着的 incident（无则空操作）
+    writer
+        .behavior()
+        .incidentBehavior()
+        .deleteOwnerIncident(record.getTaskId(), logRecord.getRequestId());
     // 加签任务取消：反馈组实例终止单位计数，不推进活动取消（组完结判定归容器处理器）
     if (record.getAddSignRole() == AddSignRole.ADD_SIGN) {
       writer.behavior().addSignBehavior().onSignTaskEnded(record, logRecord.getRequestId(), true);
