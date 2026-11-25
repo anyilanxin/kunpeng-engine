@@ -49,6 +49,7 @@ import java.util.function.LongSupplier;
 import org.agrona.MutableDirectBuffer;
 import org.agrona.collections.Hashing;
 import org.agrona.collections.Int2ObjectHashMap;
+import org.agrona.collections.IntHashSet;
 import org.agrona.collections.Long2ObjectHashMap;
 import org.agrona.concurrent.IdGenerator;
 import org.agrona.concurrent.UnsafeBuffer;
@@ -71,6 +72,8 @@ public class CommandApiHandleImpl implements CommandApiHandle, CloseableSilently
   // sink 滞后背压闸门（每分区一个；配置禁用或未创建时无条目=闸门不存在）
   private final Int2ObjectHashMap<SinkBackpressureGate> backpressureGates =
       new Int2ObjectHashMap<>();
+  // leader 转移窗口中的分区：新命令一律回 NOT_LEADER。与处理器登记同生命周期，退位即清除
+  private final IntHashSet leadershipTransferringPartitions = new IntHashSet();
   private final IdGenerator idGenerator;
   private static final Logger LOG = BrokerLoggers.CLUSTER_BUSINESS;
   private final RecordValueMapper valueMapper;
@@ -127,7 +130,10 @@ public class CommandApiHandleImpl implements CommandApiHandle, CloseableSilently
     }
   }
 
+  /** 注销分区的命令处理器：该分区在本节点的任期到此为止。 */
   private void removeRequestHandlers(final int partitionId) {
+    // 转移标记与处理器登记同生命周期：退位即清除，不会留给下一任期
+    leadershipTransferringPartitions.remove(partitionId);
     final var topicName =
         TopicUtils.getTopicName(RecordType.COMMAND_API.value(), String.valueOf(partitionId));
     LOG.info("Unsubscribe from topic {}", topicName);
@@ -201,10 +207,23 @@ public class CommandApiHandleImpl implements CommandApiHandle, CloseableSilently
           requestReader.reset();
           requestReader.wrap(reusableRequestBuffer, 0, reusableRequestBuffer.capacity());
 
-          requestMap.put(
-              requestId,
+          final var partitionRequest =
               new PartitionRequest(
-                  completableFuture, requestReader.requestType(), requestReader.valueType()));
+                  completableFuture, requestReader.requestType(), requestReader.valueType());
+          // leader 转移窗口：命令既不进日志也不进请求表，直接回 NOT_LEADER（命令确定没有执行，网关会退避后重新寻址再发）
+          if (leadershipTransferringPartitions.contains(partitionSource.getPartitionId().id())) {
+            final BrokerResponseWriter<UnifiedRecordValue> response =
+                newResponse(null, requestId, partitionSource.getPartitionId().id());
+            response.setError(
+                BrokerResponseCodes.NOT_LEADER,
+                "Partition "
+                    + partitionSource.getPartitionId().id()
+                    + " is transferring leadership; resend the command to the new leader");
+            completableFuture.complete(encodeResponse(partitionRequest, response));
+            return;
+          }
+
+          requestMap.put(requestId, partitionRequest);
 
           // sink 滞后背压闸门：只拦业务面 USER_COMMAND 入口（本方法即唯一入口），超限立即回 code=2 失败应答
           final var backpressureGate = backpressureGates.get(partitionSource.getPartitionId().id());
@@ -261,10 +280,10 @@ public class CommandApiHandleImpl implements CommandApiHandle, CloseableSilently
       final AppendResult result = logStreamWriter.tryAppend(WriteContext.USER_COMMAND, appendEntry);
       if (result instanceof final AppendResult.Rejected rejected) {
         if (rejected.reason() == RejectionReason.FROZEN) {
-          // 分区冻结（数据手术窗口）：可重试——RESUME 后自动恢复，与背压拒绝同类的暂时性失败
+          // 分区冻结（数据手术窗口；转移窗口的命令在入口就以 NOT_LEADER 回绝，不会走到这里）：解冻后自动恢复的暂时性失败
           errorResponse(
               BrokerResponseCodes.PARTITION_FROZEN,
-              "Partition is frozen for data surgery; retry after the plan resumes the partition",
+              "Partition is frozen; resend the command once the partition is resumed",
               partitionSource,
               requestId);
         } else {
@@ -328,38 +347,87 @@ public class CommandApiHandleImpl implements CommandApiHandle, CloseableSilently
             if (LOG.isTraceEnabled()) {
               LOG.trace("Send response to request {}", requestId);
             }
-            // 统一响应
-            final ApiResponseWriterImpl apiResponseWriter = reusableResponseWriter.reset();
-            apiResponseWriter.requestType(partitionRequest.requestType);
-            apiResponseWriter.valueType(partitionRequest.valueType);
-            apiResponseWriter.lifeCycle(response.getLifeCycle());
-            // 数据
-            if (response.isSuccess()) {
-              final UnifiedRecordValue value = response.getResponse();
-              final int valueLength = value.getLength();
-              if (reusableResponseDataBytes.length < valueLength) {
-                reusableResponseDataBytes = new byte[valueLength];
-              }
-              reusableResponseDataBuffer.wrap(reusableResponseDataBytes, 0, valueLength);
-              value.write(reusableResponseDataBuffer, 0);
-              apiResponseWriter.data(reusableResponseDataBuffer);
-              apiResponseWriter.success();
-            } else {
-              apiResponseWriter.fail(response.getCode(), response.getMessage());
-            }
-            // 统一请求格式编码 byte[]
-            final MutableDirectBuffer responseDataBuffer =
-                new UnsafeBuffer(new byte[apiResponseWriter.getLength()]);
-            apiResponseWriter.write(responseDataBuffer, 0);
-            partitionRequest.responseFuture.complete(responseDataBuffer.byteArray());
+            partitionRequest.responseFuture.complete(encodeResponse(partitionRequest, response));
           } else if (LOG.isTraceEnabled()) {
             LOG.trace("Wasn't able to send response to request {}", requestId);
           }
         });
   }
 
+  /** 把应答编码成统一响应格式（actor 线程上调用：复用编码缓冲区）。应答面别回显请求的面别，调用方据此物化结果。 */
+  private byte[] encodeResponse(
+      final PartitionRequest partitionRequest,
+      final BrokerResponseWriter<? extends UnifiedRecordValue> response) {
+    // 统一响应
+    final ApiResponseWriterImpl apiResponseWriter = reusableResponseWriter.reset();
+    apiResponseWriter.requestType(partitionRequest.requestType);
+    apiResponseWriter.valueType(partitionRequest.valueType);
+    apiResponseWriter.lifeCycle(response.getLifeCycle());
+    // 数据
+    if (response.isSuccess()) {
+      final UnifiedRecordValue value = response.getResponse();
+      final int valueLength = value.getLength();
+      if (reusableResponseDataBytes.length < valueLength) {
+        reusableResponseDataBytes = new byte[valueLength];
+      }
+      reusableResponseDataBuffer.wrap(reusableResponseDataBytes, 0, valueLength);
+      value.write(reusableResponseDataBuffer, 0);
+      apiResponseWriter.data(reusableResponseDataBuffer);
+      apiResponseWriter.success();
+    } else {
+      apiResponseWriter.fail(response.getCode(), response.getMessage());
+    }
+    // 统一请求格式编码 byte[]
+    final MutableDirectBuffer responseDataBuffer =
+        new UnsafeBuffer(new byte[apiResponseWriter.getLength()]);
+    apiResponseWriter.write(responseDataBuffer, 0);
+    return responseDataBuffer.byteArray();
+  }
+
+  /** 标记（或清除）分区处于 leader 转移窗口（actor 线程上调用）：窗口内该分区的新命令一律以 {@code NOT_LEADER} 回绝。 */
+  void setLeadershipTransferring(final int partitionId, final boolean transferring) {
+    if (transferring) {
+      leadershipTransferringPartitions.add(partitionId);
+    } else {
+      leadershipTransferringPartitions.remove(partitionId);
+    }
+  }
+
   public void unregisterHandlers(final RaftPartitionSource partitionSource) {
-    removeRequestHandlers(partitionSource.getPartitionId().id());
+    final int partitionId = partitionSource.getPartitionId().id();
+    // 先终止在途请求再注销处理器：应答要经消息处理器送回调用方，顺序反了调用方会悬挂到超时
+    failPendingRequests(partitionSource, partitionId);
+    removeRequestHandlers(partitionId);
+  }
+
+  /**
+   * 退位时终止该分区的全部在途请求：这些命令可能已被新 leader 执行，结果未知，立即失败而不是悬挂到调用方超时。 引擎迟到的应答会在 {@link #sendResponse}
+   * 里找不到登记而被丢弃，先到的结果生效。
+   */
+  private void failPendingRequests(
+      final RaftPartitionSource partitionSource, final int partitionId) {
+    final var requestMap = partitionsRequestMap.get(partitionId);
+    if (requestMap == null) {
+      return;
+    }
+    // 先拷贝请求号：errorResponse 会逐个摘除登记，不能边遍历边删
+    final Long[] pendingRequestIds = requestMap.keySet().toArray(new Long[0]);
+    if (pendingRequestIds.length == 0) {
+      return;
+    }
+    LOG.warn(
+        "Failing {} pending request(s) of partition {}: this node is no longer their leader",
+        pendingRequestIds.length,
+        partitionId);
+    for (final long requestId : pendingRequestIds) {
+      errorResponse(
+          BrokerResponseCodes.LEADER_STEPPED_DOWN,
+          "Leader of partition "
+              + partitionId
+              + " changed before the command was answered; the command may have been applied",
+          partitionSource,
+          requestId);
+    }
   }
 
   void onDiskSpaceNotAvailable() {

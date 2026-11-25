@@ -21,8 +21,10 @@ import com.anyilanxin.kunpeng.broker.business.raft.step.transition.apipartition.
 import com.anyilanxin.kunpeng.broker.business.raft.step.transition.apipartition.impl.InterPartitionCommandSenderService;
 import com.anyilanxin.kunpeng.cluster.business.step.transition.TransitionStep;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.DefaultRecordValueMapper;
+import com.anyilanxin.kunpeng.scheduler.Actor;
 import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
 import com.anyilanxin.kunpeng.scheduler.future.ActorFuture;
+import com.anyilanxin.kunpeng.scheduler.future.CompletableActorFuture;
 
 /**
  * 分区间命令收发服务的 transition 步骤：leader 分区安装接收器（消费其他分区发来的命令并写入本分区日志）与发送器（引擎跨分区命令出口， 存入 content 供引擎装配消费）；非
@@ -111,28 +113,32 @@ public final class InterPartitionCommandServiceStep
             });
   }
 
+  /** 非 leader 角色关闭两者：发送器停止未完成交付的重发，接收器不再收命令；两者都关完才算关闭完成。 */
   private ActorFuture<Void> close(final BusinessTransitionContent context) {
     final ConcurrencyControl concurrencyControl = context.getConcurrencyControl();
     final ActorFuture<Void> future = concurrencyControl.createFuture();
     concurrencyControl.run(
         () -> {
-          final InterPartitionCommandReceiverActor receiverActor =
-              context.getPartitionCommandReceiver();
-          if (receiverActor != null) {
-            receiverActor
-                .closeAsync()
-                .onComplete(
-                    (unused, throwable) -> {
-                      if (throwable != null) {
-                        future.completeExceptionally(throwable);
-                      } else {
-                        future.complete(null);
-                      }
-                    });
-          } else {
-            future.complete(null);
-          }
+          final ActorFuture<Void> senderClosed = close(context.getPartitionCommandSender());
+          final ActorFuture<Void> receiverClosed = close(context.getPartitionCommandReceiver());
+          senderClosed.onComplete(
+              (ignored, error) ->
+                  receiverClosed.onComplete(
+                      (unused, throwable) -> {
+                        if (error != null) {
+                          future.completeExceptionally(error);
+                        } else if (throwable != null) {
+                          future.completeExceptionally(throwable);
+                        } else {
+                          future.complete(null);
+                        }
+                      }));
         });
     return future;
+  }
+
+  /** 请求关闭一个分区级 actor；本任期没有安装过（为 null）视为已关闭。 */
+  private static ActorFuture<Void> close(final Actor actor) {
+    return actor == null ? CompletableActorFuture.completed() : actor.closeAsync();
   }
 }

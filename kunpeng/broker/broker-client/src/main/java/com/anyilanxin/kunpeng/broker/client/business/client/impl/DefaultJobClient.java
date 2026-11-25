@@ -43,18 +43,18 @@ public class DefaultJobClient implements JobClient {
   @Override
   public CompletableFuture<BrokerResponse<JobCompleteResponseRecord>> completeJob(
       final JobCompleteRequest request) {
-    return brokerClient.sendRequest(request);
+    return brokerClient.sendRequestWithRetry(request);
   }
 
   @Override
   public CompletableFuture<BrokerResponse<JobFailResponseRecord>> failJob(
       final JobFailRequest request) {
-    return brokerClient.sendRequest(request);
+    return brokerClient.sendRequestWithRetry(request);
   }
 
   @Override
   public CompletableFuture<BrokerResponse<JobBatchActivateResponseRecord>> batchActivateJobs(
       final JobBatchActivateRequest request) {
-    return brokerClient.sendRequest(request);
+    return brokerClient.sendRequestWithRetry(request);
   }
 }

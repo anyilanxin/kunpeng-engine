@@ -503,6 +503,17 @@ class SinkServiceTest {
     }
 
     @Override
+    public com.anyilanxin.kunpeng.cluster.config.topology.cluster.PartitionLeaderInfo
+        getPartitionLeaderInfo(final PartitionId partitionId) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void addTopologyChangeListener(final Runnable listener) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
     public org.agrona.collections.IntHashSet getActivitySourceIds() {
       throw new UnsupportedOperationException();
     }

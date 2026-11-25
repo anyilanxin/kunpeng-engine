@@ -39,6 +39,6 @@ public class DefaultIncidentClient implements IncidentClient {
   @Override
   public CompletableFuture<BrokerResponse<IncidentResolveResponseRecord>> resolveIncident(
       final IncidentResolveRequest request) {
-    return brokerClient.sendRequest(request);
+    return brokerClient.sendRequestWithRetry(request);
   }
 }

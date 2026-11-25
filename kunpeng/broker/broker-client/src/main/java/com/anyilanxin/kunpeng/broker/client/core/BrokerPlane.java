@@ -16,6 +16,8 @@
  */
 package com.anyilanxin.kunpeng.broker.client.core;
 
+import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
+import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
 import com.anyilanxin.kunpeng.cluster.utils.net.Address;
 import com.anyilanxin.kunpeng.protocol.common.api.ResponseRecordValue;
 
@@ -46,5 +48,18 @@ public interface BrokerPlane {
    */
   ResponseRecordValue materialize(ApiResponseReader response);
 
-  record Destination(String topicName, Address apiAddress) {}
+  /**
+   * 目标分区发出时的 leader 身份。拓扑变化时据此核对在途请求：leader 或任期与发出时不同，说明原 leader 已不可能应答。 拿不到身份的寻址（管理面）为 {@code
+   * null}，这类请求不参与核对。
+   */
+  record LeaderKey(PartitionId partitionId, MemberId memberId, long term) {}
+
+  /**
+   * 请求的投递目标。
+   *
+   * @param topicName 目标主题
+   * @param apiAddress 目标业务面地址
+   * @param leader 目标分区发出时的 leader 身份；无身份信息时为 {@code null}
+   */
+  record Destination(String topicName, Address apiAddress, LeaderKey leader) {}
 }

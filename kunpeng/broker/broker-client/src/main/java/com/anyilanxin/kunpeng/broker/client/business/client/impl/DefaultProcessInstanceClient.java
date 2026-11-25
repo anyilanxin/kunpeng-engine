@@ -43,18 +43,18 @@ public class DefaultProcessInstanceClient implements ProcessInstanceClient {
   @Override
   public CompletableFuture<BrokerResponse<ProcessInstanceCreateResponseRecord>>
       createProcessInstance(final ProcessInstanceCreateRequest request) {
-    return brokerClient.sendRequest(request);
+    return brokerClient.sendRequestWithRetry(request);
   }
 
   @Override
   public CompletableFuture<BrokerResponse<ProcessInstanceCreateAndResultResponseRecord>>
       createProcessInstanceWithResult(final ProcessInstanceCreateAndResultRequest request) {
-    return brokerClient.sendRequest(request);
+    return brokerClient.sendRequestWithRetry(request);
   }
 
   @Override
   public CompletableFuture<BrokerResponse<ProcessInstanceCancelResponseRecord>>
       cancelProcessInstance(final ProcessInstanceCancelRequest request) {
-    return brokerClient.sendRequest(request);
+    return brokerClient.sendRequestWithRetry(request);
   }
 }

@@ -26,12 +26,15 @@ import com.anyilanxin.kunpeng.cluster.cluster.Member;
 import com.anyilanxin.kunpeng.cluster.cluster.MemberId;
 import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.DefaultClusterTopologyService;
+import com.anyilanxin.kunpeng.cluster.config.topology.cluster.PartitionLeaderInfo;
 import com.anyilanxin.kunpeng.cluster.utils.net.Address;
 import com.anyilanxin.kunpeng.protocol.common.encoding.BrokerInfo;
 import com.anyilanxin.kunpeng.protocol.common.member.CommPortType;
 import com.anyilanxin.kunpeng.scheduler.ActorScheduler;
 import java.util.Base64;
+import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -111,6 +114,33 @@ class DefaultClusterTopologyServiceTest {
     assertThat(service().getPartitionLeader(PartitionId.from("unknown", 9))).isNull();
     assertThat(service().getPartitionMemberInfo(PartitionId.from("unknown", 9))).isEmpty();
     assertThat(service().getPartitionBusinessAddress(PartitionId.from("unknown", 9))).isNull();
+    assertThat(service().getPartitionLeaderInfo(PartitionId.from("unknown", 9))).isNull();
+  }
+
+  @Test
+  void shouldNotifyListenersOfTheRebuiltViewWithTheLeaderIdentity() {
+    final DefaultClusterTopologyService service = startedService();
+    // 监听在通知时刻读到的 leader 身份（成员、任期、业务地址）
+    final List<PartitionLeaderInfo> leadersSeenByListeners = new CopyOnWriteArrayList<>();
+    service.addTopologyChangeListener(
+        () -> leadersSeenByListeners.add(service.getPartitionLeaderInfo(PARTITION)));
+
+    service.event(
+        new ClusterMembershipEvent(
+            ClusterMembershipEvent.Type.MEMBER_ADDED,
+            memberBroadcast("member-1", PartitionRole.LEADER, 2L, "10.0.0.1", 4567)));
+    awaitEventsProcessed(service);
+    // leader 切到另一成员：视图重建后监听必须读到新 leader
+    service.event(
+        new ClusterMembershipEvent(
+            ClusterMembershipEvent.Type.MEMBER_ADDED,
+            memberBroadcast("member-2", PartitionRole.LEADER, 3L, "10.0.0.2", 4567)));
+    awaitEventsProcessed(service);
+
+    assertThat(leadersSeenByListeners)
+        .containsExactly(
+            new PartitionLeaderInfo(MemberId.from("member-1"), 2L, Address.from("10.0.0.1", 4567)),
+            new PartitionLeaderInfo(MemberId.from("member-2"), 3L, Address.from("10.0.0.2", 4567)));
   }
 
   @Test

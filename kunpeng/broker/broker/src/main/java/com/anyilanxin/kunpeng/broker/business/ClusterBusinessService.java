@@ -672,7 +672,8 @@ public class ClusterBusinessService extends Actor
                     "partition " + record.getPartitionId() + " has no engine process service"));
             return;
           }
-          if (engineProcessService.isFrozen()) {
+          // 只认手术自己的冻结：leader 转移冻结进行中时不算手术在途，交给 freezeAndDrain 按互斥失败、走手术的重试链
+          if (engineProcessService.isFrozenForDataSurgery()) {
             // 看门狗重试探：回 IN_PROGRESS 进度 ack（调度侧不落日志不置终态，观测续期）
             ackInProgress(record, engineProcessService.freezeRemaining());
             return;

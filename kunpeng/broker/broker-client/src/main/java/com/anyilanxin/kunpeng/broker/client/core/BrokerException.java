@@ -23,6 +23,11 @@ package com.anyilanxin.kunpeng.broker.client.core;
  * @since 2026.9.0
  */
 public class BrokerException extends Exception {
+  /**
+   * 目标分区的 leader 解析不出来（选举进行中、成员离线、业务端口未广播）：暂态，命令没有发出，可安全重试。 其余码值表示请求本身无法寻址（无效 key、找不到源分区等），重试无意义。
+   */
+  public static final int LEADER_UNRESOLVABLE = 11;
+
   private final int code;
 
   public BrokerException(final int code, final String message) {

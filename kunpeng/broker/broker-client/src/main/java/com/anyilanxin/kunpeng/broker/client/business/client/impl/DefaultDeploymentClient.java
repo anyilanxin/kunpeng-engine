@@ -41,12 +41,12 @@ public class DefaultDeploymentClient implements DeploymentClient {
   @Override
   public CompletableFuture<BrokerResponse<DeploymentCreateResponseRecord>> deployResource(
       final DeploymentCreateRequest request) {
-    return brokerClient.sendRequest(request);
+    return brokerClient.sendRequestWithRetry(request);
   }
 
   @Override
   public CompletableFuture<BrokerResponse<DeploymentDeleteResponseRecord>> deleteResource(
       final DeploymentDeleteRequest request) {
-    return brokerClient.sendRequest(request);
+    return brokerClient.sendRequestWithRetry(request);
   }
 }

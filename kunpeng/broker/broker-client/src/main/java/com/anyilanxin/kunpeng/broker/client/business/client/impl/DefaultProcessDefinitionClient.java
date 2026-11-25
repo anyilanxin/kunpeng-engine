@@ -43,18 +43,18 @@ public class DefaultProcessDefinitionClient implements ProcessDefinitionClient {
   @Override
   public CompletableFuture<BrokerResponse<ProcessDefinitionActivateResponseRecord>>
       activateProcessDefinition(final ActivateProcessDefinitionRequest request) {
-    return brokerClient.sendRequest(request);
+    return brokerClient.sendRequestWithRetry(request);
   }
 
   @Override
   public CompletableFuture<BrokerResponse<ProcessDefinitionSuspendResponseRecord>>
       suspendProcessDefinition(final SuspendProcessDefinitionRequest request) {
-    return brokerClient.sendRequest(request);
+    return brokerClient.sendRequestWithRetry(request);
   }
 
   @Override
   public CompletableFuture<BrokerResponse<ProcessDefinitionDeleteResponseRecord>>
       deleteProcessDefinition(final DeleteProcessDefinitionRequest request) {
-    return brokerClient.sendRequest(request);
+    return brokerClient.sendRequestWithRetry(request);
   }
 }

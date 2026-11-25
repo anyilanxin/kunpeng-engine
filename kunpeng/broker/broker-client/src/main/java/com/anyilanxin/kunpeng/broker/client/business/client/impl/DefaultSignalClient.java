@@ -39,6 +39,6 @@ public class DefaultSignalClient implements SignalClient {
   @Override
   public CompletableFuture<BrokerResponse<SignalCorrelationResponseRecord>> correlateSignal(
       final SignalCorrelationRequest request) {
-    return brokerClient.sendRequest(request);
+    return brokerClient.sendRequestWithRetry(request);
   }
 }

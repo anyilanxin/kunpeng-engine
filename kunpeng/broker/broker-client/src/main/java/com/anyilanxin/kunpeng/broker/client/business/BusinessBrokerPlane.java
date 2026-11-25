@@ -27,7 +27,7 @@ import com.anyilanxin.kunpeng.broker.client.core.BrokerRequest;
 import com.anyilanxin.kunpeng.broker.client.core.protocol.RecordType;
 import com.anyilanxin.kunpeng.cluster.cluster.PartitionId;
 import com.anyilanxin.kunpeng.cluster.config.topology.cluster.ClusterTopologyService;
-import com.anyilanxin.kunpeng.cluster.utils.net.Address;
+import com.anyilanxin.kunpeng.cluster.config.topology.cluster.PartitionLeaderInfo;
 import com.anyilanxin.kunpeng.protocol.business.ValueLifeCycle;
 import com.anyilanxin.kunpeng.protocol.business.ValueType;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.DefaultRecordValueMapper;
@@ -85,7 +85,9 @@ public class BusinessBrokerPlane implements BrokerPlane {
     if (partitionId == RANDOM_PARTITION) {
       final PartitionId partition = randomPartition();
       if (partition == null) {
-        throw new BrokerException(10, "No business partition with a leader is available");
+        throw new BrokerException(
+            BrokerException.LEADER_UNRESOLVABLE,
+            "No business partition with a leader is available");
       }
       return partitionDestination(partition);
     } else if (partitionId == NOT_SPECIFIED_PARTITION) {
@@ -113,18 +115,20 @@ public class BusinessBrokerPlane implements BrokerPlane {
 
   private Destination partitionDestination(final PartitionId partitionId) throws BrokerException {
     // 业务面寻址统一走拓扑收集服务(分区 leader 的成员主机 + 其广播的业务端口);
-    // 地址不可得(leader 未选出/成员离线/业务端口未广播)本身就是异常, 立即抛出让调用方拿到明确失败
-    final Address businessAddress = topologyService.getPartitionBusinessAddress(partitionId);
-    if (businessAddress == null) {
+    // 地址不可得(leader 未选出/成员离线/业务端口未广播)本身就是异常, 立即抛出让调用方拿到明确失败。
+    // 成员与任期随地址一并带出: 请求发出时的 leader 身份, 拓扑变化时据此核对在途请求
+    final PartitionLeaderInfo leader = topologyService.getPartitionLeaderInfo(partitionId);
+    if (leader == null || leader.businessAddress() == null) {
       throw new BrokerException(
-          10,
+          BrokerException.LEADER_UNRESOLVABLE,
           "Business address of partition leader not resolvable for partition "
               + partitionId
               + " (leader unknown, member offline, or business port not broadcast)");
     }
     return new Destination(
         TopicUtils.getTopicName(RecordType.COMMAND_API.value(), String.valueOf(partitionId.id())),
-        businessAddress);
+        leader.businessAddress(),
+        new LeaderKey(partitionId, leader.memberId(), leader.term()));
   }
 
   private PartitionId randomPartition() {

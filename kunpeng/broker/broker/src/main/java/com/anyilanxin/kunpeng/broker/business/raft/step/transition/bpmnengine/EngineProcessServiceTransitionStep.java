@@ -19,6 +19,7 @@ package com.anyilanxin.kunpeng.broker.business.raft.step.transition.bpmnengine;
 import com.anyilanxin.kunpeng.broker.business.raft.step.transition.BusinessTransitionContent;
 import com.anyilanxin.kunpeng.broker.jobstream.JobStreamDispatcher;
 import com.anyilanxin.kunpeng.cluster.business.step.transition.TransitionStep;
+import com.anyilanxin.kunpeng.cluster.raft.LeadershipTransferWriteBarrier;
 import com.anyilanxin.kunpeng.engine.bpmn.EngineProcessService;
 import com.anyilanxin.kunpeng.engine.bpmn.scheduling.TimerClock;
 import com.anyilanxin.kunpeng.scheduler.ConcurrencyControl;
@@ -91,6 +92,13 @@ public final class EngineProcessServiceTransitionStep
                       return;
                     }
                     context.setEngineProcessService(engineService);
+                    // 把写屏障交给 Raft 层：协调转移期间由它冻结本分区的写入
+                    context
+                        .getRaftPartition()
+                        .getServer()
+                        .setLeadershipTransferWriteBarrier(
+                            new EngineLeadershipTransferWriteBarrier(
+                                partitionId, commandApiService, engineService));
                     // 推送失败回退：leader 期登记本分区日志写入器（WITHDRAW 命令直写）
                     jobStreamDispatcher
                         .fallbackHandler()
@@ -121,6 +129,11 @@ public final class EngineProcessServiceTransitionStep
     concurrencyControl.run(
         () -> {
           final int partitionId = context.getRaftPartitionId().id();
+          // 摘除写屏障：引擎关闭后它不能再冻结分区，Raft 层退回空实现
+          context
+              .getRaftPartition()
+              .getServer()
+              .setLeadershipTransferWriteBarrier(LeadershipTransferWriteBarrier.NONE);
           final JobStreamDispatcher jobStreamDispatcher = context.getJobStreamDispatcher();
           if (jobStreamDispatcher != null) {
             jobStreamDispatcher.fallbackHandler().removeWriter(partitionId);

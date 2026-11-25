@@ -18,6 +18,7 @@ package com.anyilanxin.kunpeng.gateway.grpc;
 
 import com.anyilanxin.kunpeng.broker.client.core.BrokerResponse;
 import com.anyilanxin.kunpeng.broker.client.core.BrokerResponseCodes;
+import com.anyilanxin.kunpeng.broker.client.core.LeaderChangedException;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
@@ -46,6 +47,11 @@ public class GrpcErrorHandle {
       return new StatusRuntimeException(
           Status.DEADLINE_EXCEEDED.withDescription(error.getMessage()));
     }
+    // 在途请求因 leader 变更被网关终止：命令可能已被执行，结果未知。与 broker 应答码 LEADER_STEPPED_DOWN 同样映射 UNAVAILABLE，
+    // 网关不自动重试，是否重试由调用方决定
+    if (error instanceof LeaderChangedException) {
+      return new StatusRuntimeException(Status.UNAVAILABLE.withDescription(error.getMessage()));
+    }
     if (error instanceof IllegalArgumentException || error instanceof NullPointerException) {
       return new StatusRuntimeException(
           Status.INVALID_ARGUMENT.withDescription(error.getMessage()));
@@ -65,6 +71,12 @@ public class GrpcErrorHandle {
     }
     // 分区冻结（数据手术窗口）：暂时性不可用，计划 RESUME 后自动恢复——映射 UNAVAILABLE 供调用方重试退避
     if (code == BrokerResponseCodes.PARTITION_FROZEN) {
+      return new StatusRuntimeException(
+          Status.UNAVAILABLE.withDescription(brokerResponse.message()));
+    }
+    // leader 转移窗口拒绝（命令没进日志）与在途请求因 leader 变更被终止（结果未知）：都是暂时性不可用。
+    // 前者到这里说明网关的自动重试已耗尽预算；后者网关不自动重试，是否重试由调用方决定
+    if (code == BrokerResponseCodes.NOT_LEADER || code == BrokerResponseCodes.LEADER_STEPPED_DOWN) {
       return new StatusRuntimeException(
           Status.UNAVAILABLE.withDescription(brokerResponse.message()));
     }

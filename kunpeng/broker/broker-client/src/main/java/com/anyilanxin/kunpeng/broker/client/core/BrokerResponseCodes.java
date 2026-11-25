@@ -17,9 +17,10 @@
 package com.anyilanxin.kunpeng.broker.client.core;
 
 /**
- * broker 传输层失败应答错误码（{@code BrokerResponse.code} int 通道）：流控/背压类拒绝，调用方可重试。
+ * broker 传输层失败应答错误码（{@code BrokerResponse.code} int 通道）：流控/背压/leader 切换类拒绝。各码是否可重试见常量说明。
  *
- * <p>与 record 级业务拒绝（RejectionType）分属两层：这里只表达"这条命令没能进入日志"，不携带业务语义；wire 格式与编号池零改动。
+ * <p>与 record 级业务拒绝（RejectionType）分属两层，不携带业务语义；wire 格式与编号池零改动。多数码表达"这条命令没能进入日志"；例外是 {@link
+ * #LEADER_STEPPED_DOWN}，命令可能已进入日志。
  *
  * @author zxuanhong
  * @since 2026.9.0
@@ -36,6 +37,15 @@ public final class BrokerResponseCodes {
    * 拓扑冻结通告（建议层）同义——通告让调用方根本不发，本码接住漏网的。
    */
   public static final int PARTITION_FROZEN = 3;
+
+  /**
+   * leader 转移窗口拒绝：分区正在把 leader 交给别的节点，秒级窗口，命令没有进入日志。调用方可立即重试，网关会自动重试到新 leader。 与 {@link
+   * #PARTITION_FROZEN} 分开，因为数据手术持续分钟到小时，不该原地重试。
+   */
+  public static final int NOT_LEADER = 4;
+
+  /** 在途请求因 leader 变更被终止：命令可能已进入日志并被新 leader 执行，结果未知。调用方不应盲目重试非幂等命令（重试创建流程实例会建出第二个）。 */
+  public static final int LEADER_STEPPED_DOWN = 5;
 
   private BrokerResponseCodes() {}
 }

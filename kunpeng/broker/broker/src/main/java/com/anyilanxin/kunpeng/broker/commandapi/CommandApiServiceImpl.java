@@ -100,6 +100,18 @@ public class CommandApiServiceImpl extends Actor
     actor.run(() -> handle.bindSinkPositionSupplier(partitionId, lowestSinkPosition));
   }
 
+  @Override
+  public ActorFuture<Void> markLeadershipTransferring(
+      final int partitionId, final boolean transferring) {
+    final var future = actor.<Void>createFuture();
+    actor.run(
+        () -> {
+          handle.setLeadershipTransferring(partitionId, transferring);
+          future.complete(null);
+        });
+    return future;
+  }
+
   /**
    * sink 滞后背压闸门（每分区一个）：配置禁用或缺失时不创建（闸门不存在）；写入位 supplier 取本分区事件日志流控， sink 最低确认位 supplier 由后续
    * transition 步骤晚绑定（commandapi 步骤先于 repository 步骤执行）。

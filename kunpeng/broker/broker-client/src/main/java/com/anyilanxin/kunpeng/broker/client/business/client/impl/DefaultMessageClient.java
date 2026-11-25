@@ -39,6 +39,6 @@ public class DefaultMessageClient implements MessageClient {
   @Override
   public CompletableFuture<BrokerResponse<MessageCorrelationResponseRecord>> correlateMessage(
       final MessageCorrelationRequest request) {
-    return brokerClient.sendRequest(request);
+    return brokerClient.sendRequestWithRetry(request);
   }
 }

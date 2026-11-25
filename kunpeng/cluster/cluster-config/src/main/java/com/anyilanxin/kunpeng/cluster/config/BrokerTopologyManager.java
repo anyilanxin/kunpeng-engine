@@ -38,6 +38,7 @@ public final class BrokerTopologyManager {
 
   public BrokerTopologyManager(final ClusterTopologyService topologyService) {
     this.topologyService = topologyService;
+    topologyService.addTopologyChangeListener(this::notifyListeners);
   }
 
   public BrokerClusterState getTopology() {
@@ -47,6 +48,12 @@ public final class BrokerTopologyManager {
       cachedVersion = version;
     }
     return cachedTopology;
+  }
+
+  /** 拓扑视图重建后转发给已登记的监听；运行在拓扑服务的线程上，监听方须自行切回自己的线程 */
+  private void notifyListeners() {
+    final BrokerClusterState topology = getTopology();
+    listeners.forEach(listener -> listener.onTopologyChanged(topology));
   }
 
   public void addTopologyListener(final TopologyListener listener) {

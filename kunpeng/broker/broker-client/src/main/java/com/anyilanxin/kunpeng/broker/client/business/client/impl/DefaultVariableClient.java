@@ -41,12 +41,12 @@ public class DefaultVariableClient implements VariableClient {
   @Override
   public CompletableFuture<BrokerResponse<VariableUpdateResponseRecord>> updateVariable(
       final VariableUpdateRequest request) {
-    return brokerClient.sendRequest(request);
+    return brokerClient.sendRequestWithRetry(request);
   }
 
   @Override
   public CompletableFuture<BrokerResponse<VariableRemoveResponseRecord>> removeVariable(
       final VariableRemoveRequest request) {
-    return brokerClient.sendRequest(request);
+    return brokerClient.sendRequestWithRetry(request);
   }
 }
