@@ -33,8 +33,14 @@ import com.anyilanxin.kunpeng.eventlog.storage.EventStoreReader;
 import com.anyilanxin.kunpeng.protocol.business.BusinessEventRecord;
 import com.anyilanxin.kunpeng.repository.business.BusinessRepository;
 import com.anyilanxin.kunpeng.repository.business.ResourceDataSplit;
+import com.anyilanxin.kunpeng.repository.business.modules.activityinstance.ImmutableActivityInstanceRepository;
+import com.anyilanxin.kunpeng.repository.business.modules.activityinstance.MutableActivityInstanceRepository;
+import com.anyilanxin.kunpeng.repository.business.modules.deployment.bpmnresource.ImmutableBpmnResourceRepository;
+import com.anyilanxin.kunpeng.repository.business.modules.deployment.bpmnresource.MutableBpmnResourceRepository;
 import com.anyilanxin.kunpeng.repository.business.modules.sink.MutableSinkRepository;
 import com.anyilanxin.kunpeng.repository.business.modules.sink.record.SinkStateEntry;
+import com.anyilanxin.kunpeng.repository.business.modules.variable.ImmutableVariableRepository;
+import com.anyilanxin.kunpeng.repository.business.modules.variable.MutableVariableRepository;
 import com.anyilanxin.kunpeng.sink.api.RecordSink;
 import com.anyilanxin.kunpeng.sink.registry.SinkDescriptor;
 import com.anyilanxin.kunpeng.scheduler.ActorScheduler;
@@ -159,11 +165,38 @@ class SinkServiceTest {
             BusinessRepository.class.getClassLoader(),
             new Class<?>[] {BusinessRepository.class},
             (proxy, method, args) -> {
-              if ("sinkRepository".equals(method.getName())) {
+              final String name = method.getName();
+              if ("sinkRepository".equals(name)) {
                 return sinkState;
               }
-              throw new UnsupportedOperationException(method.getName());
+              // SinkService 构造时为分区本地查询引擎取三个只读仓储；本测试的 sink 不做查询，给一调用就抛异常的空实现
+              if ("bpmnResourceRepository".equals(name)) {
+                return unusedRepository(
+                    ImmutableBpmnResourceRepository.class, MutableBpmnResourceRepository.class);
+              }
+              if ("variableRepository".equals(name)) {
+                return unusedRepository(
+                    ImmutableVariableRepository.class, MutableVariableRepository.class);
+              }
+              if ("instanceRepository".equals(name)) {
+                return unusedRepository(
+                    ImmutableActivityInstanceRepository.class,
+                    MutableActivityInstanceRepository.class);
+              }
+              throw new UnsupportedOperationException(name);
             });
+  }
+
+  /**
+   * 被取用但不该被调用的仓储：任何方法一调用就抛异常，问题在使用处暴露。 同名取数方法在只读与可变两个父接口上各声明了一次，返回值必须同时满足两边，所以两个接口都要实现。
+   */
+  private static Object unusedRepository(final Class<?>... types) {
+    return Proxy.newProxyInstance(
+        types[0].getClassLoader(),
+        types,
+        (proxy, method, args) -> {
+          throw new UnsupportedOperationException(method.getName());
+        });
   }
 
   private static AppendEntry dummyEntry(final long key) {
