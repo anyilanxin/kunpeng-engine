@@ -17,6 +17,7 @@
 package com.anyilanxin.kunpeng.cluster.raft.partition;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
 import org.junit.jupiter.api.Test;
@@ -41,14 +42,34 @@ final class RaftPartitionConfigTest {
   @Test
   void allowsOverridingSnapshotSettings() {
     final var config = new RaftPartitionConfig();
-    config.setSnapshotInterval(Duration.ofSeconds(30));
+    config.setSnapshotInterval(Duration.ofMinutes(10));
     config.setMaxSnapshotCount(1);
     config.setSnapshotEntryTriggerThreshold(50_000);
     config.setSnapshotTransferMaxBatchSize(1024 * 1024);
-    assertThat(config.getSnapshotInterval()).isEqualTo(Duration.ofSeconds(30));
+    assertThat(config.getSnapshotInterval()).isEqualTo(Duration.ofMinutes(10));
     assertThat(config.getMaxSnapshotCount()).isEqualTo(1);
     assertThat(config.getSnapshotEntryTriggerThreshold()).isEqualTo(50_000);
     assertThat(config.getSnapshotTransferMaxBatchSize()).isEqualTo(1024 * 1024);
+  }
+
+  /** 快照间隔不得低于下限（4 分钟）；被拒后保持默认值。 */
+  @Test
+  void rejectsSnapshotIntervalBelowFourMinutes() {
+    final var config = new RaftPartitionConfig();
+    assertThatThrownBy(() -> config.setSnapshotInterval(Duration.ofSeconds(30)))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("snapshotInterval must be >= PT4M");
+    assertThat(config.getSnapshotInterval()).isEqualTo(Duration.ofMinutes(5));
+  }
+
+  /** 条数触发阈值只接受 0（禁用）或不低于下限；被拒后保持默认值。 */
+  @Test
+  void rejectsSnapshotEntryTriggerThresholdBelowMinimum() {
+    final var config = new RaftPartitionConfig();
+    assertThatThrownBy(() -> config.setSnapshotEntryTriggerThreshold(3_999))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("snapshotEntryTriggerThreshold must be 0 (disabled) or >=");
+    assertThat(config.getSnapshotEntryTriggerThreshold()).isEqualTo(100_000);
   }
 
   /** 0 是合法取值：禁用条数触发，仅保留周期触发。 */

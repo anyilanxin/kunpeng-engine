@@ -34,7 +34,7 @@ import java.util.Collections;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * 验证 {@link com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartition} 的拍摄与关闭前快照。
+ * 验证 {@link com.anyilanxin.kunpeng.cluster.raft.partition.RaftPartition} 的快照拍摄，以及关闭不拍最终快照。
  *
  * @author zxuanhong
  * @since 2026.9.0
@@ -78,18 +78,20 @@ public class RaftPartitionSnapshotIntegrationTest {
     assertThat(store.getLatestSnapshot().get().getIndex()).isEqualTo(commitIndex);
   }
 
+  /** 关闭不拍最终快照：关机序列先经 TO_INACTIVE 关闭运行库，到 close() 时已无库可拍，关闭前拍摄已去掉。 */
   @Test
-  public void closeTakesFinalSnapshot() {
+  public void closeDoesNotTakeAFinalSnapshot() {
     // given：追加并提交一条日志
     final var appender = helper.awaitLeaderAppender(1);
     appender.appendEntry(0, 0, ByteBuffer.allocate(Integer.BYTES).putInt(0, 1), appenderListener);
-    appenderListener.pollCommitted();
+    assertThat(appenderListener.pollCommitted()).isGreaterThan(0);
 
-    // when：强制关闭（应在此之前拍一次快照）
+    // when：关闭分区
     node.getPartition(1).close().join();
 
-    // then：最新快照索引已推进到关闭前的 commit index
+    // then：没有产生任何快照
     final var store = node.getPartitionServer(1).getPersistedSnapshotStore();
-    assertThat(store.getCurrentSnapshotIndex()).isGreaterThan(0);
+    assertThat(store.getCurrentSnapshotIndex()).isZero();
+    assertThat(store.getLatestSnapshot()).isEmpty();
   }
 }
