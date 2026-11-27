@@ -25,8 +25,8 @@ const sharedToken = {
   colorSuccess: '#13a57a',
   colorWarning: '#ee9b32',
   colorError: '#ef6461',
-  borderRadius: 12,
-  borderRadiusLG: 18,
+  borderRadius: 8,
+  borderRadiusLG: 12,
   fontFamily: 'Inter, "SF Pro Display", "PingFang SC", "Microsoft YaHei", sans-serif',
 };
 
@@ -46,7 +46,7 @@ const lightTheme: ThemeConfig = {
       fontWeight: 500,
     },
     Card: {
-      borderRadiusLG: 18,
+      borderRadiusLG: 12,
       boxShadowTertiary: '0 10px 36px rgba(38, 82, 147, 0.07)',
     },
     Input: {
@@ -58,7 +58,7 @@ const lightTheme: ThemeConfig = {
     },
     Menu: {
       itemHeight: 46,
-      itemBorderRadius: 12,
+      itemBorderRadius: 8,
       itemSelectedBg: '#eaf1ff',
       itemSelectedColor: '#246bfd',
       itemColor: '#66758f',
@@ -78,7 +78,7 @@ const lightTheme: ThemeConfig = {
       titleFontSize: 14,
     },
     Drawer: {
-      borderRadiusLG: 18,
+      borderRadiusLG: 12,
     },
   },
 };
@@ -102,7 +102,7 @@ const darkTheme: ThemeConfig = {
       fontWeight: 500,
     },
     Card: {
-      borderRadiusLG: 18,
+      borderRadiusLG: 12,
       boxShadowTertiary: '0 10px 36px rgba(0, 0, 0, 0.4)',
     },
     Input: {
@@ -114,7 +114,7 @@ const darkTheme: ThemeConfig = {
     },
     Menu: {
       itemHeight: 46,
-      itemBorderRadius: 12,
+      itemBorderRadius: 8,
       itemSelectedBg: 'rgba(77, 141, 255, 0.16)',
       itemSelectedColor: '#6ea3ff',
       itemColor: '#8b9bb5',
@@ -135,7 +135,7 @@ const darkTheme: ThemeConfig = {
       titleFontSize: 14,
     },
     Drawer: {
-      borderRadiusLG: 18,
+      borderRadiusLG: 12,
     },
   },
 };
