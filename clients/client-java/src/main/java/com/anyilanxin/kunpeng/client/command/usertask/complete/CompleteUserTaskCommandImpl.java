@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 public final class CompleteUserTaskCommandImpl
-    extends CommandWithVariables2<CompleteUserTaskCommandImpl>
+    extends CommandWithVariables3<CompleteUserTaskCommandImpl>
     implements CompleteUserTaskCommand, CompleteUserTaskCommand.CompleteUserTaskCommandStep1 {
 
   private static final Duration DEADLINE_OFFSET = Duration.ofSeconds(10);
@@ -65,6 +65,12 @@ public final class CompleteUserTaskCommandImpl
   @Override
   protected CompleteUserTaskCommandImpl setVariablesInternal(final String variables) {
     requestBuilder.setVariable(variables);
+    return this;
+  }
+
+  @Override
+  protected CompleteUserTaskCommandImpl setLocalVariablesInternal(final String localVariables) {
+    requestBuilder.setLocalVariable(localVariables);
     return this;
   }
 

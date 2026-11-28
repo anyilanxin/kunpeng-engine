@@ -63,7 +63,10 @@ public class InputOutputBehavior {
       final BpmnFlowNode flowElement, final ActivityContent activityContext) {
     final ScriptExpression inputMappings = flowElement.getInputMappings();
     if (inputMappings != null) {
-      final ScriptContext scriptContext = variableBehavior.scriptContext(activityContext);
+      // 输入映射求值域=流程实例作用域（全局）：按声明把全局变量拷入任务局部，父容器局部变量不作输入源
+      final ScriptContext scriptContext =
+          variableBehavior.scriptContext(
+              activityContext.getProcessInstanceId(), activityContext.getProcessInstanceId());
       final Either<String, Map<String, Object>> mapObjectEither =
           inputMappings.evaluateMapObject(scriptContext);
       if (mapObjectEither.isLeft()) {

@@ -62,6 +62,7 @@ public class GrpcUserTaskServiceImpl extends UserTaskServiceGrpc.UserTaskService
     final long userTaskId = request.getUserTaskId();
     final UserTaskCompleteRequest brokerRequest = new UserTaskCompleteRequest(userTaskId);
     brokerRequest.setVariable(ensureJsonSet(request.getVariable()));
+    brokerRequest.setLocalVariable(ensureJsonSet(request.getLocalVariable()));
     AuthorizationMetadataContext.attachTo(brokerRequest);
     // 完成携带后加签：名单非空时模式必须显式（NONE 由引擎拒绝）
     if (request.getAddSignAssigneesCount() > 0) {

@@ -12,6 +12,7 @@
  */
 package com.anyilanxin.kunpeng.client.command.usertask.complete;
 
+import com.anyilanxin.kunpeng.client.command.CommandWithLocalVariables;
 import com.anyilanxin.kunpeng.client.command.CommandWithTenantStep;
 import com.anyilanxin.kunpeng.client.command.CommandWithVariables;
 import com.anyilanxin.kunpeng.client.command.FinalCommandStep;
@@ -33,7 +34,8 @@ public interface CompleteUserTaskCommand {
   interface CompleteUserTaskCommandStep1
       extends CommandWithTenantStep<CompleteUserTaskCommandStep1>,
           FinalCommandStep<CompleteUserTaskCommandResponse>,
-          CommandWithVariables<CompleteUserTaskCommandStep1> {
+          CommandWithVariables<CompleteUserTaskCommandStep1>,
+          CommandWithLocalVariables<CompleteUserTaskCommandStep1> {
     /**
      * Set the initial variables of the process instance.
      *

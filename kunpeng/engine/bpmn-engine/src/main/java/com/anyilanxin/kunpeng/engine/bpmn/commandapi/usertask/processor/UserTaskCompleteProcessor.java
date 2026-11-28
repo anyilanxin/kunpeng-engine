@@ -23,6 +23,7 @@ import com.anyilanxin.kunpeng.engine.bpmn.authorization.AuthorizationDeniedExcep
 import com.anyilanxin.kunpeng.engine.bpmn.authorization.AuthorizationHandler;
 import com.anyilanxin.kunpeng.engine.bpmn.command.behavior.impl.AddSignBehavior;
 import com.anyilanxin.kunpeng.engine.bpmn.command.behavior.impl.VariableBehavior;
+import com.anyilanxin.kunpeng.engine.bpmn.command.bpmn.activities.ActivityContent;
 import com.anyilanxin.kunpeng.engine.bpmn.commandapi.usertask.UserTaskApiAbstractProcessor;
 import com.anyilanxin.kunpeng.protocol.business.impl.eventlog.BusinessLogRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.command.activityinstance.ActivityInstanceRecord;
@@ -159,6 +160,15 @@ public class UserTaskCompleteProcessor
       }
       final Map<String, Object> variables = value.getVariables();
       final Map<String, Object> localVariables = value.getLocalVariables();
+      // 完成变量先落作用域再走完成链（局部通道进任务活动作用域、全局通道进流程实例作用域）：
+      // 落作用域必须用原始两份载荷（先于合并），完成监听器与输出映射随后可见
+      variableBehavior.variableUpdate(
+          new ActivityContent(instanceRecord, record.getRequestId()), localVariables);
+      variableBehavior.variableUpdate(
+          userTask.getProcessInstanceId(),
+          userTask.getProcessDefinitionId(),
+          record.getRequestId(),
+          variables);
       if (!localVariables.isEmpty()) {
         variables.putAll(localVariables);
       }

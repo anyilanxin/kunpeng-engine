@@ -49,6 +49,18 @@ public class UserTaskCompleteRequest
     return this;
   }
 
+  /** 完成局部变量通道：落任务活动作用域（区别于 {@link #setVariable(Map)} 的流程实例作用域） */
+  public UserTaskCompleteRequest setLocalVariable(final DirectBuffer localVariables) {
+    getValue().setLocalVariables(localVariables);
+    return this;
+  }
+
+  /** 完成局部变量通道：落任务活动作用域（区别于 {@link #setVariable(Map)} 的流程实例作用域） */
+  public UserTaskCompleteRequest setLocalVariable(final Map<String, Object> localVariables) {
+    getValue().setLocalVariables(localVariables);
+    return this;
+  }
+
   /** 完成时携带后加签（与完成同命令级联原子，登记后于完成时创建） */
   public UserTaskCompleteRequest setAddSignAssignees(final List<String> addSignAssignees) {
     getValue().setAddSignAssignees(addSignAssignees);
