@@ -10,6 +10,7 @@
        <result property="processDefinitionId" column="PROCESS_DEFINITION_ID" jdbcType="BIGINT"/>
        <result property="processDefinitionName" column="PROCESS_DEFINITION_NAME" jdbcType="VARCHAR"/>
        <result property="startUserId" column="START_USER_ID" jdbcType="VARCHAR"/>
+       <result property="delegateUserId" column="DELEGATE_USER_ID" jdbcType="VARCHAR"/>
        <result property="state" column="STATE" jdbcType="VARCHAR"/>
        <result property="startTime" column="START_TIME" jdbcType="TIMESTAMP"/>
        <result property="endTime" column="END_TIME" jdbcType="TIMESTAMP"/>

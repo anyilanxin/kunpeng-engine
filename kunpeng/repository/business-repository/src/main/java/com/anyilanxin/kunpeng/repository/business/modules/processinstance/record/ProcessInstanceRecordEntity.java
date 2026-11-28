@@ -83,11 +83,12 @@ public class ProcessInstanceRecordEntity extends UnpackedObject implements Store
   private final IntegerProperty listenerIndexProp = new IntegerProperty(22, LISTENER_INDEX, -1);
   private final StringProperty tenantIdProp =
       new StringProperty(23, TENANT_ID, TenantOwned.DEFAULT_TENANT_IDENTIFIER);
+  private final StringProperty delegateUserIdProp = new StringProperty(24, "DELEGATE_USER_ID", "");
 
   // 授权元数据不落库（只驻命令层，v3 流转规则），实例侧仅存 start_user_id 提取物
 
   public ProcessInstanceRecordEntity() {
-    super(23);
+    super(24);
     declareProperty(processInstanceIdProp)
         .declareProperty(parentProcessInstanceIdProp)
         .declareProperty(rootProcessInstanceIdProp)
@@ -110,7 +111,8 @@ public class ProcessInstanceRecordEntity extends UnpackedObject implements Store
         .declareProperty(lifeCycleProp)
         .declareProperty(listenerTypeProp)
         .declareProperty(listenerIndexProp)
-        .declareProperty(tenantIdProp);
+        .declareProperty(tenantIdProp)
+        .declareProperty(delegateUserIdProp);
   }
 
   public void wrap(final ProcessInstanceRecord record) {
@@ -136,7 +138,8 @@ public class ProcessInstanceRecordEntity extends UnpackedObject implements Store
         .setLifeCycle(record.getLifeCycle())
         .setListenerType(record.getListenerType())
         .setListenerIndex(record.getListenerIndex())
-        .setTenantId(record.getTenantIdBuffer());
+        .setTenantId(record.getTenantIdBuffer())
+        .setDelegateUserId(record.getDelegateUserIdBuffer());
   }
 
   public ProcessInstanceRecord unwrap(final ProcessInstanceRecord instanceRecord) {
@@ -163,7 +166,8 @@ public class ProcessInstanceRecordEntity extends UnpackedObject implements Store
         .setLifeCycle(getLifeCycle())
         .setListenerType(getListenerType())
         .setListenerIndex(getListenerIndex())
-        .setTenantId(getTenantIdBuffer());
+        .setTenantId(getTenantIdBuffer())
+        .setDelegateUserId(getDelegateUserIdBuffer());
   }
 
   public long getProcessInstanceId() {
@@ -302,6 +306,28 @@ public class ProcessInstanceRecordEntity extends UnpackedObject implements Store
   public ProcessInstanceRecordEntity setStartUserId(final DirectBuffer startUserId) {
     if (startUserId != null) {
       startUserIdProp.setValue(startUserId);
+    }
+    return this;
+  }
+
+  public String getDelegateUserId() {
+    return bufferAsString(delegateUserIdProp.getValue());
+  }
+
+  public DirectBuffer getDelegateUserIdBuffer() {
+    return delegateUserIdProp.getValue();
+  }
+
+  public ProcessInstanceRecordEntity setDelegateUserId(final String delegateUserId) {
+    if (delegateUserId != null) {
+      delegateUserIdProp.setValue(wrapString(delegateUserId));
+    }
+    return this;
+  }
+
+  public ProcessInstanceRecordEntity setDelegateUserId(final DirectBuffer delegateUserId) {
+    if (delegateUserId != null) {
+      delegateUserIdProp.setValue(delegateUserId);
     }
     return this;
   }

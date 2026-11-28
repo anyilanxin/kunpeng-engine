@@ -39,6 +39,7 @@ public class RepositoryUserTaskApplierRegister {
         .register(new RocksdbRepositoryUserTaskCompletingApplierImpl(repository))
         .register(new RocksdbRepositoryUserTaskCreatedApplierImpl(repository))
         .register(new RocksdbRepositoryUserTaskCreatingApplierImpl(repository))
+        .register(new RocksdbRepositoryUserTaskDelegateUserApplierImpl(repository))
         .register(new RocksdbRepositoryUserTaskDeleteApplierImpl(repository))
         .register(new RocksdbRepositoryUserTaskDeletedApplierImpl(repository))
         .register(new RocksdbRepositoryUserTaskTerminatedApplierImpl(repository))

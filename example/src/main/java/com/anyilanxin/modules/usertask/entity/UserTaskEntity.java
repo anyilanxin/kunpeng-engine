@@ -78,6 +78,10 @@ public class UserTaskEntity extends BaseEntity {
   @TableField(value = "OWNER")
   private String owner;
 
+  /** 代办人 id（代为办理）：自办为空，代办完成为实际办理人 */
+  @TableField(value = "DELEGATE_USER_ID")
+  private String delegateUserId;
+
   /** 状态 */
   @TableField(value = "STATE")
   private String state;

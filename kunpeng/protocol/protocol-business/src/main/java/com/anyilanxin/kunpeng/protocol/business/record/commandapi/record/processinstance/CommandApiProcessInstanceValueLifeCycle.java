@@ -18,6 +18,10 @@ import static com.anyilanxin.kunpeng.protocol.business.RecordMappingIndex.RECORD
 import static com.anyilanxin.kunpeng.protocol.business.RecordMappingIndex.RECORD_INDEX_18;
 import static com.anyilanxin.kunpeng.protocol.business.RecordMappingIndex.RECORD_INDEX_19;
 import static com.anyilanxin.kunpeng.protocol.business.RecordMappingIndex.RECORD_INDEX_20;
+import static com.anyilanxin.kunpeng.protocol.business.RecordMappingIndex.RECORD_INDEX_95;
+import static com.anyilanxin.kunpeng.protocol.business.RecordMappingIndex.RECORD_INDEX_96;
+import static com.anyilanxin.kunpeng.protocol.business.RecordMappingIndex.RECORD_INDEX_97;
+import static com.anyilanxin.kunpeng.protocol.business.RecordMappingIndex.RECORD_INDEX_98;
 import static com.anyilanxin.kunpeng.protocol.business.RecordProcessIndex.*;
 
 import com.anyilanxin.kunpeng.protocol.business.ValueType;
@@ -33,7 +37,11 @@ public enum CommandApiProcessInstanceValueLifeCycle implements CommandApiValueLi
   CREATE_REQUEST((short) 2, PROCESS_INDEX_45, RECORD_INDEX_17),
   CREATE_RESPONSE((short) 3, NOT_PROCESS_INDEX, RECORD_INDEX_18),
   CREATE_AND_RESULT_REQUEST((short) 4, PROCESS_INDEX_46, RECORD_INDEX_19),
-  CREATE_AND_RESULT_RESPONSE((short) 5, NOT_PROCESS_INDEX, RECORD_INDEX_20);
+  CREATE_AND_RESULT_RESPONSE((short) 5, NOT_PROCESS_INDEX, RECORD_INDEX_20),
+  SET_START_USER_REQUEST((short) 6, PROCESS_INDEX_241, RECORD_INDEX_95),
+  SET_START_USER_RESPONSE((short) 7, NOT_PROCESS_INDEX, RECORD_INDEX_96),
+  SET_DELEGATE_USER_REQUEST((short) 8, PROCESS_INDEX_243, RECORD_INDEX_97),
+  SET_DELEGATE_USER_RESPONSE((short) 9, NOT_PROCESS_INDEX, RECORD_INDEX_98);
 
   private final short value;
   private final short processIndex;
@@ -58,6 +66,10 @@ public enum CommandApiProcessInstanceValueLifeCycle implements CommandApiValueLi
       case 3 -> CREATE_RESPONSE;
       case 4 -> CREATE_AND_RESULT_REQUEST;
       case 5 -> CREATE_AND_RESULT_RESPONSE;
+      case 6 -> SET_START_USER_REQUEST;
+      case 7 -> SET_START_USER_RESPONSE;
+      case 8 -> SET_DELEGATE_USER_REQUEST;
+      case 9 -> SET_DELEGATE_USER_RESPONSE;
       default -> throw new IllegalStateException("Unexpected value: " + value);
     };
   }

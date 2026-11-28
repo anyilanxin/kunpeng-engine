@@ -23,6 +23,7 @@ import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskCancelRequest;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskClaimRequest;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskCompleteRequest;
+import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskDelegateUserRequest;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskUnclaimRequest;
 import com.anyilanxin.kunpeng.broker.client.core.BrokerClient;
 import com.anyilanxin.kunpeng.broker.client.core.BrokerResponse;
@@ -32,6 +33,7 @@ import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.cancel.UserTaskCancelResponseRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.claim.UserTaskClaimResponseRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.complete.UserTaskCompleteResponseRecord;
+import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.delegateuser.UserTaskDelegateUserResponseRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.unclaim.UserTaskUnclaimResponseRecord;
 import java.util.concurrent.CompletableFuture;
 
@@ -75,6 +77,12 @@ public class DefaultUserTaskClient implements UserTaskClient {
   @Override
   public CompletableFuture<BrokerResponse<UserTaskAssigneeResponseRecord>> assignUserTask(
       final UserTaskAssigneeRequest request) {
+    return brokerClient.sendRequestWithRetry(request);
+  }
+
+  @Override
+  public CompletableFuture<BrokerResponse<UserTaskDelegateUserResponseRecord>> setUserTaskDelegate(
+      final UserTaskDelegateUserRequest request) {
     return brokerClient.sendRequestWithRetry(request);
   }
 

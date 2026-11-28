@@ -118,8 +118,11 @@ public class UserTaskRecord extends UnifiedRecordValue<UserTaskRecord>
   private final BooleanProperty addSignAllowedProp =
       new BooleanProperty(37, "ADD_SIGN_ALLOWED", false);
 
+  /** 代办人 id（代为办理）：审批人本人自办为空；代办完成为实际办理人；未接入授权体系时由设置代办人命令写入 */
+  private final StringProperty delegateUserIdProp = new StringProperty(38, "DELEGATE_USER_ID", "");
+
   public UserTaskRecord() {
-    super(37);
+    super(38);
     declareProperty(taskIdProp)
         .declareProperty(parentTaskIdProp)
         .declareProperty(revProp)
@@ -156,7 +159,8 @@ public class UserTaskRecord extends UnifiedRecordValue<UserTaskRecord>
         .declareProperty(afterSignAssigneesProp)
         .declareProperty(afterSignModeProp)
         .declareProperty(addSignDepthProp)
-        .declareProperty(addSignAllowedProp);
+        .declareProperty(addSignAllowedProp)
+        .declareProperty(delegateUserIdProp);
   }
 
   public void wrap(final ActivityInstanceRecord instanceRecord) {
@@ -616,6 +620,28 @@ public class UserTaskRecord extends UnifiedRecordValue<UserTaskRecord>
 
   public UserTaskRecord setAddSignAllowed(final boolean addSignAllowed) {
     addSignAllowedProp.setValue(addSignAllowed);
+    return this;
+  }
+
+  @Override
+  public String getDelegateUserId() {
+    return bufferAsString(delegateUserIdProp.getValue());
+  }
+
+  @JsonIgnore
+  public DirectBuffer getDelegateUserIdBuffer() {
+    return delegateUserIdProp.getValue();
+  }
+
+  public UserTaskRecord setDelegateUserId(final DirectBuffer delegateUserId) {
+    delegateUserIdProp.setValue(delegateUserId);
+    return this;
+  }
+
+  public UserTaskRecord setDelegateUserId(final String delegateUserId) {
+    if (delegateUserId != null) {
+      delegateUserIdProp.setValue(wrapString(delegateUserId));
+    }
     return this;
   }
 

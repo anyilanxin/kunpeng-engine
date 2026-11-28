@@ -20,11 +20,15 @@ import com.anyilanxin.kunpeng.broker.client.business.client.ProcessInstanceClien
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.processinstance.request.ProcessInstanceCancelRequest;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.processinstance.request.ProcessInstanceCreateAndResultRequest;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.processinstance.request.ProcessInstanceCreateRequest;
+import com.anyilanxin.kunpeng.broker.client.business.commandapi.processinstance.request.ProcessInstanceSetDelegateUserRequest;
+import com.anyilanxin.kunpeng.broker.client.business.commandapi.processinstance.request.ProcessInstanceSetStartUserRequest;
 import com.anyilanxin.kunpeng.broker.client.core.BrokerClient;
 import com.anyilanxin.kunpeng.broker.client.core.BrokerResponse;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.processinstance.cancel.ProcessInstanceCancelResponseRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.processinstance.create.ProcessInstanceCreateAndResultResponseRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.processinstance.create.ProcessInstanceCreateResponseRecord;
+import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.processinstance.delegateuser.ProcessInstanceDelegateUserResponseRecord;
+import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.processinstance.startuser.ProcessInstanceStartUserResponseRecord;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -55,6 +59,18 @@ public class DefaultProcessInstanceClient implements ProcessInstanceClient {
   @Override
   public CompletableFuture<BrokerResponse<ProcessInstanceCancelResponseRecord>>
       cancelProcessInstance(final ProcessInstanceCancelRequest request) {
+    return brokerClient.sendRequestWithRetry(request);
+  }
+
+  @Override
+  public CompletableFuture<BrokerResponse<ProcessInstanceStartUserResponseRecord>>
+      setProcessInstanceStartUser(final ProcessInstanceSetStartUserRequest request) {
+    return brokerClient.sendRequestWithRetry(request);
+  }
+
+  @Override
+  public CompletableFuture<BrokerResponse<ProcessInstanceDelegateUserResponseRecord>>
+      setProcessInstanceDelegateUser(final ProcessInstanceSetDelegateUserRequest request) {
     return brokerClient.sendRequestWithRetry(request);
   }
 }

@@ -16,6 +16,7 @@
  */
 package com.anyilanxin.kunpeng.engine.bpmn.authorization;
 
+import static com.anyilanxin.kunpeng.protocol.common.UserMetadataConstant.ACT_FOR;
 import static com.anyilanxin.kunpeng.protocol.common.UserMetadataConstant.EMAIL;
 import static com.anyilanxin.kunpeng.protocol.common.UserMetadataConstant.FIRST_NAME;
 import static com.anyilanxin.kunpeng.protocol.common.UserMetadataConstant.GROUPS;
@@ -31,15 +32,16 @@ import org.agrona.concurrent.UnsafeBuffer;
 
 /**
  * 授权实体：信封授权元数据（JSON）解析出的具体身份，供引擎处理器直接使用。标准键见 {@link
- * UserMetadataConstant}（userId/groups/firstName/lastName/email/tenantId），校验只消费 userId 与
- * groups，其余为审计字段。
+ * UserMetadataConstant}（userId/groups/actFor/firstName/lastName/email/tenantId），校验只消费 userId、groups
+ * 与 actFor，其余为审计字段。
  *
  * @author zxuanhong
  * @since 2026.9.0
  */
 public final class Authorization {
   /** 未携带授权元数据的操作人（未认证/系统语义） */
-  public static final Authorization NONE = new Authorization("", "", "", "", "", List.of());
+  public static final Authorization NONE =
+      new Authorization("", "", "", "", "", List.of(), List.of());
 
   private final String userId;
   private final String firstName;
@@ -47,6 +49,7 @@ public final class Authorization {
   private final String email;
   private final String tenantId;
   private final List<String> groups;
+  private final List<String> actFor;
 
   private Authorization(
       final String userId,
@@ -54,13 +57,15 @@ public final class Authorization {
       final String lastName,
       final String email,
       final String tenantId,
-      final List<String> groups) {
+      final List<String> groups,
+      final List<String> actFor) {
     this.userId = userId;
     this.firstName = firstName;
     this.lastName = lastName;
     this.email = email;
     this.tenantId = tenantId;
     this.groups = groups;
+    this.actFor = actFor;
   }
 
   /** 从信封授权元数据 JSON 解析；空文本返回 {@link #NONE}，携带元数据但缺 userId 标准键直接失败。 */
@@ -80,13 +85,21 @@ public final class Authorization {
     } else {
       groupList = List.of();
     }
+    final Object actFor = metadata.get(ACT_FOR);
+    final List<String> actForList;
+    if (actFor instanceof final List<?> list) {
+      actForList = list.stream().map(String::valueOf).toList();
+    } else {
+      actForList = List.of();
+    }
     return new Authorization(
         userId.toString(),
         text(metadata.get(FIRST_NAME)),
         text(metadata.get(LAST_NAME)),
         text(metadata.get(EMAIL)),
         text(metadata.get(TENANT_ID)),
-        groupList);
+        groupList,
+        actForList);
   }
 
   private static String text(final Object value) {
@@ -105,6 +118,13 @@ public final class Authorization {
    */
   public List<String> groups() {
     return groups;
+  }
+
+  /**
+   * @return 操作人当前代办的人 id（代办身份列表，只认直接代办）；未携带为空列表
+   */
+  public List<String> actFor() {
+    return actFor;
   }
 
   /**

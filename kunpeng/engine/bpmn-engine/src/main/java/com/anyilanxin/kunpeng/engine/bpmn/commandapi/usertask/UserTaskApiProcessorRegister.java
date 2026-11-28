@@ -41,6 +41,7 @@ public final class UserTaskApiProcessorRegister {
         .onCommand(new UserTaskDeleteProcessor(writer))
         .onCommand(new UserTaskCancelProcessor(writer))
         .onCommand(new UserTaskOwnProcessor(writer))
+        .onCommand(new UserTaskSetDelegateProcessor(writer))
         .onCommand(new UserTaskUpdateProcessor(writer))
         .onCommand(new UserTaskUnclaimProcessor(writer));
   }

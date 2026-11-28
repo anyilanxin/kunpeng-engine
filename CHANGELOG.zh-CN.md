@@ -8,6 +8,12 @@
 
 ### 新增
 
+- 代为办理（用户任务与流程实例）：
+  - 用户任务与流程实例各自新增代办人（`delegateUserId`，sink 导出列 `delegate_user_id`）：记录代替属主（审批人 / 发起人）经手的实际办理人；属主本人经手时为空
+  - 授权元数据新增 `actFor` 名单（操作人可代为办理的用户 id）。名单包含属主时，该操作人可以完成任务或取消流程实例，其 id 记为代办人。只要求携带元数据，不依赖授权是否开启
+  - 新增设置 / 清空代办人的接口与 SDK 命令，面向未接入授权体系的部署（这种部署下引擎分不清是谁经手的，代办人保持命令设置的值）：`SetUserTaskDelegate`（`newSetUserTaskDelegateCommand().taskId(id).delegateUserId(id).send()`）与 `SetProcessInstanceDelegate`（`newSetProcessInstanceDelegateCommand().processInstanceId(id).delegateUserId(id).send()`）。要求对象存在且已有属主，代办人不能是属主本人；授权开启后仅属主本人或管理员可设置
+  - 新增 `SetProcessInstanceStartUser` 接口与 SDK 命令 `newSetProcessInstanceStartUserCommand().processInstanceId(id).startUserId(id).send()`，用于把流程实例过户给他人（如离职交接）。只影响这一条实例：此后经调用活动新建的子实例继承新发起人，已存在的子实例不变；授权开启后仅管理员可修改
+  - 关系型 sink 的用户任务表与流程实例表基线新增 `delegate_user_id` 列与索引，流程实例的发起人变更同步到导出行；用旧基线建库的需要重置
 - leader 切换期间的请求处理：
   - broker 退位时，在途请求立即以 `LEADER_STEPPED_DOWN`（命令可能已被执行）失败，不再等到调用方超时；leader 转移窗口内的新命令回 `NOT_LEADER`
   - 网关只对"命令确定没有进入日志"的失败自动重试（转移窗口被拒、目标节点没有命令处理器、解析不出分区 leader），退避 20ms 起翻倍、封顶 500ms；等应答超时等结果未知的失败不重试

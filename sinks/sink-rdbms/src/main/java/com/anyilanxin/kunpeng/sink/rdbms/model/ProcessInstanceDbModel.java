@@ -29,6 +29,7 @@ public class ProcessInstanceDbModel {
   private String definitionKey;
   private String definitionName;
   private String startUser;
+  private String delegateUserId;
   private String state;
   private Timestamp startTime;
   private Timestamp endTime;

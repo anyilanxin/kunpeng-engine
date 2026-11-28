@@ -167,12 +167,13 @@ class RdbmsSinkTest {
     emit(2L, ValueType.PROCESS_INSTANCE, ProcessInstanceLifeCycle.COMPLETED, finished);
     sink.flush();
 
-    // update 语句不触碰 start_time / start_user_id：终态更新后创建时间仍在、结束时间已写（H2 下同样成立）
+    // update 语句不触碰 start_time：终态更新后创建时间仍在、结束时间已写；发起人随事件取记录当前值，记录未改则行上不变（H2 下同样成立）
     try (var session = verifyFactory.openSession()) {
       final var mapper = session.getMapper(VerificationMapper.class);
       assertThat(mapper.totalRows()).isOne();
       assertThat(mapper.instanceRow())
           .containsEntry("STATE", "COMPLETED")
+          .containsEntry("START_USER_ID", "alice")
           .containsKey("START_TIME")
           .containsKey("END_TIME");
     }
@@ -258,10 +259,58 @@ class RdbmsSinkTest {
     try (var session = verifyFactory.openSession()) {
       final var mapper = session.getMapper(VerificationMapper.class);
       assertThat(mapper.totalRows()).isOne();
-      assertThat(mapper.userTaskRow()).containsEntry("ADD_SIGN_COUNT", 2);
-      assertThat(mapper.userTaskRow()).containsEntry("ADD_SIGN_DEPTH", 2);
+    assertThat(mapper.userTaskRow()).containsEntry("ADD_SIGN_COUNT", 2);
+    assertThat(mapper.userTaskRow()).containsEntry("ADD_SIGN_DEPTH", 2);
     }
     assertThat(controller.getPosition()).isEqualTo(2L);
+  }
+
+  @Test
+  void shouldExportUserTaskDelegateUserId() {
+    // 设置代办人命令写 DELEGATE_USER 事件；代办完成随 COMPLETING 事件带出：导出行都要同步 DELEGATE_USER_ID
+    emit(1L, ValueType.USER_TASK, UserTaskLifeCycle.CREATED, new Fakes.UserTaskValue());
+
+    final var delegated = new Fakes.UserTaskValue();
+    delegated.delegateUserId = "carol";
+    emit(2L, ValueType.USER_TASK, UserTaskLifeCycle.DELEGATE_USER, delegated);
+    emit(3L, ValueType.USER_TASK, UserTaskLifeCycle.COMPLETING, delegated);
+    sink.flush();
+
+    try (var session = verifyFactory.openSession()) {
+      final var mapper = session.getMapper(VerificationMapper.class);
+      assertThat(mapper.totalRows()).isOne();
+      assertThat(mapper.userTaskRow()).containsEntry("DELEGATE_USER_ID", "carol");
+    }
+    assertThat(controller.getPosition()).isEqualTo(3L);
+  }
+
+  @Test
+  void shouldExportProcessInstanceStartUserAndDelegateUserId() {
+    // 修改发起人、设置代办人各写一条事件，代办取消随 CANCEL 事件带出：导出行同步 START_USER_ID 与 DELEGATE_USER_ID
+    emit(1L, ValueType.PROCESS_INSTANCE, ProcessInstanceLifeCycle.ACTIVATED, new Fakes.ProcessInstanceValue());
+
+    final var handedOver = new Fakes.ProcessInstanceValue();
+    handedOver.startUserId = "bob";
+    emit(2L, ValueType.PROCESS_INSTANCE, ProcessInstanceLifeCycle.START_USER, handedOver);
+    sink.flush();
+
+    final var delegated = new Fakes.ProcessInstanceValue();
+    delegated.startUserId = "bob";
+    delegated.delegateUserId = "carol";
+    emit(3L, ValueType.PROCESS_INSTANCE, ProcessInstanceLifeCycle.DELEGATE_USER, delegated);
+    delegated.state = ProcessInstanceState.CANCEL;
+    emit(4L, ValueType.PROCESS_INSTANCE, ProcessInstanceLifeCycle.CANCEL, delegated);
+    sink.flush();
+
+    try (var session = verifyFactory.openSession()) {
+      final var mapper = session.getMapper(VerificationMapper.class);
+      assertThat(mapper.totalRows()).isOne();
+      assertThat(mapper.instanceRow())
+          .containsEntry("START_USER_ID", "bob")
+          .containsEntry("DELEGATE_USER_ID", "carol")
+          .containsEntry("STATE", "CANCEL");
+    }
+    assertThat(controller.getPosition()).isEqualTo(4L);
   }
 
   @Test

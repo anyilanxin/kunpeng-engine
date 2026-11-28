@@ -25,6 +25,7 @@ import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskCancelRequest;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskClaimRequest;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskCompleteRequest;
+import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskDelegateUserRequest;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskUnclaimRequest;
 import com.anyilanxin.kunpeng.gateway.grpc.AuthorizationMetadataContext;
 import com.anyilanxin.kunpeng.gateway.grpc.GrpcErrorHandle;
@@ -158,6 +159,33 @@ public class GrpcUserTaskServiceImpl extends UserTaskServiceGrpc.UserTaskService
                 if (brokerResponse.isSuccess()) {
                   responseObserver.onNext(
                       UserTaskServiceOuterClass.AssignUserTaskResponse.newBuilder().build());
+                  responseObserver.onCompleted();
+                } else {
+                  responseObserver.onError(handle.error(responseObserver, brokerResponse));
+                }
+              }
+            });
+  }
+
+  @Override
+  public void setUserTaskDelegate(
+      final UserTaskServiceOuterClass.SetUserTaskDelegateRequest request,
+      final StreamObserver<UserTaskServiceOuterClass.SetUserTaskDelegateResponse>
+          responseObserver) {
+    // 代办人随请求传递（空串清空）：未接入授权体系的部署由业务后端直接指定，只改代办人不改审批人
+    final UserTaskDelegateUserRequest brokerRequest =
+        new UserTaskDelegateUserRequest(request.getUserTaskId(), request.getDelegateUserId());
+    AuthorizationMetadataContext.attachTo(brokerRequest);
+    commands
+        .setUserTaskDelegate(brokerRequest)
+        .whenComplete(
+            (brokerResponse, throwable) -> {
+              if (throwable != null) {
+                responseObserver.onError(handle.error(responseObserver, throwable));
+              } else {
+                if (brokerResponse.isSuccess()) {
+                  responseObserver.onNext(
+                      UserTaskServiceOuterClass.SetUserTaskDelegateResponse.newBuilder().build());
                   responseObserver.onCompleted();
                 } else {
                   responseObserver.onError(handle.error(responseObserver, brokerResponse));

@@ -86,11 +86,12 @@ public class ProcessInstanceRecord extends UnifiedRecordValue<ProcessInstanceRec
   private final IntegerProperty listenerIndexProp = new IntegerProperty(23, LISTENER_INDEX, -1);
   private final StringProperty tenantIdProp =
       new StringProperty(24, TENANT_ID, TenantOwned.DEFAULT_TENANT_IDENTIFIER);
+  private final StringProperty delegateUserIdProp = new StringProperty(25, "DELEGATE_USER_ID", "");
 
   // 授权元数据只驻命令层（非落库流转，见 design-docs/authorization-identity-design.md v3），实例侧仅存 startUserId 提取物
 
   public ProcessInstanceRecord() {
-    super(24);
+    super(25);
     declareProperty(processInstanceIdProp)
         .declareProperty(parentProcessInstanceIdProp)
         .declareProperty(rootProcessInstanceIdProp)
@@ -114,7 +115,8 @@ public class ProcessInstanceRecord extends UnifiedRecordValue<ProcessInstanceRec
         .declareProperty(lifeCycleProp)
         .declareProperty(listenerTypeProp)
         .declareProperty(listenerIndexProp)
-        .declareProperty(tenantIdProp);
+        .declareProperty(tenantIdProp)
+        .declareProperty(delegateUserIdProp);
   }
 
   @Override
@@ -264,6 +266,30 @@ public class ProcessInstanceRecord extends UnifiedRecordValue<ProcessInstanceRec
   public ProcessInstanceRecord setStartUserId(final DirectBuffer startUserId) {
     if (startUserId != null) {
       startUserIdProp.setValue(startUserId);
+    }
+    return this;
+  }
+
+  @Override
+  public String getDelegateUserId() {
+    return bufferAsString(delegateUserIdProp.getValue());
+  }
+
+  @JsonIgnore
+  public DirectBuffer getDelegateUserIdBuffer() {
+    return delegateUserIdProp.getValue();
+  }
+
+  public ProcessInstanceRecord setDelegateUserId(final String delegateUserId) {
+    if (delegateUserId != null) {
+      delegateUserIdProp.setValue(wrapString(delegateUserId));
+    }
+    return this;
+  }
+
+  public ProcessInstanceRecord setDelegateUserId(final DirectBuffer delegateUserId) {
+    if (delegateUserId != null) {
+      delegateUserIdProp.setValue(delegateUserId);
     }
     return this;
   }

@@ -22,6 +22,7 @@ import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskCancelRequest;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskClaimRequest;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskCompleteRequest;
+import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskDelegateUserRequest;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.usertask.request.UserTaskUnclaimRequest;
 import com.anyilanxin.kunpeng.broker.client.core.BrokerResponse;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.addsign.AddSignAfterResponseRecord;
@@ -30,6 +31,7 @@ import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.cancel.UserTaskCancelResponseRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.claim.UserTaskClaimResponseRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.complete.UserTaskCompleteResponseRecord;
+import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.delegateuser.UserTaskDelegateUserResponseRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.unclaim.UserTaskUnclaimResponseRecord;
 import java.util.concurrent.CompletableFuture;
 
@@ -59,6 +61,10 @@ public interface UserTaskClient {
   /** 改派用户任务（管理员动作：新审批人来自请求参数，引擎校验操作人 admin 归属） */
   CompletableFuture<BrokerResponse<UserTaskAssigneeResponseRecord>> assignUserTask(
       UserTaskAssigneeRequest request);
+
+  /** 设置用户任务代办人（代为办理：代办人来自请求参数，空串清空；只改代办人、不改审批人） */
+  CompletableFuture<BrokerResponse<UserTaskDelegateUserResponseRecord>> setUserTaskDelegate(
+      UserTaskDelegateUserRequest request);
 
   /** 前加签（原任务冻结，加签归零解冻） */
   CompletableFuture<BrokerResponse<AddSignBeforeResponseRecord>> addSignBeforeUserTask(

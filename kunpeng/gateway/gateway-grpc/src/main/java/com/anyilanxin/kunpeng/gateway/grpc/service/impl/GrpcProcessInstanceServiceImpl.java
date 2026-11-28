@@ -21,6 +21,8 @@ import static com.anyilanxin.kunpeng.gateway.grpc.utils.RequestUtil.ensureJsonSe
 import com.anyilanxin.kunpeng.broker.client.business.client.ProcessInstanceClient;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.processinstance.request.ProcessInstanceCancelRequest;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.processinstance.request.ProcessInstanceCreateRequest;
+import com.anyilanxin.kunpeng.broker.client.business.commandapi.processinstance.request.ProcessInstanceSetDelegateUserRequest;
+import com.anyilanxin.kunpeng.broker.client.business.commandapi.processinstance.request.ProcessInstanceSetStartUserRequest;
 import com.anyilanxin.kunpeng.gateway.grpc.AuthorizationMetadataContext;
 import com.anyilanxin.kunpeng.gateway.grpc.GrpcErrorHandle;
 import com.anyilanxin.kunpeng.gateway.grpc.service.GrpcService;
@@ -134,6 +136,66 @@ public class GrpcProcessInstanceServiceImpl
                       ProcessInstanceServiceOuterClass.CancelProcessInstanceResponse.newBuilder()
                           .build();
                   responseObserver.onNext(response);
+                  responseObserver.onCompleted();
+                } else {
+                  responseObserver.onError(handle.error(responseObserver, brokerResponse));
+                }
+              }
+            });
+  }
+
+  @Override
+  public void setProcessInstanceStartUser(
+      final ProcessInstanceServiceOuterClass.SetProcessInstanceStartUserRequest request,
+      final StreamObserver<ProcessInstanceServiceOuterClass.SetProcessInstanceStartUserResponse>
+          responseObserver) {
+    // 新发起人随请求传递：离职交接把这一条实例过户给接手人
+    final ProcessInstanceSetStartUserRequest brokerRequest =
+        new ProcessInstanceSetStartUserRequest(
+            request.getProcessInstanceId(), request.getStartUserId());
+    AuthorizationMetadataContext.attachTo(brokerRequest);
+    commands
+        .setProcessInstanceStartUser(brokerRequest)
+        .whenComplete(
+            (brokerResponse, throwable) -> {
+              if (throwable != null) {
+                responseObserver.onError(handle.error(responseObserver, throwable));
+              } else {
+                if (brokerResponse.isSuccess()) {
+                  responseObserver.onNext(
+                      ProcessInstanceServiceOuterClass.SetProcessInstanceStartUserResponse
+                          .newBuilder()
+                          .build());
+                  responseObserver.onCompleted();
+                } else {
+                  responseObserver.onError(handle.error(responseObserver, brokerResponse));
+                }
+              }
+            });
+  }
+
+  @Override
+  public void setProcessInstanceDelegate(
+      final ProcessInstanceServiceOuterClass.SetProcessInstanceDelegateRequest request,
+      final StreamObserver<ProcessInstanceServiceOuterClass.SetProcessInstanceDelegateResponse>
+          responseObserver) {
+    // 代办人随请求传递（空串清空）：未接入授权体系的部署由业务后端直接指定，只改代办人不改发起人
+    final ProcessInstanceSetDelegateUserRequest brokerRequest =
+        new ProcessInstanceSetDelegateUserRequest(
+            request.getProcessInstanceId(), request.getDelegateUserId());
+    AuthorizationMetadataContext.attachTo(brokerRequest);
+    commands
+        .setProcessInstanceDelegateUser(brokerRequest)
+        .whenComplete(
+            (brokerResponse, throwable) -> {
+              if (throwable != null) {
+                responseObserver.onError(handle.error(responseObserver, throwable));
+              } else {
+                if (brokerResponse.isSuccess()) {
+                  responseObserver.onNext(
+                      ProcessInstanceServiceOuterClass.SetProcessInstanceDelegateResponse
+                          .newBuilder()
+                          .build());
                   responseObserver.onCompleted();
                 } else {
                   responseObserver.onError(handle.error(responseObserver, brokerResponse));

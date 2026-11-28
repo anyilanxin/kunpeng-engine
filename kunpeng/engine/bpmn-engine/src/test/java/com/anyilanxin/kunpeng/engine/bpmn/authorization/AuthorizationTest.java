@@ -55,6 +55,27 @@ class AuthorizationTest {
     assertEquals("", authorization.email());
     assertEquals("", authorization.tenantId());
     assertTrue(authorization.groups().isEmpty());
+    assertTrue(authorization.actFor().isEmpty());
+  }
+
+  @Test
+  void parsesActForList() {
+    final Authorization authorization =
+        Authorization.fromJson("{\"userId\":\"d1\",\"actFor\":[\"a1\",\"a2\"]}");
+    assertEquals(List.of("a1", "a2"), authorization.actFor());
+    assertTrue(authorization.groups().isEmpty());
+  }
+
+  @Test
+  void nonListActForYieldsEmptyList() {
+    final Authorization authorization =
+        Authorization.fromJson("{\"userId\":\"d1\",\"actFor\":\"a1\"}");
+    assertTrue(authorization.actFor().isEmpty());
+  }
+
+  @Test
+  void noneHasNoActFor() {
+    assertTrue(Authorization.NONE.actFor().isEmpty());
   }
 
   @Test

@@ -44,7 +44,9 @@ public enum UserTaskLifeCycle implements ValueLifeCycle {
   LISTENER_CREATE((short) 18, PROCESS_INDEX_127),
   LISTENER_COMPLETED((short) 19, PROCESS_INDEX_128),
   LISTENER_DENY((short) 20, PROCESS_INDEX_129),
-  UNCLAIM((short) 21, PROCESS_INDEX_235);
+  UNCLAIM((short) 21, PROCESS_INDEX_235),
+  /** 代办人已设置/修改/清空（事件：任务上的代办人 id 变更，不是委托） */
+  DELEGATE_USER((short) 22, PROCESS_INDEX_240);
 
   private final short value;
   private final short processIndex;
@@ -102,6 +104,7 @@ public enum UserTaskLifeCycle implements ValueLifeCycle {
       case 19 -> LISTENER_COMPLETED;
       case 20 -> LISTENER_DENY;
       case 21 -> UNCLAIM;
+      case 22 -> DELEGATE_USER;
       default -> UNKNOWN;
     };
   }
@@ -128,6 +131,7 @@ public enum UserTaskLifeCycle implements ValueLifeCycle {
       case 18 -> LISTENER_CREATE;
       case 19 -> LISTENER_COMPLETED;
       case 21 -> UNCLAIM;
+      case 22 -> DELEGATE_USER;
       default -> NULL_VAL;
     };
   }

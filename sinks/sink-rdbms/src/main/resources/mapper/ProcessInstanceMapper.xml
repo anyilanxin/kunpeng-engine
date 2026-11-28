@@ -21,20 +21,23 @@
   <insert id="insert" parameterType="com.anyilanxin.kunpeng.sink.rdbms.model.ProcessInstanceDbModel">
     INSERT INTO ${table.process_instance} (
       process_instance_id, parent_process_instance_id, root_process_instance_id, business_key,
-      process_definition_id, process_definition_key, process_definition_name, start_user_id, state, start_time,
-      end_time, revision, resource_id
+      process_definition_id, process_definition_key, process_definition_name, start_user_id, delegate_user_id,
+      state, start_time, end_time, revision, resource_id
     ) VALUES (
       #{processInstanceId}, #{parentProcessInstanceId}, #{rootProcessInstanceId}, #{businessKey},
-      #{processDefinitionId}, #{definitionKey}, #{definitionName}, #{startUser}, #{state},
-      #{startTime,jdbcType=TIMESTAMP}, #{endTime,jdbcType=TIMESTAMP}, #{revision}, #{resourceId}
+      #{processDefinitionId}, #{definitionKey}, #{definitionName}, #{startUser}, #{delegateUserId},
+      #{state}, #{startTime,jdbcType=TIMESTAMP}, #{endTime,jdbcType=TIMESTAMP}, #{revision}, #{resourceId}
     )
   </insert>
 
-  <!-- 只更新可变列：start_time / start_user_id 等创建期列不被任何后续事件覆盖 -->
+  <!-- 更新可变列：state / end_time / revision，以及可由命令修改的 start_user_id（修改发起人）与 delegate_user_id（设置代办人、代办取消），
+       两列随事件取记录当前值；start_time 等其余创建期列不被任何后续事件覆盖 -->
   <update id="update" parameterType="com.anyilanxin.kunpeng.sink.rdbms.model.ProcessInstanceDbModel">
     UPDATE ${table.process_instance}
     SET state = #{state},
         end_time = #{endTime,jdbcType=TIMESTAMP},
+        start_user_id = #{startUser},
+        delegate_user_id = #{delegateUserId},
         revision = #{revision}
     WHERE process_instance_id = #{processInstanceId}
   </update>

@@ -38,6 +38,10 @@ import com.anyilanxin.kunpeng.client.command.processinstance.CancelProcessInstan
 import com.anyilanxin.kunpeng.client.command.processinstance.CancelProcessInstanceCommandImpl;
 import com.anyilanxin.kunpeng.client.command.processinstance.CreateProcessInstanceCommand;
 import com.anyilanxin.kunpeng.client.command.processinstance.CreateProcessInstanceCommandImpl;
+import com.anyilanxin.kunpeng.client.command.processinstance.SetProcessInstanceDelegateCommand;
+import com.anyilanxin.kunpeng.client.command.processinstance.SetProcessInstanceDelegateCommandImpl;
+import com.anyilanxin.kunpeng.client.command.processinstance.SetProcessInstanceStartUserCommand;
+import com.anyilanxin.kunpeng.client.command.processinstance.SetProcessInstanceStartUserCommandImpl;
 import com.anyilanxin.kunpeng.client.command.signal.correlation.SignalCorrelationCommand;
 import com.anyilanxin.kunpeng.client.command.signal.correlation.SignalCorrelationCommandImpl;
 import com.anyilanxin.kunpeng.client.command.topology.TopologyCommand;
@@ -524,6 +528,18 @@ public class KunpengClientImpl implements KunpengClient {
   }
 
   @Override
+  public SetProcessInstanceStartUserCommand newSetProcessInstanceStartUserCommand() {
+    return new SetProcessInstanceStartUserCommandImpl(
+        processInstanceService, configuration, retryPredicate);
+  }
+
+  @Override
+  public SetProcessInstanceDelegateCommand newSetProcessInstanceDelegateCommand() {
+    return new SetProcessInstanceDelegateCommandImpl(
+        processInstanceService, configuration, retryPredicate);
+  }
+
+  @Override
   public CompleteUserTaskCommand newCompleteUserTaskCommand() {
     return new CompleteUserTaskCommandImpl(
         userTaskService, configuration, jsonMapper, retryPredicate);
@@ -554,6 +570,13 @@ public class KunpengClientImpl implements KunpengClient {
       newUnclaimUserTaskCommand() {
     return new com.anyilanxin.kunpeng.client.command.usertask.unclaim.UnclaimUserTaskCommandImpl(
         userTaskService, configuration, retryPredicate);
+  }
+
+  @Override
+  public com.anyilanxin.kunpeng.client.command.usertask.delegateuser.SetUserTaskDelegateCommand
+      newSetUserTaskDelegateCommand() {
+    return new com.anyilanxin.kunpeng.client.command.usertask.delegateuser
+        .SetUserTaskDelegateCommandImpl(userTaskService, configuration, retryPredicate);
   }
 
   @Override

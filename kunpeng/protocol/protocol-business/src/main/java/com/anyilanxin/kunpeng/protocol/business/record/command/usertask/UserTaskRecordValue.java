@@ -49,6 +49,9 @@ public interface UserTaskRecordValue
 
   String getOwner();
 
+  /** 代办人 id（代为办理，不是委托）：审批人本人自办为空；代办完成为实际办理人；未接入授权体系时由设置代办人命令写入，空串表示无代办人。 */
+  String getDelegateUserId();
+
   int getPriority();
 
   long getDueDate();

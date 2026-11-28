@@ -388,6 +388,7 @@ final class Fakes {
     String processDefinitionName = "Order Process";
     long processDefinitionId = 1001;
     String startUserId = "alice";
+    String delegateUserId = "";
     ProcessInstanceState state = ProcessInstanceState.ACTIVATED;
 
     @Override
@@ -438,6 +439,11 @@ final class Fakes {
     @Override
     public String getStartUserId() {
       return startUserId;
+    }
+
+    @Override
+    public String getDelegateUserId() {
+      return delegateUserId;
     }
 
     @Override
@@ -715,6 +721,7 @@ final class Fakes {
     long processInstanceId = 2001;
     long processDefinitionId = 1001;
     String assignee = "bob";
+    String delegateUserId = "";
     UserTaskState state = UserTaskState.ACTIVE;
     long startTime = 1_000;
     AddSignRole addSignRole = AddSignRole.NONE;
@@ -791,6 +798,11 @@ final class Fakes {
     @Override
     public String getOwner() {
       return null;
+    }
+
+    @Override
+    public String getDelegateUserId() {
+      return delegateUserId;
     }
 
     @Override

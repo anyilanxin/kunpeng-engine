@@ -25,7 +25,6 @@ import com.anyilanxin.kunpeng.protocol.business.impl.record.command.processinsta
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.processinstance.cancel.ProcessInstanceCancelRequestRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.processinstance.cancel.ProcessInstanceCancelResponseRecord;
 import com.anyilanxin.kunpeng.protocol.business.record.command.processinstance.ProcessInstanceLifeCycle;
-import com.anyilanxin.kunpeng.protocol.business.record.command.processinstance.ProcessInstanceState;
 import com.anyilanxin.kunpeng.protocol.business.record.commandapi.record.processinstance.CommandApiProcessInstanceValueLifeCycle;
 
 /**
@@ -52,32 +51,28 @@ public class ProcessInstanceCancelProcessor
 
   @Override
   public void processRecord(final BusinessLogRecord<ProcessInstanceCancelRequestRecord> record) {
-    final long key = record.getKey();
-    final ProcessInstanceRecord instanceRecord = processInstance.getRecord(key);
+    final long requestId = record.getRequestId();
+    final ProcessInstanceRecord instanceRecord =
+        operableInstance(record.getKey(), requestId, "操作取消");
     if (instanceRecord == null) {
-      writer.adErrorResponse(record.getRequestId(), 404, "流程实例不存在");
-      return;
-    }
-    if (instanceRecord.getState() == ProcessInstanceState.TERMINATING
-        || instanceRecord.getState() == ProcessInstanceState.TERMINATED
-        || instanceRecord.getState() == ProcessInstanceState.CANCELED) {
-      writer.adErrorResponse(
-          record.getRequestId(), 404, "流程实例处于:" + instanceRecord.getState().describe() + ",无法操作取消");
       return;
     }
     try {
-      authorization.checkCancelInstance(instanceRecord.getStartUserId());
+      authorization.checkCancelInstance(instanceRecord);
     } catch (final AuthorizationDeniedException e) {
-      writer.adErrorResponse(
-          record.getRequestId(), AuthorizationDeniedException.CODE, e.getMessage());
+      writer.adErrorResponse(requestId, AuthorizationDeniedException.CODE, e.getMessage());
       return;
+    }
+    // 代办人 id 写在取消命令携带的实例记录上，随 CANCEL / CANCELED 事件落库导出（实例到终态后引擎删行，只剩导出表）
+    final String delegateUserId = authorization.delegateOnCancel(instanceRecord);
+    if (delegateUserId != null) {
+      instanceRecord.setDelegateUserId(delegateUserId);
     }
     writer.addCommand(
         instanceRecord.getProcessInstanceId(),
         ProcessInstanceLifeCycle.CANCEL,
-        record.getRequestId(),
+        requestId,
         instanceRecord);
-    writer.adResponse(
-        CommandApiProcessInstanceValueLifeCycle.CANCEL_RESPONSE, record.getRequestId(), response);
+    writer.adResponse(CommandApiProcessInstanceValueLifeCycle.CANCEL_RESPONSE, requestId, response);
   }
 }

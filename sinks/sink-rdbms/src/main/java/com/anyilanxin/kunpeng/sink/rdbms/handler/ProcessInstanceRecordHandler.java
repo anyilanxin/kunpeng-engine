@@ -26,8 +26,8 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * 流程实例：激活类事件保存全量行（含 {@code start_time}，取记录时间戳——实例值本身不携带时间）； 其余状态事件只更新可变列。 {@code start_time} 不在
- * update 语句里，任何方言下后续事件都不会覆盖它。
+ * 流程实例：激活类事件保存全量行（含 {@code start_time}，取记录时间戳——实例值本身不携带时间）； 其余状态事件只更新可变列（state / end_time /
+ * revision，以及可由命令修改的发起人与代办人）。 {@code start_time} 不在 update 语句里，任何方言下后续事件都不会覆盖它。
  *
  * @author zxuanhong
  * @since 2026.9.0
@@ -53,7 +53,9 @@ public final class ProcessInstanceRecordHandler implements RecordModelHandler {
           ProcessInstanceLifeCycle.CANCEL,
           ProcessInstanceLifeCycle.CANCELED,
           ProcessInstanceLifeCycle.TERMINATING,
-          ProcessInstanceLifeCycle.TERMINATED);
+          ProcessInstanceLifeCycle.TERMINATED,
+          ProcessInstanceLifeCycle.START_USER,
+          ProcessInstanceLifeCycle.DELEGATE_USER);
 
   @Override
   public ValueType valueType() {
@@ -79,6 +81,7 @@ public final class ProcessInstanceRecordHandler implements RecordModelHandler {
       model.setDefinitionKey(value.getProcessDefinitionKey());
       model.setDefinitionName(value.getProcessDefinitionName());
       model.setStartUser(value.getStartUserId());
+      model.setDelegateUserId(value.getDelegateUserId());
       model.setState(nameOf(value.getState()));
       model.setStartTime(RecordModelHandler.at(record.getTimestamp()));
       model.setRevision(value.getRev());
@@ -87,12 +90,14 @@ public final class ProcessInstanceRecordHandler implements RecordModelHandler {
           RowChange.insert(PROCESS_INSTANCE, List.of(value.getProcessInstanceId()), model));
       return;
     }
-    // 终态与非终态状态变化共用 update：end_time 仅终态事件携带，其余事件保持为空
+    // 终态与非终态状态变化共用 update：end_time 仅终态事件携带，其余事件保持为空； 发起人与代办人取记录当前值（修改发起人 / 设置代办人 / 代办取消都经此落列）
     final var model = new ProcessInstanceDbModel();
     model.setProcessInstanceId(value.getProcessInstanceId());
     model.setState(nameOf(value.getState()));
     model.setEndTime(
         END_EVENTS.contains(lifecycle) ? RecordModelHandler.at(record.getTimestamp()) : null);
+    model.setStartUser(value.getStartUserId());
+    model.setDelegateUserId(value.getDelegateUserId());
     model.setRevision(value.getRev());
     buffer.offer(RowChange.update(PROCESS_INSTANCE, List.of(value.getProcessInstanceId()), model));
   }

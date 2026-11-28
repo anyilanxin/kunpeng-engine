@@ -21,6 +21,8 @@ import com.anyilanxin.kunpeng.engine.bpmn.LogEventWriter;
 import com.anyilanxin.kunpeng.engine.bpmn.commandapi.processinstance.processor.ProcessInstanceActivateAndResultProcessor;
 import com.anyilanxin.kunpeng.engine.bpmn.commandapi.processinstance.processor.ProcessInstanceCancelProcessor;
 import com.anyilanxin.kunpeng.engine.bpmn.commandapi.processinstance.processor.ProcessInstanceCreateProcessor;
+import com.anyilanxin.kunpeng.engine.bpmn.commandapi.processinstance.processor.ProcessInstanceSetDelegateProcessor;
+import com.anyilanxin.kunpeng.engine.bpmn.commandapi.processinstance.processor.ProcessInstanceSetStartUserProcessor;
 
 /**
  * 流程实例相关
@@ -35,6 +37,8 @@ public final class ProcessInstanceApiProcessorRegister {
     processors
         .onCommand(new ProcessInstanceCreateProcessor(writer))
         .onCommand(new ProcessInstanceActivateAndResultProcessor(writer))
-        .onCommand(new ProcessInstanceCancelProcessor(writer));
+        .onCommand(new ProcessInstanceCancelProcessor(writer))
+        .onCommand(new ProcessInstanceSetStartUserProcessor(writer))
+        .onCommand(new ProcessInstanceSetDelegateProcessor(writer));
   }
 }

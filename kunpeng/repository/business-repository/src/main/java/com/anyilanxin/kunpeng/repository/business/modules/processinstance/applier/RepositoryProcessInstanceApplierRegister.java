@@ -42,6 +42,8 @@ public class RepositoryProcessInstanceApplierRegister {
         .register(new RocksdbRepositoryProcessInstanceCanceledApplierImpl(repository))
         .register(new RocksdbRepositoryProcessInstanceListenerCompletedApplierImpl(repository))
         .register(new RocksdbRepositoryProcessInstanceListenerCreatedApplierImpl(repository))
-        .register(new RocksdbRepositoryProcessInstanceListenerDenyApplierImpl(repository));
+        .register(new RocksdbRepositoryProcessInstanceListenerDenyApplierImpl(repository))
+        .register(new RocksdbRepositoryProcessInstanceStartUserApplierImpl(repository))
+        .register(new RocksdbRepositoryProcessInstanceDelegateUserApplierImpl(repository));
   }
 }

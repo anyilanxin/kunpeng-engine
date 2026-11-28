@@ -32,6 +32,8 @@ import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.create.UserTaskCreateResponseRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.delegate.UserTaskDelegateRequestRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.delegate.UserTaskDelegateResponseRecord;
+import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.delegateuser.UserTaskDelegateUserRequestRecord;
+import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.delegateuser.UserTaskDelegateUserResponseRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.delete.UserTaskDeleteRequestRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.delete.UserTaskDeleteResponseRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.usertask.own.UserTaskOwnRequestRecord;
@@ -91,6 +93,12 @@ public class UserTaskApiRecordRegister {
             CommandApiUserTaskValueLifeCycle.ADD_SIGN_AFTER_REQUEST, AddSignAfterRequestRecord::new)
         .register(
             CommandApiUserTaskValueLifeCycle.ADD_SIGN_AFTER_RESPONSE,
-            AddSignAfterResponseRecord::new);
+            AddSignAfterResponseRecord::new)
+        .register(
+            CommandApiUserTaskValueLifeCycle.SET_DELEGATE_USER_REQUEST,
+            UserTaskDelegateUserRequestRecord::new)
+        .register(
+            CommandApiUserTaskValueLifeCycle.SET_DELEGATE_USER_RESPONSE,
+            UserTaskDelegateUserResponseRecord::new);
   }
 }

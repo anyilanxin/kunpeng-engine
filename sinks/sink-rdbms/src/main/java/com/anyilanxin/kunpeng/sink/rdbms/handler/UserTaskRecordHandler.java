@@ -29,7 +29,8 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * 用户任务：创建保存全量行（值自带 {@code start_time}），认领/转办/完成等事件只更新可变列；候选人序列化为 JSON 列。
+ * 用户任务：创建保存全量行（值自带 {@code start_time}），认领/转办/完成等事件只更新可变列；候选人序列化为 JSON 列。 代办人
+ * id（delegate_user_id）随创建与后续事件同步：代办完成为实际办理人，设置代办人命令的事件同样走更新。
  *
  * @author zxuanhong
  * @since 2026.9.0
@@ -46,6 +47,7 @@ public final class UserTaskRecordHandler implements RecordModelHandler {
           UserTaskLifeCycle.OWN,
           UserTaskLifeCycle.RESOLVE,
           UserTaskLifeCycle.DELEGATE,
+          UserTaskLifeCycle.DELEGATE_USER,
           UserTaskLifeCycle.COMPLETING,
           UserTaskLifeCycle.COMPLETED,
           UserTaskLifeCycle.CANCELED,
@@ -76,6 +78,7 @@ public final class UserTaskRecordHandler implements RecordModelHandler {
       model.setTaskName(value.getTaskDefinitionName());
       model.setAssignee(value.getAssignee());
       model.setOwner(value.getOwner());
+      model.setDelegateUserId(value.getDelegateUserId());
       model.setPriority(value.getPriority());
       model.setDueTime(RecordModelHandler.at(value.getDueDate()));
       model.setFollowUpTime(RecordModelHandler.at(value.getFollowUpDate()));
@@ -94,6 +97,7 @@ public final class UserTaskRecordHandler implements RecordModelHandler {
     model.setTaskId(value.getTaskId());
     model.setAssignee(value.getAssignee());
     model.setOwner(value.getOwner());
+    model.setDelegateUserId(value.getDelegateUserId());
     model.setPriority(value.getPriority());
     model.setDueTime(RecordModelHandler.at(value.getDueDate()));
     model.setFollowUpTime(RecordModelHandler.at(value.getFollowUpDate()));

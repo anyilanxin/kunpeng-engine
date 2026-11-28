@@ -21,6 +21,7 @@ package com.anyilanxin.kunpeng.protocol.common;
  * <ul>
  *   <li>{@link #USER_ID}：操作人 id，必填（对齐 OAuth2 sub claim）；签收人/发起人/审批人判定依据
  *   <li>{@link #GROUPS}：操作人所属组 id 列表；候选审批组匹配 + admin 白名单
+ *   <li>{@link #ACT_FOR}：操作人当前代办的人（代办身份列表）；代办完成审批人名下的任务
  *   <li>{@link #FIRST_NAME}/{@link #LAST_NAME}：姓名（审计/导出显示，不参与校验）
  *   <li>{@link #EMAIL}：邮箱（审计透传，不参与校验）
  *   <li>{@link #TENANT_ID}：所属租户 id（审计透传，不参与校验）
@@ -36,6 +37,9 @@ public interface UserMetadataConstant {
 
   /** 操作人所属组 id 列表（候选审批组匹配 + admin 白名单） */
   String GROUPS = "groups";
+
+  /** 操作人当前代办的人 id 列表（代办身份列表，只认直接代办不传递；由业务后端核对规则后写入） */
+  String ACT_FOR = "actFor";
 
   /** 操作人名（审计/导出显示） */
   String FIRST_NAME = "firstName";

@@ -77,6 +77,16 @@ message UnclaimUserTaskRequest {
 message UnclaimUserTaskResponse {
 }
 
+message SetUserTaskDelegateRequest {
+  int64 userTaskId = 1;
+  string tenantId = 2;
+  // 代办人 id（代为办理）：空串表示清空任务上的代办人
+  string delegateUserId = 3;
+}
+
+message SetUserTaskDelegateResponse {
+}
+
 message AddSignBeforeUserTaskRequest {
   int64 userTaskId = 1;
   string tenantId = 2;
@@ -147,6 +157,14 @@ service UserTaskService {
    * 授权开启时操作人须为当前签收人(admin 白名单旁路)，非签收人返回 403 错误
    */
   rpc UnclaimUserTask (UnclaimUserTaskRequest) returns (stream UnclaimUserTaskResponse) {
+  }
+
+  /*
+   * 设置用户任务代办人（代为办理，不是委托）：代办人 delegateUserId 随请求传递，引擎只改任务上的代办人、不改审批人，
+   * 空串清空；未接入授权体系时供业务后端直接指定代办人。
+   * 授权开启时操作人须为审批人本人或命中 admin 白名单，否则返回 403 错误
+   */
+  rpc SetUserTaskDelegate (SetUserTaskDelegateRequest) returns (stream SetUserTaskDelegateResponse) {
   }
 
 

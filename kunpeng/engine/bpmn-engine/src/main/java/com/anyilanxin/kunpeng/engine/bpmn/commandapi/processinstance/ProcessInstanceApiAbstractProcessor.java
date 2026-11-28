@@ -19,6 +19,8 @@ package com.anyilanxin.kunpeng.engine.bpmn.commandapi.processinstance;
 import com.anyilanxin.kunpeng.engine.bpmn.LogEventProcessorSingleState;
 import com.anyilanxin.kunpeng.engine.bpmn.LogEventWriter;
 import com.anyilanxin.kunpeng.protocol.business.ValueType;
+import com.anyilanxin.kunpeng.protocol.business.impl.record.command.processinstance.ProcessInstanceRecord;
+import com.anyilanxin.kunpeng.protocol.business.record.command.processinstance.ProcessInstanceState;
 import com.anyilanxin.kunpeng.protocol.business.record.commandapi.record.processinstance.CommandApiProcessInstanceValueLifeCycle;
 import com.anyilanxin.kunpeng.protocol.common.UnifiedRecordValue;
 import com.anyilanxin.kunpeng.repository.business.ImmutableBusinessRepository;
@@ -50,6 +52,28 @@ public abstract class ProcessInstanceApiAbstractProcessor<T extends UnifiedRecor
   @Override
   public ValueType valueType() {
     return ValueType.PROCESS_INSTANCE_API;
+  }
+
+  /**
+   * 取可操作的实例行：不存在或已到终态（终止中 / 已终止 / 已取消）时回错误响应并返回 null，调用方据此结束。 实例到终态后引擎已删行，状态判断与取消接口保持同一套。
+   *
+   * @param action 错误消息里的操作名，如"操作取消"
+   */
+  protected ProcessInstanceRecord operableInstance(
+      final long instanceId, final long requestId, final String action) {
+    final ProcessInstanceRecord instanceRecord = processInstance.getRecord(instanceId);
+    if (instanceRecord == null) {
+      writer.adErrorResponse(requestId, 404, "流程实例不存在");
+      return null;
+    }
+    final ProcessInstanceState state = instanceRecord.getState();
+    if (state == ProcessInstanceState.TERMINATING
+        || state == ProcessInstanceState.TERMINATED
+        || state == ProcessInstanceState.CANCELED) {
+      writer.adErrorResponse(requestId, 404, "流程实例处于:" + state.describe() + ",无法" + action);
+      return null;
+    }
+    return instanceRecord;
   }
 
   @Override

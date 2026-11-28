@@ -24,12 +24,15 @@ import com.anyilanxin.kunpeng.client.command.job.worker.JobWorkerBuilderStep1;
 import com.anyilanxin.kunpeng.client.command.message.correlation.MessageCorrelationCommand;
 import com.anyilanxin.kunpeng.client.command.processinstance.CancelProcessInstanceCommand;
 import com.anyilanxin.kunpeng.client.command.processinstance.CreateProcessInstanceCommand;
+import com.anyilanxin.kunpeng.client.command.processinstance.SetProcessInstanceDelegateCommand;
+import com.anyilanxin.kunpeng.client.command.processinstance.SetProcessInstanceStartUserCommand;
 import com.anyilanxin.kunpeng.client.command.signal.correlation.SignalCorrelationCommand;
 import com.anyilanxin.kunpeng.client.command.topology.TopologyCommand;
 import com.anyilanxin.kunpeng.client.command.usertask.assignee.AssignUserTaskCommand;
 import com.anyilanxin.kunpeng.client.command.usertask.cancel.CancelUserTaskCommand;
 import com.anyilanxin.kunpeng.client.command.usertask.claim.ClaimUserTaskCommand;
 import com.anyilanxin.kunpeng.client.command.usertask.complete.CompleteUserTaskCommand;
+import com.anyilanxin.kunpeng.client.command.usertask.delegateuser.SetUserTaskDelegateCommand;
 import com.anyilanxin.kunpeng.client.command.usertask.unclaim.UnclaimUserTaskCommand;
 import com.anyilanxin.kunpeng.client.command.variable.remove.RemoveVariableCommand;
 import com.anyilanxin.kunpeng.client.command.variable.update.UpdateVariableCommand;
@@ -259,6 +262,12 @@ public interface KunpengClient extends AutoCloseable, JobClient, GatewayServiceD
    */
   CancelProcessInstanceCommand newCancelProcessInstanceCommand();
 
+  /** 修改流程实例发起人（离职交接，只改这一条实例）：新发起人随命令传递、不能为空；授权开启时须管理员 */
+  SetProcessInstanceStartUserCommand newSetProcessInstanceStartUserCommand();
+
+  /** 设置流程实例代办人（代为办理，不是委托）：代办人随命令传递、空串清空，引擎只改实例上的代办人、不改发起人 */
+  SetProcessInstanceDelegateCommand newSetProcessInstanceDelegateCommand();
+
   /**
    * 完成用户任务
    *
@@ -281,6 +290,9 @@ public interface KunpengClient extends AutoCloseable, JobClient, GatewayServiceD
 
   /** 取消签收用户任务（仅清空签收人，签收人匹配校验在引擎侧） */
   UnclaimUserTaskCommand newUnclaimUserTaskCommand();
+
+  /** 设置用户任务代办人（代为办理，不是委托）：代办人随命令传递、空串清空，引擎只改任务上的代办人、不改审批人； 未接入授权体系时供业务后端直接指定 */
+  SetUserTaskDelegateCommand newSetUserTaskDelegateCommand();
 
   /**
    * 前加签（原任务冻结、加签归零解冻）

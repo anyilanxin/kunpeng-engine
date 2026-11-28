@@ -173,6 +173,11 @@ public class UserTaskCompleteProcessor
         variables.putAll(localVariables);
       }
       userTask.setVariables(variables);
+      // 代办人 id：自办清空、代办记操作人、其余不动（判定不跟随授权开关）；完成链路沿用同一条任务记录，随事件导出
+      final String delegateUserId = authorization.delegateOnComplete(userTask);
+      if (delegateUserId != null) {
+        userTask.setDelegateUserId(delegateUserId);
+      }
       writer.addCommand(
           userTask.getTaskId(), UserTaskLifeCycle.COMPLETING, record.getRequestId(), userTask);
     } else {

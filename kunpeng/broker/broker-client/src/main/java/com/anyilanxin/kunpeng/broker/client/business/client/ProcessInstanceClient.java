@@ -19,10 +19,14 @@ package com.anyilanxin.kunpeng.broker.client.business.client;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.processinstance.request.ProcessInstanceCancelRequest;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.processinstance.request.ProcessInstanceCreateAndResultRequest;
 import com.anyilanxin.kunpeng.broker.client.business.commandapi.processinstance.request.ProcessInstanceCreateRequest;
+import com.anyilanxin.kunpeng.broker.client.business.commandapi.processinstance.request.ProcessInstanceSetDelegateUserRequest;
+import com.anyilanxin.kunpeng.broker.client.business.commandapi.processinstance.request.ProcessInstanceSetStartUserRequest;
 import com.anyilanxin.kunpeng.broker.client.core.BrokerResponse;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.processinstance.cancel.ProcessInstanceCancelResponseRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.processinstance.create.ProcessInstanceCreateAndResultResponseRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.processinstance.create.ProcessInstanceCreateResponseRecord;
+import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.processinstance.delegateuser.ProcessInstanceDelegateUserResponseRecord;
+import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.processinstance.startuser.ProcessInstanceStartUserResponseRecord;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -43,4 +47,12 @@ public interface ProcessInstanceClient {
   /** 取消流程实例 */
   CompletableFuture<BrokerResponse<ProcessInstanceCancelResponseRecord>> cancelProcessInstance(
       ProcessInstanceCancelRequest request);
+
+  /** 修改流程实例发起人（离职交接，只改这一条实例） */
+  CompletableFuture<BrokerResponse<ProcessInstanceStartUserResponseRecord>>
+      setProcessInstanceStartUser(ProcessInstanceSetStartUserRequest request);
+
+  /** 设置 / 清空流程实例代办人（空串清空，不是委托） */
+  CompletableFuture<BrokerResponse<ProcessInstanceDelegateUserResponseRecord>>
+      setProcessInstanceDelegateUser(ProcessInstanceSetDelegateUserRequest request);
 }

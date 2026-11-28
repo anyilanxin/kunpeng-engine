@@ -35,7 +35,11 @@ public enum ProcessInstanceLifeCycle implements ValueLifeCycle {
   TERMINATED((short) 9, PROCESS_INDEX_55),
   LISTENER_CREATE((short) 10, PROCESS_INDEX_56),
   LISTENER_COMPLETED((short) 11, PROCESS_INDEX_57),
-  LISTENER_DENY((short) 12, PROCESS_INDEX_58);
+  LISTENER_DENY((short) 12, PROCESS_INDEX_58),
+  /** 发起人已修改（事件：离职交接把发起人换成接手人，只改这一条实例） */
+  START_USER((short) 13, PROCESS_INDEX_242),
+  /** 代办人已设置/修改/清空（事件：实例上的代办人 id 变更，不是委托） */
+  DELEGATE_USER((short) 14, PROCESS_INDEX_244);
 
   private final short value;
   private final short processIndex;
@@ -59,6 +63,8 @@ public enum ProcessInstanceLifeCycle implements ValueLifeCycle {
       case 10 -> LISTENER_CREATE;
       case 11 -> LISTENER_COMPLETED;
       case 12 -> LISTENER_DENY;
+      case 13 -> START_USER;
+      case 14 -> DELEGATE_USER;
       default -> UNKNOWN;
     };
   }
@@ -77,6 +83,8 @@ public enum ProcessInstanceLifeCycle implements ValueLifeCycle {
       case 10 -> LISTENER_CREATE;
       case 11 -> LISTENER_COMPLETED;
       case 12 -> LISTENER_DENY;
+      case 13 -> START_USER;
+      case 14 -> DELEGATE_USER;
       default -> NULL_VAL;
     };
   }

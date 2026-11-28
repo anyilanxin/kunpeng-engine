@@ -53,6 +53,9 @@ public interface ProcessInstanceRecordValue
   /** 开始用户 id（从命令层授权元数据提取的发起人；元数据本身不落库，见 v3 流转规则） */
   String getStartUserId();
 
+  /** 代办人 id（代为办理的实际办理人；发起人本人经手为空，不是委托） */
+  String getDelegateUserId();
+
   /** 开始活动key列表 */
   Set<String> getStartActivityDefinitionKeys();
 

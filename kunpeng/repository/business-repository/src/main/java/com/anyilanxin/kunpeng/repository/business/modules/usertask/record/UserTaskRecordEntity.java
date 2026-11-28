@@ -110,8 +110,11 @@ public class UserTaskRecordEntity extends UnpackedObject implements StoreValue {
   private final BooleanProperty addSignAllowedProp =
       new BooleanProperty(36, "ADD_SIGN_ALLOWED", false);
 
+  /** 代办人 id（代为办理）：审批人本人自办为空；代办完成为实际办理人；未接入授权体系时由设置代办人命令写入 */
+  private final StringProperty delegateUserIdProp = new StringProperty(37, "DELEGATE_USER_ID", "");
+
   public UserTaskRecordEntity() {
-    super(36);
+    super(37);
     declareProperty(taskIdProp)
         .declareProperty(parentTaskIdProp)
         .declareProperty(revProp)
@@ -147,7 +150,8 @@ public class UserTaskRecordEntity extends UnpackedObject implements StoreValue {
         .declareProperty(afterSignAssigneesProp)
         .declareProperty(afterSignModeProp)
         .declareProperty(addSignDepthProp)
-        .declareProperty(addSignAllowedProp);
+        .declareProperty(addSignAllowedProp)
+        .declareProperty(delegateUserIdProp);
   }
 
   public void wrap(final UserTaskRecord record) {
@@ -186,7 +190,8 @@ public class UserTaskRecordEntity extends UnpackedObject implements StoreValue {
         .setAfterSignAssignees(record.getAfterSignAssignees())
         .setAfterSignMode(record.getAfterSignMode())
         .setAddSignDepth(record.getAddSignDepth())
-        .setAddSignAllowed(record.isAddSignAllowed());
+        .setAddSignAllowed(record.isAddSignAllowed())
+        .setDelegateUserId(record.getDelegateUserIdBuffer());
   }
 
   public UserTaskRecord unwrap(final UserTaskRecord taskRecord) {
@@ -227,7 +232,8 @@ public class UserTaskRecordEntity extends UnpackedObject implements StoreValue {
         .setAfterSignAssignees(getAfterSignAssignees())
         .setAfterSignMode(getAfterSignMode())
         .setAddSignDepth(getAddSignDepth())
-        .setAddSignAllowed(isAddSignAllowed());
+        .setAddSignAllowed(isAddSignAllowed())
+        .setDelegateUserId(getDelegateUserIdBuffer());
   }
 
   public long getTaskId() {
@@ -619,6 +625,27 @@ public class UserTaskRecordEntity extends UnpackedObject implements StoreValue {
 
   public UserTaskRecordEntity setAddSignAllowed(final boolean addSignAllowed) {
     addSignAllowedProp.setValue(addSignAllowed);
+    return this;
+  }
+
+  public String getDelegateUserId() {
+    return bufferAsString(delegateUserIdProp.getValue());
+  }
+
+  @JsonIgnore
+  public DirectBuffer getDelegateUserIdBuffer() {
+    return delegateUserIdProp.getValue();
+  }
+
+  public UserTaskRecordEntity setDelegateUserId(final DirectBuffer delegateUserId) {
+    delegateUserIdProp.setValue(delegateUserId);
+    return this;
+  }
+
+  public UserTaskRecordEntity setDelegateUserId(final String delegateUserId) {
+    if (delegateUserId != null) {
+      delegateUserIdProp.setValue(wrapString(delegateUserId));
+    }
     return this;
   }
 

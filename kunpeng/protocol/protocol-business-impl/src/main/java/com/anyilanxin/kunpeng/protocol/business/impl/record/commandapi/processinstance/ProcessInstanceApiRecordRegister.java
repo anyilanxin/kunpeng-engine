@@ -21,6 +21,10 @@ import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.processin
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.processinstance.create.ProcessInstanceCreateAndResultResponseRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.processinstance.create.ProcessInstanceCreateRequestRecord;
 import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.processinstance.create.ProcessInstanceCreateResponseRecord;
+import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.processinstance.delegateuser.ProcessInstanceDelegateUserRequestRecord;
+import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.processinstance.delegateuser.ProcessInstanceDelegateUserResponseRecord;
+import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.processinstance.startuser.ProcessInstanceStartUserRequestRecord;
+import com.anyilanxin.kunpeng.protocol.business.impl.record.commandapi.processinstance.startuser.ProcessInstanceStartUserResponseRecord;
 import com.anyilanxin.kunpeng.protocol.business.record.RecordValueMapperRegister;
 import com.anyilanxin.kunpeng.protocol.business.record.commandapi.record.processinstance.CommandApiProcessInstanceValueLifeCycle;
 
@@ -53,6 +57,18 @@ public class ProcessInstanceApiRecordRegister {
             ProcessInstanceCreateRequestRecord::new)
         .register(
             CommandApiProcessInstanceValueLifeCycle.CREATE_AND_RESULT_RESPONSE,
-            ProcessInstanceCreateAndResultResponseRecord::new);
+            ProcessInstanceCreateAndResultResponseRecord::new)
+        .register(
+            CommandApiProcessInstanceValueLifeCycle.SET_START_USER_REQUEST,
+            ProcessInstanceStartUserRequestRecord::new)
+        .register(
+            CommandApiProcessInstanceValueLifeCycle.SET_START_USER_RESPONSE,
+            ProcessInstanceStartUserResponseRecord::new)
+        .register(
+            CommandApiProcessInstanceValueLifeCycle.SET_DELEGATE_USER_REQUEST,
+            ProcessInstanceDelegateUserRequestRecord::new)
+        .register(
+            CommandApiProcessInstanceValueLifeCycle.SET_DELEGATE_USER_RESPONSE,
+            ProcessInstanceDelegateUserResponseRecord::new);
   }
 }

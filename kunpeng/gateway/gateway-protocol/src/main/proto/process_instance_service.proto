@@ -78,6 +78,26 @@ message CancelProcessInstanceResponse {
 
 }
 
+message SetProcessInstanceStartUserRequest {
+  int64 processInstanceId = 1;
+  // the new start user; must not be blank
+  string startUserId = 2;
+}
+
+message SetProcessInstanceStartUserResponse {
+
+}
+
+message SetProcessInstanceDelegateRequest {
+  int64 processInstanceId = 1;
+  // the user acting on behalf of the start user; an empty string clears it
+  string delegateUserId = 2;
+}
+
+message SetProcessInstanceDelegateResponse {
+
+}
+
 service ProcessInstanceService {
   /*
    Iterates through all known partitions round-robin and activates up to the requested
@@ -110,5 +130,24 @@ service ProcessInstanceService {
         - retries is not greater than 0
    */
   rpc CancelProcessInstance (CancelProcessInstanceRequest) returns (CancelProcessInstanceResponse) {
+  }
+
+  /*
+    Changes the start user of a process instance, handing the instance over to another user.
+    Only this instance is affected: child instances created afterwards through a call activity
+    inherit the new start user, existing ones keep theirs. The start user must not be blank.
+    Once authorization is enabled the operator must be an admin, otherwise the call fails with 403.
+   */
+  rpc SetProcessInstanceStartUser (SetProcessInstanceStartUserRequest) returns (SetProcessInstanceStartUserResponse) {
+  }
+
+  /*
+    Sets or clears the delegate user of a process instance: the user acting on behalf of the start
+    user when cancelling it. An empty string clears the delegate. The instance must have a start
+    user and the delegate cannot be the start user. Meant for deployments without the authorization
+    system. Once authorization is enabled the operator must be the start user or an admin,
+    otherwise the call fails with 403.
+   */
+  rpc SetProcessInstanceDelegate (SetProcessInstanceDelegateRequest) returns (SetProcessInstanceDelegateResponse) {
   }
 }

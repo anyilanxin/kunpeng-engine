@@ -64,6 +64,10 @@ public class ProcessInstanceEntity implements Serializable {
   @TableField(value = "START_USER_ID")
   private String startUserId;
 
+  /** 代办人 id（代为办理的实际办理人） */
+  @TableField(value = "DELEGATE_USER_ID")
+  private String delegateUserId;
+
   /** 状态 */
   @TableField(value = "STATE")
   private String state;
