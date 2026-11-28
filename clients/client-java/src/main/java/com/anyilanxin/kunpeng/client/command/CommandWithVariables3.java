@@ -29,12 +29,12 @@ public abstract class CommandWithVariables3<T> {
 
   public T localVariables(final InputStream localVariables) {
     ArgumentUtil.ensureNotNull("localVariables", localVariables);
-    return setVariablesInternal(objectMapper.validateJson("localVariables", localVariables));
+    return setLocalVariablesInternal(objectMapper.validateJson("localVariables", localVariables));
   }
 
   public T localVariables(final String localVariables) {
     ArgumentUtil.ensureNotNull("localVariables", localVariables);
-    return setVariablesInternal(objectMapper.validateJson("localVariables", localVariables));
+    return setLocalVariablesInternal(objectMapper.validateJson("localVariables", localVariables));
   }
 
   public T localVariables(final Map<String, Object> localVariables) {
@@ -44,7 +44,7 @@ public abstract class CommandWithVariables3<T> {
 
   public T localVariables(final Object localVariables) {
     ArgumentUtil.ensureNotNull("localVariables", localVariables);
-    return setVariablesInternal(objectMapper.toJson(localVariables));
+    return setLocalVariablesInternal(objectMapper.toJson(localVariables));
   }
 
   public T localVariable(final String key, final Object value) {
